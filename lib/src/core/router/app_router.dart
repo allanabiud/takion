@@ -1,0 +1,47 @@
+import 'package:auto_route/auto_route.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/router/auth_guard.dart';
+
+@AutoRouterConfig()
+class AppRouter extends RootStackRouter {
+  final AuthGuard authGuard;
+
+  AppRouter(this.authGuard);
+
+  @override
+  List<AutoRoute> get routes => [
+        AutoRoute(page: LoginRoute.page, path: '/login'),
+        AutoRoute(
+          page: MainRoute.page,
+          path: '/',
+          initial: true,
+          guards: [authGuard],
+          children: [
+            AutoRoute(page: HomeRoute.page, path: 'home'),
+            AutoRoute(page: ReleasesRoute.page, path: 'releases'),
+            AutoRoute(page: LibraryRoute.page, path: 'library'),
+            AutoRoute(page: DiscoverRoute.page, path: 'discover'),
+          ],
+        ),
+        AutoRoute(
+          page: SearchRoute.page,
+          path: '/search',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: SearchResultsRoute.page,
+          path: '/search-results',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: UserProfileRoute.page,
+          path: '/profile',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: SettingsRoute.page,
+          path: '/settings',
+          guards: [authGuard],
+        ),
+      ];
+}
