@@ -4,6 +4,7 @@ import 'package:takion/src/data/models/series_dto.dart';
 
 abstract class MetronRemoteDataSource {
   Future<List<IssueDto>> getWeeklyReleases();
+  Future<List<IssueDto>> getWeeklyReleasesForDate(DateTime date);
   Future<List<IssueDto>> searchIssues(String query);
   Future<List<SeriesDto>> searchSeries(String query);
   Future<IssueDto> getIssueDetails(int id);
@@ -16,14 +17,16 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
 
   @override
   Future<List<IssueDto>> getWeeklyReleases() async {
-    final now = DateTime.now();
-    // Start of the week (Sunday = 7, so we normalize to Monday being 1)
-    // Sunday - 6 = Monday, Monday - 0 = Monday
-    final startOfWeek = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: now.weekday - 1));
+    return getWeeklyReleasesForDate(DateTime.now());
+  }
+
+  @override
+  Future<List<IssueDto>> getWeeklyReleasesForDate(DateTime date) async {
+    // Week starts on Sunday. 
+    // In Dart weekday is 1 (Mon) to 7 (Sun).
+    // If it's Sunday (7), subtract 0. If Monday (1), subtract 1.
+    final offset = date.weekday % 7;
+    final startOfWeek = DateTime(date.year, date.month, date.day).subtract(Duration(days: offset));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
     String formatDate(DateTime d) =>

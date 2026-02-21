@@ -119,7 +119,6 @@ class AppThemes {
         inputDecoratorFocusedBorderWidth: 2.0,
         inputDecoratorPrefixIconSchemeColor: SchemeColor.primary,
         inputDecoratorSuffixIconSchemeColor: SchemeColor.primary,
-        searchBarRadius: 10.0,
         alignedDropdown: true,
         appBarCenterTitle: true,
         navigationBarLabelTextStyle: TextStyle(fontSize: 14),

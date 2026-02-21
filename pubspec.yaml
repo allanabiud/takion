@@ -26,6 +26,7 @@ dependencies:
   cached_network_image: ^3.4.1
   auto_route: ^11.1.0
   flash: ^3.1.1
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

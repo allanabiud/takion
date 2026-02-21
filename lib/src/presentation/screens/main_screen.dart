@@ -2,8 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/providers/auth_provider.dart';
-import 'package:takion/src/presentation/providers/theme_provider.dart';
 
 @RoutePage()
 class MainScreen extends ConsumerWidget {

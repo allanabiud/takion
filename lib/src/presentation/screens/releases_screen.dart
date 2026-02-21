@@ -1,8 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
-import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/action_card.dart';
 
 @RoutePage()
 class ReleasesScreen extends ConsumerWidget {
@@ -10,32 +11,74 @@ class ReleasesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final issuesAsync = ref.watch(weeklyReleasesProvider);
+    // This provider always fetches for the actual current week (DateTime.now)
+    final currentIssuesAsync = ref.watch(currentWeeklyReleasesProvider);
 
-    return issuesAsync.when(
-      data: (issues) => RefreshIndicator(
-        onRefresh: () => ref.refresh(weeklyReleasesProvider.future),
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          itemCount: issues.length,
-          itemBuilder: (context, index) {
-            final issue = issues[index];
-            final isFirst = index == 0;
-            final isLast = index == issues.length - 1;
-
-            return IssueListTile(
-              issue: issue,
-              isFirst: isFirst,
-              isLast: isLast,
-              onTap: () {
-                // Navigate to details
-              },
-            );
-          },
+    return Scaffold(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  ActionCard(
+                    icon: Icons.new_releases_outlined,
+                    value: currentIssuesAsync.when(
+                      data: (issues) => issues.length.toString(),
+                      loading: () => '--',
+                      error: (_, __) => '!',
+                    ),
+                    label: 'This Week',
+                    onTap: () {
+                      // Reset navigation to current week before opening
+                      ref
+                          .read(selectedWeekProvider.notifier)
+                          .setDate(DateTime.now());
+                      context.pushRoute(const WeeklyReleasesRoute());
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ActionCard(
+                    icon: Icons.star_outline,
+                    value: currentIssuesAsync.when(
+                      data: (issues) => issues
+                          .where((i) => i.number == '1')
+                          .length
+                          .toString(),
+                      loading: () => '--',
+                      error: (_, __) => '!',
+                    ),
+                    label: 'New #1s',
+                    onTap: () {
+                      // Reset navigation to current week before opening
+                      ref
+                          .read(selectedWeekProvider.notifier)
+                          .setDate(DateTime.now());
+                      context.pushRoute(const NewFirstIssuesRoute());
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ActionCard(
+                    icon: Icons.history_outlined,
+                    value: '--',
+                    label: 'Last Week',
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Center(
+              child: Text(
+                'Select a category to view releases',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ],
         ),
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Error: $err')),
     );
   }
 }

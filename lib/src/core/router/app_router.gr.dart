@@ -9,29 +9,33 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i11;
-import 'package:flutter/material.dart' as _i12;
+import 'package:auto_route/auto_route.dart' as _i13;
+import 'package:flutter/material.dart' as _i14;
 import 'package:takion/src/presentation/screens/discover_screen.dart' as _i1;
 import 'package:takion/src/presentation/screens/home_screen.dart' as _i2;
 import 'package:takion/src/presentation/screens/library_screen.dart' as _i3;
 import 'package:takion/src/presentation/screens/login_screen.dart' as _i4;
 import 'package:takion/src/presentation/screens/main_screen.dart' as _i5;
-import 'package:takion/src/presentation/screens/profile_screen.dart' as _i10;
-import 'package:takion/src/presentation/screens/releases_screen.dart' as _i6;
+import 'package:takion/src/presentation/screens/new_first_issues_screen.dart'
+    as _i6;
+import 'package:takion/src/presentation/screens/profile_screen.dart' as _i11;
+import 'package:takion/src/presentation/screens/releases_screen.dart' as _i7;
 import 'package:takion/src/presentation/screens/search_results_screen.dart'
-    as _i7;
-import 'package:takion/src/presentation/screens/search_screen.dart' as _i8;
-import 'package:takion/src/presentation/screens/settings_screen.dart' as _i9;
+    as _i8;
+import 'package:takion/src/presentation/screens/search_screen.dart' as _i9;
+import 'package:takion/src/presentation/screens/settings_screen.dart' as _i10;
+import 'package:takion/src/presentation/screens/weekly_releases_screen.dart'
+    as _i12;
 
 /// generated route for
 /// [_i1.DiscoverScreen]
-class DiscoverRoute extends _i11.PageRouteInfo<void> {
-  const DiscoverRoute({List<_i11.PageRouteInfo>? children})
+class DiscoverRoute extends _i13.PageRouteInfo<void> {
+  const DiscoverRoute({List<_i13.PageRouteInfo>? children})
     : super(DiscoverRoute.name, initialChildren: children);
 
   static const String name = 'DiscoverRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
       return const _i1.DiscoverScreen();
@@ -41,13 +45,13 @@ class DiscoverRoute extends _i11.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i2.HomeScreen]
-class HomeRoute extends _i11.PageRouteInfo<void> {
-  const HomeRoute({List<_i11.PageRouteInfo>? children})
+class HomeRoute extends _i13.PageRouteInfo<void> {
+  const HomeRoute({List<_i13.PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
       return const _i2.HomeScreen();
@@ -57,13 +61,13 @@ class HomeRoute extends _i11.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i3.LibraryScreen]
-class LibraryRoute extends _i11.PageRouteInfo<void> {
-  const LibraryRoute({List<_i11.PageRouteInfo>? children})
+class LibraryRoute extends _i13.PageRouteInfo<void> {
+  const LibraryRoute({List<_i13.PageRouteInfo>? children})
     : super(LibraryRoute.name, initialChildren: children);
 
   static const String name = 'LibraryRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
       return const _i3.LibraryScreen();
@@ -73,11 +77,11 @@ class LibraryRoute extends _i11.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i4.LoginScreen]
-class LoginRoute extends _i11.PageRouteInfo<LoginRouteArgs> {
+class LoginRoute extends _i13.PageRouteInfo<LoginRouteArgs> {
   LoginRoute({
-    _i12.Key? key,
+    _i14.Key? key,
     void Function(bool)? onResult,
-    List<_i11.PageRouteInfo>? children,
+    List<_i13.PageRouteInfo>? children,
   }) : super(
          LoginRoute.name,
          args: LoginRouteArgs(key: key, onResult: onResult),
@@ -86,7 +90,7 @@ class LoginRoute extends _i11.PageRouteInfo<LoginRouteArgs> {
 
   static const String name = 'LoginRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<LoginRouteArgs>(
@@ -100,7 +104,7 @@ class LoginRoute extends _i11.PageRouteInfo<LoginRouteArgs> {
 class LoginRouteArgs {
   const LoginRouteArgs({this.key, this.onResult});
 
-  final _i12.Key? key;
+  final _i14.Key? key;
 
   final void Function(bool)? onResult;
 
@@ -122,13 +126,13 @@ class LoginRouteArgs {
 
 /// generated route for
 /// [_i5.MainScreen]
-class MainRoute extends _i11.PageRouteInfo<void> {
-  const MainRoute({List<_i11.PageRouteInfo>? children})
+class MainRoute extends _i13.PageRouteInfo<void> {
+  const MainRoute({List<_i13.PageRouteInfo>? children})
     : super(MainRoute.name, initialChildren: children);
 
   static const String name = 'MainRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
       return const _i5.MainScreen();
@@ -137,81 +141,113 @@ class MainRoute extends _i11.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i6.ReleasesScreen]
-class ReleasesRoute extends _i11.PageRouteInfo<void> {
-  const ReleasesRoute({List<_i11.PageRouteInfo>? children})
+/// [_i6.NewFirstIssuesScreen]
+class NewFirstIssuesRoute extends _i13.PageRouteInfo<void> {
+  const NewFirstIssuesRoute({List<_i13.PageRouteInfo>? children})
+    : super(NewFirstIssuesRoute.name, initialChildren: children);
+
+  static const String name = 'NewFirstIssuesRoute';
+
+  static _i13.PageInfo page = _i13.PageInfo(
+    name,
+    builder: (data) {
+      return const _i6.NewFirstIssuesScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i7.ReleasesScreen]
+class ReleasesRoute extends _i13.PageRouteInfo<void> {
+  const ReleasesRoute({List<_i13.PageRouteInfo>? children})
     : super(ReleasesRoute.name, initialChildren: children);
 
   static const String name = 'ReleasesRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i6.ReleasesScreen();
+      return const _i7.ReleasesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i7.SearchResultsScreen]
-class SearchResultsRoute extends _i11.PageRouteInfo<void> {
-  const SearchResultsRoute({List<_i11.PageRouteInfo>? children})
+/// [_i8.SearchResultsScreen]
+class SearchResultsRoute extends _i13.PageRouteInfo<void> {
+  const SearchResultsRoute({List<_i13.PageRouteInfo>? children})
     : super(SearchResultsRoute.name, initialChildren: children);
 
   static const String name = 'SearchResultsRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i7.SearchResultsScreen();
+      return const _i8.SearchResultsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i8.SearchScreen]
-class SearchRoute extends _i11.PageRouteInfo<void> {
-  const SearchRoute({List<_i11.PageRouteInfo>? children})
+/// [_i9.SearchScreen]
+class SearchRoute extends _i13.PageRouteInfo<void> {
+  const SearchRoute({List<_i13.PageRouteInfo>? children})
     : super(SearchRoute.name, initialChildren: children);
 
   static const String name = 'SearchRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i8.SearchScreen();
+      return const _i9.SearchScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i9.SettingsScreen]
-class SettingsRoute extends _i11.PageRouteInfo<void> {
-  const SettingsRoute({List<_i11.PageRouteInfo>? children})
+/// [_i10.SettingsScreen]
+class SettingsRoute extends _i13.PageRouteInfo<void> {
+  const SettingsRoute({List<_i13.PageRouteInfo>? children})
     : super(SettingsRoute.name, initialChildren: children);
 
   static const String name = 'SettingsRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i9.SettingsScreen();
+      return const _i10.SettingsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i10.UserProfileScreen]
-class UserProfileRoute extends _i11.PageRouteInfo<void> {
-  const UserProfileRoute({List<_i11.PageRouteInfo>? children})
+/// [_i11.UserProfileScreen]
+class UserProfileRoute extends _i13.PageRouteInfo<void> {
+  const UserProfileRoute({List<_i13.PageRouteInfo>? children})
     : super(UserProfileRoute.name, initialChildren: children);
 
   static const String name = 'UserProfileRoute';
 
-  static _i11.PageInfo page = _i11.PageInfo(
+  static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i10.UserProfileScreen();
+      return const _i11.UserProfileScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i12.WeeklyReleasesScreen]
+class WeeklyReleasesRoute extends _i13.PageRouteInfo<void> {
+  const WeeklyReleasesRoute({List<_i13.PageRouteInfo>? children})
+    : super(WeeklyReleasesRoute.name, initialChildren: children);
+
+  static const String name = 'WeeklyReleasesRoute';
+
+  static _i13.PageInfo page = _i13.PageInfo(
+    name,
+    builder: (data) {
+      return const _i12.WeeklyReleasesScreen();
     },
   );
 }

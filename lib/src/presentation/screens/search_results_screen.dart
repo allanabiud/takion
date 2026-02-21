@@ -130,36 +130,40 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                       style: TextStyle(color: Colors.grey),
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: filteredResults.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredResults[index];
-                      final isFirst = index == 0;
-                      final isLast = index == filteredResults.length - 1;
+                : RefreshIndicator(
+                    onRefresh: () =>
+                        ref.read(searchResultsProvider.notifier).refresh(),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: filteredResults.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredResults[index];
+                        final isFirst = index == 0;
+                        final isLast = index == filteredResults.length - 1;
 
-                      if (item is Issue) {
-                        return IssueListTile(
-                          issue: item,
-                          isFirst: isFirst,
-                          isLast: isLast,
-                          onTap: () {
-                            // Navigate to details
-                          },
-                        );
-                      } else if (item is Series) {
-                        return SeriesListTile(
-                          series: item,
-                          isFirst: isFirst,
-                          isLast: isLast,
-                          onTap: () {
-                            // Navigate to details
-                          },
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
+                        if (item is Issue) {
+                          return IssueListTile(
+                            issue: item,
+                            isFirst: isFirst,
+                            isLast: isLast,
+                            onTap: () {
+                              // Navigate to details
+                            },
+                          );
+                        } else if (item is Series) {
+                          return SeriesListTile(
+                            series: item,
+                            isFirst: isFirst,
+                            isLast: isLast,
+                            onTap: () {
+                              // Navigate to details
+                            },
+                          );
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      },
+                    ),
                   ),
           ),
         ],

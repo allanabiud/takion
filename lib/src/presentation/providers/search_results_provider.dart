@@ -23,7 +23,11 @@ class SearchResultsNotifier extends _$SearchResultsNotifier {
   @override
   SearchResultsState build() => const SearchResultsState();
 
-  Future<void> initiateSearch(String query, SearchType type) async {
+  Future<void> refresh() async {
+    return initiateSearch(state.query, state.searchType, forceRefresh: true);
+  }
+
+  Future<void> initiateSearch(String query, SearchType type, {bool forceRefresh = false}) async {
     state = state.copyWith(
       query: query,
       searchType: type,
@@ -37,13 +41,12 @@ class SearchResultsNotifier extends _$SearchResultsNotifier {
       final repository = ref.read(metronRepositoryProvider);
       List<dynamic> results = [];
 
-      // Note: Repository needs expansion for specific types
       switch (type) {
         case SearchType.series:
-          results = await repository.searchSeries(query);
+          results = await repository.searchSeries(query, forceRefresh: forceRefresh);
           break;
         case SearchType.issues:
-          results = await repository.searchIssues(query);
+          results = await repository.searchIssues(query, forceRefresh: forceRefresh);
           break;
         default:
           results = [];

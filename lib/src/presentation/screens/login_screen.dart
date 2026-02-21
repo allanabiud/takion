@@ -120,7 +120,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     autofillHints: const [AutofillHints.password],
                     onEditingComplete: () => TextInput.finishAutofillContext(),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
