@@ -3,19 +3,27 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
+import 'package:takion/src/data/models/collection_stats_dto.dart';
 import 'package:takion/src/data/models/issue_dto.dart';
 import 'package:takion/src/data/models/series_dto.dart';
+import 'package:takion/src/data/models/series_type_dto.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
+    registerAdapter(CollectionStatsDtoAdapter());
     registerAdapter(IssueDtoAdapter());
+    registerAdapter(PublisherDtoAdapter());
     registerAdapter(SeriesDtoAdapter());
+    registerAdapter(SeriesTypeDtoAdapter());
   }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
+    registerAdapter(CollectionStatsDtoAdapter());
     registerAdapter(IssueDtoAdapter());
+    registerAdapter(PublisherDtoAdapter());
     registerAdapter(SeriesDtoAdapter());
+    registerAdapter(SeriesTypeDtoAdapter());
   }
 }

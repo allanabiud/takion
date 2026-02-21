@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:takion/src/data/models/collection_stats_dto.dart';
 import 'package:takion/src/data/models/issue_dto.dart';
 import 'package:takion/src/data/models/series_dto.dart';
 
@@ -8,6 +9,9 @@ abstract class MetronRemoteDataSource {
   Future<List<IssueDto>> searchIssues(String query);
   Future<List<SeriesDto>> searchSeries(String query);
   Future<IssueDto> getIssueDetails(int id);
+  Future<List<IssueDto>> getRecentlyModifiedIssues({int limit = 12});
+  Future<CollectionStatsDto> getCollectionStats();
+  Future<List<IssueDto>> getUnreadIssues();
 }
 
 class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
@@ -22,11 +26,15 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
 
   @override
   Future<List<IssueDto>> getWeeklyReleasesForDate(DateTime date) async {
-    // Week starts on Sunday. 
+    // Week starts on Sunday.
     // In Dart weekday is 1 (Mon) to 7 (Sun).
     // If it's Sunday (7), subtract 0. If Monday (1), subtract 1.
     final offset = date.weekday % 7;
-    final startOfWeek = DateTime(date.year, date.month, date.day).subtract(Duration(days: offset));
+    final startOfWeek = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).subtract(Duration(days: offset));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
     String formatDate(DateTime d) =>
@@ -68,5 +76,35 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<IssueDto> getIssueDetails(int id) async {
     final response = await _dio.get('issue/$id/');
     return IssueDto.fromJson(response.data);
+  }
+
+  @override
+  Future<List<IssueDto>> getRecentlyModifiedIssues({int limit = 12}) async {
+    // Fetch issues modified in the last 24 hours
+    final dayAgo = DateTime.now().subtract(const Duration(hours: 24));
+    final response = await _dio.get('issue/', queryParameters: {
+      'limit': limit,
+      'modified_gt': dayAgo.toIso8601String(),
+    });
+    final List results = response.data['results'];
+    return results.map((e) => IssueDto.fromJson(e)).toList();
+  }
+
+  @override
+  Future<CollectionStatsDto> getCollectionStats() async {
+    final response = await _dio.get('collection/stats/');
+    return CollectionStatsDto.fromJson(response.data);
+  }
+
+  @override
+  Future<List<IssueDto>> getUnreadIssues() async {
+    final response = await _dio.get(
+      'collection/',
+      queryParameters: {'is_read': false},
+    );
+    final List results = response.data['results'];
+    // The collection endpoint returns a list of collection items,
+    // where 'issue' is a nested object.
+    return results.map((e) => IssueDto.fromJson(e['issue'])).toList();
   }
 }

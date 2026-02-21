@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
+import 'package:expressive_refresh/expressive_refresh.dart';
+import 'package:flutter/material.dart' hide RefreshIndicatorTriggerMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue.dart';
 import 'package:takion/src/domain/entities/series.dart';
@@ -103,7 +104,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               ],
         bottom: searchState.isLoading
             ? const PreferredSize(
-                preferredSize: Size.fromHeight(2),
+                preferredSize: Size.fromHeight(4),
                 child: LinearProgressIndicator(),
               )
             : null,
@@ -123,18 +124,23 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               ),
             ),
           Expanded(
-            child: filteredResults.isEmpty && !searchState.isLoading
-                ? const Center(
-                    child: Text(
-                      'No matching results found',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: () =>
-                        ref.read(searchResultsProvider.notifier).refresh(),
-                    child: ListView.builder(
+            child: ExpressiveRefreshIndicator(
+              displacement: 80,
+              triggerMode: RefreshIndicatorTriggerMode.anywhere,
+              color: Theme.of(context).colorScheme.primary,
+              onRefresh: () async {
+                await ref.read(searchResultsProvider.notifier).refresh();
+              },
+              child: filteredResults.isEmpty && !searchState.isLoading
+                  ? const Center(
+                      child: Text(
+                        'No matching results found',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
                       padding: const EdgeInsets.symmetric(vertical: 8),
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: filteredResults.length,
                       itemBuilder: (context, index) {
                         final item = filteredResults[index];
@@ -146,9 +152,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                             issue: item,
                             isFirst: isFirst,
                             isLast: isLast,
-                            onTap: () {
-                              // Navigate to details
-                            },
+                            onTap: () {},
                           );
                         } else if (item is Series) {
                           return SeriesListTile(
@@ -164,7 +168,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         }
                       },
                     ),
-                  ),
+            ),
           ),
         ],
       ),

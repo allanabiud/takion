@@ -39,6 +39,7 @@ class AppThemes {
         inputDecoratorFocusedBorderWidth: 2.0,
         inputDecoratorPrefixIconSchemeColor: SchemeColor.primary,
         inputDecoratorSuffixIconSchemeColor: SchemeColor.primary,
+        listTileIconSchemeColor: SchemeColor.primary,
         alignedDropdown: true,
         appBarCenterTitle: true,
         navigationBarLabelTextStyle: TextStyle(fontSize: 14),
@@ -92,6 +93,7 @@ class AppThemes {
         tintedDisabledControls: true,
         blendOnColors: true,
         useM2StyleDividerInM3: true,
+        adaptiveAppBarScrollUnderOff: FlexAdaptive.all(),
         filledButtonRadius: 10.0,
         filledButtonTextStyle: WidgetStatePropertyAll(
           TextStyle(
@@ -119,6 +121,7 @@ class AppThemes {
         inputDecoratorFocusedBorderWidth: 2.0,
         inputDecoratorPrefixIconSchemeColor: SchemeColor.primary,
         inputDecoratorSuffixIconSchemeColor: SchemeColor.primary,
+        listTileIconSchemeColor: SchemeColor.primary,
         alignedDropdown: true,
         appBarCenterTitle: true,
         navigationBarLabelTextStyle: TextStyle(fontSize: 14),

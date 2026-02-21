@@ -2,6 +2,7 @@ import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
 import 'package:takion/src/data/models/issue_dto.dart';
 import 'package:takion/src/data/models/series_dto.dart';
+import 'package:takion/src/domain/entities/collection_stats.dart';
 import 'package:takion/src/domain/entities/issue.dart';
 import 'package:takion/src/domain/entities/series.dart';
 import 'package:takion/src/domain/repositories/metron_repository.dart';
@@ -46,7 +47,18 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
-  Future<List<Issue>> searchIssues(String query, {bool forceRefresh = false}) async {
+  Future<List<Issue>> getRecentlyModifiedIssues({int limit = 12}) async {
+    final dtos = await _remoteDataSource.getRecentlyModifiedIssues(
+      limit: limit,
+    );
+    return dtos.map((e) => e.toEntity()).take(limit).toList();
+  }
+
+  @override
+  Future<List<Issue>> searchIssues(
+    String query, {
+    bool forceRefresh = false,
+  }) async {
     if (!forceRefresh) {
       final cached = await _localDataSource.getSearchResults(query, 'issue');
       if (cached != null) {
@@ -60,7 +72,10 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
-  Future<List<Series>> searchSeries(String query, {bool forceRefresh = false}) async {
+  Future<List<Series>> searchSeries(
+    String query, {
+    bool forceRefresh = false,
+  }) async {
     if (!forceRefresh) {
       final cached = await _localDataSource.getSearchResults(query, 'series');
       if (cached != null) {
@@ -70,6 +85,24 @@ class MetronRepositoryImpl implements MetronRepository {
 
     final dtos = await _remoteDataSource.searchSeries(query);
     await _localDataSource.cacheSearchResults(query, 'series', dtos);
+    return dtos.map((e) => e.toEntity()).toList();
+  }
+
+  @override
+  Future<CollectionStats> getCollectionStats() async {
+    final cachedDto = await _localDataSource.getCollectionStats();
+    if (cachedDto != null) {
+      return cachedDto.toEntity();
+    }
+
+    final dto = await _remoteDataSource.getCollectionStats();
+    await _localDataSource.cacheCollectionStats(dto);
+    return dto.toEntity();
+  }
+
+  @override
+  Future<List<Issue>> getUnreadIssues() async {
+    final dtos = await _remoteDataSource.getUnreadIssues();
     return dtos.map((e) => e.toEntity()).toList();
   }
 }

@@ -15,6 +15,15 @@ class ReleasesScreen extends ConsumerWidget {
     final currentIssuesAsync = ref.watch(currentWeeklyReleasesProvider);
 
     return Scaffold(
+      appBar: currentIssuesAsync.isLoading
+          ? AppBar(
+              toolbarHeight: 0,
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(4),
+                child: LinearProgressIndicator(),
+              ),
+            )
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
@@ -32,7 +41,6 @@ class ReleasesScreen extends ConsumerWidget {
                     ),
                     label: 'This Week',
                     onTap: () {
-                      // Reset navigation to current week before opening
                       ref
                           .read(selectedWeekProvider.notifier)
                           .setDate(DateTime.now());
@@ -52,7 +60,6 @@ class ReleasesScreen extends ConsumerWidget {
                     ),
                     label: 'New #1s',
                     onTap: () {
-                      // Reset navigation to current week before opening
                       ref
                           .read(selectedWeekProvider.notifier)
                           .setDate(DateTime.now());
@@ -67,13 +74,6 @@ class ReleasesScreen extends ConsumerWidget {
                     onTap: () {},
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Center(
-              child: Text(
-                'Select a category to view releases',
-                style: TextStyle(color: Colors.grey),
               ),
             ),
           ],

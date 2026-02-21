@@ -9,17 +9,21 @@ class WeekPickerBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDate = ref.watch(selectedWeekProvider);
-    
+
     // Calculate start of week (Sunday)
     final offset = selectedDate.weekday % 7;
-    final startOfWeek = DateTime(selectedDate.year, selectedDate.month, selectedDate.day).subtract(Duration(days: offset));
-    
+    final startOfWeek = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    ).subtract(Duration(days: offset));
+
     // Calculate New Comic Book Day (Wednesday = Sunday + 3 days)
     final wednesday = startOfWeek.add(const Duration(days: 3));
     final dateString = DateFormat('MMM dd, yyyy').format(wednesday);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
@@ -34,7 +38,8 @@ class WeekPickerBar extends ConsumerWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: () => ref.read(selectedWeekProvider.notifier).previousWeek(),
+            onPressed: () =>
+                ref.read(selectedWeekProvider.notifier).previousWeek(),
           ),
           InkWell(
             onTap: () async {
@@ -50,7 +55,10 @@ class WeekPickerBar extends ConsumerWidget {
             },
             borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8.0,
+                vertical: 4.0,
+              ),
               child: Row(
                 children: [
                   const Icon(Icons.calendar_month, size: 18),
@@ -58,8 +66,8 @@ class WeekPickerBar extends ConsumerWidget {
                   Text(
                     'Week of $dateString',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),

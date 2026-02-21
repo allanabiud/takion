@@ -11,7 +11,10 @@ abstract class Issue with _$Issue {
     required String? seriesName,
     required String? publisherName,
     required DateTime? storeDate,
+    required DateTime? coverDate,
     required String? image,
     required String? description,
+    @Default(false) bool isCollected,
+    @Default(false) bool isRead,
   }) = _Issue;
 }

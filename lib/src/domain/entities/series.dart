@@ -13,5 +13,6 @@ abstract class Series with _$Series {
     required int? issueCount,
     required String? publisherName,
     required String? description,
+    required String? status,
   }) = _Series;
 }

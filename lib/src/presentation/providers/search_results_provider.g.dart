@@ -42,7 +42,7 @@ final class SearchResultsNotifierProvider
 }
 
 String _$searchResultsNotifierHash() =>
-    r'4d136eca357ed3192d631c1263d5845f4309f963';
+    r'e30e6a3037abc7d4993ef738ec95dadf8592f3a4';
 
 abstract class _$SearchResultsNotifier extends $Notifier<SearchResultsState> {
   SearchResultsState build();

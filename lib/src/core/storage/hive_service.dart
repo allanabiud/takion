@@ -19,4 +19,25 @@ class HiveService {
   Box<T> getBox<T>(String boxName) {
     return Hive.box<T>(boxName);
   }
+
+  Future<void> clearLocalCache() async {
+    // List only data-related boxes to clear
+    final boxes = [
+      'search_history_box',
+      'weekly_releases_box',
+      'search_results_box',
+      'issue_details_box',
+      'collection_stats_box',
+    ];
+
+    for (final boxName in boxes) {
+      if (Hive.isBoxOpen(boxName)) {
+        await Hive.box(boxName).clear();
+      } else {
+        // If it's not open, we just open it dynamic which is safe for clear()
+        final box = await Hive.openBox(boxName);
+        await box.clear();
+      }
+    }
+  }
 }

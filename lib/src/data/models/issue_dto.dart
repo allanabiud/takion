@@ -17,6 +17,7 @@ abstract class IssueDto with _$IssueDto {
     @HiveField(4) required String? image,
     @HiveField(5) @JsonKey(name: 'desc') required String? description,
     @HiveField(6) @JsonKey(name: 'issue') required String? issueName,
+    @HiveField(7) @JsonKey(name: 'cover_date') String? coverDate,
   }) = _IssueDto;
 
   factory IssueDto.fromJson(Map<String, dynamic> json) => _$IssueDtoFromJson(json);
@@ -29,8 +30,9 @@ abstract class IssueDto with _$IssueDto {
       name: issueName ?? '${series?.name ?? 'Issue'} #$number',
       number: number,
       seriesName: series?.name,
-      publisherName: series?.publisherName,
+      publisherName: series?.publisherName ?? series?.publisher?.name,
       storeDate: storeDate != null ? DateTime.tryParse(storeDate!) : null,
+      coverDate: coverDate != null ? DateTime.tryParse(coverDate!) : null,
       image: image,
       description: description,
     );

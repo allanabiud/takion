@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IssueDto {
 
-@HiveField(0) int get id;@HiveField(1) String get number;@HiveField(2) SeriesDto? get series;@HiveField(3)@JsonKey(name: 'store_date') String? get storeDate;@HiveField(4) String? get image;@HiveField(5)@JsonKey(name: 'desc') String? get description;@HiveField(6)@JsonKey(name: 'issue') String? get issueName;
+@HiveField(0) int get id;@HiveField(1) String get number;@HiveField(2) SeriesDto? get series;@HiveField(3)@JsonKey(name: 'store_date') String? get storeDate;@HiveField(4) String? get image;@HiveField(5)@JsonKey(name: 'desc') String? get description;@HiveField(6)@JsonKey(name: 'issue') String? get issueName;@HiveField(7)@JsonKey(name: 'cover_date') String? get coverDate;
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $IssueDtoCopyWith<IssueDto> get copyWith => _$IssueDtoCopyWithImpl<IssueDto>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDto&&(identical(other.id, id) || other.id == id)&&(identical(other.number, number) || other.number == number)&&(identical(other.series, series) || other.series == series)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.issueName, issueName) || other.issueName == issueName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDto&&(identical(other.id, id) || other.id == id)&&(identical(other.number, number) || other.number == number)&&(identical(other.series, series) || other.series == series)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.issueName, issueName) || other.issueName == issueName)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,number,series,storeDate,image,description,issueName);
+int get hashCode => Object.hash(runtimeType,id,number,series,storeDate,image,description,issueName,coverDate);
 
 @override
 String toString() {
-  return 'IssueDto(id: $id, number: $number, series: $series, storeDate: $storeDate, image: $image, description: $description, issueName: $issueName)';
+  return 'IssueDto(id: $id, number: $number, series: $series, storeDate: $storeDate, image: $image, description: $description, issueName: $issueName, coverDate: $coverDate)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $IssueDtoCopyWith<$Res>  {
   factory $IssueDtoCopyWith(IssueDto value, $Res Function(IssueDto) _then) = _$IssueDtoCopyWithImpl;
 @useResult
 $Res call({
-@HiveField(0) int id,@HiveField(1) String number,@HiveField(2) SeriesDto? series,@HiveField(3)@JsonKey(name: 'store_date') String? storeDate,@HiveField(4) String? image,@HiveField(5)@JsonKey(name: 'desc') String? description,@HiveField(6)@JsonKey(name: 'issue') String? issueName
+@HiveField(0) int id,@HiveField(1) String number,@HiveField(2) SeriesDto? series,@HiveField(3)@JsonKey(name: 'store_date') String? storeDate,@HiveField(4) String? image,@HiveField(5)@JsonKey(name: 'desc') String? description,@HiveField(6)@JsonKey(name: 'issue') String? issueName,@HiveField(7)@JsonKey(name: 'cover_date') String? coverDate
 });
 
 
@@ -65,7 +65,7 @@ class _$IssueDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? number = null,Object? series = freezed,Object? storeDate = freezed,Object? image = freezed,Object? description = freezed,Object? issueName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? number = null,Object? series = freezed,Object? storeDate = freezed,Object? image = freezed,Object? description = freezed,Object? issueName = freezed,Object? coverDate = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
@@ -74,6 +74,7 @@ as SeriesDto?,storeDate: freezed == storeDate ? _self.storeDate : storeDate // i
 as String?,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,issueName: freezed == issueName ? _self.issueName : issueName // ignore: cast_nullable_to_non_nullable
+as String?,coverDate: freezed == coverDate ? _self.coverDate : coverDate // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -171,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String number, @HiveField(2)  SeriesDto? series, @HiveField(3)@JsonKey(name: 'store_date')  String? storeDate, @HiveField(4)  String? image, @HiveField(5)@JsonKey(name: 'desc')  String? description, @HiveField(6)@JsonKey(name: 'issue')  String? issueName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String number, @HiveField(2)  SeriesDto? series, @HiveField(3)@JsonKey(name: 'store_date')  String? storeDate, @HiveField(4)  String? image, @HiveField(5)@JsonKey(name: 'desc')  String? description, @HiveField(6)@JsonKey(name: 'issue')  String? issueName, @HiveField(7)@JsonKey(name: 'cover_date')  String? coverDate)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDto() when $default != null:
-return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_that.description,_that.issueName);case _:
+return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_that.description,_that.issueName,_that.coverDate);case _:
   return orElse();
 
 }
@@ -192,10 +193,10 @@ return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String number, @HiveField(2)  SeriesDto? series, @HiveField(3)@JsonKey(name: 'store_date')  String? storeDate, @HiveField(4)  String? image, @HiveField(5)@JsonKey(name: 'desc')  String? description, @HiveField(6)@JsonKey(name: 'issue')  String? issueName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String number, @HiveField(2)  SeriesDto? series, @HiveField(3)@JsonKey(name: 'store_date')  String? storeDate, @HiveField(4)  String? image, @HiveField(5)@JsonKey(name: 'desc')  String? description, @HiveField(6)@JsonKey(name: 'issue')  String? issueName, @HiveField(7)@JsonKey(name: 'cover_date')  String? coverDate)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDto():
-return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_that.description,_that.issueName);case _:
+return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_that.description,_that.issueName,_that.coverDate);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -212,10 +213,10 @@ return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  int id, @HiveField(1)  String number, @HiveField(2)  SeriesDto? series, @HiveField(3)@JsonKey(name: 'store_date')  String? storeDate, @HiveField(4)  String? image, @HiveField(5)@JsonKey(name: 'desc')  String? description, @HiveField(6)@JsonKey(name: 'issue')  String? issueName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  int id, @HiveField(1)  String number, @HiveField(2)  SeriesDto? series, @HiveField(3)@JsonKey(name: 'store_date')  String? storeDate, @HiveField(4)  String? image, @HiveField(5)@JsonKey(name: 'desc')  String? description, @HiveField(6)@JsonKey(name: 'issue')  String? issueName, @HiveField(7)@JsonKey(name: 'cover_date')  String? coverDate)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDto() when $default != null:
-return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_that.description,_that.issueName);case _:
+return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_that.description,_that.issueName,_that.coverDate);case _:
   return null;
 
 }
@@ -227,7 +228,7 @@ return $default(_that.id,_that.number,_that.series,_that.storeDate,_that.image,_
 @JsonSerializable()
 
 class _IssueDto extends IssueDto {
-  const _IssueDto({@HiveField(0) required this.id, @HiveField(1) required this.number, @HiveField(2) required this.series, @HiveField(3)@JsonKey(name: 'store_date') required this.storeDate, @HiveField(4) required this.image, @HiveField(5)@JsonKey(name: 'desc') required this.description, @HiveField(6)@JsonKey(name: 'issue') required this.issueName}): super._();
+  const _IssueDto({@HiveField(0) required this.id, @HiveField(1) required this.number, @HiveField(2) required this.series, @HiveField(3)@JsonKey(name: 'store_date') required this.storeDate, @HiveField(4) required this.image, @HiveField(5)@JsonKey(name: 'desc') required this.description, @HiveField(6)@JsonKey(name: 'issue') required this.issueName, @HiveField(7)@JsonKey(name: 'cover_date') this.coverDate}): super._();
   factory _IssueDto.fromJson(Map<String, dynamic> json) => _$IssueDtoFromJson(json);
 
 @override@HiveField(0) final  int id;
@@ -237,6 +238,7 @@ class _IssueDto extends IssueDto {
 @override@HiveField(4) final  String? image;
 @override@HiveField(5)@JsonKey(name: 'desc') final  String? description;
 @override@HiveField(6)@JsonKey(name: 'issue') final  String? issueName;
+@override@HiveField(7)@JsonKey(name: 'cover_date') final  String? coverDate;
 
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
@@ -251,16 +253,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDto&&(identical(other.id, id) || other.id == id)&&(identical(other.number, number) || other.number == number)&&(identical(other.series, series) || other.series == series)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.issueName, issueName) || other.issueName == issueName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDto&&(identical(other.id, id) || other.id == id)&&(identical(other.number, number) || other.number == number)&&(identical(other.series, series) || other.series == series)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.issueName, issueName) || other.issueName == issueName)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,number,series,storeDate,image,description,issueName);
+int get hashCode => Object.hash(runtimeType,id,number,series,storeDate,image,description,issueName,coverDate);
 
 @override
 String toString() {
-  return 'IssueDto(id: $id, number: $number, series: $series, storeDate: $storeDate, image: $image, description: $description, issueName: $issueName)';
+  return 'IssueDto(id: $id, number: $number, series: $series, storeDate: $storeDate, image: $image, description: $description, issueName: $issueName, coverDate: $coverDate)';
 }
 
 
@@ -271,7 +273,7 @@ abstract mixin class _$IssueDtoCopyWith<$Res> implements $IssueDtoCopyWith<$Res>
   factory _$IssueDtoCopyWith(_IssueDto value, $Res Function(_IssueDto) _then) = __$IssueDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@HiveField(0) int id,@HiveField(1) String number,@HiveField(2) SeriesDto? series,@HiveField(3)@JsonKey(name: 'store_date') String? storeDate,@HiveField(4) String? image,@HiveField(5)@JsonKey(name: 'desc') String? description,@HiveField(6)@JsonKey(name: 'issue') String? issueName
+@HiveField(0) int id,@HiveField(1) String number,@HiveField(2) SeriesDto? series,@HiveField(3)@JsonKey(name: 'store_date') String? storeDate,@HiveField(4) String? image,@HiveField(5)@JsonKey(name: 'desc') String? description,@HiveField(6)@JsonKey(name: 'issue') String? issueName,@HiveField(7)@JsonKey(name: 'cover_date') String? coverDate
 });
 
 
@@ -288,7 +290,7 @@ class __$IssueDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? number = null,Object? series = freezed,Object? storeDate = freezed,Object? image = freezed,Object? description = freezed,Object? issueName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? number = null,Object? series = freezed,Object? storeDate = freezed,Object? image = freezed,Object? description = freezed,Object? issueName = freezed,Object? coverDate = freezed,}) {
   return _then(_IssueDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
@@ -297,6 +299,7 @@ as SeriesDto?,storeDate: freezed == storeDate ? _self.storeDate : storeDate // i
 as String?,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,issueName: freezed == issueName ? _self.issueName : issueName // ignore: cast_nullable_to_non_nullable
+as String?,coverDate: freezed == coverDate ? _self.coverDate : coverDate // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

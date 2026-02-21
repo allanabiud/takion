@@ -138,7 +138,47 @@ final class CurrentWeeklyReleasesProvider
 }
 
 String _$currentWeeklyReleasesHash() =>
-    r'f39b6d0ec1c413925c0c1bc69ad442dab3fe6635';
+    r'ec3c70a6d3aba2d812fa2262fab351e39b07d2bd';
+
+@ProviderFor(recentlyAddedIssues)
+final recentlyAddedIssuesProvider = RecentlyAddedIssuesProvider._();
+
+final class RecentlyAddedIssuesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Issue>>,
+          List<Issue>,
+          FutureOr<List<Issue>>
+        >
+    with $FutureModifier<List<Issue>>, $FutureProvider<List<Issue>> {
+  RecentlyAddedIssuesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'recentlyAddedIssuesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$recentlyAddedIssuesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Issue>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Issue>> create(Ref ref) {
+    return recentlyAddedIssues(ref);
+  }
+}
+
+String _$recentlyAddedIssuesHash() =>
+    r'869316964756ccbcfceb7d425e94f56f67144bfd';
 
 @ProviderFor(SelectedWeek)
 final selectedWeekProvider = SelectedWeekProvider._();

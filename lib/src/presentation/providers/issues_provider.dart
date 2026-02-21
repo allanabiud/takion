@@ -25,6 +25,12 @@ Future<List<Issue>> currentWeeklyReleases(Ref ref) async {
 }
 
 @riverpod
+Future<List<Issue>> recentlyAddedIssues(Ref ref) async {
+  final repository = ref.watch(metronRepositoryProvider);
+  return repository.getRecentlyModifiedIssues(limit: 12);
+}
+
+@riverpod
 class SelectedWeek extends _$SelectedWeek {
   @override
   DateTime build() => DateTime.now();

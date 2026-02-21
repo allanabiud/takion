@@ -24,13 +24,14 @@ class IssueDtoAdapter extends TypeAdapter<IssueDto> {
       image: fields[4] as String?,
       description: fields[5] as String?,
       issueName: fields[6] as String?,
+      coverDate: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, IssueDto obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class IssueDtoAdapter extends TypeAdapter<IssueDto> {
       ..writeByte(5)
       ..write(obj.description)
       ..writeByte(6)
-      ..write(obj.issueName);
+      ..write(obj.issueName)
+      ..writeByte(7)
+      ..write(obj.coverDate);
   }
 
   @override
@@ -72,6 +75,7 @@ _IssueDto _$IssueDtoFromJson(Map<String, dynamic> json) => _IssueDto(
   image: json['image'] as String?,
   description: json['desc'] as String?,
   issueName: json['issue'] as String?,
+  coverDate: json['cover_date'] as String?,
 );
 
 Map<String, dynamic> _$IssueDtoToJson(_IssueDto instance) => <String, dynamic>{
@@ -82,4 +86,5 @@ Map<String, dynamic> _$IssueDtoToJson(_IssueDto instance) => <String, dynamic>{
   'image': instance.image,
   'desc': instance.description,
   'issue': instance.issueName,
+  'cover_date': instance.coverDate,
 };

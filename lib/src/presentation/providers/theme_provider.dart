@@ -27,7 +27,7 @@ class ThemeNotifier extends _$ThemeNotifier {
       final box = hive.getBox(_boxName);
       final index = box.get(_themeKey, defaultValue: ThemeMode.system.index);
       final isTrueBlack = box.get(_blackKey, defaultValue: false);
-      
+
       return ThemeSettings(
         themeMode: ThemeMode.values[index],
         darkIsTrueBlack: isTrueBlack,

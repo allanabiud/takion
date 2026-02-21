@@ -1,9 +1,9 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
+import 'package:expressive_refresh/expressive_refresh.dart';
+import 'package:flutter/material.dart' hide RefreshIndicatorTriggerMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
-import 'package:takion/src/presentation/widgets/week_picker_bar.dart';
 
 @RoutePage()
 class WeeklyReleasesScreen extends ConsumerWidget {
@@ -15,33 +15,28 @@ class WeeklyReleasesScreen extends ConsumerWidget {
     final issuesAsync = ref.watch(weeklyReleasesProvider(selectedDate));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Weekly Releases')),
+      appBar: AppBar(
+        title: const Text('Weekly Releases'),
+        bottom: issuesAsync.isLoading
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(4),
+                child: LinearProgressIndicator(),
+              )
+            : null,
+      ),
       body: Column(
         children: [
-          const WeekPickerBar(),
-          issuesAsync.when(
-            data: (issues) => Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Found ${issues.length} releases',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-            ),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
           Expanded(
-            child: issuesAsync.when(
-              data: (issues) => RefreshIndicator(
-                onRefresh: () =>
-                    ref.refresh(weeklyReleasesProvider(selectedDate).future),
-                child: ListView.builder(
+            child: ExpressiveRefreshIndicator(
+              displacement: 80,
+              triggerMode: RefreshIndicatorTriggerMode.anywhere,
+              color: Theme.of(context).colorScheme.primary,
+              onRefresh: () async {
+                // ignore: unused_result
+                await ref.refresh(weeklyReleasesProvider(selectedDate).future);
+              },
+              child: issuesAsync.when(
+                data: (issues) => ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   itemCount: issues.length,
                   itemBuilder: (context, index) {
@@ -53,15 +48,29 @@ class WeeklyReleasesScreen extends ConsumerWidget {
                       issue: issue,
                       isFirst: isFirst,
                       isLast: isLast,
-                      onTap: () {
-                        // Navigate to details
-                      },
+                      onTap: () {},
                     );
                   },
                 ),
+                loading: () => const SizedBox.shrink(),
+                error: (err, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Error: $err', textAlign: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
             ),
           ),
         ],
