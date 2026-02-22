@@ -58,7 +58,7 @@ class LibraryScreen extends ConsumerWidget {
                       value: statsAsync.when(
                         data: (stats) => stats.totalItems.toString(),
                         loading: () => '--',
-                        error: (_, __) => '!',
+                        error: (_, _) => '!',
                       ),
                       label: 'Comics',
                       onTap: () {},
@@ -69,7 +69,7 @@ class LibraryScreen extends ConsumerWidget {
                       value: statsAsync.when(
                         data: (stats) => stats.readCount.toString(),
                         loading: () => '--',
-                        error: (_, __) => '!',
+                        error: (_, _) => '!',
                       ),
                       label: 'Read',
                       onTap: () {},
@@ -80,7 +80,7 @@ class LibraryScreen extends ConsumerWidget {
                       value: statsAsync.when(
                         data: (stats) => _formatValue(stats.totalValue),
                         loading: () => '--',
-                        error: (_, __) => '!',
+                        error: (_, _) => '!',
                       ),
                       label: 'Value',
                       onTap: () {},
@@ -108,7 +108,7 @@ class LibraryScreen extends ConsumerWidget {
                   data: (stats) =>
                       (stats.totalItems - stats.readCount).toString(),
                   loading: () => null,
-                  error: (_, __) => null,
+                  error: (_, _) => null,
                 ),
                 isFirst: true,
                 onTap: () {},

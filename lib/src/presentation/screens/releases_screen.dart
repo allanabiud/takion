@@ -43,7 +43,7 @@ class ReleasesScreen extends ConsumerWidget {
                       value: currentIssuesAsync.when(
                         data: (issues) => issues.length.toString(),
                         loading: () => '--',
-                        error: (_, __) => '!',
+                        error: (_, _) => '!',
                       ),
                       label: 'This Week',
                       onTap: () {
@@ -62,7 +62,7 @@ class ReleasesScreen extends ConsumerWidget {
                             .length
                             .toString(),
                         loading: () => '--',
-                        error: (_, __) => '!',
+                        error: (_, _) => '!',
                       ),
                       label: 'New #1s',
                       onTap: () {

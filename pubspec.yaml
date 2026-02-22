@@ -27,6 +27,7 @@ dependencies:
   auto_route: ^11.1.0
   flash: ^3.1.1
   intl: ^0.20.2
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,9 @@ dev_dependencies:
 flutter:
 
   uses-material-design: true
+
+  assets:
+    - assets/images/
 
   fonts:
     - family: Rubik

@@ -21,7 +21,8 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
 
     // Explicitly set to loading while preserving previous data
     // This ensures .isRefreshing becomes true
-    state = AsyncValue<List<Issue>>.loading().copyWithPrevious(state);
+    // ignore: invalid_use_of_internal_member
+    state = AsyncLoading<List<Issue>>().copyWithPrevious(state);
 
     final newState = await AsyncValue.guard(() async {
       final repository = ref.read(metronRepositoryProvider);

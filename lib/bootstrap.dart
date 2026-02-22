@@ -25,7 +25,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   // Pre-open essential boxes in parallel to avoid blocking the main thread
   await Future.wait([
     hiveService.openBox('settings_box'),
-    hiveService.openBox('auth_box'),
+    hiveService.openBox<String>('auth_box'),
     hiveService.openBox<String>('search_history_box'),
     hiveService.openBox<List>('weekly_releases_box'),
     hiveService.openBox<List>('search_results_box'),
@@ -35,9 +35,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        hiveServiceProvider.overrideWithValue(hiveService),
-      ],
+      overrides: [hiveServiceProvider.overrideWithValue(hiveService)],
       child: await builder(),
     ),
   );

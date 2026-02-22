@@ -55,6 +55,16 @@ class _TakionAppState extends ConsumerState<TakionApp> {
           value: FlexColorScheme.themedSystemNavigationBar(
             context,
             systemNavBarStyle: FlexSystemNavBarStyle.transparent,
+          ).copyWith(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                Theme.of(context).brightness == Brightness.dark
+                    ? Brightness.light
+                    : Brightness.dark,
+            statusBarBrightness:
+                Theme.of(context).brightness == Brightness.dark
+                    ? Brightness.dark
+                    : Brightness.light,
           ),
           child: child!,
         );
