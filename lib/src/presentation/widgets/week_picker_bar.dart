@@ -26,12 +26,12 @@ class WeekPickerBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
+        // border: Border(
+        //   bottom: BorderSide(
+        //     color: Theme.of(context).colorScheme.outlineVariant,
+        //     width: 1,
+        //   ),
+        // ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

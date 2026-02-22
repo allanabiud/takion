@@ -1,6 +1,7 @@
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/models/collection_stats_dto.dart';
 import 'package:takion/src/data/models/issue_dto.dart';
+import 'package:takion/src/data/models/series_dto.dart';
 
 abstract class MetronLocalDataSource {
   Future<void> cacheWeeklyReleases(DateTime weekStart, List<IssueDto> issues);

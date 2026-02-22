@@ -37,13 +37,13 @@ class AuthService {
   }
 
   Future<void> saveCredentials(String username, String password) async {
-    final box = await _hiveService.openBox(_boxName);
+    final box = await _hiveService.openBox<String>(_boxName);
     await box.put(_usernameKey, username);
     await box.put(_passwordKey, password);
   }
 
   Future<Map<String, String>?> getCredentials() async {
-    final box = await _hiveService.openBox(_boxName);
+    final box = await _hiveService.openBox<String>(_boxName);
     final username = box.get(_usernameKey);
     final password = box.get(_passwordKey);
     if (username != null && password != null) {
@@ -53,7 +53,7 @@ class AuthService {
   }
 
   Future<void> clearCredentials() async {
-    final box = await _hiveService.openBox(_boxName);
+    final box = await _hiveService.openBox<String>(_boxName);
     await box.clear();
   }
 }

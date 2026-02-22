@@ -19,10 +19,12 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
-  Future<List<Issue>> getWeeklyReleasesForDate(DateTime date) async {
-    final cachedDtos = await _localDataSource.getWeeklyReleases(date);
-    if (cachedDtos != null && cachedDtos.isNotEmpty) {
-      return cachedDtos.map((e) => e.toEntity()).toList();
+  Future<List<Issue>> getWeeklyReleasesForDate(DateTime date, {bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      final cachedDtos = await _localDataSource.getWeeklyReleases(date);
+      if (cachedDtos != null && cachedDtos.isNotEmpty) {
+        return cachedDtos.map((e) => e.toEntity()).toList();
+      }
     }
 
     try {

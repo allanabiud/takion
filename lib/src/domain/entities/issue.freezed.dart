@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Issue {
 
- int get id; String get name; String get number; String? get seriesName; String? get publisherName; DateTime? get storeDate; DateTime? get coverDate; String? get image; String? get description; bool get isCollected; bool get isRead;
+ int get id; String get name; String get number; String? get seriesName; String? get publisherName; DateTime? get storeDate; String? get image; String? get description;
 /// Create a copy of Issue
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $IssueCopyWith<Issue> get copyWith => _$IssueCopyWithImpl<Issue>(this as Issue, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Issue&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.number, number) || other.number == number)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.publisherName, publisherName) || other.publisherName == publisherName)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.isCollected, isCollected) || other.isCollected == isCollected)&&(identical(other.isRead, isRead) || other.isRead == isRead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Issue&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.number, number) || other.number == number)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.publisherName, publisherName) || other.publisherName == publisherName)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,number,seriesName,publisherName,storeDate,coverDate,image,description,isCollected,isRead);
+int get hashCode => Object.hash(runtimeType,id,name,number,seriesName,publisherName,storeDate,image,description);
 
 @override
 String toString() {
-  return 'Issue(id: $id, name: $name, number: $number, seriesName: $seriesName, publisherName: $publisherName, storeDate: $storeDate, coverDate: $coverDate, image: $image, description: $description, isCollected: $isCollected, isRead: $isRead)';
+  return 'Issue(id: $id, name: $name, number: $number, seriesName: $seriesName, publisherName: $publisherName, storeDate: $storeDate, image: $image, description: $description)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $IssueCopyWith<$Res>  {
   factory $IssueCopyWith(Issue value, $Res Function(Issue) _then) = _$IssueCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, String number, String? seriesName, String? publisherName, DateTime? storeDate, DateTime? coverDate, String? image, String? description, bool isCollected, bool isRead
+ int id, String name, String number, String? seriesName, String? publisherName, DateTime? storeDate, String? image, String? description
 });
 
 
@@ -62,7 +62,7 @@ class _$IssueCopyWithImpl<$Res>
 
 /// Create a copy of Issue
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? number = null,Object? seriesName = freezed,Object? publisherName = freezed,Object? storeDate = freezed,Object? coverDate = freezed,Object? image = freezed,Object? description = freezed,Object? isCollected = null,Object? isRead = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? number = null,Object? seriesName = freezed,Object? publisherName = freezed,Object? storeDate = freezed,Object? image = freezed,Object? description = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -70,12 +70,9 @@ as String,number: null == number ? _self.number : number // ignore: cast_nullabl
 as String,seriesName: freezed == seriesName ? _self.seriesName : seriesName // ignore: cast_nullable_to_non_nullable
 as String?,publisherName: freezed == publisherName ? _self.publisherName : publisherName // ignore: cast_nullable_to_non_nullable
 as String?,storeDate: freezed == storeDate ? _self.storeDate : storeDate // ignore: cast_nullable_to_non_nullable
-as DateTime?,coverDate: freezed == coverDate ? _self.coverDate : coverDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,isCollected: null == isCollected ? _self.isCollected : isCollected // ignore: cast_nullable_to_non_nullable
-as bool,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
-as bool,
+as String?,
   ));
 }
 
@@ -160,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String number,  String? seriesName,  String? publisherName,  DateTime? storeDate,  DateTime? coverDate,  String? image,  String? description,  bool isCollected,  bool isRead)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String number,  String? seriesName,  String? publisherName,  DateTime? storeDate,  String? image,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Issue() when $default != null:
-return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publisherName,_that.storeDate,_that.coverDate,_that.image,_that.description,_that.isCollected,_that.isRead);case _:
+return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publisherName,_that.storeDate,_that.image,_that.description);case _:
   return orElse();
 
 }
@@ -181,10 +178,10 @@ return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publishe
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String number,  String? seriesName,  String? publisherName,  DateTime? storeDate,  DateTime? coverDate,  String? image,  String? description,  bool isCollected,  bool isRead)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String number,  String? seriesName,  String? publisherName,  DateTime? storeDate,  String? image,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _Issue():
-return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publisherName,_that.storeDate,_that.coverDate,_that.image,_that.description,_that.isCollected,_that.isRead);case _:
+return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publisherName,_that.storeDate,_that.image,_that.description);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +198,10 @@ return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publishe
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String number,  String? seriesName,  String? publisherName,  DateTime? storeDate,  DateTime? coverDate,  String? image,  String? description,  bool isCollected,  bool isRead)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String number,  String? seriesName,  String? publisherName,  DateTime? storeDate,  String? image,  String? description)?  $default,) {final _that = this;
 switch (_that) {
 case _Issue() when $default != null:
-return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publisherName,_that.storeDate,_that.coverDate,_that.image,_that.description,_that.isCollected,_that.isRead);case _:
+return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publisherName,_that.storeDate,_that.image,_that.description);case _:
   return null;
 
 }
@@ -216,7 +213,7 @@ return $default(_that.id,_that.name,_that.number,_that.seriesName,_that.publishe
 
 
 class _Issue implements Issue {
-  const _Issue({required this.id, required this.name, required this.number, required this.seriesName, required this.publisherName, required this.storeDate, required this.coverDate, required this.image, required this.description, this.isCollected = false, this.isRead = false});
+  const _Issue({required this.id, required this.name, required this.number, required this.seriesName, required this.publisherName, required this.storeDate, required this.image, required this.description});
   
 
 @override final  int id;
@@ -225,11 +222,8 @@ class _Issue implements Issue {
 @override final  String? seriesName;
 @override final  String? publisherName;
 @override final  DateTime? storeDate;
-@override final  DateTime? coverDate;
 @override final  String? image;
 @override final  String? description;
-@override@JsonKey() final  bool isCollected;
-@override@JsonKey() final  bool isRead;
 
 /// Create a copy of Issue
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +235,16 @@ _$IssueCopyWith<_Issue> get copyWith => __$IssueCopyWithImpl<_Issue>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Issue&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.number, number) || other.number == number)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.publisherName, publisherName) || other.publisherName == publisherName)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.isCollected, isCollected) || other.isCollected == isCollected)&&(identical(other.isRead, isRead) || other.isRead == isRead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Issue&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.number, number) || other.number == number)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.publisherName, publisherName) || other.publisherName == publisherName)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,number,seriesName,publisherName,storeDate,coverDate,image,description,isCollected,isRead);
+int get hashCode => Object.hash(runtimeType,id,name,number,seriesName,publisherName,storeDate,image,description);
 
 @override
 String toString() {
-  return 'Issue(id: $id, name: $name, number: $number, seriesName: $seriesName, publisherName: $publisherName, storeDate: $storeDate, coverDate: $coverDate, image: $image, description: $description, isCollected: $isCollected, isRead: $isRead)';
+  return 'Issue(id: $id, name: $name, number: $number, seriesName: $seriesName, publisherName: $publisherName, storeDate: $storeDate, image: $image, description: $description)';
 }
 
 
@@ -261,7 +255,7 @@ abstract mixin class _$IssueCopyWith<$Res> implements $IssueCopyWith<$Res> {
   factory _$IssueCopyWith(_Issue value, $Res Function(_Issue) _then) = __$IssueCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, String number, String? seriesName, String? publisherName, DateTime? storeDate, DateTime? coverDate, String? image, String? description, bool isCollected, bool isRead
+ int id, String name, String number, String? seriesName, String? publisherName, DateTime? storeDate, String? image, String? description
 });
 
 
@@ -278,7 +272,7 @@ class __$IssueCopyWithImpl<$Res>
 
 /// Create a copy of Issue
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? number = null,Object? seriesName = freezed,Object? publisherName = freezed,Object? storeDate = freezed,Object? coverDate = freezed,Object? image = freezed,Object? description = freezed,Object? isCollected = null,Object? isRead = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? number = null,Object? seriesName = freezed,Object? publisherName = freezed,Object? storeDate = freezed,Object? image = freezed,Object? description = freezed,}) {
   return _then(_Issue(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -286,12 +280,9 @@ as String,number: null == number ? _self.number : number // ignore: cast_nullabl
 as String,seriesName: freezed == seriesName ? _self.seriesName : seriesName // ignore: cast_nullable_to_non_nullable
 as String?,publisherName: freezed == publisherName ? _self.publisherName : publisherName // ignore: cast_nullable_to_non_nullable
 as String?,storeDate: freezed == storeDate ? _self.storeDate : storeDate // ignore: cast_nullable_to_non_nullable
-as DateTime?,coverDate: freezed == coverDate ? _self.coverDate : coverDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,isCollected: null == isCollected ? _self.isCollected : isCollected // ignore: cast_nullable_to_non_nullable
-as bool,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
-as bool,
+as String?,
   ));
 }
 

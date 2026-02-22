@@ -26,9 +26,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
 
   @override
   Future<List<IssueDto>> getWeeklyReleasesForDate(DateTime date) async {
-    // Week starts on Sunday.
-    // In Dart weekday is 1 (Mon) to 7 (Sun).
-    // If it's Sunday (7), subtract 0. If Monday (1), subtract 1.
     final offset = date.weekday % 7;
     final startOfWeek = DateTime(
       date.year,
@@ -37,7 +34,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     ).subtract(Duration(days: offset));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    String formatDate(DateTime d) =>
+    String formatDate(DateTime d) => 
         "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
     final response = await _dio.get(
@@ -80,7 +77,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
 
   @override
   Future<List<IssueDto>> getRecentlyModifiedIssues({int limit = 12}) async {
-    // Fetch issues modified in the last 24 hours
     final dayAgo = DateTime.now().subtract(const Duration(hours: 24));
     final response = await _dio.get('issue/', queryParameters: {
       'limit': limit,
@@ -103,8 +99,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters: {'is_read': false},
     );
     final List results = response.data['results'];
-    // The collection endpoint returns a list of collection items,
-    // where 'issue' is a nested object.
     return results.map((e) => IssueDto.fromJson(e['issue'])).toList();
   }
 }

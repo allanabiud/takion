@@ -1,6 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:expressive_refresh/expressive_refresh.dart';
-import 'package:flutter/material.dart' hide RefreshIndicatorTriggerMode;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue.dart';
 import 'package:takion/src/domain/entities/series.dart';
@@ -124,18 +123,20 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               ),
             ),
           Expanded(
-            child: ExpressiveRefreshIndicator(
-              displacement: 80,
-              triggerMode: RefreshIndicatorTriggerMode.anywhere,
-              color: Theme.of(context).colorScheme.primary,
+            child: RefreshIndicator(
               onRefresh: () async {
                 await ref.read(searchResultsProvider.notifier).refresh();
               },
-              child: filteredResults.isEmpty && !searchState.isLoading
+              child: searchState.isLoading
+                  ? const SizedBox.shrink()
+                  : filteredResults.isEmpty
                   ? const Center(
-                      child: Text(
-                        'No matching results found',
-                        style: TextStyle(color: Colors.grey),
+                      child: SingleChildScrollView(
+                        physics: AlwaysScrollableScrollPhysics(),
+                        child: Text(
+                          'No matching results found',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ),
                     )
                   : ListView.builder(

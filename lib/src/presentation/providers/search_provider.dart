@@ -27,8 +27,8 @@ class SearchHistory extends _$SearchHistory {
   List<String> build() {
     final hive = ref.read(hiveServiceProvider);
     try {
-      final box = hive.getBox<String>(_boxName);
-      return box.values.toList().reversed.toList();
+      final box = hive.getBoxIfOpen<String>(_boxName);
+      return box?.values.toList().reversed.toList() ?? [];
     } catch (_) {
       return [];
     }

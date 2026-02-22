@@ -32,31 +32,34 @@ class MainScreen extends ConsumerWidget {
         ],
       ),
       bottomNavigationBuilder: (_, tabsRouter) {
-        return NavigationBar(
-          selectedIndex: tabsRouter.activeIndex,
-          onDestinationSelected: tabsRouter.setActiveIndex,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.new_releases_outlined),
-              selectedIcon: Icon(Icons.new_releases),
-              label: 'Releases',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.collections_bookmark_outlined),
-              selectedIcon: Icon(Icons.collections_bookmark),
-              label: 'Library',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.explore_outlined),
-              selectedIcon: Icon(Icons.explore),
-              label: 'Discover',
-            ),
-          ],
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: NavigationBar(
+            selectedIndex: tabsRouter.activeIndex,
+            onDestinationSelected: tabsRouter.setActiveIndex,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.new_releases_outlined),
+                selectedIcon: Icon(Icons.new_releases),
+                label: 'Releases',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.collections_bookmark_outlined),
+                selectedIcon: Icon(Icons.collections_bookmark),
+                label: 'Library',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.explore_outlined),
+                selectedIcon: Icon(Icons.explore),
+                label: 'Discover',
+              ),
+            ],
+          ),
         );
       },
     );

@@ -26,7 +26,8 @@ class _TakionAppState extends ConsumerState<TakionApp> {
 
   @override
   Widget build(BuildContext context) {
-    final themeSettings = ref.watch(themeProvider);
+    final themeAsync = ref.watch(themeProvider);
+    ref.watch(authStateProvider);
 
     // Re-evaluate guards when auth state changes (e.g. on logout/login)
     ref.listen(authStateProvider, (previous, next) {
@@ -34,6 +35,13 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         _appRouter.reevaluateGuards();
       }
     });
+
+    final themeSettings =
+        themeAsync.value ??
+        const ThemeSettings(
+          themeMode: ThemeMode.system,
+          darkIsTrueBlack: false,
+        );
 
     return MaterialApp.router(
       title: 'Takion',

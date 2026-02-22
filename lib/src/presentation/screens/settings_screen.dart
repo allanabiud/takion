@@ -19,7 +19,14 @@ class SettingsScreen extends ConsumerWidget {
       builder: (context) {
         return Consumer(
           builder: (context, ref, _) {
-            final themeSettings = ref.watch(themeProvider);
+            final themeAsync = ref.watch(themeProvider);
+            final themeSettings =
+                themeAsync.value ??
+                const ThemeSettings(
+                  themeMode: ThemeMode.system,
+                  darkIsTrueBlack: false,
+                );
+
             return SettingsBottomSheet(
               title: 'Appearance',
               content: Column(

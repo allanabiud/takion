@@ -7,17 +7,28 @@ final hiveServiceProvider = Provider<HiveService>((ref) {
 });
 
 class HiveService {
+  bool _initialized = false;
+
   Future<void> init() async {
+    if (_initialized) return;
+
     await Hive.initFlutter();
     Hive.registerAdapters();
+    _initialized = true;
   }
 
   Future<Box<T>> openBox<T>(String boxName) async {
+    if (Hive.isBoxOpen(boxName)) {
+      return Hive.box<T>(boxName);
+    }
     return await Hive.openBox<T>(boxName);
   }
 
-  Box<T> getBox<T>(String boxName) {
-    return Hive.box<T>(boxName);
+  Box<T>? getBoxIfOpen<T>(String boxName) {
+    if (Hive.isBoxOpen(boxName)) {
+      return Hive.box<T>(boxName);
+    }
+    return null;
   }
 
   Future<void> clearLocalCache() async {

@@ -21,36 +21,34 @@ class ThemeNotifier extends _$ThemeNotifier {
   static const _blackKey = 'dark_is_true_black';
 
   @override
-  ThemeSettings build() {
+  FutureOr<ThemeSettings> build() async {
     final hive = ref.read(hiveServiceProvider);
-    try {
-      final box = hive.getBox(_boxName);
-      final index = box.get(_themeKey, defaultValue: ThemeMode.system.index);
-      final isTrueBlack = box.get(_blackKey, defaultValue: false);
+    final box = await hive.openBox(_boxName);
+    
+    final index = box.get(_themeKey, defaultValue: ThemeMode.system.index);
+    final isTrueBlack = box.get(_blackKey, defaultValue: false);
 
-      return ThemeSettings(
-        themeMode: ThemeMode.values[index],
-        darkIsTrueBlack: isTrueBlack,
-      );
-    } catch (_) {
-      return const ThemeSettings(
-        themeMode: ThemeMode.system,
-        darkIsTrueBlack: false,
-      );
-    }
+    return ThemeSettings(
+      themeMode: ThemeMode.values[index],
+      darkIsTrueBlack: isTrueBlack,
+    );
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_themeKey, mode.index);
-    state = state.copyWith(themeMode: mode);
+    
+    final currentSettings = state.value ?? const ThemeSettings(themeMode: ThemeMode.system, darkIsTrueBlack: false);
+    state = AsyncValue.data(currentSettings.copyWith(themeMode: mode));
   }
 
   Future<void> setDarkIsTrueBlack(bool value) async {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_blackKey, value);
-    state = state.copyWith(darkIsTrueBlack: value);
+    
+    final currentSettings = state.value ?? const ThemeSettings(themeMode: ThemeMode.system, darkIsTrueBlack: false);
+    state = AsyncValue.data(currentSettings.copyWith(darkIsTrueBlack: value));
   }
 }

@@ -13,7 +13,7 @@ part of 'theme_provider.dart';
 final themeProvider = ThemeNotifierProvider._();
 
 final class ThemeNotifierProvider
-    extends $NotifierProvider<ThemeNotifier, ThemeSettings> {
+    extends $AsyncNotifierProvider<ThemeNotifier, ThemeSettings> {
   ThemeNotifierProvider._()
     : super(
         from: null,
@@ -31,29 +31,21 @@ final class ThemeNotifierProvider
   @$internal
   @override
   ThemeNotifier create() => ThemeNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ThemeSettings value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ThemeSettings>(value),
-    );
-  }
 }
 
-String _$themeNotifierHash() => r'1758504738b79aba4dc5de112efc417cac52383a';
+String _$themeNotifierHash() => r'15958c5ea7e006306748ae73967409e714aac8f8';
 
-abstract class _$ThemeNotifier extends $Notifier<ThemeSettings> {
-  ThemeSettings build();
+abstract class _$ThemeNotifier extends $AsyncNotifier<ThemeSettings> {
+  FutureOr<ThemeSettings> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<ThemeSettings, ThemeSettings>;
+    final ref = this.ref as $Ref<AsyncValue<ThemeSettings>, ThemeSettings>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<ThemeSettings, ThemeSettings>,
-              ThemeSettings,
+              AnyNotifier<AsyncValue<ThemeSettings>, ThemeSettings>,
+              AsyncValue<ThemeSettings>,
               Object?,
               Object?
             >;

@@ -1,6 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:expressive_refresh/expressive_refresh.dart';
-import 'package:flutter/material.dart' hide RefreshIndicatorTriggerMode;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/collection_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
@@ -36,10 +35,7 @@ class LibraryScreen extends ConsumerWidget {
               ),
             )
           : null,
-      body: ExpressiveRefreshIndicator(
-        displacement: 80,
-        triggerMode: RefreshIndicatorTriggerMode.anywhere,
-        color: Theme.of(context).colorScheme.primary,
+      body: RefreshIndicator(
         onRefresh: () async {
           // ignore: unused_result
           await ref.refresh(collectionStatsProvider.future);
@@ -155,14 +151,11 @@ class LibraryScreen extends ConsumerWidget {
                     isFirst: true,
                     isLast: true,
                     onTap: () {
-                      // Navigate to details (disabled for now as screen is removed)
+                      // Navigate to details
                     },
                   );
                 },
-                loading: () => const SizedBox(
-                  height: 120,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                loading: () => const SizedBox.shrink(),
                 error: (err, _) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text('Could not load suggestion: $err'),

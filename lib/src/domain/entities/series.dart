@@ -9,10 +9,7 @@ abstract class Series with _$Series {
     required String name,
     required int? volume,
     required int? yearBegan,
-    required int? yearEnd,
-    required int? issueCount,
     required String? publisherName,
     required String? description,
-    required String? status,
   }) = _Series;
 }

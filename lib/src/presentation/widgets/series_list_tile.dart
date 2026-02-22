@@ -20,7 +20,11 @@ class SeriesListTile extends StatelessWidget {
     const double radius = 24.0;
 
     return Card(
-      margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
+      margin: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        bottom: isLast ? 12 : 2,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: isFirst ? const Radius.circular(radius) : Radius.zero,
@@ -59,14 +63,7 @@ class SeriesListTile extends StatelessWidget {
                 const Icon(Icons.calendar_today, size: 12),
                 const SizedBox(width: 4),
                 Text(
-                  '${series.yearBegan ?? 'Unknown'}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(width: 12),
-                const Icon(Icons.menu_book, size: 12),
-                const SizedBox(width: 4),
-                Text(
-                  '${series.issueCount ?? 0} issues',
+                  'Began in ${series.yearBegan ?? 'Unknown'}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

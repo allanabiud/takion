@@ -52,7 +52,7 @@ final class WeeklyReleasesNotifierProvider
 }
 
 String _$weeklyReleasesNotifierHash() =>
-    r'022d4ce565ad35ac2796b42d9312cdbcfc101b5b';
+    r'93257bec84c343340bcbbbb6691bd8ccff430dd9';
 
 final class WeeklyReleasesNotifierFamily extends $Family
     with

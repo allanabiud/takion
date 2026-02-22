@@ -10,7 +10,10 @@ class AuthGuard extends AutoRouteGuard {
 
   @override
   void onNavigation(NavigationResolver resolver, StackRouter router) async {
-    final status = await ref.read(authStateProvider.future);
+    // Try to get current value first to avoid unnecessary waiting if already resolved
+    final currentStatus = ref.read(authStateProvider).value;
+    
+    final status = currentStatus ?? await ref.read(authStateProvider.future);
     
     if (status == AuthStatus.authenticated) {
       resolver.next(true);
