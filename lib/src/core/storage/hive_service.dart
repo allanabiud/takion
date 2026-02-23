@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/hive_registrar.g.dart';
@@ -8,6 +10,11 @@ final hiveServiceProvider = Provider<HiveService>((ref) {
 
 class HiveService {
   bool _initialized = false;
+  static const Set<String> _recoverableCacheBoxes = {
+    'weekly_releases_box',
+    'cache_meta_box',
+    'issue_details_box',
+  };
 
   Future<void> init() async {
     if (_initialized) return;
@@ -21,7 +28,25 @@ class HiveService {
     if (Hive.isBoxOpen(boxName)) {
       return Hive.box<T>(boxName);
     }
-    return await Hive.openBox<T>(boxName);
+
+    try {
+      return await Hive.openBox<T>(boxName);
+    } on TypeError {
+      if (!_recoverableCacheBoxes.contains(boxName)) rethrow;
+      await _deleteCorruptedBoxFromDisk(boxName);
+      return await Hive.openBox<T>(boxName);
+    }
+  }
+
+  Future<void> _deleteCorruptedBoxFromDisk(String boxName) async {
+    try {
+      await Hive.deleteBoxFromDisk(boxName);
+      return;
+    } on PathNotFoundException {
+      // Another process or isolate may remove a file between exists() and delete().
+      // Missing files are safe to ignore during recovery.
+      return;
+    }
   }
 
   Box<T>? getBoxIfOpen<T>(String boxName) {
@@ -32,14 +57,7 @@ class HiveService {
   }
 
   Future<void> clearLocalCache() async {
-    // List only data-related boxes to clear
-    final boxes = [
-      'search_history_box',
-      'weekly_releases_box',
-      'search_results_box',
-      'issue_details_box',
-      'collection_stats_box',
-    ];
+    final boxes = _recoverableCacheBoxes;
 
     for (final boxName in boxes) {
       if (Hive.isBoxOpen(boxName)) {

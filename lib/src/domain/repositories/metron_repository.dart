@@ -1,15 +1,14 @@
-import 'package:takion/src/domain/entities/collection_stats.dart';
-import 'package:takion/src/domain/entities/issue.dart';
-import 'package:takion/src/domain/entities/series.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/entities/issue_details.dart';
 
 abstract class MetronRepository {
-  Future<List<Issue>> getWeeklyReleases();
-  Future<List<Issue>> getWeeklyReleasesForDate(DateTime date, {bool forceRefresh = false});
-  Future<List<Issue>> searchIssues(String query, {bool forceRefresh = false});
-  Future<List<Series>> searchSeries(String query, {bool forceRefresh = false});
-  // Add others later: Character, Creator, Arc
-  Future<Issue> getIssueDetails(int id);
-  Future<List<Issue>> getRecentlyModifiedIssues({int limit = 12});
-  Future<CollectionStats> getCollectionStats();
-  Future<List<Issue>> getUnreadIssues();
+  Future<List<IssueList>> getWeeklyReleasesForDate(
+    DateTime date, {
+    bool forceRefresh = false,
+  });
+
+  Future<IssueDetails> getIssueDetails(
+    int issueId, {
+    bool forceRefresh = false,
+  });
 }

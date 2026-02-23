@@ -3,22 +3,39 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
-import 'package:takion/src/data/models/collection_stats_dto.dart';
-import 'package:takion/src/data/models/issue_dto.dart';
+import 'package:takion/src/data/models/issue_details_dto.dart';
+import 'package:takion/src/data/models/issue_list_dto.dart';
+import 'package:takion/src/data/models/issue_list_series_dto.dart';
 import 'package:takion/src/data/models/series_dto.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
-    registerAdapter(CollectionStatsDtoAdapter());
-    registerAdapter(IssueDtoAdapter());
+    registerAdapter(IssueDetailsCreditDtoAdapter());
+    registerAdapter(IssueDetailsCreditRoleDtoAdapter());
+    registerAdapter(IssueDetailsDtoAdapter());
+    registerAdapter(IssueDetailsNamedRefDtoAdapter());
+    registerAdapter(IssueDetailsParticipationDtoAdapter());
+    registerAdapter(IssueDetailsReprintDtoAdapter());
+    registerAdapter(IssueDetailsSeriesDtoAdapter());
+    registerAdapter(IssueDetailsVariantDtoAdapter());
+    registerAdapter(IssueListDtoAdapter());
+    registerAdapter(IssueListSeriesDtoAdapter());
     registerAdapter(SeriesDtoAdapter());
   }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
-    registerAdapter(CollectionStatsDtoAdapter());
-    registerAdapter(IssueDtoAdapter());
+    registerAdapter(IssueDetailsCreditDtoAdapter());
+    registerAdapter(IssueDetailsCreditRoleDtoAdapter());
+    registerAdapter(IssueDetailsDtoAdapter());
+    registerAdapter(IssueDetailsNamedRefDtoAdapter());
+    registerAdapter(IssueDetailsParticipationDtoAdapter());
+    registerAdapter(IssueDetailsReprintDtoAdapter());
+    registerAdapter(IssueDetailsSeriesDtoAdapter());
+    registerAdapter(IssueDetailsVariantDtoAdapter());
+    registerAdapter(IssueListDtoAdapter());
+    registerAdapter(IssueListSeriesDtoAdapter());
     registerAdapter(SeriesDtoAdapter());
   }
 }

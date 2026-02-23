@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/data/models/issue_dto.dart';
+import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/series_dto.dart';
 
 /// Bootstraps the application by initializing core services and state management.
@@ -26,10 +26,9 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   await Future.wait([
     hiveService.openBox('settings_box'),
     hiveService.openBox<String>('auth_box'),
-    hiveService.openBox<String>('search_history_box'),
     hiveService.openBox<List>('weekly_releases_box'),
-    hiveService.openBox<List>('search_results_box'),
-    hiveService.openBox<IssueDto>('issue_details_box'),
+    hiveService.openBox<int>('cache_meta_box'),
+    hiveService.openBox<IssueDetailsDto>('issue_details_box'),
     hiveService.openBox<SeriesDto>('series_details_box'),
   ]);
 

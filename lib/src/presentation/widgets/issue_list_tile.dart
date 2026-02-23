@@ -1,10 +1,12 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:takion/src/domain/entities/issue.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/domain/entities/issue_list.dart'; // Updated import
 
 class IssueListTile extends StatelessWidget {
-  final Issue issue;
+  final IssueList issue; // Updated to IssueList
   final VoidCallback? onTap;
   final bool isFirst;
   final bool isLast;
@@ -20,8 +22,21 @@ class IssueListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double radius = 24.0;
-    const double imageHeight = 120;
-    const double imageWidth = 80;
+    const double imageHeight = 110;
+    const double imageWidth = 75;
+    final heroTag = issue.id != null ? 'issue-cover-${issue.id}' : null;
+    final effectiveOnTap =
+        onTap ??
+        (issue.id == null
+            ? null
+            : () {
+                context.pushRoute(
+                  IssueDetailsRoute(
+                    issueId: issue.id!,
+                    initialImageUrl: issue.image,
+                  ),
+                );
+              });
 
     return Card(
       margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
@@ -33,52 +48,101 @@ class IssueListTile extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onTap,
+        onTap: effectiveOnTap,
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: issue.image != null
-                    ? CachedNetworkImage(
-                        imageUrl: issue.image!,
-                        width: imageWidth,
-                        height: imageHeight,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
+              if (heroTag != null)
+                Hero(
+                  tag: heroTag,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: issue.image != null
+                        ? CachedNetworkImage(
+                            imageUrl: issue.image!,
+                            width: imageWidth,
+                            height: imageHeight,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              width: imageWidth,
+                              height: imageHeight,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: imageWidth,
+                              height: imageHeight,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              child: const Icon(Icons.broken_image, size: 40),
+                            ),
+                          )
+                        : Container(
+                            width: imageWidth,
+                            height: imageHeight,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            child: const Icon(Icons.image, size: 40),
+                          ),
+                  ),
+                )
+              else
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: issue.image != null
+                      ? CachedNetworkImage(
+                          imageUrl: issue.image!,
                           width: imageWidth,
                           height: imageHeight,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          child: const Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: imageWidth,
+                            height: imageHeight,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            child: const Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
+                          errorWidget: (context, url, error) => Container(
+                            width: imageWidth,
+                            height: imageHeight,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            child: const Icon(Icons.broken_image, size: 40),
+                          ),
+                        )
+                      : Container(
                           width: imageWidth,
                           height: imageHeight,
                           color: Theme.of(
                             context,
                           ).colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.broken_image, size: 40),
+                          child: const Icon(Icons.image, size: 40),
                         ),
-                      )
-                    : Container(
-                        width: imageWidth,
-                        height: imageHeight,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.image, size: 40),
-                      ),
-              ),
+                ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -90,7 +154,7 @@ class IssueListTile extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (issue.storeDate != null)

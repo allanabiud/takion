@@ -191,7 +191,9 @@ class SettingsScreen extends ConsumerWidget {
                               ),
                             );
                             if (confirm == true) {
-                              ref.read(settingsProvider.notifier).clearCache();
+                              await ref
+                                  .read(settingsProvider.notifier)
+                                  .clearCache();
                             }
                           },
                   ),

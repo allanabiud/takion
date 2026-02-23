@@ -20,6 +20,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  static const _logoHeroTag = 'takion-app-logo';
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -77,21 +78,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 48.0,
-            ),
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 48),
             child: AutofillGroup(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/takion_logo.svg',
-                    height: 60,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).colorScheme.primary,
-                      BlendMode.srcIn,
+                  Hero(
+                    tag: _logoHeroTag,
+                    child: SvgPicture.asset(
+                      'assets/images/takion_logo.svg',
+                      height: 60,
+                      colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

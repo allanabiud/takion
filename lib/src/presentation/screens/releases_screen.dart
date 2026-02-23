@@ -24,66 +24,55 @@ class ReleasesScreen extends ConsumerWidget {
               ),
             )
           : null,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // ignore: unused_result
-          await ref.refresh(currentWeeklyReleasesProvider.future);
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    ActionCard(
-                      icon: Icons.new_releases_outlined,
-                      value: currentIssuesAsync.when(
-                        data: (issues) => issues.length.toString(),
-                        loading: () => '--',
-                        error: (_, _) => '!',
-                      ),
-                      label: 'This Week',
-                      onTap: () {
-                        ref
-                            .read(selectedWeekProvider.notifier)
-                            .setDate(DateTime.now());
-                        context.pushRoute(const WeeklyReleasesRoute());
-                      },
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  ActionCard(
+                    icon: Icons.new_releases_outlined,
+                    value: currentIssuesAsync.when(
+                      data: (issues) => issues.length.toString(),
+                      loading: () => '--',
+                      error: (_, _) => '!',
                     ),
-                    const SizedBox(width: 8),
-                    ActionCard(
-                      icon: Icons.star_outline,
-                      value: currentIssuesAsync.when(
-                        data: (issues) => issues
-                            .where((i) => i.number == '1')
-                            .length
-                            .toString(),
-                        loading: () => '--',
-                        error: (_, _) => '!',
-                      ),
-                      label: 'New #1s',
-                      onTap: () {
-                        ref
-                            .read(selectedWeekProvider.notifier)
-                            .setDate(DateTime.now());
-                        context.pushRoute(const NewFirstIssuesRoute());
-                      },
+                    label: 'This Week',
+                    onTap: () {
+                      ref.read(selectedWeekProvider.notifier).setDate(DateTime.now());
+                      context.pushRoute(const WeeklyReleasesRoute());
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ActionCard(
+                    icon: Icons.star_outline,
+                    value: currentIssuesAsync.when(
+                      data: (issues) => issues
+                          .where((i) => i.number == '1')
+                          .length
+                          .toString(),
+                      loading: () => '--',
+                      error: (_, _) => '!',
                     ),
-                    const SizedBox(width: 8),
-                    ActionCard(
-                      icon: Icons.history_outlined,
-                      value: '--',
-                      label: 'Last Week',
-                      onTap: () {},
-                    ),
-                  ],
-                ),
+                    label: 'New #1s',
+                    onTap: () {
+                      ref.read(selectedWeekProvider.notifier).setDate(DateTime.now());
+                      context.pushRoute(const NewFirstIssuesRoute());
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ActionCard(
+                    icon: Icons.history_outlined,
+                    value: '--',
+                    label: 'Last Week',
+                    onTap: () {},
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

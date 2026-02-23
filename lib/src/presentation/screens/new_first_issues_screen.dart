@@ -17,7 +17,7 @@ class NewFirstIssuesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('New #1 Issues'),
-        bottom: issuesAsync.isLoading || issuesAsync.isRefreshing
+        bottom: issuesAsync.isLoading
             ? const PreferredSize(
                 preferredSize: Size.fromHeight(4),
                 child: LinearProgressIndicator(),
@@ -28,63 +28,47 @@ class NewFirstIssuesScreen extends ConsumerWidget {
         children: [
           const WeekPickerBar(),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await ref
-                    .read(weeklyReleasesProvider(selectedDate).notifier)
-                    .refresh();
-              },
-              child: issuesAsync.when(
-                data: (issues) {
-                  final firstIssues =
-                      issues.where((i) => i.number == '1').toList();
+            child: issuesAsync.when(
+              data: (issues) {
+                final firstIssues = issues.where((i) => i.number == '1').toList();
 
-                  if (firstIssues.isEmpty) {
-                    return const Center(
-                      child: SingleChildScrollView(
-                        physics: AlwaysScrollableScrollPhysics(),
-                        child: Text('No new #1s this week'),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: firstIssues.length,
-                    itemBuilder: (context, index) {
-                      final issue = firstIssues[index];
-                      final isFirst = index == 0;
-                      final isLast = index == firstIssues.length - 1;
-
-                      return IssueListTile(
-                        issue: issue,
-                        isFirst: isFirst,
-                        isLast: isLast,
-                        onTap: () {},
-                      );
-                    },
+                if (firstIssues.isEmpty) {
+                  return const Center(
+                    child: Text('No new #1s this week'),
                   );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (err, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Colors.red,
-                          ),
-                          const SizedBox(height: 16),
-                          Text('Error: $err', textAlign: TextAlign.center),
-                        ],
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemCount: firstIssues.length,
+                  itemBuilder: (context, index) {
+                    final issue = firstIssues[index];
+                    final isFirst = index == 0;
+                    final isLast = index == firstIssues.length - 1;
+
+                    return IssueListTile(
+                      issue: issue,
+                      isFirst: isFirst,
+                      isLast: isLast,
+                    );
+                  },
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (err, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text('Error: $err', textAlign: TextAlign.center),
+                    ],
                   ),
                 ),
               ),

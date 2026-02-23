@@ -17,7 +17,7 @@ class WeeklyReleasesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weekly Releases'),
-        bottom: issuesAsync.isLoading || issuesAsync.isRefreshing
+        bottom: issuesAsync.isLoading
             ? const PreferredSize(
                 preferredSize: Size.fromHeight(4),
                 child: LinearProgressIndicator(),
@@ -28,49 +28,37 @@ class WeeklyReleasesScreen extends ConsumerWidget {
         children: [
           const WeekPickerBar(),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await ref
-                    .read(weeklyReleasesProvider(selectedDate).notifier)
-                    .refresh();
-              },
-              child: issuesAsync.when(
-                data: (issues) => ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: issues.length,
-                  itemBuilder: (context, index) {
-                    final issue = issues[index];
-                    final isFirst = index == 0;
-                    final isLast = index == issues.length - 1;
+            child: issuesAsync.when(
+              data: (issues) => ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: issues.length,
+                itemBuilder: (context, index) {
+                  final issue = issues[index];
+                  final isFirst = index == 0;
+                  final isLast = index == issues.length - 1;
 
-                    return IssueListTile(
-                      issue: issue,
-                      isFirst: isFirst,
-                      isLast: isLast,
-                      onTap: () {},
-                    );
-                  },
-                ),
-                loading: () => const SizedBox.shrink(),
-                error: (err, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Colors.red,
-                          ),
-                          const SizedBox(height: 16),
-                          Text('Error: $err', textAlign: TextAlign.center),
-                        ],
+                  return IssueListTile(
+                    issue: issue,
+                    isFirst: isFirst,
+                    isLast: isLast,
+                  );
+                },
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (err, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text('Error: $err', textAlign: TextAlign.center),
+                    ],
                   ),
                 ),
               ),

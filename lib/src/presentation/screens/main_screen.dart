@@ -33,7 +33,7 @@ class MainScreen extends ConsumerWidget {
       ),
       bottomNavigationBuilder: (_, tabsRouter) {
         return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
           child: NavigationBar(
             selectedIndex: tabsRouter.activeIndex,
             onDestinationSelected: tabsRouter.setActiveIndex,

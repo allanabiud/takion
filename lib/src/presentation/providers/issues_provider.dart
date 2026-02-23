@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/domain/entities/issue.dart';
+import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 part 'issues_provider.g.dart';
@@ -7,22 +8,18 @@ part 'issues_provider.g.dart';
 @riverpod
 class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
   @override
-  Future<List<Issue>> build([DateTime? date]) async {
+  Future<List<IssueList>> build([DateTime? date]) async {
     final targetDate = date ?? DateTime.now();
     final repository = ref.watch(metronRepositoryProvider);
 
-    // Note: MetronRemoteDataSourceImpl needs to be updated to accept a date
-    // for getWeeklyReleases. For now, we'll keep using the provider with parameters.
     return repository.getWeeklyReleasesForDate(targetDate);
   }
 
   Future<void> refresh() async {
     final targetDate = date ?? DateTime.now();
 
-    // Explicitly set to loading while preserving previous data
-    // This ensures .isRefreshing becomes true
     // ignore: invalid_use_of_internal_member
-    state = AsyncLoading<List<Issue>>().copyWithPrevious(state);
+    state = AsyncLoading<List<IssueList>>().copyWithPrevious(state);
 
     final newState = await AsyncValue.guard(() async {
       final repository = ref.read(metronRepositoryProvider);
@@ -36,15 +33,29 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
 }
 
 @riverpod
-Future<List<Issue>> currentWeeklyReleases(Ref ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
-  return repository.getWeeklyReleases();
+class IssueDetailsNotifier extends _$IssueDetailsNotifier {
+  @override
+  Future<IssueDetails> build(int issueId) async {
+    final repository = ref.watch(metronRepositoryProvider);
+    return repository.getIssueDetails(issueId);
+  }
+
+  Future<void> refresh() async {
+    // ignore: invalid_use_of_internal_member
+    state = AsyncLoading<IssueDetails>().copyWithPrevious(state);
+
+    final newState = await AsyncValue.guard(() async {
+      final repository = ref.read(metronRepositoryProvider);
+      return repository.getIssueDetails(issueId, forceRefresh: true);
+    });
+    state = newState;
+  }
 }
 
 @riverpod
-Future<List<Issue>> recentlyAddedIssues(Ref ref) async {
+Future<List<IssueList>> currentWeeklyReleases(Ref ref) async {
   final repository = ref.watch(metronRepositoryProvider);
-  return repository.getRecentlyModifiedIssues(limit: 12);
+  return repository.getWeeklyReleasesForDate(DateTime.now());
 }
 
 @riverpod

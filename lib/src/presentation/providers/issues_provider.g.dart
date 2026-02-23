@@ -13,7 +13,7 @@ part of 'issues_provider.dart';
 final weeklyReleasesProvider = WeeklyReleasesNotifierFamily._();
 
 final class WeeklyReleasesNotifierProvider
-    extends $AsyncNotifierProvider<WeeklyReleasesNotifier, List<Issue>> {
+    extends $AsyncNotifierProvider<WeeklyReleasesNotifier, List<IssueList>> {
   WeeklyReleasesNotifierProvider._({
     required WeeklyReleasesNotifierFamily super.from,
     required DateTime? super.argument,
@@ -52,15 +52,15 @@ final class WeeklyReleasesNotifierProvider
 }
 
 String _$weeklyReleasesNotifierHash() =>
-    r'93257bec84c343340bcbbbb6691bd8ccff430dd9';
+    r'a87c8ba104012dfcec35dfd2199844b1e4e9fbf3';
 
 final class WeeklyReleasesNotifierFamily extends $Family
     with
         $ClassFamilyOverride<
           WeeklyReleasesNotifier,
-          AsyncValue<List<Issue>>,
-          List<Issue>,
-          FutureOr<List<Issue>>,
+          AsyncValue<List<IssueList>>,
+          List<IssueList>,
+          FutureOr<List<IssueList>>,
           DateTime?
         > {
   WeeklyReleasesNotifierFamily._()
@@ -79,20 +79,111 @@ final class WeeklyReleasesNotifierFamily extends $Family
   String toString() => r'weeklyReleasesProvider';
 }
 
-abstract class _$WeeklyReleasesNotifier extends $AsyncNotifier<List<Issue>> {
+abstract class _$WeeklyReleasesNotifier
+    extends $AsyncNotifier<List<IssueList>> {
   late final _$args = ref.$arg as DateTime?;
   DateTime? get date => _$args;
 
-  FutureOr<List<Issue>> build([DateTime? date]);
+  FutureOr<List<IssueList>> build([DateTime? date]);
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Issue>>, List<Issue>>;
+    final ref = this.ref as $Ref<AsyncValue<List<IssueList>>, List<IssueList>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Issue>>, List<Issue>>,
-              AsyncValue<List<Issue>>,
+              AnyNotifier<AsyncValue<List<IssueList>>, List<IssueList>>,
+              AsyncValue<List<IssueList>>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, () => build(_$args));
+  }
+}
+
+@ProviderFor(IssueDetailsNotifier)
+final issueDetailsProvider = IssueDetailsNotifierFamily._();
+
+final class IssueDetailsNotifierProvider
+    extends $AsyncNotifierProvider<IssueDetailsNotifier, IssueDetails> {
+  IssueDetailsNotifierProvider._({
+    required IssueDetailsNotifierFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'issueDetailsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$issueDetailsNotifierHash();
+
+  @override
+  String toString() {
+    return r'issueDetailsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  IssueDetailsNotifier create() => IssueDetailsNotifier();
+
+  @override
+  bool operator ==(Object other) {
+    return other is IssueDetailsNotifierProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$issueDetailsNotifierHash() =>
+    r'fd9a9215c0e1008c0d6cbf6e03f5159fd575dd6d';
+
+final class IssueDetailsNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          IssueDetailsNotifier,
+          AsyncValue<IssueDetails>,
+          IssueDetails,
+          FutureOr<IssueDetails>,
+          int
+        > {
+  IssueDetailsNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'issueDetailsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  IssueDetailsNotifierProvider call(int issueId) =>
+      IssueDetailsNotifierProvider._(argument: issueId, from: this);
+
+  @override
+  String toString() => r'issueDetailsProvider';
+}
+
+abstract class _$IssueDetailsNotifier extends $AsyncNotifier<IssueDetails> {
+  late final _$args = ref.$arg as int;
+  int get issueId => _$args;
+
+  FutureOr<IssueDetails> build(int issueId);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<IssueDetails>, IssueDetails>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<IssueDetails>, IssueDetails>,
+              AsyncValue<IssueDetails>,
               Object?,
               Object?
             >;
@@ -106,11 +197,11 @@ final currentWeeklyReleasesProvider = CurrentWeeklyReleasesProvider._();
 final class CurrentWeeklyReleasesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Issue>>,
-          List<Issue>,
-          FutureOr<List<Issue>>
+          AsyncValue<List<IssueList>>,
+          List<IssueList>,
+          FutureOr<List<IssueList>>
         >
-    with $FutureModifier<List<Issue>>, $FutureProvider<List<Issue>> {
+    with $FutureModifier<List<IssueList>>, $FutureProvider<List<IssueList>> {
   CurrentWeeklyReleasesProvider._()
     : super(
         from: null,
@@ -127,58 +218,18 @@ final class CurrentWeeklyReleasesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Issue>> $createElement(
+  $FutureProviderElement<List<IssueList>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Issue>> create(Ref ref) {
+  FutureOr<List<IssueList>> create(Ref ref) {
     return currentWeeklyReleases(ref);
   }
 }
 
 String _$currentWeeklyReleasesHash() =>
-    r'ec3c70a6d3aba2d812fa2262fab351e39b07d2bd';
-
-@ProviderFor(recentlyAddedIssues)
-final recentlyAddedIssuesProvider = RecentlyAddedIssuesProvider._();
-
-final class RecentlyAddedIssuesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Issue>>,
-          List<Issue>,
-          FutureOr<List<Issue>>
-        >
-    with $FutureModifier<List<Issue>>, $FutureProvider<List<Issue>> {
-  RecentlyAddedIssuesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'recentlyAddedIssuesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$recentlyAddedIssuesHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<Issue>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<Issue>> create(Ref ref) {
-    return recentlyAddedIssues(ref);
-  }
-}
-
-String _$recentlyAddedIssuesHash() =>
-    r'869316964756ccbcfceb7d425e94f56f67144bfd';
+    r'5694ba0e3d951bf3bdbacaa4f75f158555b993ee';
 
 @ProviderFor(SelectedWeek)
 final selectedWeekProvider = SelectedWeekProvider._();

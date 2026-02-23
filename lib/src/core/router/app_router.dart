@@ -10,11 +10,11 @@ class AppRouter extends RootStackRouter {
 
   @override
   List<AutoRoute> get routes => [
+        AutoRoute(page: OnboardingRoute.page, path: '/', initial: true),
         AutoRoute(page: LoginRoute.page, path: '/login'),
         AutoRoute(
           page: MainRoute.page,
-          path: '/',
-          initial: true,
+          path: '/app',
           guards: [authGuard],
           children: [
             AutoRoute(page: HomeRoute.page, path: 'home'),
@@ -24,16 +24,6 @@ class AppRouter extends RootStackRouter {
           ],
         ),
         AutoRoute(
-          page: SearchRoute.page,
-          path: '/search',
-          guards: [authGuard],
-        ),
-        AutoRoute(
-          page: SearchResultsRoute.page,
-          path: '/search-results',
-          guards: [authGuard],
-        ),
-        AutoRoute(
           page: WeeklyReleasesRoute.page,
           path: '/weekly-releases',
           guards: [authGuard],
@@ -41,6 +31,16 @@ class AppRouter extends RootStackRouter {
         AutoRoute(
           page: NewFirstIssuesRoute.page,
           path: '/new-first-issues',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: IssueDetailsRoute.page,
+          path: '/issue/:issueId',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: IssueCoverGalleryRoute.page,
+          path: '/issue-cover-gallery',
           guards: [authGuard],
         ),
         AutoRoute(

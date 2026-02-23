@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Series {
 
- int get id; String get name; int? get volume; int? get yearBegan; String? get publisherName; String? get description;
+ int? get id; String get name; int? get volume; int? get yearBegan; String? get publisherName; String? get description;
 /// Create a copy of Series
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $SeriesCopyWith<$Res>  {
   factory $SeriesCopyWith(Series value, $Res Function(Series) _then) = _$SeriesCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, int? volume, int? yearBegan, String? publisherName, String? description
+ int? id, String name, int? volume, int? yearBegan, String? publisherName, String? description
 });
 
 
@@ -62,10 +62,10 @@ class _$SeriesCopyWithImpl<$Res>
 
 /// Create a copy of Series
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? volume = freezed,Object? yearBegan = freezed,Object? publisherName = freezed,Object? description = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? name = null,Object? volume = freezed,Object? yearBegan = freezed,Object? publisherName = freezed,Object? description = freezed,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,volume: freezed == volume ? _self.volume : volume // ignore: cast_nullable_to_non_nullable
 as int?,yearBegan: freezed == yearBegan ? _self.yearBegan : yearBegan // ignore: cast_nullable_to_non_nullable
 as int?,publisherName: freezed == publisherName ? _self.publisherName : publisherName // ignore: cast_nullable_to_non_nullable
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  int? volume,  int? yearBegan,  String? publisherName,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String name,  int? volume,  int? yearBegan,  String? publisherName,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Series() when $default != null:
 return $default(_that.id,_that.name,_that.volume,_that.yearBegan,_that.publisherName,_that.description);case _:
@@ -176,7 +176,7 @@ return $default(_that.id,_that.name,_that.volume,_that.yearBegan,_that.publisher
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  int? volume,  int? yearBegan,  String? publisherName,  String? description)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String name,  int? volume,  int? yearBegan,  String? publisherName,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _Series():
 return $default(_that.id,_that.name,_that.volume,_that.yearBegan,_that.publisherName,_that.description);case _:
@@ -196,7 +196,7 @@ return $default(_that.id,_that.name,_that.volume,_that.yearBegan,_that.publisher
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  int? volume,  int? yearBegan,  String? publisherName,  String? description)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String name,  int? volume,  int? yearBegan,  String? publisherName,  String? description)?  $default,) {final _that = this;
 switch (_that) {
 case _Series() when $default != null:
 return $default(_that.id,_that.name,_that.volume,_that.yearBegan,_that.publisherName,_that.description);case _:
@@ -211,10 +211,10 @@ return $default(_that.id,_that.name,_that.volume,_that.yearBegan,_that.publisher
 
 
 class _Series implements Series {
-  const _Series({required this.id, required this.name, required this.volume, required this.yearBegan, required this.publisherName, required this.description});
+  const _Series({this.id, required this.name, required this.volume, required this.yearBegan, this.publisherName, this.description});
   
 
-@override final  int id;
+@override final  int? id;
 @override final  String name;
 @override final  int? volume;
 @override final  int? yearBegan;
@@ -251,7 +251,7 @@ abstract mixin class _$SeriesCopyWith<$Res> implements $SeriesCopyWith<$Res> {
   factory _$SeriesCopyWith(_Series value, $Res Function(_Series) _then) = __$SeriesCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, int? volume, int? yearBegan, String? publisherName, String? description
+ int? id, String name, int? volume, int? yearBegan, String? publisherName, String? description
 });
 
 
@@ -268,10 +268,10 @@ class __$SeriesCopyWithImpl<$Res>
 
 /// Create a copy of Series
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? volume = freezed,Object? yearBegan = freezed,Object? publisherName = freezed,Object? description = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? name = null,Object? volume = freezed,Object? yearBegan = freezed,Object? publisherName = freezed,Object? description = freezed,}) {
   return _then(_Series(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,volume: freezed == volume ? _self.volume : volume // ignore: cast_nullable_to_non_nullable
 as int?,yearBegan: freezed == yearBegan ? _self.yearBegan : yearBegan // ignore: cast_nullable_to_non_nullable
 as int?,publisherName: freezed == publisherName ? _self.publisherName : publisherName // ignore: cast_nullable_to_non_nullable

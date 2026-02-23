@@ -5,11 +5,11 @@ part 'series.freezed.dart';
 @freezed
 abstract class Series with _$Series {
   const factory Series({
-    required int id,
+    int? id,
     required String name,
     required int? volume,
     required int? yearBegan,
-    required String? publisherName,
-    required String? description,
+    String? publisherName,
+    String? description,
   }) = _Series;
 }

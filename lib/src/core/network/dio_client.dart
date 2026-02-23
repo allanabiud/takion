@@ -13,8 +13,6 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
-  
   // Rate limiter should be early in the chain
   dio.interceptors.add(RateLimitInterceptor());
 
