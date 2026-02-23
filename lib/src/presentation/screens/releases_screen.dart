@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
+import 'package:takion/src/presentation/widgets/compact_list_tile.dart';
+import 'package:takion/src/presentation/widgets/media_card.dart';
 
 @RoutePage()
 class ReleasesScreen extends ConsumerWidget {
@@ -27,6 +29,7 @@ class ReleasesScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -71,6 +74,100 @@ class ReleasesScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'This Week Preview',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            currentIssuesAsync.when(
+              data: (issues) {
+                if (issues.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('No releases found for this week.'),
+                  );
+                }
+
+                final previewIssues = issues.take(10).toList();
+
+                return SizedBox(
+                  height: 232,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: previewIssues.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final issue = previewIssues[index];
+                      final issueId = issue.id;
+
+                      return MediaCard(
+                        imageUrl: issue.image,
+                        title: issue.name,
+                        onTap: issueId == null
+                            ? null
+                            : () {
+                                context.pushRoute(
+                                  IssueDetailsRoute(
+                                    issueId: issueId,
+                                    initialImageUrl: issue.image,
+                                  ),
+                                );
+                              },
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: SizedBox(
+                  height: 232,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+              error: (_, _) => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text('Could not load this week preview.'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Browse',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            CompactListTile(
+              icon: Icons.calendar_month_outlined,
+              label: 'FOC Calendar',
+              isFirst: true,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('FOC Calendar coming soon.')),
+                );
+              },
+            ),
+            CompactListTile(
+              icon: Icons.upcoming_outlined,
+              label: 'Upcoming #1s',
+              isLast: true,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Upcoming #1s coming soon.')),
+                );
+              },
             ),
           ],
         ),

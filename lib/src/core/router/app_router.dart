@@ -44,6 +44,16 @@ class AppRouter extends RootStackRouter {
           guards: [authGuard],
         ),
         AutoRoute(
+          page: SearchRoute.page,
+          path: '/search',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: SearchResultsRoute.page,
+          path: '/search/results',
+          guards: [authGuard],
+        ),
+        AutoRoute(
           page: UserProfileRoute.page,
           path: '/profile',
           guards: [authGuard],

@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/presentation/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
@@ -73,6 +74,7 @@ class SettingsNotifier extends _$SettingsNotifier {
   void _invalidateCacheBackedProviders() {
     _invalidateReleaseProviders();
     ref.invalidate(issueDetailsProvider);
+    ref.invalidate(issueSearchResultsProvider);
   }
 
   Future<void> triggerFullSync() async {

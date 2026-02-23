@@ -27,6 +27,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     hiveService.openBox('settings_box'),
     hiveService.openBox<String>('auth_box'),
     hiveService.openBox<List>('weekly_releases_box'),
+    hiveService.openBox<List>('issue_search_box'),
     hiveService.openBox<int>('cache_meta_box'),
     hiveService.openBox<IssueDetailsDto>('issue_details_box'),
     hiveService.openBox<SeriesDto>('series_details_box'),

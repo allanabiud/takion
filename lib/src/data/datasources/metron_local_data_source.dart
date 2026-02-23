@@ -9,12 +9,16 @@ abstract class MetronLocalDataSource {
   Future<void> cacheIssueDetails(IssueDetailsDto issue);
   Future<IssueDetailsDto?> getIssueDetails(int issueId);
   Future<DateTime?> getIssueDetailsCachedAt(int issueId);
+  Future<void> cacheIssueSearchResults(String query, List<IssueListDto> issues);
+  Future<List<IssueListDto>?> getIssueSearchResults(String query);
+  Future<DateTime?> getIssueSearchResultsCachedAt(String query);
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   final HiveService _hiveService;
   static const String _weeklyBox = 'weekly_releases_box';
   static const String _issueDetailsBox = 'issue_details_box';
+  static const String _issueSearchBox = 'issue_search_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   MetronLocalDataSourceImpl(this._hiveService);
@@ -28,6 +32,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   String _getMetaKey(String key) => 'weekly_releases:$key';
   String _getIssueDetailsMetaKey(int issueId) => 'issue_details:$issueId';
+  String _normalizeSearchQuery(String query) => query.trim().toLowerCase();
+  String _getIssueSearchMetaKey(String query) =>
+      'issue_search:${_normalizeSearchQuery(query)}';
 
   @override
   Future<void> cacheWeeklyReleases(DateTime weekStart, List<IssueListDto> issues) async {
@@ -83,6 +90,38 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   Future<DateTime?> getIssueDetailsCachedAt(int issueId) async {
     final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getIssueDetailsMetaKey(issueId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheIssueSearchResults(String query, List<IssueListDto> issues) async {
+    final normalizedQuery = _normalizeSearchQuery(query);
+    final box = await _hiveService.openBox<List>(_issueSearchBox);
+    await box.put(normalizedQuery, issues);
+
+    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getIssueSearchMetaKey(query),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<IssueListDto>?> getIssueSearchResults(String query) async {
+    final normalizedQuery = _normalizeSearchQuery(query);
+    final box = await _hiveService.openBox<List>(_issueSearchBox);
+    final data = box.get(normalizedQuery);
+    if (data != null) {
+      return data.cast<IssueListDto>();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getIssueSearchResultsCachedAt(String query) async {
+    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getIssueSearchMetaKey(query));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
   }

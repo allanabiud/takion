@@ -14,6 +14,7 @@ class HiveService {
     'weekly_releases_box',
     'cache_meta_box',
     'issue_details_box',
+    'issue_search_box',
   };
 
   Future<void> init() async {

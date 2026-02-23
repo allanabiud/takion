@@ -9,9 +9,9 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i14;
-import 'package:collection/collection.dart' as _i16;
-import 'package:flutter/material.dart' as _i15;
+import 'package:auto_route/auto_route.dart' as _i16;
+import 'package:collection/collection.dart' as _i18;
+import 'package:flutter/material.dart' as _i17;
 import 'package:takion/src/presentation/screens/discover_screen.dart' as _i1;
 import 'package:takion/src/presentation/screens/home_screen.dart' as _i2;
 import 'package:takion/src/presentation/screens/issue_cover_gallery_screen.dart'
@@ -24,21 +24,24 @@ import 'package:takion/src/presentation/screens/main_screen.dart' as _i7;
 import 'package:takion/src/presentation/screens/new_first_issues_screen.dart'
     as _i8;
 import 'package:takion/src/presentation/screens/onboarding_screen.dart' as _i9;
-import 'package:takion/src/presentation/screens/profile_screen.dart' as _i12;
+import 'package:takion/src/presentation/screens/profile_screen.dart' as _i14;
 import 'package:takion/src/presentation/screens/releases_screen.dart' as _i10;
-import 'package:takion/src/presentation/screens/settings_screen.dart' as _i11;
+import 'package:takion/src/presentation/screens/search_results_screen.dart'
+    as _i11;
+import 'package:takion/src/presentation/screens/search_screen.dart' as _i12;
+import 'package:takion/src/presentation/screens/settings_screen.dart' as _i13;
 import 'package:takion/src/presentation/screens/weekly_releases_screen.dart'
-    as _i13;
+    as _i15;
 
 /// generated route for
 /// [_i1.DiscoverScreen]
-class DiscoverRoute extends _i14.PageRouteInfo<void> {
-  const DiscoverRoute({List<_i14.PageRouteInfo>? children})
+class DiscoverRoute extends _i16.PageRouteInfo<void> {
+  const DiscoverRoute({List<_i16.PageRouteInfo>? children})
     : super(DiscoverRoute.name, initialChildren: children);
 
   static const String name = 'DiscoverRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i1.DiscoverScreen();
@@ -48,13 +51,13 @@ class DiscoverRoute extends _i14.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i2.HomeScreen]
-class HomeRoute extends _i14.PageRouteInfo<void> {
-  const HomeRoute({List<_i14.PageRouteInfo>? children})
+class HomeRoute extends _i16.PageRouteInfo<void> {
+  const HomeRoute({List<_i16.PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i2.HomeScreen();
@@ -65,16 +68,16 @@ class HomeRoute extends _i14.PageRouteInfo<void> {
 /// generated route for
 /// [_i3.IssueCoverGalleryScreen]
 class IssueCoverGalleryRoute
-    extends _i14.PageRouteInfo<IssueCoverGalleryRouteArgs> {
+    extends _i16.PageRouteInfo<IssueCoverGalleryRouteArgs> {
   IssueCoverGalleryRoute({
-    _i15.Key? key,
+    _i17.Key? key,
     required List<String> imageUrls,
     List<String>? imageLabels,
     List<String>? imageCaptions,
     int initialIndex = 0,
     String? title,
     String? heroTag,
-    List<_i14.PageRouteInfo>? children,
+    List<_i16.PageRouteInfo>? children,
   }) : super(
          IssueCoverGalleryRoute.name,
          args: IssueCoverGalleryRouteArgs(
@@ -91,7 +94,7 @@ class IssueCoverGalleryRoute
 
   static const String name = 'IssueCoverGalleryRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<IssueCoverGalleryRouteArgs>();
@@ -119,7 +122,7 @@ class IssueCoverGalleryRouteArgs {
     this.heroTag,
   });
 
-  final _i15.Key? key;
+  final _i17.Key? key;
 
   final List<String> imageUrls;
 
@@ -143,12 +146,12 @@ class IssueCoverGalleryRouteArgs {
     if (identical(this, other)) return true;
     if (other is! IssueCoverGalleryRouteArgs) return false;
     return key == other.key &&
-        const _i16.ListEquality<String>().equals(imageUrls, other.imageUrls) &&
-        const _i16.ListEquality<String>().equals(
+        const _i18.ListEquality<String>().equals(imageUrls, other.imageUrls) &&
+        const _i18.ListEquality<String>().equals(
           imageLabels,
           other.imageLabels,
         ) &&
-        const _i16.ListEquality<String>().equals(
+        const _i18.ListEquality<String>().equals(
           imageCaptions,
           other.imageCaptions,
         ) &&
@@ -160,9 +163,9 @@ class IssueCoverGalleryRouteArgs {
   @override
   int get hashCode =>
       key.hashCode ^
-      const _i16.ListEquality<String>().hash(imageUrls) ^
-      const _i16.ListEquality<String>().hash(imageLabels) ^
-      const _i16.ListEquality<String>().hash(imageCaptions) ^
+      const _i18.ListEquality<String>().hash(imageUrls) ^
+      const _i18.ListEquality<String>().hash(imageLabels) ^
+      const _i18.ListEquality<String>().hash(imageCaptions) ^
       initialIndex.hashCode ^
       title.hashCode ^
       heroTag.hashCode;
@@ -170,12 +173,12 @@ class IssueCoverGalleryRouteArgs {
 
 /// generated route for
 /// [_i4.IssueDetailsScreen]
-class IssueDetailsRoute extends _i14.PageRouteInfo<IssueDetailsRouteArgs> {
+class IssueDetailsRoute extends _i16.PageRouteInfo<IssueDetailsRouteArgs> {
   IssueDetailsRoute({
-    _i15.Key? key,
+    _i17.Key? key,
     required int issueId,
     String? initialImageUrl,
-    List<_i14.PageRouteInfo>? children,
+    List<_i16.PageRouteInfo>? children,
   }) : super(
          IssueDetailsRoute.name,
          args: IssueDetailsRouteArgs(
@@ -189,7 +192,7 @@ class IssueDetailsRoute extends _i14.PageRouteInfo<IssueDetailsRouteArgs> {
 
   static const String name = 'IssueDetailsRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       final pathParams = data.inheritedPathParams;
@@ -213,7 +216,7 @@ class IssueDetailsRouteArgs {
     this.initialImageUrl,
   });
 
-  final _i15.Key? key;
+  final _i17.Key? key;
 
   final int issueId;
 
@@ -240,13 +243,13 @@ class IssueDetailsRouteArgs {
 
 /// generated route for
 /// [_i5.LibraryScreen]
-class LibraryRoute extends _i14.PageRouteInfo<void> {
-  const LibraryRoute({List<_i14.PageRouteInfo>? children})
+class LibraryRoute extends _i16.PageRouteInfo<void> {
+  const LibraryRoute({List<_i16.PageRouteInfo>? children})
     : super(LibraryRoute.name, initialChildren: children);
 
   static const String name = 'LibraryRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i5.LibraryScreen();
@@ -256,11 +259,11 @@ class LibraryRoute extends _i14.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.LoginScreen]
-class LoginRoute extends _i14.PageRouteInfo<LoginRouteArgs> {
+class LoginRoute extends _i16.PageRouteInfo<LoginRouteArgs> {
   LoginRoute({
-    _i15.Key? key,
+    _i17.Key? key,
     void Function(bool)? onResult,
-    List<_i14.PageRouteInfo>? children,
+    List<_i16.PageRouteInfo>? children,
   }) : super(
          LoginRoute.name,
          args: LoginRouteArgs(key: key, onResult: onResult),
@@ -269,7 +272,7 @@ class LoginRoute extends _i14.PageRouteInfo<LoginRouteArgs> {
 
   static const String name = 'LoginRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<LoginRouteArgs>(
@@ -283,7 +286,7 @@ class LoginRoute extends _i14.PageRouteInfo<LoginRouteArgs> {
 class LoginRouteArgs {
   const LoginRouteArgs({this.key, this.onResult});
 
-  final _i15.Key? key;
+  final _i17.Key? key;
 
   final void Function(bool)? onResult;
 
@@ -305,13 +308,13 @@ class LoginRouteArgs {
 
 /// generated route for
 /// [_i7.MainScreen]
-class MainRoute extends _i14.PageRouteInfo<void> {
-  const MainRoute({List<_i14.PageRouteInfo>? children})
+class MainRoute extends _i16.PageRouteInfo<void> {
+  const MainRoute({List<_i16.PageRouteInfo>? children})
     : super(MainRoute.name, initialChildren: children);
 
   static const String name = 'MainRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i7.MainScreen();
@@ -321,13 +324,13 @@ class MainRoute extends _i14.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i8.NewFirstIssuesScreen]
-class NewFirstIssuesRoute extends _i14.PageRouteInfo<void> {
-  const NewFirstIssuesRoute({List<_i14.PageRouteInfo>? children})
+class NewFirstIssuesRoute extends _i16.PageRouteInfo<void> {
+  const NewFirstIssuesRoute({List<_i16.PageRouteInfo>? children})
     : super(NewFirstIssuesRoute.name, initialChildren: children);
 
   static const String name = 'NewFirstIssuesRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i8.NewFirstIssuesScreen();
@@ -337,13 +340,13 @@ class NewFirstIssuesRoute extends _i14.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i9.OnboardingScreen]
-class OnboardingRoute extends _i14.PageRouteInfo<void> {
-  const OnboardingRoute({List<_i14.PageRouteInfo>? children})
+class OnboardingRoute extends _i16.PageRouteInfo<void> {
+  const OnboardingRoute({List<_i16.PageRouteInfo>? children})
     : super(OnboardingRoute.name, initialChildren: children);
 
   static const String name = 'OnboardingRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i9.OnboardingScreen();
@@ -353,13 +356,13 @@ class OnboardingRoute extends _i14.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i10.ReleasesScreen]
-class ReleasesRoute extends _i14.PageRouteInfo<void> {
-  const ReleasesRoute({List<_i14.PageRouteInfo>? children})
+class ReleasesRoute extends _i16.PageRouteInfo<void> {
+  const ReleasesRoute({List<_i16.PageRouteInfo>? children})
     : super(ReleasesRoute.name, initialChildren: children);
 
   static const String name = 'ReleasesRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
       return const _i10.ReleasesScreen();
@@ -368,49 +371,129 @@ class ReleasesRoute extends _i14.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i11.SettingsScreen]
-class SettingsRoute extends _i14.PageRouteInfo<void> {
-  const SettingsRoute({List<_i14.PageRouteInfo>? children})
+/// [_i11.SearchResultsScreen]
+class SearchResultsRoute extends _i16.PageRouteInfo<SearchResultsRouteArgs> {
+  SearchResultsRoute({
+    _i17.Key? key,
+    required String query,
+    required String searchChoice,
+    List<_i16.PageRouteInfo>? children,
+  }) : super(
+         SearchResultsRoute.name,
+         args: SearchResultsRouteArgs(
+           key: key,
+           query: query,
+           searchChoice: searchChoice,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'SearchResultsRoute';
+
+  static _i16.PageInfo page = _i16.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<SearchResultsRouteArgs>();
+      return _i11.SearchResultsScreen(
+        key: args.key,
+        query: args.query,
+        searchChoice: args.searchChoice,
+      );
+    },
+  );
+}
+
+class SearchResultsRouteArgs {
+  const SearchResultsRouteArgs({
+    this.key,
+    required this.query,
+    required this.searchChoice,
+  });
+
+  final _i17.Key? key;
+
+  final String query;
+
+  final String searchChoice;
+
+  @override
+  String toString() {
+    return 'SearchResultsRouteArgs{key: $key, query: $query, searchChoice: $searchChoice}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! SearchResultsRouteArgs) return false;
+    return key == other.key &&
+        query == other.query &&
+        searchChoice == other.searchChoice;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ query.hashCode ^ searchChoice.hashCode;
+}
+
+/// generated route for
+/// [_i12.SearchScreen]
+class SearchRoute extends _i16.PageRouteInfo<void> {
+  const SearchRoute({List<_i16.PageRouteInfo>? children})
+    : super(SearchRoute.name, initialChildren: children);
+
+  static const String name = 'SearchRoute';
+
+  static _i16.PageInfo page = _i16.PageInfo(
+    name,
+    builder: (data) {
+      return const _i12.SearchScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i13.SettingsScreen]
+class SettingsRoute extends _i16.PageRouteInfo<void> {
+  const SettingsRoute({List<_i16.PageRouteInfo>? children})
     : super(SettingsRoute.name, initialChildren: children);
 
   static const String name = 'SettingsRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
-      return const _i11.SettingsScreen();
+      return const _i13.SettingsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i12.UserProfileScreen]
-class UserProfileRoute extends _i14.PageRouteInfo<void> {
-  const UserProfileRoute({List<_i14.PageRouteInfo>? children})
+/// [_i14.UserProfileScreen]
+class UserProfileRoute extends _i16.PageRouteInfo<void> {
+  const UserProfileRoute({List<_i16.PageRouteInfo>? children})
     : super(UserProfileRoute.name, initialChildren: children);
 
   static const String name = 'UserProfileRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
-      return const _i12.UserProfileScreen();
+      return const _i14.UserProfileScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i13.WeeklyReleasesScreen]
-class WeeklyReleasesRoute extends _i14.PageRouteInfo<void> {
-  const WeeklyReleasesRoute({List<_i14.PageRouteInfo>? children})
+/// [_i15.WeeklyReleasesScreen]
+class WeeklyReleasesRoute extends _i16.PageRouteInfo<void> {
+  const WeeklyReleasesRoute({List<_i16.PageRouteInfo>? children})
     : super(WeeklyReleasesRoute.name, initialChildren: children);
 
   static const String name = 'WeeklyReleasesRoute';
 
-  static _i14.PageInfo page = _i14.PageInfo(
+  static _i16.PageInfo page = _i16.PageInfo(
     name,
     builder: (data) {
-      return const _i13.WeeklyReleasesScreen();
+      return const _i15.WeeklyReleasesScreen();
     },
   );
 }

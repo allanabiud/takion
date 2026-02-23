@@ -63,4 +63,32 @@ class MetronRepositoryImpl implements MetronRepository {
     }
   }
 
+  @override
+  Future<List<IssueList>> searchIssues(
+    String query, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getIssueSearchResults(query);
+    final cachedAt = await _localDataSource.getIssueSearchResultsCachedAt(query);
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh = cachedAt != null &&
+          MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
+      if (isFresh) {
+        return cachedDtos.map((entry) => entry.toEntity()).toList();
+      }
+    }
+
+    try {
+      final remoteDtos = await _remoteDataSource.searchIssues(query);
+      await _localDataSource.cacheIssueSearchResults(query, remoteDtos);
+      return remoteDtos.map((entry) => entry.toEntity()).toList();
+    } catch (_) {
+      if (cachedDtos != null && cachedDtos.isNotEmpty) {
+        return cachedDtos.map((entry) => entry.toEntity()).toList();
+      }
+      rethrow;
+    }
+  }
+
 }

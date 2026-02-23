@@ -11,4 +11,9 @@ abstract class MetronRepository {
     int issueId, {
     bool forceRefresh = false,
   });
+
+  Future<List<IssueList>> searchIssues(
+    String query, {
+    bool forceRefresh = false,
+  });
 }
