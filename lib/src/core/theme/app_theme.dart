@@ -12,6 +12,8 @@ class AppThemes {
         interactionEffects: true,
         tintedDisabledControls: true,
         useM2StyleDividerInM3: true,
+        tabBarDividerColor: Color(0x00000000),
+
         filledButtonRadius: 10.0,
         filledButtonTextStyle: WidgetStatePropertyAll(
           TextStyle(
@@ -94,6 +96,7 @@ class AppThemes {
         blendOnColors: true,
         useM2StyleDividerInM3: true,
         adaptiveAppBarScrollUnderOff: FlexAdaptive.all(),
+        tabBarDividerColor: Color(0x00000000),
         filledButtonRadius: 10.0,
         filledButtonTextStyle: WidgetStatePropertyAll(
           TextStyle(

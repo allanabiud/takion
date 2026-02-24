@@ -111,6 +111,7 @@ class ReleasesScreen extends ConsumerWidget {
                       return MediaCard(
                         imageUrl: issue.image,
                         title: issue.name,
+                        heroTag: issueId != null ? 'issue-cover-$issueId' : null,
                         onTap: issueId == null
                             ? null
                             : () {

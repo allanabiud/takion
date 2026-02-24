@@ -31,8 +31,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         SearchResultsRoute(query: query, searchChoice: 'Issues'),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Series search coming soon.')),
+      context.pushRoute(
+        SearchResultsRoute(query: query, searchChoice: 'Series'),
       );
     }
     FocusScope.of(context).unfocus();
@@ -59,7 +59,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: SearchBar(
               controller: _searchController,
               hintText: 'Search comics...',
-              leading: const Icon(Icons.search),
+              leading: const Icon(Icons.search, size: 24),
               autoFocus: true,
               onSubmitted: (_) => _submitSearch(),
               trailing: [

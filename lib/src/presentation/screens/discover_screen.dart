@@ -21,7 +21,7 @@ class DiscoverScreen extends StatelessWidget {
                 color: Colors.transparent,
                 child: SearchBar(
                   hintText: 'Search comics...',
-                  leading: const Icon(Icons.search),
+                  leading: const Icon(Icons.search, size: 24),
                   onTap: () {
                     context.pushRoute(const SearchRoute());
                   },

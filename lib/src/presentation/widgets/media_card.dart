@@ -6,6 +6,7 @@ class MediaCard extends StatelessWidget {
   final String title;
   final VoidCallback? onTap;
   final double width;
+  final String? heroTag;
 
   const MediaCard({
     super.key,
@@ -13,10 +14,43 @@ class MediaCard extends StatelessWidget {
     required this.title,
     this.onTap,
     this.width = 120,
+    this.heroTag,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cover = ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: 2 / 3,
+        child: imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: imageUrl!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  child: const Icon(Icons.broken_image, size: 32),
+                ),
+              )
+            : Container(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
+                child: const Icon(Icons.image, size: 32),
+              ),
+      ),
+    );
+
     return SizedBox(
       width: width,
       child: InkWell(
@@ -25,37 +59,7 @@ class MediaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 2 / 3,
-                child: imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.broken_image, size: 32),
-                        ),
-                      )
-                    : Container(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.image, size: 32),
-                      ),
-              ),
-            ),
+            heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
             const SizedBox(height: 8),
             Text(
               title,

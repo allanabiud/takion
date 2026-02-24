@@ -15,6 +15,11 @@ class HiveService {
     'cache_meta_box',
     'issue_details_box',
     'issue_search_box',
+    'issue_search_meta_box',
+    'series_search_box',
+    'series_search_meta_box',
+    'series_list_box',
+    'series_list_meta_box',
   };
 
   Future<void> init() async {

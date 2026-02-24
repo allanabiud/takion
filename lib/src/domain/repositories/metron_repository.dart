@@ -1,5 +1,8 @@
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/issue_search_page.dart';
+import 'package:takion/src/domain/entities/series_list_page.dart';
+import 'package:takion/src/domain/entities/series_search_page.dart';
 
 abstract class MetronRepository {
   Future<List<IssueList>> getWeeklyReleasesForDate(
@@ -12,8 +15,20 @@ abstract class MetronRepository {
     bool forceRefresh = false,
   });
 
-  Future<List<IssueList>> searchIssues(
+  Future<IssueSearchPage> searchIssues(
     String query, {
+    int page = 1,
+    bool forceRefresh = false,
+  });
+
+  Future<SeriesSearchPage> searchSeries(
+    String query, {
+    int page = 1,
+    bool forceRefresh = false,
+  });
+
+  Future<SeriesListPage> getSeriesList({
+    int page = 1,
     bool forceRefresh = false,
   });
 }

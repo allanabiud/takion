@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/series.dart';
+import 'package:takion/src/domain/entities/series_list.dart';
 
 class SeriesListTile extends StatelessWidget {
-  final Series series;
+  final SeriesList series;
   final VoidCallback? onTap;
   final bool isFirst;
   final bool isLast;
@@ -77,6 +77,11 @@ class SeriesListTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         const Icon(Icons.book, size: 12),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${series.issueCount ?? 0}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ],

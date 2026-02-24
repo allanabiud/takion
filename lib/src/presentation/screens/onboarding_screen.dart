@@ -29,7 +29,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _checkFirstLaunch() async {
     final hiveService = ref.read(hiveServiceProvider);
     final settingsBox = await hiveService.openBox(_settingsBoxName);
-    final hasSeen = settingsBox.get(_seenOnboardingKey, defaultValue: false) == true;
+    final hasSeen =
+        settingsBox.get(_seenOnboardingKey, defaultValue: false) == true;
 
     if (!mounted) return;
 
@@ -55,9 +56,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isCheckingFirstLaunch) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -65,7 +64,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 28),
               Hero(
@@ -85,11 +85,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
                 'Discover, track, and organize your comic collection.',
                 style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
               ),
               const Spacer(),
               SizedBox(

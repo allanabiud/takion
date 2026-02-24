@@ -14,5 +14,6 @@ class MetronCachePolicies {
   static const weeklyReleases = CachePolicy(ttl: Duration(hours: 3));
   static const issueDetails = CachePolicy(ttl: Duration(days: 1));
   static const searchResults = CachePolicy(ttl: Duration(hours: 3));
+  static const seriesSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const seriesDetails = CachePolicy(ttl: Duration(days: 7));
 }
