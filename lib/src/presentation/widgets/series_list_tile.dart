@@ -31,7 +31,7 @@ class SeriesListTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
-        Icons.library_books,
+        Icons.collections_bookmark_outlined,
         size: 40,
         color: Theme.of(context).colorScheme.onPrimaryContainer,
       ),
@@ -79,7 +79,7 @@ class SeriesListTile extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(width: 12),
-                        const Icon(Icons.book, size: 12),
+                        const Icon(Icons.menu_book_outlined, size: 12),
                         const SizedBox(width: 4),
                         Text(
                           '${series.issueCount ?? 0}',

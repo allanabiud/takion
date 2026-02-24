@@ -20,7 +20,7 @@ class TakionFlash {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: color.withValues(alpha: 0.2), width: 1),
           ),
-          margin: const EdgeInsets.all(32),
+          margin: const EdgeInsets.fromLTRB(24, 56, 24, 0),
           clipBehavior: Clip.antiAlias,
           icon: Icon(icon, color: color),
           content: Text(

@@ -5,8 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
-import 'package:takion/src/presentation/widgets/takion_flash.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
@@ -21,6 +22,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   static const _logoHeroTag = 'takion-app-logo';
+  static const _settingsBoxName = 'settings_box';
+  static const _seenOnboardingKey = 'has_seen_onboarding';
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -35,8 +38,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final url = Uri.parse('https://metron.cloud/accounts/signup/');
     if (!await launchUrl(url)) {
       if (mounted) {
-        TakionFlash.error(context, 'Could not launch signup page');
+        TakionAlerts.signupLaunchFailed(context);
       }
+    }
+  }
+
+  Future<void> _markOnboardingSeenAfterFirstLogin() async {
+    final hiveService = ref.read(hiveServiceProvider);
+    final settingsBox = await hiveService.openBox(_settingsBoxName);
+    final hasSeen = settingsBox.get(_seenOnboardingKey, defaultValue: false) == true;
+    if (!hasSeen) {
+      await settingsBox.put(_seenOnboardingKey, true);
     }
   }
 
@@ -52,23 +64,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         data: (status) {
           if (status == AuthStatus.authenticated &&
               previous?.value != AuthStatus.authenticated) {
-            TakionFlash.success(context, 'Successfully logged in!');
-            // Resolve the guard if it exists
-            if (widget.onResult != null) {
-              widget.onResult!(true);
-            } else {
-              // Manual fallback if we navigated here directly (e.g. after logout)
-              context.router.replaceAll([const MainRoute()]);
-            }
+            Future<void>(() async {
+              await _markOnboardingSeenAfterFirstLogin();
+              if (!mounted) return;
+
+              TakionAlerts.authLoginSuccess(context);
+              // Resolve the guard if it exists
+              if (widget.onResult != null) {
+                widget.onResult!(true);
+                if (context.mounted && context.router.canPop()) {
+                  context.router.pop();
+                }
+              } else {
+                // Manual fallback if we navigated here directly (e.g. after logout)
+                context.router.replaceAll([const MainRoute()]);
+              }
+            });
           } else if (status == AuthStatus.unauthenticated &&
               previous?.value == AuthStatus.authenticated) {
-            TakionFlash.info(context, 'Logged out successfully');
             _usernameController.clear();
             _passwordController.clear();
           }
         },
         error: (error, _) {
-          TakionFlash.error(context, error.toString());
+          TakionAlerts.authError(context, error);
         },
         loading: () {},
       );
@@ -165,10 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               final password = _passwordController.text.trim();
 
                               if (username.isEmpty || password.isEmpty) {
-                                TakionFlash.info(
-                                  context,
-                                  'Please enter both username and password',
-                                );
+                                TakionAlerts.authMissingCredentials(context);
                                 return;
                               }
 

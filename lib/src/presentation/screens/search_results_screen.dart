@@ -9,7 +9,9 @@ import 'package:takion/src/domain/entities/series_search_page.dart';
 import 'package:takion/src/presentation/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/series_search_provider.dart';
+import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
 enum _SearchSortOption {
@@ -186,56 +188,6 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     }
   }
 
-  Widget _buildFloatingPagination({
-    required int currentPage,
-    required int totalPages,
-    required bool hasPrevious,
-    required bool hasNext,
-    required VoidCallback? onPrevious,
-    required VoidCallback? onNext,
-  }) {
-    if (totalPages <= 1) return const SizedBox.shrink();
-
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(24),
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FilledButton.tonalIcon(
-                      onPressed: hasPrevious ? onPrevious : null,
-                      icon: const Icon(Icons.chevron_left),
-                      label: const Text('Prev'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('Page $currentPage of $totalPages'),
-                    ),
-                    FilledButton.tonalIcon(
-                      onPressed: hasNext ? onNext : null,
-                      icon: const Icon(Icons.chevron_right),
-                      label: const Text('Next'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final issueResultsAsync = _isSeriesSearch
@@ -377,14 +329,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       body: _isSeriesSearch
           ? seriesResultsAsync!.when(
               loading: () => const SizedBox.shrink(),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Search failed: $error',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+              error: (error, _) => AsyncStatePanel.error(
+                errorMessage: 'Search failed: $error',
               ),
               data: (pageData) {
                 final sortedSeries = _applySeriesSort(
@@ -468,25 +414,33 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         ),
                       ],
                     ),
-                    _buildFloatingPagination(
-                      currentPage: _page,
-                      totalPages: totalPages,
-                      hasPrevious: pageData.hasPrevious,
-                      hasNext: pageData.hasNext,
-                      onPrevious: () {
-                        final previousPage = pageData.previousPage;
-                        if (previousPage == null) return;
-                        setState(() {
-                          _page = previousPage;
-                        });
-                      },
-                      onNext: () {
-                        final nextPage = pageData.nextPage;
-                        if (nextPage == null) return;
-                        setState(() {
-                          _page = nextPage;
-                        });
-                      },
+                    SafeArea(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: PageNavigationBar(
+                            currentPage: _page,
+                            totalPages: totalPages,
+                            hasPrevious: pageData.hasPrevious,
+                            hasNext: pageData.hasNext,
+                            onPrevious: () {
+                              final previousPage = pageData.previousPage;
+                              if (previousPage == null) return;
+                              setState(() {
+                                _page = previousPage;
+                              });
+                            },
+                            onNext: () {
+                              final nextPage = pageData.nextPage;
+                              if (nextPage == null) return;
+                              setState(() {
+                                _page = nextPage;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 );
@@ -494,14 +448,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             )
           : issueResultsAsync!.when(
               loading: () => const SizedBox.shrink(),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Search failed: $error',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+              error: (error, _) => AsyncStatePanel.error(
+                errorMessage: 'Search failed: $error',
               ),
               data: (pageData) {
                 final sortedIssues = _applySort(_applyFilter(pageData.results));
@@ -575,25 +523,33 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         ),
                       ],
                     ),
-                    _buildFloatingPagination(
-                      currentPage: _page,
-                      totalPages: totalPages,
-                      hasPrevious: pageData.hasPrevious,
-                      hasNext: pageData.hasNext,
-                      onPrevious: () {
-                        final previousPage = pageData.previousPage;
-                        if (previousPage == null) return;
-                        setState(() {
-                          _page = previousPage;
-                        });
-                      },
-                      onNext: () {
-                        final nextPage = pageData.nextPage;
-                        if (nextPage == null) return;
-                        setState(() {
-                          _page = nextPage;
-                        });
-                      },
+                    SafeArea(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: PageNavigationBar(
+                            currentPage: _page,
+                            totalPages: totalPages,
+                            hasPrevious: pageData.hasPrevious,
+                            hasNext: pageData.hasNext,
+                            onPrevious: () {
+                              final previousPage = pageData.previousPage;
+                              if (previousPage == null) return;
+                              setState(() {
+                                _page = previousPage;
+                              });
+                            },
+                            onNext: () {
+                              final nextPage = pageData.nextPage;
+                              if (nextPage == null) return;
+                              setState(() {
+                                _page = nextPage;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 );

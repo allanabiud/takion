@@ -1,15 +1,20 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart'; // Updated import
+import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 
-class IssueListTile extends StatelessWidget {
+class IssueListTile extends ConsumerWidget {
   final IssueList issue; // Updated to IssueList
   final VoidCallback? onTap;
   final bool isFirst;
   final bool isLast;
+  final bool? isCollected;
+  final bool? isRead;
+  final int? rating;
 
   const IssueListTile({
     super.key,
@@ -17,10 +22,13 @@ class IssueListTile extends StatelessWidget {
     this.onTap,
     this.isFirst = false,
     this.isLast = false,
+    this.isCollected,
+    this.isRead,
+    this.rating,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const double radius = 24.0;
     const double imageHeight = 110;
     const double imageWidth = 75;
@@ -37,6 +45,11 @@ class IssueListTile extends StatelessWidget {
                   ),
                 );
               });
+
+          final providerStatus = ref.watch(issueCollectionStatusProvider(issue.id));
+          final effectiveIsCollected = isCollected ?? providerStatus?.isCollected ?? false;
+          final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
+          final effectiveRating = rating ?? providerStatus?.rating;
 
     return Card(
       margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
@@ -171,6 +184,40 @@ class IssueListTile extends StatelessWidget {
                           ],
                         ),
                       ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6.0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            effectiveIsCollected
+                                ? Icons.inventory_2
+                                : Icons.inventory_2_outlined,
+                            size: 16,
+                            color: effectiveIsCollected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            effectiveIsRead ? Icons.bookmark : Icons.bookmark_border,
+                            size: 16,
+                            color: effectiveIsRead
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                          ),
+                          const Spacer(),
+                          if ((effectiveRating ?? 0) > 0)
+                            ...List.generate(5, (index) {
+                              final value = (effectiveRating ?? 0).clamp(0, 5);
+                              return Icon(
+                                index < value ? Icons.star : Icons.star_border,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              );
+                            }),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),

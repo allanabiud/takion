@@ -54,6 +54,26 @@ class AppRouter extends RootStackRouter {
           guards: [authGuard],
         ),
         AutoRoute(
+          page: CollectionReadStatusRoute.page,
+          path: '/my-comics/read-status',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: IncompleteSeriesRoute.page,
+          path: '/my-comics/incomplete-series',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: MyComicsRoute.page,
+          path: '/my-comics',
+          guards: [authGuard],
+        ),
+        AutoRoute(
+          page: MyPullsRoute.page,
+          path: '/my-pulls',
+          guards: [authGuard],
+        ),
+        AutoRoute(
           page: SeriesDetailsRoute.page,
           path: '/series/:seriesId',
           guards: [authGuard],

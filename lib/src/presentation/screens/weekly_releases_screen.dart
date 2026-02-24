@@ -2,8 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
-import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
-import 'package:takion/src/presentation/widgets/week_picker_bar.dart';
+import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
 @RoutePage()
 class WeeklyReleasesScreen extends ConsumerWidget {
@@ -14,58 +13,10 @@ class WeeklyReleasesScreen extends ConsumerWidget {
     final selectedDate = ref.watch(selectedWeekProvider);
     final issuesAsync = ref.watch(weeklyReleasesProvider(selectedDate));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Weekly Releases'),
-        bottom: issuesAsync.isLoading
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(4),
-                child: LinearProgressIndicator(),
-              )
-            : null,
-      ),
-      body: Column(
-        children: [
-          const WeekPickerBar(),
-          Expanded(
-            child: issuesAsync.when(
-              data: (issues) => ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                itemCount: issues.length,
-                itemBuilder: (context, index) {
-                  final issue = issues[index];
-                  final isFirst = index == 0;
-                  final isLast = index == issues.length - 1;
-
-                  return IssueListTile(
-                    issue: issue,
-                    isFirst: isFirst,
-                    isLast: isLast,
-                  );
-                },
-              ),
-              loading: () => const SizedBox.shrink(),
-              error: (err, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 16),
-                      Text('Error: $err', textAlign: TextAlign.center),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return WeeklyIssueListScaffold(
+      title: 'Weekly Releases',
+      issuesAsync: issuesAsync,
+      emptyMessage: 'No weekly releases for this week.',
     );
   }
 }

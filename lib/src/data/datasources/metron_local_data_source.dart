@@ -1,6 +1,10 @@
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/data/models/collection_item_details_dto.dart';
+import 'package:takion/src/data/models/collection_items_response_dto.dart';
+import 'package:takion/src/data/models/collection_stats_dto.dart';
 import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/issue_list_dto.dart';
+import 'package:takion/src/data/models/missing_series_response_dto.dart';
 import 'package:takion/src/data/models/series_details_dto.dart';
 import 'package:takion/src/data/models/series_list_dto.dart';
 
@@ -53,6 +57,19 @@ class SeriesIssueListPageCacheMeta {
 }
 
 abstract class MetronLocalDataSource {
+  Future<void> cacheCollectionStats(CollectionStatsDto stats);
+  Future<CollectionStatsDto?> getCollectionStats();
+  Future<DateTime?> getCollectionStatsCachedAt();
+  Future<void> cacheCollectionItemsPage(int page, CollectionItemsResponseDto response);
+  Future<CollectionItemsResponseDto?> getCollectionItemsPage(int page);
+  Future<DateTime?> getCollectionItemsPageCachedAt(int page);
+  Future<void> cacheCollectionItemDetails(CollectionItemDetailsDto details);
+  Future<CollectionItemDetailsDto?> getCollectionItemDetails(int collectionId);
+  Future<DateTime?> getCollectionItemDetailsCachedAt(int collectionId);
+  Future<void> cacheMissingSeriesPage(int page, MissingSeriesResponseDto response);
+  Future<MissingSeriesResponseDto?> getMissingSeriesPage(int page);
+  Future<DateTime?> getMissingSeriesPageCachedAt(int page);
+
   Future<void> cacheWeeklyReleases(DateTime weekStart, List<IssueListDto> issues);
   Future<List<IssueListDto>?> getWeeklyReleases(DateTime weekStart);
   Future<DateTime?> getWeeklyReleasesCachedAt(DateTime weekStart);
@@ -138,6 +155,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _seriesDetailsBox = 'series_details_box';
   static const String _seriesIssueListBox = 'series_issue_list_box';
   static const String _seriesIssueListMetaBox = 'series_issue_list_meta_box';
+  static const String _collectionStatsBox = 'collection_stats_box';
+  static const String _collectionItemsBox = 'collection_items_box';
+  static const String _collectionItemDetailsBox = 'collection_item_details_box';
+  static const String _missingSeriesBox = 'missing_series_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   MetronLocalDataSourceImpl(this._hiveService);
@@ -150,6 +171,11 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   }
 
   String _getMetaKey(String key) => 'weekly_releases:$key';
+  String _getCollectionStatsMetaKey() => 'collection_stats:singleton';
+  String _getCollectionItemsMetaKey(int page) => 'collection_items:p$page';
+  String _getCollectionItemDetailsMetaKey(int collectionId) =>
+      'collection_item_details:$collectionId';
+  String _getMissingSeriesMetaKey(int page) => 'missing_series:p$page';
   String _getIssueDetailsMetaKey(int issueId) => 'issue_details:$issueId';
   String _getSeriesDetailsMetaKey(int seriesId) => 'series_details:$seriesId';
   String _normalizeSearchQuery(String query) => query.trim().toLowerCase();
@@ -167,6 +193,126 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       'series_issue_list:$seriesId:p$page';
     String _getSeriesIssueListMetaKey(int seriesId, int page) =>
       'series_issue_list:${_getSeriesIssueListKey(seriesId, page)}';
+
+    @override
+    Future<void> cacheCollectionStats(CollectionStatsDto stats) async {
+      final box = await _hiveService.openBox<Map>(_collectionStatsBox);
+      await box.put('singleton', stats.toJson());
+
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      await metaBox.put(
+        _getCollectionStatsMetaKey(),
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+
+    @override
+    Future<CollectionStatsDto?> getCollectionStats() async {
+      final box = await _hiveService.openBox<Map>(_collectionStatsBox);
+      final data = box.get('singleton');
+      if (data == null) return null;
+      return CollectionStatsDto.fromJson(data.cast<String, dynamic>());
+    }
+
+    @override
+    Future<DateTime?> getCollectionStatsCachedAt() async {
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      final epoch = metaBox.get(_getCollectionStatsMetaKey());
+      if (epoch == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(epoch);
+    }
+
+    @override
+    Future<void> cacheCollectionItemsPage(
+      int page,
+      CollectionItemsResponseDto response,
+    ) async {
+      final box = await _hiveService.openBox<Map>(_collectionItemsBox);
+      await box.put('p$page', response.toJson());
+
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      await metaBox.put(
+        _getCollectionItemsMetaKey(page),
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+
+    @override
+    Future<CollectionItemsResponseDto?> getCollectionItemsPage(int page) async {
+      final box = await _hiveService.openBox<Map>(_collectionItemsBox);
+      final data = box.get('p$page');
+      if (data == null) return null;
+      return CollectionItemsResponseDto.fromJson(data.cast<String, dynamic>());
+    }
+
+    @override
+    Future<DateTime?> getCollectionItemsPageCachedAt(int page) async {
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      final epoch = metaBox.get(_getCollectionItemsMetaKey(page));
+      if (epoch == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(epoch);
+    }
+
+    @override
+    Future<void> cacheCollectionItemDetails(CollectionItemDetailsDto details) async {
+      final box = await _hiveService.openBox<Map>(_collectionItemDetailsBox);
+      await box.put(details.id, details.toJson());
+
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      await metaBox.put(
+        _getCollectionItemDetailsMetaKey(details.id),
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+
+    @override
+    Future<CollectionItemDetailsDto?> getCollectionItemDetails(
+      int collectionId,
+    ) async {
+      final box = await _hiveService.openBox<Map>(_collectionItemDetailsBox);
+      final data = box.get(collectionId);
+      if (data == null) return null;
+      return CollectionItemDetailsDto.fromJson(data.cast<String, dynamic>());
+    }
+
+    @override
+    Future<DateTime?> getCollectionItemDetailsCachedAt(int collectionId) async {
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      final epoch = metaBox.get(_getCollectionItemDetailsMetaKey(collectionId));
+      if (epoch == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(epoch);
+    }
+
+    @override
+    Future<void> cacheMissingSeriesPage(
+      int page,
+      MissingSeriesResponseDto response,
+    ) async {
+      final box = await _hiveService.openBox<Map>(_missingSeriesBox);
+      await box.put('p$page', response.toJson());
+
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      await metaBox.put(
+        _getMissingSeriesMetaKey(page),
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+
+    @override
+    Future<MissingSeriesResponseDto?> getMissingSeriesPage(int page) async {
+      final box = await _hiveService.openBox<Map>(_missingSeriesBox);
+      final data = box.get('p$page');
+      if (data == null) return null;
+      return MissingSeriesResponseDto.fromJson(data.cast<String, dynamic>());
+    }
+
+    @override
+    Future<DateTime?> getMissingSeriesPageCachedAt(int page) async {
+      final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+      final epoch = metaBox.get(_getMissingSeriesMetaKey(page));
+      if (epoch == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(epoch);
+    }
 
   @override
   Future<void> cacheWeeklyReleases(DateTime weekStart, List<IssueListDto> issues) async {

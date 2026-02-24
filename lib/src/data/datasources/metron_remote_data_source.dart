@@ -1,13 +1,27 @@
 import 'package:dio/dio.dart';
+import 'package:takion/src/data/models/collection_item_details_dto.dart';
+import 'package:takion/src/data/models/collection_stats_dto.dart';
+import 'package:takion/src/data/models/collection_items_response_dto.dart';
+import 'package:takion/src/data/models/collection_scrobble_response_dto.dart';
 import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/issue_list_dto.dart';
 import 'package:takion/src/data/models/issue_search_response_dto.dart';
+import 'package:takion/src/data/models/missing_series_response_dto.dart';
 import 'package:takion/src/data/models/series_details_dto.dart';
 import 'package:takion/src/data/models/series_issue_list_response_dto.dart';
 import 'package:takion/src/data/models/series_list_response_dto.dart';
 import 'package:takion/src/data/models/series_search_response_dto.dart';
 
 abstract class MetronRemoteDataSource {
+  Future<CollectionStatsDto> getCollectionStats();
+  Future<CollectionScrobbleResponseDto> scrobbleIssueRead({
+    required int issueId,
+    DateTime? dateRead,
+    int? rating,
+  });
+  Future<CollectionItemsResponseDto> getCollectionItems({int page = 1});
+  Future<CollectionItemDetailsDto> getCollectionItemDetails(int collectionId);
+  Future<MissingSeriesResponseDto> getMissingSeries({int page = 1});
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
   Future<IssueDetailsDto> getIssueDetails(int issueId);
   Future<IssueSearchResponseDto> searchIssues(String query, {int page = 1});
@@ -51,6 +65,75 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     candidates.addAll(tokens);
 
     return candidates.toList(growable: false);
+  }
+
+  @override
+  Future<CollectionStatsDto> getCollectionStats() async {
+    final response = await _dio.get('collection/stats/');
+    return CollectionStatsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<CollectionScrobbleResponseDto> scrobbleIssueRead({
+    required int issueId,
+    DateTime? dateRead,
+    int? rating,
+  }) async {
+    final payload = <String, dynamic>{
+      'issue_id': issueId,
+    };
+
+    if (dateRead != null) {
+      payload['date_read'] = dateRead.toUtc().toIso8601String();
+    }
+    if (rating != null) {
+      payload['rating'] = rating;
+    }
+
+    final response = await _dio.post(
+      'collection/scrobble/',
+      data: payload,
+    );
+
+    return CollectionScrobbleResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<CollectionItemsResponseDto> getCollectionItems({int page = 1}) async {
+    final response = await _dio.get(
+      'collection/',
+      queryParameters: {
+        'page': page,
+      },
+    );
+    return CollectionItemsResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<CollectionItemDetailsDto> getCollectionItemDetails(
+    int collectionId,
+  ) async {
+    final response = await _dio.get('collection/$collectionId/');
+    return CollectionItemDetailsDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<MissingSeriesResponseDto> getMissingSeries({int page = 1}) async {
+    final response = await _dio.get(
+      'collection/missing_series/',
+      queryParameters: {
+        'page': page,
+      },
+    );
+    return MissingSeriesResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override

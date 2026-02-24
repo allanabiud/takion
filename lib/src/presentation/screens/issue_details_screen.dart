@@ -7,7 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
+import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
+import 'package:takion/src/presentation/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/issue_details/about_tab_content.dart';
 import 'package:takion/src/presentation/widgets/issue_details/people_tab_content.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,48 +32,208 @@ class IssueDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final issueAsync = ref.watch(issueDetailsProvider(issueId));
+    final issueStatus = ref.watch(issueCollectionStatusProvider(issueId));
+
+    void showScrobbleSheet() {
+      var markAsRead = issueStatus?.isRead ?? false;
+      var selectedRating = (issueStatus?.rating ?? 0).clamp(0, 5);
+      ref.read(scrobbleIssueProvider(issueId).notifier).reset();
+
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (sheetContext) {
+          return Consumer(
+            builder: (context, ref, _) {
+              final scrobbleState = ref.watch(scrobbleIssueProvider(issueId));
+              final isSubmitting = scrobbleState.isLoading;
+              final submitError = scrobbleState.whenOrNull(
+                error: (error, _) => '$error',
+              );
+
+              return StatefulBuilder(
+                builder: (context, setModalState) {
+                  final helperMessage = !markAsRead
+                      ? 'Enable Mark as Read to submit a scrobble.'
+                      : null;
+                  const collectionAutoAddMessage =
+                      'Marking this issue as read will add it to your collection if it is not already collected.';
+
+                  return SafeArea(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        16,
+                        16,
+                        16 + MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Scrobble Issue',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 12),
+                          SwitchListTile.adaptive(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Mark as Read'),
+                            value: markAsRead,
+                            onChanged: isSubmitting
+                                ? null
+                                : (value) {
+                                    setModalState(() {
+                                      markAsRead = value;
+                                      if (!markAsRead) {
+                                        selectedRating = 0;
+                                      }
+                                    });
+                                  },
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            collectionAutoAddMessage,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          if (helperMessage != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              helperMessage,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Text(
+                            'Rating',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(5, (index) {
+                              final starValue = index + 1;
+                              final isEnabled = markAsRead && !isSubmitting;
+                              return IconButton(
+                                iconSize: 36,
+                                onPressed: !isEnabled
+                                    ? null
+                                    : () {
+                                        setModalState(() {
+                                          selectedRating = starValue;
+                                        });
+                                      },
+                                icon: Icon(
+                                  starValue <= selectedRating
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                ),
+                              );
+                            }),
+                          ),
+                          if (submitError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              submitError,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: isSubmitting
+                                    ? null
+                                    : () => Navigator.of(sheetContext).pop(),
+                                child: const Text('Cancel'),
+                              ),
+                              const SizedBox(width: 8),
+                              FilledButton(
+                                onPressed: isSubmitting
+                                    ? null
+                                    : () async {
+                                        if (!markAsRead) {
+                                          TakionAlerts.scrobbleMarkAsReadRequired(
+                                            context,
+                                          );
+                                          return;
+                                        }
+
+                                        await ref
+                                            .read(
+                                              scrobbleIssueProvider(
+                                                issueId,
+                                              ).notifier,
+                                            )
+                                            .scrobble(
+                                              dateRead: DateTime.now().toUtc(),
+                                              rating: selectedRating > 0
+                                                  ? selectedRating
+                                                  : null,
+                                              refreshReadingSuggestion: true,
+                                              refreshRateSuggestion: true,
+                                            );
+
+                                        final latestState = ref.read(
+                                          scrobbleIssueProvider(issueId),
+                                        );
+                                        if (latestState.hasError) return;
+
+                                        if (sheetContext.mounted) {
+                                          Navigator.of(sheetContext).pop();
+                                        }
+                                        if (context.mounted) {
+                                          TakionAlerts.scrobbleSuccess(context);
+                                        }
+                                      },
+                                child: isSubmitting
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text('Save'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
+    }
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add action coming soon.')),
-          );
-        },
+        onPressed: showScrobbleSheet,
         child: const Icon(Icons.add),
       ),
       body: issueAsync.when(
-        data: (issue) => _IssueDetailsBody(issue: issue, issueId: issueId),
+        data: (issue) => _IssueDetailsBody(
+          issue: issue,
+          issueId: issueId,
+          collectionStatus: issueStatus,
+        ),
         loading: () =>
             _IssueDetailsLoading(issueId: issueId, imageUrl: initialImageUrl),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 12),
-                Text(
-                  'Failed to load issue details',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$error',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () {
-                    ref.read(issueDetailsProvider(issueId).notifier).refresh();
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
+        error: (error, stack) => AsyncStatePanel.error(
+          title: 'Failed to load issue details',
+          errorMessage: '$error',
+          onRetry: () {
+            ref.read(issueDetailsProvider(issueId).notifier).refresh();
+          },
         ),
       ),
     );
@@ -77,10 +241,15 @@ class IssueDetailsScreen extends ConsumerWidget {
 }
 
 class _IssueDetailsBody extends StatefulWidget {
-  const _IssueDetailsBody({required this.issue, required this.issueId});
+  const _IssueDetailsBody({
+    required this.issue,
+    required this.issueId,
+    this.collectionStatus,
+  });
 
   final IssueDetails issue;
   final int issueId;
+  final IssueCollectionStatus? collectionStatus;
 
   @override
   State<_IssueDetailsBody> createState() => _IssueDetailsBodyState();
@@ -258,9 +427,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
   Future<void> _shareResourceUrl() async {
     final uri = _resourceUri();
     if (uri == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No share URL available for this issue.')),
-      );
+      TakionAlerts.noShareUrl(context, 'issue');
       return;
     }
 
@@ -272,19 +439,13 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
   Future<void> _openResourceUrlInBrowser() async {
     final uri = _resourceUri();
     if (uri == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No browser URL available for this issue.'),
-        ),
-      );
+      TakionAlerts.noBrowserUrl(context, 'issue');
       return;
     }
 
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open this issue in browser.')),
-      );
+      TakionAlerts.couldNotOpenInBrowser(context, 'issue');
     }
   }
 
@@ -292,9 +453,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
     final series = widget.issue.series;
     final seriesName = series?.name.trim();
     if (series == null || seriesName == null || seriesName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No series is linked to this issue.')),
-      );
+      TakionAlerts.noLinkedSeriesForIssue(context);
       return;
     }
 
@@ -382,7 +541,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                         ColoredBox(color: colorScheme.surfaceContainerHighest),
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: backgroundTint.withValues(alpha: 0.26),
+                          color: backgroundTint.withValues(alpha: 0.34),
                         ),
                       ),
                       DecoratedBox(
@@ -392,8 +551,8 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                             end: Alignment.bottomCenter,
                             stops: const [0, 0.55, 1],
                             colors: [
-                              Colors.black.withValues(alpha: 0.34),
-                              Colors.black.withValues(alpha: 0.12),
+                              Colors.black.withValues(alpha: 0.42),
+                              Colors.black.withValues(alpha: 0.18),
                               Colors.transparent,
                             ],
                           ),
@@ -412,9 +571,9 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                           final bottomPadding = (maxHeight * 0.05)
                               .clamp(10.0, 20.0)
                               .toDouble();
-                          final titleMaxLines = maxHeight < 320 ? 1 : 2;
-                          final titleGap = maxHeight < 320 ? 8.0 : 12.0;
-                          final subtitleGap = maxHeight < 320 ? 2.0 : 6.0;
+                          final titleGap = maxHeight < 320 ? 6.0 : 10.0;
+                          final subtitleGap = maxHeight < 320 ? 2.0 : 4.0;
+                          final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
                           final title = _displayTitle();
                           final baseTitleLargeStyle = Theme.of(
                             context,
@@ -446,34 +605,23 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                       ),
                                     ],
                                   );
-                          final titleMaxWidth =
-                              (constraints.maxWidth - 40).clamp(
+                          final coverHeight =
+                              (maxHeight - topPadding - bottomPadding - 6.0)
+                                  .clamp(130.0, 230.0)
+                                  .toDouble();
+                          final coverWidth = (coverHeight * (2 / 3)).toDouble();
+                          final textColumnWidth =
+                              (constraints.maxWidth - 40 - horizontalGap - coverWidth)
+                                  .clamp(
                                 0.0,
                                 double.infinity,
                               );
-                          final titlePainter = TextPainter(
-                            text: TextSpan(text: title, style: titleLargeStyle),
-                            maxLines: titleMaxLines,
-                            textDirection: Directionality.of(context),
-                          )..layout(maxWidth: titleMaxWidth);
-                          final useTitleMedium = titlePainter.didExceedMaxLines;
-                          final estimatedTitleHeight = titleMaxLines == 2
-                              ? 54.0
-                              : 34.0;
-                          const estimatedSubtitleHeight = 20.0;
-
-                          final coverHeight =
-                              (maxHeight -
-                                      topPadding -
-                                      bottomPadding -
-                                      titleGap -
-                                      subtitleGap -
-                                      estimatedTitleHeight -
-                                      estimatedSubtitleHeight -
-                                      6.0)
-                                  .clamp(96.0, 192.0)
-                                  .toDouble();
-                          final coverWidth = (coverHeight * (2 / 3)).toDouble();
+                          final useTitleMedium = maxHeight < 320;
+                          final ratingValue =
+                              (widget.collectionStatus?.rating ?? 0).clamp(
+                                0,
+                                5,
+                              );
 
                           return Center(
                             child: Padding(
@@ -483,8 +631,8 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                 20,
                                 bottomPadding,
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Hero(
                                     tag: heroTag,
@@ -529,37 +677,91 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: titleGap),
-                                  Text(
-                                    title,
-                                    maxLines: titleMaxLines,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: useTitleMedium
-                                        ? titleMediumStyle
-                                        : titleLargeStyle,
-                                  ),
-                                  SizedBox(height: subtitleGap),
-                                  Text(
-                                    _subtitle(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.9,
-                                          ),
-                                          shadows: const [
-                                            Shadow(
-                                              color: Colors.black45,
-                                              blurRadius: 8,
-                                              offset: Offset(0, 1),
+                                  SizedBox(width: horizontalGap),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title,
+                                          textAlign: TextAlign.left,
+                                          softWrap: true,
+                                          style: useTitleMedium
+                                              ? titleMediumStyle
+                                              : titleLargeStyle,
+                                        ),
+                                        SizedBox(height: subtitleGap),
+                                        Text(
+                                          _subtitle(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.left,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.9,
+                                                ),
+                                                shadows: const [
+                                                  Shadow(
+                                                    color: Colors.black45,
+                                                    blurRadius: 8,
+                                                    offset: Offset(0, 1),
+                                                  ),
+                                                ],
+                                              ),
+                                        ),
+                                        SizedBox(height: titleGap),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              (widget.collectionStatus
+                                                          ?.isCollected ??
+                                                      false)
+                                                  ? Icons.inventory_2
+                                                  : Icons.inventory_2_outlined,
+                                              size: 20,
+                                              color: (widget.collectionStatus
+                                                          ?.isCollected ??
+                                                      false)
+                                                  ? Colors.white
+                                                  : Colors.white70,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Icon(
+                                              (widget.collectionStatus?.isRead ??
+                                                      false)
+                                                  ? Icons.bookmark
+                                                  : Icons.bookmark_border,
+                                              size: 20,
+                                              color: (widget.collectionStatus
+                                                          ?.isRead ??
+                                                      false)
+                                                  ? Colors.white
+                                                  : Colors.white70,
                                             ),
                                           ],
                                         ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: List.generate(5, (index) {
+                                            final isFilled = index < ratingValue;
+                                            return Icon(
+                                              isFilled
+                                                  ? Icons.star
+                                                  : Icons.star_border,
+                                              size: 18,
+                                              color: isFilled
+                                                  ? Colors.white
+                                                  : Colors.white70,
+                                            );
+                                          }),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -749,18 +951,17 @@ class _IssueDetailsLoading extends StatelessWidget {
                     final bottomPadding = (maxHeight * 0.05)
                         .clamp(10.0, 20.0)
                         .toDouble();
-                    final indicatorGap = maxHeight < 320 ? 10.0 : 14.0;
-                    const indicatorHeight = 36.0;
+                    final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
+                    final titleBarHeight = maxHeight < 320 ? 16.0 : 20.0;
+                    final subtitleBarHeight = maxHeight < 320 ? 12.0 : 14.0;
                     final coverHeight =
-                        (maxHeight -
-                                topPadding -
-                                bottomPadding -
-                                indicatorGap -
-                                indicatorHeight -
-                                6.0)
-                            .clamp(96.0, 192.0)
-                            .toDouble();
+                      (maxHeight - topPadding - bottomPadding - 6.0)
+                        .clamp(130.0, 230.0)
+                        .toDouble();
                     final coverWidth = (coverHeight * (2 / 3)).toDouble();
+                    final metaWidth =
+                      (constraints.maxWidth - 40 - horizontalGap - coverWidth)
+                        .clamp(0.0, double.infinity);
 
                     return Center(
                       child: Padding(
@@ -770,8 +971,8 @@ class _IssueDetailsLoading extends StatelessWidget {
                           20,
                           bottomPadding,
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Hero(
                               tag: 'issue-cover-$issueId',
@@ -796,8 +997,88 @@ class _IssueDetailsLoading extends StatelessWidget {
                                       ),
                               ),
                             ),
-                            SizedBox(height: indicatorGap),
-                            const CircularProgressIndicator(),
+                            SizedBox(width: horizontalGap),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: metaWidth * 0.95,
+                                    height: titleBarHeight,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.24,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: metaWidth * 0.65,
+                                    height: subtitleBarHeight,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.18,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: List.generate(2, (index) {
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          right: index == 0 ? 12 : 0,
+                                        ),
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.22,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: List.generate(5, (index) {
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          right: index == 4 ? 0 : 6,
+                                        ),
+                                        child: Container(
+                                          width: 16,
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),

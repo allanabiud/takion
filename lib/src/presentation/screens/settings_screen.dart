@@ -5,11 +5,54 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/settings_bottom_sheet.dart';
 
 @RoutePage()
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _confirmAndLogout(BuildContext context, WidgetRef ref) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          icon: Icon(
+            Icons.logout,
+            color: Theme.of(dialogContext).colorScheme.error,
+          ),
+          title: const Text('Logout?'),
+          content: const Text(
+            'You will be signed out and returned to the login screen.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton.tonal(
+              style: FilledButton.styleFrom(
+                foregroundColor: Theme.of(dialogContext).colorScheme.error,
+                backgroundColor: Theme.of(
+                  dialogContext,
+                ).colorScheme.errorContainer.withValues(alpha: 0.5),
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true || !context.mounted) return;
+
+    await ref.read(authStateProvider.notifier).logout();
+    if (!context.mounted) return;
+
+    TakionAlerts.authLogoutSuccess(context);
+    context.router.replaceAll([LoginRoute()]);
+  }
 
   void _showAppearanceSettings(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
@@ -242,14 +285,21 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showDataStorageSettings(context, ref),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              ref.read(authStateProvider.notifier).logout();
-              context.router.replaceAll([LoginRoute()]);
-            },
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                foregroundColor: Theme.of(context).colorScheme.error,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.errorContainer.withValues(alpha: 0.5),
+              ),
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              onPressed: () => _confirmAndLogout(context, ref),
+            ),
           ),
         ],
       ),

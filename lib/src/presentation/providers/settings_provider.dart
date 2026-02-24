@@ -2,12 +2,17 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/presentation/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/providers/issue_search_provider.dart';
+import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
+import 'package:takion/src/presentation/providers/missing_series_provider.dart';
 import 'package:takion/src/presentation/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/providers/series_list_provider.dart';
 import 'package:takion/src/presentation/providers/series_search_provider.dart';
+import 'package:takion/src/presentation/providers/reading_suggestion_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 part 'settings_provider.freezed.dart';
@@ -79,11 +84,21 @@ class SettingsNotifier extends _$SettingsNotifier {
     _invalidateReleaseProviders();
     ref.invalidate(issueDetailsProvider);
     ref.invalidate(issueSearchResultsProvider);
+    ref.invalidate(collectionIssueStatusMapProvider);
+    ref.invalidate(collectionItemsProvider);
+    ref.invalidate(currentCollectionItemsProvider);
+    ref.invalidate(collectionStatsProvider);
+    ref.invalidate(missingSeriesProvider);
+    ref.invalidate(currentMissingSeriesProvider);
     ref.invalidate(seriesDetailsProvider);
     ref.invalidate(seriesIssueListProvider);
     ref.invalidate(seriesListProvider);
     ref.invalidate(currentSeriesListProvider);
     ref.invalidate(seriesSearchResultsProvider);
+    ref.invalidate(readingSuggestionProvider);
+    ref.invalidate(readingSuggestionIssueProvider);
+    ref.invalidate(rateSuggestionProvider);
+    ref.invalidate(rateSuggestionIssueProvider);
   }
 
   Future<void> triggerFullSync() async {

@@ -23,6 +23,10 @@ class HiveService {
     'series_details_box',
     'series_issue_list_box',
     'series_issue_list_meta_box',
+    'collection_stats_box',
+    'collection_items_box',
+    'collection_item_details_box',
+    'missing_series_box',
   };
 
   Future<void> init() async {

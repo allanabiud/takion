@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
-import 'package:takion/src/presentation/widgets/compact_list_tile.dart';
+import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/media_card.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class ReleasesScreen extends ConsumerWidget {
@@ -15,6 +17,7 @@ class ReleasesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // This provider always fetches for the actual current week (DateTime.now)
     final currentIssuesAsync = ref.watch(currentWeeklyReleasesProvider);
+    final pullsCountAsync = ref.watch(currentWeekPullsCountProvider);
 
     return Scaffold(
       appBar: currentIssuesAsync.isLoading
@@ -67,10 +70,17 @@ class ReleasesScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   ActionCard(
-                    icon: Icons.history_outlined,
-                    value: '--',
-                    label: 'Last Week',
-                    onTap: () {},
+                    icon: Icons.shopping_bag_outlined,
+                    value: pullsCountAsync.when(
+                      data: (count) => count.toString(),
+                      loading: () => '--',
+                      error: (_, _) => '!',
+                    ),
+                    label: 'Your Pulls',
+                    onTap: () {
+                      ref.read(selectedWeekProvider.notifier).setDate(DateTime.now());
+                      context.pushRoute(const MyPullsRoute());
+                    },
                   ),
                 ],
               ),
@@ -140,35 +150,24 @@ class ReleasesScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Browse',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+            CompactListSection(
+              title: 'Browse',
+              items: [
+                CompactListSectionItem(
+                  icon: Icons.calendar_month_outlined,
+                  label: 'FOC Calendar',
+                  onTap: () {
+                    TakionAlerts.comingSoon(context, 'FOC Calendar');
+                  },
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            CompactListTile(
-              icon: Icons.calendar_month_outlined,
-              label: 'FOC Calendar',
-              isFirst: true,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('FOC Calendar coming soon.')),
-                );
-              },
-            ),
-            CompactListTile(
-              icon: Icons.upcoming_outlined,
-              label: 'Upcoming #1s',
-              isLast: true,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Upcoming #1s coming soon.')),
-                );
-              },
+                CompactListSectionItem(
+                  icon: Icons.upcoming_outlined,
+                  label: 'Upcoming #1s',
+                  onTap: () {
+                    TakionAlerts.comingSoon(context, 'Upcoming #1s');
+                  },
+                ),
+              ],
             ),
           ],
         ),

@@ -7,17 +7,17 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/presentation/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
+import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
-  const SeriesDetailsScreen({
-    super.key,
-    @pathParam required this.seriesId,
-  });
+  const SeriesDetailsScreen({super.key, @pathParam required this.seriesId});
 
   final int seriesId;
 
@@ -32,6 +32,10 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   double _titleOpacity = 0;
   int _issuesPage = 1;
 
+  void _showAddActionComingSoon() {
+    TakionAlerts.comingSoon(context, 'Add action');
+  }
+
   Uri? _resourceUri(SeriesDetails details) {
     final resourceUrl = details.resourceUrl?.trim();
     if (resourceUrl == null || resourceUrl.isEmpty) return null;
@@ -41,9 +45,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   Future<void> _shareResourceUrl(SeriesDetails details) async {
     final uri = _resourceUri(details);
     if (uri == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No share URL available for this series.')),
-      );
+      TakionAlerts.noShareUrl(context, 'series');
       return;
     }
 
@@ -55,19 +57,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   Future<void> _openResourceUrlInBrowser(SeriesDetails details) async {
     final uri = _resourceUri(details);
     if (uri == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No browser URL available for this series.'),
-        ),
-      );
+      TakionAlerts.noBrowserUrl(context, 'series');
       return;
     }
 
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open this series in browser.')),
-      );
+      TakionAlerts.couldNotOpenInBrowser(context, 'series');
     }
   }
 
@@ -116,30 +112,16 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
 
     return detailsAsync.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(body: AsyncStatePanel.loading()),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'Failed to load series details: $error',
-              textAlign: TextAlign.center,
-            ),
-          ),
+        body: AsyncStatePanel.error(
+          errorMessage: 'Failed to load series details: $error',
         ),
       ),
       data: (details) => DefaultTabController(
         length: 2,
         child: Scaffold(
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add action coming soon.')),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
           body: NestedScrollView(
             controller: _scrollController,
             headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -150,6 +132,11 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   backgroundColor: Theme.of(context).colorScheme.surface,
                   surfaceTintColor: Theme.of(context).colorScheme.surface,
                   actions: [
+                    IconButton(
+                      tooltip: 'Add',
+                      onPressed: _showAddActionComingSoon,
+                      icon: const Icon(Icons.add),
+                    ),
                     PopupMenuButton<_SeriesDetailsMenuAction>(
                       tooltip: 'More options',
                       onSelected: (action) {
@@ -235,7 +222,7 @@ class _SeriesHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final publisher = details.publisher?.name?.trim();
+    final publisher = details.publisher?.name.trim();
     final hasPublisher = publisher != null && publisher.isNotEmpty;
     final firstPageIssuesAsync = ref.watch(
       seriesIssueListProvider(SeriesIssueListArgs(seriesId: seriesId, page: 1)),
@@ -251,10 +238,7 @@ class _SeriesHeader extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            colorScheme.primaryContainer,
-            colorScheme.surface,
-          ],
+          colors: [colorScheme.primaryContainer, colorScheme.surface],
         ),
       ),
       child: SafeArea(
@@ -323,9 +307,8 @@ class _SeriesHeader extends ConsumerWidget {
                         children: [
                           Text(
                             details.name.toUpperCase(),
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 4),
                           if (hasPublisher)
@@ -446,7 +429,8 @@ class _SeriesAboutTab extends StatelessWidget {
           const SizedBox(height: 6),
           Text(description),
         ],
-        if (hasDescription && (hasGrid || hasGenres || hasAssociated || hasModified))
+        if (hasDescription &&
+            (hasGrid || hasGenres || hasAssociated || hasModified))
           const SizedBox(height: 16),
         if (hasGrid)
           LayoutBuilder(
@@ -468,7 +452,9 @@ class _SeriesAboutTab extends StatelessWidget {
                               item.label,
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                             ),
@@ -506,7 +492,8 @@ class _SeriesAboutTab extends StatelessWidget {
                 .toList(),
           ),
         ],
-        if (hasGenres && (hasAssociated || hasModified)) const SizedBox(height: 14),
+        if (hasGenres && (hasAssociated || hasModified))
+          const SizedBox(height: 14),
         if (hasAssociated) ...[
           Text(
             'Associated Series',
@@ -533,17 +520,21 @@ class _SeriesAboutTab extends StatelessWidget {
                   ),
                 )
                 .toList(),
-          )
+          ),
         ],
         if (hasAssociated && hasModified) const SizedBox(height: 14),
         if (hasModified)
           Text(
             'Last modified: $modifiedValue',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           ),
-        if (!hasDescription && !hasGrid && !hasGenres && !hasAssociated && !hasModified)
+        if (!hasDescription &&
+            !hasGrid &&
+            !hasGenres &&
+            !hasAssociated &&
+            !hasModified)
           Text(
             'No about information available.',
             style: Theme.of(context).textTheme.bodyMedium,
@@ -572,59 +563,63 @@ class _SeriesIssuesTab extends ConsumerWidget {
     final issuesAsync = ref.watch(seriesIssueListProvider(args));
 
     return issuesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'Failed to load series issues: $error',
-            textAlign: TextAlign.center,
-          ),
-        ),
+      loading: () => const AsyncStatePanel.loading(),
+      error: (error, _) => AsyncStatePanel.error(
+        errorMessage: 'Failed to load series issues: $error',
       ),
       data: (issuePage) {
-        final totalPages = ((issuePage.count /
-                    (issuePage.results.isEmpty ? 100 : issuePage.results.length))
-                .ceil())
-            .clamp(1, 9999);
+        final totalPages =
+            ((issuePage.count /
+                        (issuePage.results.isEmpty
+                            ? 100
+                            : issuePage.results.length))
+                    .ceil())
+                .clamp(1, 9999);
+        final hasPagination = totalPages > 1;
 
-        return Column(
+        return Stack(
           children: [
-            Expanded(
-              child: issuePage.results.isEmpty
-                  ? const Center(child: Text('No issues available.'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      itemCount: issuePage.results.length,
-                      itemBuilder: (context, index) {
-                        final issue = issuePage.results[index];
-                        return IssueListTile(
-                          issue: issue,
-                          isFirst: index == 0,
-                          isLast: index == issuePage.results.length - 1,
-                        );
-                      },
+            issuePage.results.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
+                    children: const [
+                      SizedBox(height: 220),
+                      Center(child: Text('No issues available.')),
+                    ],
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.fromLTRB(
+                      0,
+                      12,
+                      0,
+                      hasPagination ? 96 : 12,
                     ),
-            ),
-            if (totalPages > 1)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: issuePage.hasPrevious ? onPrevious : null,
-                      icon: const Icon(Icons.chevron_left),
-                      label: const Text('Previous'),
+                    itemCount: issuePage.results.length,
+                    itemBuilder: (context, index) {
+                      final issue = issuePage.results[index];
+                      return IssueListTile(
+                        issue: issue,
+                        isFirst: index == 0,
+                        isLast: index == issuePage.results.length - 1,
+                      );
+                    },
+                  ),
+            if (hasPagination)
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: PageNavigationBar(
+                      currentPage: page,
+                      totalPages: totalPages,
+                      hasPrevious: issuePage.hasPrevious,
+                      hasNext: issuePage.hasNext,
+                      onPrevious: onPrevious,
+                      onNext: onNext,
                     ),
-                    const Spacer(),
-                    Text('Page $page of $totalPages'),
-                    const Spacer(),
-                    OutlinedButton.icon(
-                      onPressed: issuePage.hasNext ? onNext : null,
-                      icon: const Icon(Icons.chevron_right),
-                      label: const Text('Next'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
           ],
