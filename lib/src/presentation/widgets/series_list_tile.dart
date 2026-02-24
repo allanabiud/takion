@@ -6,6 +6,7 @@ class SeriesListTile extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isFirst;
   final bool isLast;
+  final String? heroTag;
 
   const SeriesListTile({
     super.key,
@@ -13,6 +14,7 @@ class SeriesListTile extends StatelessWidget {
     this.onTap,
     this.isFirst = false,
     this.isLast = false,
+    this.heroTag,
   });
 
   @override
@@ -20,6 +22,20 @@ class SeriesListTile extends StatelessWidget {
     const double radius = 24.0;
     const double iconHeight = 100;
     const double iconWidth = 90;
+
+    final cover = Container(
+      width: iconWidth,
+      height: iconHeight,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        Icons.library_books,
+        size: 40,
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+      ),
+    );
 
     return Card(
       margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
@@ -37,20 +53,7 @@ class SeriesListTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon
-              Container(
-                width: iconWidth,
-                height: iconHeight,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.library_books,
-                  size: 40, // Larger icon size
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-              ),
+              heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
               const SizedBox(width: 12),
               // Text Content
               Expanded(

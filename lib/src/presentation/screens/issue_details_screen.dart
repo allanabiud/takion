@@ -289,17 +289,16 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
   }
 
   void _navigateToSeries() {
-    final seriesName = widget.issue.series?.name.trim();
-    if (seriesName == null || seriesName.isEmpty) {
+    final series = widget.issue.series;
+    final seriesName = series?.name.trim();
+    if (series == null || seriesName == null || seriesName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No series is linked to this issue.')),
       );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Navigate to series: $seriesName (coming soon)')),
-    );
+    context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
   }
 
   Future<void> _handleMoreAction(_IssueDetailsMenuAction action) async {

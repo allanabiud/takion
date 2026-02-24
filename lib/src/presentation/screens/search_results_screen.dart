@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
@@ -450,6 +451,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                       final series = sortedSeries[index];
                                       return SeriesListTile(
                                         series: series,
+                                        heroTag: 'series-cover-${series.id}',
+                                        onTap: () {
+                                          context.pushRoute(
+                                            SeriesDetailsRoute(
+                                              seriesId: series.id,
+                                            ),
+                                          );
+                                        },
                                         isFirst: index == 0,
                                         isLast: index == sortedSeries.length - 1,
                                       );

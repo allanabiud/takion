@@ -1,6 +1,7 @@
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/issue_list_dto.dart';
+import 'package:takion/src/data/models/series_details_dto.dart';
 import 'package:takion/src/data/models/series_list_dto.dart';
 
 class IssueSearchPageCacheMeta {
@@ -29,6 +30,18 @@ class SeriesSearchPageCacheMeta {
 
 class SeriesListPageCacheMeta {
   const SeriesListPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class SeriesIssueListPageCacheMeta {
+  const SeriesIssueListPageCacheMeta({
     required this.count,
     this.next,
     this.previous,
@@ -87,6 +100,29 @@ abstract class MetronLocalDataSource {
   Future<List<SeriesListDto>?> getSeriesListResults({required int page});
   Future<DateTime?> getSeriesListResultsCachedAt({required int page});
   Future<SeriesListPageCacheMeta?> getSeriesListResultsMeta({required int page});
+  Future<void> cacheSeriesDetails(SeriesDetailsDto details);
+  Future<SeriesDetailsDto?> getSeriesDetails(int seriesId);
+  Future<DateTime?> getSeriesDetailsCachedAt(int seriesId);
+  Future<void> cacheSeriesIssueListResults(
+    int seriesId,
+    List<IssueListDto> issues, {
+    required int page,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<IssueListDto>?> getSeriesIssueListResults(
+    int seriesId, {
+    required int page,
+  });
+  Future<DateTime?> getSeriesIssueListResultsCachedAt(
+    int seriesId, {
+    required int page,
+  });
+  Future<SeriesIssueListPageCacheMeta?> getSeriesIssueListResultsMeta(
+    int seriesId, {
+    required int page,
+  });
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
@@ -99,6 +135,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _seriesSearchMetaBox = 'series_search_meta_box';
   static const String _seriesListBox = 'series_list_box';
   static const String _seriesListMetaBox = 'series_list_meta_box';
+  static const String _seriesDetailsBox = 'series_details_box';
+  static const String _seriesIssueListBox = 'series_issue_list_box';
+  static const String _seriesIssueListMetaBox = 'series_issue_list_meta_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   MetronLocalDataSourceImpl(this._hiveService);
@@ -112,6 +151,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   String _getMetaKey(String key) => 'weekly_releases:$key';
   String _getIssueDetailsMetaKey(int issueId) => 'issue_details:$issueId';
+  String _getSeriesDetailsMetaKey(int seriesId) => 'series_details:$seriesId';
   String _normalizeSearchQuery(String query) => query.trim().toLowerCase();
     String _getIssueSearchKey(String query, int page) =>
       '${_normalizeSearchQuery(query)}::p$page';
@@ -123,6 +163,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
         'series_search:${_getSeriesSearchKey(query, page)}';
   String _getSeriesListKey(int page) => 'series_list:p$page';
   String _getSeriesListMetaKey(int page) => 'series_list:${_getSeriesListKey(page)}';
+    String _getSeriesIssueListKey(int seriesId, int page) =>
+      'series_issue_list:$seriesId:p$page';
+    String _getSeriesIssueListMetaKey(int seriesId, int page) =>
+      'series_issue_list:${_getSeriesIssueListKey(seriesId, page)}';
 
   @override
   Future<void> cacheWeeklyReleases(DateTime weekStart, List<IssueListDto> issues) async {
@@ -390,6 +434,106 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     if (count == null) return null;
 
     return SeriesListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheSeriesDetails(SeriesDetailsDto details) async {
+    final box = await _hiveService.openBox<Map>(_seriesDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getSeriesDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<SeriesDetailsDto?> getSeriesDetails(int seriesId) async {
+    final box = await _hiveService.openBox<Map>(_seriesDetailsBox);
+    final data = box.get(seriesId);
+    if (data == null) return null;
+    return SeriesDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getSeriesDetailsCachedAt(int seriesId) async {
+    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getSeriesDetailsMetaKey(seriesId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheSeriesIssueListResults(
+    int seriesId,
+    List<IssueListDto> issues, {
+    required int page,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getSeriesIssueListKey(seriesId, page);
+    final box = await _hiveService.openBox<List>(_seriesIssueListBox);
+    await box.put(key, issues);
+
+    final metaBox = await _hiveService.openBox<Map>(_seriesIssueListMetaBox);
+    await metaBox.put(key, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    await cacheMetaBox.put(
+      _getSeriesIssueListMetaKey(seriesId, page),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<IssueListDto>?> getSeriesIssueListResults(
+    int seriesId, {
+    required int page,
+  }) async {
+    final key = _getSeriesIssueListKey(seriesId, page);
+    final box = await _hiveService.openBox<List>(_seriesIssueListBox);
+    final data = box.get(key);
+    if (data != null) {
+      return data.cast<IssueListDto>();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getSeriesIssueListResultsCachedAt(
+    int seriesId, {
+    required int page,
+  }) async {
+    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final epoch = cacheMetaBox.get(_getSeriesIssueListMetaKey(seriesId, page));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<SeriesIssueListPageCacheMeta?> getSeriesIssueListResultsMeta(
+    int seriesId, {
+    required int page,
+  }) async {
+    final key = _getSeriesIssueListKey(seriesId, page);
+    final box = await _hiveService.openBox<Map>(_seriesIssueListMetaBox);
+    final data = box.get(key);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return SeriesIssueListPageCacheMeta(
       count: count,
       next: data['next'] as String?,
       previous: data['previous'] as String?,

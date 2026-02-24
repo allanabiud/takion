@@ -54,6 +54,11 @@ class AppRouter extends RootStackRouter {
           guards: [authGuard],
         ),
         AutoRoute(
+          page: SeriesDetailsRoute.page,
+          path: '/series/:seriesId',
+          guards: [authGuard],
+        ),
+        AutoRoute(
           page: UserProfileRoute.page,
           path: '/profile',
           guards: [authGuard],

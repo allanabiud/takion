@@ -1,5 +1,7 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 
 class IssueAboutTabContent extends StatefulWidget {
@@ -201,6 +203,7 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
             fontStyle: FontStyle.italic,
           ),
         ),
+        _buildStoriesSection(context),
         const SizedBox(height: 20),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -386,6 +389,54 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     );
   }
 
+  Widget _buildReprintsSection(BuildContext context) {
+    final reprints = widget.issue.reprints
+        .where((reprint) => reprint.id > 0)
+        .toList();
+
+    if (reprints.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    String labelFor(IssueDetailsReprint reprint) {
+      final issueText = reprint.issue?.trim();
+      if (issueText != null && issueText.isNotEmpty) return issueText;
+      return 'Issue ${reprint.id}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Reprints',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: reprints
+                .map(
+                  (reprint) => ActionChip(
+                    label: Text(labelFor(reprint)),
+                    onPressed: () {
+                      context.pushRoute(
+                        IssueDetailsRoute(issueId: reprint.id),
+                      );
+                    },
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -394,7 +445,7 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
         _buildDescriptionSection(context),
         _buildIssueMetaSection(context),
         _buildGenresAndIdsSection(context),
-        _buildStoriesSection(context),
+        _buildReprintsSection(context),
         const SizedBox(height: 14),
         Text(
           'Modified: ${_formatModified(widget.issue.modified)}',

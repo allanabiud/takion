@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/issue_list_dto.dart';
 import 'package:takion/src/data/models/issue_search_response_dto.dart';
+import 'package:takion/src/data/models/series_details_dto.dart';
+import 'package:takion/src/data/models/series_issue_list_response_dto.dart';
 import 'package:takion/src/data/models/series_list_response_dto.dart';
 import 'package:takion/src/data/models/series_search_response_dto.dart';
 
@@ -11,6 +13,11 @@ abstract class MetronRemoteDataSource {
   Future<IssueSearchResponseDto> searchIssues(String query, {int page = 1});
   Future<SeriesListResponseDto> getSeriesList({int page = 1});
   Future<SeriesSearchResponseDto> searchSeries(String query, {int page = 1});
+  Future<SeriesDetailsDto> getSeriesDetails(int seriesId);
+  Future<SeriesIssueListResponseDto> getSeriesIssueList(
+    int seriesId, {
+    int page = 1,
+  });
 }
 
 class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
@@ -155,5 +162,28 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     return lastResponse ?? const SeriesSearchResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<SeriesDetailsDto> getSeriesDetails(int seriesId) async {
+    final response = await _dio.get('series/$seriesId/');
+    return SeriesDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<SeriesIssueListResponseDto> getSeriesIssueList(
+    int seriesId, {
+    int page = 1,
+  }) async {
+    final response = await _dio.get(
+      'series/$seriesId/issue_list/',
+      queryParameters: {
+        'page': page,
+      },
+    );
+
+    return SeriesIssueListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 }

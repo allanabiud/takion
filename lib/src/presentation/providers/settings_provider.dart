@@ -4,6 +4,8 @@ import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
+import 'package:takion/src/presentation/providers/series_details_provider.dart';
+import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/providers/series_list_provider.dart';
 import 'package:takion/src/presentation/providers/series_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
@@ -77,6 +79,8 @@ class SettingsNotifier extends _$SettingsNotifier {
     _invalidateReleaseProviders();
     ref.invalidate(issueDetailsProvider);
     ref.invalidate(issueSearchResultsProvider);
+    ref.invalidate(seriesDetailsProvider);
+    ref.invalidate(seriesIssueListProvider);
     ref.invalidate(seriesListProvider);
     ref.invalidate(currentSeriesListProvider);
     ref.invalidate(seriesSearchResultsProvider);
