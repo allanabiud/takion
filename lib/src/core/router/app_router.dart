@@ -13,6 +13,11 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: OnboardingRoute.page, path: '/', initial: true),
         AutoRoute(page: LoginRoute.page, path: '/login'),
         AutoRoute(
+          page: MetronConnectRoute.page,
+          path: '/connect-metron',
+          guards: [authGuard],
+        ),
+        AutoRoute(
           page: MainRoute.page,
           path: '/app',
           guards: [authGuard],

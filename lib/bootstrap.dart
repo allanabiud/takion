@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/models/issue_details_dto.dart';
 
@@ -18,13 +19,26 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   // Enable edge-to-edge mode for transparent system bars
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw StateError(
+      'Missing Supabase config. Provide SUPABASE_URL and SUPABASE_ANON_KEY using --dart-define.',
+    );
+  }
+
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
+
   final hiveService = HiveService();
   await hiveService.init();
 
   // Pre-open essential boxes in parallel to avoid blocking the main thread
   await Future.wait([
     hiveService.openBox('settings_box'),
-    hiveService.openBox<String>('auth_box'),
+    hiveService.openBox<String>('metron_account_box'),
     hiveService.openBox<List>('weekly_releases_box'),
     hiveService.openBox<List>('issue_search_box'),
     hiveService.openBox<Map>('issue_search_meta_box'),

@@ -29,6 +29,8 @@ dependencies:
   intl: ^0.20.2
   flutter_svg: ^2.2.3
   share_plus: ^11.0.0
+  supabase_flutter: ^2.10.2
+  connectivity_plus: ^6.1.5
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +43,7 @@ dev_dependencies:
   riverpod_generator: ^4.0.3
   hive_ce_generator: ^1.11.0
   auto_route_generator: ^10.4.0
+  shared_preferences: ^2.5.4
 
 
 flutter:
@@ -49,7 +52,6 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/covers/
 
   fonts:
     - family: Rubik

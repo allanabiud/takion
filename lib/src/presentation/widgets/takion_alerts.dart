@@ -52,11 +52,20 @@ class TakionAlerts {
   }
 
   static void authMissingCredentials(BuildContext context) {
-    info(context, 'Please enter both username and password.');
+    info(context, 'Please enter both email and password.');
   }
 
   static void authError(BuildContext context, Object error) {
-    TakionAlerts.error(context, error.toString());
+    final raw = error.toString().trim();
+    final cleaned = raw
+        .replaceFirst('Exception: ', '')
+        .replaceFirst('AuthFlowException: ', '')
+        .trim();
+
+    TakionAlerts.error(
+      context,
+      cleaned.isEmpty ? 'Authentication failed. Please try again.' : cleaned,
+    );
   }
 
   static void scrobbleMarkAsReadRequired(BuildContext context) {

@@ -7,6 +7,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:takion/src/app.dart';
 import 'package:hive_ce/hive_ce.dart'; // Import Hive
 import 'package:takion/hive_registrar.g.dart'; // Import generated adapters
@@ -17,6 +19,11 @@ void main() {
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    await Supabase.initialize(
+      url: 'https://example.supabase.co',
+      anonKey: 'test-anon-key',
+    );
     tempDir = await Directory.systemTemp.createTemp('hive_test');
     Hive.init(tempDir.path);
     Hive.registerAdapters();

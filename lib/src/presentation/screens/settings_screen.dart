@@ -1,16 +1,177 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
+import 'package:takion/src/presentation/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/settings_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _launchMetronSignup(BuildContext context) async {
+    final url = Uri.parse('https://metron.cloud/accounts/signup/');
+    if (!await launchUrl(url)) {
+      if (!context.mounted) return;
+      TakionAlerts.signupLaunchFailed(context);
+    }
+  }
+
+  void _showMetronConnectionSettings(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final metronConnectionAsync = ref.watch(metronConnectionProvider);
+
+            return SettingsBottomSheet(
+              title: 'Metron Connection',
+              content: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.link),
+                    title: const Text('Status'),
+                    subtitle: metronConnectionAsync.when(
+                      data: (connection) => connection == null
+                          ? const Text('Not connected')
+                          : Text('Connected as ${connection.username}'),
+                      loading: () => const Text('Checking connection...'),
+                      error: (error, _) => Text(error.toString()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        await _showMetronConnectDialog(context, ref);
+                      },
+                      child: const Text('Connect / Reconnect Metron'),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => _launchMetronSignup(context),
+                      child: const Text('Create Metron Account'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.tonal(
+                      onPressed: () => _disconnectMetronAccount(context, ref),
+                      child: const Text('Disconnect Metron'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showMetronConnectDialog(BuildContext context, WidgetRef ref) async {
+    final usernameController = TextEditingController();
+    final passwordController = TextEditingController();
+
+    final shouldConnect = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Connect Metron Account'),
+          content: AutofillGroup(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Metron Username',
+                  ),
+                  autofillHints: const [AutofillHints.username],
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Metron Password',
+                  ),
+                  obscureText: true,
+                  autofillHints: const [AutofillHints.password],
+                  textInputAction: TextInputAction.done,
+                  onEditingComplete: () => TextInput.finishAutofillContext(),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                TextInput.finishAutofillContext();
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: const Text('Connect'),
+            ),
+          ],
+        );
+      },
+    );
+
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+    usernameController.dispose();
+    passwordController.dispose();
+
+    if (shouldConnect != true) return;
+    if (!context.mounted) return;
+    if (username.isEmpty || password.isEmpty) {
+      TakionAlerts.info(context, 'Please enter Metron username and password.');
+      return;
+    }
+
+    try {
+      final service = ref.read(metronAccountServiceProvider);
+      final connected = await service.connect(username, password);
+      if (!context.mounted) return;
+
+      if (!connected) {
+        TakionAlerts.error(context, 'Invalid Metron username or password.');
+      } else {
+        TakionAlerts.success(context, 'Metron account connected.');
+        ref.invalidate(metronConnectionProvider);
+      }
+    } catch (error) {
+      if (!context.mounted) return;
+      TakionAlerts.error(context, error.toString());
+    }
+  }
+
+  Future<void> _disconnectMetronAccount(BuildContext context, WidgetRef ref) async {
+    await ref.read(metronAccountServiceProvider).disconnect();
+    ref.invalidate(metronConnectionProvider);
+    if (!context.mounted) return;
+    TakionAlerts.info(context, 'Metron account disconnected.');
+  }
 
   Future<void> _confirmAndLogout(BuildContext context, WidgetRef ref) async {
     final shouldLogout = await showDialog<bool>(
@@ -284,6 +445,16 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Manage local database and storage'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showDataStorageSettings(context, ref),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.link,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('Metron Connection'),
+            subtitle: const Text('View connected account and disconnect'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showMetronConnectionSettings(context, ref),
           ),
           const SizedBox(height: 12),
           Padding(
