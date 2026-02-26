@@ -100,7 +100,10 @@ Future<IssueList> _toSuggestionIssueList(
   }
 
   String? imageUrl;
-  if (issueId != null && issueId > 0) {
+  final directImage = issue?.image?.trim();
+  if (directImage != null && directImage.isNotEmpty) {
+    imageUrl = directImage;
+  } else if (issueId != null && issueId > 0) {
     try {
       final details = await repository.getIssueDetails(issueId);
       imageUrl = details.image;
@@ -174,7 +177,8 @@ final readingSuggestionIssueProvider =
   );
 });
 
-final rateSuggestionProvider = FutureProvider.autoDispose<CollectionItem?>((ref) async {
+final rateSuggestionProvider =
+    FutureProvider.autoDispose<CollectionItem?>((ref) async {
   final repository = ref.watch(metronRepositoryProvider);
   try {
     return await _randomCollectionItemByPredicate(

@@ -610,12 +610,6 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                   .clamp(130.0, 230.0)
                                   .toDouble();
                           final coverWidth = (coverHeight * (2 / 3)).toDouble();
-                          final textColumnWidth =
-                              (constraints.maxWidth - 40 - horizontalGap - coverWidth)
-                                  .clamp(
-                                0.0,
-                                double.infinity,
-                              );
                           final useTitleMedium = maxHeight < 320;
                           final ratingValue =
                               (widget.collectionStatus?.rating ?? 0).clamp(
@@ -921,7 +915,7 @@ class _IssueDetailsLoading extends StatelessWidget {
                   ColoredBox(color: colorScheme.surfaceContainerHighest),
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: backgroundTint.withValues(alpha: 0.26),
+                    color: backgroundTint.withValues(alpha: 0.34),
                   ),
                 ),
                 DecoratedBox(
@@ -931,8 +925,8 @@ class _IssueDetailsLoading extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       stops: const [0, 0.55, 1],
                       colors: [
-                        Colors.black.withValues(alpha: 0.34),
-                        Colors.black.withValues(alpha: 0.12),
+                        Colors.black.withValues(alpha: 0.42),
+                        Colors.black.withValues(alpha: 0.18),
                         Colors.transparent,
                       ],
                     ),
@@ -952,16 +946,11 @@ class _IssueDetailsLoading extends StatelessWidget {
                         .clamp(10.0, 20.0)
                         .toDouble();
                     final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
-                    final titleBarHeight = maxHeight < 320 ? 16.0 : 20.0;
-                    final subtitleBarHeight = maxHeight < 320 ? 12.0 : 14.0;
                     final coverHeight =
-                      (maxHeight - topPadding - bottomPadding - 6.0)
-                        .clamp(130.0, 230.0)
-                        .toDouble();
+                        (maxHeight - topPadding - bottomPadding - 6.0)
+                            .clamp(130.0, 230.0)
+                            .toDouble();
                     final coverWidth = (coverHeight * (2 / 3)).toDouble();
-                    final metaWidth =
-                      (constraints.maxWidth - 40 - horizontalGap - coverWidth)
-                        .clamp(0.0, double.infinity);
 
                     return Center(
                       child: Padding(
@@ -988,8 +977,8 @@ class _IssueDetailsLoading extends StatelessWidget {
                                     : Container(
                                         width: coverWidth,
                                         height: coverHeight,
-                                        color:
-                                            colorScheme.surfaceContainerHighest,
+                                        color: colorScheme
+                                            .surfaceContainerHighest,
                                         child: const Icon(
                                           Icons.image,
                                           size: 40,
@@ -998,85 +987,10 @@ class _IssueDetailsLoading extends StatelessWidget {
                               ),
                             ),
                             SizedBox(width: horizontalGap),
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: metaWidth * 0.95,
-                                    height: titleBarHeight,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.24,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    width: metaWidth * 0.65,
-                                    height: subtitleBarHeight,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.18,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: List.generate(2, (index) {
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          right: index == 0 ? 12 : 0,
-                                        ),
-                                        child: Container(
-                                          width: 20,
-                                          height: 20,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.22,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: List.generate(5, (index) {
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          right: index == 4 ? 0 : 6,
-                                        ),
-                                        child: Container(
-                                          width: 16,
-                                          height: 16,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.4,
-                                    ),
-                                  ),
-                                ],
+                            const Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: CircularProgressIndicator(),
                               ),
                             ),
                           ],

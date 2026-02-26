@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/providers/reading_suggestion_provider.dart';
+import 'package:takion/src/presentation/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 final scrobbleIssueProvider = NotifierProvider.autoDispose
@@ -36,6 +36,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
+      ref.invalidate(allCollectionItemsProvider);
       ref.invalidate(collectionItemsProvider);
       ref.invalidate(currentCollectionItemsProvider);
       if (refreshReadingSuggestion) {

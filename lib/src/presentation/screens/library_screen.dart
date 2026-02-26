@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/providers/reading_suggestion_provider.dart';
+import 'package:takion/src/presentation/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
 import 'package:takion/src/presentation/widgets/compact_list_section.dart';

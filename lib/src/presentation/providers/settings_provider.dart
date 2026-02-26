@@ -12,7 +12,7 @@ import 'package:takion/src/presentation/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/providers/series_list_provider.dart';
 import 'package:takion/src/presentation/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/providers/reading_suggestion_provider.dart';
+import 'package:takion/src/presentation/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 part 'settings_provider.freezed.dart';
@@ -85,6 +85,7 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(issueDetailsProvider);
     ref.invalidate(issueSearchResultsProvider);
     ref.invalidate(collectionIssueStatusMapProvider);
+    ref.invalidate(allCollectionItemsProvider);
     ref.invalidate(collectionItemsProvider);
     ref.invalidate(currentCollectionItemsProvider);
     ref.invalidate(collectionStatsProvider);

@@ -25,6 +25,7 @@ class CollectionIssueRef {
     required this.id,
     required this.number,
     this.series,
+    this.image,
     this.coverDate,
     this.storeDate,
     this.modified,
@@ -33,6 +34,7 @@ class CollectionIssueRef {
   final int id;
   final String number;
   final CollectionIssueSeriesRef? series;
+  final String? image;
   final DateTime? coverDate;
   final DateTime? storeDate;
   final DateTime? modified;

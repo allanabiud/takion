@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/presentation/providers/auth_provider.dart';
 
 @RoutePage()
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -97,7 +98,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (!mounted) return;
 
     if (hasSeen) {
-      context.router.replace(const MainRoute());
+      final authStatus = await ref.read(authStateProvider.future);
+      if (!mounted) return;
+
+      if (authStatus == AuthStatus.authenticated) {
+        context.router.replace(const MainRoute());
+      } else {
+        context.router.replace(LoginRoute());
+      }
       return;
     }
 

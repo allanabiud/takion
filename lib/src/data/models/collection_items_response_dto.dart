@@ -67,6 +67,7 @@ class CollectionIssueRefDto {
     required this.id,
     required this.number,
     this.series,
+    this.image,
     this.coverDate,
     this.storeDate,
     this.modified,
@@ -75,6 +76,7 @@ class CollectionIssueRefDto {
   final int id;
   final String number;
   final CollectionIssueSeriesRefDto? series;
+  final String? image;
   final String? coverDate;
   final String? storeDate;
   final String? modified;
@@ -88,6 +90,7 @@ class CollectionIssueRefDto {
               (json['series'] as Map).cast<String, dynamic>(),
             )
           : null,
+      image: json['image'] as String?,
       coverDate: json['cover_date'] as String?,
       storeDate: json['store_date'] as String?,
       modified: json['modified'] as String?,
@@ -99,6 +102,7 @@ class CollectionIssueRefDto {
       'id': id,
       'number': number,
       'series': series?.toJson(),
+      'image': image,
       'cover_date': coverDate,
       'store_date': storeDate,
       'modified': modified,
@@ -110,6 +114,7 @@ class CollectionIssueRefDto {
       id: id,
       number: number,
       series: series?.toEntity(),
+      image: image,
       coverDate: coverDate != null ? DateTime.tryParse(coverDate!) : null,
       storeDate: storeDate != null ? DateTime.tryParse(storeDate!) : null,
       modified: modified != null ? DateTime.tryParse(modified!) : null,

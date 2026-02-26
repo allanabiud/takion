@@ -173,15 +173,9 @@ class IssueListTile extends ConsumerWidget {
                     if (issue.storeDate != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 12),
-                            const SizedBox(width: 4),
-                            Text(
-                              DateFormat.yMMMd().format(issue.storeDate!),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
+                        child: Text(
+                          DateFormat.yMMMd().format(issue.storeDate!),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
                     Padding(

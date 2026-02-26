@@ -37,30 +37,35 @@ final currentCollectionItemsProvider =
   return ref.watch(collectionItemsProvider(page).future);
 });
 
+final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((ref) async {
+  final repository = ref.watch(metronRepositoryProvider);
+
+  final firstPage = await repository.getCollectionItems(page: 1);
+  final items = <CollectionItem>[...firstPage.results];
+
+  if (firstPage.results.isEmpty) return items;
+
+  final pageSize = firstPage.results.length;
+  final totalPages = ((firstPage.count / pageSize).ceil()).clamp(1, 9999);
+
+  for (var page = 2; page <= totalPages; page++) {
+    final pageData = await repository.getCollectionItems(page: page);
+    items.addAll(pageData.results);
+  }
+
+  return items;
+});
+
 final collectionItemsByReadStatusProvider =
-    FutureProvider.autoDispose.family<List<CollectionItem>, bool>((
-      ref,
-      isRead,
-    ) async {
-      final repository = ref.watch(metronRepositoryProvider);
-
-      final firstPage = await repository.getCollectionItems(page: 1);
-      final matches = <CollectionItem>[
-        ...firstPage.results.where((item) => item.isRead == isRead),
-      ];
-
-      if (firstPage.results.isEmpty) return matches;
-
-      final pageSize = firstPage.results.length;
-      final totalPages = ((firstPage.count / pageSize).ceil()).clamp(1, 9999);
-
-      for (var page = 2; page <= totalPages; page++) {
-        final pageData = await repository.getCollectionItems(page: page);
-        matches.addAll(pageData.results.where((item) => item.isRead == isRead));
-      }
-
-      return matches;
-    });
+    FutureProvider.autoDispose.family<List<CollectionItem>, bool>(
+      (
+        ref,
+        isRead,
+      ) async {
+        final items = await ref.watch(allCollectionItemsProvider.future);
+        return items.where((item) => item.isRead == isRead).toList();
+      },
+    );
 
 String _normalizeSeriesName(String name) {
   return name.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
@@ -76,37 +81,21 @@ String _seriesKey({
 
 final collectionSeriesKeysProvider =
     FutureProvider.autoDispose<Set<String>>((ref) async {
-      final repository = ref.watch(metronRepositoryProvider);
-
-      final firstPage = await repository.getCollectionItems(page: 1);
+      final items = await ref.watch(allCollectionItemsProvider.future);
       final keys = <String>{};
 
-      void mergePage(List<CollectionItem> items) {
-        for (final item in items) {
-          if (item.quantity <= 0) continue;
-          final series = item.issue?.series;
-          final name = series?.name.trim();
-          if (name == null || name.isEmpty) continue;
-          keys.add(
-            _seriesKey(
-              name: name,
-              volume: series?.volume,
-              yearBegan: series?.yearBegan,
-            ),
-          );
-        }
-      }
-
-      mergePage(firstPage.results);
-
-      if (firstPage.results.isEmpty) return keys;
-
-      final pageSize = firstPage.results.length;
-      final totalPages = ((firstPage.count / pageSize).ceil()).clamp(1, 9999);
-
-      for (var page = 2; page <= totalPages; page++) {
-        final pageData = await repository.getCollectionItems(page: page);
-        mergePage(pageData.results);
+      for (final item in items) {
+        if (item.quantity <= 0) continue;
+        final series = item.issue?.series;
+        final name = series?.name.trim();
+        if (name == null || name.isEmpty) continue;
+        keys.add(
+          _seriesKey(
+            name: name,
+            volume: series?.volume,
+            yearBegan: series?.yearBegan,
+          ),
+        );
       }
 
       return keys;

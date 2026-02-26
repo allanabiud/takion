@@ -44,9 +44,12 @@ class AuthService {
 
   Future<Map<String, String>?> getCredentials() async {
     final box = await _hiveService.openBox<String>(_boxName);
-    final username = box.get(_usernameKey);
-    final password = box.get(_passwordKey);
-    if (username != null && password != null) {
+    final username = box.get(_usernameKey)?.trim();
+    final password = box.get(_passwordKey)?.trim();
+    if (username != null &&
+        username.isNotEmpty &&
+        password != null &&
+        password.isNotEmpty) {
       return {'username': username, 'password': password};
     }
     return null;

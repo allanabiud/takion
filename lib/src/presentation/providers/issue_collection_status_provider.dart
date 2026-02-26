@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/collection_item.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 
 class IssueCollectionStatus {
   const IssueCollectionStatus({
@@ -16,31 +15,18 @@ class IssueCollectionStatus {
 
 final collectionIssueStatusMapProvider =
     FutureProvider<Map<int, IssueCollectionStatus>>((ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
-
-  final firstPage = await repository.getCollectionItems(page: 1);
-  final pageSize = firstPage.results.isEmpty ? 1 : firstPage.results.length;
-  final totalPages = ((firstPage.count / pageSize).ceil()).clamp(1, 9999);
+  final items = await ref.watch(allCollectionItemsProvider.future);
 
   final map = <int, IssueCollectionStatus>{};
 
-  void mergePage(List<CollectionItem> items) {
-    for (final item in items) {
-      final issueId = item.issue?.id;
-      if (issueId == null || issueId <= 0) continue;
-      map[issueId] = IssueCollectionStatus(
-        isCollected: item.quantity > 0,
-        isRead: item.isRead,
-        rating: item.rating,
-      );
-    }
-  }
-
-  mergePage(firstPage.results);
-
-  for (var page = 2; page <= totalPages; page++) {
-    final pageData = await repository.getCollectionItems(page: page);
-    mergePage(pageData.results);
+  for (final item in items) {
+    final issueId = item.issue?.id;
+    if (issueId == null || issueId <= 0) continue;
+    map[issueId] = IssueCollectionStatus(
+      isCollected: item.quantity > 0,
+      isRead: item.isRead,
+      rating: item.rating,
+    );
   }
 
   return map;
