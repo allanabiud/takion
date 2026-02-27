@@ -1,13 +1,12 @@
-import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/domain/entities/series_list_page.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
-import 'package:takion/src/domain/repositories/catalog_repository.dart';
 
-abstract class MetronRepository implements CatalogRepository {
+abstract class CatalogRepository {
   Future<List<IssueList>> getWeeklyReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,

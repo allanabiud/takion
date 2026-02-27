@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
@@ -110,14 +111,19 @@ class SettingsNotifier extends _$SettingsNotifier {
       lastSyncMessage: 'Starting full sync...',
     );
 
-    final repository = ref.read(metronRepositoryProvider);
+    final repository = ref.read(catalogRepositoryProvider);
+    final catalogSync = ref.read(catalogSyncHelperProvider);
 
     try {
       final weeks = await _syncTargetWeeks();
       var synced = 0;
 
       for (final week in weeks) {
-        await repository.getWeeklyReleasesForDate(week, forceRefresh: true);
+        final issues = await repository.getWeeklyReleasesForDate(
+          week,
+          forceRefresh: true,
+        );
+        await catalogSync.upsertIssues(issues);
         synced++;
       }
 
@@ -142,7 +148,8 @@ class SettingsNotifier extends _$SettingsNotifier {
       lastSyncMessage: 'Starting quick sync...',
     );
 
-    final repository = ref.read(metronRepositoryProvider);
+    final repository = ref.read(catalogRepositoryProvider);
+    final catalogSync = ref.read(catalogSyncHelperProvider);
     final localDataSource = ref.read(metronLocalDataSourceProvider);
     final now = DateTime.now();
 
@@ -156,7 +163,8 @@ class SettingsNotifier extends _$SettingsNotifier {
             MetronCachePolicies.weeklyReleases.isFresh(cachedAt, now);
 
         if (!isFresh) {
-          await repository.getWeeklyReleasesForDate(week);
+          final issues = await repository.getWeeklyReleasesForDate(week);
+          await catalogSync.upsertIssues(issues);
           synced++;
         }
       }
@@ -193,5 +201,46 @@ class SettingsNotifier extends _$SettingsNotifier {
     } catch (e) {
       state = state.copyWith(isSyncing: false, lastSyncMessage: 'Failed to clear cache: $e');
     }
+  }
+}
+
+enum CollectionDefaultFormat { print, digital, both }
+
+final collectionDefaultFormatProvider = AsyncNotifierProvider<
+    CollectionDefaultFormatNotifier,
+    CollectionDefaultFormat>(CollectionDefaultFormatNotifier.new);
+
+class CollectionDefaultFormatNotifier
+    extends AsyncNotifier<CollectionDefaultFormat> {
+  static const _boxName = 'settings_box';
+  static const _key = 'collection_default_format';
+
+  @override
+  Future<CollectionDefaultFormat> build() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    final raw = (box.get(_key, defaultValue: 'print') as String?) ?? 'print';
+
+    switch (raw) {
+      case 'digital':
+        return CollectionDefaultFormat.digital;
+      case 'both':
+        return CollectionDefaultFormat.both;
+      case 'print':
+      default:
+        return CollectionDefaultFormat.print;
+    }
+  }
+
+  Future<void> setDefaultFormat(CollectionDefaultFormat format) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    final value = switch (format) {
+      CollectionDefaultFormat.print => 'print',
+      CollectionDefaultFormat.digital => 'digital',
+      CollectionDefaultFormat.both => 'both',
+    };
+    await box.put(_key, value);
+    state = AsyncValue.data(format);
   }
 }

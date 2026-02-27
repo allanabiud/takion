@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/presentation/widgets/people_info_list_tile.dart';
 
 class IssueAboutTabContent extends StatefulWidget {
   const IssueAboutTabContent({
@@ -437,6 +438,89 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     );
   }
 
+  String _creatorTitle(IssueDetailsCredit credit) {
+    final creator = credit.creator?.trim();
+    if (creator != null && creator.isNotEmpty) {
+      return creator;
+    }
+    return 'Unknown Creator';
+  }
+
+  String? _creatorSubtitle(IssueDetailsCredit credit) {
+    final roles = credit.roles
+        .map((role) => role.name.trim())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (roles.isEmpty) {
+      return null;
+    }
+
+    return roles.join(' • ');
+  }
+
+  Widget _buildCreatorsSection(BuildContext context) {
+    final credits = widget.issue.credits;
+    if (credits.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: ExpansionTile(
+        key: PageStorageKey('issue-creators-${widget.issueId}'),
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        title: Text(
+          'Creators',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        children: List.generate(credits.length, (index) {
+          final credit = credits[index];
+          return PeopleInfoListTile(
+            title: _creatorTitle(credit),
+            subtitle: _creatorSubtitle(credit),
+            isFirst: index == 0,
+            isLast: index == credits.length - 1,
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCharactersSection(BuildContext context) {
+    final characters = widget.issue.characters;
+    if (characters.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: ExpansionTile(
+        key: PageStorageKey('issue-characters-${widget.issueId}'),
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        title: Text(
+          'Characters',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        children: List.generate(characters.length, (index) {
+          final characterName = characters[index].name.trim();
+          return PeopleInfoListTile(
+            title: characterName.isNotEmpty ? characterName : 'Unknown Character',
+            isFirst: index == 0,
+            isLast: index == characters.length - 1,
+          );
+        }),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -446,6 +530,8 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
         _buildIssueMetaSection(context),
         _buildGenresAndIdsSection(context),
         _buildReprintsSection(context),
+        _buildCreatorsSection(context),
+        _buildCharactersSection(context),
         const SizedBox(height: 14),
         Text(
           'Modified: ${_formatModified(widget.issue.modified)}',

@@ -193,7 +193,9 @@ class IssueListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           Icon(
-                            effectiveIsRead ? Icons.bookmark : Icons.bookmark_border,
+                            effectiveIsRead
+                              ? Icons.bookmark_added
+                              : Icons.bookmark_added_outlined,
                             size: 16,
                             color: effectiveIsRead
                                 ? Theme.of(context).colorScheme.primary

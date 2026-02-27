@@ -214,7 +214,7 @@ class LibraryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   ActionCard(
-                    icon: Icons.bookmark,
+                    icon: Icons.bookmark_added,
                     value: statsAsync.when(
                       data: (stats) => stats.readCount.toString(),
                       loading: () => '--',
@@ -248,7 +248,7 @@ class LibraryScreen extends ConsumerWidget {
               title: 'Lists',
               items: [
                 CompactListSectionItem(
-                  icon: Icons.bookmark_border,
+                  icon: Icons.bookmark_added_outlined,
                   label: 'Unread',
                   value: statsAsync.when(
                     data: (stats) => stats.unreadCount.toString(),

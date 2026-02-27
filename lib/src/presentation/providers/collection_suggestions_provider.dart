@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/series.dart';
-import 'package:takion/src/domain/repositories/metron_repository.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 
 class SuggestionIssueTileData {
   const SuggestionIssueTileData({
@@ -24,62 +23,25 @@ class SuggestionIssueTileData {
 }
 
 Future<CollectionItem> _randomCollectionItemByPredicate(
-  MetronRepository repository,
+  List<CollectionItem> items,
   bool Function(CollectionItem item) predicate, {
   required String emptyError,
 }) async {
   final random = Random();
 
-  final firstPage = await repository.getCollectionItems(page: 1);
-  final firstMatches = firstPage.results.where(predicate).toList();
-
-  if (firstPage.results.isEmpty) {
+  if (items.isEmpty) {
     throw StateError('No collection items found.');
   }
 
-  final pageSize = firstPage.results.length;
-  final totalPages =
-      pageSize > 0 ? ((firstPage.count / pageSize).ceil()).clamp(1, 9999) : 1;
-
-  if (totalPages == 1 && firstMatches.isNotEmpty) {
-    return firstMatches[random.nextInt(firstMatches.length)];
-  }
-
-  final attemptedPages = <int>{1};
-  const maxAttempts = 6;
-  final attempts = totalPages < maxAttempts ? totalPages : maxAttempts;
-
-  for (var attempt = 0; attempt < attempts; attempt++) {
-    int page;
-    if (attempt == 0) {
-      page = 1;
-    } else {
-      do {
-        page = random.nextInt(totalPages) + 1;
-      } while (attemptedPages.contains(page) &&
-          attemptedPages.length < totalPages);
-    }
-
-    attemptedPages.add(page);
-    final pageData = page == 1
-        ? firstPage
-        : await repository.getCollectionItems(page: page);
-    final matches = pageData.results.where(predicate).toList();
-
-    if (matches.isNotEmpty) {
-      return matches[random.nextInt(matches.length)];
-    }
-  }
-
-  if (firstMatches.isNotEmpty) {
-    return firstMatches[random.nextInt(firstMatches.length)];
+  final matches = items.where(predicate).toList();
+  if (matches.isNotEmpty) {
+    return matches[random.nextInt(matches.length)];
   }
 
   throw StateError(emptyError);
 }
 
 Future<IssueList> _toSuggestionIssueList(
-  MetronRepository repository,
   CollectionItem item, {
   required String fallbackName,
 }) async {
@@ -99,18 +61,7 @@ Future<IssueList> _toSuggestionIssueList(
     return fallbackName;
   }
 
-  String? imageUrl;
-  final directImage = issue?.image?.trim();
-  if (directImage != null && directImage.isNotEmpty) {
-    imageUrl = directImage;
-  } else if (issueId != null && issueId > 0) {
-    try {
-      final details = await repository.getIssueDetails(issueId);
-      imageUrl = details.image;
-    } catch (_) {
-      imageUrl = null;
-    }
-  }
+  final imageUrl = issue?.image?.trim();
 
   return IssueList(
     id: issueId,
@@ -132,12 +83,10 @@ Future<IssueList> _toSuggestionIssueList(
 }
 
 Future<SuggestionIssueTileData> _toSuggestionTileData(
-  MetronRepository repository,
   CollectionItem item, {
   required String fallbackName,
 }) async {
   final issueList = await _toSuggestionIssueList(
-    repository,
     item,
     fallbackName: fallbackName,
   );
@@ -153,10 +102,10 @@ Future<SuggestionIssueTileData> _toSuggestionTileData(
 
 final readingSuggestionProvider =
     FutureProvider.autoDispose<CollectionItem?>((ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
+  final items = await ref.watch(allCollectionItemsProvider.future);
   try {
     return await _randomCollectionItemByPredicate(
-      repository,
+      items,
       (item) => !item.isRead,
       emptyError: 'No unread issues found in your collection.',
     );
@@ -167,22 +116,17 @@ final readingSuggestionProvider =
 
 final readingSuggestionIssueProvider =
     FutureProvider.autoDispose<SuggestionIssueTileData?>((ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
   final item = await ref.watch(readingSuggestionProvider.future);
   if (item == null) return null;
-  return _toSuggestionTileData(
-    repository,
-    item,
-    fallbackName: 'Unread issue',
-  );
+  return _toSuggestionTileData(item, fallbackName: 'Unread issue');
 });
 
 final rateSuggestionProvider =
     FutureProvider.autoDispose<CollectionItem?>((ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
+  final items = await ref.watch(allCollectionItemsProvider.future);
   try {
     return await _randomCollectionItemByPredicate(
-      repository,
+      items,
       (item) {
         final rating = item.rating;
         return item.isRead && (rating == null || rating <= 0);
@@ -196,12 +140,7 @@ final rateSuggestionProvider =
 
 final rateSuggestionIssueProvider =
     FutureProvider.autoDispose<SuggestionIssueTileData?>((ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
   final item = await ref.watch(rateSuggestionProvider.future);
   if (item == null) return null;
-  return _toSuggestionTileData(
-    repository,
-    item,
-    fallbackName: 'Unrated issue',
-  );
+  return _toSuggestionTileData(item, fallbackName: 'Unrated issue');
 });

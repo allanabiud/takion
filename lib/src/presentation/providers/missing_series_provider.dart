@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/missing_series_page.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 final selectedMissingSeriesPageProvider =
     NotifierProvider<SelectedMissingSeriesPage, int>(
@@ -26,8 +25,13 @@ class SelectedMissingSeriesPage extends Notifier<int> {
 
 final missingSeriesProvider =
     FutureProvider.autoDispose.family<MissingSeriesPage, int>((ref, page) {
-  final repository = ref.watch(metronRepositoryProvider);
-  return repository.getMissingSeries(page: page);
+  return Future.value(
+    MissingSeriesPage(
+      count: 0,
+      results: const [],
+      currentPage: page,
+    ),
+  );
 });
 
 final currentMissingSeriesProvider =

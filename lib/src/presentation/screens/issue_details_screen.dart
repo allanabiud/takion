@@ -13,7 +13,7 @@ import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/issue_details/about_tab_content.dart';
-import 'package:takion/src/presentation/widgets/issue_details/people_tab_content.dart';
+import 'package:takion/src/presentation/widgets/issue_details/my_details_tab_content.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _IssueDetailsMenuAction { share, openInBrowser }
@@ -34,7 +34,26 @@ class IssueDetailsScreen extends ConsumerWidget {
     final issueAsync = ref.watch(issueDetailsProvider(issueId));
     final issueStatus = ref.watch(issueCollectionStatusProvider(issueId));
 
+    String _issueTitle(IssueDetails issue) {
+      final seriesName = issue.series?.name.trim();
+      final issueNumber = issue.number.trim();
+
+      if (seriesName != null && seriesName.isNotEmpty && issueNumber.isNotEmpty) {
+        return '$seriesName #$issueNumber';
+      }
+      if (issue.names.isNotEmpty && issue.names.first.trim().isNotEmpty) {
+        return issue.names.first.trim();
+      }
+      return issueNumber.isNotEmpty ? 'Issue #$issueNumber' : 'Issue';
+    }
+
+    final sheetTitle = issueAsync.maybeWhen(
+      data: _issueTitle,
+      orElse: () => 'Issue',
+    );
+
     void showScrobbleSheet() {
+      var addToCollection = issueStatus?.isCollected ?? false;
       var markAsRead = issueStatus?.isRead ?? false;
       var selectedRating = (issueStatus?.rating ?? 0).clamp(0, 5);
       ref.read(scrobbleIssueProvider(issueId).notifier).reset();
@@ -53,11 +72,9 @@ class IssueDetailsScreen extends ConsumerWidget {
 
               return StatefulBuilder(
                 builder: (context, setModalState) {
-                  final helperMessage = !markAsRead
-                      ? 'Enable Mark as Read to submit a scrobble.'
-                      : null;
-                  const collectionAutoAddMessage =
-                      'Marking this issue as read will add it to your collection if it is not already collected.';
+                  Color toggleColor(bool enabled) => enabled
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline;
 
                   return SafeArea(
                     child: Padding(
@@ -72,38 +89,74 @@ class IssueDetailsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Scrobble Issue',
+                            sheetTitle,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 12),
-                          SwitchListTile.adaptive(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Mark as Read'),
-                            value: markAsRead,
-                            onChanged: isSubmitting
-                                ? null
-                                : (value) {
-                                    setModalState(() {
-                                      markAsRead = value;
-                                      if (!markAsRead) {
-                                        selectedRating = 0;
-                                      }
-                                    });
-                                  },
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Add to Collection',
+                                    iconSize: 40,
+                                    onPressed: isSubmitting
+                                        ? null
+                                        : () {
+                                            setModalState(() {
+                                              addToCollection = !addToCollection;
+                                            });
+                                          },
+                                    icon: Icon(
+                                      addToCollection
+                                          ? Icons.inventory_2
+                                          : Icons.inventory_2_outlined,
+                                      color: toggleColor(addToCollection),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Collected',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 24),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Mark as Read',
+                                    iconSize: 40,
+                                    onPressed: isSubmitting
+                                        ? null
+                                        : () {
+                                            setModalState(() {
+                                              markAsRead = !markAsRead;
+                                              if (!markAsRead) {
+                                                selectedRating = 0;
+                                              }
+                                            });
+                                          },
+                                    icon: Icon(
+                                      markAsRead
+                                          ? Icons.bookmark_added
+                                          : Icons.bookmark_added_outlined,
+                                      color: toggleColor(markAsRead),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Read',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                                ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            collectionAutoAddMessage,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          if (helperMessage != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              helperMessage,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
                           const SizedBox(height: 8),
                           Text(
                             'Rating',
@@ -114,24 +167,43 @@ class IssueDetailsScreen extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(5, (index) {
                               final starValue = index + 1;
-                              final isEnabled = markAsRead && !isSubmitting;
                               return IconButton(
                                 iconSize: 36,
-                                onPressed: !isEnabled
+                                onPressed: isSubmitting
                                     ? null
                                     : () {
                                         setModalState(() {
                                           selectedRating = starValue;
+                                          markAsRead = true;
                                         });
                                       },
                                 icon: Icon(
                                   starValue <= selectedRating
                                       ? Icons.star
                                       : Icons.star_border,
+                                  color: starValue <= selectedRating
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.outline,
                                 ),
                               );
                             }),
                           ),
+                          if (selectedRating > 0) ...[
+                            const SizedBox(height: 4),
+                            Align(
+                              alignment: Alignment.center,
+                              child: TextButton(
+                                onPressed: isSubmitting
+                                    ? null
+                                    : () {
+                                        setModalState(() {
+                                          selectedRating = 0;
+                                        });
+                                      },
+                                child: const Text('Reset rating'),
+                              ),
+                            ),
+                          ],
                           if (submitError != null) ...[
                             const SizedBox(height: 6),
                             Text(
@@ -157,12 +229,8 @@ class IssueDetailsScreen extends ConsumerWidget {
                                 onPressed: isSubmitting
                                     ? null
                                     : () async {
-                                        if (!markAsRead) {
-                                          TakionAlerts.scrobbleMarkAsReadRequired(
-                                            context,
-                                          );
-                                          return;
-                                        }
+                                    final hadCollection = issueStatus?.isCollected ?? false;
+                                    final hadRead = issueStatus?.isRead ?? false;
 
                                         await ref
                                             .read(
@@ -171,8 +239,12 @@ class IssueDetailsScreen extends ConsumerWidget {
                                               ).notifier,
                                             )
                                             .scrobble(
-                                              dateRead: DateTime.now().toUtc(),
-                                              rating: selectedRating > 0
+                                              markAsRead: markAsRead || selectedRating > 0,
+                                              addToCollection: addToCollection,
+                                              dateRead: markAsRead
+                                                  ? DateTime.now().toUtc()
+                                                  : null,
+                                              rating: markAsRead && selectedRating > 0
                                                   ? selectedRating
                                                   : null,
                                               refreshReadingSuggestion: true,
@@ -188,7 +260,18 @@ class IssueDetailsScreen extends ConsumerWidget {
                                           Navigator.of(sheetContext).pop();
                                         }
                                         if (context.mounted) {
-                                          TakionAlerts.scrobbleSuccess(context);
+                                          final addedNow = !hadCollection && addToCollection;
+                                          final markedReadNow = !hadRead && markAsRead;
+
+                                          if (addedNow) {
+                                            TakionAlerts.libraryAddedToCollection(context);
+                                          }
+                                          if (markedReadNow) {
+                                            TakionAlerts.libraryMarkedAsRead(context);
+                                          }
+                                          if (!addedNow && !markedReadNow) {
+                                            TakionAlerts.libraryUpdated(context);
+                                          }
                                         }
                                       },
                                 child: isSubmitting
@@ -479,7 +562,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
     final heroTag = 'issue-cover-${widget.issueId}';
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: NestedScrollView(
         controller: _scrollController,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -541,7 +624,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                         ColoredBox(color: colorScheme.surfaceContainerHighest),
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: backgroundTint.withValues(alpha: 0.34),
+                          color: backgroundTint.withValues(alpha: 0.44),
                         ),
                       ),
                       DecoratedBox(
@@ -551,8 +634,8 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                             end: Alignment.bottomCenter,
                             stops: const [0, 0.55, 1],
                             colors: [
-                              Colors.black.withValues(alpha: 0.42),
-                              Colors.black.withValues(alpha: 0.18),
+                              Colors.black.withValues(alpha: 0.56),
+                              Colors.black.withValues(alpha: 0.30),
                               Colors.transparent,
                             ],
                           ),
@@ -721,20 +804,24 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                               color: (widget.collectionStatus
                                                           ?.isCollected ??
                                                       false)
-                                                  ? Colors.white
+                                                  ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
                                                   : Colors.white70,
                                             ),
                                             const SizedBox(width: 12),
                                             Icon(
                                               (widget.collectionStatus?.isRead ??
                                                       false)
-                                                  ? Icons.bookmark
-                                                  : Icons.bookmark_border,
+                                                  ? Icons.bookmark_added
+                                                  : Icons.bookmark_added_outlined,
                                               size: 20,
                                               color: (widget.collectionStatus
                                                           ?.isRead ??
                                                       false)
-                                                  ? Colors.white
+                                                  ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
                                                   : Colors.white70,
                                             ),
                                           ],
@@ -749,7 +836,9 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                                   : Icons.star_border,
                                               size: 18,
                                               color: isFilled
-                                                  ? Colors.white
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
                                                   : Colors.white70,
                                             );
                                           }),
@@ -776,8 +865,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                   child: const TabBar(
                     tabs: [
                       Tab(text: 'About'),
-                      Tab(text: 'Creators'),
-                      Tab(text: 'Characters'),
+                      Tab(text: 'My Details'),
                     ],
                   ),
                 ),
@@ -797,7 +885,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
                     sliver: SliverList.list(
                       children: [
                         IssueAboutTabContent(
@@ -812,7 +900,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
             ),
             Builder(
               builder: (context) => CustomScrollView(
-                key: const PageStorageKey('issue-creators-tab'),
+                key: const PageStorageKey('issue-my-details-tab'),
                 slivers: [
                   SliverOverlapInjector(
                     handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
@@ -820,28 +908,13 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverList.list(
-                      children: [IssueCreatorsTabContent(issue: widget.issue)],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Builder(
-              builder: (context) => CustomScrollView(
-                key: const PageStorageKey('issue-characters-tab'),
-                slivers: [
-                  SliverOverlapInjector(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                      context,
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
                     sliver: SliverList.list(
                       children: [
-                        IssueCharactersTabContent(issue: widget.issue),
+                        IssueMyDetailsTabContent(
+                          issueId: widget.issueId,
+                          collectionStatus: widget.collectionStatus,
+                        ),
                       ],
                     ),
                   ),
@@ -915,7 +988,7 @@ class _IssueDetailsLoading extends StatelessWidget {
                   ColoredBox(color: colorScheme.surfaceContainerHighest),
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: backgroundTint.withValues(alpha: 0.34),
+                      color: backgroundTint.withValues(alpha: 0.44),
                   ),
                 ),
                 DecoratedBox(
@@ -925,8 +998,8 @@ class _IssueDetailsLoading extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       stops: const [0, 0.55, 1],
                       colors: [
-                        Colors.black.withValues(alpha: 0.42),
-                        Colors.black.withValues(alpha: 0.18),
+                          Colors.black.withValues(alpha: 0.56),
+                          Colors.black.withValues(alpha: 0.30),
                         Colors.transparent,
                       ],
                     ),

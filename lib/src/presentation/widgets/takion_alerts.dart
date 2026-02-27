@@ -68,12 +68,16 @@ class TakionAlerts {
     );
   }
 
-  static void scrobbleMarkAsReadRequired(BuildContext context) {
-    info(context, 'Mark as Read is required to scrobble.');
+  static void libraryAddedToCollection(BuildContext context) {
+    success(context, 'Added to Collection.');
   }
 
-  static void scrobbleSuccess(BuildContext context) {
-    success(context, 'Issue scrobbled successfully.');
+  static void libraryMarkedAsRead(BuildContext context) {
+    success(context, 'Marked as Read.');
+  }
+
+  static void libraryUpdated(BuildContext context) {
+    success(context, 'Library updated.');
   }
 
   static void noLinkedSeriesForIssue(BuildContext context) {

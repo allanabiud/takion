@@ -343,6 +343,67 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  void _showCollectionSettings(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final formatAsync = ref.watch(collectionDefaultFormatProvider);
+            final selected = formatAsync.maybeWhen(
+              data: (value) => value,
+              orElse: () => CollectionDefaultFormat.print,
+            );
+
+            return SettingsBottomSheet(
+              title: 'Collection',
+              content: Column(
+                children: [
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.tune),
+                    title: Text('Default format when adding issues'),
+                    subtitle: Text('Applied when a new item is added to your collection'),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<CollectionDefaultFormat>(
+                      segments: const [
+                        ButtonSegment<CollectionDefaultFormat>(
+                          value: CollectionDefaultFormat.print,
+                          label: Text('Print'),
+                        ),
+                        ButtonSegment<CollectionDefaultFormat>(
+                          value: CollectionDefaultFormat.digital,
+                          label: Text('Digital'),
+                        ),
+                        ButtonSegment<CollectionDefaultFormat>(
+                          value: CollectionDefaultFormat.both,
+                          label: Text('Both'),
+                        ),
+                      ],
+                      selected: {selected},
+                      onSelectionChanged: formatAsync.isLoading
+                          ? null
+                          : (newSelection) {
+                              ref
+                                  .read(collectionDefaultFormatProvider.notifier)
+                                  .setDefaultFormat(newSelection.first);
+                            },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showDataStorageSettings(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -425,6 +486,16 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Theme mode and color settings'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showAppearanceSettings(context, ref),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.collections_bookmark_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('Collection'),
+            subtitle: const Text('Default format for newly added issues'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showCollectionSettings(context, ref),
           ),
           ListTile(
             leading: Icon(

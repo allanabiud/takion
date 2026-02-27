@@ -10,9 +10,12 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
   @override
   Future<List<IssueList>> build([DateTime? date]) async {
     final targetDate = date ?? DateTime.now();
-    final repository = ref.watch(metronRepositoryProvider);
+    final repository = ref.watch(catalogRepositoryProvider);
 
-    return repository.getWeeklyReleasesForDate(targetDate);
+    final issues = await repository.getWeeklyReleasesForDate(targetDate);
+    await ref.read(catalogSyncHelperProvider).upsertIssues(issues);
+
+    return issues;
   }
 
   Future<void> refresh() async {
@@ -22,11 +25,13 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
     state = AsyncLoading<List<IssueList>>().copyWithPrevious(state);
 
     final newState = await AsyncValue.guard(() async {
-      final repository = ref.read(metronRepositoryProvider);
-      return repository.getWeeklyReleasesForDate(
+      final repository = ref.read(catalogRepositoryProvider);
+      final issues = await repository.getWeeklyReleasesForDate(
         targetDate,
         forceRefresh: true,
       );
+      await ref.read(catalogSyncHelperProvider).upsertIssues(issues);
+      return issues;
     });
     state = newState;
   }
@@ -36,7 +41,7 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
 class IssueDetailsNotifier extends _$IssueDetailsNotifier {
   @override
   Future<IssueDetails> build(int issueId) async {
-    final repository = ref.watch(metronRepositoryProvider);
+    final repository = ref.watch(catalogRepositoryProvider);
     return repository.getIssueDetails(issueId);
   }
 
@@ -45,7 +50,7 @@ class IssueDetailsNotifier extends _$IssueDetailsNotifier {
     state = AsyncLoading<IssueDetails>().copyWithPrevious(state);
 
     final newState = await AsyncValue.guard(() async {
-      final repository = ref.read(metronRepositoryProvider);
+      final repository = ref.read(catalogRepositoryProvider);
       return repository.getIssueDetails(issueId, forceRefresh: true);
     });
     state = newState;
@@ -54,8 +59,11 @@ class IssueDetailsNotifier extends _$IssueDetailsNotifier {
 
 @riverpod
 Future<List<IssueList>> currentWeeklyReleases(Ref ref) async {
-  final repository = ref.watch(metronRepositoryProvider);
-  return repository.getWeeklyReleasesForDate(DateTime.now());
+  final repository = ref.watch(catalogRepositoryProvider);
+  final now = DateTime.now();
+  final issues = await repository.getWeeklyReleasesForDate(now);
+  await ref.read(catalogSyncHelperProvider).upsertIssues(issues);
+  return issues;
 }
 
 @riverpod
