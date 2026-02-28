@@ -6,7 +6,8 @@ import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
 import 'package:takion/src/presentation/widgets/compact_list_section.dart';
-import 'package:takion/src/presentation/widgets/media_card.dart';
+import 'package:takion/src/presentation/widgets/issue_card.dart';
+import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
@@ -15,12 +16,12 @@ class ReleasesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // This provider always fetches for the actual current week (DateTime.now)
     final currentIssuesAsync = ref.watch(currentWeeklyReleasesProvider);
     final pullsCountAsync = ref.watch(currentWeekPullsCountProvider);
+    final pullsAsync = ref.watch(currentWeekPullsProvider);
 
     return Scaffold(
-      appBar: currentIssuesAsync.isLoading
+      appBar: currentIssuesAsync.isLoading || pullsAsync.isLoading
           ? AppBar(
               toolbarHeight: 0,
               bottom: const PreferredSize(
@@ -35,7 +36,7 @@ class ReleasesScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
                 children: [
                   ActionCard(
@@ -47,38 +48,32 @@ class ReleasesScreen extends ConsumerWidget {
                     ),
                     label: 'This Week',
                     onTap: () {
-                      ref.read(selectedWeekProvider.notifier).setDate(DateTime.now());
+                      ref
+                          .read(selectedWeekProvider.notifier)
+                          .setDate(DateTime.now());
                       context.pushRoute(const WeeklyReleasesRoute());
                     },
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   ActionCard(
-                    icon: Icons.star_outline,
-                    value: currentIssuesAsync.when(
-                      data: (issues) => issues
-                          .where((i) => i.number == '1')
-                          .length
-                          .toString(),
-                      loading: () => '--',
-                      error: (_, _) => '!',
-                    ),
-                    label: 'New #1s',
+                    icon: Icons.bookmark_outline,
+                    value: '--',
+                    label: 'Subscriptions',
                     onTap: () {
-                      ref.read(selectedWeekProvider.notifier).setDate(DateTime.now());
-                      context.pushRoute(const NewFirstIssuesRoute());
+                      TakionAlerts.comingSoon(context, 'Subscriptions');
                     },
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   ActionCard(
                     icon: Icons.shopping_bag_outlined,
-                    value: pullsCountAsync.when(
-                      data: (count) => count.toString(),
-                      loading: () => '--',
-                      error: (_, _) => '!',
-                    ),
-                    label: 'Your Pulls',
+                    value: pullsAsync.isLoading
+                        ? '--'
+                        : pullsCountAsync.toString(),
+                    label: 'Pulls',
                     onTap: () {
-                      ref.read(selectedWeekProvider.notifier).setDate(DateTime.now());
+                      ref
+                          .read(selectedWeekProvider.notifier)
+                          .setDate(DateTime.now());
                       context.pushRoute(const MyPullsRoute());
                     },
                   ),
@@ -89,26 +84,26 @@ class ReleasesScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'This Week Preview',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                'Your Pulls This Week',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(height: 10),
-            currentIssuesAsync.when(
+            pullsAsync.when(
               data: (issues) {
                 if (issues.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('No releases found for this week.'),
+                    child: Text('No pulls this week.'),
                   );
                 }
 
-                final previewIssues = issues.take(10).toList();
+                final previewIssues = issues.take(5).toList();
 
                 return SizedBox(
-                  height: 232,
+                  height: 260,
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     scrollDirection: Axis.horizontal,
@@ -117,11 +112,21 @@ class ReleasesScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final issue = previewIssues[index];
                       final issueId = issue.id;
+                      final collectionStatus = issueId != null
+                          ? ref.watch(issueCollectionStatusProvider(issueId))
+                          : null;
+                      final isCollected =
+                          collectionStatus?.isCollected ?? false;
+                      final isRead = collectionStatus?.isRead ?? false;
 
-                      return MediaCard(
+                      return IssueCard(
                         imageUrl: issue.image,
                         title: issue.name,
-                        heroTag: issueId != null ? 'issue-cover-$issueId' : null,
+                        heroTag: issueId != null
+                            ? 'issue-cover-$issueId'
+                            : null,
+                        isCollected: isCollected,
+                        isRead: isRead,
                         onTap: issueId == null
                             ? null
                             : () {
@@ -146,7 +151,7 @@ class ReleasesScreen extends ConsumerWidget {
               ),
               error: (_, _) => const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('Could not load this week preview.'),
+                child: Text('Could not load pulls preview.'),
               ),
             ),
             const SizedBox(height: 16),
@@ -154,17 +159,20 @@ class ReleasesScreen extends ConsumerWidget {
               title: 'Browse',
               items: [
                 CompactListSectionItem(
+                  icon: Icons.new_releases_outlined,
+                  label: 'New #1s',
+                  onTap: () {
+                    ref
+                        .read(selectedWeekProvider.notifier)
+                        .setDate(DateTime.now());
+                    context.pushRoute(const NewFirstIssuesRoute());
+                  },
+                ),
+                CompactListSectionItem(
                   icon: Icons.calendar_month_outlined,
                   label: 'FOC Calendar',
                   onTap: () {
                     TakionAlerts.comingSoon(context, 'FOC Calendar');
-                  },
-                ),
-                CompactListSectionItem(
-                  icon: Icons.upcoming_outlined,
-                  label: 'Upcoming #1s',
-                  onTap: () {
-                    TakionAlerts.comingSoon(context, 'Upcoming #1s');
                   },
                 ),
               ],

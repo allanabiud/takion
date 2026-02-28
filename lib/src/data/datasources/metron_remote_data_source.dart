@@ -48,10 +48,10 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     final normalized = _normalizeQuery(query);
     if (normalized.isEmpty) return const [];
 
-    final cleaned = normalized.replaceAll(RegExp(r'[^\w\s#-]'), ' ').replaceAll(
-      RegExp(r'\s+'),
-      ' ',
-    ).trim();
+    final cleaned = normalized
+        .replaceAll(RegExp(r'[^\w\s#-]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
     final tokens = cleaned
         .split(' ')
         .map((token) => token.trim())
@@ -79,9 +79,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     DateTime? dateRead,
     int? rating,
   }) async {
-    final payload = <String, dynamic>{
-      'issue_id': issueId,
-    };
+    final payload = <String, dynamic>{'issue_id': issueId};
 
     if (dateRead != null) {
       payload['date_read'] = dateRead.toUtc().toIso8601String();
@@ -90,10 +88,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       payload['rating'] = rating;
     }
 
-    final response = await _dio.post(
-      'collection/scrobble/',
-      data: payload,
-    );
+    final response = await _dio.post('collection/scrobble/', data: payload);
 
     return CollectionScrobbleResponseDto.fromJson(
       response.data as Map<String, dynamic>,
@@ -104,9 +99,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<CollectionItemsResponseDto> getCollectionItems({int page = 1}) async {
     final response = await _dio.get(
       'collection/',
-      queryParameters: {
-        'page': page,
-      },
+      queryParameters: {'page': page},
     );
     return CollectionItemsResponseDto.fromJson(
       response.data as Map<String, dynamic>,
@@ -127,9 +120,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<MissingSeriesResponseDto> getMissingSeries({int page = 1}) async {
     final response = await _dio.get(
       'collection/missing_series/',
-      queryParameters: {
-        'page': page,
-      },
+      queryParameters: {'page': page},
     );
     return MissingSeriesResponseDto.fromJson(
       response.data as Map<String, dynamic>,
@@ -146,7 +137,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     ).subtract(Duration(days: offset));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    String formatDate(DateTime d) => 
+    String formatDate(DateTime d) =>
         "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
     final response = await _dio.get(
@@ -181,10 +172,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     for (final candidate in candidates) {
       final response = await _dio.get(
         'issue/',
-        queryParameters: {
-          'series_name': candidate,
-          'page': page,
-        },
+        queryParameters: {'series_name': candidate, 'page': page},
       );
 
       final parsed = IssueSearchResponseDto.fromJson(
@@ -202,12 +190,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
 
   @override
   Future<SeriesListResponseDto> getSeriesList({int page = 1}) async {
-    final response = await _dio.get(
-      'series/',
-      queryParameters: {
-        'page': page,
-      },
-    );
+    final response = await _dio.get('series/', queryParameters: {'page': page});
 
     return SeriesListResponseDto.fromJson(
       response.data as Map<String, dynamic>,
@@ -228,10 +211,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     for (final candidate in candidates) {
       final response = await _dio.get(
         'series/',
-        queryParameters: {
-          'name': candidate,
-          'page': page,
-        },
+        queryParameters: {'name': candidate, 'page': page},
       );
 
       final parsed = SeriesSearchResponseDto.fromJson(
@@ -260,9 +240,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }) async {
     final response = await _dio.get(
       'series/$seriesId/issue_list/',
-      queryParameters: {
-        'page': page,
-      },
+      queryParameters: {'page': page},
     );
 
     return SeriesIssueListResponseDto.fromJson(

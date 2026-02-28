@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +29,7 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
-  static const _expandedHeight = 268.0;
+  static const _expandedHeight = 240.0;
   final ScrollController _scrollController = ScrollController();
   double _titleOpacity = 0;
   int _issuesPage = 1;
@@ -112,7 +114,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
 
     return detailsAsync.when(
-      loading: () => const Scaffold(body: AsyncStatePanel.loading()),
+      loading: () => _SeriesDetailsLoading(seriesId: widget.seriesId),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: AsyncStatePanel.error(
@@ -222,8 +224,9 @@ class _SeriesHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final backgroundTint = Theme.of(context).scaffoldBackgroundColor;
     final publisher = details.publisher?.name.trim();
-    final hasPublisher = publisher != null && publisher.isNotEmpty;
+    final hasPublisher = details.publisher != null;
     final firstPageIssuesAsync = ref.watch(
       seriesIssueListProvider(SeriesIssueListArgs(seriesId: seriesId, page: 1)),
     );
@@ -233,107 +236,119 @@ class _SeriesHeader extends ConsumerWidget {
         ? firstPageIssues.results.first.image
         : null;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [colorScheme.primaryContainer, colorScheme.surface],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Hero(
-                    tag: 'series-cover-$seriesId',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: 132,
-                        height: 198,
-                        color: colorScheme.surfaceContainerHighest,
-                        child: firstIssueImage != null
-                            ? CachedNetworkImage(
-                                imageUrl: firstIssueImage,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Center(
-                                  child: SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Center(
-                                  child: SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : Center(
-                                child: SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            details.name.toUpperCase(),
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 4),
-                          if (hasPublisher)
-                            Text(
-                              publisher.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          Text(
-                            _yearRange(details).toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (firstIssueImage != null)
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: CachedNetworkImage(
+              imageUrl: firstIssueImage,
+              fit: BoxFit.cover,
+            ),
+          )
+        else
+          ColoredBox(color: colorScheme.surfaceContainerHighest),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: backgroundTint.withValues(alpha: 0.44),
           ),
         ),
-      ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0, 0.55, 1],
+              colors: [
+                Colors.black.withValues(alpha: 0.56),
+                Colors.black.withValues(alpha: 0.30),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    if (hasPublisher) ...[
+                      Flexible(
+                        child: Text(
+                          publisher?.toUpperCase() ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 8,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                        ),
+                      ),
+                      Text(
+                        ' • ',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shadows: const [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 8,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    Flexible(
+                      child: Text(
+                        _yearRange(details).toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shadows: const [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 8,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  details.name.toUpperCase(),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 8,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -416,6 +431,7 @@ class _SeriesAboutTab extends StatelessWidget {
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
     return ListView(
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
         if (hasDescription) ...[
@@ -581,7 +597,7 @@ class _SeriesIssuesTab extends ConsumerWidget {
           children: [
             issuePage.results.isEmpty
                 ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
                     children: const [
                       SizedBox(height: 220),
@@ -589,6 +605,7 @@ class _SeriesIssuesTab extends ConsumerWidget {
                     ],
                   )
                 : ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       0,
                       12,
@@ -652,5 +669,45 @@ class _SeriesTabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _SeriesTabBarDelegate oldDelegate) {
     return oldDelegate.child != child;
+  }
+}
+
+class _SeriesDetailsLoading extends StatelessWidget {
+  const _SeriesDetailsLoading({required this.seriesId});
+
+  final int seriesId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          expandedHeight: 240.0,
+          backgroundColor: colorScheme.surface,
+          flexibleSpace: FlexibleSpaceBar(
+            collapseMode: CollapseMode.parallax,
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: colorScheme.surfaceContainerHighest),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const [CircularProgressIndicator()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

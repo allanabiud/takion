@@ -123,7 +123,9 @@ class LibraryScreen extends ConsumerWidget {
                             Text(
                               errorMessage,
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Theme.of(context).colorScheme.error),
+                                  ?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                             ),
                           ],
                           const SizedBox(height: 8),
@@ -197,7 +199,7 @@ class LibraryScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
                 children: [
                   ActionCard(
@@ -212,7 +214,7 @@ class LibraryScreen extends ConsumerWidget {
                       context.pushRoute(const MyComicsRoute());
                     },
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   ActionCard(
                     icon: Icons.bookmark_added,
                     value: statsAsync.when(
@@ -227,7 +229,7 @@ class LibraryScreen extends ConsumerWidget {
                       );
                     },
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   ActionCard(
                     icon: Icons.attach_money_outlined,
                     value: statsAsync.when(
@@ -256,9 +258,7 @@ class LibraryScreen extends ConsumerWidget {
                     error: (_, _) => '!',
                   ),
                   onTap: () {
-                    context.pushRoute(
-                      CollectionReadStatusRoute(isRead: false),
-                    );
+                    context.pushRoute(CollectionReadStatusRoute(isRead: false));
                   },
                 ),
                 CompactListSectionItem(
@@ -298,7 +298,10 @@ class LibraryScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: 8),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 16,
+                    ),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ],
@@ -365,7 +368,10 @@ class LibraryScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: 8),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 16,
+                    ),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ],

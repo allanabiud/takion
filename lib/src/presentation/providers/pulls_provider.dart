@@ -12,10 +12,12 @@ String _seriesKey(Series series) {
   return '${_normalizeSeriesName(series.name)}|${series.volume ?? -1}|${series.yearBegan ?? -1}';
 }
 
-final pullsIssuesForWeekProvider =
-    FutureProvider.autoDispose.family<List<IssueList>, DateTime>((ref, date) async {
+final pullsIssuesForWeekProvider = FutureProvider.autoDispose
+    .family<List<IssueList>, DateTime>((ref, date) async {
       final weeklyIssues = await ref.watch(weeklyReleasesProvider(date).future);
-      final collectionSeriesKeys = await ref.watch(collectionSeriesKeysProvider.future);
+      final collectionSeriesKeys = await ref.watch(
+        collectionSeriesKeysProvider.future,
+      );
 
       return weeklyIssues.where((issue) {
         final series = issue.series;
@@ -24,7 +26,16 @@ final pullsIssuesForWeekProvider =
       }).toList();
     });
 
-final currentWeekPullsCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final pulls = await ref.watch(pullsIssuesForWeekProvider(DateTime.now()).future);
-  return pulls.length;
+final currentWeekPullsProvider = FutureProvider.autoDispose<List<IssueList>>((
+  ref,
+) async {
+  final pulls = await ref.watch(
+    pullsIssuesForWeekProvider(DateTime.now()).future,
+  );
+  return pulls;
+});
+
+final currentWeekPullsCountProvider = Provider<int>((ref) {
+  final pullsAsync = ref.watch(currentWeekPullsProvider);
+  return pullsAsync.maybeWhen(data: (pulls) => pulls.length, orElse: () => 0);
 });

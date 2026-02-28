@@ -7,25 +7,24 @@ import 'package:takion/src/presentation/providers/issue_collection_status_provid
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 class IssueMyDetailsData {
-  const IssueMyDetailsData({
-    required this.item,
-    required this.readLogs,
-  });
+  const IssueMyDetailsData({required this.item, required this.readLogs});
 
   final LibraryItem? item;
   final List<LibraryReadLog> readLogs;
 }
 
-final issueMyDetailsProvider =
-    FutureProvider.autoDispose.family<IssueMyDetailsData, int>((ref, issueId) async {
-      final libraryRepository = ref.read(libraryRepositoryProvider);
-      final item = await libraryRepository.getItemByIssueId(issueId);
-      final logs = await libraryRepository.getReadLogsByIssueId(issueId);
-      return IssueMyDetailsData(item: item, readLogs: logs);
-    });
+final issueMyDetailsProvider = FutureProvider.family<IssueMyDetailsData, int>((
+  ref,
+  issueId,
+) async {
+  final libraryRepository = ref.read(libraryRepositoryProvider);
+  final item = await libraryRepository.getItemByIssueId(issueId);
+  final logs = await libraryRepository.getReadLogsByIssueId(issueId);
+  return IssueMyDetailsData(item: item, readLogs: logs);
+});
 
-final issueMyDetailsControllerProvider = NotifierProvider.autoDispose
-    .family<IssueMyDetailsController, AsyncValue<void>, int>(
+final issueMyDetailsControllerProvider =
+    NotifierProvider.family<IssueMyDetailsController, AsyncValue<void>, int>(
       IssueMyDetailsController.new,
     );
 
@@ -70,15 +69,14 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
       } else {
         final now = DateTime.now().toUtc();
         final resolvedRating = isRead ? rating : null;
-        final firstReadAt = isRead
-            ? (existing?.firstReadAt ?? now)
-            : null;
+        final firstReadAt = isRead ? (existing?.firstReadAt ?? now) : null;
 
         await libraryRepository.upsertItem(
           metronIssueId: _issueId,
           metronSeriesId: seriesId,
-          ownershipStatus:
-              isCollected ? LibraryOwnershipStatus.owned : LibraryOwnershipStatus.wishlist,
+          ownershipStatus: isCollected
+              ? LibraryOwnershipStatus.owned
+              : LibraryOwnershipStatus.wishlist,
           isRead: isRead,
           rating: resolvedRating,
           purchaseDate: purchaseDate,
@@ -166,9 +164,13 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
 
       await libraryRepository.deleteReadLogById(readLogId);
 
-      final remainingLogs = await libraryRepository.getReadLogsByIssueId(_issueId);
+      final remainingLogs = await libraryRepository.getReadLogsByIssueId(
+        _issueId,
+      );
       remainingLogs.sort((a, b) => a.readAt.compareTo(b.readAt));
-      final nextFirstReadAt = remainingLogs.isEmpty ? null : remainingLogs.first.readAt;
+      final nextFirstReadAt = remainingLogs.isEmpty
+          ? null
+          : remainingLogs.first.readAt;
 
       await libraryRepository.upsertItem(
         metronIssueId: item.metronIssueId,

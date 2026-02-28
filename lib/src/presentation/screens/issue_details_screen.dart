@@ -38,7 +38,9 @@ class IssueDetailsScreen extends ConsumerWidget {
       final seriesName = issue.series?.name.trim();
       final issueNumber = issue.number.trim();
 
-      if (seriesName != null && seriesName.isNotEmpty && issueNumber.isNotEmpty) {
+      if (seriesName != null &&
+          seriesName.isNotEmpty &&
+          issueNumber.isNotEmpty) {
         return '$seriesName #$issueNumber';
       }
       if (issue.names.isNotEmpty && issue.names.first.trim().isNotEmpty) {
@@ -107,7 +109,8 @@ class IssueDetailsScreen extends ConsumerWidget {
                                         ? null
                                         : () {
                                             setModalState(() {
-                                              addToCollection = !addToCollection;
+                                              addToCollection =
+                                                  !addToCollection;
                                             });
                                           },
                                     icon: Icon(
@@ -120,7 +123,9 @@ class IssueDetailsScreen extends ConsumerWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     'Collected',
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ],
                               ),
@@ -151,10 +156,12 @@ class IssueDetailsScreen extends ConsumerWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     'Read',
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ],
-                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -229,8 +236,10 @@ class IssueDetailsScreen extends ConsumerWidget {
                                 onPressed: isSubmitting
                                     ? null
                                     : () async {
-                                    final hadCollection = issueStatus?.isCollected ?? false;
-                                    final hadRead = issueStatus?.isRead ?? false;
+                                        final hadCollection =
+                                            issueStatus?.isCollected ?? false;
+                                        final hadRead =
+                                            issueStatus?.isRead ?? false;
 
                                         await ref
                                             .read(
@@ -239,12 +248,16 @@ class IssueDetailsScreen extends ConsumerWidget {
                                               ).notifier,
                                             )
                                             .scrobble(
-                                              markAsRead: markAsRead || selectedRating > 0,
+                                              markAsRead:
+                                                  markAsRead ||
+                                                  selectedRating > 0,
                                               addToCollection: addToCollection,
                                               dateRead: markAsRead
                                                   ? DateTime.now().toUtc()
                                                   : null,
-                                              rating: markAsRead && selectedRating > 0
+                                              rating:
+                                                  markAsRead &&
+                                                      selectedRating > 0
                                                   ? selectedRating
                                                   : null,
                                               refreshReadingSuggestion: true,
@@ -260,17 +273,25 @@ class IssueDetailsScreen extends ConsumerWidget {
                                           Navigator.of(sheetContext).pop();
                                         }
                                         if (context.mounted) {
-                                          final addedNow = !hadCollection && addToCollection;
-                                          final markedReadNow = !hadRead && markAsRead;
+                                          final addedNow =
+                                              !hadCollection && addToCollection;
+                                          final markedReadNow =
+                                              !hadRead && markAsRead;
 
                                           if (addedNow) {
-                                            TakionAlerts.libraryAddedToCollection(context);
+                                            TakionAlerts.libraryAddedToCollection(
+                                              context,
+                                            );
                                           }
                                           if (markedReadNow) {
-                                            TakionAlerts.libraryMarkedAsRead(context);
+                                            TakionAlerts.libraryMarkedAsRead(
+                                              context,
+                                            );
                                           }
                                           if (!addedNow && !markedReadNow) {
-                                            TakionAlerts.libraryUpdated(context);
+                                            TakionAlerts.libraryUpdated(
+                                              context,
+                                            );
                                           }
                                         }
                                       },
@@ -795,33 +816,41 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                         Row(
                                           children: [
                                             Icon(
-                                              (widget.collectionStatus
+                                              (widget
+                                                          .collectionStatus
                                                           ?.isCollected ??
                                                       false)
                                                   ? Icons.inventory_2
                                                   : Icons.inventory_2_outlined,
                                               size: 20,
-                                              color: (widget.collectionStatus
+                                              color:
+                                                  (widget
+                                                          .collectionStatus
                                                           ?.isCollected ??
                                                       false)
-                                                  ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
                                                   : Colors.white70,
                                             ),
                                             const SizedBox(width: 12),
                                             Icon(
-                                              (widget.collectionStatus?.isRead ??
-                                                      false)
-                                                  ? Icons.bookmark_added
-                                                  : Icons.bookmark_added_outlined,
-                                              size: 20,
-                                              color: (widget.collectionStatus
+                                              (widget
+                                                          .collectionStatus
                                                           ?.isRead ??
                                                       false)
-                                                  ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
+                                                  ? Icons.bookmark_added
+                                                  : Icons
+                                                        .bookmark_added_outlined,
+                                              size: 20,
+                                              color:
+                                                  (widget
+                                                          .collectionStatus
+                                                          ?.isRead ??
+                                                      false)
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
                                                   : Colors.white70,
                                             ),
                                           ],
@@ -829,16 +858,17 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                         const SizedBox(height: 6),
                                         Row(
                                           children: List.generate(5, (index) {
-                                            final isFilled = index < ratingValue;
+                                            final isFilled =
+                                                index < ratingValue;
                                             return Icon(
                                               isFilled
                                                   ? Icons.star
                                                   : Icons.star_border,
                                               size: 18,
                                               color: isFilled
-                                                  ? Theme.of(context)
-                                                      .colorScheme
-                                                      .primary
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
                                                   : Colors.white70,
                                             );
                                           }),
@@ -877,6 +907,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
           children: [
             Builder(
               builder: (context) => CustomScrollView(
+                physics: const NeverScrollableScrollPhysics(),
                 key: const PageStorageKey('issue-about-tab'),
                 slivers: [
                   SliverOverlapInjector(
@@ -900,6 +931,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
             ),
             Builder(
               builder: (context) => CustomScrollView(
+                physics: const NeverScrollableScrollPhysics(),
                 key: const PageStorageKey('issue-my-details-tab'),
                 slivers: [
                   SliverOverlapInjector(
@@ -988,7 +1020,7 @@ class _IssueDetailsLoading extends StatelessWidget {
                   ColoredBox(color: colorScheme.surfaceContainerHighest),
                 DecoratedBox(
                   decoration: BoxDecoration(
-                      color: backgroundTint.withValues(alpha: 0.44),
+                    color: backgroundTint.withValues(alpha: 0.44),
                   ),
                 ),
                 DecoratedBox(
@@ -998,8 +1030,8 @@ class _IssueDetailsLoading extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       stops: const [0, 0.55, 1],
                       colors: [
-                          Colors.black.withValues(alpha: 0.56),
-                          Colors.black.withValues(alpha: 0.30),
+                        Colors.black.withValues(alpha: 0.56),
+                        Colors.black.withValues(alpha: 0.30),
                         Colors.transparent,
                       ],
                     ),
@@ -1050,8 +1082,8 @@ class _IssueDetailsLoading extends StatelessWidget {
                                     : Container(
                                         width: coverWidth,
                                         height: coverHeight,
-                                        color: colorScheme
-                                            .surfaceContainerHighest,
+                                        color:
+                                            colorScheme.surfaceContainerHighest,
                                         child: const Icon(
                                           Icons.image,
                                           size: 40,

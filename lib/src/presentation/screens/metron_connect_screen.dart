@@ -181,7 +181,7 @@ class _MetronConnectScreenState extends ConsumerState<MetronConnectScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _isConnecting || isOffline
+              onPressed: _isConnecting || isOffline || isConnected
                   ? null
                   : () async {
                       if (isOffline) {
