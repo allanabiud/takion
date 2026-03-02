@@ -1,36 +1,19 @@
-# Takion
+<p align="center">
+  <img src="assets/images/icon.png" alt="Takion App Icon" width="96" height="96" />
+</p>
 
-Takion is a Flutter comic client that now uses Supabase for app authentication
-and user profiles, while Metron is handled as an optional connected account for
-comic data access.
+<h1 align="center">Takion</h1>
 
-## Setup
+<p align="center">Android app for Metron-powered comic pull-list and collection tracking.</p>
 
-### 1) Configure Supabase
+## Features
 
-Create a Supabase project and run the SQL script in:
+- **Pull List Management**: Track upcoming issues and weekly pull activity.
+- **Library Tracking**: Organize collection items, read status, and ratings.
+- **Wishlist Support**: Keep a separate list of wanted issues.
+- **Profile & Insights**: View account details and collector-focused stats.
+- **Notifications Settings**: Configure pull alert preferences and timing.
 
-- `tool/supabase_profiles.sql`
+## Download
 
-This creates the `profiles` table and row-level-security policies used by the app.
-
-### 2) Run with environment values
-
-The app requires these `dart-define` values at runtime:
-
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-
-Example:
-
-```bash
-flutter run \
-	--dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
-	--dart-define=SUPABASE_ANON_KEY=YOUR_ANON_KEY
-```
-
-## Auth model
-
-- App login/signup: Supabase email + password.
-- Profiles: stored in Supabase `profiles` table.
-- Metron credentials: stored separately as an optional connected account in app settings.
+Get release APKs from the GitHub **Releases** page.
