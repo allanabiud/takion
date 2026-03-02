@@ -60,16 +60,21 @@ class SupabasePullListRepository implements PullListRepository {
       userId: row['user_id'] as String,
       metronSeriesId: row['metron_series_id'] as int,
       metronIssueId: row['metron_issue_id'] as int,
-      releaseDate:
-          row['release_date'] != null
-              ? DateTime.parse(row['release_date'] as String)
-              : null,
+      releaseDate: row['release_date'] != null
+          ? DateTime.parse(row['release_date'] as String)
+          : null,
       entryStatus: _statusFromDb(row['entry_status'] as String),
       source: _sourceFromDb(row['source'] as String),
       generatedAt: DateTime.parse(row['generated_at'] as String),
       createdAt: DateTime.parse(row['created_at'] as String),
       updatedAt: DateTime.parse(row['updated_at'] as String),
     );
+  }
+
+  String _dateOnly(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
   }
 
   @override
@@ -90,10 +95,10 @@ class SupabasePullListRepository implements PullListRepository {
         .eq('user_id', userId);
 
     if (fromDate != null) {
-      query = query.gte('release_date', fromDate.toUtc().toIso8601String().split('T').first);
+      query = query.gte('release_date', _dateOnly(fromDate));
     }
     if (toDate != null) {
-      query = query.lte('release_date', toDate.toUtc().toIso8601String().split('T').first);
+      query = query.lte('release_date', _dateOnly(toDate));
     }
     if (status != null) {
       query = query.eq('entry_status', _statusToDb(status));
@@ -142,7 +147,7 @@ class SupabasePullListRepository implements PullListRepository {
           'user_id': userId,
           'metron_series_id': metronSeriesId,
           'metron_issue_id': metronIssueId,
-          'release_date': releaseDate?.toUtc().toIso8601String().split('T').first,
+          'release_date': releaseDate == null ? null : _dateOnly(releaseDate),
           'entry_status': _statusToDb(entryStatus),
           'source': 'manual',
           'generated_at': now,
@@ -194,14 +199,26 @@ class SupabasePullListRepository implements PullListRepository {
     DateTime? toDate,
   }) async {
     _requireUserId();
-
-    final result = await _client.rpc(
-      'regenerate_pull_list_from_subscriptions',
-      params: {
-        'p_from_date': fromDate?.toUtc().toIso8601String().split('T').first,
-        'p_to_date': toDate?.toUtc().toIso8601String().split('T').first,
-      },
-    );
+    dynamic result;
+    try {
+      result = await _client.rpc(
+        'regenerate_pull_list_from_subscriptions',
+        params: {
+          'p_from_date': fromDate == null ? null : _dateOnly(fromDate),
+          'p_to_date': toDate == null ? null : _dateOnly(toDate),
+        },
+      );
+    } on PostgrestException catch (error) {
+      final message = error.message.toLowerCase();
+      final details = '${error.details ?? ''}'.toLowerCase();
+      final isMissingLegacyCatalogTable =
+          message.contains('catalog_issue_releases') ||
+          details.contains('catalog_issue_releases');
+      if (isMissingLegacyCatalogTable) {
+        return 0;
+      }
+      rethrow;
+    }
 
     if (result is int) return result;
     if (result is num) return result.toInt();

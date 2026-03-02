@@ -1,14 +1,17 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
+import 'package:takion/src/core/notifications/push_notification_service.dart';
 import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
+import 'package:takion/src/presentation/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
@@ -31,7 +34,35 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _runMetronConnectionCheckIfNeeded();
+      _initializePushNotifications();
     });
+  }
+
+  Future<void> _initializePushNotifications() async {
+    if (Firebase.apps.isEmpty) return;
+    await ref.read(pushNotificationServiceProvider).initialize();
+    await _syncPushRegistration();
+  }
+
+  Future<void> _syncPushRegistration({bool includeDisable = false}) async {
+    final authState = ref.read(authStateProvider).value;
+    if (authState != AuthStatus.authenticated) return;
+
+    final enabledAsync = ref.read(pushPullNotificationsEnabledProvider);
+    final enabled = enabledAsync.value ?? false;
+    if (!enabled && !includeDisable) return;
+
+    try {
+      await ref
+          .read(pushNotificationServiceProvider)
+          .syncRegistration(enabled: enabled);
+    } catch (error) {
+      if (!mounted) return;
+      TakionAlerts.error(
+        context,
+        error.toString().replaceFirst('Bad state: ', ''),
+      );
+    }
   }
 
   Future<void> _runMetronConnectionCheckIfNeeded() async {
@@ -81,9 +112,19 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         if (current == AuthStatus.authenticated) {
           _metronCheckedForSession = false;
           Future<void>(() => _runMetronConnectionCheckIfNeeded());
+          Future<void>(() => _syncPushRegistration());
         } else if (current == AuthStatus.unauthenticated) {
           _metronCheckedForSession = false;
         }
+      }
+    });
+    ref.listen(pushPullNotificationsEnabledProvider, (previous, next) {
+      if (!next.isLoading && previous?.value != next.value) {
+        final wasEnabled = previous?.value ?? false;
+        final isEnabled = next.value ?? false;
+        Future<void>(
+          () => _syncPushRegistration(includeDisable: wasEnabled && !isEnabled),
+        );
       }
     });
 
@@ -106,20 +147,21 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         final bannerTextColor = Theme.of(context).colorScheme.onErrorContainer;
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: FlexColorScheme.themedSystemNavigationBar(
-            context,
-            systemNavBarStyle: FlexSystemNavBarStyle.transparent,
-          ).copyWith(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness:
-                Theme.of(context).brightness == Brightness.dark
+          value:
+              FlexColorScheme.themedSystemNavigationBar(
+                context,
+                systemNavBarStyle: FlexSystemNavBarStyle.transparent,
+              ).copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness:
+                    Theme.of(context).brightness == Brightness.dark
                     ? Brightness.light
                     : Brightness.dark,
-            statusBarBrightness:
-                Theme.of(context).brightness == Brightness.dark
+                statusBarBrightness:
+                    Theme.of(context).brightness == Brightness.dark
                     ? Brightness.dark
                     : Brightness.light,
-          ),
+              ),
           child: Stack(
             children: [
               child!,

@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -19,6 +20,8 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   // Enable edge-to-edge mode for transparent system bars
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
+  await Firebase.initializeApp();
+
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
   if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
@@ -27,10 +30,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     );
   }
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
   final hiveService = HiveService();
   await hiveService.init();
@@ -51,7 +51,6 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     hiveService.openBox<Map>('collection_stats_box'),
     hiveService.openBox<Map>('collection_items_box'),
     hiveService.openBox<Map>('collection_item_details_box'),
-    hiveService.openBox<Map>('missing_series_box'),
     hiveService.openBox<int>('cache_meta_box'),
     hiveService.openBox<IssueDetailsDto>('issue_details_box'),
     hiveService.openBox<Map>('series_details_box'),

@@ -22,12 +22,17 @@ class MetronRepositoryImpl implements MetronRepository {
   }) : _now = now ?? DateTime.now;
 
   @override
-  Future<List<IssueList>> getWeeklyReleasesForDate(DateTime date, {bool forceRefresh = false}) async { // Updated to IssueList
+  Future<List<IssueList>> getWeeklyReleasesForDate(
+    DateTime date, {
+    bool forceRefresh = false,
+  }) async {
+    // Updated to IssueList
     final cachedDtos = await _localDataSource.getWeeklyReleases(date);
     final cachedAt = await _localDataSource.getWeeklyReleasesCachedAt(date);
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      if (cachedAt != null && MetronCachePolicies.weeklyReleases.isFresh(cachedAt, _now())) {
+      if (cachedAt != null &&
+          MetronCachePolicies.weeklyReleases.isFresh(cachedAt, _now())) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
       }
     }
@@ -45,11 +50,42 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
-  Future<IssueDetails> getIssueDetails(int issueId, {bool forceRefresh = false}) async {
+  Future<List<IssueList>> getFocReleasesForDate(
+    DateTime date, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getFocReleases(date);
+    final cachedAt = await _localDataSource.getFocReleasesCachedAt(date);
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      if (cachedAt != null &&
+          MetronCachePolicies.focReleases.isFresh(cachedAt, _now())) {
+        return cachedDtos.map((entry) => entry.toEntity()).toList();
+      }
+    }
+
+    try {
+      final remoteDtos = await _remoteDataSource.getFocReleasesForDate(date);
+      await _localDataSource.cacheFocReleases(date, remoteDtos);
+      return remoteDtos.map((entry) => entry.toEntity()).toList();
+    } catch (_) {
+      if (cachedDtos != null && cachedDtos.isNotEmpty) {
+        return cachedDtos.map((entry) => entry.toEntity()).toList();
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<IssueDetails> getIssueDetails(
+    int issueId, {
+    bool forceRefresh = false,
+  }) async {
     final cachedDto = await _localDataSource.getIssueDetails(issueId);
     final cachedAt = await _localDataSource.getIssueDetailsCachedAt(issueId);
     if (!forceRefresh && cachedDto != null) {
-      final isFresh = cachedAt != null &&
+      final isFresh =
+          cachedAt != null &&
           MetronCachePolicies.issueDetails.isFresh(cachedAt, _now());
       if (isFresh) {
         return cachedDto.toEntity();
@@ -88,7 +124,8 @@ class MetronRepositoryImpl implements MetronRepository {
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh = cachedAt != null &&
+      final isFresh =
+          cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
       if (isFresh && cachedMeta != null) {
         return IssueSearchPage(
@@ -102,7 +139,10 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchIssues(query, page: page);
+      final remotePage = await _remoteDataSource.searchIssues(
+        query,
+        page: page,
+      );
       await _localDataSource.cacheIssueSearchResults(
         query,
         remotePage.results,
@@ -152,7 +192,8 @@ class MetronRepositoryImpl implements MetronRepository {
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh = cachedAt != null &&
+      final isFresh =
+          cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
       if (isFresh && cachedMeta != null) {
         return SeriesSearchPage(
@@ -166,7 +207,10 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchSeries(query, page: page);
+      final remotePage = await _remoteDataSource.searchSeries(
+        query,
+        page: page,
+      );
       await _localDataSource.cacheSeriesSearchResults(
         query,
         remotePage.results,
@@ -210,7 +254,8 @@ class MetronRepositoryImpl implements MetronRepository {
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh = cachedAt != null &&
+      final isFresh =
+          cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
       if (isFresh && cachedMeta != null) {
         return SeriesListPage(
@@ -262,7 +307,8 @@ class MetronRepositoryImpl implements MetronRepository {
     final cachedAt = await _localDataSource.getSeriesDetailsCachedAt(seriesId);
 
     if (!forceRefresh && cachedDto != null) {
-      final isFresh = cachedAt != null &&
+      final isFresh =
+          cachedAt != null &&
           MetronCachePolicies.seriesDetails.isFresh(cachedAt, _now());
       if (isFresh) {
         return cachedDto.toEntity();
@@ -301,7 +347,8 @@ class MetronRepositoryImpl implements MetronRepository {
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh = cachedAt != null &&
+      final isFresh =
+          cachedAt != null &&
           MetronCachePolicies.seriesIssueList.isFresh(cachedAt, _now());
       if (isFresh && cachedMeta != null) {
         return SeriesIssueListPage(
@@ -347,5 +394,4 @@ class MetronRepositoryImpl implements MetronRepository {
       rethrow;
     }
   }
-
 }

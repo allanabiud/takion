@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
@@ -11,11 +12,7 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
   Future<List<IssueList>> build([DateTime? date]) async {
     final targetDate = date ?? DateTime.now();
     final repository = ref.watch(catalogRepositoryProvider);
-
-    final issues = await repository.getWeeklyReleasesForDate(targetDate);
-    await ref.read(catalogSyncHelperProvider).upsertIssues(issues);
-
-    return issues;
+    return repository.getWeeklyReleasesForDate(targetDate);
   }
 
   Future<void> refresh() async {
@@ -26,12 +23,10 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
 
     final newState = await AsyncValue.guard(() async {
       final repository = ref.read(catalogRepositoryProvider);
-      final issues = await repository.getWeeklyReleasesForDate(
+      return repository.getWeeklyReleasesForDate(
         targetDate,
         forceRefresh: true,
       );
-      await ref.read(catalogSyncHelperProvider).upsertIssues(issues);
-      return issues;
     });
     state = newState;
   }
@@ -61,10 +56,14 @@ class IssueDetailsNotifier extends _$IssueDetailsNotifier {
 Future<List<IssueList>> currentWeeklyReleases(Ref ref) async {
   final repository = ref.watch(catalogRepositoryProvider);
   final now = DateTime.now();
-  final issues = await repository.getWeeklyReleasesForDate(now);
-  await ref.read(catalogSyncHelperProvider).upsertIssues(issues);
-  return issues;
+  return repository.getWeeklyReleasesForDate(now);
 }
+
+final focReleasesProvider = FutureProvider.autoDispose
+    .family<List<IssueList>, DateTime>((ref, date) async {
+      final repository = ref.watch(catalogRepositoryProvider);
+      return repository.getFocReleasesForDate(date);
+    });
 
 @riverpod
 class SelectedWeek extends _$SelectedWeek {

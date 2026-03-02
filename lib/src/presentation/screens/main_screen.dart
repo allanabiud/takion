@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/presentation/providers/profile_provider.dart';
 
 @RoutePage()
 class MainScreen extends ConsumerWidget {
@@ -10,6 +11,12 @@ class MainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final titles = ['Home', 'Releases', 'Library', 'Discover'];
+    final profileAsync = ref.watch(userProfileProvider);
+    final avatarUrl = profileAsync.maybeWhen(
+      data: (profile) => (profile?['avatar_url'] as String?)?.trim(),
+      orElse: () => null,
+    );
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
 
     return AutoTabsScaffold(
       routes: const [
@@ -20,7 +27,18 @@ class MainScreen extends ConsumerWidget {
       ],
       appBarBuilder: (context, tabsRouter) => AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.account_circle_outlined),
+          icon: hasAvatar
+              ? ClipOval(
+                  child: Image.network(
+                    avatarUrl,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) =>
+                        const Icon(Icons.account_circle_outlined),
+                  ),
+                )
+              : const Icon(Icons.account_circle_outlined),
           onPressed: () => context.pushRoute(const UserProfileRoute()),
         ),
         title: Text(titles[tabsRouter.activeIndex]),

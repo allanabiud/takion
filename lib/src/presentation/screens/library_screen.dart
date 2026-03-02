@@ -9,7 +9,6 @@ import 'package:takion/src/presentation/widgets/action_card.dart';
 import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/section_subtitle_header.dart';
-import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class LibraryScreen extends ConsumerWidget {
@@ -20,48 +19,6 @@ class LibraryScreen extends ConsumerWidget {
     final statsAsync = ref.watch(collectionStatsProvider);
     final suggestionAsync = ref.watch(readingSuggestionIssueProvider);
     final rateSuggestionAsync = ref.watch(rateSuggestionIssueProvider);
-
-    void showAddComicSheet() {
-      showModalBottomSheet<void>(
-        context: context,
-        builder: (sheetContext) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add Comic',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.add_circle_outline),
-                    title: const Text('Add Issue'),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                    },
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.library_add_outlined),
-                    title: const Text('Add from Series'),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    }
 
     void showRateSuggestionSheet({
       required int issueId,
@@ -180,10 +137,6 @@ class LibraryScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: showAddComicSheet,
-        child: const Icon(Icons.add),
-      ),
       appBar: statsAsync.isLoading
           ? AppBar(
               toolbarHeight: 0,
@@ -231,15 +184,15 @@ class LibraryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                   ActionCard(
-                    icon: Icons.attach_money_outlined,
+                    icon: Icons.favorite_border,
                     value: statsAsync.when(
-                      data: (stats) => stats.totalValue,
+                      data: (stats) => stats.wishlistCount.toString(),
                       loading: () => '--',
                       error: (_, _) => '!',
                     ),
-                    label: 'Value',
+                    label: 'Wishlist',
                     onTap: () {
-                      TakionAlerts.comingSoon(context, 'Value page');
+                      context.pushRoute(const WishlistRoute());
                     },
                   ),
                 ],
@@ -262,24 +215,22 @@ class LibraryScreen extends ConsumerWidget {
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.warning_amber_outlined,
-                  label: 'Incomplete Series',
+                  icon: Icons.star_border_outlined,
+                  label: 'Unrated',
+                  value: statsAsync.when(
+                    data: (stats) => stats.unratedCount.toString(),
+                    loading: () => '--',
+                    error: (_, _) => '!',
+                  ),
                   onTap: () {
-                    context.pushRoute(const IncompleteSeriesRoute());
+                    context.pushRoute(const UnratedIssuesRoute());
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.playlist_add_check_circle_outlined,
-                  label: 'My Reading Lists',
-                  onTap: () {
-                    TakionAlerts.comingSoon(context, 'My Reading Lists');
-                  },
-                ),
-                CompactListSectionItem(
-                  icon: Icons.history,
+                  icon: Icons.history_outlined,
                   label: 'Reading History',
                   onTap: () {
-                    TakionAlerts.comingSoon(context, 'Reading History');
+                    context.pushRoute(const ReadingHistoryRoute());
                   },
                 ),
               ],

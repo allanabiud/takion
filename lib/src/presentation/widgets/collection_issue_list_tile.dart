@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
 
 class CollectionIssueListTile extends ConsumerWidget {
   const CollectionIssueListTile({
@@ -38,9 +39,15 @@ class CollectionIssueListTile extends ConsumerWidget {
     const double radius = 24.0;
     final issueId = item.issue?.id;
     final providerStatus = ref.watch(issueCollectionStatusProvider(issueId));
+    final pullEntryAsync = issueId == null
+        ? null
+        : ref.watch(issuePullListEntryProvider(issueId));
 
-    final effectiveIsCollected = providerStatus?.isCollected ?? (item.quantity > 0);
+    final effectiveIsCollected =
+        providerStatus?.isCollected ?? (item.quantity > 0);
+    final effectiveIsWishlisted = providerStatus?.isWishlisted ?? false;
     final effectiveIsRead = providerStatus?.isRead ?? item.isRead;
+    final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = providerStatus?.rating ?? item.rating;
 
     final effectiveOnTap =
@@ -69,7 +76,10 @@ class CollectionIssueListTile extends ConsumerWidget {
             children: [
               Text(
                 _issueTitle(),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -101,6 +111,26 @@ class CollectionIssueListTile extends ConsumerWidget {
                           : Icons.bookmark_added_outlined,
                       size: 16,
                       color: effectiveIsRead
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      effectiveIsPulled
+                          ? Icons.shopping_bag
+                          : Icons.shopping_bag_outlined,
+                      size: 16,
+                      color: effectiveIsPulled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      effectiveIsWishlisted
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      size: 16,
+                      color: effectiveIsWishlisted
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.outline,
                     ),

@@ -28,6 +28,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   final _displayNameController = TextEditingController();
   bool _isSignUpMode = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -193,11 +194,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                      ),
                     ),
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     autofillHints: _isSignUpMode
                         ? const [
                             AutofillHints.newPassword,

@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
 import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/issue_card.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class ReleasesScreen extends ConsumerWidget {
@@ -19,6 +19,8 @@ class ReleasesScreen extends ConsumerWidget {
     final currentIssuesAsync = ref.watch(currentWeeklyReleasesProvider);
     final pullsCountAsync = ref.watch(currentWeekPullsCountProvider);
     final pullsAsync = ref.watch(currentWeekPullsProvider);
+    final subscriptionsAsync = ref.watch(activeSubscriptionsProvider);
+    final subscriptionsCount = ref.watch(activeSubscriptionsCountProvider);
 
     return Scaffold(
       appBar: currentIssuesAsync.isLoading || pullsAsync.isLoading
@@ -57,10 +59,12 @@ class ReleasesScreen extends ConsumerWidget {
                   const SizedBox(width: 4),
                   ActionCard(
                     icon: Icons.bookmark_outline,
-                    value: '--',
+                    value: subscriptionsAsync.isLoading
+                        ? '--'
+                        : subscriptionsCount.toString(),
                     label: 'Subscriptions',
                     onTap: () {
-                      TakionAlerts.comingSoon(context, 'Subscriptions');
+                      context.pushRoute(const SubscriptionsRoute());
                     },
                   ),
                   const SizedBox(width: 4),
@@ -80,66 +84,79 @@ class ReleasesScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Your Pulls This Week',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            const SizedBox(height: 10),
             pullsAsync.when(
               data: (issues) {
                 if (issues.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('No pulls this week.'),
-                  );
+                  return const SizedBox.shrink();
                 }
 
-                final previewIssues = issues.take(5).toList();
+                final previewIssues = issues.take(10).toList();
 
-                return SizedBox(
-                  height: 260,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: previewIssues.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      final issue = previewIssues[index];
-                      final issueId = issue.id;
-                      final collectionStatus = issueId != null
-                          ? ref.watch(issueCollectionStatusProvider(issueId))
-                          : null;
-                      final isCollected =
-                          collectionStatus?.isCollected ?? false;
-                      final isRead = collectionStatus?.isRead ?? false;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'Your Pulls This Week',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 260,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: previewIssues.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final issue = previewIssues[index];
+                          final issueId = issue.id;
+                          final collectionStatus = issueId != null
+                              ? ref.watch(
+                                  issueCollectionStatusProvider(issueId),
+                                )
+                              : null;
+                          final pullEntryAsync = issueId != null
+                              ? ref.watch(issuePullListEntryProvider(issueId))
+                              : null;
+                          final isCollected =
+                              collectionStatus?.isCollected ?? false;
+                          final isWishlisted =
+                              collectionStatus?.isWishlisted ?? false;
+                          final isRead = collectionStatus?.isRead ?? false;
+                          final isPulled =
+                              pullEntryAsync?.asData?.value != null;
 
-                      return IssueCard(
-                        imageUrl: issue.image,
-                        title: issue.name,
-                        heroTag: issueId != null
-                            ? 'issue-cover-$issueId'
-                            : null,
-                        isCollected: isCollected,
-                        isRead: isRead,
-                        onTap: issueId == null
-                            ? null
-                            : () {
-                                context.pushRoute(
-                                  IssueDetailsRoute(
-                                    issueId: issueId,
-                                    initialImageUrl: issue.image,
-                                  ),
-                                );
-                              },
-                      );
-                    },
-                  ),
+                          return IssueCard(
+                            imageUrl: issue.image,
+                            title: issue.name,
+                            heroTag: issueId != null
+                                ? 'issue-cover-$issueId'
+                                : null,
+                            isCollected: isCollected,
+                            isWishlisted: isWishlisted,
+                            isRead: isRead,
+                            isPulled: isPulled,
+                            onTap: issueId == null
+                                ? null
+                                : () {
+                                    context.pushRoute(
+                                      IssueDetailsRoute(
+                                        issueId: issueId,
+                                        initialImageUrl: issue.image,
+                                      ),
+                                    );
+                                  },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 );
               },
               loading: () => const Padding(
@@ -154,7 +171,6 @@ class ReleasesScreen extends ConsumerWidget {
                 child: Text('Could not load pulls preview.'),
               ),
             ),
-            const SizedBox(height: 16),
             CompactListSection(
               title: 'Browse',
               items: [
@@ -172,7 +188,10 @@ class ReleasesScreen extends ConsumerWidget {
                   icon: Icons.calendar_month_outlined,
                   label: 'FOC Calendar',
                   onTap: () {
-                    TakionAlerts.comingSoon(context, 'FOC Calendar');
+                    ref
+                        .read(selectedWeekProvider.notifier)
+                        .setDate(DateTime.now());
+                    context.pushRoute(const FocReleasesRoute());
                   },
                 ),
               ],

@@ -12,6 +12,7 @@ class HiveService {
   bool _initialized = false;
   static const Set<String> _recoverableCacheBoxes = {
     'weekly_releases_box',
+    'foc_releases_box',
     'cache_meta_box',
     'issue_details_box',
     'issue_search_box',
@@ -26,7 +27,7 @@ class HiveService {
     'collection_stats_box',
     'collection_items_box',
     'collection_item_details_box',
-    'missing_series_box',
+    'supabase_profile_box',
   };
 
   Future<void> init() async {

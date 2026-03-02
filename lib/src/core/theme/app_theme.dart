@@ -59,9 +59,9 @@ class AppThemes {
 
     return base.copyWith(
       appBarTheme: base.appBarTheme.copyWith(
-        iconTheme: const IconThemeData(size: 30),
+        iconTheme: const IconThemeData(size: 28),
         titleTextStyle: TextStyle(
-          fontSize: 28,
+          fontSize: 26,
           fontWeight: FontWeight.bold,
           fontFamily: 'Rubik',
           color: base.colorScheme.onSurface,
@@ -142,9 +142,9 @@ class AppThemes {
 
     return base.copyWith(
       appBarTheme: base.appBarTheme.copyWith(
-        iconTheme: const IconThemeData(size: 30),
+        iconTheme: const IconThemeData(size: 28),
         titleTextStyle: TextStyle(
-          fontSize: 28,
+          fontSize: 26,
           fontWeight: FontWeight.bold,
           fontFamily: 'Rubik',
           color: base.colorScheme.onSurface,

@@ -1,8 +1,7 @@
 enum LibraryOwnershipStatus {
   owned,
+  notOwned,
   wishlist,
-  ordered,
-  sold,
 }
 
 enum LibraryItemFormat {

@@ -15,6 +15,8 @@ class CollectionStats {
     required this.totalValue,
     required this.readCount,
     required this.unreadCount,
+    this.unratedCount = 0,
+    this.wishlistCount = 0,
     this.byFormat = const [],
   });
 
@@ -23,5 +25,7 @@ class CollectionStats {
   final String totalValue;
   final int readCount;
   final int unreadCount;
+  final int unratedCount;
+  final int wishlistCount;
   final List<CollectionStatsByFormat> byFormat;
 }

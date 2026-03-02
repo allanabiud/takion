@@ -6,7 +6,6 @@ import 'package:takion/src/data/models/collection_scrobble_response_dto.dart';
 import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/issue_list_dto.dart';
 import 'package:takion/src/data/models/issue_search_response_dto.dart';
-import 'package:takion/src/data/models/missing_series_response_dto.dart';
 import 'package:takion/src/data/models/series_details_dto.dart';
 import 'package:takion/src/data/models/series_issue_list_response_dto.dart';
 import 'package:takion/src/data/models/series_list_response_dto.dart';
@@ -21,8 +20,8 @@ abstract class MetronRemoteDataSource {
   });
   Future<CollectionItemsResponseDto> getCollectionItems({int page = 1});
   Future<CollectionItemDetailsDto> getCollectionItemDetails(int collectionId);
-  Future<MissingSeriesResponseDto> getMissingSeries({int page = 1});
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
+  Future<List<IssueListDto>> getFocReleasesForDate(DateTime date);
   Future<IssueDetailsDto> getIssueDetails(int issueId);
   Future<IssueSearchResponseDto> searchIssues(String query, {int page = 1});
   Future<SeriesListResponseDto> getSeriesList({int page = 1});
@@ -117,17 +116,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<MissingSeriesResponseDto> getMissingSeries({int page = 1}) async {
-    final response = await _dio.get(
-      'collection/missing_series/',
-      queryParameters: {'page': page},
-    );
-    return MissingSeriesResponseDto.fromJson(
-      response.data as Map<String, dynamic>,
-    );
-  }
-
-  @override
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date) async {
     final offset = date.weekday % 7;
     final startOfWeek = DateTime(
@@ -145,6 +133,31 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters: {
         'store_date_range_after': formatDate(startOfWeek),
         'store_date_range_before': formatDate(endOfWeek),
+      },
+    );
+
+    final List results = response.data['results'];
+    return results.map((e) => IssueListDto.fromJson(e)).toList();
+  }
+
+  @override
+  Future<List<IssueListDto>> getFocReleasesForDate(DateTime date) async {
+    final offset = date.weekday % 7;
+    final startOfWeek = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).subtract(Duration(days: offset));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+    String formatDate(DateTime d) =>
+        "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+
+    final response = await _dio.get(
+      'issue/',
+      queryParameters: {
+        'foc_date_range_after': formatDate(startOfWeek),
+        'foc_date_range_before': formatDate(endOfWeek),
       },
     );
 

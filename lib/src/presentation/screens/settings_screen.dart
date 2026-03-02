@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
@@ -21,6 +23,14 @@ class SettingsScreen extends ConsumerWidget {
     if (!await launchUrl(url)) {
       if (!context.mounted) return;
       TakionAlerts.signupLaunchFailed(context);
+    }
+  }
+
+  Future<void> _launchGitHubRepo(BuildContext context) async {
+    final url = Uri.parse('https://github.com/allanabiud/takion');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (!context.mounted) return;
+      TakionAlerts.couldNotOpenInBrowser(context, 'repository');
     }
   }
 
@@ -84,7 +94,10 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showMetronConnectDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showMetronConnectDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
 
@@ -166,7 +179,10 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _disconnectMetronAccount(BuildContext context, WidgetRef ref) async {
+  Future<void> _disconnectMetronAccount(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     await ref.read(metronAccountServiceProvider).disconnect();
     ref.invalidate(metronConnectionProvider);
     if (!context.mounted) return;
@@ -365,7 +381,9 @@ class SettingsScreen extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(Icons.tune),
                     title: Text('Default format when adding issues'),
-                    subtitle: Text('Applied when a new item is added to your collection'),
+                    subtitle: Text(
+                      'Applied when a new item is added to your collection',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -390,10 +408,111 @@ class SettingsScreen extends ConsumerWidget {
                           ? null
                           : (newSelection) {
                               ref
-                                  .read(collectionDefaultFormatProvider.notifier)
+                                  .read(
+                                    collectionDefaultFormatProvider.notifier,
+                                  )
                                   .setDefaultFormat(newSelection.first);
                             },
                     ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showNotificationSettings(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final enabledAsync = ref.watch(
+              pushPullNotificationsEnabledProvider,
+            );
+            final timingAsync = ref.watch(pullNotificationTimingProvider);
+            final enabled = enabledAsync.maybeWhen(
+              data: (value) => value,
+              orElse: () => false,
+            );
+            final timing = timingAsync.maybeWhen(
+              data: (value) => value,
+              orElse: () => PullNotificationTiming.releaseDay,
+            );
+
+            String labelForTiming(PullNotificationTiming value) {
+              switch (value) {
+                case PullNotificationTiming.dayBefore:
+                  return 'Day before';
+                case PullNotificationTiming.releaseDay:
+                  return 'Release day';
+                case PullNotificationTiming.dayAfter:
+                  return 'Day after';
+              }
+            }
+
+            return SettingsBottomSheet(
+              title: 'Notifications',
+              content: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(Icons.notifications_active_outlined),
+                    title: const Text('Push Notifications for Pulls'),
+                    value: enabled,
+                    onChanged: enabledAsync.isLoading
+                        ? null
+                        : (value) => ref
+                              .read(
+                                pushPullNotificationsEnabledProvider.notifier,
+                              )
+                              .setEnabled(value),
+                  ),
+                  const SizedBox(height: 8),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.schedule_outlined),
+                    title: const Text('When to Notify'),
+                    subtitle: Text(labelForTiming(timing)),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Day before'),
+                        selected: timing == PullNotificationTiming.dayBefore,
+                        onSelected: (!enabled || timingAsync.isLoading)
+                            ? null
+                            : (_) => ref
+                                  .read(pullNotificationTimingProvider.notifier)
+                                  .setTiming(PullNotificationTiming.dayBefore),
+                      ),
+                      ChoiceChip(
+                        label: const Text('Release day'),
+                        selected: timing == PullNotificationTiming.releaseDay,
+                        onSelected: (!enabled || timingAsync.isLoading)
+                            ? null
+                            : (_) => ref
+                                  .read(pullNotificationTimingProvider.notifier)
+                                  .setTiming(PullNotificationTiming.releaseDay),
+                      ),
+                      ChoiceChip(
+                        label: const Text('Day after'),
+                        selected: timing == PullNotificationTiming.dayAfter,
+                        onSelected: (!enabled || timingAsync.isLoading)
+                            ? null
+                            : (_) => ref
+                                  .read(pullNotificationTimingProvider.notifier)
+                                  .setTiming(PullNotificationTiming.dayAfter),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -429,7 +548,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     title: const Text('Clear Local Cache'),
                     subtitle: const Text(
-                      'Remove all cached comics and history',
+                      'Remove fetched cached releases, issues, and series data',
                     ),
                     onTap: appSettings.isSyncing
                         ? null
@@ -439,7 +558,7 @@ class SettingsScreen extends ConsumerWidget {
                               builder: (context) => AlertDialog(
                                 title: const Text('Clear Cache?'),
                                 content: const Text(
-                                  'This will remove all downloaded data and history. Your login will remain.',
+                                  'This will remove fetched cached local data. Your account and preferences remain.',
                                 ),
                                 actions: [
                                   TextButton(
@@ -459,6 +578,12 @@ class SettingsScreen extends ConsumerWidget {
                               await ref
                                   .read(settingsProvider.notifier)
                                   .clearCache();
+                              if (context.mounted) {
+                                TakionAlerts.success(
+                                  context,
+                                  'Local cache cleared.',
+                                );
+                              }
                             }
                           },
                   ),
@@ -466,6 +591,76 @@ class SettingsScreen extends ConsumerWidget {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showAboutSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return SettingsBottomSheet(
+          title: 'About',
+          content: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/images/takion_logo.svg',
+                  height: 86,
+                  colorFilter: ColorFilter.mode(
+                    Theme.of(context).colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Takion',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                FutureBuilder<PackageInfo>(
+                  future: PackageInfo.fromPlatform(),
+                  builder: (context, snapshot) {
+                    final versionText = snapshot.hasData
+                        ? snapshot.data!.buildNumber.isEmpty
+                              ? snapshot.data!.version
+                              : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+                        : '...';
+                    return Text(
+                      'Version $versionText',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Made by allanabiud',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                IconButton(
+                  tooltip: 'GitHub',
+                  onPressed: () => _launchGitHubRepo(context),
+                  icon: Icon(
+                    Icons.code,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -499,6 +694,16 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: Icon(
+              Icons.notifications_none_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('Notifications'),
+            subtitle: const Text('Push alerts for pulls and notify timing'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showNotificationSettings(context, ref),
+          ),
+          ListTile(
+            leading: Icon(
               Icons.sync,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -526,6 +731,16 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('View connected account and disconnect'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showMetronConnectionSettings(context, ref),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.info_outline,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('About'),
+            subtitle: const Text('App info and version'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showAboutSettings(context),
           ),
           const SizedBox(height: 12),
           Padding(

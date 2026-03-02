@@ -11,6 +11,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
   final String emptyMessage;
   final List<IssueList> Function(List<IssueList>) transformIssues;
   final String Function(Object error)? errorTextBuilder;
+  final List<Widget>? appBarActions;
 
   const WeeklyIssueListScaffold({
     super.key,
@@ -19,6 +20,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
     required this.emptyMessage,
     this.transformIssues = _identity,
     this.errorTextBuilder,
+    this.appBarActions,
   });
 
   static List<IssueList> _identity(List<IssueList> issues) => issues;
@@ -28,6 +30,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        actions: appBarActions,
         bottom: issuesAsync.isLoading
             ? const PreferredSize(
                 preferredSize: Size.fromHeight(4),

@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/issue_list.dart'; // Updated import
+import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
 
 class IssueListTile extends ConsumerWidget {
-  final IssueList issue; // Updated to IssueList
+  final IssueList issue;
   final VoidCallback? onTap;
   final bool isFirst;
   final bool isLast;
@@ -46,10 +47,16 @@ class IssueListTile extends ConsumerWidget {
                 );
               });
 
-          final providerStatus = ref.watch(issueCollectionStatusProvider(issue.id));
-          final effectiveIsCollected = isCollected ?? providerStatus?.isCollected ?? false;
-          final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
-          final effectiveRating = rating ?? providerStatus?.rating;
+    final providerStatus = ref.watch(issueCollectionStatusProvider(issue.id));
+    final pullEntryAsync = issue.id == null
+        ? null
+        : ref.watch(issuePullListEntryProvider(issue.id!));
+    final effectiveIsCollected =
+        isCollected ?? providerStatus?.isCollected ?? false;
+    final effectiveIsWishlisted = providerStatus?.isWishlisted ?? false;
+    final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
+    final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
+    final effectiveRating = rating ?? providerStatus?.rating;
 
     return Card(
       margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
@@ -194,10 +201,30 @@ class IssueListTile extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Icon(
                             effectiveIsRead
-                              ? Icons.bookmark_added
-                              : Icons.bookmark_added_outlined,
+                                ? Icons.bookmark_added
+                                : Icons.bookmark_added_outlined,
                             size: 16,
                             color: effectiveIsRead
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            effectiveIsPulled
+                                ? Icons.shopping_bag
+                                : Icons.shopping_bag_outlined,
+                            size: 16,
+                            color: effectiveIsPulled
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            effectiveIsWishlisted
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            size: 16,
+                            color: effectiveIsWishlisted
                                 ? Theme.of(context).colorScheme.primary
                                 : Theme.of(context).colorScheme.outline,
                           ),

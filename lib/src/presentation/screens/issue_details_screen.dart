@@ -9,6 +9,8 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
@@ -33,6 +35,8 @@ class IssueDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final issueAsync = ref.watch(issueDetailsProvider(issueId));
     final issueStatus = ref.watch(issueCollectionStatusProvider(issueId));
+    final pullEntryAsync = ref.watch(issuePullListEntryProvider(issueId));
+    final isInPullList = pullEntryAsync.asData?.value != null;
 
     String _issueTitle(IssueDetails issue) {
       final seriesName = issue.series?.name.trim();
@@ -57,6 +61,8 @@ class IssueDetailsScreen extends ConsumerWidget {
     void showScrobbleSheet() {
       var addToCollection = issueStatus?.isCollected ?? false;
       var markAsRead = issueStatus?.isRead ?? false;
+      var pullIssue = isInPullList;
+      var addToWishlist = issueStatus?.isWishlisted ?? false;
       var selectedRating = (issueStatus?.rating ?? 0).clamp(0, 5);
       ref.read(scrobbleIssueProvider(issueId).notifier).reset();
 
@@ -111,6 +117,9 @@ class IssueDetailsScreen extends ConsumerWidget {
                                             setModalState(() {
                                               addToCollection =
                                                   !addToCollection;
+                                              if (addToCollection) {
+                                                addToWishlist = false;
+                                              }
                                             });
                                           },
                                     icon: Icon(
@@ -156,6 +165,69 @@ class IssueDetailsScreen extends ConsumerWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     'Read',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 24),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Pull',
+                                    iconSize: 40,
+                                    onPressed: isSubmitting
+                                        ? null
+                                        : () {
+                                            setModalState(() {
+                                              pullIssue = !pullIssue;
+                                            });
+                                          },
+                                    icon: Icon(
+                                      pullIssue
+                                          ? Icons.shopping_bag
+                                          : Icons.shopping_bag_outlined,
+                                      color: toggleColor(pullIssue),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Pull',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 24),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Add to Wishlist',
+                                    iconSize: 40,
+                                    onPressed: isSubmitting
+                                        ? null
+                                        : () {
+                                            setModalState(() {
+                                              addToWishlist = !addToWishlist;
+                                              if (addToWishlist) {
+                                                addToCollection = false;
+                                              }
+                                            });
+                                          },
+                                    icon: Icon(
+                                      addToWishlist
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: toggleColor(addToWishlist),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Wishlist',
                                     style: Theme.of(
                                       context,
                                     ).textTheme.bodySmall,
@@ -240,6 +312,7 @@ class IssueDetailsScreen extends ConsumerWidget {
                                             issueStatus?.isCollected ?? false;
                                         final hadRead =
                                             issueStatus?.isRead ?? false;
+                                        final hadPull = isInPullList;
 
                                         await ref
                                             .read(
@@ -252,6 +325,7 @@ class IssueDetailsScreen extends ConsumerWidget {
                                                   markAsRead ||
                                                   selectedRating > 0,
                                               addToCollection: addToCollection,
+                                              addToWishlist: addToWishlist,
                                               dateRead: markAsRead
                                                   ? DateTime.now().toUtc()
                                                   : null,
@@ -268,6 +342,51 @@ class IssueDetailsScreen extends ConsumerWidget {
                                           scrobbleIssueProvider(issueId),
                                         );
                                         if (latestState.hasError) return;
+
+                                        if (pullIssue != hadPull) {
+                                          final issueData =
+                                              issueAsync.asData?.value;
+                                          final series = issueData?.series;
+                                          if (!pullIssue) {
+                                            await ref
+                                                .read(
+                                                  pullListRepositoryProvider,
+                                                )
+                                                .deleteEntryByIssueId(issueId);
+                                          } else {
+                                            if (series == null) {
+                                              if (context.mounted) {
+                                                TakionAlerts.noLinkedSeriesForIssue(
+                                                  context,
+                                                );
+                                              }
+                                              return;
+                                            }
+                                            await ref
+                                                .read(
+                                                  pullListRepositoryProvider,
+                                                )
+                                                .upsertManualEntry(
+                                                  metronSeriesId: series.id,
+                                                  metronIssueId: issueId,
+                                                  releaseDate:
+                                                      issueData?.storeDate ??
+                                                      issueData?.coverDate,
+                                                );
+                                          }
+                                        }
+
+                                        ref.invalidate(
+                                          issuePullListEntryProvider(issueId),
+                                        );
+                                        ref.invalidate(
+                                          pullsIssuesForWeekProvider(
+                                            ref.read(selectedWeekProvider),
+                                          ),
+                                        );
+                                        ref.invalidate(
+                                          currentWeekPullsProvider,
+                                        );
 
                                         if (sheetContext.mounted) {
                                           Navigator.of(sheetContext).pop();
@@ -291,6 +410,17 @@ class IssueDetailsScreen extends ConsumerWidget {
                                           if (!addedNow && !markedReadNow) {
                                             TakionAlerts.libraryUpdated(
                                               context,
+                                            );
+                                          }
+                                          if (pullIssue && !hadPull) {
+                                            TakionAlerts.success(
+                                              context,
+                                              'Added to pull list.',
+                                            );
+                                          } else if (!pullIssue && hadPull) {
+                                            TakionAlerts.info(
+                                              context,
+                                              'Removed from pull list.',
                                             );
                                           }
                                         }
@@ -344,7 +474,7 @@ class IssueDetailsScreen extends ConsumerWidget {
   }
 }
 
-class _IssueDetailsBody extends StatefulWidget {
+class _IssueDetailsBody extends ConsumerStatefulWidget {
   const _IssueDetailsBody({
     required this.issue,
     required this.issueId,
@@ -356,10 +486,10 @@ class _IssueDetailsBody extends StatefulWidget {
   final IssueCollectionStatus? collectionStatus;
 
   @override
-  State<_IssueDetailsBody> createState() => _IssueDetailsBodyState();
+  ConsumerState<_IssueDetailsBody> createState() => _IssueDetailsBodyState();
 }
 
-class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
+class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
   static const _expandedHeight = 340.0;
   final ScrollController _scrollController = ScrollController();
   double _titleOpacity = 0;
@@ -581,6 +711,10 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
     final backgroundTint = Theme.of(context).scaffoldBackgroundColor;
     final imageUrl = widget.issue.image;
     final heroTag = 'issue-cover-${widget.issueId}';
+    final pullEntryAsync = ref.watch(
+      issuePullListEntryProvider(widget.issueId),
+    );
+    final isInPullList = pullEntryAsync.asData?.value != null;
 
     return DefaultTabController(
       length: 2,
@@ -594,6 +728,7 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                 pinned: true,
                 expandedHeight: _expandedHeight,
                 backgroundColor: colorScheme.surface,
+                centerTitle: false,
                 actions: [
                   IconButton(
                     tooltip: 'Go to series',
@@ -853,6 +988,37 @@ class _IssueDetailsBodyState extends State<_IssueDetailsBody> {
                                                     ).colorScheme.primary
                                                   : Colors.white70,
                                             ),
+                                            const SizedBox(width: 12),
+                                            Icon(
+                                              isInPullList
+                                                  ? Icons.shopping_bag
+                                                  : Icons.shopping_bag_outlined,
+                                              size: 20,
+                                              color: isInPullList
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                  : Colors.white70,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Icon(
+                                              (widget
+                                                          .collectionStatus
+                                                          ?.isWishlisted ??
+                                                      false)
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
+                                              size: 20,
+                                              color:
+                                                  (widget
+                                                          .collectionStatus
+                                                          ?.isWishlisted ??
+                                                      false)
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                  : Colors.white70,
+                                            ),
                                           ],
                                         ),
                                         const SizedBox(height: 6),
@@ -997,68 +1163,68 @@ class _IssueDetailsLoading extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final backgroundTint = Theme.of(context).scaffoldBackgroundColor;
 
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          expandedHeight: _IssueDetailsBodyState._expandedHeight,
-          backgroundColor: colorScheme.surface,
-          flexibleSpace: FlexibleSpaceBar(
-            collapseMode: CollapseMode.parallax,
-            background: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (imageUrl != null)
-                  ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                else
-                  ColoredBox(color: colorScheme.surfaceContainerHighest),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: backgroundTint.withValues(alpha: 0.44),
-                  ),
-                ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0, 0.55, 1],
-                      colors: [
-                        Colors.black.withValues(alpha: 0.56),
-                        Colors.black.withValues(alpha: 0.30),
-                        Colors.transparent,
-                      ],
+    return DefaultTabController(
+      length: 2,
+      child: NestedScrollView(
+        headerSliverBuilder: (context, _) => [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: _IssueDetailsBodyState._expandedHeight,
+            backgroundColor: colorScheme.surface,
+            title: const Text('Issue'),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.parallax,
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (imageUrl != null)
+                    ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl!,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    ColoredBox(color: colorScheme.surfaceContainerHighest),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: backgroundTint.withValues(alpha: 0.44),
                     ),
                   ),
-                ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final maxHeight = constraints.maxHeight;
-                    if (maxHeight < 180) {
-                      return const SizedBox.shrink();
-                    }
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0, 0.55, 1],
+                        colors: [
+                          Colors.black.withValues(alpha: 0.56),
+                          Colors.black.withValues(alpha: 0.30),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final maxHeight = constraints.maxHeight;
+                      if (maxHeight < 180) return const SizedBox.shrink();
 
-                    final topPadding = (maxHeight * 0.18)
-                        .clamp(20.0, 72.0)
-                        .toDouble();
-                    final bottomPadding = (maxHeight * 0.05)
-                        .clamp(10.0, 20.0)
-                        .toDouble();
-                    final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
-                    final coverHeight =
-                        (maxHeight - topPadding - bottomPadding - 6.0)
-                            .clamp(130.0, 230.0)
-                            .toDouble();
-                    final coverWidth = (coverHeight * (2 / 3)).toDouble();
+                      final topPadding = (maxHeight * 0.18)
+                          .clamp(20.0, 72.0)
+                          .toDouble();
+                      final bottomPadding = (maxHeight * 0.05)
+                          .clamp(10.0, 20.0)
+                          .toDouble();
+                      final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
+                      final coverHeight =
+                          (maxHeight - topPadding - bottomPadding - 6.0)
+                              .clamp(130.0, 230.0)
+                              .toDouble();
+                      final coverWidth = (coverHeight * (2 / 3)).toDouble();
 
-                    return Center(
-                      child: Padding(
+                      return Padding(
                         padding: EdgeInsets.fromLTRB(
                           20,
                           topPadding,
@@ -1092,23 +1258,33 @@ class _IssueDetailsLoading extends StatelessWidget {
                               ),
                             ),
                             SizedBox(width: horizontalGap),
-                            const Expanded(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: CircularProgressIndicator(),
-                              ),
-                            ),
+                            const Expanded(child: SizedBox()),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabBarHeaderDelegate(
+              child: Material(
+                color: colorScheme.surface,
+                child: const TabBar(
+                  tabs: [
+                    Tab(text: 'About'),
+                    Tab(text: 'My Details'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        body: const Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }

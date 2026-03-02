@@ -35,11 +35,11 @@ CollectionItem _toCollectionItem(
       modified: modified,
     ),
     quantity: item.ownershipStatus == LibraryOwnershipStatus.owned
-      ? item.quantityOwned
-      : 0,
+        ? item.quantityOwned
+        : 0,
     grade: item.conditionGrade == null
-      ? null
-      : double.tryParse(item.conditionGrade!.trim()),
+        ? null
+        : double.tryParse(item.conditionGrade!.trim()),
     purchaseDate: item.purchaseDate ?? item.acquiredOn,
     isRead: item.isRead,
     readCount: item.isRead ? 1 : 0,
@@ -48,10 +48,7 @@ CollectionItem _toCollectionItem(
   );
 }
 
-Future<CollectionItem> _enrichLibraryItem(
-  Ref ref,
-  LibraryItem item,
-) async {
+Future<CollectionItem> _enrichLibraryItem(Ref ref, LibraryItem item) async {
   final catalogRepository = ref.read(catalogRepositoryProvider);
 
   try {
@@ -84,8 +81,8 @@ Future<CollectionItem> _enrichLibraryItem(
 
 final selectedCollectionItemsPageProvider =
     NotifierProvider<SelectedCollectionItemsPage, int>(
-  SelectedCollectionItemsPage.new,
-);
+      SelectedCollectionItemsPage.new,
+    );
 
 class SelectedCollectionItemsPage extends Notifier<int> {
   @override
@@ -104,10 +101,10 @@ class SelectedCollectionItemsPage extends Notifier<int> {
   }
 }
 
-final collectionItemsProvider =
-    FutureProvider.autoDispose.family<CollectionItemsPage, int>((ref, page) {
-  return _loadCollectionPage(ref, page);
-});
+final collectionItemsProvider = FutureProvider.autoDispose
+    .family<CollectionItemsPage, int>((ref, page) {
+      return _loadCollectionPage(ref, page);
+    });
 
 Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
   final repository = ref.read(libraryRepositoryProvider);
@@ -143,16 +140,16 @@ Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
 
 final currentCollectionItemsProvider =
     FutureProvider.autoDispose<CollectionItemsPage>((ref) {
-  final page = ref.watch(selectedCollectionItemsPageProvider);
-  return ref.watch(collectionItemsProvider(page).future);
-});
+      final page = ref.watch(selectedCollectionItemsPageProvider);
+      return ref.watch(collectionItemsProvider(page).future);
+    });
 
-final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((ref) async {
+Future<List<LibraryItem>> _loadAllLibraryItems(Ref ref) async {
   final repository = ref.read(libraryRepositoryProvider);
   final totalCount = await repository.getItemCount();
-  if (totalCount <= 0) return <CollectionItem>[];
+  if (totalCount <= 0) return <LibraryItem>[];
 
-  final items = <CollectionItem>[];
+  final items = <LibraryItem>[];
   var offset = 0;
 
   while (items.length < totalCount) {
@@ -161,27 +158,104 @@ final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((ref) as
       offset: offset,
     );
     if (libraryItems.isEmpty) break;
-
-    final enriched = await Future.wait(
-      libraryItems.map((item) => _enrichLibraryItem(ref, item)),
-    );
-    items.addAll(enriched);
+    items.addAll(libraryItems);
     offset += libraryItems.length;
   }
 
   return items;
+}
+
+final allLibraryItemsProvider = FutureProvider<List<LibraryItem>>((ref) async {
+  return _loadAllLibraryItems(ref);
 });
 
-final collectionItemsByReadStatusProvider =
-    FutureProvider.autoDispose.family<List<CollectionItem>, bool>(
-      (
-        ref,
-        isRead,
-      ) async {
-        final items = await ref.watch(allCollectionItemsProvider.future);
-        return items.where((item) => item.isRead == isRead).toList();
-      },
-    );
+final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((
+  ref,
+) async {
+  final libraryItems = await ref.watch(allLibraryItemsProvider.future);
+  final enriched = await Future.wait(
+    libraryItems.map((item) => _enrichLibraryItem(ref, item)),
+  );
+  return enriched;
+});
+
+final collectionItemsByOwnershipStatusProvider = FutureProvider.autoDispose
+    .family<List<CollectionItem>, LibraryOwnershipStatus>((ref, status) async {
+      final libraryItems = await ref.watch(allLibraryItemsProvider.future);
+      final filtered = libraryItems
+          .where((item) => item.ownershipStatus == status)
+          .toList();
+      return Future.wait(filtered.map((item) => _enrichLibraryItem(ref, item)));
+    });
+
+final collectionItemsByReadStatusProvider = FutureProvider.autoDispose
+    .family<List<CollectionItem>, bool>((ref, isRead) async {
+      final items = await ref.watch(allCollectionItemsProvider.future);
+      return items.where((item) => item.isRead == isRead).toList();
+    });
+
+final unratedCollectionItemsProvider =
+    FutureProvider.autoDispose<List<CollectionItem>>((ref) async {
+      final items = await ref.watch(allCollectionItemsProvider.future);
+      return items
+          .where(
+            (item) => item.quantity > 0 && item.isRead && item.rating == null,
+          )
+          .toList();
+    });
+
+final wishlistCollectionItemsProvider =
+    FutureProvider.autoDispose<List<CollectionItem>>((ref) async {
+      return ref.watch(
+        collectionItemsByOwnershipStatusProvider(
+          LibraryOwnershipStatus.wishlist,
+        ).future,
+      );
+    });
+
+class ReadingHistoryEntry {
+  const ReadingHistoryEntry({required this.item, required this.readAt});
+
+  final CollectionItem item;
+  final DateTime? readAt;
+}
+
+final readingHistoryCollectionItemsProvider =
+    FutureProvider.autoDispose<List<ReadingHistoryEntry>>((ref) async {
+      final libraryItems = await ref.watch(allLibraryItemsProvider.future);
+      final collectionItems = await ref.watch(
+        allCollectionItemsProvider.future,
+      );
+
+      final readAtByIssueId = <int, DateTime?>{
+        for (final item in libraryItems)
+          if (item.isRead) item.metronIssueId: item.firstReadAt,
+      };
+
+      final entries =
+          collectionItems
+              .where((item) {
+                final issueId = item.issue?.id;
+                return issueId != null && readAtByIssueId.containsKey(issueId);
+              })
+              .map(
+                (item) => ReadingHistoryEntry(
+                  item: item,
+                  readAt: readAtByIssueId[item.issue!.id],
+                ),
+              )
+              .toList()
+            ..sort((a, b) {
+              final aDate = a.readAt;
+              final bDate = b.readAt;
+              if (aDate == null && bDate == null) return 0;
+              if (aDate == null) return 1;
+              if (bDate == null) return -1;
+              return bDate.compareTo(aDate);
+            });
+
+      return entries;
+    });
 
 String _normalizeSeriesName(String name) {
   return name.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
@@ -195,24 +269,25 @@ String _seriesKey({
   return '${_normalizeSeriesName(name)}|${volume ?? -1}|${yearBegan ?? -1}';
 }
 
-final collectionSeriesKeysProvider =
-    FutureProvider.autoDispose<Set<String>>((ref) async {
-      final items = await ref.watch(allCollectionItemsProvider.future);
-      final keys = <String>{};
+final collectionSeriesKeysProvider = FutureProvider.autoDispose<Set<String>>((
+  ref,
+) async {
+  final items = await ref.watch(allCollectionItemsProvider.future);
+  final keys = <String>{};
 
-      for (final item in items) {
-        if (item.quantity <= 0) continue;
-        final series = item.issue?.series;
-        final name = series?.name.trim();
-        if (name == null || name.isEmpty) continue;
-        keys.add(
-          _seriesKey(
-            name: name,
-            volume: series?.volume,
-            yearBegan: series?.yearBegan,
-          ),
-        );
-      }
+  for (final item in items) {
+    if (item.quantity <= 0) continue;
+    final series = item.issue?.series;
+    final name = series?.name.trim();
+    if (name == null || name.isEmpty) continue;
+    keys.add(
+      _seriesKey(
+        name: name,
+        volume: series?.volume,
+        yearBegan: series?.yearBegan,
+      ),
+    );
+  }
 
-      return keys;
-    });
+  return keys;
+});

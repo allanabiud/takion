@@ -8,7 +8,9 @@ class IssueCard extends StatelessWidget {
   final double width;
   final String? heroTag;
   final bool isCollected;
+  final bool isWishlisted;
   final bool isRead;
+  final bool isPulled;
 
   const IssueCard({
     super.key,
@@ -18,7 +20,9 @@ class IssueCard extends StatelessWidget {
     this.width = 120,
     this.heroTag,
     this.isCollected = false,
+    this.isWishlisted = false,
     this.isRead = false,
+    this.isPulled = false,
   });
 
   @override
@@ -83,6 +87,24 @@ class IssueCard extends StatelessWidget {
                               : Icons.bookmark_added_outlined,
                           size: 16,
                           color: isRead
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          isPulled
+                              ? Icons.shopping_bag
+                              : Icons.shopping_bag_outlined,
+                          size: 16,
+                          color: isPulled
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          isWishlisted ? Icons.favorite : Icons.favorite_border,
+                          size: 16,
+                          color: isWishlisted
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(context).colorScheme.outline,
                         ),

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:takion/src/core/notifications/push_notification_service.dart';
 import 'package:takion/src/core/network/supabase_service.dart';
 
 part 'auth_provider.g.dart';
@@ -26,11 +27,13 @@ class AuthState extends _$AuthState {
       final code = error.code?.toLowerCase().trim();
       final message = error.message.toLowerCase().trim();
 
-      if (code == 'invalid_credentials' || message.contains('invalid login credentials')) {
+      if (code == 'invalid_credentials' ||
+          message.contains('invalid login credentials')) {
         return 'Incorrect email or password. Please try again.';
       }
 
-      if (code == 'email_not_confirmed' || message.contains('email not confirmed')) {
+      if (code == 'email_not_confirmed' ||
+          message.contains('email not confirmed')) {
         return 'Please verify your email before logging in.';
       }
 
@@ -44,11 +47,13 @@ class AuthState extends _$AuthState {
         return 'Please enter a valid email address.';
       }
 
-      if (code == 'weak_password' || message.contains('password should be at least')) {
+      if (code == 'weak_password' ||
+          message.contains('password should be at least')) {
         return 'Password is too weak. Use at least 6 characters.';
       }
 
-      if (code == 'signup_disabled' || message.contains('signups not allowed')) {
+      if (code == 'signup_disabled' ||
+          message.contains('signups not allowed')) {
         return 'Account creation is currently disabled. Please try again later.';
       }
 
@@ -77,9 +82,7 @@ class AuthState extends _$AuthState {
   Future<AuthStatus> build() async {
     final client = ref.watch(supabaseClientProvider);
     final hasSession = client.auth.currentSession != null;
-    return hasSession
-        ? AuthStatus.authenticated
-        : AuthStatus.unauthenticated;
+    return hasSession ? AuthStatus.authenticated : AuthStatus.unauthenticated;
   }
 
   Future<void> login(String email, String password) async {
@@ -103,6 +106,10 @@ class AuthState extends _$AuthState {
       await profileService.ensureProfile(
         user: user,
         displayName: user.userMetadata?['display_name'] as String?,
+      );
+      await profileService.storeAuthCredentials(
+        email: email,
+        password: password,
       );
 
       state = const AsyncValue.data(AuthStatus.authenticated);
@@ -165,6 +172,7 @@ class AuthState extends _$AuthState {
     state = const AsyncValue.loading();
 
     final client = ref.read(supabaseClientProvider);
+    await ref.read(pushNotificationServiceProvider).markCurrentDeviceDisabled();
     await client.auth.signOut();
 
     state = const AsyncValue.data(AuthStatus.unauthenticated);

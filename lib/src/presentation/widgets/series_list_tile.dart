@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
 
-class SeriesListTile extends StatelessWidget {
+class SeriesListTile extends ConsumerWidget {
   final SeriesList series;
   final VoidCallback? onTap;
   final bool isFirst;
@@ -18,10 +20,13 @@ class SeriesListTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const double radius = 24.0;
     const double iconHeight = 100;
     const double iconWidth = 90;
+    final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
+    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
+    final issueCount = series.issueCount ?? 0;
 
     final cover = Container(
       width: iconWidth,
@@ -72,18 +77,30 @@ class SeriesListTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today, size: 12),
-                        const SizedBox(width: 4),
                         Text(
                           '${series.yearBegan ?? 'Unknown'}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
-                        const SizedBox(width: 12),
-                        const Icon(Icons.menu_book_outlined, size: 12),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 8),
+                        Text('•', style: Theme.of(context).textTheme.bodySmall),
+                        const SizedBox(width: 8),
                         Text(
-                          '${series.issueCount ?? 0}',
+                          '$issueCount ${issueCount == 1 ? 'issue' : 'issues'}',
                           style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          isSubscribed
+                              ? Icons.notifications_active
+                              : Icons.notifications_none_outlined,
+                          size: 16,
+                          color: isSubscribed
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outline,
                         ),
                       ],
                     ),

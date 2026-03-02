@@ -1,8 +1,8 @@
 name: takion
-description: "A Metron Comic Database Mobile Client"
+description: "Android app for Metron-powered comic pull-list and collection tracking."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 0.8.0+3
 
 environment:
   sdk: ^3.11.0
@@ -28,15 +28,22 @@ dependencies:
   flash: ^3.1.1
   intl: ^0.20.2
   flutter_svg: ^2.2.3
+  package_info_plus: ^8.3.0
   share_plus: ^11.0.0
   supabase_flutter: ^2.10.2
   connectivity_plus: ^6.1.5
+  image_picker: ^1.2.0
+  firebase_core: ^4.5.0
+  firebase_messaging: ^16.1.2
+  flutter_local_notifications: ^20.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
   build_runner: ^2.11.1
   json_serializable: ^6.13.0
   freezed: ^3.2.5
@@ -63,3 +70,21 @@ flutter:
           weight: 500
         - asset: fonts/Rubik-Italic.ttf
           style: italic
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/images/icon.png
+  adaptive_icon_background: "#121212"
+  adaptive_icon_foreground: assets/images/icon.png
+
+flutter_native_splash:
+  color: "#121212"
+  image: assets/images/splash.png
+  android: true
+  ios: false
+  android_gravity: center
+  fullscreen: true
+  android_12:
+    color: "#121212"
+    image: assets/images/icon.png

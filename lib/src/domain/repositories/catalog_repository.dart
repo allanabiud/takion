@@ -12,6 +12,11 @@ abstract class CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<List<IssueList>> getFocReleasesForDate(
+    DateTime date, {
+    bool forceRefresh = false,
+  });
+
   Future<IssueDetails> getIssueDetails(
     int issueId, {
     bool forceRefresh = false,

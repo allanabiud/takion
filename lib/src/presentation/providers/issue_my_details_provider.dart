@@ -76,7 +76,7 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           metronSeriesId: seriesId,
           ownershipStatus: isCollected
               ? LibraryOwnershipStatus.owned
-              : LibraryOwnershipStatus.wishlist,
+              : LibraryOwnershipStatus.notOwned,
           isRead: isRead,
           rating: resolvedRating,
           purchaseDate: purchaseDate,

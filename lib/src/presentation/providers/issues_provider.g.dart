@@ -52,7 +52,7 @@ final class WeeklyReleasesNotifierProvider
 }
 
 String _$weeklyReleasesNotifierHash() =>
-    r'a87c8ba104012dfcec35dfd2199844b1e4e9fbf3';
+    r'7ebb1d0360b3e3ae1e8ecfef2ed7a7aba830c1c9';
 
 final class WeeklyReleasesNotifierFamily extends $Family
     with
@@ -143,7 +143,7 @@ final class IssueDetailsNotifierProvider
 }
 
 String _$issueDetailsNotifierHash() =>
-    r'fd9a9215c0e1008c0d6cbf6e03f5159fd575dd6d';
+    r'e7858383924fcbb5d2157abdbbce89fa844fb8df';
 
 final class IssueDetailsNotifierFamily extends $Family
     with
@@ -229,7 +229,7 @@ final class CurrentWeeklyReleasesProvider
 }
 
 String _$currentWeeklyReleasesHash() =>
-    r'5694ba0e3d951bf3bdbacaa4f75f158555b993ee';
+    r'dbb16925f253212eb0b1857cd6196ff87a1150d9';
 
 @ProviderFor(SelectedWeek)
 final selectedWeekProvider = SelectedWeekProvider._();

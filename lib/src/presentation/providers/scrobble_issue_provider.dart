@@ -39,6 +39,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     DateTime? dateRead,
     int? rating,
     bool? addToCollection,
+    bool? addToWishlist,
     bool? markAsRead,
     bool refreshReadingSuggestion = false,
     bool refreshRateSuggestion = false,
@@ -60,19 +61,26 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
       final wasCollected =
           existing?.ownershipStatus == LibraryOwnershipStatus.owned;
-      final targetIsRead = markAsRead ?? (dateRead != null || (existing?.isRead ?? false));
+      final wasWishlisted =
+          existing?.ownershipStatus == LibraryOwnershipStatus.wishlist;
+      final targetIsRead =
+          markAsRead ?? (dateRead != null || (existing?.isRead ?? false));
       final targetIsCollected = addToCollection ?? wasCollected;
+      final targetIsWishlisted = targetIsCollected
+          ? false
+          : (addToWishlist ?? wasWishlisted);
       final wasRead = existing?.isRead ?? false;
       final readAt = dateRead ?? DateTime.now().toUtc();
       final readLogs = await libraryRepository.getReadLogsByIssueId(_issueId);
 
-      if (!targetIsCollected && !targetIsRead) {
+      if (!targetIsCollected && !targetIsRead && !targetIsWishlisted) {
         if (existing != null) {
           await libraryRepository.deleteItemByIssueId(_issueId);
         }
 
         ref.invalidate(collectionIssueStatusMapProvider);
         ref.invalidate(collectionStatsProvider);
+        ref.invalidate(allLibraryItemsProvider);
         ref.invalidate(allCollectionItemsProvider);
         ref.invalidate(collectionItemsProvider);
         ref.invalidate(currentCollectionItemsProvider);
@@ -92,7 +100,9 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         metronSeriesId: seriesId,
         ownershipStatus: targetIsCollected
             ? LibraryOwnershipStatus.owned
-            : LibraryOwnershipStatus.wishlist,
+            : (targetIsWishlisted
+                  ? LibraryOwnershipStatus.wishlist
+                  : LibraryOwnershipStatus.notOwned),
         isRead: targetIsRead,
         rating: targetIsRead ? (rating ?? existing?.rating) : null,
         firstReadAt: targetIsRead
@@ -110,11 +120,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
                 remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
                 return remaining.first.readAt;
               })(),
-              format: existing?.format ?? _resolveDefaultFormat(),
-        acquiredOn:
-            existing?.acquiredOn ??
-            dateRead ??
-            DateTime.now().toUtc(),
+        format: existing?.format ?? _resolveDefaultFormat(),
+        acquiredOn: existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
       );
 
       if (targetIsRead && !wasRead) {
@@ -138,6 +145,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
+      ref.invalidate(allLibraryItemsProvider);
       ref.invalidate(allCollectionItemsProvider);
       ref.invalidate(collectionItemsProvider);
       ref.invalidate(currentCollectionItemsProvider);

@@ -20,12 +20,13 @@ class SupabaseLibraryRepository implements LibraryRepository {
     switch (value) {
       case 'owned':
         return LibraryOwnershipStatus.owned;
+      case 'not_owned':
+        return LibraryOwnershipStatus.notOwned;
       case 'wishlist':
         return LibraryOwnershipStatus.wishlist;
       case 'ordered':
-        return LibraryOwnershipStatus.ordered;
       case 'sold':
-        return LibraryOwnershipStatus.sold;
+        return LibraryOwnershipStatus.notOwned;
       default:
         throw StateError('Unknown ownership status: $value');
     }
@@ -35,12 +36,10 @@ class SupabaseLibraryRepository implements LibraryRepository {
     switch (status) {
       case LibraryOwnershipStatus.owned:
         return 'owned';
+      case LibraryOwnershipStatus.notOwned:
+        return 'not_owned';
       case LibraryOwnershipStatus.wishlist:
         return 'wishlist';
-      case LibraryOwnershipStatus.ordered:
-        return 'ordered';
-      case LibraryOwnershipStatus.sold:
-        return 'sold';
     }
   }
 

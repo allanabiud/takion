@@ -1,12 +1,18 @@
-import 'dart:ui';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/domain/entities/pull_list_entry.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
+import 'package:takion/src/presentation/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
+import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/providers/issues_provider.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
@@ -16,6 +22,24 @@ import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
+
+enum _SeriesIssueBulkOperation { addToCollection, markAsRead }
+
+enum _SeriesIssueSelectionMode { predefined, range }
+
+enum _SeriesIssueSubset { all, collected, uncollected, read, unread }
+
+class _SeriesIssueBulkCandidate {
+  const _SeriesIssueBulkCandidate({
+    required this.issueId,
+    required this.orderIndex,
+    required this.issueNumber,
+  });
+
+  final int issueId;
+  final int orderIndex;
+  final String issueNumber;
+}
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
@@ -29,13 +53,649 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
-  static const _expandedHeight = 240.0;
+  static const _expandedHeight = 250.0;
   final ScrollController _scrollController = ScrollController();
   double _titleOpacity = 0;
   int _issuesPage = 1;
+  bool _isUpdatingSubscription = false;
 
-  void _showAddActionComingSoon() {
-    TakionAlerts.comingSoon(context, 'Add action');
+  Future<void> _syncSeriesUpcomingIssuesToPullList(DateTime fromDate) async {
+    final metronRepository = ref.read(metronRepositoryProvider);
+    final pullListRepository = ref.read(pullListRepositoryProvider);
+    var page = 1;
+
+    while (true) {
+      final issuePage = await metronRepository.getSeriesIssueList(
+        widget.seriesId,
+        page: page,
+      );
+
+      for (final issue in issuePage.results) {
+        final issueId = issue.id;
+        if (issueId == null) continue;
+        final releaseDate = issue.storeDate ?? issue.coverDate;
+        if (releaseDate == null) continue;
+        final releaseDay = DateTime(
+          releaseDate.year,
+          releaseDate.month,
+          releaseDate.day,
+        );
+        if (releaseDay.isBefore(fromDate)) continue;
+
+        await pullListRepository.upsertManualEntry(
+          metronSeriesId: widget.seriesId,
+          metronIssueId: issueId,
+          releaseDate: releaseDate,
+          entryStatus: PullListEntryStatus.upcoming,
+        );
+      }
+
+      final nextPage = issuePage.nextPage;
+      if (nextPage == null) break;
+      page = nextPage;
+    }
+  }
+
+  Future<List<_SeriesIssueBulkCandidate>> _allSeriesIssues() async {
+    final metronRepository = ref.read(metronRepositoryProvider);
+    var page = 1;
+    var orderIndex = 1;
+    final issues = <_SeriesIssueBulkCandidate>[];
+
+    while (true) {
+      final issuePage = await metronRepository.getSeriesIssueList(
+        widget.seriesId,
+        page: page,
+      );
+      for (final issue in issuePage.results) {
+        final issueId = issue.id;
+        if (issueId != null) {
+          issues.add(
+            _SeriesIssueBulkCandidate(
+              issueId: issueId,
+              orderIndex: orderIndex,
+              issueNumber: issue.number,
+            ),
+          );
+          orderIndex++;
+        }
+      }
+      final nextPage = issuePage.nextPage;
+      if (nextPage == null) break;
+      page = nextPage;
+    }
+
+    return issues;
+  }
+
+  Future<void> _applySeriesIssueBulkAction({
+    required _SeriesIssueBulkOperation operation,
+    required _SeriesIssueSelectionMode selectionMode,
+    required List<_SeriesIssueBulkCandidate> issues,
+    _SeriesIssueSubset? subset,
+    int? startOrderIndex,
+    int? endOrderIndex,
+  }) async {
+    try {
+      final libraryRepository = ref.read(libraryRepositoryProvider);
+      var affected = 0;
+      final affectedIssueIds = <int>{};
+
+      for (final issue in issues) {
+        final issueId = issue.issueId;
+        final existing = await libraryRepository.getItemByIssueId(issueId);
+        final isCollected =
+            existing?.ownershipStatus == LibraryOwnershipStatus.owned;
+        final isRead = existing?.isRead ?? false;
+
+        final matchesSelection =
+            selectionMode == _SeriesIssueSelectionMode.range
+            ? (startOrderIndex != null &&
+                  endOrderIndex != null &&
+                  issue.orderIndex >= startOrderIndex &&
+                  issue.orderIndex <= endOrderIndex)
+            : (subset != null &&
+                  _matchesSubset(
+                    subset: subset,
+                    isCollected: isCollected,
+                    isRead: isRead,
+                  ));
+        if (!matchesSelection) continue;
+
+        if (operation == _SeriesIssueBulkOperation.addToCollection) {
+          if (isCollected) continue;
+          await libraryRepository.upsertItem(
+            metronIssueId: issueId,
+            metronSeriesId: widget.seriesId,
+            ownershipStatus: LibraryOwnershipStatus.owned,
+            isRead: existing?.isRead ?? false,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: existing?.firstReadAt,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+            notes: existing?.notes,
+          );
+          affected++;
+          affectedIssueIds.add(issueId);
+          continue;
+        }
+
+        if (operation == _SeriesIssueBulkOperation.markAsRead) {
+          if (isRead) continue;
+          final now = DateTime.now().toUtc();
+          await libraryRepository.upsertItem(
+            metronIssueId: issueId,
+            metronSeriesId: widget.seriesId,
+            ownershipStatus:
+                existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
+            isRead: true,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: existing?.firstReadAt ?? now,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? now,
+            notes: existing?.notes,
+          );
+          await libraryRepository.addReadLog(
+            metronIssueId: issueId,
+            readAt: now,
+          );
+          affected++;
+          affectedIssueIds.add(issueId);
+        }
+      }
+
+      ref.invalidate(allLibraryItemsProvider);
+      await ref.read(allLibraryItemsProvider.future);
+      ref.invalidate(collectionIssueStatusMapProvider);
+      await ref.read(collectionIssueStatusMapProvider.future);
+      for (final issueId in affectedIssueIds) {
+        ref.invalidate(issueCollectionStatusProvider(issueId));
+      }
+      ref.invalidate(collectionStatsProvider);
+      ref.invalidate(allCollectionItemsProvider);
+      ref.invalidate(collectionItemsProvider);
+      ref.invalidate(currentCollectionItemsProvider);
+
+      if (mounted) {
+        final actionText =
+            operation == _SeriesIssueBulkOperation.addToCollection
+            ? 'added to collection'
+            : 'marked as read';
+        TakionAlerts.success(context, '$affected issues $actionText.');
+      }
+    } catch (error) {
+      if (mounted) {
+        TakionAlerts.error(
+          context,
+          'Failed to apply series issue action: $error',
+        );
+      }
+    }
+  }
+
+  bool _matchesSubset({
+    required _SeriesIssueSubset subset,
+    required bool isCollected,
+    required bool isRead,
+  }) {
+    switch (subset) {
+      case _SeriesIssueSubset.all:
+        return true;
+      case _SeriesIssueSubset.collected:
+        return isCollected;
+      case _SeriesIssueSubset.uncollected:
+        return !isCollected;
+      case _SeriesIssueSubset.read:
+        return isRead;
+      case _SeriesIssueSubset.unread:
+        return !isRead;
+    }
+  }
+
+  Future<void> _showSeriesIssueActionsSheet({
+    required String seriesName,
+  }) async {
+    final issues = await _allSeriesIssues();
+    if (!mounted) return;
+    if (issues.isEmpty) {
+      TakionAlerts.info(context, 'No issues found for this series yet.');
+      return;
+    }
+
+    final totalIssues = issues.length;
+    var selectedOperation = _SeriesIssueBulkOperation.addToCollection;
+    var selectedMode = _SeriesIssueSelectionMode.predefined;
+    var selectedSubset = _SeriesIssueSubset.uncollected;
+    var selectedRange = RangeValues(1, totalIssues.toDouble());
+    var isApplying = false;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            String operationLabel(_SeriesIssueBulkOperation value) {
+              switch (value) {
+                case _SeriesIssueBulkOperation.addToCollection:
+                  return 'Add to Collection';
+                case _SeriesIssueBulkOperation.markAsRead:
+                  return 'Mark as Read';
+              }
+            }
+
+            String selectionModeLabel(_SeriesIssueSelectionMode value) {
+              switch (value) {
+                case _SeriesIssueSelectionMode.predefined:
+                  return 'Filters';
+                case _SeriesIssueSelectionMode.range:
+                  return 'Issue range';
+              }
+            }
+
+            String subsetLabel(_SeriesIssueSubset value) {
+              switch (value) {
+                case _SeriesIssueSubset.all:
+                  return 'All issues';
+                case _SeriesIssueSubset.collected:
+                  return 'Collected issues';
+                case _SeriesIssueSubset.uncollected:
+                  return 'Uncollected issues';
+                case _SeriesIssueSubset.read:
+                  return 'Read issues';
+                case _SeriesIssueSubset.unread:
+                  return 'Unread issues';
+              }
+            }
+
+            List<_SeriesIssueSubset> applicableSubsets(
+              _SeriesIssueBulkOperation operation,
+            ) {
+              switch (operation) {
+                case _SeriesIssueBulkOperation.addToCollection:
+                  return const [
+                    _SeriesIssueSubset.all,
+                    _SeriesIssueSubset.uncollected,
+                    _SeriesIssueSubset.read,
+                    _SeriesIssueSubset.unread,
+                  ];
+                case _SeriesIssueBulkOperation.markAsRead:
+                  return const [
+                    _SeriesIssueSubset.all,
+                    _SeriesIssueSubset.unread,
+                    _SeriesIssueSubset.collected,
+                    _SeriesIssueSubset.uncollected,
+                  ];
+              }
+            }
+
+            final availableSubsets = applicableSubsets(selectedOperation);
+            if (!availableSubsets.contains(selectedSubset)) {
+              selectedSubset = availableSubsets.first;
+            }
+
+            final selectedStart = selectedRange.start.round();
+            final selectedEnd = selectedRange.end.round();
+            final startIssueNumber = issues[selectedStart - 1].issueNumber;
+            final endIssueNumber = issues[selectedEnd - 1].issueNumber;
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  16 + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      seriesName,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Manage Series Issues',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<_SeriesIssueBulkOperation>(
+                      value: selectedOperation,
+                      decoration: const InputDecoration(
+                        labelText: 'Action',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _SeriesIssueBulkOperation.values
+                          .map(
+                            (value) => DropdownMenuItem(
+                              value: value,
+                              child: Text(operationLabel(value)),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: isApplying
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setModalState(() {
+                                selectedOperation = value;
+                              });
+                            },
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Selection method',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    SegmentedButton<_SeriesIssueSelectionMode>(
+                      segments: _SeriesIssueSelectionMode.values
+                          .map(
+                            (value) => ButtonSegment(
+                              value: value,
+                              label: Text(selectionModeLabel(value)),
+                            ),
+                          )
+                          .toList(),
+                      selected: {selectedMode},
+                      onSelectionChanged: isApplying
+                          ? null
+                          : (selection) {
+                              final value = selection.firstOrNull;
+                              if (value == null) return;
+                              setModalState(() {
+                                selectedMode = value;
+                              });
+                            },
+                    ),
+                    const SizedBox(height: 12),
+                    if (selectedMode == _SeriesIssueSelectionMode.predefined)
+                      DropdownButtonFormField<_SeriesIssueSubset>(
+                        value: selectedSubset,
+                        decoration: const InputDecoration(
+                          labelText: 'Apply to',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: availableSubsets
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(subsetLabel(value)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: isApplying
+                            ? null
+                            : (value) {
+                                if (value == null) return;
+                                setModalState(() {
+                                  selectedSubset = value;
+                                });
+                              },
+                      ),
+                    if (selectedMode == _SeriesIssueSelectionMode.range) ...[
+                      Text(
+                        'Issue range: #$startIssueNumber - #$endIssueNumber',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      RangeSlider(
+                        min: 1,
+                        max: totalIssues.toDouble(),
+                        divisions: totalIssues > 1 ? totalIssues - 1 : null,
+                        labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                        values: selectedRange,
+                        onChanged: isApplying
+                            ? null
+                            : (value) {
+                                setModalState(() {
+                                  selectedRange = RangeValues(
+                                    value.start.roundToDouble(),
+                                    value.end.roundToDouble(),
+                                  );
+                                });
+                              },
+                      ),
+                      Text(
+                        'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isApplying
+                              ? null
+                              : () => Navigator.of(sheetContext).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: isApplying
+                              ? null
+                              : () async {
+                                  setModalState(() {
+                                    isApplying = true;
+                                  });
+                                  try {
+                                    await _applySeriesIssueBulkAction(
+                                      operation: selectedOperation,
+                                      selectionMode: selectedMode,
+                                      issues: issues,
+                                      subset:
+                                          selectedMode ==
+                                              _SeriesIssueSelectionMode
+                                                  .predefined
+                                          ? selectedSubset
+                                          : null,
+                                      startOrderIndex:
+                                          selectedMode ==
+                                              _SeriesIssueSelectionMode.range
+                                          ? selectedStart
+                                          : null,
+                                      endOrderIndex:
+                                          selectedMode ==
+                                              _SeriesIssueSelectionMode.range
+                                          ? selectedEnd
+                                          : null,
+                                    );
+                                  } finally {
+                                    if (sheetContext.mounted) {
+                                      setModalState(() {
+                                        isApplying = false;
+                                      });
+                                    }
+                                  }
+                                },
+                          child: isApplying
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _setSeriesSubscription(bool enabled) async {
+    if (_isUpdatingSubscription) return;
+    setState(() {
+      _isUpdatingSubscription = true;
+    });
+    try {
+      final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
+      if (enabled) {
+        await subscriptionRepository.subscribe(metronSeriesId: widget.seriesId);
+      } else {
+        await subscriptionRepository.unsubscribe(widget.seriesId);
+      }
+      final now = DateTime.now();
+      final startOfWeek = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: now.weekday % 7));
+      await ref
+          .read(pullListRepositoryProvider)
+          .regenerateFromSubscriptions(fromDate: startOfWeek);
+      if (enabled) {
+        await _syncSeriesUpcomingIssuesToPullList(startOfWeek);
+      }
+      final selectedWeek = ref.read(selectedWeekProvider);
+      ref.invalidate(seriesSubscriptionProvider(widget.seriesId));
+      ref.invalidate(issuePullListEntryProvider);
+      ref.invalidate(pullListEntriesForWeekProvider);
+      ref.invalidate(pullsIssuesForWeekProvider);
+      ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
+      ref.invalidate(currentWeekPullsProvider);
+      ref.invalidate(currentWeekPullsCountProvider);
+      await ref.read(currentWeekPullsProvider.future);
+      if (mounted) {
+        TakionAlerts.success(
+          context,
+          enabled
+              ? 'Subscribed and pull list updated.'
+              : 'Unsubscribed and pull list updated.',
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to update subscription: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingSubscription = false;
+        });
+      }
+    }
+  }
+
+  void _showAddActionsSheet({required String seriesName}) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final subscriptionAsync = ref.watch(
+              seriesSubscriptionProvider(widget.seriesId),
+            );
+            final isSubscribed =
+                subscriptionAsync.asData?.value?.isActive ?? false;
+
+            var isTogglingSubscription = false;
+            return StatefulBuilder(
+              builder: (context, setSheetState) {
+                final showLoading =
+                    isTogglingSubscription || _isUpdatingSubscription;
+                return SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            seriesName,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                      SwitchListTile.adaptive(
+                        secondary: showLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                isSubscribed
+                                    ? Icons.notifications_active
+                                    : Icons.notifications_outlined,
+                              ),
+                        title: const Text('Subscribe and Pull Series'),
+                        subtitle: Text(
+                          isSubscribed ? 'Subscribed' : 'Not subscribed',
+                        ),
+                        value: isSubscribed,
+                        onChanged: subscriptionAsync.isLoading || showLoading
+                            ? null
+                            : (value) async {
+                                setSheetState(() {
+                                  isTogglingSubscription = true;
+                                });
+                                try {
+                                  await _setSeriesSubscription(value);
+                                } finally {
+                                  if (context.mounted) {
+                                    setSheetState(() {
+                                      isTogglingSubscription = false;
+                                    });
+                                  }
+                                }
+                              },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.library_add_check_outlined),
+                        title: const Text('Manage Series Issues'),
+                        subtitle: const Text(
+                          'Add to collection or mark read by issue range',
+                        ),
+                        onTap: () => _showSeriesIssueActionsSheet(
+                          seriesName: seriesName,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _subscriptionBadge(bool isSubscribed) {
+    return Icon(
+      isSubscribed
+          ? Icons.notifications_active
+          : Icons.notifications_none_outlined,
+      size: 18,
+      color: isSubscribed
+          ? Theme.of(context).colorScheme.primary
+          : Colors.white70,
+    );
   }
 
   Uri? _resourceUri(SeriesDetails details) {
@@ -112,9 +772,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
+    final subscriptionAsync = ref.watch(
+      seriesSubscriptionProvider(widget.seriesId),
+    );
+    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
 
     return detailsAsync.when(
-      loading: () => _SeriesDetailsLoading(seriesId: widget.seriesId),
+      loading: () => const _SeriesDetailsLoading(),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: AsyncStatePanel.error(
@@ -136,7 +800,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   actions: [
                     IconButton(
                       tooltip: 'Add',
-                      onPressed: _showAddActionComingSoon,
+                      onPressed: () =>
+                          _showAddActionsSheet(seriesName: details.name),
                       icon: const Icon(Icons.add),
                     ),
                     PopupMenuButton<_SeriesDetailsMenuAction>(
@@ -158,11 +823,19 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   ],
                   title: Opacity(
                     opacity: _titleOpacity,
-                    child: Text(
-                      details.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            details.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _subscriptionBadge(isSubscribed),
+                      ],
                     ),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
@@ -230,6 +903,8 @@ class _SeriesHeader extends ConsumerWidget {
     final firstPageIssuesAsync = ref.watch(
       seriesIssueListProvider(SeriesIssueListArgs(seriesId: seriesId, page: 1)),
     );
+    final subscriptionAsync = ref.watch(seriesSubscriptionProvider(seriesId));
+    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final firstPageIssues = firstPageIssuesAsync.asData?.value;
     final firstIssueImage =
         firstPageIssues != null && firstPageIssues.results.isNotEmpty
@@ -240,18 +915,12 @@ class _SeriesHeader extends ConsumerWidget {
       fit: StackFit.expand,
       children: [
         if (firstIssueImage != null)
-          ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: CachedNetworkImage(
-              imageUrl: firstIssueImage,
-              fit: BoxFit.cover,
-            ),
-          )
+          CachedNetworkImage(imageUrl: firstIssueImage, fit: BoxFit.cover)
         else
           ColoredBox(color: colorScheme.surfaceContainerHighest),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: backgroundTint.withValues(alpha: 0.44),
+            color: backgroundTint.withValues(alpha: 0.5),
           ),
         ),
         DecoratedBox(
@@ -343,6 +1012,20 @@ class _SeriesHeader extends ConsumerWidget {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      isSubscribed
+                          ? Icons.notifications_active
+                          : Icons.notifications_none_outlined,
+                      size: 22,
+                      color: isSubscribed
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -673,41 +1356,45 @@ class _SeriesTabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _SeriesDetailsLoading extends StatelessWidget {
-  const _SeriesDetailsLoading({required this.seriesId});
-
-  final int seriesId;
+  const _SeriesDetailsLoading();
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          expandedHeight: 240.0,
-          backgroundColor: colorScheme.surface,
-          flexibleSpace: FlexibleSpaceBar(
-            collapseMode: CollapseMode.parallax,
-            background: Stack(
-              fit: StackFit.expand,
-              children: [
-                ColoredBox(color: colorScheme.surfaceContainerHighest),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: const [CircularProgressIndicator()],
-                    ),
-                  ),
-                ),
-              ],
+    return DefaultTabController(
+      length: 2,
+      child: NestedScrollView(
+        headerSliverBuilder: (context, _) => [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 250.0,
+            backgroundColor: colorScheme.surface,
+            title: const Text('Series'),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.parallax,
+              background: ColoredBox(
+                color: colorScheme.surfaceContainerHighest,
+              ),
             ),
           ),
-        ),
-      ],
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SeriesTabBarDelegate(
+              child: Material(
+                color: colorScheme.surface,
+                child: const TabBar(
+                  tabs: [
+                    Tab(text: 'About'),
+                    Tab(text: 'Issues'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        body: const Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }
