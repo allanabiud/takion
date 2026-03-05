@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/because_you_pulled_provider.dart';
 import 'package:takion/src/presentation/providers/continue_reading_provider.dart';
-import 'package:takion/src/presentation/providers/home_series_suggestions_provider.dart';
+import 'package:takion/src/presentation/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/widgets/issue_card.dart';
@@ -16,7 +16,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final suggestionsAsync = ref.watch(homeSeriesSuggestionsProvider);
+    final suggestionsAsync = ref.watch(homeTrendingProvider);
     final continueReadingAsync = ref.watch(continueReadingSuggestionsProvider);
     final becauseYouPulledAsync = ref.watch(becauseYouPulledIssuesProvider);
 
@@ -30,9 +30,7 @@ class HomeScreen extends ConsumerWidget {
                 if (suggestions.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'No suggestions yet. Add more issues to refine picks.',
-                    ),
+                    child: Text('No trending releases available yet.'),
                   );
                 }
 
@@ -43,20 +41,24 @@ class HomeScreen extends ConsumerWidget {
                     itemCount: suggestions.length,
                     itemBuilder: (context, index) {
                       final suggestion = suggestions[index];
-                      final series = suggestion.series;
-                      final backdropUrl = ref
-                          .watch(seriesSuggestionBackdropProvider(series.id))
-                          .asData
-                          ?.value;
+                      final issue = suggestion.issue;
+                      final series = issue.series;
+                      final backdropUrl = issue.image;
+                      final issueId = issue.id;
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         child: Card(
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
-                            onTap: () => context.pushRoute(
-                              SeriesDetailsRoute(seriesId: series.id),
-                            ),
+                            onTap: issueId == null
+                                ? null
+                                : () => context.pushRoute(
+                                    IssueDetailsRoute(
+                                      issueId: issueId,
+                                      initialImageUrl: issue.image,
+                                    ),
+                                  ),
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
@@ -179,7 +181,7 @@ class HomeScreen extends ConsumerWidget {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        series.name,
+                                        series?.name ?? issue.name,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
@@ -192,7 +194,7 @@ class HomeScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${series.yearBegan ?? 'Unknown'}',
+                                        '${series?.yearBegan ?? 'Unknown'}',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
@@ -294,7 +296,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               error: (_, _) => const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Could not load suggestions right now.'),
+                child: Text('Could not load trending releases right now.'),
               ),
             ),
             const SizedBox(height: 16),

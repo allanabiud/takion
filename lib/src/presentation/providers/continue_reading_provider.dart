@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/cache_policy.dart';
+import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 class ContinueReadingSuggestion {
@@ -56,55 +59,127 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
   return null;
 }
 
-final continueReadingSuggestionsProvider =
-    FutureProvider.autoDispose<List<ContinueReadingSuggestion>>((ref) async {
-      final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-      final readItems = libraryItems.where((item) => item.isRead).toList();
-      if (readItems.isEmpty) return const [];
+Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
+  Ref ref,
+) async {
+  final libraryItems = await ref.watch(allLibraryItemsProvider.future);
+  final readItems = libraryItems.where((item) => item.isRead).toList();
+  if (readItems.isEmpty) return const [];
 
-      final readIssueIdsBySeries = <int, Set<int>>{};
-      final latestReadAtBySeries = <int, DateTime>{};
-      final latestReadIssueIdBySeries = <int, int>{};
+  final readIssueIdsBySeries = <int, Set<int>>{};
+  final latestReadAtBySeries = <int, DateTime>{};
+  final latestReadIssueIdBySeries = <int, int>{};
 
-      DateTime readTimestamp(LibraryItem item) =>
-          item.firstReadAt ?? item.updatedAt;
+  DateTime readTimestamp(LibraryItem item) =>
+      item.firstReadAt ?? item.updatedAt;
 
-      for (final item in readItems) {
-        readIssueIdsBySeries
-            .putIfAbsent(item.metronSeriesId, () => <int>{})
-            .add(item.metronIssueId);
-        final ts = readTimestamp(item);
-        final existing = latestReadAtBySeries[item.metronSeriesId];
-        if (existing == null || ts.isAfter(existing)) {
-          latestReadAtBySeries[item.metronSeriesId] = ts;
-          latestReadIssueIdBySeries[item.metronSeriesId] = item.metronIssueId;
-        }
-      }
+  for (final item in readItems) {
+    readIssueIdsBySeries
+        .putIfAbsent(item.metronSeriesId, () => <int>{})
+        .add(item.metronIssueId);
+    final ts = readTimestamp(item);
+    final existing = latestReadAtBySeries[item.metronSeriesId];
+    if (existing == null || ts.isAfter(existing)) {
+      latestReadAtBySeries[item.metronSeriesId] = ts;
+      latestReadIssueIdBySeries[item.metronSeriesId] = item.metronIssueId;
+    }
+  }
 
-      final recentSeriesIds = latestReadAtBySeries.keys.toList()
-        ..sort(
-          (a, b) =>
-              latestReadAtBySeries[b]!.compareTo(latestReadAtBySeries[a]!),
-        );
+  final recentSeriesIds = latestReadAtBySeries.keys.toList()
+    ..sort(
+      (a, b) => latestReadAtBySeries[b]!.compareTo(latestReadAtBySeries[a]!),
+    );
 
-      final suggestionResults = await Future.wait(
-        recentSeriesIds.take(6).map((seriesId) async {
-          final lastReadIssueId = latestReadIssueIdBySeries[seriesId];
-          if (lastReadIssueId == null) return null;
-          final nextIssue = await _findNextUnreadIssueForSeries(
-            ref,
-            seriesId: seriesId,
-            lastReadIssueId: lastReadIssueId,
-            readIssueIds: readIssueIdsBySeries[seriesId] ?? const <int>{},
-          );
-          if (nextIssue == null) return null;
-          return ContinueReadingSuggestion(
-            seriesId: seriesId,
-            issue: nextIssue,
-            lastReadAt: latestReadAtBySeries[seriesId]!,
-          );
-        }),
+  final suggestionResults = await Future.wait(
+    recentSeriesIds.take(6).map((seriesId) async {
+      final lastReadIssueId = latestReadIssueIdBySeries[seriesId];
+      if (lastReadIssueId == null) return null;
+      final nextIssue = await _findNextUnreadIssueForSeries(
+        ref,
+        seriesId: seriesId,
+        lastReadIssueId: lastReadIssueId,
+        readIssueIds: readIssueIdsBySeries[seriesId] ?? const <int>{},
       );
+      if (nextIssue == null) return null;
+      return ContinueReadingSuggestion(
+        seriesId: seriesId,
+        issue: nextIssue,
+        lastReadAt: latestReadAtBySeries[seriesId]!,
+      );
+    }),
+  );
 
-      return suggestionResults.whereType<ContinueReadingSuggestion>().toList();
+  return suggestionResults.whereType<ContinueReadingSuggestion>().toList();
+}
+
+final continueReadingSuggestionsProvider =
+    FutureProvider<List<ContinueReadingSuggestion>>((ref) async {
+      final metrics = AppPerformanceMetrics.instance;
+      final cache = ref.read(homeContentCacheProvider);
+      DateTime? cachedAt;
+      var cached = const <ContinueReadingSuggestion>[];
+      try {
+        cachedAt = await cache.getCachedAt(homeContinueReadingMetaKey);
+        final cachedJson = await cache.readJsonList(
+          homeContinueReadingCacheKey,
+        );
+        cached =
+            cachedJson
+                ?.map((json) {
+                  final issue = issueListFromJson(
+                    (json['issue'] as Map?)?.cast<String, dynamic>() ??
+                        const {},
+                  );
+                  final seriesId = (json['series_id'] as num?)?.toInt();
+                  final lastReadAt = DateTime.tryParse(
+                    json['last_read_at'] as String? ?? '',
+                  );
+                  if (issue == null || seriesId == null || lastReadAt == null) {
+                    return null;
+                  }
+                  return ContinueReadingSuggestion(
+                    seriesId: seriesId,
+                    issue: issue,
+                    lastReadAt: lastReadAt,
+                  );
+                })
+                .whereType<ContinueReadingSuggestion>()
+                .toList() ??
+            const <ContinueReadingSuggestion>[];
+      } catch (_) {}
+      final hasFreshCache =
+          cachedAt != null &&
+          HomeCachePolicies.continueReading.isFresh(cachedAt, DateTime.now()) &&
+          cached.isNotEmpty;
+
+      if (hasFreshCache) {
+        metrics.recordCacheHit(homeContinueReadingMetaKey);
+        return cached;
+      }
+      metrics.recordCacheMiss(homeContinueReadingMetaKey);
+
+      try {
+        final fresh = await metrics.trackProvider(
+          'continueReadingSuggestionsProvider',
+          () => _computeContinueReadingSuggestions(ref),
+        );
+        try {
+          await cache.writeJsonList(
+            homeContinueReadingCacheKey,
+            fresh
+                .map(
+                  (entry) => {
+                    'series_id': entry.seriesId,
+                    'issue': issueListToJson(entry.issue),
+                    'last_read_at': entry.lastReadAt.toIso8601String(),
+                  },
+                )
+                .toList(),
+          );
+          await cache.writeCachedAtNow(homeContinueReadingMetaKey);
+        } catch (_) {}
+        return fresh;
+      } catch (_) {
+        return cached;
+      }
     });

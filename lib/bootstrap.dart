@@ -48,6 +48,8 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     hiveService.openBox<Map>('series_list_meta_box'),
     hiveService.openBox<List>('series_issue_list_box'),
     hiveService.openBox<Map>('series_issue_list_meta_box'),
+    hiveService.openBox<Map>('home_content_box'),
+    hiveService.openBox<dynamic>('library_items_cache_box'),
     hiveService.openBox<Map>('collection_stats_box'),
     hiveService.openBox<Map>('collection_items_box'),
     hiveService.openBox<Map>('collection_item_details_box'),

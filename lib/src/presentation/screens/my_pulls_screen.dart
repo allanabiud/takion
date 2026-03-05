@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
@@ -54,12 +55,13 @@ class MyPullsScreen extends ConsumerWidget {
         );
         affected++;
       }
+      await invalidateLibraryItemsLocalCacheWithHive(
+        ref.read(hiveServiceProvider),
+      );
 
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
       TakionAlerts.success(
@@ -112,12 +114,13 @@ class MyPullsScreen extends ConsumerWidget {
         await libraryRepository.addReadLog(metronIssueId: issueId, readAt: now);
         affected++;
       }
+      await invalidateLibraryItemsLocalCacheWithHive(
+        ref.read(hiveServiceProvider),
+      );
 
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
       TakionAlerts.success(context, '$affected pulled issues marked as read.');

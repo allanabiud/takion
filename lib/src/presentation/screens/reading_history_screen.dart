@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 
 @RoutePage()
@@ -49,27 +50,65 @@ class ReadingHistoryScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final entry = entries[index];
                 final issue = entry.item.issue;
-                final seriesName = issue?.series?.name ?? 'Issue';
-                final number = (issue?.number.isNotEmpty ?? false)
-                    ? ' #${issue!.number}'
+                final issueId = issue?.id;
+                final rawSeriesName = issue?.series?.name.trim() ?? '';
+                final shouldHydrate =
+                    issueId != null &&
+                    (RegExp(r'^Series \d+$').hasMatch(rawSeriesName) ||
+                        (issue?.number.isEmpty ?? true));
+                final hydratedIssue = shouldHydrate
+                    ? ref.watch(issueDetailsProvider(issueId)).asData?.value
+                    : null;
+                final seriesName =
+                    (hydratedIssue?.series?.name.trim().isNotEmpty ?? false)
+                    ? hydratedIssue!.series!.name.trim()
+                    : (rawSeriesName.isNotEmpty ? rawSeriesName : 'Issue');
+                final displayNumber =
+                    (hydratedIssue?.number.trim().isNotEmpty ?? false)
+                    ? hydratedIssue!.number.trim()
+                    : (issue?.number ?? '');
+                final number = displayNumber.isNotEmpty
+                    ? ' #$displayNumber'
                     : '';
                 final readAtLabel = entry.readAt == null
-                    ? 'Read date unavailable'
-                    : 'Read on ${DateFormat.yMMMd().format(entry.readAt!.toLocal())}';
-                final ratingLabel = entry.item.rating == null
-                    ? 'Unrated'
-                    : 'Rating: ${entry.item.rating}/5';
+                    ? 'Date unavailable'
+                    : DateFormat.yMMMd().format(entry.readAt!.toLocal());
+                final ratingValue = (entry.item.rating ?? 0).clamp(0, 5);
 
                 return Card(
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: ListTile(
                     title: Text('$seriesName$number'),
-                    subtitle: Text('$readAtLabel • $ratingLabel'),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.event_outlined,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(readAtLabel),
+                          const Spacer(),
+                          ...List.generate(5, (starIndex) {
+                            final filled = starIndex < ratingValue;
+                            return Icon(
+                              filled ? Icons.star : Icons.star_border,
+                              size: 14,
+                              color: filled
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outline,
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: issue == null
+                    onTap: issueId == null
                         ? null
                         : () => context.pushRoute(
-                            IssueDetailsRoute(issueId: issue.id),
+                            IssueDetailsRoute(issueId: issueId),
                           ),
                   ),
                 );

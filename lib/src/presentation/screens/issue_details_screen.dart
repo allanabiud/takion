@@ -13,6 +13,7 @@ import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/widgets/rating_picker.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/issue_details/about_tab_content.dart';
 import 'package:takion/src/presentation/widgets/issue_details/my_details_tab_content.dart';
@@ -242,47 +243,21 @@ class IssueDetailsScreen extends ConsumerWidget {
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(5, (index) {
-                              final starValue = index + 1;
-                              return IconButton(
-                                iconSize: 36,
-                                onPressed: isSubmitting
-                                    ? null
-                                    : () {
-                                        setModalState(() {
-                                          selectedRating = starValue;
-                                          markAsRead = true;
-                                        });
-                                      },
-                                icon: Icon(
-                                  starValue <= selectedRating
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: starValue <= selectedRating
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context).colorScheme.outline,
-                                ),
-                              );
-                            }),
+                          RatingPicker(
+                            selectedRating: selectedRating,
+                            enabled: !isSubmitting,
+                            onChanged: (value) {
+                              setModalState(() {
+                                selectedRating = value;
+                                markAsRead = true;
+                              });
+                            },
+                            onReset: () {
+                              setModalState(() {
+                                selectedRating = 0;
+                              });
+                            },
                           ),
-                          if (selectedRating > 0) ...[
-                            const SizedBox(height: 4),
-                            Align(
-                              alignment: Alignment.center,
-                              child: TextButton(
-                                onPressed: isSubmitting
-                                    ? null
-                                    : () {
-                                        setModalState(() {
-                                          selectedRating = 0;
-                                        });
-                                      },
-                                child: const Text('Reset rating'),
-                              ),
-                            ),
-                          ],
                           if (submitError != null) ...[
                             const SizedBox(height: 6),
                             Text(
@@ -518,6 +493,243 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
         _titleOpacity = next;
       });
     }
+  }
+
+  Widget _buildIssueHeaderBackdrop({
+    required BuildContext context,
+    required ColorScheme colorScheme,
+    required Color backgroundTint,
+    required String? imageUrl,
+    required String heroTag,
+    required bool isInPullList,
+  }) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (imageUrl != null)
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
+          )
+        else
+          ColoredBox(color: colorScheme.surfaceContainerHighest),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: backgroundTint.withValues(alpha: 0.44),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0, 0.55, 1],
+              colors: [
+                Colors.black.withValues(alpha: 0.56),
+                Colors.black.withValues(alpha: 0.30),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final maxHeight = constraints.maxHeight;
+            if (maxHeight < 180) {
+              return const SizedBox.shrink();
+            }
+
+            final topPadding = (maxHeight * 0.18).clamp(20.0, 72.0).toDouble();
+            final bottomPadding = (maxHeight * 0.05)
+                .clamp(10.0, 20.0)
+                .toDouble();
+            final titleGap = maxHeight < 320 ? 6.0 : 10.0;
+            final subtitleGap = maxHeight < 320 ? 2.0 : 4.0;
+            final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
+            final title = _displayTitle();
+            final baseTitleLargeStyle = Theme.of(context).textTheme.titleLarge;
+            final baseTitleMediumStyle = Theme.of(
+              context,
+            ).textTheme.titleMedium;
+            final titleLargeStyle = baseTitleLargeStyle?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              shadows: const [
+                Shadow(
+                  color: Colors.black45,
+                  blurRadius: 8,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            );
+            final titleMediumStyle =
+                (baseTitleMediumStyle ?? baseTitleLargeStyle)?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  shadows: const [
+                    Shadow(
+                      color: Colors.black45,
+                      blurRadius: 8,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                );
+            final coverHeight = (maxHeight - topPadding - bottomPadding - 6.0)
+                .clamp(130.0, 230.0)
+                .toDouble();
+            final coverWidth = (coverHeight * (2 / 3)).toDouble();
+            final useTitleMedium = maxHeight < 320;
+            final ratingValue = (widget.collectionStatus?.rating ?? 0).clamp(
+              0,
+              5,
+            );
+
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, topPadding, 20, bottomPadding),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Hero(
+                      tag: heroTag,
+                      child: GestureDetector(
+                        onTap: _openCoverGallery,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: imageUrl != null
+                              ? Container(
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.28,
+                                        ),
+                                        blurRadius: 22,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: coverWidth,
+                                    height: coverHeight,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Container(
+                                  width: coverWidth,
+                                  height: coverHeight,
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: const Icon(Icons.image, size: 40),
+                                ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: horizontalGap),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            textAlign: TextAlign.left,
+                            softWrap: true,
+                            style: useTitleMedium
+                                ? titleMediumStyle
+                                : titleLargeStyle,
+                          ),
+                          SizedBox(height: subtitleGap),
+                          Text(
+                            _subtitle(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.left,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  shadows: const [
+                                    Shadow(
+                                      color: Colors.black45,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                          ),
+                          SizedBox(height: titleGap),
+                          Row(
+                            children: [
+                              Icon(
+                                (widget.collectionStatus?.isCollected ?? false)
+                                    ? Icons.inventory_2
+                                    : Icons.inventory_2_outlined,
+                                size: 20,
+                                color:
+                                    (widget.collectionStatus?.isCollected ??
+                                        false)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.white70,
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                (widget.collectionStatus?.isRead ?? false)
+                                    ? Icons.bookmark_added
+                                    : Icons.bookmark_added_outlined,
+                                size: 20,
+                                color:
+                                    (widget.collectionStatus?.isRead ?? false)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.white70,
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                isInPullList
+                                    ? Icons.shopping_bag
+                                    : Icons.shopping_bag_outlined,
+                                size: 20,
+                                color: isInPullList
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.white70,
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                (widget.collectionStatus?.isWishlisted ?? false)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 20,
+                                color:
+                                    (widget.collectionStatus?.isWishlisted ??
+                                        false)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.white70,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: List.generate(5, (index) {
+                              final isFilled = index < ratingValue;
+                              return Icon(
+                                isFilled ? Icons.star : Icons.star_border,
+                                size: 18,
+                                color: isFilled
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.white70,
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
   }
 
   String _displayTitle() {
@@ -765,290 +977,13 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.parallax,
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (imageUrl != null)
-                        ImageFiltered(
-                          imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      else
-                        ColoredBox(color: colorScheme.surfaceContainerHighest),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: backgroundTint.withValues(alpha: 0.44),
-                        ),
-                      ),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            stops: const [0, 0.55, 1],
-                            colors: [
-                              Colors.black.withValues(alpha: 0.56),
-                              Colors.black.withValues(alpha: 0.30),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final maxHeight = constraints.maxHeight;
-                          if (maxHeight < 180) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final topPadding = (maxHeight * 0.18)
-                              .clamp(20.0, 72.0)
-                              .toDouble();
-                          final bottomPadding = (maxHeight * 0.05)
-                              .clamp(10.0, 20.0)
-                              .toDouble();
-                          final titleGap = maxHeight < 320 ? 6.0 : 10.0;
-                          final subtitleGap = maxHeight < 320 ? 2.0 : 4.0;
-                          final horizontalGap = maxHeight < 320 ? 14.0 : 18.0;
-                          final title = _displayTitle();
-                          final baseTitleLargeStyle = Theme.of(
-                            context,
-                          ).textTheme.titleLarge;
-                          final baseTitleMediumStyle = Theme.of(
-                            context,
-                          ).textTheme.titleMedium;
-                          final titleLargeStyle = baseTitleLargeStyle?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            shadows: const [
-                              Shadow(
-                                color: Colors.black45,
-                                blurRadius: 8,
-                                offset: Offset(0, 1),
-                              ),
-                            ],
-                          );
-                          final titleMediumStyle =
-                              (baseTitleMediumStyle ?? baseTitleLargeStyle)
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    shadows: const [
-                                      Shadow(
-                                        color: Colors.black45,
-                                        blurRadius: 8,
-                                        offset: Offset(0, 1),
-                                      ),
-                                    ],
-                                  );
-                          final coverHeight =
-                              (maxHeight - topPadding - bottomPadding - 6.0)
-                                  .clamp(130.0, 230.0)
-                                  .toDouble();
-                          final coverWidth = (coverHeight * (2 / 3)).toDouble();
-                          final useTitleMedium = maxHeight < 320;
-                          final ratingValue =
-                              (widget.collectionStatus?.rating ?? 0).clamp(
-                                0,
-                                5,
-                              );
-
-                          return Center(
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                20,
-                                topPadding,
-                                20,
-                                bottomPadding,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Hero(
-                                    tag: heroTag,
-                                    child: GestureDetector(
-                                      onTap: _openCoverGallery,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(14),
-                                        child: imageUrl != null
-                                            ? Container(
-                                                decoration: BoxDecoration(
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withValues(
-                                                            alpha: 0.28,
-                                                          ),
-                                                      blurRadius: 22,
-                                                      offset: const Offset(
-                                                        0,
-                                                        10,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: imageUrl,
-                                                  width: coverWidth,
-                                                  height: coverHeight,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              )
-                                            : Container(
-                                                width: coverWidth,
-                                                height: coverHeight,
-                                                color: colorScheme
-                                                    .surfaceContainerHighest,
-                                                child: const Icon(
-                                                  Icons.image,
-                                                  size: 40,
-                                                ),
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: horizontalGap),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          title,
-                                          textAlign: TextAlign.left,
-                                          softWrap: true,
-                                          style: useTitleMedium
-                                              ? titleMediumStyle
-                                              : titleLargeStyle,
-                                        ),
-                                        SizedBox(height: subtitleGap),
-                                        Text(
-                                          _subtitle(),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.left,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: Colors.white.withValues(
-                                                  alpha: 0.9,
-                                                ),
-                                                shadows: const [
-                                                  Shadow(
-                                                    color: Colors.black45,
-                                                    blurRadius: 8,
-                                                    offset: Offset(0, 1),
-                                                  ),
-                                                ],
-                                              ),
-                                        ),
-                                        SizedBox(height: titleGap),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              (widget
-                                                          .collectionStatus
-                                                          ?.isCollected ??
-                                                      false)
-                                                  ? Icons.inventory_2
-                                                  : Icons.inventory_2_outlined,
-                                              size: 20,
-                                              color:
-                                                  (widget
-                                                          .collectionStatus
-                                                          ?.isCollected ??
-                                                      false)
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary
-                                                  : Colors.white70,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Icon(
-                                              (widget
-                                                          .collectionStatus
-                                                          ?.isRead ??
-                                                      false)
-                                                  ? Icons.bookmark_added
-                                                  : Icons
-                                                        .bookmark_added_outlined,
-                                              size: 20,
-                                              color:
-                                                  (widget
-                                                          .collectionStatus
-                                                          ?.isRead ??
-                                                      false)
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary
-                                                  : Colors.white70,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Icon(
-                                              isInPullList
-                                                  ? Icons.shopping_bag
-                                                  : Icons.shopping_bag_outlined,
-                                              size: 20,
-                                              color: isInPullList
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary
-                                                  : Colors.white70,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Icon(
-                                              (widget
-                                                          .collectionStatus
-                                                          ?.isWishlisted ??
-                                                      false)
-                                                  ? Icons.favorite
-                                                  : Icons.favorite_border,
-                                              size: 20,
-                                              color:
-                                                  (widget
-                                                          .collectionStatus
-                                                          ?.isWishlisted ??
-                                                      false)
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary
-                                                  : Colors.white70,
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: List.generate(5, (index) {
-                                            final isFilled =
-                                                index < ratingValue;
-                                            return Icon(
-                                              isFilled
-                                                  ? Icons.star
-                                                  : Icons.star_border,
-                                              size: 18,
-                                              color: isFilled
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary
-                                                  : Colors.white70,
-                                            );
-                                          }),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                  background: _buildIssueHeaderBackdrop(
+                    context: context,
+                    colorScheme: colorScheme,
+                    backgroundTint: backgroundTint,
+                    imageUrl: imageUrl,
+                    heroTag: heroTag,
+                    isInPullList: isInPullList,
                   ),
                 ),
               ),

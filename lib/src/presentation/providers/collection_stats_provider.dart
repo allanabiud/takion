@@ -3,12 +3,15 @@ import 'package:takion/src/domain/entities/collection_stats.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 
-final collectionStatsProvider = FutureProvider.autoDispose<CollectionStats>((
-  ref,
-) async {
-  final items = await ref.watch(allCollectionItemsProvider.future);
+final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-  final collectedItems = items.where((item) => item.quantity > 0).toList();
+  final collectedItems = libraryItems
+      .where(
+        (item) =>
+            item.ownershipStatus == LibraryOwnershipStatus.owned &&
+            item.quantityOwned > 0,
+      )
+      .toList();
   final wishlistCount = libraryItems
       .where((item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist)
       .length;
@@ -21,7 +24,7 @@ final collectionStatsProvider = FutureProvider.autoDispose<CollectionStats>((
     totalItems: collectedItems.length,
     totalQuantity: collectedItems.fold<int>(
       0,
-      (sum, item) => sum + item.quantity,
+      (sum, item) => sum + item.quantityOwned,
     ),
     totalValue: '--',
     readCount: readCount,

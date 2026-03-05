@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/domain/entities/pull_list_entry.dart';
@@ -19,6 +20,7 @@ import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
+import 'package:takion/src/presentation/widgets/tappable_link_row.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
@@ -212,6 +214,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         }
       }
 
+      await invalidateLibraryItemsLocalCacheWithHive(
+        ref.read(hiveServiceProvider),
+      );
       ref.invalidate(allLibraryItemsProvider);
       await ref.read(allLibraryItemsProvider.future);
       ref.invalidate(collectionIssueStatusMapProvider);
@@ -220,9 +225,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         ref.invalidate(issueCollectionStatusProvider(issueId));
       }
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (mounted) {
         final actionText =
@@ -1042,10 +1045,20 @@ class _SeriesHeader extends ConsumerWidget {
   }
 }
 
-class _SeriesAboutTab extends StatelessWidget {
+class _SeriesAboutTab extends StatefulWidget {
   const _SeriesAboutTab({required this.details});
 
   final SeriesDetails details;
+
+  @override
+  State<_SeriesAboutTab> createState() => _SeriesAboutTabState();
+}
+
+class _SeriesAboutTabState extends State<_SeriesAboutTab> {
+  static const _descriptionMaxLines = 4;
+  bool _isDescriptionExpanded = false;
+
+  SeriesDetails get details => widget.details;
 
   String _yearRange() {
     final start = details.yearBegan;
@@ -1099,6 +1112,51 @@ class _SeriesAboutTab extends StatelessWidget {
     return items;
   }
 
+  TextStyle? _sectionTitleStyle(BuildContext context) {
+    return Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: Theme.of(context).colorScheme.primary,
+    );
+  }
+
+  Widget _buildSectionCard(
+    BuildContext context,
+    Widget child, {
+    VoidCallback? onTap,
+  }) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(padding: const EdgeInsets.all(14), child: child),
+      ),
+    );
+  }
+
+  Widget _buildExpansionTileNoSplash(
+    BuildContext context, {
+    Key? key,
+    required Widget title,
+    required List<Widget> children,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        splashFactory: NoSplash.splashFactory,
+      ),
+      child: ExpansionTile(
+        key: key,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        title: title,
+        children: children,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final description = details.description?.trim();
@@ -1117,38 +1175,95 @@ class _SeriesAboutTab extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
-        if (hasDescription) ...[
-          Text(
-            'Description',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.primary,
+        if (hasDescription)
+          _buildSectionCard(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Description', style: _sectionTitleStyle(context)),
+                const SizedBox(height: 6),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final textStyle = Theme.of(context).textTheme.bodyMedium;
+                    final painter = TextPainter(
+                      text: TextSpan(text: description, style: textStyle),
+                      maxLines: _descriptionMaxLines,
+                      textDirection: Directionality.of(context),
+                    )..layout(maxWidth: constraints.maxWidth);
+                    final isOverflowing = painter.didExceedMaxLines;
+
+                    if (!isOverflowing || _isDescriptionExpanded) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(description, style: textStyle),
+                          if (isOverflowing) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to read less',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ],
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          description,
+                          style: textStyle,
+                          maxLines: _descriptionMaxLines,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tap to read more',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
+            onTap: () {
+              setState(() {
+                _isDescriptionExpanded = !_isDescriptionExpanded;
+              });
+            },
           ),
-          const SizedBox(height: 6),
-          Text(description),
-        ],
         if (hasDescription &&
             (hasGrid || hasGenres || hasAssociated || hasModified))
-          const SizedBox(height: 16),
-        if (hasGrid)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const spacing = 12.0;
-              final itemWidth = (constraints.maxWidth - spacing) / 2;
-
-              return Wrap(
-                spacing: spacing,
-                runSpacing: 10,
-                children: gridItems
-                    .map(
-                      (item) => SizedBox(
-                        width: itemWidth,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 12),
+        if (hasGrid || hasGenres)
+          _buildSectionCard(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasGrid)
+                  ...gridItems.asMap().entries.map(
+                    (entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text.rich(
+                        TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
                           children: [
-                            Text(
-                              item.label,
+                            TextSpan(
+                              text: '${entry.value.label.toUpperCase()}: ',
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
                                     color: Theme.of(
@@ -1157,71 +1272,86 @@ class _SeriesAboutTab extends StatelessWidget {
                                     fontWeight: FontWeight.w700,
                                   ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item.value,
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            TextSpan(text: entry.value.value),
                           ],
                         ),
                       ),
-                    )
-                    .toList(),
-              );
-            },
-          ),
-        if (hasGrid && (hasGenres || hasAssociated || hasModified))
-          const SizedBox(height: 14),
-        if (hasGenres) ...[
-          Text(
-            'Genres',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: details.genres
-                .map((genre) => Chip(label: Text(genre.name)))
-                .toList(),
-          ),
-        ],
-        if (hasGenres && (hasAssociated || hasModified))
-          const SizedBox(height: 14),
-        if (hasAssociated) ...[
-          Text(
-            'Associated Series',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: associated
-                .map(
-                  (entry) => ActionChip(
-                    label: Text(entry.series),
-                    onPressed: entry.id == details.id
-                        ? null
-                        : () {
-                            context.pushRoute(
-                              SeriesDetailsRoute(seriesId: entry.id),
-                            );
-                          },
+                    ),
                   ),
-                )
-                .toList(),
+                if (hasGenres) ...[
+                  Text.rich(
+                    TextSpan(
+                      style: Theme.of(context).textTheme.bodySmall,
+                      children: [
+                        TextSpan(
+                          text: 'GENRES: ',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                        TextSpan(
+                          text: details.genres
+                              .map((genre) => genre.name)
+                              .join(' • '),
+                        ),
+                      ],
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
           ),
-        ],
-        if (hasAssociated && hasModified) const SizedBox(height: 14),
+        if ((hasGrid || hasGenres) && (hasAssociated || hasModified))
+          const SizedBox(height: 12),
+        if (hasAssociated)
+          _buildSectionCard(
+            context,
+            _buildExpansionTileNoSplash(
+              context,
+              key: PageStorageKey('series-associated-${details.id}'),
+              title: Text(
+                'Associated Series',
+                style: _sectionTitleStyle(context),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: associated
+                        .asMap()
+                        .entries
+                        .map(
+                          (item) => Padding(
+                            padding: EdgeInsets.only(
+                              bottom: item.key == associated.length - 1 ? 0 : 6,
+                            ),
+                            child: TappableLinkRow(
+                              label: item.value.series,
+                              isCurrent: item.value.id == details.id,
+                              onTap: item.value.id == details.id
+                                  ? null
+                                  : () {
+                                      context.pushRoute(
+                                        SeriesDetailsRoute(
+                                          seriesId: item.value.id,
+                                        ),
+                                      );
+                                    },
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (hasAssociated && hasModified) const SizedBox(height: 12),
         if (hasModified)
           Text(
             'Last modified: $modifiedValue',

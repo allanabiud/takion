@@ -77,13 +77,11 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         if (existing != null) {
           await libraryRepository.deleteItemByIssueId(_issueId);
         }
+        await invalidateLibraryItemsLocalCache(ref);
 
         ref.invalidate(collectionIssueStatusMapProvider);
         ref.invalidate(collectionStatsProvider);
-        ref.invalidate(allLibraryItemsProvider);
-        ref.invalidate(allCollectionItemsProvider);
-        ref.invalidate(collectionItemsProvider);
-        ref.invalidate(currentCollectionItemsProvider);
+        invalidateLibraryCollectionProviders(ref);
         if (refreshReadingSuggestion) {
           ref.invalidate(readingSuggestionProvider);
           ref.invalidate(readingSuggestionIssueProvider);
@@ -142,13 +140,11 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           await libraryRepository.deleteReadLogById(firstLog.first.id);
         }
       }
+      await invalidateLibraryItemsLocalCache(ref);
 
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allLibraryItemsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProviders(ref);
       if (refreshReadingSuggestion) {
         ref.invalidate(readingSuggestionProvider);
         ref.invalidate(readingSuggestionIssueProvider);

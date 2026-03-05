@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'dart:collection';
 import 'package:takion/src/core/cache/cache_policy.dart';
+import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
@@ -14,6 +17,13 @@ class MetronRepositoryImpl implements MetronRepository {
   final MetronRemoteDataSource _remoteDataSource;
   final MetronLocalDataSource _localDataSource;
   final DateTime Function() _now;
+  final Map<String, Future<List<IssueList>>> _weeklyInFlight =
+      <String, Future<List<IssueList>>>{};
+  final Map<String, Future<IssueDetails>> _issueDetailsInFlight =
+      <String, Future<IssueDetails>>{};
+  final Map<String, Future<SeriesListPage>> _seriesListInFlight =
+      <String, Future<SeriesListPage>>{};
+  final _AsyncConcurrencyGate _issueDetailsGate = _AsyncConcurrencyGate(4);
 
   MetronRepositoryImpl(
     this._remoteDataSource,
@@ -21,11 +31,29 @@ class MetronRepositoryImpl implements MetronRepository {
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
+  Future<T> _coalesce<T>(
+    Map<String, Future<T>> inFlight,
+    String key,
+    Future<T> Function() loader,
+  ) {
+    final existing = inFlight[key];
+    if (existing != null) return existing;
+    final future = loader();
+    inFlight[key] = future;
+    future.whenComplete(() {
+      if (identical(inFlight[key], future)) {
+        inFlight.remove(key);
+      }
+    });
+    return future;
+  }
+
   @override
   Future<List<IssueList>> getWeeklyReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,
   }) async {
+    final metrics = AppPerformanceMetrics.instance;
     // Updated to IssueList
     final cachedDtos = await _localDataSource.getWeeklyReleases(date);
     final cachedAt = await _localDataSource.getWeeklyReleasesCachedAt(date);
@@ -33,14 +61,21 @@ class MetronRepositoryImpl implements MetronRepository {
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
       if (cachedAt != null &&
           MetronCachePolicies.weeklyReleases.isFresh(cachedAt, _now())) {
+        metrics.recordCacheHit('weekly_releases');
         return cachedDtos.map((entry) => entry.toEntity()).toList();
       }
     }
+    metrics.recordCacheMiss('weekly_releases');
 
     try {
-      final remoteDtos = await _remoteDataSource.getWeeklyReleasesForDate(date);
-      await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
-      return remoteDtos.map((entry) => entry.toEntity()).toList();
+      final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
+      return _coalesce(_weeklyInFlight, key, () async {
+        final remoteDtos = await _remoteDataSource.getWeeklyReleasesForDate(
+          date,
+        );
+        await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
+        return remoteDtos.map((entry) => entry.toEntity()).toList();
+      });
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
@@ -81,6 +116,7 @@ class MetronRepositoryImpl implements MetronRepository {
     int issueId, {
     bool forceRefresh = false,
   }) async {
+    final metrics = AppPerformanceMetrics.instance;
     final cachedDto = await _localDataSource.getIssueDetails(issueId);
     final cachedAt = await _localDataSource.getIssueDetailsCachedAt(issueId);
     if (!forceRefresh && cachedDto != null) {
@@ -88,14 +124,24 @@ class MetronRepositoryImpl implements MetronRepository {
           cachedAt != null &&
           MetronCachePolicies.issueDetails.isFresh(cachedAt, _now());
       if (isFresh) {
+        metrics.recordCacheHit('issue_details');
         return cachedDto.toEntity();
       }
     }
+    metrics.recordCacheMiss('issue_details');
 
     try {
-      final remoteDto = await _remoteDataSource.getIssueDetails(issueId);
-      await _localDataSource.cacheIssueDetails(remoteDto);
-      return remoteDto.toEntity();
+      final key = '$issueId|$forceRefresh';
+      return _coalesce(_issueDetailsInFlight, key, () async {
+        await _issueDetailsGate.acquire();
+        try {
+          final remoteDto = await _remoteDataSource.getIssueDetails(issueId);
+          await _localDataSource.cacheIssueDetails(remoteDto);
+          return remoteDto.toEntity();
+        } finally {
+          _issueDetailsGate.release();
+        }
+      });
     } catch (_) {
       if (cachedDto != null) {
         return cachedDto.toEntity();
@@ -245,6 +291,7 @@ class MetronRepositoryImpl implements MetronRepository {
     int page = 1,
     bool forceRefresh = false,
   }) async {
+    final metrics = AppPerformanceMetrics.instance;
     final cachedDtos = await _localDataSource.getSeriesListResults(page: page);
     final cachedAt = await _localDataSource.getSeriesListResultsCachedAt(
       page: page,
@@ -258,6 +305,7 @@ class MetronRepositoryImpl implements MetronRepository {
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
       if (isFresh && cachedMeta != null) {
+        metrics.recordCacheHit('series_list');
         return SeriesListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -267,23 +315,27 @@ class MetronRepositoryImpl implements MetronRepository {
         );
       }
     }
+    metrics.recordCacheMiss('series_list');
 
     try {
-      final remotePage = await _remoteDataSource.getSeriesList(page: page);
-      await _localDataSource.cacheSeriesListResults(
-        remotePage.results,
-        page: page,
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-      );
-      return SeriesListPage(
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
-        currentPage: page,
-      );
+      final key = '$page|$forceRefresh';
+      return _coalesce(_seriesListInFlight, key, () async {
+        final remotePage = await _remoteDataSource.getSeriesList(page: page);
+        await _localDataSource.cacheSeriesListResults(
+          remotePage.results,
+          page: page,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return SeriesListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      });
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesListPage(
@@ -392,6 +444,35 @@ class MetronRepositoryImpl implements MetronRepository {
         );
       }
       rethrow;
+    }
+  }
+}
+
+class _AsyncConcurrencyGate {
+  _AsyncConcurrencyGate(this.maxConcurrent);
+
+  final int maxConcurrent;
+  int _active = 0;
+  final Queue<Completer<void>> _queue = Queue<Completer<void>>();
+
+  Future<void> acquire() async {
+    if (_active < maxConcurrent) {
+      _active++;
+      return;
+    }
+    final waiter = Completer<void>();
+    _queue.add(waiter);
+    await waiter.future;
+    _active++;
+  }
+
+  void release() {
+    if (_active > 0) _active--;
+    if (_queue.isNotEmpty) {
+      final next = _queue.removeFirst();
+      if (!next.isCompleted) {
+        next.complete();
+      }
     }
   }
 }

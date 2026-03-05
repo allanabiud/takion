@@ -1,9 +1,9 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/presentation/widgets/people_info_list_tile.dart';
+import 'package:takion/src/presentation/widgets/person_info_card.dart';
+import 'package:takion/src/presentation/widgets/tappable_link_row.dart';
 
 class IssueAboutTabContent extends StatefulWidget {
   const IssueAboutTabContent({
@@ -21,135 +21,142 @@ class IssueAboutTabContent extends StatefulWidget {
 
 class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
   static const _descriptionMaxLines = 4;
-  late final TapGestureRecognizer _readMoreRecognizer;
-  late final TapGestureRecognizer _readLessRecognizer;
   bool _isDescriptionExpanded = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _readMoreRecognizer = TapGestureRecognizer()
-      ..onTap = () {
-        setState(() {
-          _isDescriptionExpanded = true;
-        });
-      };
-    _readLessRecognizer = TapGestureRecognizer()
-      ..onTap = () {
-        setState(() {
-          _isDescriptionExpanded = false;
-        });
-      };
+  TextStyle? _sectionTitleStyle(BuildContext context) {
+    return Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: Theme.of(context).colorScheme.primary,
+    );
   }
 
-  @override
-  void dispose() {
-    _readMoreRecognizer.dispose();
-    _readLessRecognizer.dispose();
-    super.dispose();
+  Widget _buildSectionCard(
+    BuildContext context,
+    Widget child, {
+    VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(padding: const EdgeInsets.all(14), child: child),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpansionTileNoSplash(
+    BuildContext context, {
+    Key? key,
+    required Widget title,
+    required List<Widget> children,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        splashFactory: NoSplash.splashFactory,
+      ),
+      child: ExpansionTile(
+        key: key,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        title: title,
+        children: children,
+      ),
+    );
   }
 
   Widget _buildDescriptionSection(BuildContext context) {
     final rawDescription = widget.issue.description?.trim();
     final hasDescription = rawDescription != null && rawDescription.isNotEmpty;
+    final sectionTitleStyle = _sectionTitleStyle(context);
 
     if (!hasDescription) {
-      return Text(
-        'No description available.',
-        style: Theme.of(context).textTheme.bodyMedium,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Description', style: sectionTitleStyle),
+          const SizedBox(height: 6),
+          Text(
+            'No description available.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
       );
     }
 
     final description = rawDescription;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
-    final linkStyle = textStyle?.copyWith(
-      color: Theme.of(context).colorScheme.primary,
-      fontWeight: FontWeight.w600,
-    );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final painter = TextPainter(
-          text: TextSpan(text: description, style: textStyle),
-          maxLines: _descriptionMaxLines,
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Description', style: sectionTitleStyle),
+        const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final painter = TextPainter(
+              text: TextSpan(text: description, style: textStyle),
+              maxLines: _descriptionMaxLines,
+              textDirection: Directionality.of(context),
+            )..layout(maxWidth: constraints.maxWidth);
 
-        final isOverflowing = painter.didExceedMaxLines;
+            final isOverflowing = painter.didExceedMaxLines;
 
-        if (!isOverflowing) {
-          return Text(description, style: textStyle);
-        }
+            if (!isOverflowing || _isDescriptionExpanded) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(description, style: textStyle),
+                  if (isOverflowing) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap to read less',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            }
 
-        if (_isDescriptionExpanded) {
-          return RichText(
-            text: TextSpan(
-              style: textStyle,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextSpan(text: description),
-                const TextSpan(text: ' '),
-                TextSpan(
-                  text: 'Read less',
-                  style: linkStyle,
-                  recognizer: _readLessRecognizer,
+                Text(
+                  description,
+                  style: textStyle,
+                  maxLines: _descriptionMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tap to read more',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
-            ),
-          );
-        }
-
-        const readMoreLabel = 'Read more';
-        final suffix = '… $readMoreLabel';
-        var low = 0;
-        var high = description.length;
-        var best = 0;
-
-        while (low <= high) {
-          final mid = (low + high) ~/ 2;
-          final candidate = '${description.substring(0, mid).trimRight()}$suffix';
-          final candidatePainter = TextPainter(
-            text: TextSpan(text: candidate, style: textStyle),
-            maxLines: _descriptionMaxLines,
-            textDirection: Directionality.of(context),
-          )..layout(maxWidth: constraints.maxWidth);
-
-          if (candidatePainter.didExceedMaxLines) {
-            high = mid - 1;
-          } else {
-            best = mid;
-            low = mid + 1;
-          }
-        }
-
-        var cutAt = best;
-        if (cutAt > 0 && cutAt < description.length) {
-          final wordBoundary = description.lastIndexOf(' ', cutAt);
-          if (wordBoundary > 0) {
-            cutAt = wordBoundary;
-          }
-        }
-        final preview = description.substring(0, cutAt).trimRight();
-
-        return RichText(
-          text: TextSpan(
-            style: textStyle,
-            children: [
-              TextSpan(text: '$preview… '),
-              TextSpan(
-                text: readMoreLabel,
-                style: linkStyle,
-                recognizer: _readMoreRecognizer,
-              ),
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildIssueMetaSection(BuildContext context) {
     final seriesType = widget.issue.series?.seriesType?.name ?? 'Unknown';
-    final pages = widget.issue.page != null ? '${widget.issue.page}' : 'Unknown';
+    final pages = widget.issue.page != null
+        ? '${widget.issue.page}'
+        : 'Unknown';
     final currency = widget.issue.priceCurrency?.trim();
     final priceValue = widget.issue.price?.trim();
 
@@ -164,7 +171,8 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
         : 'Unknown';
     final upc = widget.issue.upc?.trim();
     final isbn = widget.issue.isbn?.trim();
-    final upcIsbn = (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
+    final upcIsbn =
+        (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
         ? '$upc / $isbn'
         : (upc != null && upc.isNotEmpty)
         ? upc
@@ -197,51 +205,32 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 10),
         Text(
           '$seriesType • $pages pages • $price',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontStyle: FontStyle.italic,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
         ),
-        _buildStoriesSection(context),
-        const SizedBox(height: 20),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            const spacing = 12.0;
-            final itemWidth = (constraints.maxWidth - spacing) / 2;
-
-            return Wrap(
-              spacing: spacing,
-              runSpacing: 10,
-              children: gridItems
-                  .map(
-                    (item) => SizedBox(
-                      width: itemWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.label.toUpperCase(),
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item.value,
-                            style: Theme.of(context).textTheme.bodySmall,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+        const SizedBox(height: 10),
+        ...gridItems.asMap().entries.map(
+          (entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text.rich(
+              TextSpan(
+                style: Theme.of(context).textTheme.bodyMedium,
+                children: [
+                  TextSpan(
+                    text: '${entry.value.label.toUpperCase()}: ',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w700,
                     ),
-                  )
-                  .toList(),
-            );
-          },
+                  ),
+                  TextSpan(text: entry.value.value),
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -249,7 +238,8 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
 
   Widget _buildGenresAndIdsSection(BuildContext context) {
     final imprint = widget.issue.imprint?.name.trim();
-    final genres = widget.issue.series?.genres
+    final genres =
+        widget.issue.series?.genres
             .map((genre) => genre.name.trim())
             .where((name) => name.isNotEmpty)
             .toList() ??
@@ -265,61 +255,66 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
 
     final genreText = genres.isNotEmpty ? genres.join(' • ') : 'Unknown';
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (imprint != null && imprint.isNotEmpty) ...[
-            Text(
-              'IMPRINT',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              imprint,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (imprint != null && imprint.isNotEmpty) ...[
+          Text.rich(
+            TextSpan(
               style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 10),
-          ],
-          Text(
-            'GENRES',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            genreText,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 10),
-          ...ids.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text.rich(
+              children: [
                 TextSpan(
-                  style: Theme.of(context).textTheme.bodySmall,
-                  children: [
-                    TextSpan(
-                      text: '${item.label}: ',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    TextSpan(text: item.value),
-                  ],
+                  text: 'IMPRINT: ',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                TextSpan(text: imprint),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Text.rich(
+          TextSpan(
+            style: Theme.of(context).textTheme.bodySmall,
+            children: [
+              TextSpan(
+                text: 'GENRES: ',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
+              TextSpan(text: genreText),
+            ],
+          ),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        ...ids.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text.rich(
+              TextSpan(
+                style: Theme.of(context).textTheme.bodySmall,
+                children: [
+                  TextSpan(
+                    text: '${item.label}: ',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextSpan(text: item.value),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -342,51 +337,46 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     }
 
     if (stories.length == 1) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 14),
-        child: Text(
-          stories.first,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w700,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Story', style: _sectionTitleStyle(context)),
+          const SizedBox(height: 8),
+          Text(
+            stories.first,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
-        ),
+        ],
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: ExpansionTile(
-        key: PageStorageKey('issue-stories-${widget.issueId}'),
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: EdgeInsets.zero,
-        title: Text(
-          'Stories',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        children: stories
-            .map(
-              (story) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('• ', style: Theme.of(context).textTheme.bodyMedium),
-                    Expanded(
-                      child: Text(
-                        story,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+    return _buildExpansionTileNoSplash(
+      context,
+      key: PageStorageKey('issue-stories-${widget.issueId}'),
+      title: Text('Stories', style: _sectionTitleStyle(context)),
+      children: stories
+          .map(
+            (story) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: Theme.of(context).textTheme.bodyMedium),
+                  Expanded(
+                    child: Text(
+                      story,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            )
-            .toList(),
-      ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -406,32 +396,36 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.zero,
+      child: _buildExpansionTileNoSplash(
+        context,
+        key: PageStorageKey('issue-reprints-${widget.issueId}'),
+        title: Text('Reprints', style: _sectionTitleStyle(context)),
         children: [
-          Text(
-            'Reprints',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: reprints
+                  .asMap()
+                  .entries
+                  .map(
+                    (item) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: item.key == reprints.length - 1 ? 0 : 6,
+                      ),
+                      child: TappableLinkRow(
+                        label: labelFor(item.value),
+                        onTap: () {
+                          context.pushRoute(
+                            IssueDetailsRoute(issueId: item.value.id),
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: reprints
-                .map(
-                  (reprint) => ActionChip(
-                    label: Text(labelFor(reprint)),
-                    onPressed: () {
-                      context.pushRoute(
-                        IssueDetailsRoute(issueId: reprint.id),
-                      );
-                    },
-                  ),
-                )
-                .toList(),
           ),
         ],
       ),
@@ -460,34 +454,57 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     return roles.join(' • ');
   }
 
+  Widget _buildPeopleGrid(
+    BuildContext context, {
+    required String title,
+    required List<({String name, String? subtitle})> items,
+  }) {
+    return _buildExpansionTileNoSplash(
+      context,
+      key: PageStorageKey('issue-people-grid-$title-${widget.issueId}'),
+      title: Text(title, style: _sectionTitleStyle(context)),
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            children: items
+                .asMap()
+                .entries
+                .map(
+                  (entry) => Padding(
+                    padding: EdgeInsets.only(
+                      bottom: entry.key == items.length - 1 ? 0 : 8,
+                    ),
+                    child: PersonInfoCard(
+                      name: entry.value.name,
+                      subtitle: entry.value.subtitle,
+                      placeholderIcon: Icons.person_outline,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCreatorsSection(BuildContext context) {
     final credits = widget.issue.credits;
     if (credits.isEmpty) {
       return const SizedBox.shrink();
     }
 
+    final items = credits
+        .map<({String name, String? subtitle})>(
+          (credit) =>
+              (name: _creatorTitle(credit), subtitle: _creatorSubtitle(credit)),
+        )
+        .toList();
+
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: ExpansionTile(
-        key: PageStorageKey('issue-creators-${widget.issueId}'),
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: EdgeInsets.zero,
-        title: Text(
-          'Creators',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        children: List.generate(credits.length, (index) {
-          final credit = credits[index];
-          return PeopleInfoListTile(
-            title: _creatorTitle(credit),
-            subtitle: _creatorSubtitle(credit),
-            isFirst: index == 0,
-            isLast: index == credits.length - 1,
-          );
-        }),
-      ),
+      padding: EdgeInsets.zero,
+      child: _buildPeopleGrid(context, title: 'Creators', items: items),
     );
   }
 
@@ -497,47 +514,85 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: ExpansionTile(
-        key: PageStorageKey('issue-characters-${widget.issueId}'),
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: EdgeInsets.zero,
-        title: Text(
-          'Characters',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
+    final items = characters
+        .map<({String name, String? subtitle})>(
+          (character) => (
+            name: character.name.trim().isNotEmpty
+                ? character.name.trim()
+                : 'Unknown Character',
+            subtitle: null,
           ),
-        ),
-        children: List.generate(characters.length, (index) {
-          final characterName = characters[index].name.trim();
-          return PeopleInfoListTile(
-            title: characterName.isNotEmpty ? characterName : 'Unknown Character',
-            isFirst: index == 0,
-            isLast: index == characters.length - 1,
-          );
-        }),
-      ),
+        )
+        .toList();
+
+    return Padding(
+      padding: EdgeInsets.zero,
+      child: _buildPeopleGrid(context, title: 'Characters', items: items),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasDescription = widget.issue.description?.trim().isNotEmpty ?? false;
+    final hasMeta = true;
+    final hasStories = _storyNames().isNotEmpty;
+    final hasReprints = widget.issue.reprints.any((reprint) => reprint.id > 0);
+    final hasCreators = widget.issue.credits.isNotEmpty;
+    final hasCharacters = widget.issue.characters.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDescriptionSection(context),
-        _buildIssueMetaSection(context),
-        _buildGenresAndIdsSection(context),
-        _buildReprintsSection(context),
-        _buildCreatorsSection(context),
-        _buildCharactersSection(context),
+        if (hasDescription)
+          _buildSectionCard(
+            context,
+            _buildDescriptionSection(context),
+            onTap: () {
+              setState(() {
+                _isDescriptionExpanded = !_isDescriptionExpanded;
+              });
+            },
+          ),
+        if (hasDescription &&
+            (hasMeta ||
+                hasStories ||
+                hasReprints ||
+                hasCreators ||
+                hasCharacters))
+          const SizedBox(height: 12),
+        if (hasMeta)
+          _buildSectionCard(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildIssueMetaSection(context),
+                _buildGenresAndIdsSection(context),
+              ],
+            ),
+          ),
+        if (hasMeta &&
+            (hasStories || hasReprints || hasCreators || hasCharacters))
+          const SizedBox(height: 12),
+        if (hasStories)
+          _buildSectionCard(context, _buildStoriesSection(context)),
+        if (hasStories && (hasReprints || hasCreators || hasCharacters))
+          const SizedBox(height: 12),
+        if (hasReprints)
+          _buildSectionCard(context, _buildReprintsSection(context)),
+        if (hasReprints && (hasCreators || hasCharacters))
+          const SizedBox(height: 12),
+        if (hasCreators)
+          _buildSectionCard(context, _buildCreatorsSection(context)),
+        if (hasCreators && hasCharacters) const SizedBox(height: 12),
+        if (hasCharacters)
+          _buildSectionCard(context, _buildCharactersSection(context)),
         const SizedBox(height: 14),
         Text(
-          'Modified: ${_formatModified(widget.issue.modified)}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontStyle: FontStyle.italic,
-          ),
+          'Last modified: ${_formatModified(widget.issue.modified)}',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
         ),
       ],
     );

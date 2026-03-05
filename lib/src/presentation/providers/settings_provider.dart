@@ -16,7 +16,7 @@ import 'package:takion/src/presentation/providers/series_search_provider.dart';
 import 'package:takion/src/presentation/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/providers/because_you_pulled_provider.dart';
 import 'package:takion/src/presentation/providers/continue_reading_provider.dart';
-import 'package:takion/src/presentation/providers/home_series_suggestions_provider.dart';
+import 'package:takion/src/presentation/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/providers/profile_provider.dart';
 import 'package:takion/src/presentation/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
@@ -109,8 +109,7 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(readingSuggestionIssueProvider);
     ref.invalidate(rateSuggestionProvider);
     ref.invalidate(rateSuggestionIssueProvider);
-    ref.invalidate(homeSeriesSuggestionsProvider);
-    ref.invalidate(seriesSuggestionBackdropProvider);
+    ref.invalidate(homeTrendingProvider);
     ref.invalidate(continueReadingSuggestionsProvider);
     ref.invalidate(becauseYouPulledIssuesProvider);
     ref.invalidate(activeSubscriptionsProvider);

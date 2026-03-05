@@ -27,3 +27,11 @@ class SupabaseCachePolicies {
   static const collectionItems = CachePolicy(ttl: Duration(hours: 3));
   static const collectionItemDetails = CachePolicy(ttl: Duration(hours: 3));
 }
+
+class HomeCachePolicies {
+  const HomeCachePolicies._();
+
+  static const seriesSuggestions = CachePolicy(ttl: Duration(hours: 1));
+  static const becauseYouPulled = CachePolicy(ttl: Duration(hours: 1));
+  static const continueReading = CachePolicy(ttl: Duration(hours: 1));
+}

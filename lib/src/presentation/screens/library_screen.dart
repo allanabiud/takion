@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/widgets/action_card.dart';
 import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/rating_picker.dart';
 import 'package:takion/src/presentation/widgets/section_subtitle_header.dart';
 
 @RoutePage()
@@ -54,26 +55,20 @@ class LibraryScreen extends ConsumerWidget {
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(5, (index) {
-                              final starValue = index + 1;
-                              return IconButton(
-                                onPressed: isSubmitting
-                                    ? null
-                                    : () {
-                                        setModalState(() {
-                                          selectedRating = starValue;
-                                        });
-                                      },
-                                iconSize: 38,
-                                icon: Icon(
-                                  starValue <= selectedRating
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                ),
-                              );
-                            }),
+                          RatingPicker(
+                            selectedRating: selectedRating,
+                            enabled: !isSubmitting,
+                            iconSize: 38,
+                            onChanged: (value) {
+                              setModalState(() {
+                                selectedRating = value;
+                              });
+                            },
+                            onReset: () {
+                              setModalState(() {
+                                selectedRating = 0;
+                              });
+                            },
                           ),
                           if (errorMessage != null) ...[
                             const SizedBox(height: 8),

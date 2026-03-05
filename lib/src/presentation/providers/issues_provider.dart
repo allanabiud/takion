@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
@@ -12,7 +13,10 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
   Future<List<IssueList>> build([DateTime? date]) async {
     final targetDate = date ?? DateTime.now();
     final repository = ref.watch(catalogRepositoryProvider);
-    return repository.getWeeklyReleasesForDate(targetDate);
+    return AppPerformanceMetrics.instance.trackProvider(
+      'weeklyReleasesProvider',
+      () => repository.getWeeklyReleasesForDate(targetDate),
+    );
   }
 
   Future<void> refresh() async {
@@ -37,7 +41,10 @@ class IssueDetailsNotifier extends _$IssueDetailsNotifier {
   @override
   Future<IssueDetails> build(int issueId) async {
     final repository = ref.watch(catalogRepositoryProvider);
-    return repository.getIssueDetails(issueId);
+    return AppPerformanceMetrics.instance.trackProvider(
+      'issueDetailsProvider',
+      () => repository.getIssueDetails(issueId),
+    );
   }
 
   Future<void> refresh() async {

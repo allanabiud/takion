@@ -8,6 +8,7 @@ import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/metron_account_provider.dart';
+import 'package:takion/src/presentation/providers/performance_metrics_provider.dart';
 import 'package:takion/src/presentation/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
@@ -302,63 +303,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showSyncSettings(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final appSettings = ref.watch(settingsProvider);
-            return SettingsBottomSheet(
-              title: 'Sync',
-              content: Column(
-                children: [
-                  if (appSettings.isSyncing)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  if (appSettings.lastSyncMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(
-                        appSettings.lastSyncMessage!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ListTile(
-                    leading: const Icon(Icons.sync),
-                    title: const Text('Full Sync'),
-                    subtitle: const Text('Update all application data'),
-                    onTap: appSettings.isSyncing
-                        ? null
-                        : () => ref
-                              .read(settingsProvider.notifier)
-                              .triggerFullSync(),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.sync_problem),
-                    title: const Text('Quick Sync'),
-                    subtitle: const Text('Update modified data only'),
-                    onTap: appSettings.isSyncing
-                        ? null
-                        : () => ref
-                              .read(settingsProvider.notifier)
-                              .triggerQuickSync(),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _showCollectionSettings(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -374,7 +318,7 @@ class SettingsScreen extends ConsumerWidget {
             );
 
             return SettingsBottomSheet(
-              title: 'Collection',
+              title: 'Library',
               content: Column(
                 children: [
                   const ListTile(
@@ -541,6 +485,36 @@ class SettingsScreen extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       child: Center(child: CircularProgressIndicator()),
                     ),
+                  if (appSettings.lastSyncMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Text(
+                        appSettings.lastSyncMessage!,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ListTile(
+                    leading: const Icon(Icons.sync),
+                    title: const Text('Full Sync'),
+                    subtitle: const Text('Update all application data'),
+                    onTap: appSettings.isSyncing
+                        ? null
+                        : () => ref
+                              .read(settingsProvider.notifier)
+                              .triggerFullSync(),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.sync_problem),
+                    title: const Text('Quick Sync'),
+                    subtitle: const Text('Update modified data only'),
+                    onTap: appSettings.isSyncing
+                        ? null
+                        : () => ref
+                              .read(settingsProvider.notifier)
+                              .triggerQuickSync(),
+                  ),
                   ListTile(
                     leading: const Icon(
                       Icons.delete_sweep_outlined,
@@ -666,6 +640,88 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  void _showPerformanceMetrics(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final metrics = ref.watch(performanceMetricsProvider);
+            return AnimatedBuilder(
+              animation: metrics,
+              builder: (context, _) {
+                Widget metricSection(String title, Map<String, int> values) {
+                  final entries = values.entries.toList()
+                    ..sort((a, b) => b.value.compareTo(a.value));
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      if (entries.isEmpty)
+                        Text(
+                          'No data yet.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ...entries
+                          .take(12)
+                          .map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text('${entry.key}: ${entry.value}'),
+                            ),
+                          ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }
+
+                final providerAvg = <String, int>{};
+                for (final entry in metrics.providerCalls.entries) {
+                  final total = metrics.providerTotalMs[entry.key] ?? 0;
+                  providerAvg[entry.key] = entry.value <= 0
+                      ? 0
+                      : (total / entry.value).round();
+                }
+
+                return SettingsBottomSheet(
+                  title: 'Performance Metrics',
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('HTTP 429: ${metrics.http429Count}'),
+                      Text('429 retries: ${metrics.retryAfter429Count}'),
+                      const SizedBox(height: 16),
+                      metricSection('Cache Hits', metrics.cacheHits),
+                      metricSection('Cache Misses', metrics.cacheMisses),
+                      metricSection('API Calls', metrics.apiCalls),
+                      metricSection('Provider Avg ms', providerAvg),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonal(
+                          onPressed: () {
+                            ref.read(performanceMetricsProvider).clear();
+                          },
+                          child: const Text('Reset Metrics'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -684,11 +740,23 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: Icon(
+              Icons.link,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('Metron Connection'),
+            subtitle: const Text('View connected account and disconnect'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showMetronConnectionSettings(context, ref),
+          ),
+          ListTile(
+            leading: Icon(
               Icons.collections_bookmark_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('Collection'),
-            subtitle: const Text('Default format for newly added issues'),
+            title: const Text('Library'),
+            subtitle: const Text(
+              'Library defaults and item detail preferences',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showCollectionSettings(context, ref),
           ),
@@ -704,16 +772,6 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: Icon(
-              Icons.sync,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Sync'),
-            subtitle: const Text('Collection and metadata sync settings'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSyncSettings(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
               Icons.storage_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -724,13 +782,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: Icon(
-              Icons.link,
+              Icons.analytics_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('Metron Connection'),
-            subtitle: const Text('View connected account and disconnect'),
+            title: const Text('Performance Metrics'),
+            subtitle: const Text('View cache/network/provider timing metrics'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showMetronConnectionSettings(context, ref),
+            onTap: () => _showPerformanceMetrics(context, ref),
           ),
           ListTile(
             leading: Icon(

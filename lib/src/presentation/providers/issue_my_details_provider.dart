@@ -96,13 +96,12 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           );
         }
       }
+      await invalidateLibraryItemsLocalCache(ref);
 
       ref.invalidate(issueMyDetailsProvider(_issueId));
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProviders(ref);
     });
   }
 
@@ -138,13 +137,12 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         metronIssueId: _issueId,
         readAt: normalizedReadAt,
       );
+      await invalidateLibraryItemsLocalCache(ref);
 
       ref.invalidate(issueMyDetailsProvider(_issueId));
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProviders(ref);
     });
   }
 
@@ -187,13 +185,12 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         notes: item.notes,
         acquiredOn: item.acquiredOn,
       );
+      await invalidateLibraryItemsLocalCache(ref);
 
       ref.invalidate(issueMyDetailsProvider(_issueId));
       ref.invalidate(collectionIssueStatusMapProvider);
       ref.invalidate(collectionStatsProvider);
-      ref.invalidate(allCollectionItemsProvider);
-      ref.invalidate(collectionItemsProvider);
-      ref.invalidate(currentCollectionItemsProvider);
+      invalidateLibraryCollectionProviders(ref);
     });
   }
 }
