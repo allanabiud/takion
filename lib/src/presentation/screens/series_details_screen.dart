@@ -16,6 +16,7 @@ import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
+import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
@@ -578,6 +579,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
       ref.invalidate(currentWeekPullsProvider);
       ref.invalidate(currentWeekPullsCountProvider);
+      await invalidateSubscriptionsLocalCacheWithHive(
+        ref.read(hiveServiceProvider),
+      );
+      ref.invalidate(activeSubscriptionsProvider);
+      ref.invalidate(activeSubscriptionsCountProvider);
+      ref.invalidate(subscribedSeriesListProvider);
+      ref.invalidate(subscribedSeriesPageProvider);
       await ref.read(currentWeekPullsProvider.future);
       if (mounted) {
         TakionAlerts.success(

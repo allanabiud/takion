@@ -115,6 +115,7 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(activeSubscriptionsProvider);
     ref.invalidate(activeSubscriptionsCountProvider);
     ref.invalidate(subscribedSeriesListProvider);
+    ref.invalidate(subscribedSeriesPageProvider);
     ref.invalidate(seriesSubscriptionProvider);
     ref.invalidate(issuePullListEntryProvider);
     ref.invalidate(pullListEntriesForWeekProvider);

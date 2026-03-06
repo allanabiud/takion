@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -11,11 +13,54 @@ import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/widgets/issue_card.dart';
 
 @RoutePage()
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  static const _trendingAutoScrollInterval = Duration(seconds: 8);
+  final PageController _trendingController = PageController(
+    viewportFraction: 0.92,
+  );
+  Timer? _trendingAutoScrollTimer;
+  int _trendingCount = 0;
+  int _currentTrendingPage = 0;
+
+  void _stopTrendingAutoScroll() {
+    _trendingAutoScrollTimer?.cancel();
+    _trendingAutoScrollTimer = null;
+  }
+
+  void _configureTrendingAutoScroll(int itemCount) {
+    if (_trendingCount == itemCount && _trendingAutoScrollTimer != null) return;
+
+    _trendingCount = itemCount;
+    _stopTrendingAutoScroll();
+    if (itemCount <= 1) return;
+
+    _trendingAutoScrollTimer = Timer.periodic(_trendingAutoScrollInterval, (_) {
+      if (!mounted || !_trendingController.hasClients) return;
+      final nextPage = (_currentTrendingPage + 1) % itemCount;
+      _trendingController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _stopTrendingAutoScroll();
+    _trendingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final suggestionsAsync = ref.watch(homeTrendingProvider);
     final continueReadingAsync = ref.watch(continueReadingSuggestionsProvider);
     final becauseYouPulledAsync = ref.watch(becauseYouPulledIssuesProvider);
@@ -27,6 +72,7 @@ class HomeScreen extends ConsumerWidget {
           children: [
             suggestionsAsync.when(
               data: (suggestions) {
+                _configureTrendingAutoScroll(suggestions.length);
                 if (suggestions.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
@@ -37,8 +83,9 @@ class HomeScreen extends ConsumerWidget {
                 return SizedBox(
                   height: 240,
                   child: PageView.builder(
-                    controller: PageController(viewportFraction: 0.92),
+                    controller: _trendingController,
                     itemCount: suggestions.length,
+                    onPageChanged: (page) => _currentTrendingPage = page,
                     itemBuilder: (context, index) {
                       final suggestion = suggestions[index];
                       final issue = suggestion.issue;
@@ -212,92 +259,100 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 );
               },
-              loading: () => SizedBox(
-                height: 240,
-                child: PageView.builder(
-                  controller: PageController(viewportFraction: 0.92),
-                  itemCount: 3,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Card(
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainer,
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerHigh,
-                                  ],
+              loading: () {
+                _stopTrendingAutoScroll();
+                return SizedBox(
+                  height: 240,
+                  child: PageView.builder(
+                    controller: PageController(viewportFraction: 0.92),
+                    itemCount: 3,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Card(
+                          clipBehavior: Clip.antiAlias,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainer,
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHigh,
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.1),
-                                    Colors.black.withValues(alpha: 0.3),
-                                  ],
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.1),
+                                      Colors.black.withValues(alpha: 0.3),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 72,
-                                    height: 26,
-                                    decoration: BoxDecoration(
+                              Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 72,
+                                      height: 26,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      width: 180,
+                                      height: 20,
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(999),
                                     ),
-                                  ),
-                                  const Spacer(),
-                                  Container(
-                                    width: 180,
-                                    height: 20,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerHighest,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    width: 64,
-                                    height: 14,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerHighest,
-                                  ),
-                                ],
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      width: 64,
+                                      height: 14,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHighest,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              error: (_, _) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Could not load trending releases right now.'),
-              ),
+                      );
+                    },
+                  ),
+                );
+              },
+              error: (_, _) {
+                _stopTrendingAutoScroll();
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Could not load trending releases right now.'),
+                );
+              },
             ),
             const SizedBox(height: 16),
             Padding(
@@ -341,10 +396,21 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Continue Reading',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Continue Reading',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              context.pushRoute(const ContinueReadingRoute());
+                            },
+                            child: const Text('More'),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 10),

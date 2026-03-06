@@ -74,9 +74,10 @@ class _MetronConnectScreenState extends ConsumerState<MetronConnectScreen> {
         return;
       }
 
-      TakionAlerts.success(context, 'Metron account connected.');
       ref.invalidate(metronConnectionProvider);
       _passwordController.clear();
+      _didAutoRedirect = true;
+      context.router.replaceAll([const MainRoute()]);
     } catch (error) {
       if (!mounted || !context.mounted) return;
       TakionAlerts.error(context, error.toString());
@@ -87,10 +88,6 @@ class _MetronConnectScreenState extends ConsumerState<MetronConnectScreen> {
         });
       }
     }
-  }
-
-  void _continueToHome() {
-    context.router.replaceAll([const MainRoute()]);
   }
 
   Future<void> _launchMetronSignup() async {
@@ -216,14 +213,6 @@ class _MetronConnectScreenState extends ConsumerState<MetronConnectScreen> {
                 loading: () => const Text('Checking...'),
                 error: (error, _) => Text(error.toString()),
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.tonal(
-              onPressed: isConnected ? _continueToHome : null,
-              child: const Text('Go to Home'),
             ),
           ),
         ],

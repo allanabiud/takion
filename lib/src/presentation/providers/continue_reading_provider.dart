@@ -19,6 +19,8 @@ class ContinueReadingSuggestion {
   final DateTime lastReadAt;
 }
 
+const _homeContinueReadingPreviewLimit = 5;
+
 Future<IssueList?> _findNextUnreadIssueForSeries(
   Ref ref, {
   required int seriesId,
@@ -60,8 +62,9 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
 }
 
 Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
-  Ref ref,
-) async {
+  Ref ref, {
+  int? maxSeriesCount,
+}) async {
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
   final readItems = libraryItems.where((item) => item.isRead).toList();
   if (readItems.isEmpty) return const [];
@@ -90,8 +93,12 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
       (a, b) => latestReadAtBySeries[b]!.compareTo(latestReadAtBySeries[a]!),
     );
 
+  final seriesIdsToResolve = maxSeriesCount == null
+      ? recentSeriesIds
+      : recentSeriesIds.take(maxSeriesCount).toList();
+
   final suggestionResults = await Future.wait(
-    recentSeriesIds.take(6).map((seriesId) async {
+    seriesIdsToResolve.map((seriesId) async {
       final lastReadIssueId = latestReadIssueIdBySeries[seriesId];
       if (lastReadIssueId == null) return null;
       final nextIssue = await _findNextUnreadIssueForSeries(
@@ -114,6 +121,12 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
 
 final continueReadingSuggestionsProvider =
     FutureProvider<List<ContinueReadingSuggestion>>((ref) async {
+      final all = await ref.watch(continueReadingAllSuggestionsProvider.future);
+      return all.take(_homeContinueReadingPreviewLimit).toList(growable: false);
+    });
+
+final continueReadingAllSuggestionsProvider =
+    FutureProvider.autoDispose<List<ContinueReadingSuggestion>>((ref) async {
       final metrics = AppPerformanceMetrics.instance;
       final cache = ref.read(homeContentCacheProvider);
       DateTime? cachedAt;
@@ -160,7 +173,7 @@ final continueReadingSuggestionsProvider =
 
       try {
         final fresh = await metrics.trackProvider(
-          'continueReadingSuggestionsProvider',
+          'continueReadingAllSuggestionsProvider',
           () => _computeContinueReadingSuggestions(ref),
         );
         try {

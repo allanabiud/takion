@@ -52,7 +52,7 @@ final class WeeklyReleasesNotifierProvider
 }
 
 String _$weeklyReleasesNotifierHash() =>
-    r'7ebb1d0360b3e3ae1e8ecfef2ed7a7aba830c1c9';
+    r'b4a4b97522db1f25bee560f995f8dfe53c091f7a';
 
 final class WeeklyReleasesNotifierFamily extends $Family
     with
@@ -143,7 +143,7 @@ final class IssueDetailsNotifierProvider
 }
 
 String _$issueDetailsNotifierHash() =>
-    r'e7858383924fcbb5d2157abdbbce89fa844fb8df';
+    r'c936db49c22b90215e6a6a6d1e76e6173e479b32';
 
 final class IssueDetailsNotifierFamily extends $Family
     with
