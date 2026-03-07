@@ -56,7 +56,7 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
-  static const _expandedHeight = 250.0;
+  static const _expandedHeight = 280.0;
   final ScrollController _scrollController = ScrollController();
   double _titleOpacity = 0;
   int _issuesPage = 1;
@@ -1506,7 +1506,7 @@ class _SeriesDetailsLoading extends StatelessWidget {
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
             pinned: true,
-            expandedHeight: 250.0,
+            expandedHeight: 280.0,
             backgroundColor: colorScheme.surface,
             title: const Text('Series'),
             flexibleSpace: FlexibleSpaceBar(
