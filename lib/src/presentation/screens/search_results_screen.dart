@@ -8,18 +8,16 @@ import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
 import 'package:takion/src/presentation/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/providers/series_search_provider.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
+import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
-
-enum _SearchSortOption {
-  nameAsc,
-  nameDesc,
-  dateAsc,
-  dateDesc,
-}
 
 @RoutePage()
 class SearchResultsScreen extends ConsumerStatefulWidget {
@@ -33,14 +31,16 @@ class SearchResultsScreen extends ConsumerStatefulWidget {
   final String searchChoice;
 
   @override
-  ConsumerState<SearchResultsScreen> createState() => _SearchResultsScreenState();
+  ConsumerState<SearchResultsScreen> createState() =>
+      _SearchResultsScreenState();
 }
 
 class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   final TextEditingController _filterController = TextEditingController();
   bool _isFiltering = false;
-  _SearchSortOption _sortOption = _SearchSortOption.nameAsc;
   int _page = 1;
+  int _seriesCoverFetchLimit = seriesCoverFetchBudgetPerSession;
+  bool _seriesCoverLimitUpdateScheduled = false;
   bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
 
   IssueSearchArgs get _currentIssueArgs =>
@@ -61,6 +61,42 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           .searchIssues(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(issueSearchResultsProvider(_currentIssueArgs));
       await ref.read(issueSearchResultsProvider(_currentIssueArgs).future);
+    }
+  }
+
+  void _resetSeriesCoverFetchLimit() {
+    _seriesCoverFetchLimit = seriesCoverFetchBudgetPerSession;
+    _seriesCoverLimitUpdateScheduled = false;
+  }
+
+  void _maybeExpandSeriesCoverFetchLimit({
+    required int index,
+    required int total,
+  }) {
+    if (index < _seriesCoverFetchLimit - 2) return;
+    if (_seriesCoverFetchLimit >= total) return;
+    if (_seriesCoverLimitUpdateScheduled) return;
+
+    _seriesCoverLimitUpdateScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _seriesCoverFetchLimit =
+            (_seriesCoverFetchLimit + seriesCoverFetchBudgetPerSession).clamp(
+              seriesCoverFetchBudgetPerSession,
+              total,
+            );
+        _seriesCoverLimitUpdateScheduled = false;
+      });
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant SearchResultsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.query != widget.query ||
+        oldWidget.searchChoice != widget.searchChoice) {
+      _resetSeriesCoverFetchLimit();
     }
   }
 
@@ -91,80 +127,6 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     }).toList();
   }
 
-  DateTime? _issueDate(IssueList issue) {
-    return issue.storeDate ?? issue.coverDate ?? issue.modified;
-  }
-
-  List<IssueList> _applySort(List<IssueList> issues) {
-    final sorted = [...issues];
-
-    int compareByName(IssueList a, IssueList b) =>
-        a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-    int compareByDate(IssueList a, IssueList b) {
-      final aDate = _issueDate(a);
-      final bDate = _issueDate(b);
-      if (aDate == null && bDate == null) return compareByName(a, b);
-      if (aDate == null) return 1;
-      if (bDate == null) return -1;
-      final dateCompare = aDate.compareTo(bDate);
-      if (dateCompare != 0) return dateCompare;
-      return compareByName(a, b);
-    }
-
-    switch (_sortOption) {
-      case _SearchSortOption.nameAsc:
-        sorted.sort(compareByName);
-        break;
-      case _SearchSortOption.nameDesc:
-        sorted.sort((a, b) => compareByName(b, a));
-        break;
-      case _SearchSortOption.dateAsc:
-        sorted.sort(compareByDate);
-        break;
-      case _SearchSortOption.dateDesc:
-        sorted.sort((a, b) => compareByDate(b, a));
-        break;
-    }
-
-    return sorted;
-  }
-
-  List<SeriesList> _applySeriesSort(List<SeriesList> series) {
-    final sorted = [...series];
-
-    int compareByName(SeriesList a, SeriesList b) =>
-        a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-    int compareByYear(SeriesList a, SeriesList b) {
-      final aYear = a.yearBegan;
-      final bYear = b.yearBegan;
-      if (aYear == null && bYear == null) return compareByName(a, b);
-      if (aYear == null) return 1;
-      if (bYear == null) return -1;
-      final yearCompare = aYear.compareTo(bYear);
-      if (yearCompare != 0) return yearCompare;
-      return compareByName(a, b);
-    }
-
-    switch (_sortOption) {
-      case _SearchSortOption.nameAsc:
-        sorted.sort(compareByName);
-        break;
-      case _SearchSortOption.nameDesc:
-        sorted.sort((a, b) => compareByName(b, a));
-        break;
-      case _SearchSortOption.dateAsc:
-        sorted.sort(compareByYear);
-        break;
-      case _SearchSortOption.dateDesc:
-        sorted.sort((a, b) => compareByYear(b, a));
-        break;
-    }
-
-    return sorted;
-  }
-
   int _estimatedTotalPages(IssueSearchPage pageData) {
     final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
     return (pageData.count / pageSize).ceil().clamp(1, 99999);
@@ -175,30 +137,21 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     return (pageData.count / pageSize).ceil().clamp(1, 99999);
   }
 
-  String _sortLabel() {
-    switch (_sortOption) {
-      case _SearchSortOption.nameAsc:
-        return 'Name (A–Z)';
-      case _SearchSortOption.nameDesc:
-        return 'Name (Z–A)';
-      case _SearchSortOption.dateAsc:
-        return 'Date (Oldest first)';
-      case _SearchSortOption.dateDesc:
-        return 'Date (Newest first)';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final sortContext = _isSeriesSearch
+        ? SortPreferenceContext.searchSeries
+        : SortPreferenceContext.searchIssues;
+    final sortOption = ref.watch(sortPreferenceForContextProvider(sortContext));
     final issueResultsAsync = _isSeriesSearch
-      ? null
-      : ref.watch(issueSearchResultsProvider(_currentIssueArgs));
+        ? null
+        : ref.watch(issueSearchResultsProvider(_currentIssueArgs));
     final seriesResultsAsync = _isSeriesSearch
-      ? ref.watch(seriesSearchResultsProvider(_currentSeriesArgs))
-      : null;
+        ? ref.watch(seriesSearchResultsProvider(_currentSeriesArgs))
+        : null;
     final isLoading = _isSeriesSearch
-      ? seriesResultsAsync?.isLoading == true
-      : issueResultsAsync?.isLoading == true;
+        ? seriesResultsAsync?.isLoading == true
+        : issueResultsAsync?.isLoading == true;
 
     return Scaffold(
       appBar: AppBar(
@@ -238,85 +191,16 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                   },
                   icon: const Icon(Icons.search),
                 ),
-                PopupMenuButton<_SearchSortOption>(
-                  tooltip: 'Sort',
-                  icon: const Icon(Icons.sort),
-                  initialValue: _sortOption,
+                DisplaySettingsButton(
+                  selectedOption: sortOption,
+                  optionLabel: _isSeriesSearch
+                      ? seriesSortLabel
+                      : issueSortLabel,
                   onSelected: (option) {
-                    setState(() {
-                      _sortOption = option;
-                    });
+                    ref
+                        .read(sortPreferencesProvider.notifier)
+                        .setPreference(sortContext, option);
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: _SearchSortOption.nameAsc,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _sortOption == _SearchSortOption.nameAsc
-                                ? Icons.check
-                                : Icons.circle_outlined,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Name (A–Z)'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: _SearchSortOption.nameDesc,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _sortOption == _SearchSortOption.nameDesc
-                                ? Icons.check
-                                : Icons.circle_outlined,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Name (Z–A)'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: _SearchSortOption.dateAsc,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _sortOption == _SearchSortOption.dateAsc
-                                ? Icons.check
-                                : Icons.circle_outlined,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isSeriesSearch
-                                ? 'Year Began (Oldest first)'
-                                : 'Date (Oldest first)',
-                          ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: _SearchSortOption.dateDesc,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _sortOption == _SearchSortOption.dateDesc
-                                ? Icons.check
-                                : Icons.circle_outlined,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isSeriesSearch
-                                ? 'Year Began (Newest first)'
-                                : 'Date (Newest first)',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ],
         bottom: isLoading
@@ -329,12 +213,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       body: _isSeriesSearch
           ? seriesResultsAsync!.when(
               loading: () => const SizedBox.shrink(),
-              error: (error, _) => AsyncStatePanel.error(
-                errorMessage: 'Search failed: $error',
-              ),
+              error: (error, _) =>
+                  AsyncStatePanel.error(errorMessage: 'Search failed: $error'),
               data: (pageData) {
-                final sortedSeries = _applySeriesSort(
+                final sortedSeries = sortSeries(
                   _applySeriesFilter(pageData.results),
+                  sortOption,
                 );
                 final totalPages = _estimatedSeriesTotalPages(pageData);
                 final hasPagination = totalPages > 1;
@@ -351,16 +235,17 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                             children: [
                               Text(
                                 '${pageData.count} results for "${widget.query}" in ${widget.searchChoice}',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Sorted by ${_sortLabel()}',
+                                'Sorted by ${seriesSortLabel(sortOption)}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
@@ -370,14 +255,23 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                           child: sortedSeries.isEmpty
                               ? RefreshIndicator(
                                   onRefresh: _forceRefreshResults,
-                                  child: ListView(
-                                    physics: const AlwaysScrollableScrollPhysics(),
-                                    padding: EdgeInsets.only(
-                                      bottom: hasPagination ? 96 : 0,
-                                    ),
-                                    children: const [
-                                      SizedBox(height: 220),
-                                      Center(child: Text('No series found.')),
+                                  child: CustomScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    slivers: [
+                                      SliverFillRemaining(
+                                        hasScrollBody: false,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: hasPagination ? 96 : 12,
+                                          ),
+                                          child: const EmptyContentState(
+                                            icon: Icons
+                                                .collections_bookmark_outlined,
+                                            message: 'No series found.',
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 )
@@ -394,9 +288,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                     ),
                                     itemCount: sortedSeries.length,
                                     itemBuilder: (context, index) {
+                                      _maybeExpandSeriesCoverFetchLimit(
+                                        index: index,
+                                        total: sortedSeries.length,
+                                      );
                                       final series = sortedSeries[index];
                                       return SeriesListTile(
                                         series: series,
+                                        allowRemoteCoverFetch:
+                                            index < _seriesCoverFetchLimit,
                                         heroTag: 'series-cover-${series.id}',
                                         onTap: () {
                                           context.pushRoute(
@@ -406,7 +306,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                           );
                                         },
                                         isFirst: index == 0,
-                                        isLast: index == sortedSeries.length - 1,
+                                        isLast:
+                                            index == sortedSeries.length - 1,
                                       );
                                     },
                                   ),
@@ -429,6 +330,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                               if (previousPage == null) return;
                               setState(() {
                                 _page = previousPage;
+                                _resetSeriesCoverFetchLimit();
                               });
                             },
                             onNext: () {
@@ -436,6 +338,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                               if (nextPage == null) return;
                               setState(() {
                                 _page = nextPage;
+                                _resetSeriesCoverFetchLimit();
                               });
                             },
                           ),
@@ -448,11 +351,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             )
           : issueResultsAsync!.when(
               loading: () => const SizedBox.shrink(),
-              error: (error, _) => AsyncStatePanel.error(
-                errorMessage: 'Search failed: $error',
-              ),
+              error: (error, _) =>
+                  AsyncStatePanel.error(errorMessage: 'Search failed: $error'),
               data: (pageData) {
-                final sortedIssues = _applySort(_applyFilter(pageData.results));
+                final sortedIssues = sortIssues(
+                  _applyFilter(pageData.results),
+                  sortOption,
+                );
                 final totalPages = _estimatedTotalPages(pageData);
                 final hasPagination = totalPages > 1;
 
@@ -468,16 +373,17 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                             children: [
                               Text(
                                 '${pageData.count} results for "${widget.query}" in ${widget.searchChoice}',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Sorted by ${_sortLabel()}',
+                                'Sorted by ${issueSortLabel(sortOption)}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
@@ -487,14 +393,22 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                           child: sortedIssues.isEmpty
                               ? RefreshIndicator(
                                   onRefresh: _forceRefreshResults,
-                                  child: ListView(
-                                    physics: const AlwaysScrollableScrollPhysics(),
-                                    padding: EdgeInsets.only(
-                                      bottom: hasPagination ? 96 : 0,
-                                    ),
-                                    children: const [
-                                      SizedBox(height: 220),
-                                      Center(child: Text('No issues found.')),
+                                  child: CustomScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    slivers: [
+                                      SliverFillRemaining(
+                                        hasScrollBody: false,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: hasPagination ? 96 : 12,
+                                          ),
+                                          child: const EmptyContentState(
+                                            icon: Icons.menu_book_outlined,
+                                            message: 'No issues found.',
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 )
@@ -515,7 +429,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                       return IssueListTile(
                                         issue: issue,
                                         isFirst: index == 0,
-                                        isLast: index == sortedIssues.length - 1,
+                                        isLast:
+                                            index == sortedIssues.length - 1,
                                       );
                                     },
                                   ),

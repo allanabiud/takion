@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/providers/series_cover_provider.dart';
 
 class SeriesListTile extends ConsumerWidget {
   final SeriesList series;
@@ -9,6 +11,7 @@ class SeriesListTile extends ConsumerWidget {
   final bool isFirst;
   final bool isLast;
   final String? heroTag;
+  final bool allowRemoteCoverFetch;
 
   const SeriesListTile({
     super.key,
@@ -17,6 +20,7 @@ class SeriesListTile extends ConsumerWidget {
     this.isFirst = false,
     this.isLast = false,
     this.heroTag,
+    this.allowRemoteCoverFetch = true,
   });
 
   @override
@@ -27,6 +31,13 @@ class SeriesListTile extends ConsumerWidget {
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final issueCount = series.issueCount ?? 0;
+    final coverImageAsync = ref.watch(
+      seriesCoverImageProvider((
+        seriesId: series.id,
+        allowRemoteFetch: allowRemoteCoverFetch,
+      )),
+    );
+    final coverImage = coverImageAsync.asData?.value;
 
     final cover = Container(
       width: iconWidth,
@@ -35,11 +46,14 @@ class SeriesListTile extends ConsumerWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(
-        Icons.collections_bookmark_outlined,
-        size: 40,
-        color: Theme.of(context).colorScheme.onPrimaryContainer,
-      ),
+      clipBehavior: Clip.antiAlias,
+      child: coverImage == null
+          ? Icon(
+              Icons.collections_bookmark_outlined,
+              size: 40,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            )
+          : CachedNetworkImage(imageUrl: coverImage, fit: BoxFit.cover),
     );
 
     return Card(

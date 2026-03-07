@@ -9,6 +9,9 @@ import 'package:takion/src/presentation/providers/issue_collection_status_provid
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
+import 'package:takion/src/presentation/sorting/content_sorting.dart';
+import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
@@ -140,28 +143,57 @@ class MyPullsScreen extends ConsumerWidget {
   ) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.inventory_2_outlined),
-                title: const Text('Add Pulled to Collection'),
-                onTap: () async {
-                  Navigator.of(sheetContext).pop();
-                  await _addPulledToCollection(context, ref, selectedDate);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.bookmark_added_outlined),
-                title: const Text('Mark Pulled Issues as Read'),
-                onTap: () async {
-                  Navigator.of(sheetContext).pop();
-                  await _markPulledAsRead(context, ref, selectedDate);
-                },
-              ),
-            ],
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Pull Actions',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: const Text('Add Pulled to Collection'),
+                  onTap: () async {
+                    Navigator.of(sheetContext).pop();
+                    await _addPulledToCollection(context, ref, selectedDate);
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.bookmark_added_outlined),
+                  title: const Text('Mark Pulled Issues as Read'),
+                  onTap: () async {
+                    Navigator.of(sheetContext).pop();
+                    await _markPulledAsRead(context, ref, selectedDate);
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         );
       },
@@ -171,14 +203,28 @@ class MyPullsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDate = ref.watch(selectedWeekProvider);
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(SortPreferenceContext.releasesMyPulls),
+    );
     final pullsAsync = ref.watch(pullsIssuesForWeekProvider(selectedDate));
 
     return WeeklyIssueListScaffold(
       title: 'My Pulls',
       issuesAsync: pullsAsync,
+      transformIssues: (issues) => sortIssues(issues, sortOption),
       emptyMessage: 'No pulls for this week.',
+      emptyIcon: Icons.shopping_bag_outlined,
       errorTextBuilder: (error) => 'Failed to load pulls: $error',
       appBarActions: [
+        DisplaySettingsButton(
+          selectedOption: sortOption,
+          optionLabel: issueSortLabel,
+          onSelected: (option) {
+            ref
+                .read(sortPreferencesProvider.notifier)
+                .setPreference(SortPreferenceContext.releasesMyPulls, option);
+          },
+        ),
         IconButton(
           tooltip: 'Add',
           onPressed: () => _showPullActionsSheet(context, ref, selectedDate),

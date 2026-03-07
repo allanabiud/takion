@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
+import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 
 @RoutePage()
 class ReadingHistoryScreen extends ConsumerWidget {
@@ -13,6 +17,11 @@ class ReadingHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(
+        SortPreferenceContext.libraryReadingHistory,
+      ),
+    );
     final historyAsync = ref.watch(readingHistoryCollectionItemsProvider);
 
     Future<void> refresh() async {
@@ -21,21 +30,55 @@ class ReadingHistoryScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reading History')),
+      appBar: AppBar(
+        title: const Text('Reading History'),
+        actions: [
+          DisplaySettingsButton(
+            selectedOption: sortOption,
+            optionLabel: issueSortLabel,
+            onSelected: (option) {
+              ref
+                  .read(sortPreferencesProvider.notifier)
+                  .setPreference(
+                    SortPreferenceContext.libraryReadingHistory,
+                    option,
+                  );
+            },
+          ),
+        ],
+      ),
       body: historyAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: 'Failed to load reading history: $error',
         ),
         data: (entries) {
-          if (entries.isEmpty) {
+          final sortedEntries = sortItemsByNameAndDate(
+            entries,
+            sortOption: sortOption,
+            nameOf: (entry) =>
+                '${entry.item.issue?.series?.name ?? ''} #${entry.item.issue?.number ?? ''}',
+            dateOf: (entry) =>
+                entry.readAt ??
+                entry.item.modified ??
+                entry.item.issue?.storeDate ??
+                entry.item.issue?.coverDate ??
+                entry.item.issue?.modified,
+          );
+
+          if (sortedEntries.isEmpty) {
             return RefreshIndicator(
               onRefresh: refresh,
-              child: ListView(
+              child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 220),
-                  Center(child: Text('No reading history in your collection.')),
+                slivers: const [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: EmptyContentState(
+                      icon: Icons.history_outlined,
+                      message: 'No reading history yet.',
+                    ),
+                  ),
                 ],
               ),
             );
@@ -46,9 +89,9 @@ class ReadingHistoryScreen extends ConsumerWidget {
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: entries.length,
+              itemCount: sortedEntries.length,
               itemBuilder: (context, index) {
-                final entry = entries[index];
+                final entry = sortedEntries[index];
                 final issue = entry.item.issue;
                 final issueId = issue?.id;
                 final rawSeriesName = issue?.series?.name.trim() ?? '';
@@ -86,7 +129,9 @@ class ReadingHistoryScreen extends ConsumerWidget {
                           Icon(
                             Icons.event_outlined,
                             size: 14,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 6),
                           Text(readAtLabel),

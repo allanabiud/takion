@@ -31,6 +31,8 @@ class LibraryScreen extends ConsumerWidget {
 
       showModalBottomSheet<void>(
         context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
         builder: (sheetContext) {
           return Consumer(
             builder: (context, ref, _) {
@@ -42,19 +44,45 @@ class LibraryScreen extends ConsumerWidget {
 
               return StatefulBuilder(
                 builder: (context, setModalState) {
-                  return SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    child: SafeArea(
+                      top: false,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Rate $comicName',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Rate $comicName',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () =>
+                                    Navigator.of(sheetContext).pop(),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           RatingPicker(
                             selectedRating: selectedRating,
                             enabled: !isSubmitting,
@@ -119,6 +147,7 @@ class LibraryScreen extends ConsumerWidget {
                                   : const Text('Done'),
                             ),
                           ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),

@@ -101,6 +101,34 @@ abstract class MetronLocalDataSource {
     String query, {
     required int page,
   });
+  Future<void> cacheIssueListResults(
+    List<IssueListDto> issues, {
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<IssueListDto>?> getIssueListResults({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  });
+  Future<DateTime?> getIssueListResultsCachedAt({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  });
+  Future<IssueSearchPageCacheMeta?> getIssueListResultsMeta({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  });
   Future<void> cacheSeriesSearchResults(
     String query,
     List<SeriesListDto> series, {
@@ -165,6 +193,8 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _issueDetailsBox = 'issue_details_box';
   static const String _issueSearchBox = 'issue_search_box';
   static const String _issueSearchMetaBox = 'issue_search_meta_box';
+  static const String _issueListBox = 'issue_list_box';
+  static const String _issueListMetaBox = 'issue_list_meta_box';
   static const String _seriesSearchBox = 'series_search_box';
   static const String _seriesSearchMetaBox = 'series_search_meta_box';
   static const String _seriesListBox = 'series_list_box';
@@ -203,6 +233,25 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       '${_normalizeSearchQuery(query)}::p$page';
   String _getIssueSearchMetaKey(String query, int page) =>
       'issue_search:${_getIssueSearchKey(query, page)}';
+  String _normalizeOrdering(String? ordering) => ordering?.trim() ?? '';
+  String _normalizeModifiedGt(DateTime? modifiedGt) =>
+      modifiedGt?.toUtc().toIso8601String() ?? '';
+  String _normalizeLimit(int? limit) =>
+      limit != null && limit > 0 ? '$limit' : '';
+  String _getIssueListKey({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) =>
+      'issue_list:p$page:o${_normalizeOrdering(ordering)}:m${_normalizeModifiedGt(modifiedGt)}:l${_normalizeLimit(limit)}';
+  String _getIssueListMetaKey({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) =>
+      'issue_list:${_getIssueListKey(page: page, ordering: ordering, modifiedGt: modifiedGt, limit: limit)}';
   String _getSeriesSearchKey(String query, int page) =>
       '${_normalizeSearchQuery(query)}::p$page';
   String _getSeriesSearchMetaKey(String query, int page) =>
@@ -459,6 +508,113 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     final searchKey = _getIssueSearchKey(query, page);
     final box = await _hiveService.openBox<Map>(_issueSearchMetaBox);
     final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return IssueSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheIssueListResults(
+    List<IssueListDto> issues, {
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getIssueListKey(
+      page: page,
+      ordering: ordering,
+      modifiedGt: modifiedGt,
+      limit: limit,
+    );
+    final box = await _hiveService.openBox<List>(_issueListBox);
+    await box.put(key, issues);
+
+    final metaBox = await _hiveService.openBox<Map>(_issueListMetaBox);
+    await metaBox.put(key, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    await cacheMetaBox.put(
+      _getIssueListMetaKey(
+        page: page,
+        ordering: ordering,
+        modifiedGt: modifiedGt,
+        limit: limit,
+      ),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<IssueListDto>?> getIssueListResults({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) async {
+    final key = _getIssueListKey(
+      page: page,
+      ordering: ordering,
+      modifiedGt: modifiedGt,
+      limit: limit,
+    );
+    final box = await _hiveService.openBox<List>(_issueListBox);
+    final data = box.get(key);
+    if (data != null) {
+      return data.cast<IssueListDto>();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getIssueListResultsCachedAt({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) async {
+    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final epoch = cacheMetaBox.get(
+      _getIssueListMetaKey(
+        page: page,
+        ordering: ordering,
+        modifiedGt: modifiedGt,
+        limit: limit,
+      ),
+    );
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<IssueSearchPageCacheMeta?> getIssueListResultsMeta({
+    required int page,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) async {
+    final key = _getIssueListKey(
+      page: page,
+      ordering: ordering,
+      modifiedGt: modifiedGt,
+      limit: limit,
+    );
+    final box = await _hiveService.openBox<Map>(_issueListMetaBox);
+    final data = box.get(key);
     if (data == null) return null;
 
     final count = (data['count'] as num?)?.toInt();

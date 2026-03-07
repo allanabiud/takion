@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/search_state_provider.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 
 @RoutePage()
 class SearchScreen extends ConsumerStatefulWidget {
@@ -109,7 +110,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(height: 12),
           Expanded(
             child: state.history.isEmpty
-                ? const Center(child: Text('No search history yet'))
+                ? const EmptyContentState(
+                    icon: Icons.history_outlined,
+                    message: 'No search history yet.',
+                  )
                 : ListView.builder(
                     itemCount: state.history.length,
                     itemBuilder: (context, index) {

@@ -24,6 +24,12 @@ abstract class MetronRemoteDataSource {
   Future<List<IssueListDto>> getFocReleasesForDate(DateTime date);
   Future<IssueDetailsDto> getIssueDetails(int issueId);
   Future<IssueSearchResponseDto> searchIssues(String query, {int page = 1});
+  Future<IssueSearchResponseDto> getIssueList({
+    int page = 1,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  });
   Future<SeriesListResponseDto> getSeriesList({int page = 1});
   Future<SeriesSearchResponseDto> searchSeries(String query, {int page = 1});
   Future<SeriesDetailsDto> getSeriesDetails(int seriesId);
@@ -199,6 +205,30 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     return lastResponse ?? const IssueSearchResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<IssueSearchResponseDto> getIssueList({
+    int page = 1,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (ordering != null && ordering.trim().isNotEmpty) {
+      queryParameters['ordering'] = ordering.trim();
+    }
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
+    if (limit != null && limit > 0) {
+      queryParameters['limit'] = limit;
+    }
+
+    final response = await _dio.get('issue/', queryParameters: queryParameters);
+    return IssueSearchResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override

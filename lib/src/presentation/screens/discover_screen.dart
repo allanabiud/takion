@@ -35,40 +35,22 @@ class DiscoverScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             CompactListSection(
-              title: 'Browse Metron',
+              title: 'Browse',
               items: [
                 CompactListSectionItem(
                   icon: Icons.schedule_outlined,
                   label: 'Recently Added',
                   onTap: () {
-                    TakionAlerts.comingSoon(
-                      context,
-                      'Recently Added',
-                      scope: 'browse',
-                    );
+                    context.pushRoute(const DiscoverBrowseRecentlyAddedRoute());
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.menu_book_outlined,
-                  label: 'Issues',
-                  onTap: () {
-                    TakionAlerts.comingSoon(context, 'Issues', scope: 'browse');
-                  },
-                ),
-                CompactListSectionItem(
-                  icon: Icons.collections_bookmark_outlined,
-                  label: 'Series',
-                  onTap: () {
-                    TakionAlerts.comingSoon(context, 'Series', scope: 'browse');
-                  },
-                ),
-                CompactListSectionItem(
-                  icon: Icons.business_outlined,
-                  label: 'Publishers',
+                  icon: Icons.face_outlined,
+                  label: 'Characters',
                   onTap: () {
                     TakionAlerts.comingSoon(
                       context,
-                      'Publishers',
+                      'Characters',
                       scope: 'browse',
                     );
                   },
@@ -85,21 +67,32 @@ class DiscoverScreen extends StatelessWidget {
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.face_outlined,
-                  label: 'Characters',
+                  icon: Icons.branding_watermark_outlined,
+                  label: 'Imprints',
                   onTap: () {
                     TakionAlerts.comingSoon(
                       context,
-                      'Characters',
+                      'Imprints',
                       scope: 'browse',
                     );
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.groups_2_outlined,
-                  label: 'Teams',
+                  icon: Icons.menu_book_outlined,
+                  label: 'Issues',
                   onTap: () {
-                    TakionAlerts.comingSoon(context, 'Teams', scope: 'browse');
+                    context.pushRoute(const DiscoverBrowseIssuesRoute());
+                  },
+                ),
+                CompactListSectionItem(
+                  icon: Icons.business_outlined,
+                  label: 'Publishers',
+                  onTap: () {
+                    TakionAlerts.comingSoon(
+                      context,
+                      'Publishers',
+                      scope: 'browse',
+                    );
                   },
                 ),
                 CompactListSectionItem(
@@ -114,14 +107,10 @@ class DiscoverScreen extends StatelessWidget {
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.branding_watermark_outlined,
-                  label: 'Imprints',
+                  icon: Icons.collections_bookmark_outlined,
+                  label: 'Series',
                   onTap: () {
-                    TakionAlerts.comingSoon(
-                      context,
-                      'Imprints',
-                      scope: 'browse',
-                    );
+                    context.pushRoute(const DiscoverBrowseSeriesRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -133,6 +122,13 @@ class DiscoverScreen extends StatelessWidget {
                       'Story Arcs',
                       scope: 'browse',
                     );
+                  },
+                ),
+                CompactListSectionItem(
+                  icon: Icons.groups_2_outlined,
+                  label: 'Teams',
+                  onTap: () {
+                    TakionAlerts.comingSoon(context, 'Teams', scope: 'browse');
                   },
                 ),
                 CompactListSectionItem(

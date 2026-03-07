@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/widgets/person_info_card.dart';
@@ -182,10 +183,7 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
 
     String formatDate(DateTime? date) {
       if (date == null) return 'Unknown';
-      final year = date.year.toString().padLeft(4, '0');
-      final month = date.month.toString().padLeft(2, '0');
-      final day = date.day.toString().padLeft(2, '0');
-      return '$year-$month-$day';
+      return DateFormat.yMMMd().format(date.toLocal());
     }
 
     final gridItems = <({String label, String value})>[

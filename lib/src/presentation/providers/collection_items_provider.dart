@@ -434,7 +434,7 @@ final unratedCollectionItemsProvider =
       final items = await ref.watch(allCollectionItemsProvider.future);
       return items
           .where(
-            (item) => item.quantity > 0 && item.isRead && item.rating == null,
+            (item) => item.isRead && (item.rating == null || item.rating! <= 0),
           )
           .toList();
     });

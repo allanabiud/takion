@@ -14,10 +14,15 @@ import 'package:takion/src/presentation/providers/issue_collection_status_provid
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/providers/series_issue_list_provider.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
+import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
@@ -284,6 +289,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -351,30 +357,44 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             final startIssueNumber = issues[selectedStart - 1].issueNumber;
             final endIssueNumber = issues[selectedEnd - 1].issueNumber;
 
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  16 + MediaQuery.of(context).viewInsets.bottom,
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
+              ),
+              child: SafeArea(
+                top: false,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      seriesName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            seriesName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Manage Series Issues',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 24),
                     DropdownButtonFormField<_SeriesIssueBulkOperation>(
                       value: selectedOperation,
                       decoration: const InputDecoration(
@@ -537,6 +557,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -611,6 +632,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   void _showAddActionsSheet({required String seriesName}) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return Consumer(
           builder: (context, ref, _) {
@@ -625,68 +648,95 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
               builder: (context, setSheetState) {
                 final showLoading =
                     isTogglingSubscription || _isUpdatingSubscription;
-                return SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            seriesName,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ),
-                      SwitchListTile.adaptive(
-                        secondary: showLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Icon(
-                                isSubscribed
-                                    ? Icons.notifications_active
-                                    : Icons.notifications_outlined,
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                seriesName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
-                        title: const Text('Subscribe and Pull Series'),
-                        subtitle: Text(
-                          isSubscribed ? 'Subscribed' : 'Not subscribed',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
                         ),
-                        value: isSubscribed,
-                        onChanged: subscriptionAsync.isLoading || showLoading
-                            ? null
-                            : (value) async {
-                                setSheetState(() {
-                                  isTogglingSubscription = true;
-                                });
-                                try {
-                                  await _setSeriesSubscription(value);
-                                } finally {
-                                  if (context.mounted) {
-                                    setSheetState(() {
-                                      isTogglingSubscription = false;
-                                    });
+                        const SizedBox(height: 12),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          secondary: showLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  isSubscribed
+                                      ? Icons.notifications_active
+                                      : Icons.notifications_outlined,
+                                ),
+                          title: const Text('Subscribe and Pull Series'),
+                          subtitle: Text(
+                            isSubscribed ? 'Subscribed' : 'Not subscribed',
+                          ),
+                          value: isSubscribed,
+                          onChanged: subscriptionAsync.isLoading || showLoading
+                              ? null
+                              : (value) async {
+                                  setSheetState(() {
+                                    isTogglingSubscription = true;
+                                  });
+                                  try {
+                                    await _setSeriesSubscription(value);
+                                  } finally {
+                                    if (context.mounted) {
+                                      setSheetState(() {
+                                        isTogglingSubscription = false;
+                                      });
+                                    }
                                   }
-                                }
-                              },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.library_add_check_outlined),
-                        title: const Text('Manage Series Issues'),
-                        subtitle: const Text(
-                          'Add to collection or mark read by issue range',
+                                },
                         ),
-                        onTap: () => _showSeriesIssueActionsSheet(
-                          seriesName: seriesName,
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.library_add_check_outlined),
+                          title: const Text('Manage Series Issues'),
+                          subtitle: const Text(
+                            'Add to collection or mark read by issue range',
+                          ),
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            _showSeriesIssueActionsSheet(
+                              seriesName: seriesName,
+                            );
+                          },
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -786,6 +836,11 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final subscriptionAsync = ref.watch(
       seriesSubscriptionProvider(widget.seriesId),
     );
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(
+        SortPreferenceContext.seriesDetailsIssues,
+      ),
+    );
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
 
     return detailsAsync.when(
@@ -814,6 +869,18 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                       onPressed: () =>
                           _showAddActionsSheet(seriesName: details.name),
                       icon: const Icon(Icons.add),
+                    ),
+                    DisplaySettingsButton(
+                      selectedOption: sortOption,
+                      optionLabel: issueSortLabel,
+                      onSelected: (option) {
+                        ref
+                            .read(sortPreferencesProvider.notifier)
+                            .setPreference(
+                              SortPreferenceContext.seriesDetailsIssues,
+                              option,
+                            );
+                      },
                     ),
                     PopupMenuButton<_SeriesDetailsMenuAction>(
                       tooltip: 'More options',
@@ -878,6 +945,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 _SeriesIssuesTab(
                   seriesId: widget.seriesId,
                   page: _issuesPage,
+                  sortOption: sortOption,
                   onPrevious: () {
                     if (_issuesPage <= 1) return;
                     setState(() {
@@ -911,22 +979,18 @@ class _SeriesHeader extends ConsumerWidget {
     final backgroundTint = Theme.of(context).scaffoldBackgroundColor;
     final publisher = details.publisher?.name.trim();
     final hasPublisher = details.publisher != null;
-    final firstPageIssuesAsync = ref.watch(
-      seriesIssueListProvider(SeriesIssueListArgs(seriesId: seriesId, page: 1)),
+    final coverImageAsync = ref.watch(
+      seriesCoverImageProvider((seriesId: seriesId, allowRemoteFetch: true)),
     );
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(seriesId));
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
-    final firstPageIssues = firstPageIssuesAsync.asData?.value;
-    final firstIssueImage =
-        firstPageIssues != null && firstPageIssues.results.isNotEmpty
-        ? firstPageIssues.results.first.image
-        : null;
+    final headerImage = coverImageAsync.asData?.value;
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (firstIssueImage != null)
-          CachedNetworkImage(imageUrl: firstIssueImage, fit: BoxFit.cover)
+        if (headerImage != null)
+          CachedNetworkImage(imageUrl: headerImage, fit: BoxFit.cover)
         else
           ColoredBox(color: colorScheme.surfaceContainerHighest),
         DecoratedBox(
@@ -1385,12 +1449,14 @@ class _SeriesIssuesTab extends ConsumerWidget {
   const _SeriesIssuesTab({
     required this.seriesId,
     required this.page,
+    required this.sortOption,
     required this.onPrevious,
     required this.onNext,
   });
 
   final int seriesId;
   final int page;
+  final ContentSortOption sortOption;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
@@ -1405,24 +1471,28 @@ class _SeriesIssuesTab extends ConsumerWidget {
         errorMessage: 'Failed to load series issues: $error',
       ),
       data: (issuePage) {
+        final sortedIssues = sortIssues(issuePage.results, sortOption);
         final totalPages =
             ((issuePage.count /
-                        (issuePage.results.isEmpty
-                            ? 100
-                            : issuePage.results.length))
+                        (sortedIssues.isEmpty ? 100 : sortedIssues.length))
                     .ceil())
                 .clamp(1, 9999);
         final hasPagination = totalPages > 1;
 
         return Stack(
           children: [
-            issuePage.results.isEmpty
+            sortedIssues.isEmpty
                 ? ListView(
                     physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
                     children: const [
-                      SizedBox(height: 220),
-                      Center(child: Text('No issues available.')),
+                      SizedBox(
+                        height: 360,
+                        child: EmptyContentState(
+                          icon: Icons.menu_book_outlined,
+                          message: 'No issues available.',
+                        ),
+                      ),
                     ],
                   )
                 : ListView.builder(
@@ -1433,13 +1503,13 @@ class _SeriesIssuesTab extends ConsumerWidget {
                       0,
                       hasPagination ? 96 : 12,
                     ),
-                    itemCount: issuePage.results.length,
+                    itemCount: sortedIssues.length,
                     itemBuilder: (context, index) {
-                      final issue = issuePage.results[index];
+                      final issue = sortedIssues[index];
                       return IssueListTile(
                         issue: issue,
                         isFirst: index == 0,
-                        isLast: index == issuePage.results.length - 1,
+                        isLast: index == sortedIssues.length - 1,
                       );
                     },
                   ),

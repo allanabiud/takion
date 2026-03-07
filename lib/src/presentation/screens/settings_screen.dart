@@ -616,6 +616,25 @@ class SettingsScreen extends ConsumerWidget {
         return Consumer(
           builder: (context, ref, _) {
             final appSettings = ref.watch(settingsProvider);
+            ref.listen<AppSettings>(settingsProvider, (previous, next) {
+              if (!context.mounted) return;
+              final justFinishedSync =
+                  (previous?.isSyncing ?? false) && !next.isSyncing;
+              if (!justFinishedSync) return;
+
+              final message = next.lastSyncMessage?.trim();
+              if (message == null || message.isEmpty) return;
+
+              final normalized = message.toLowerCase();
+              if (normalized.contains('failed')) {
+                TakionAlerts.error(context, message);
+                return;
+              }
+              if (normalized.contains('completed')) {
+                TakionAlerts.success(context, message);
+              }
+            });
+
             return SettingsBottomSheet(
               title: 'Data and Storage',
               content: Column(
@@ -625,16 +644,6 @@ class SettingsScreen extends ConsumerWidget {
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       child: Center(child: CircularProgressIndicator()),
-                    ),
-                  if (appSettings.lastSyncMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(
-                        appSettings.lastSyncMessage!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
                     ),
                   Text(
                     'Sync Options',

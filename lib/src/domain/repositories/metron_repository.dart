@@ -29,6 +29,14 @@ abstract class MetronRepository implements CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<IssueSearchPage> getIssueList({
+    int page = 1,
+    bool forceRefresh = false,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  });
+
   Future<SeriesSearchPage> searchSeries(
     String query, {
     int page = 1,

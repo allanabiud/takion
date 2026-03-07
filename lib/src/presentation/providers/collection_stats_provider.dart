@@ -16,8 +16,10 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
       .where((item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist)
       .length;
   final readCount = collectedItems.where((item) => item.isRead).length;
-  final unratedCount = collectedItems
-      .where((item) => item.isRead && item.rating == null)
+  final unratedCount = libraryItems
+      .where(
+        (item) => item.isRead && (item.rating == null || item.rating! <= 0),
+      )
       .length;
 
   return CollectionStats(

@@ -2,8 +2,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
+import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/collection_issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/paged_list_scaffold.dart';
 
 @RoutePage()
@@ -24,17 +27,36 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(SortPreferenceContext.libraryMyComics),
+    );
     final pageAsync = ref.watch(collectionItemsProvider(_page));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Comics')),
+      appBar: AppBar(
+        title: const Text('My Comics'),
+        actions: [
+          DisplaySettingsButton(
+            selectedOption: sortOption,
+            optionLabel: issueSortLabel,
+            onSelected: (option) {
+              ref
+                  .read(sortPreferencesProvider.notifier)
+                  .setPreference(SortPreferenceContext.libraryMyComics, option);
+            },
+          ),
+        ],
+      ),
       body: pageAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: 'Failed to load comics: $error',
         ),
         data: (pageData) {
-          final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
+          final sortedItems = sortCollectionItems(pageData.results, sortOption);
+          final pageSize = pageData.results.isEmpty
+              ? 100
+              : pageData.results.length;
           final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
           return PagedListScaffold(
             onRefresh: _refreshPage,
@@ -56,16 +78,17 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
                 _page = nextPage;
               });
             },
-            itemCount: pageData.results.length,
+            itemCount: sortedItems.length,
             itemBuilder: (context, index) {
-              final item = pageData.results[index];
+              final item = sortedItems[index];
               return CollectionIssueListTile(
                 item: item,
                 isFirst: index == 0,
-                isLast: index == pageData.results.length - 1,
+                isLast: index == sortedItems.length - 1,
               );
             },
             emptyMessage: 'No comics in your collection yet.',
+            emptyIcon: Icons.library_books_outlined,
           );
         },
       ),

@@ -9,6 +9,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/network/supabase_service.dart';
 import 'package:takion/src/presentation/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/providers/profile_provider.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
@@ -75,21 +76,37 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   Future<void> _showEditActionsSheet(Map<String, dynamic> profile) async {
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Edit',
-                  style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Edit Actions',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.person_outline),
@@ -112,6 +129,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     await _showEditAccountSheet();
                   },
                 ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -160,7 +178,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         error: (error, _) => Center(child: Text(error.toString())),
         data: (profile) {
           if (profile == null) {
-            return const Center(child: Text('No profile available.'));
+            return const EmptyContentState(
+              icon: Icons.person_outline,
+              message: 'No profile available.',
+            );
           }
           final displayName = _stringField(
             profile,
@@ -569,24 +590,38 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          16 + MediaQuery.of(context).viewInsets.bottom,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Edit Profile',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Edit Profile',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Center(
@@ -627,7 +662,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 onChanged: (value) =>
                     setState(() => _prefs['email_pulls'] = value),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton(
@@ -641,6 +676,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                       : const Text('Save'),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -766,24 +802,38 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          16 + MediaQuery.of(context).viewInsets.bottom,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Edit Account',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Edit Account',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               TextField(
@@ -830,8 +880,8 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
                 Text(
                   _errorText!,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -852,9 +902,9 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
               Text(
                 'Delete Account',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                  fontWeight: FontWeight.w700,
-                ),
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -883,6 +933,7 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
                   label: const Text('Delete Account'),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),

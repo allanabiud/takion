@@ -21,8 +21,12 @@ class MetronRepositoryImpl implements MetronRepository {
       <String, Future<List<IssueList>>>{};
   final Map<String, Future<IssueDetails>> _issueDetailsInFlight =
       <String, Future<IssueDetails>>{};
+  final Map<String, Future<IssueSearchPage>> _issueListInFlight =
+      <String, Future<IssueSearchPage>>{};
   final Map<String, Future<SeriesListPage>> _seriesListInFlight =
       <String, Future<SeriesListPage>>{};
+  final Map<String, Future<SeriesIssueListPage>> _seriesIssueListInFlight =
+      <String, Future<SeriesIssueListPage>>{};
   final _AsyncConcurrencyGate _issueDetailsGate = _AsyncConcurrencyGate(4);
 
   MetronRepositoryImpl(
@@ -204,6 +208,93 @@ class MetronRepositoryImpl implements MetronRepository {
         results: remotePage.results.map((entry) => entry.toEntity()).toList(),
         currentPage: page,
       );
+    } catch (_) {
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return IssueSearchPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<IssueSearchPage> getIssueList({
+    int page = 1,
+    bool forceRefresh = false,
+    String? ordering,
+    DateTime? modifiedGt,
+    int? limit,
+  }) async {
+    final metrics = AppPerformanceMetrics.instance;
+    final cachedDtos = await _localDataSource.getIssueListResults(
+      page: page,
+      ordering: ordering,
+      modifiedGt: modifiedGt,
+      limit: limit,
+    );
+    final cachedAt = await _localDataSource.getIssueListResultsCachedAt(
+      page: page,
+      ordering: ordering,
+      modifiedGt: modifiedGt,
+      limit: limit,
+    );
+    final cachedMeta = await _localDataSource.getIssueListResultsMeta(
+      page: page,
+      ordering: ordering,
+      modifiedGt: modifiedGt,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        metrics.recordCacheHit('issue_list');
+        return IssueSearchPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+    metrics.recordCacheMiss('issue_list');
+
+    final key =
+        '$page|${ordering ?? ''}|${modifiedGt?.toUtc().toIso8601String() ?? ''}|${limit ?? ''}|$forceRefresh';
+    try {
+      return _coalesce(_issueListInFlight, key, () async {
+        final remotePage = await _remoteDataSource.getIssueList(
+          page: page,
+          ordering: ordering,
+          modifiedGt: modifiedGt,
+          limit: limit,
+        );
+        await _localDataSource.cacheIssueListResults(
+          remotePage.results,
+          page: page,
+          ordering: ordering,
+          modifiedGt: modifiedGt,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return IssueSearchPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      });
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return IssueSearchPage(
@@ -414,25 +505,28 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
-      final remotePage = await _remoteDataSource.getSeriesIssueList(
-        seriesId,
-        page: page,
-      );
-      await _localDataSource.cacheSeriesIssueListResults(
-        seriesId,
-        remotePage.results,
-        page: page,
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-      );
-      return SeriesIssueListPage(
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
-        currentPage: page,
-      );
+      final key = '$seriesId|$page|$forceRefresh';
+      return _coalesce(_seriesIssueListInFlight, key, () async {
+        final remotePage = await _remoteDataSource.getSeriesIssueList(
+          seriesId,
+          page: page,
+        );
+        await _localDataSource.cacheSeriesIssueListResults(
+          seriesId,
+          remotePage.results,
+          page: page,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return SeriesIssueListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      });
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesIssueListPage(

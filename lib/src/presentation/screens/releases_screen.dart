@@ -84,93 +84,94 @@ class ReleasesScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            pullsAsync.when(
-              data: (issues) {
-                if (issues.isEmpty) {
-                  return const SizedBox.shrink();
-                }
+            if (pullsCountAsync > 0)
+              pullsAsync.when(
+                data: (issues) {
+                  if (issues.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
 
-                final previewIssues = issues.take(10).toList();
+                  final previewIssues = issues.take(10).toList();
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'Your Pulls This Week',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'Your Pulls This Week',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 260,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: previewIssues.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          final issue = previewIssues[index];
-                          final issueId = issue.id;
-                          final collectionStatus = issueId != null
-                              ? ref.watch(
-                                  issueCollectionStatusProvider(issueId),
-                                )
-                              : null;
-                          final pullEntryAsync = issueId != null
-                              ? ref.watch(issuePullListEntryProvider(issueId))
-                              : null;
-                          final isCollected =
-                              collectionStatus?.isCollected ?? false;
-                          final isWishlisted =
-                              collectionStatus?.isWishlisted ?? false;
-                          final isRead = collectionStatus?.isRead ?? false;
-                          final isPulled =
-                              pullEntryAsync?.asData?.value != null;
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 260,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: previewIssues.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final issue = previewIssues[index];
+                            final issueId = issue.id;
+                            final collectionStatus = issueId != null
+                                ? ref.watch(
+                                    issueCollectionStatusProvider(issueId),
+                                  )
+                                : null;
+                            final pullEntryAsync = issueId != null
+                                ? ref.watch(issuePullListEntryProvider(issueId))
+                                : null;
+                            final isCollected =
+                                collectionStatus?.isCollected ?? false;
+                            final isWishlisted =
+                                collectionStatus?.isWishlisted ?? false;
+                            final isRead = collectionStatus?.isRead ?? false;
+                            final isPulled =
+                                pullEntryAsync?.asData?.value != null;
 
-                          return IssueCard(
-                            imageUrl: issue.image,
-                            title: issue.name,
-                            heroTag: issueId != null
-                                ? 'issue-cover-$issueId'
-                                : null,
-                            isCollected: isCollected,
-                            isWishlisted: isWishlisted,
-                            isRead: isRead,
-                            isPulled: isPulled,
-                            onTap: issueId == null
-                                ? null
-                                : () {
-                                    context.pushRoute(
-                                      IssueDetailsRoute(
-                                        issueId: issueId,
-                                        initialImageUrl: issue.image,
-                                      ),
-                                    );
-                                  },
-                          );
-                        },
+                            return IssueCard(
+                              imageUrl: issue.image,
+                              title: issue.name,
+                              heroTag: issueId != null
+                                  ? 'issue-cover-$issueId'
+                                  : null,
+                              isCollected: isCollected,
+                              isWishlisted: isWishlisted,
+                              isRead: isRead,
+                              isPulled: isPulled,
+                              onTap: issueId == null
+                                  ? null
+                                  : () {
+                                      context.pushRoute(
+                                        IssueDetailsRoute(
+                                          issueId: issueId,
+                                          initialImageUrl: issue.image,
+                                        ),
+                                      );
+                                    },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              },
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                  height: 232,
-                  child: Center(child: CircularProgressIndicator()),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: SizedBox(
+                    height: 232,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                error: (_, _) => const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text('Could not load pulls preview.'),
                 ),
               ),
-              error: (_, _) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('Could not load pulls preview.'),
-              ),
-            ),
             CompactListSection(
               title: 'Browse',
               items: [

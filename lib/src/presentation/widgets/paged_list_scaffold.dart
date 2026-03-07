@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 
 class PagedListScaffold extends StatelessWidget {
@@ -14,6 +15,7 @@ class PagedListScaffold extends StatelessWidget {
     required this.itemCount,
     required this.itemBuilder,
     required this.emptyMessage,
+    this.emptyIcon = Icons.inbox_outlined,
   });
 
   final Future<void> Function() onRefresh;
@@ -26,6 +28,7 @@ class PagedListScaffold extends StatelessWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
   final String emptyMessage;
+  final IconData emptyIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -36,17 +39,31 @@ class PagedListScaffold extends StatelessWidget {
         RefreshIndicator(
           onRefresh: onRefresh,
           child: itemCount == 0
-              ? ListView(
+              ? CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
-                  children: [
-                    const SizedBox(height: 220),
-                    Center(child: Text(emptyMessage)),
+                  slivers: [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          bottom: hasPagination ? 96 : 12,
+                        ),
+                        child: EmptyContentState(
+                          icon: emptyIcon,
+                          message: emptyMessage,
+                        ),
+                      ),
+                    ),
                   ],
                 )
               : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(0, 12, 0, hasPagination ? 96 : 12),
+                  padding: EdgeInsets.fromLTRB(
+                    0,
+                    12,
+                    0,
+                    hasPagination ? 96 : 12,
+                  ),
                   itemCount: itemCount,
                   itemBuilder: itemBuilder,
                 ),

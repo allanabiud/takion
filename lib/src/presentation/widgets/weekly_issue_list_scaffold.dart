@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/week_picker_bar.dart';
 
@@ -9,6 +10,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
   final String title;
   final AsyncValue<List<IssueList>> issuesAsync;
   final String emptyMessage;
+  final IconData emptyIcon;
   final List<IssueList> Function(List<IssueList>) transformIssues;
   final String Function(Object error)? errorTextBuilder;
   final List<Widget>? appBarActions;
@@ -18,6 +20,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
     required this.title,
     required this.issuesAsync,
     required this.emptyMessage,
+    this.emptyIcon = Icons.inbox_outlined,
     this.transformIssues = _identity,
     this.errorTextBuilder,
     this.appBarActions,
@@ -50,7 +53,10 @@ class WeeklyIssueListScaffold extends StatelessWidget {
               data: (issues) {
                 final visibleIssues = transformIssues(issues);
                 if (visibleIssues.isEmpty) {
-                  return Center(child: Text(emptyMessage));
+                  return EmptyContentState(
+                    icon: emptyIcon,
+                    message: emptyMessage,
+                  );
                 }
 
                 return ListView.builder(

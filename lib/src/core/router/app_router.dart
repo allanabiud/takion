@@ -60,6 +60,21 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: DiscoverBrowseRecentlyAddedRoute.page,
+      path: '/discover/browse/recently-added',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: DiscoverBrowseIssuesRoute.page,
+      path: '/discover/browse/issues',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: DiscoverBrowseSeriesRoute.page,
+      path: '/discover/browse/series',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: CollectionReadStatusRoute.page,
       path: '/my-comics/read-status',
       guards: [authGuard],

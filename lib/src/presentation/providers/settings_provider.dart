@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
@@ -202,7 +203,9 @@ class SettingsNotifier extends _$SettingsNotifier {
       }
     }
 
-    final issueDetailsBox = await hive.openBox<dynamic>('issue_details_box');
+    final issueDetailsBox = await hive.openBox<IssueDetailsDto>(
+      'issue_details_box',
+    );
     for (final key in issueDetailsBox.keys) {
       if (key is! int || key <= 0) continue;
       if (quick) {
@@ -221,7 +224,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       }
     }
 
-    final seriesDetailsBox = await hive.openBox<dynamic>('series_details_box');
+    final seriesDetailsBox = await hive.openBox<Map>('series_details_box');
     for (final key in seriesDetailsBox.keys) {
       if (key is! int || key <= 0) continue;
       if (quick) {
