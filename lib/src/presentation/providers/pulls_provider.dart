@@ -4,6 +4,7 @@ import 'package:takion/src/domain/entities/pull_list_entry.dart';
 import 'package:takion/src/domain/entities/series_subscription.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 
 DateTime _weekStart(DateTime date) {
   final normalized = DateTime(date.year, date.month, date.day);
@@ -45,10 +46,50 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
       );
       final issueIds = pullEntries.map((entry) => entry.metronIssueId).toSet();
 
-      return weeklyIssues.where((issue) {
+      final activeSubscriptions = await ref.watch(
+        activeSubscriptionsProvider.future,
+      );
+      final subscribedSeriesIds =
+          activeSubscriptions.map((s) => s.metronSeriesId).toSet();
+
+      final issuesToPull = <IssueList>[];
+      final missingSubscriptionEntries = <
+        ({int metronSeriesId, int metronIssueId, DateTime? releaseDate})
+      >[];
+
+      for (final issue in weeklyIssues) {
         final issueId = issue.id;
-        return issueId != null && issueIds.contains(issueId);
-      }).toList();
+        if (issueId == null) continue;
+
+        if (issueIds.contains(issueId)) {
+          issuesToPull.add(issue);
+          continue;
+        }
+
+        final seriesId = issue.series?.id;
+        if (seriesId != null && subscribedSeriesIds.contains(seriesId)) {
+          issuesToPull.add(issue);
+          missingSubscriptionEntries.add((
+            metronSeriesId: seriesId,
+            metronIssueId: issueId,
+            releaseDate: issue.storeDate ?? issue.coverDate,
+          ));
+        }
+      }
+
+      if (missingSubscriptionEntries.isNotEmpty) {
+        // Run this in the background to avoid blocking the UI,
+        // but it will ensure the pull list is updated in Supabase
+        ref
+            .read(pullListRepositoryProvider)
+            .upsertSubscriptionEntries(missingSubscriptionEntries)
+            .then((_) {
+              // Invalidate pull list provider for this week to reflect changes
+              ref.invalidate(pullListEntriesForWeekProvider(date));
+            });
+      }
+
+      return issuesToPull;
     });
 
 final currentWeekPullsProvider = FutureProvider.autoDispose<List<IssueList>>((

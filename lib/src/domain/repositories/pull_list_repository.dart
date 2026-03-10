@@ -25,6 +25,10 @@ abstract class PullListRepository {
 
   Future<void> deleteEntryByIssueId(int metronIssueId);
 
+  Future<void> upsertSubscriptionEntries(
+    List<({int metronSeriesId, int metronIssueId, DateTime? releaseDate})> entries,
+  );
+
   Future<int> regenerateFromSubscriptions({
     DateTime? fromDate,
     DateTime? toDate,

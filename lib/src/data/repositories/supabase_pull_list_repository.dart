@@ -194,6 +194,34 @@ class SupabasePullListRepository implements PullListRepository {
   }
 
   @override
+  Future<void> upsertSubscriptionEntries(
+    List<({int metronSeriesId, int metronIssueId, DateTime? releaseDate})> entries,
+  ) async {
+    if (entries.isEmpty) return;
+    final userId = _requireUserId();
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    final rows = entries.map((entry) {
+      return {
+        'user_id': userId,
+        'metron_series_id': entry.metronSeriesId,
+        'metron_issue_id': entry.metronIssueId,
+        'release_date':
+            entry.releaseDate == null ? null : _dateOnly(entry.releaseDate!),
+        'entry_status': 'upcoming',
+        'source': 'subscription',
+        'generated_at': now,
+        'updated_at': now,
+      };
+    }).toList();
+
+    await _client.from('pull_list_entries').upsert(
+      rows,
+      onConflict: 'user_id,metron_issue_id',
+    );
+  }
+
+  @override
   Future<int> regenerateFromSubscriptions({
     DateTime? fromDate,
     DateTime? toDate,
