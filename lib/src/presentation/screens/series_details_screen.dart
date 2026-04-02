@@ -6,7 +6,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
-import 'package:takion/src/domain/entities/pull_list_entry.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
@@ -66,43 +65,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   double _titleOpacity = 0;
   int _issuesPage = 1;
   bool _isUpdatingSubscription = false;
-
-  Future<void> _syncSeriesUpcomingIssuesToPullList(DateTime fromDate) async {
-    final metronRepository = ref.read(metronRepositoryProvider);
-    final pullListRepository = ref.read(pullListRepositoryProvider);
-    var page = 1;
-
-    while (true) {
-      final issuePage = await metronRepository.getSeriesIssueList(
-        widget.seriesId,
-        page: page,
-      );
-
-      for (final issue in issuePage.results) {
-        final issueId = issue.id;
-        if (issueId == null) continue;
-        final releaseDate = issue.storeDate ?? issue.coverDate;
-        if (releaseDate == null) continue;
-        final releaseDay = DateTime(
-          releaseDate.year,
-          releaseDate.month,
-          releaseDate.day,
-        );
-        if (releaseDay.isBefore(fromDate)) continue;
-
-        await pullListRepository.upsertManualEntry(
-          metronSeriesId: widget.seriesId,
-          metronIssueId: issueId,
-          releaseDate: releaseDate,
-          entryStatus: PullListEntryStatus.upcoming,
-        );
-      }
-
-      final nextPage = issuePage.nextPage;
-      if (nextPage == null) break;
-      page = nextPage;
-    }
-  }
 
   Future<List<_SeriesIssueBulkCandidate>> _allSeriesIssues() async {
     final metronRepository = ref.read(metronRepositoryProvider);
@@ -590,7 +552,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           .read(pullListRepositoryProvider)
           .regenerateFromSubscriptions(fromDate: startOfWeek);
       if (enabled) {
-        await _syncSeriesUpcomingIssuesToPullList(startOfWeek);
+        await ref
+            .read(subscriptionPullReconcilerProvider)
+            .reconcile(force: true, onlySeriesId: widget.seriesId);
       }
       final selectedWeek = ref.read(selectedWeekProvider);
       ref.invalidate(seriesSubscriptionProvider(widget.seriesId));

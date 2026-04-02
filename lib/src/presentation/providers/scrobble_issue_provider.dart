@@ -4,6 +4,7 @@ import 'package:takion/src/presentation/providers/collection_items_provider.dart
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/collection_suggestions_provider.dart';
+import 'package:takion/src/presentation/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/settings_provider.dart';
 
@@ -48,15 +49,19 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
     state = await AsyncValue.guard(() async {
       final libraryRepository = ref.read(libraryRepositoryProvider);
-      final catalogRepository = ref.read(catalogRepositoryProvider);
 
       final existing = await libraryRepository.getItemByIssueId(_issueId);
-      final seriesId =
-          existing?.metronSeriesId ??
-          (await catalogRepository.getIssueDetails(_issueId)).series?.id;
+      final seriesId = await resolveIssueSeriesId(
+        ref,
+        _issueId,
+        existingSeriesId: existing?.metronSeriesId,
+      );
 
       if (seriesId == null || seriesId <= 0) {
-        throw StateError('Unable to determine series for issue $_issueId');
+        throw StateError(
+          'Could not save this issue because its series metadata is unavailable. '
+          'Try refreshing the issue details, then save again.',
+        );
       }
 
       final wasCollected =

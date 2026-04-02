@@ -11,6 +11,7 @@ import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
+import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
@@ -35,6 +36,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       if (!mounted) return;
       _runMetronConnectionCheckIfNeeded();
       _initializePushNotifications();
+      _reconcileSubscriptionPullsOnSessionStart();
     });
   }
 
@@ -61,6 +63,21 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       TakionAlerts.error(
         context,
         error.toString().replaceFirst('Bad state: ', ''),
+      );
+    }
+  }
+
+  Future<void> _reconcileSubscriptionPullsOnSessionStart() async {
+    final authState = ref.read(authStateProvider).value;
+    if (authState != AuthStatus.authenticated) return;
+
+    try {
+      await ref.read(subscriptionPullReconcilerProvider).reconcile();
+    } catch (error) {
+      if (!mounted) return;
+      TakionAlerts.error(
+        context,
+        'Background pull reconciliation failed: $error',
       );
     }
   }
@@ -111,8 +128,9 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         final current = next.value;
         if (current == AuthStatus.authenticated) {
           _metronCheckedForSession = false;
-          Future<void>(() => _runMetronConnectionCheckIfNeeded());
-          Future<void>(() => _syncPushRegistration());
+          _runMetronConnectionCheckIfNeeded();
+          _syncPushRegistration();
+          _reconcileSubscriptionPullsOnSessionStart();
         } else if (current == AuthStatus.unauthenticated) {
           _metronCheckedForSession = false;
         }

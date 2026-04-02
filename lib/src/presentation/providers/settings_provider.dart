@@ -367,11 +367,13 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<void> _syncSupabaseData({required bool quick}) async {
     final pullRepo = ref.read(pullListRepositoryProvider);
     final profileService = ref.read(supabaseProfileServiceProvider);
+    final reconciler = ref.read(subscriptionPullReconcilerProvider);
     final fromDate = _weekStart(DateTime.now());
     await pullRepo.regenerateFromSubscriptions(
       fromDate: quick ? fromDate : fromDate.subtract(const Duration(days: 365)),
       toDate: quick ? null : fromDate.add(const Duration(days: 365 * 2)),
     );
+    await reconciler.reconcile(force: true);
     _invalidateCacheBackedProviders();
     await Future.wait([
       ref.read(allLibraryItemsProvider.future),

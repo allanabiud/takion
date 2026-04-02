@@ -22,12 +22,22 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const _trendingAutoScrollInterval = Duration(seconds: 8);
-  final PageController _trendingController = PageController(
-    viewportFraction: 0.92,
-  );
+  final CarouselController _trendingController = CarouselController();
   Timer? _trendingAutoScrollTimer;
   int _trendingCount = 0;
   int _currentTrendingPage = 0;
+  double _trendingItemExtent = 1;
+
+  void _updateCurrentTrendingPage() {
+    if (!_trendingController.hasClients || _trendingCount <= 0) return;
+    final nextPage = (_trendingController.offset / _trendingItemExtent).round();
+    final clampedPage = nextPage.clamp(0, _trendingCount - 1);
+    if (clampedPage == _currentTrendingPage) return;
+    if (!mounted) return;
+    setState(() {
+      _currentTrendingPage = clampedPage;
+    });
+  }
 
   void _stopTrendingAutoScroll() {
     _trendingAutoScrollTimer?.cancel();
@@ -38,13 +48,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_trendingCount == itemCount && _trendingAutoScrollTimer != null) return;
 
     _trendingCount = itemCount;
+    if (_currentTrendingPage >= itemCount) {
+      _currentTrendingPage = 0;
+    }
     _stopTrendingAutoScroll();
     if (itemCount <= 1) return;
 
     _trendingAutoScrollTimer = Timer.periodic(_trendingAutoScrollInterval, (_) {
       if (!mounted || !_trendingController.hasClients) return;
       final nextPage = (_currentTrendingPage + 1) % itemCount;
-      _trendingController.animateToPage(
+      _trendingController.animateToItem(
         nextPage,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -53,8 +66,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _trendingController.addListener(_updateCurrentTrendingPage);
+  }
+
+  @override
   void dispose() {
     _stopTrendingAutoScroll();
+    _trendingController.removeListener(_updateCurrentTrendingPage);
     _trendingController.dispose();
     super.dispose();
   }
@@ -80,183 +100,240 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 }
 
-                return SizedBox(
-                  height: 240,
-                  child: PageView.builder(
-                    controller: _trendingController,
-                    itemCount: suggestions.length,
-                    onPageChanged: (page) => _currentTrendingPage = page,
-                    itemBuilder: (context, index) {
-                      final suggestion = suggestions[index];
-                      final issue = suggestion.issue;
-                      final series = issue.series;
-                      final backdropUrl = issue.image;
-                      final issueId = issue.id;
+                _trendingItemExtent = MediaQuery.sizeOf(context).width * 0.92;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 240,
+                      child: CarouselView.builder(
+                        controller: _trendingController,
+                        itemExtent: _trendingItemExtent,
+                        itemCount: suggestions.length,
+                        itemSnapping: true,
+                        itemBuilder: (context, index) {
+                          final suggestion = suggestions[index];
+                          final issue = suggestion.issue;
+                          final series = issue.series;
+                          final backdropUrl = issue.image;
+                          final issueId = issue.id;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Card(
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            onTap: issueId == null
-                                ? null
-                                : () => context.pushRoute(
-                                    IssueDetailsRoute(
-                                      issueId: issueId,
-                                      initialImageUrl: issue.image,
-                                    ),
-                                  ),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                if (backdropUrl != null &&
-                                    backdropUrl.isNotEmpty)
-                                  Positioned.fill(
-                                    child: CachedNetworkImage(
-                                      imageUrl: backdropUrl,
-                                      imageBuilder: (_, imageProvider) =>
-                                          ClipRect(
-                                            child: Transform.scale(
-                                              scale: 1.14,
-                                              child: DecoratedBox(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black,
-                                                  image: DecorationImage(
-                                                    image: imageProvider,
-                                                    fit: BoxFit.cover,
-                                                    alignment: const Alignment(
-                                                      0.65,
-                                                      0,
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Card(
+                              clipBehavior: Clip.antiAlias,
+                              child: InkWell(
+                                onTap: issueId == null
+                                    ? null
+                                    : () => context.pushRoute(
+                                        IssueDetailsRoute(
+                                          issueId: issueId,
+                                          initialImageUrl: issue.image,
+                                        ),
+                                      ),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    if (backdropUrl != null &&
+                                        backdropUrl.isNotEmpty)
+                                      Positioned.fill(
+                                        child: CachedNetworkImage(
+                                          imageUrl: backdropUrl,
+                                          imageBuilder: (_, imageProvider) =>
+                                              ClipRect(
+                                                child: Transform.scale(
+                                                  scale: 1.14,
+                                                  child: DecoratedBox(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black,
+                                                      image: DecorationImage(
+                                                        image: imageProvider,
+                                                        fit: BoxFit.cover,
+                                                        alignment:
+                                                            const Alignment(
+                                                              0.65,
+                                                              0,
+                                                            ),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                      placeholder: (_, _) => Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primaryContainer,
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      errorWidget: (_, _, _) => Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primaryContainer,
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Theme.of(context).colorScheme.primary,
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.primaryContainer,
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.black.withValues(alpha: 0.2),
-                                        Colors.black.withValues(alpha: 0.65),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(14),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(
-                                            999,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          suggestion.reason,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelMedium
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onPrimaryContainer,
-                                                fontWeight: FontWeight.w700,
+                                          placeholder: (_, _) => Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                                  Theme.of(context)
+                                                      .colorScheme
+                                                      .primaryContainer,
+                                                ],
                                               ),
+                                            ),
+                                          ),
+                                          errorWidget: (_, _, _) => Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                                  Theme.of(context)
+                                                      .colorScheme
+                                                      .primaryContainer,
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primaryContainer,
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                      const Spacer(),
-                                      Text(
-                                        series?.name ?? issue.name,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white,
+                                    DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.black.withValues(alpha: 0.2),
+                                            Colors.black.withValues(
+                                              alpha: 0.65,
                                             ),
+                                          ],
+                                        ),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${series?.yearBegan ?? 'Unknown'}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(color: Colors.white),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final badgeMaxWidth =
+                                              constraints.maxWidth * 0.72;
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              ConstrainedBox(
+                                                constraints: BoxConstraints(
+                                                  maxWidth: badgeMaxWidth,
+                                                ),
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 5,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primaryContainer,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          999,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    suggestion.reason,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelMedium
+                                                        ?.copyWith(
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .onPrimaryContainer,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Text(
+                                                series?.name ?? issue.name,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${series?.yearBegan ?? 'Unknown'}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          );
+                                        },
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
+                    ),
+                    if (suggestions.length > 1) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(suggestions.length, (index) {
+                          final isActive = index == _currentTrendingPage;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: isActive ? 16 : 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outline
+                                        .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ],
                 );
               },
               loading: () {
