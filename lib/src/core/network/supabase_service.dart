@@ -23,6 +23,8 @@ class SupabaseProfileService {
   static const _authBox = 'supabase_auth_box';
   static const _authEmailKey = 'email';
   static const _authPasswordKey = 'password';
+  static const _profileUiBox = 'profile_ui_box';
+  static const _backdropPathKey = 'backdrop_image_path';
   static const _avatarBucket = 'user-profile-pictures';
   static const _avatarSignedUrlExpirySeconds = 60 * 60 * 24 * 30;
 
@@ -250,6 +252,16 @@ class SupabaseProfileService {
     await box.delete(_profileKey);
   }
 
+  Future<void> storeLocalBackdropPath(String path) async {
+    final box = await _hiveService.openBox<String>(_profileUiBox);
+    await box.put(_backdropPathKey, path.trim());
+  }
+
+  Future<String> getLocalBackdropPath() async {
+    final box = await _hiveService.openBox<String>(_profileUiBox);
+    return (box.get(_backdropPathKey) ?? '').trim();
+  }
+
   Future<void> storeAuthCredentials({
     required String email,
     required String password,
@@ -271,6 +283,11 @@ class SupabaseProfileService {
     await box.delete(_authPasswordKey);
   }
 
+  Future<void> _clearStoredProfileUiState() async {
+    final box = await _hiveService.openBox<String>(_profileUiBox);
+    await box.delete(_backdropPathKey);
+  }
+
   Future<void> deleteCurrentAccount() async {
     final currentUser = _client.auth.currentUser;
     if (currentUser == null) {
@@ -286,6 +303,7 @@ class SupabaseProfileService {
 
     await _clearCachedProfile();
     await _clearStoredAuthCredentials();
+    await _clearStoredProfileUiState();
     await _client.auth.signOut();
   }
 }

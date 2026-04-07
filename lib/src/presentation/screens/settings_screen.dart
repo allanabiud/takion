@@ -907,93 +907,88 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
     final isLoggingOut = authState.isLoading;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
         children: [
-          ListTile(
-            leading: Icon(
-              Icons.palette_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Appearance'),
-            subtitle: const Text('Theme mode and color settings'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showAppearanceSettings(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.link,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Metron Connection'),
-            subtitle: const Text('View connected account and disconnect'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showMetronConnectionSettings(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.collections_bookmark_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Library'),
-            subtitle: const Text(
-              'Library defaults and item detail preferences',
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showCollectionSettings(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.notifications_none_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Notifications'),
-            subtitle: const Text('Push alerts for pulls and notify timing'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showNotificationSettings(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.storage_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Data and Storage'),
-            subtitle: const Text('Manage local database and storage'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showDataStorageSettings(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.analytics_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('Performance Metrics'),
-            subtitle: const Text('View cache/network/provider timing metrics'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showPerformanceMetrics(context, ref),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.info_outline,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('About'),
-            subtitle: const Text('App info and version'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showAboutSettings(context),
+          _SettingsSectionCard(
+            title: 'Personalization',
+            children: [
+              _SettingsNavTile(
+                icon: Icons.palette_outlined,
+                title: 'Appearance',
+                subtitle: 'Theme mode and color settings',
+                onTap: () => _showAppearanceSettings(context, ref),
+              ),
+              _SettingsNavTile(
+                icon: Icons.collections_bookmark_outlined,
+                title: 'Library',
+                subtitle: 'Library defaults and item detail preferences',
+                onTap: () => _showCollectionSettings(context, ref),
+              ),
+              _SettingsNavTile(
+                icon: Icons.notifications_none_outlined,
+                title: 'Notifications',
+                subtitle: 'Push alerts for pulls and notify timing',
+                onTap: () => _showNotificationSettings(context, ref),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
+          _SettingsSectionCard(
+            title: 'Connections',
+            children: [
+              _SettingsNavTile(
+                icon: Icons.link,
+                title: 'Metron Connection',
+                subtitle: 'View connected account and disconnect',
+                onTap: () => _showMetronConnectionSettings(context, ref),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _SettingsSectionCard(
+            title: 'Data & Diagnostics',
+            children: [
+              _SettingsNavTile(
+                icon: Icons.storage_outlined,
+                title: 'Data and Storage',
+                subtitle: 'Manage local database and storage',
+                onTap: () => _showDataStorageSettings(context, ref),
+              ),
+              _SettingsNavTile(
+                icon: Icons.analytics_outlined,
+                title: 'Performance Metrics',
+                subtitle: 'View cache/network/provider timing metrics',
+                onTap: () => _showPerformanceMetrics(context, ref),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _SettingsSectionCard(
+            title: 'App',
+            children: [
+              _SettingsNavTile(
+                icon: Icons.info_outline,
+                title: 'About',
+                subtitle: 'App info and version',
+                onTap: () => _showAboutSettings(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: FilledButton.tonalIcon(
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
-                foregroundColor: Theme.of(context).colorScheme.error,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.errorContainer.withValues(alpha: 0.5),
+                foregroundColor: colorScheme.error,
+                backgroundColor: colorScheme.errorContainer.withValues(
+                  alpha: 0.5,
+                ),
               ),
               icon: isLoggingOut
                   ? const SizedBox(
@@ -1010,6 +1005,64 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SettingsSectionCard extends StatelessWidget {
+  const _SettingsSectionCard({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+              child: Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsNavTile extends StatelessWidget {
+  const _SettingsNavTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 }

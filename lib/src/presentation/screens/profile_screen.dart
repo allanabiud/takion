@@ -10,6 +10,7 @@ import 'package:takion/src/core/network/supabase_service.dart';
 import 'package:takion/src/presentation/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/providers/profile_provider.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/widgets/rounded_tab_chrome.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
@@ -21,7 +22,7 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
-  static const double _expandedHeight = 188;
+  static const double _expandedHeight = 250;
   final ScrollController _scrollController = ScrollController();
   double _titleOpacity = 0;
 
@@ -96,9 +97,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   children: [
                     Text(
                       'Edit Actions',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -171,6 +171,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final profileAsync = ref.watch(userProfileProvider);
     final insightsAsync = ref.watch(profileInsightsProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final pageBackground = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
       body: profileAsync.when(
@@ -190,6 +191,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           );
           final email = _stringField(profile, 'email', 'No email');
           final avatarUrl = _stringField(profile, 'avatar_url', '');
+          final backdropPath = _stringField(profile, 'backdrop_image_path', '');
           final bio = _stringField(profile, 'bio', 'No bio yet.');
           final location = _stringField(profile, 'location', 'Not set');
           final joinedDate = _joinedDate(profile);
@@ -203,8 +205,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 SliverAppBar(
                   pinned: true,
                   expandedHeight: _expandedHeight,
-                  backgroundColor: colorScheme.surface,
-                  surfaceTintColor: colorScheme.surface,
+                  backgroundColor: pageBackground,
+                  surfaceTintColor: pageBackground,
                   title: Opacity(
                     opacity: _titleOpacity,
                     child: Text(
@@ -224,20 +226,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       displayName: displayName,
                       email: email,
                       avatarUrl: avatarUrl,
+                      backdropPath: backdropPath,
                       titleOpacity: _titleOpacity,
                     ),
                   ),
                 ),
                 SliverPersistentHeader(
                   pinned: true,
-                  delegate: _ProfileTabBarDelegate(
-                    child: Material(
-                      color: colorScheme.surface,
-                      child: const TabBar(
-                        tabs: [
-                          Tab(text: 'Profile'),
-                          Tab(text: 'Stats'),
-                        ],
+                  delegate: SegmentedTabSliverHeaderDelegate(
+                    child: Container(
+                      color: pageBackground,
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                      child: SegmentedTabs(
+                        labels: const ['Profile', 'Stats'],
+                        selectedColor: colorScheme.primary,
+                        selectedTextColor: colorScheme.onPrimary,
+                        unselectedColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.9),
+                        unselectedTextColor: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -246,7 +252,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
               body: TabBarView(
                 children: [
                   ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     children: [
                       Card(
                         child: Padding(
@@ -301,7 +307,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ],
                   ),
                   ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     children: [
                       insightsAsync.when(
                         loading: () => const Card(
@@ -519,6 +525,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final Map<String, dynamic> _prefs;
   late final String _avatarStoragePath;
   String _selectedAvatarPath = '';
+  String _selectedBackdropPath = '';
   bool _avatarChanged = false;
   bool _isSaving = false;
   final ImagePicker _imagePicker = ImagePicker();
@@ -550,6 +557,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     _prefs = Map<String, dynamic>.from(_notificationPrefs());
     _selectedAvatarPath = _stringField('avatar_url', '');
     _avatarStoragePath = _stringField('avatar_storage_path', '');
+    _selectedBackdropPath = _stringField('backdrop_image_path', '');
   }
 
   @override
@@ -580,12 +588,25 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         .saveProfile(
           displayName: _displayNameController.text,
           avatarUrl: _avatarChanged ? _selectedAvatarPath : _avatarStoragePath,
+          backdropImagePath: _selectedBackdropPath,
           bio: _bioController.text,
           location: _locationController.text,
           notificationPreferences: _prefs,
         );
     if (!mounted) return;
     Navigator.of(context).pop(true);
+  }
+
+  Future<void> _pickBackdrop() async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1800,
+    );
+    if (!mounted || picked == null) return;
+    setState(() {
+      _selectedBackdropPath = picked.path;
+    });
   }
 
   @override
@@ -611,9 +632,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                       'Edit Profile',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
+                      style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -625,18 +644,106 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               ),
               const SizedBox(height: 12),
               Center(
-                child: GestureDetector(
-                  onTap: _pickAvatar,
-                  child: CircleAvatar(
-                    radius: 42,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    backgroundImage: _avatarImageProvider(_selectedAvatarPath),
-                    child: _avatarImageProvider(_selectedAvatarPath) == null
-                        ? const Icon(Icons.add_a_photo_outlined)
-                        : null,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: _pickAvatar,
+                          child: CustomPaint(
+                            foregroundPainter: _DottedRoundedBorderPainter(
+                              color: Theme.of(context).colorScheme.outline,
+                              radius: 42,
+                            ),
+                            child: CircleAvatar(
+                              radius: 42,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              backgroundImage: _avatarImageProvider(
+                                _selectedAvatarPath,
+                              ),
+                              child:
+                                  _avatarImageProvider(_selectedAvatarPath) ==
+                                      null
+                                  ? const Icon(Icons.add_a_photo_outlined)
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 14),
+                    GestureDetector(
+                      onTap: _pickBackdrop,
+                      child: CustomPaint(
+                        foregroundPainter: _DottedRoundedBorderPainter(
+                          color: Theme.of(context).colorScheme.outline,
+                          radius: 14,
+                        ),
+                        child: Container(
+                          width: 180,
+                          height: 84,
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (_avatarImageProvider(_selectedBackdropPath) !=
+                                  null)
+                                Image(
+                                  image: _avatarImageProvider(
+                                    _selectedBackdropPath,
+                                  )!,
+                                  fit: BoxFit.cover,
+                                )
+                              else
+                                const Icon(Icons.landscape_outlined),
+                              Positioned(
+                                right: 6,
+                                bottom: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    size: 12,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -694,9 +801,11 @@ class _EditAccountSheet extends ConsumerStatefulWidget {
 
 enum _EditAccountAction { passwordUpdated, accountDeleted }
 
-class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
+class _EditAccountSheetState extends ConsumerState<_EditAccountSheet>
+    with SingleTickerProviderStateMixin {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  late final TabController _tabController;
   bool _isSaving = false;
   bool _isDeleting = false;
   bool _obscureNewPassword = true;
@@ -704,7 +813,22 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
   String? _errorText;
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleTabChange() {
+    if (!_tabController.indexIsChanging) {
+      setState(() {});
+    }
+  }
+
+  @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
@@ -800,6 +924,137 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
     }
   }
 
+  Widget _buildPasswordTab(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          TextField(
+            controller: _passwordController,
+            obscureText: _obscureNewPassword,
+            decoration: InputDecoration(
+              labelText: 'New password',
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _obscureNewPassword = !_obscureNewPassword;
+                  });
+                },
+                icon: Icon(
+                  _obscureNewPassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _confirmController,
+            obscureText: _obscureConfirmPassword,
+            decoration: InputDecoration(
+              labelText: 'Confirm new password',
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                  });
+                },
+                icon: Icon(
+                  _obscureConfirmPassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+          ),
+          if (_errorText != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _errorText!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: (_isSaving || _isDeleting) ? null : _submit,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Update Password'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountTab(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Text(
+            'Delete Account',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'This will permanently delete your profile, collection, pull list, and subscriptions.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (_errorText != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _errorText!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              onPressed: (_isSaving || _isDeleting) ? null : _deleteAccount,
+              icon: _isDeleting
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.delete_outline),
+              label: const Text('Delete Account'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -810,132 +1065,61 @@ class _EditAccountSheetState extends ConsumerState<_EditAccountSheet> {
       ),
       child: SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Edit Account',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscureNewPassword,
-                decoration: InputDecoration(
-                  labelText: 'New password',
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureNewPassword = !_obscureNewPassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscureNewPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Edit Account',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _confirmController,
-                obscureText: _obscureConfirmPassword,
-                decoration: InputDecoration(
-                  labelText: 'Confirm new password',
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                  ),
-                ),
-              ),
-              if (_errorText != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _errorText!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  onPressed: (_isSaving || _isDeleting) ? null : _submit,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Update Password'),
-                ),
+            ),
+            const SizedBox(height: 8),
+            TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerHeight: 0,
+              indicator: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(999),
               ),
-              const SizedBox(height: 10),
-              Text(
-                'Delete Account',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'This will permanently delete your profile, collection, pull list, and subscriptions.',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
-                  ),
-                  onPressed: (_isSaving || _isDeleting) ? null : _deleteAccount,
-                  icon: _isDeleting
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.delete_outline),
-                  label: const Text('Delete Account'),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+              splashBorderRadius: BorderRadius.circular(999),
+              labelStyle: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              unselectedLabelStyle: Theme.of(context).textTheme.labelLarge,
+              tabs: const [
+                Tab(text: 'Update Password'),
+                Tab(text: 'Delete Account'),
+              ],
+              labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              unselectedLabelColor: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color,
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: _tabController.index == 0
+                  ? _buildPasswordTab(context)
+                  : _buildDeleteAccountTab(context),
+            ),
+          ],
         ),
       ),
     );
@@ -947,77 +1131,126 @@ class _ProfileHeader extends StatelessWidget {
     required this.displayName,
     required this.email,
     required this.avatarUrl,
+    required this.backdropPath,
     required this.titleOpacity,
   });
 
   final String displayName;
   final String email;
   final String avatarUrl;
+  final String backdropPath;
   final double titleOpacity;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final pageBackground = Theme.of(context).scaffoldBackgroundColor;
     final avatarImage = _avatarImageProvider(avatarUrl);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [colorScheme.primaryContainer, colorScheme.surface],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(),
-              Opacity(
-                opacity: 1 - titleOpacity,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    CircleAvatar(
-                      radius: 52,
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      backgroundImage: avatarImage,
-                      child: avatarImage == null
-                          ? Icon(
-                              Icons.person_outline,
-                              size: 42,
-                              color: colorScheme.primary,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            email,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    final backdropImage = _avatarImageProvider(backdropPath);
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (backdropImage != null)
+            Image(image: backdropImage, fit: BoxFit.cover)
+          else
+            ColoredBox(color: colorScheme.surfaceContainerHighest),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: pageBackground.withValues(alpha: 0.46),
+            ),
           ),
-        ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0, 0.55, 1],
+                colors: [
+                  Colors.black.withValues(alpha: 0.56),
+                  Colors.black.withValues(alpha: 0.30),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Spacer(),
+                  Opacity(
+                    opacity: 1 - titleOpacity,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        CircleAvatar(
+                          radius: 52,
+                          backgroundColor: colorScheme.surfaceContainerHighest,
+                          backgroundImage: avatarImage,
+                          child: avatarImage == null
+                              ? Icon(
+                                  Icons.person_outline,
+                                  size: 42,
+                                  color: colorScheme.primary,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Colors.black45,
+                                          blurRadius: 8,
+                                          offset: Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.92,
+                                      ),
+                                      shadows: const [
+                                        Shadow(
+                                          color: Colors.black45,
+                                          blurRadius: 8,
+                                          offset: Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1029,35 +1262,40 @@ class _ProfileLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final pageBackground = Theme.of(context).scaffoldBackgroundColor;
     return DefaultTabController(
       length: 2,
       child: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
             pinned: true,
-            expandedHeight: 188,
-            backgroundColor: colorScheme.surface,
-            surfaceTintColor: colorScheme.surface,
+            expandedHeight: 250,
+            backgroundColor: pageBackground,
+            surfaceTintColor: pageBackground,
             title: const Text('Profile'),
             flexibleSpace: const FlexibleSpaceBar(
               background: _ProfileHeader(
                 displayName: '',
                 email: '',
                 avatarUrl: '',
+                backdropPath: '',
                 titleOpacity: 0,
               ),
             ),
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: _ProfileTabBarDelegate(
-              child: Material(
-                color: colorScheme.surface,
-                child: const TabBar(
-                  tabs: [
-                    Tab(text: 'Profile'),
-                    Tab(text: 'Stats'),
-                  ],
+            delegate: SegmentedTabSliverHeaderDelegate(
+              child: Container(
+                color: pageBackground,
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                child: SegmentedTabs(
+                  labels: const ['Profile', 'Stats'],
+                  selectedColor: colorScheme.primary,
+                  selectedTextColor: colorScheme.onPrimary,
+                  unselectedColor: colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.9),
+                  unselectedTextColor: colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -1130,32 +1368,6 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-class _ProfileTabBarDelegate extends SliverPersistentHeaderDelegate {
-  _ProfileTabBarDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  double get minExtent => kTextTabBarHeight;
-
-  @override
-  double get maxExtent => kTextTabBarHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return child;
-  }
-
-  @override
-  bool shouldRebuild(covariant _ProfileTabBarDelegate oldDelegate) {
-    return oldDelegate.child != child;
-  }
-}
-
 class _ProfileMetaRow extends StatelessWidget {
   const _ProfileMetaRow({
     required this.icon,
@@ -1213,6 +1425,46 @@ class _TagSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _DottedRoundedBorderPainter extends CustomPainter {
+  const _DottedRoundedBorderPainter({
+    required this.color,
+    required this.radius,
+  });
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 1.5;
+    const dashWidth = 4.0;
+    const dashSpace = 4.0;
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rrect.deflate(strokeWidth / 2));
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final next = (distance + dashWidth).clamp(0, metric.length).toDouble();
+        canvas.drawPath(metric.extractPath(distance, next), paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DottedRoundedBorderPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.radius != radius;
   }
 }
 
