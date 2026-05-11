@@ -1,5 +1,4 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,7 +40,6 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   }
 
   Future<void> _initializePushNotifications() async {
-    if (Firebase.apps.isEmpty) return;
     await ref.read(pushNotificationServiceProvider).initialize();
     await _syncPushRegistration();
   }
@@ -108,7 +106,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         context,
         'Metron connection is invalid. Please reconnect your Metron account.',
       );
-      _appRouter.replaceAll([const MetronConnectRoute()]);
+      _appRouter.replaceAll([const AuthorizeMetronRoute()]);
     }
   }
 

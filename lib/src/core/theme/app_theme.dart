@@ -77,30 +77,10 @@ class AppThemes {
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: Colors.transparent,
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicator: BoxDecoration(
-          color: base.colorScheme.secondaryContainer,
-          boxShadow: [
-            BoxShadow(
-              color: base.colorScheme.shadow.withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        labelColor: base.colorScheme.onSecondaryContainer,
+        dividerColor: base.colorScheme.outlineVariant,
+        indicatorColor: base.colorScheme.primary,
+        labelColor: base.colorScheme.primary,
         unselectedLabelColor: base.colorScheme.onSurfaceVariant,
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          fontFamily: 'Rubik',
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'Rubik',
-        ),
       ),
       floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
         backgroundColor: base.colorScheme.primaryContainer,
@@ -195,30 +175,10 @@ class AppThemes {
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: Colors.transparent,
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicator: BoxDecoration(
-          color: base.colorScheme.secondaryContainer,
-          boxShadow: [
-            BoxShadow(
-              color: base.colorScheme.shadow.withAlpha(26),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        labelColor: base.colorScheme.onSecondaryContainer,
+        dividerColor: base.colorScheme.outlineVariant,
+        indicatorColor: base.colorScheme.primary,
+        labelColor: base.colorScheme.primary,
         unselectedLabelColor: base.colorScheme.onSurfaceVariant,
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          fontFamily: 'Rubik',
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'Rubik',
-        ),
       ),
       floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
         backgroundColor: base.colorScheme.primaryContainer,

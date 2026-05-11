@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/network/supabase_service.dart';
+import 'package:takion/src/core/storage/local_profile_service.dart';
 
 final userProfileProvider =
     AsyncNotifierProvider<UserProfileNotifier, Map<String, dynamic>?>(
@@ -9,13 +9,13 @@ final userProfileProvider =
 class UserProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   @override
   Future<Map<String, dynamic>?> build() async {
-    final service = ref.watch(supabaseProfileServiceProvider);
+    final service = ref.watch(localProfileServiceProvider);
     final profile = await service.getCurrentProfile();
     return _withBackdrop(profile, await service.getLocalBackdropPath());
   }
 
   Future<void> refresh() async {
-    final service = ref.read(supabaseProfileServiceProvider);
+    final service = ref.read(localProfileServiceProvider);
     // ignore: invalid_use_of_internal_member
     state = const AsyncLoading<Map<String, dynamic>?>().copyWithPrevious(state);
     state = await AsyncValue.guard(() {
@@ -32,7 +32,7 @@ class UserProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
     DateTime? collectingSince,
     Map<String, dynamic>? notificationPreferences,
   }) async {
-    final service = ref.read(supabaseProfileServiceProvider);
+    final service = ref.read(localProfileServiceProvider);
     // ignore: invalid_use_of_internal_member
     state = const AsyncLoading<Map<String, dynamic>?>().copyWithPrevious(state);
     state = await AsyncValue.guard(() async {
@@ -55,7 +55,7 @@ class UserProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   }
 
   Future<Map<String, dynamic>?> _loadWithBackdrop(
-    SupabaseProfileService service, {
+    LocalProfileService service, {
     required bool forceRefresh,
   }) async {
     final profile = await service.getCurrentProfile(forceRefresh: forceRefresh);

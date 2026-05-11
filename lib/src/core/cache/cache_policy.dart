@@ -19,8 +19,8 @@ class MetronCachePolicies {
   static const seriesIssueList = CachePolicy(ttl: Duration(hours: 3));
 }
 
-class SupabaseCachePolicies {
-  const SupabaseCachePolicies._();
+class LocalDataCachePolicies {
+  const LocalDataCachePolicies._();
 
   static const profile = CachePolicy(ttl: Duration(hours: 1));
   static const collectionStats = CachePolicy(ttl: Duration(hours: 3));

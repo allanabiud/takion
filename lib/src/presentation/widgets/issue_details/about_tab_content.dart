@@ -36,15 +36,12 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     Widget child, {
     VoidCallback? onTap,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(padding: const EdgeInsets.all(14), child: child),
-        ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: child,
       ),
     );
   }
@@ -557,7 +554,7 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
                 hasReprints ||
                 hasCreators ||
                 hasCharacters))
-          const SizedBox(height: 12),
+          const Divider(height: 24),
         if (hasMeta)
           _buildSectionCard(
             context,
@@ -571,21 +568,27 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
           ),
         if (hasMeta &&
             (hasStories || hasReprints || hasCreators || hasCharacters))
-          const SizedBox(height: 12),
+          const Divider(height: 24),
         if (hasStories)
           _buildSectionCard(context, _buildStoriesSection(context)),
         if (hasStories && (hasReprints || hasCreators || hasCharacters))
-          const SizedBox(height: 12),
+          const Divider(height: 24),
         if (hasReprints)
           _buildSectionCard(context, _buildReprintsSection(context)),
         if (hasReprints && (hasCreators || hasCharacters))
-          const SizedBox(height: 12),
+          const Divider(height: 24),
         if (hasCreators)
           _buildSectionCard(context, _buildCreatorsSection(context)),
-        if (hasCreators && hasCharacters) const SizedBox(height: 12),
+        if (hasCreators && hasCharacters) const Divider(height: 24),
         if (hasCharacters)
           _buildSectionCard(context, _buildCharactersSection(context)),
-        const SizedBox(height: 14),
+        if (hasDescription ||
+            hasMeta ||
+            hasStories ||
+            hasReprints ||
+            hasCreators ||
+            hasCharacters)
+          const Divider(height: 24),
         Text(
           'Last modified: ${_formatModified(widget.issue.modified)}',
           style: Theme.of(

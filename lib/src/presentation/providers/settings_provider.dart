@@ -22,7 +22,7 @@ import 'package:takion/src/presentation/providers/profile_provider.dart';
 import 'package:takion/src/presentation/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
-import 'package:takion/src/core/network/supabase_service.dart';
+import 'package:takion/src/core/storage/local_profile_service.dart';
 
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';
@@ -364,9 +364,9 @@ class SettingsNotifier extends _$SettingsNotifier {
     return synced;
   }
 
-  Future<void> _syncSupabaseData({required bool quick}) async {
+  Future<void> _syncLocalData({required bool quick}) async {
     final pullRepo = ref.read(pullListRepositoryProvider);
-    final profileService = ref.read(supabaseProfileServiceProvider);
+    final profileService = ref.read(localProfileServiceProvider);
     final reconciler = ref.read(subscriptionPullReconcilerProvider);
     final fromDate = _weekStart(DateTime.now());
     await pullRepo.regenerateFromSubscriptions(
@@ -393,7 +393,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
     try {
       final synced = await _syncMetronCaches(quick: false);
-      await _syncSupabaseData(quick: false);
+      await _syncLocalData(quick: false);
       _invalidateCacheBackedProviders();
       state = state.copyWith(
         isSyncing: false,
@@ -418,7 +418,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
     try {
       final synced = await _syncMetronCaches(quick: true);
-      await _syncSupabaseData(quick: true);
+      await _syncLocalData(quick: true);
       _invalidateCacheBackedProviders();
       state = state.copyWith(
         isSyncing: false,

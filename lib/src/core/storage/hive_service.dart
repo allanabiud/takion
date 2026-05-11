@@ -33,7 +33,6 @@ class HiveService {
     'collection_stats_box',
     'collection_items_box',
     'collection_item_details_box',
-    'supabase_profile_box',
   };
 
   Future<void> init() async {

@@ -350,7 +350,7 @@ Future<List<LibraryItem>> _loadAllLibraryItems(Ref ref) async {
       : <LibraryItem>[]);
   final isFresh =
       cachedAt != null &&
-      SupabaseCachePolicies.collectionItems.isFresh(cachedAt, DateTime.now());
+      LocalDataCachePolicies.collectionItems.isFresh(cachedAt, DateTime.now());
   if (isFresh) {
     metrics.recordCacheHit(_libraryAllItemsMetaKey);
     return cachedItems;

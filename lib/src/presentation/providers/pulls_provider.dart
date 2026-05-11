@@ -222,7 +222,7 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
 
       if (missingSubscriptionEntries.isNotEmpty) {
         // Run this in the background to avoid blocking the UI,
-        // but it will ensure the pull list is updated in Supabase
+        // but it will ensure the local pull list is updated
         ref
             .read(pullListRepositoryProvider)
             .upsertSubscriptionEntries(missingSubscriptionEntries)

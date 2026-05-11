@@ -102,7 +102,7 @@ class IssueCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          isWishlisted ? Icons.favorite : Icons.favorite_border,
+                          isWishlisted ? Icons.turned_in : Icons.turned_in_not,
                           size: 16,
                           color: isWishlisted
                               ? Theme.of(context).colorScheme.primary

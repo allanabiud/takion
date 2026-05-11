@@ -208,7 +208,7 @@ class LibraryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                   ActionCard(
-                    icon: Icons.favorite_border,
+                    icon: Icons.turned_in_not,
                     value: statsAsync.when(
                       data: (stats) => stats.wishlistCount.toString(),
                       loading: () => '--',
@@ -321,6 +321,7 @@ class LibraryScreen extends ConsumerWidget {
                       issue: suggestion.issue,
                       isFirst: true,
                       isLast: true,
+                      useCardBackground: true,
                       isCollected: suggestion.isCollected,
                       isRead: suggestion.isRead,
                       rating: suggestion.rating,
@@ -391,6 +392,7 @@ class LibraryScreen extends ConsumerWidget {
                       issue: suggestion.issue,
                       isFirst: true,
                       isLast: true,
+                      useCardBackground: true,
                       isCollected: suggestion.isCollected,
                       isRead: suggestion.isRead,
                       rating: suggestion.rating,

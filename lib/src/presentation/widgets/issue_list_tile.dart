@@ -16,6 +16,7 @@ class IssueListTile extends ConsumerWidget {
   final bool? isCollected;
   final bool? isRead;
   final int? rating;
+  final bool useCardBackground;
 
   const IssueListTile({
     super.key,
@@ -26,13 +27,13 @@ class IssueListTile extends ConsumerWidget {
     this.isCollected,
     this.isRead,
     this.rating,
+    this.useCardBackground = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const double radius = 24.0;
-    const double imageHeight = 110;
-    const double imageWidth = 75;
+    const double imageHeight = 98;
+    const double imageWidth = 67;
     final heroTag = issue.id != null ? 'issue-cover-${issue.id}' : null;
     final effectiveOnTap =
         onTap ??
@@ -58,195 +59,170 @@ class IssueListTile extends ConsumerWidget {
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
 
-    return Card(
-      margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: isFirst ? const Radius.circular(radius) : Radius.zero,
-          bottom: isLast ? const Radius.circular(radius) : Radius.zero,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: effectiveOnTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (heroTag != null)
-                Hero(
-                  tag: heroTag,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: issue.image != null
-                        ? CachedNetworkImage(
-                            imageUrl: issue.image!,
-                            width: imageWidth,
-                            height: imageHeight,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              width: imageWidth,
-                              height: imageHeight,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              child: const Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              width: imageWidth,
-                              height: imageHeight,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              child: const Icon(Icons.broken_image, size: 40),
-                            ),
-                          )
-                        : Container(
-                            width: imageWidth,
-                            height: imageHeight,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            child: const Icon(Icons.image, size: 40),
-                          ),
+    final imageWidget = ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: issue.image != null
+          ? CachedNetworkImage(
+              imageUrl: issue.image!,
+              width: imageWidth,
+              height: imageHeight,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                width: imageWidth,
+                height: imageHeight,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                )
-              else
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: issue.image != null
-                      ? CachedNetworkImage(
-                          imageUrl: issue.image!,
-                          width: imageWidth,
-                          height: imageHeight,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            width: imageWidth,
-                            height: imageHeight,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            child: const Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            width: imageWidth,
-                            height: imageHeight,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            child: const Icon(Icons.broken_image, size: 40),
-                          ),
-                        )
-                      : Container(
-                          width: imageWidth,
-                          height: imageHeight,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.image, size: 40),
-                        ),
-                ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      issue.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (issue.storeDate != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          DateFormat.yMMMd().format(issue.storeDate!),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            effectiveIsCollected
-                                ? Icons.inventory_2
-                                : Icons.inventory_2_outlined,
-                            size: 16,
-                            color: effectiveIsCollected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline,
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            effectiveIsRead
-                                ? Icons.bookmark_added
-                                : Icons.bookmark_added_outlined,
-                            size: 16,
-                            color: effectiveIsRead
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline,
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            effectiveIsPulled
-                                ? Icons.shopping_bag
-                                : Icons.shopping_bag_outlined,
-                            size: 16,
-                            color: effectiveIsPulled
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline,
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            effectiveIsWishlisted
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            size: 16,
-                            color: effectiveIsWishlisted
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline,
-                          ),
-                          const Spacer(),
-                          if ((effectiveRating ?? 0) > 0)
-                            ...List.generate(5, (index) {
-                              final value = (effectiveRating ?? 0).clamp(0, 5);
-                              return Icon(
-                                index < value ? Icons.star : Icons.star_border,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              );
-                            }),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ],
+              errorWidget: (context, url, error) => Container(
+                width: imageWidth,
+                height: imageHeight,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: const Icon(Icons.broken_image, size: 40),
+              ),
+            )
+          : Container(
+              width: imageWidth,
+              height: imageHeight,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: const Icon(Icons.image, size: 40),
+            ),
+    );
+
+    final leading = heroTag != null
+        ? Hero(tag: heroTag, child: imageWidget)
+        : imageWidget;
+
+    final tileContent = Padding(
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          leading,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  issue.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (issue.storeDate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      DateFormat.yMMMd().format(issue.storeDate!),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6.0),
+                  child: Row(
+                    children: [
+                      Icon(
+                        effectiveIsCollected
+                            ? Icons.inventory_2
+                            : Icons.inventory_2_outlined,
+                        size: 16,
+                        color: effectiveIsCollected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        effectiveIsRead
+                            ? Icons.bookmark_added
+                            : Icons.bookmark_added_outlined,
+                        size: 16,
+                        color: effectiveIsRead
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        effectiveIsPulled
+                            ? Icons.shopping_bag
+                            : Icons.shopping_bag_outlined,
+                        size: 16,
+                        color: effectiveIsPulled
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        effectiveIsWishlisted
+                            ? Icons.turned_in
+                            : Icons.turned_in_not,
+                        size: 16,
+                        color: effectiveIsWishlisted
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                      ),
+                      const Spacer(),
+                      if ((effectiveRating ?? 0) > 0)
+                        ...List.generate(5, (index) {
+                          final value = (effectiveRating ?? 0).clamp(0, 5);
+                          return Icon(
+                            index < value ? Icons.star : Icons.star_border,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          );
+                        }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (useCardBackground) {
+      const radius = 24.0;
+      return Card(
+        margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: isFirst ? const Radius.circular(radius) : Radius.zero,
+            bottom: isLast ? const Radius.circular(radius) : Radius.zero,
           ),
         ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(onTap: effectiveOnTap, child: tileContent),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        top: isFirst ? 12 : 2,
+        bottom: isLast ? 12 : 0,
+      ),
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: effectiveOnTap,
+              child: tileContent,
+            ),
+          ),
+          if (!isLast) const Divider(height: 1),
+        ],
       ),
     );
   }

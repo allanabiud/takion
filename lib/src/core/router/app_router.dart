@@ -11,10 +11,10 @@ class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
     AutoRoute(page: OnboardingRoute.page, path: '/', initial: true),
-    AutoRoute(page: LoginRoute.page, path: '/login'),
+    AutoRoute(page: MetronInfoRoute.page, path: '/metron-info'),
     AutoRoute(
-      page: MetronConnectRoute.page,
-      path: '/connect-metron',
+      page: AuthorizeMetronRoute.page,
+      path: '/authorize-metron',
       guards: [authGuard],
     ),
     AutoRoute(

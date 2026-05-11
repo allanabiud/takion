@@ -211,9 +211,9 @@ class _IssueMyDetailsTabContentState
   }
 
   Widget _buildSectionCard(Widget child) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(padding: const EdgeInsets.all(14), child: child),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: child,
     );
   }
 
@@ -392,7 +392,7 @@ class _IssueMyDetailsTabContentState
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const Divider(height: 24),
             _buildSectionCard(
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

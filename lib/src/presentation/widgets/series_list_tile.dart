@@ -25,7 +25,6 @@ class SeriesListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const double radius = 24.0;
     const double iconHeight = 100;
     const double iconWidth = 90;
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
@@ -56,29 +55,32 @@ class SeriesListTile extends ConsumerWidget {
           : CachedNetworkImage(imageUrl: coverImage, fit: BoxFit.cover),
     );
 
-    return Card(
-      margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: isFirst ? const Radius.circular(radius) : Radius.zero,
-          bottom: isLast ? const Radius.circular(radius) : Radius.zero,
-        ),
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        top: isFirst ? 12 : 2,
+        bottom: isLast ? 12 : 0,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
-              const SizedBox(width: 12),
-              // Text Content
-              Expanded(
-                child: Column(
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+              heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
+                    const SizedBox(width: 12),
+                    // Text Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                     Text(
                       series.name,
                       style: const TextStyle(
@@ -118,12 +120,16 @@ class SeriesListTile extends ConsumerWidget {
                         ),
                       ],
                     ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          if (!isLast) const Divider(height: 1),
+        ],
       ),
     );
   }

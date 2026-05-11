@@ -12,28 +12,29 @@
 import 'package:auto_route/auto_route.dart' as _i30;
 import 'package:collection/collection.dart' as _i32;
 import 'package:flutter/material.dart' as _i31;
-import 'package:takion/src/presentation/screens/collection_read_status_screen.dart'
+import 'package:takion/src/presentation/screens/authorize_metron_screen.dart'
     as _i1;
-import 'package:takion/src/presentation/screens/continue_reading_screen.dart'
+import 'package:takion/src/presentation/screens/collection_read_status_screen.dart'
     as _i2;
-import 'package:takion/src/presentation/screens/discover_browse_issues_screen.dart'
+import 'package:takion/src/presentation/screens/continue_reading_screen.dart'
     as _i3;
-import 'package:takion/src/presentation/screens/discover_browse_recently_added_screen.dart'
+import 'package:takion/src/presentation/screens/discover_browse_issues_screen.dart'
     as _i4;
-import 'package:takion/src/presentation/screens/discover_browse_series_screen.dart'
+import 'package:takion/src/presentation/screens/discover_browse_recently_added_screen.dart'
     as _i5;
-import 'package:takion/src/presentation/screens/discover_screen.dart' as _i6;
+import 'package:takion/src/presentation/screens/discover_browse_series_screen.dart'
+    as _i6;
+import 'package:takion/src/presentation/screens/discover_screen.dart' as _i7;
 import 'package:takion/src/presentation/screens/foc_releases_screen.dart'
-    as _i7;
-import 'package:takion/src/presentation/screens/home_screen.dart' as _i8;
+    as _i8;
+import 'package:takion/src/presentation/screens/home_screen.dart' as _i9;
 import 'package:takion/src/presentation/screens/issue_cover_gallery_screen.dart'
-    as _i9;
-import 'package:takion/src/presentation/screens/issue_details_screen.dart'
     as _i10;
-import 'package:takion/src/presentation/screens/library_screen.dart' as _i11;
-import 'package:takion/src/presentation/screens/login_screen.dart' as _i12;
+import 'package:takion/src/presentation/screens/issue_details_screen.dart'
+    as _i11;
+import 'package:takion/src/presentation/screens/library_screen.dart' as _i12;
 import 'package:takion/src/presentation/screens/main_screen.dart' as _i13;
-import 'package:takion/src/presentation/screens/metron_connect_screen.dart'
+import 'package:takion/src/presentation/screens/metron_info_screen.dart'
     as _i14;
 import 'package:takion/src/presentation/screens/my_comics_screen.dart' as _i15;
 import 'package:takion/src/presentation/screens/my_pulls_screen.dart' as _i16;
@@ -59,7 +60,23 @@ import 'package:takion/src/presentation/screens/weekly_releases_screen.dart'
 import 'package:takion/src/presentation/screens/wishlist_screen.dart' as _i29;
 
 /// generated route for
-/// [_i1.CollectionReadStatusScreen]
+/// [_i1.AuthorizeMetronScreen]
+class AuthorizeMetronRoute extends _i30.PageRouteInfo<void> {
+  const AuthorizeMetronRoute({List<_i30.PageRouteInfo>? children})
+    : super(AuthorizeMetronRoute.name, initialChildren: children);
+
+  static const String name = 'AuthorizeMetronRoute';
+
+  static _i30.PageInfo page = _i30.PageInfo(
+    name,
+    builder: (data) {
+      return const _i1.AuthorizeMetronScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i2.CollectionReadStatusScreen]
 class CollectionReadStatusRoute
     extends _i30.PageRouteInfo<CollectionReadStatusRouteArgs> {
   CollectionReadStatusRoute({
@@ -78,7 +95,7 @@ class CollectionReadStatusRoute
     name,
     builder: (data) {
       final args = data.argsAs<CollectionReadStatusRouteArgs>();
-      return _i1.CollectionReadStatusScreen(key: args.key, isRead: args.isRead);
+      return _i2.CollectionReadStatusScreen(key: args.key, isRead: args.isRead);
     },
   );
 }
@@ -107,7 +124,7 @@ class CollectionReadStatusRouteArgs {
 }
 
 /// generated route for
-/// [_i2.ContinueReadingScreen]
+/// [_i3.ContinueReadingScreen]
 class ContinueReadingRoute extends _i30.PageRouteInfo<void> {
   const ContinueReadingRoute({List<_i30.PageRouteInfo>? children})
     : super(ContinueReadingRoute.name, initialChildren: children);
@@ -117,13 +134,13 @@ class ContinueReadingRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i2.ContinueReadingScreen();
+      return const _i3.ContinueReadingScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i3.DiscoverBrowseIssuesScreen]
+/// [_i4.DiscoverBrowseIssuesScreen]
 class DiscoverBrowseIssuesRoute extends _i30.PageRouteInfo<void> {
   const DiscoverBrowseIssuesRoute({List<_i30.PageRouteInfo>? children})
     : super(DiscoverBrowseIssuesRoute.name, initialChildren: children);
@@ -133,13 +150,13 @@ class DiscoverBrowseIssuesRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i3.DiscoverBrowseIssuesScreen();
+      return const _i4.DiscoverBrowseIssuesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i4.DiscoverBrowseRecentlyAddedScreen]
+/// [_i5.DiscoverBrowseRecentlyAddedScreen]
 class DiscoverBrowseRecentlyAddedRoute extends _i30.PageRouteInfo<void> {
   const DiscoverBrowseRecentlyAddedRoute({List<_i30.PageRouteInfo>? children})
     : super(DiscoverBrowseRecentlyAddedRoute.name, initialChildren: children);
@@ -149,13 +166,13 @@ class DiscoverBrowseRecentlyAddedRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i4.DiscoverBrowseRecentlyAddedScreen();
+      return const _i5.DiscoverBrowseRecentlyAddedScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i5.DiscoverBrowseSeriesScreen]
+/// [_i6.DiscoverBrowseSeriesScreen]
 class DiscoverBrowseSeriesRoute extends _i30.PageRouteInfo<void> {
   const DiscoverBrowseSeriesRoute({List<_i30.PageRouteInfo>? children})
     : super(DiscoverBrowseSeriesRoute.name, initialChildren: children);
@@ -165,13 +182,13 @@ class DiscoverBrowseSeriesRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i5.DiscoverBrowseSeriesScreen();
+      return const _i6.DiscoverBrowseSeriesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i6.DiscoverScreen]
+/// [_i7.DiscoverScreen]
 class DiscoverRoute extends _i30.PageRouteInfo<void> {
   const DiscoverRoute({List<_i30.PageRouteInfo>? children})
     : super(DiscoverRoute.name, initialChildren: children);
@@ -181,13 +198,13 @@ class DiscoverRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i6.DiscoverScreen();
+      return const _i7.DiscoverScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i7.FocReleasesScreen]
+/// [_i8.FocReleasesScreen]
 class FocReleasesRoute extends _i30.PageRouteInfo<void> {
   const FocReleasesRoute({List<_i30.PageRouteInfo>? children})
     : super(FocReleasesRoute.name, initialChildren: children);
@@ -197,13 +214,13 @@ class FocReleasesRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i7.FocReleasesScreen();
+      return const _i8.FocReleasesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i8.HomeScreen]
+/// [_i9.HomeScreen]
 class HomeRoute extends _i30.PageRouteInfo<void> {
   const HomeRoute({List<_i30.PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
@@ -213,13 +230,13 @@ class HomeRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i8.HomeScreen();
+      return const _i9.HomeScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i9.IssueCoverGalleryScreen]
+/// [_i10.IssueCoverGalleryScreen]
 class IssueCoverGalleryRoute
     extends _i30.PageRouteInfo<IssueCoverGalleryRouteArgs> {
   IssueCoverGalleryRoute({
@@ -251,7 +268,7 @@ class IssueCoverGalleryRoute
     name,
     builder: (data) {
       final args = data.argsAs<IssueCoverGalleryRouteArgs>();
-      return _i9.IssueCoverGalleryScreen(
+      return _i10.IssueCoverGalleryScreen(
         key: args.key,
         imageUrls: args.imageUrls,
         imageLabels: args.imageLabels,
@@ -325,7 +342,7 @@ class IssueCoverGalleryRouteArgs {
 }
 
 /// generated route for
-/// [_i10.IssueDetailsScreen]
+/// [_i11.IssueDetailsScreen]
 class IssueDetailsRoute extends _i30.PageRouteInfo<IssueDetailsRouteArgs> {
   IssueDetailsRoute({
     _i31.Key? key,
@@ -353,7 +370,7 @@ class IssueDetailsRoute extends _i30.PageRouteInfo<IssueDetailsRouteArgs> {
         orElse: () =>
             IssueDetailsRouteArgs(issueId: pathParams.getInt('issueId')),
       );
-      return _i10.IssueDetailsScreen(
+      return _i11.IssueDetailsScreen(
         key: args.key,
         issueId: args.issueId,
         initialImageUrl: args.initialImageUrl,
@@ -395,7 +412,7 @@ class IssueDetailsRouteArgs {
 }
 
 /// generated route for
-/// [_i11.LibraryScreen]
+/// [_i12.LibraryScreen]
 class LibraryRoute extends _i30.PageRouteInfo<void> {
   const LibraryRoute({List<_i30.PageRouteInfo>? children})
     : super(LibraryRoute.name, initialChildren: children);
@@ -405,58 +422,9 @@ class LibraryRoute extends _i30.PageRouteInfo<void> {
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i11.LibraryScreen();
+      return const _i12.LibraryScreen();
     },
   );
-}
-
-/// generated route for
-/// [_i12.LoginScreen]
-class LoginRoute extends _i30.PageRouteInfo<LoginRouteArgs> {
-  LoginRoute({
-    _i31.Key? key,
-    void Function(bool)? onResult,
-    List<_i30.PageRouteInfo>? children,
-  }) : super(
-         LoginRoute.name,
-         args: LoginRouteArgs(key: key, onResult: onResult),
-         initialChildren: children,
-       );
-
-  static const String name = 'LoginRoute';
-
-  static _i30.PageInfo page = _i30.PageInfo(
-    name,
-    builder: (data) {
-      final args = data.argsAs<LoginRouteArgs>(
-        orElse: () => const LoginRouteArgs(),
-      );
-      return _i12.LoginScreen(key: args.key, onResult: args.onResult);
-    },
-  );
-}
-
-class LoginRouteArgs {
-  const LoginRouteArgs({this.key, this.onResult});
-
-  final _i31.Key? key;
-
-  final void Function(bool)? onResult;
-
-  @override
-  String toString() {
-    return 'LoginRouteArgs{key: $key, onResult: $onResult}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! LoginRouteArgs) return false;
-    return key == other.key;
-  }
-
-  @override
-  int get hashCode => key.hashCode;
 }
 
 /// generated route for
@@ -476,17 +444,17 @@ class MainRoute extends _i30.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i14.MetronConnectScreen]
-class MetronConnectRoute extends _i30.PageRouteInfo<void> {
-  const MetronConnectRoute({List<_i30.PageRouteInfo>? children})
-    : super(MetronConnectRoute.name, initialChildren: children);
+/// [_i14.MetronInfoScreen]
+class MetronInfoRoute extends _i30.PageRouteInfo<void> {
+  const MetronInfoRoute({List<_i30.PageRouteInfo>? children})
+    : super(MetronInfoRoute.name, initialChildren: children);
 
-  static const String name = 'MetronConnectRoute';
+  static const String name = 'MetronInfoRoute';
 
   static _i30.PageInfo page = _i30.PageInfo(
     name,
     builder: (data) {
-      return const _i14.MetronConnectScreen();
+      return const _i14.MetronInfoScreen();
     },
   );
 }

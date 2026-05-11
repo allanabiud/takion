@@ -38,7 +38,6 @@ class CollectionIssueListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const double radius = 24.0;
     final issueId = item.issue?.id;
     final providerStatus = ref.watch(issueCollectionStatusProvider(issueId));
     final pullEntryAsync = issueId == null
@@ -74,22 +73,25 @@ class CollectionIssueListTile extends ConsumerWidget {
                 context.pushRoute(IssueDetailsRoute(issueId: issueId));
               });
 
-    return Card(
-      margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: isFirst ? const Radius.circular(radius) : Radius.zero,
-          bottom: isLast ? const Radius.circular(radius) : Radius.zero,
-        ),
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        top: isFirst ? 12 : 2,
+        bottom: isLast ? 12 : 0,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: effectiveOnTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: effectiveOnTap,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,8 +155,8 @@ class CollectionIssueListTile extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Icon(
                             effectiveIsWishlisted
-                                ? Icons.favorite
-                                : Icons.favorite_border,
+                                ? Icons.turned_in
+                                : Icons.turned_in_not,
                             size: 16,
                             color: effectiveIsWishlisted
                                 ? Theme.of(context).colorScheme.primary
@@ -176,43 +178,47 @@ class CollectionIssueListTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 46,
-                height: 64,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: imageUrl == null || imageUrl.isEmpty
-                      ? Container(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                        )
-                      : CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, _) => Container(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                          ),
-                          errorWidget: (context, _, error) => Container(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.image_not_supported_outlined,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                          ),
-                        ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 46,
+                      height: 64,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: imageUrl == null || imageUrl.isEmpty
+                            ? Container(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, _) => Container(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                                ),
+                                errorWidget: (context, _, error) => Container(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.outline,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          if (!isLast) const Divider(height: 1),
+        ],
       ),
     );
   }

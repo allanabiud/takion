@@ -20,7 +20,6 @@ import 'package:takion/src/presentation/providers/sort_preferences_provider.dart
 import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
@@ -60,9 +59,6 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
-  static const _expandedHeight = 280.0;
-  final ScrollController _scrollController = ScrollController();
-  double _titleOpacity = 0;
   int _issuesPage = 1;
   bool _isUpdatingSubscription = false;
 
@@ -319,208 +315,323 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             final startIssueNumber = issues[selectedStart - 1].issueNumber;
             final endIssueNumber = issues[selectedEnd - 1].issueNumber;
 
+            final actionIcon =
+                selectedOperation == _SeriesIssueBulkOperation.addToCollection
+                ? Icons.inventory_2_outlined
+                : Icons.bookmark_added_outlined;
+            final selectionSummary =
+                selectedMode == _SeriesIssueSelectionMode.predefined
+                ? subsetLabel(selectedSubset)
+                : 'Issues #$startIssueNumber - #$endIssueNumber';
+
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
+                  top: Radius.circular(28),
                 ),
               ),
               child: SafeArea(
                 top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            seriesName,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 42,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                            borderRadius: BorderRadius.circular(99),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Manage Series Issues',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    DropdownButtonFormField<_SeriesIssueBulkOperation>(
-                      value: selectedOperation,
-                      decoration: const InputDecoration(
-                        labelText: 'Action',
-                        border: OutlineInputBorder(),
                       ),
-                      items: _SeriesIssueBulkOperation.values
-                          .map(
-                            (value) => DropdownMenuItem(
-                              value: value,
-                              child: Text(operationLabel(value)),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  seriesName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                Text(
+                                  'Bulk update series issues',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
                             ),
-                          )
-                          .toList(),
-                      onChanged: isApplying
-                          ? null
-                          : (value) {
-                              if (value == null) return;
-                              setModalState(() {
-                                selectedOperation = value;
-                              });
-                            },
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Selection method',
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    SegmentedButton<_SeriesIssueSelectionMode>(
-                      segments: _SeriesIssueSelectionMode.values
-                          .map(
-                            (value) => ButtonSegment(
-                              value: value,
-                              label: Text(selectionModeLabel(value)),
-                            ),
-                          )
-                          .toList(),
-                      selected: {selectedMode},
-                      onSelectionChanged: isApplying
-                          ? null
-                          : (selection) {
-                              final value = selection.firstOrNull;
-                              if (value == null) return;
-                              setModalState(() {
-                                selectedMode = value;
-                              });
-                            },
-                    ),
-                    const SizedBox(height: 12),
-                    if (selectedMode == _SeriesIssueSelectionMode.predefined)
-                      DropdownButtonFormField<_SeriesIssueSubset>(
-                        value: selectedSubset,
-                        decoration: const InputDecoration(
-                          labelText: 'Apply to',
-                          border: OutlineInputBorder(),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        height: 80,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        items: availableSubsets
-                            .map(
-                              (value) => DropdownMenuItem(
-                                value: value,
-                                child: Text(subsetLabel(value)),
+                        child: Row(
+                          children: [
+                            Icon(
+                              actionIcon,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Action preview',
+                                    style: Theme.of(context).textTheme.labelMedium,
+                                  ),
+                                  Text(
+                                    '${operationLabel(selectedOperation)} • $selectionSummary',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ],
                               ),
-                            )
-                            .toList(),
-                        onChanged: isApplying
-                            ? null
-                            : (value) {
-                                if (value == null) return;
-                                setModalState(() {
-                                  selectedSubset = value;
-                                });
-                              },
+                            ),
+                            if (selectedMode == _SeriesIssueSelectionMode.range)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  '${selectedEnd - selectedStart + 1}',
+                                  style: Theme.of(context).textTheme.labelMedium
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    if (selectedMode == _SeriesIssueSelectionMode.range) ...[
+                      const SizedBox(height: 16),
+                      Text('Action', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<_SeriesIssueBulkOperation>(
+                          segments: const [
+                            ButtonSegment(
+                              value: _SeriesIssueBulkOperation.addToCollection,
+                              label: Text('Add to Collection'),
+                            ),
+                            ButtonSegment(
+                              value: _SeriesIssueBulkOperation.markAsRead,
+                              label: Text('Mark as Read'),
+                            ),
+                          ],
+                          selected: {selectedOperation},
+                          showSelectedIcon: false,
+                          multiSelectionEnabled: false,
+                          emptySelectionAllowed: false,
+                          style: const ButtonStyle(
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onSelectionChanged: isApplying
+                              ? null
+                              : (selection) {
+                                  final value = selection.firstOrNull;
+                                  if (value == null) return;
+                                  setModalState(() {
+                                    selectedOperation = value;
+                                  });
+                                },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        'Issue range: #$startIssueNumber - #$endIssueNumber',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        'Selection method',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<_SeriesIssueSelectionMode>(
+                          segments: _SeriesIssueSelectionMode.values
+                              .map(
+                                (value) => ButtonSegment(
+                                  value: value,
+                                  label: Text(selectionModeLabel(value)),
+                                ),
+                              )
+                              .toList(),
+                          selected: {selectedMode},
+                          showSelectedIcon: false,
+                          multiSelectionEnabled: false,
+                          emptySelectionAllowed: false,
+                          onSelectionChanged: isApplying
+                              ? null
+                              : (selection) {
+                                  final value = selection.firstOrNull;
+                                  if (value == null) return;
+                                  setModalState(() {
+                                    selectedMode = value;
+                                  });
+                                },
+                        ),
                       ),
                       const SizedBox(height: 12),
-                      RangeSlider(
-                        min: 1,
-                        max: totalIssues.toDouble(),
-                        divisions: totalIssues > 1 ? totalIssues - 1 : null,
-                        labels: RangeLabels('$selectedStart', '$selectedEnd'),
-                        values: selectedRange,
-                        onChanged: isApplying
-                            ? null
-                            : (value) {
-                                setModalState(() {
-                                  selectedRange = RangeValues(
-                                    value.start.roundToDouble(),
-                                    value.end.roundToDouble(),
-                                  );
-                                });
-                              },
-                      ),
-                      Text(
-                        'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: isApplying
-                              ? null
-                              : () => Navigator.of(sheetContext).pop(),
-                          child: const Text('Cancel'),
+                      if (selectedMode == _SeriesIssueSelectionMode.predefined) ...[
+                        Text(
+                          'Apply to',
+                          style: Theme.of(context).textTheme.labelLarge,
                         ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: isApplying
-                              ? null
-                              : () async {
-                                  setModalState(() {
-                                    isApplying = true;
-                                  });
-                                  try {
-                                    await _applySeriesIssueBulkAction(
-                                      operation: selectedOperation,
-                                      selectionMode: selectedMode,
-                                      issues: issues,
-                                      subset:
-                                          selectedMode ==
-                                              _SeriesIssueSelectionMode
-                                                  .predefined
-                                          ? selectedSubset
-                                          : null,
-                                      startOrderIndex:
-                                          selectedMode ==
-                                              _SeriesIssueSelectionMode.range
-                                          ? selectedStart
-                                          : null,
-                                      endOrderIndex:
-                                          selectedMode ==
-                                              _SeriesIssueSelectionMode.range
-                                          ? selectedEnd
-                                          : null,
-                                    );
-                                  } finally {
-                                    if (sheetContext.mounted) {
-                                      setModalState(() {
-                                        isApplying = false;
-                                      });
-                                    }
-                                  }
-                                },
-                          child: isApplying
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Apply'),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: availableSubsets
+                              .map(
+                                (value) => ChoiceChip(
+                                  label: Text(subsetLabel(value)),
+                                  selected: value == selectedSubset,
+                                  onSelected: isApplying
+                                      ? null
+                                      : (_) {
+                                          setModalState(() {
+                                            selectedSubset = value;
+                                          });
+                                        },
+                                ),
+                              )
+                              .toList(),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                      if (selectedMode == _SeriesIssueSelectionMode.range) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Issue range: #$startIssueNumber - #$endIssueNumber',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              RangeSlider(
+                                min: 1,
+                                max: totalIssues.toDouble(),
+                                divisions: totalIssues > 1 ? totalIssues - 1 : null,
+                                labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                                values: selectedRange,
+                                onChanged: isApplying
+                                    ? null
+                                    : (value) {
+                                        setModalState(() {
+                                          selectedRange = RangeValues(
+                                            value.start.roundToDouble(),
+                                            value.end.roundToDouble(),
+                                          );
+                                        });
+                                      },
+                              ),
+                              Text(
+                                'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: isApplying
+                                ? null
+                                : () => Navigator.of(sheetContext).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton(
+                            onPressed: isApplying
+                                ? null
+                                : () async {
+                                    setModalState(() {
+                                      isApplying = true;
+                                    });
+                                    try {
+                                      await _applySeriesIssueBulkAction(
+                                        operation: selectedOperation,
+                                        selectionMode: selectedMode,
+                                        issues: issues,
+                                        subset:
+                                            selectedMode ==
+                                                _SeriesIssueSelectionMode
+                                                    .predefined
+                                            ? selectedSubset
+                                            : null,
+                                        startOrderIndex:
+                                            selectedMode ==
+                                                _SeriesIssueSelectionMode.range
+                                            ? selectedStart
+                                            : null,
+                                        endOrderIndex:
+                                            selectedMode ==
+                                                _SeriesIssueSelectionMode.range
+                                            ? selectedEnd
+                                            : null,
+                                      );
+                                    } finally {
+                                      if (sheetContext.mounted) {
+                                        setModalState(() {
+                                          isApplying = false;
+                                        });
+                                      }
+                                    }
+                                  },
+                            child: isApplying
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Apply'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -593,136 +704,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     }
   }
 
-  void _showAddActionsSheet({required String seriesName}) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final subscriptionAsync = ref.watch(
-              seriesSubscriptionProvider(widget.seriesId),
-            );
-            final isSubscribed =
-                subscriptionAsync.asData?.value?.isActive ?? false;
-
-            var isTogglingSubscription = false;
-            return StatefulBuilder(
-              builder: (context, setSheetState) {
-                final showLoading =
-                    isTogglingSubscription || _isUpdatingSubscription;
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                seriesName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          secondary: showLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(
-                                  isSubscribed
-                                      ? Icons.notifications_active
-                                      : Icons.notifications_outlined,
-                                ),
-                          title: const Text('Subscribe and Pull Series'),
-                          subtitle: Text(
-                            isSubscribed ? 'Subscribed' : 'Not subscribed',
-                          ),
-                          value: isSubscribed,
-                          onChanged: subscriptionAsync.isLoading || showLoading
-                              ? null
-                              : (value) async {
-                                  setSheetState(() {
-                                    isTogglingSubscription = true;
-                                  });
-                                  try {
-                                    await _setSeriesSubscription(value);
-                                  } finally {
-                                    if (context.mounted) {
-                                      setSheetState(() {
-                                        isTogglingSubscription = false;
-                                      });
-                                    }
-                                  }
-                                },
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.library_add_check_outlined),
-                          title: const Text('Manage Series Issues'),
-                          subtitle: const Text(
-                            'Add to collection or mark read by issue range',
-                          ),
-                          onTap: () {
-                            Navigator.of(sheetContext).pop();
-                            _showSeriesIssueActionsSheet(
-                              seriesName: seriesName,
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _subscriptionBadge(bool isSubscribed) {
-    return Icon(
-      isSubscribed
-          ? Icons.notifications_active
-          : Icons.notifications_none_outlined,
-      size: 18,
-      color: isSubscribed
-          ? Theme.of(context).colorScheme.primary
-          : Colors.white70,
-    );
-  }
-
   Uri? _resourceUri(SeriesDetails details) {
     final resourceUrl = details.resourceUrl?.trim();
     if (resourceUrl == null || resourceUrl.isEmpty) return null;
@@ -769,43 +750,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final offset = _scrollController.offset;
-    final fadeStart = _expandedHeight * 0.58;
-    final fadeEnd = _expandedHeight - kToolbarHeight;
-    final next = ((offset - fadeStart) / (fadeEnd - fadeStart)).clamp(0.0, 1.0);
-
-    if ((next - _titleOpacity).abs() > 0.01) {
-      setState(() {
-        _titleOpacity = next;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
-    final subscriptionAsync = ref.watch(
-      seriesSubscriptionProvider(widget.seriesId),
-    );
-    final sortOption = ref.watch(
-      sortPreferenceForContextProvider(
-        SortPreferenceContext.seriesDetailsIssues,
-      ),
-    );
-    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return detailsAsync.when(
       loading: () => const _SeriesDetailsLoading(),
@@ -818,112 +765,153 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       data: (details) => DefaultTabController(
         length: 2,
         child: Scaffold(
-          body: NestedScrollView(
-            controller: _scrollController,
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  pinned: true,
-                  expandedHeight: _expandedHeight,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  surfaceTintColor: Theme.of(context).colorScheme.surface,
-                  actions: [
-                    IconButton(
-                      tooltip: 'Add',
-                      onPressed: () =>
-                          _showAddActionsSheet(seriesName: details.name),
-                      icon: const Icon(Icons.add),
-                    ),
-                    DisplaySettingsButton(
-                      selectedOption: sortOption,
-                      optionLabel: issueSortLabel,
-                      onSelected: (option) {
-                        ref
-                            .read(sortPreferencesProvider.notifier)
-                            .setPreference(
-                              SortPreferenceContext.seriesDetailsIssues,
-                              option,
-                            );
-                      },
-                    ),
-                    PopupMenuButton<_SeriesDetailsMenuAction>(
-                      tooltip: 'More options',
-                      onSelected: (action) {
-                        _handleMoreAction(action, details);
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(
-                          value: _SeriesDetailsMenuAction.share,
-                          child: Text('Share'),
+          bottomNavigationBar: Builder(
+            builder: (context) {
+              final subscriptionAsync = ref.watch(
+                seriesSubscriptionProvider(widget.seriesId),
+              );
+              final isSubscribed =
+                  subscriptionAsync.asData?.value?.isActive ?? false;
+              final isSubscriptionLoading =
+                  subscriptionAsync.isLoading || _isUpdatingSubscription;
+              return BottomAppBar(
+                shape: const CircularNotchedRectangle(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          iconSize: 28,
+                          tooltip: isSubscribed
+                              ? 'Unsubscribe and remove pull'
+                              : 'Subscribe and pull series',
+                          onPressed: isSubscriptionLoading
+                              ? null
+                              : () {
+                                  _setSeriesSubscription(!isSubscribed);
+                                },
+                          icon: isSubscriptionLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  isSubscribed
+                                      ? Icons.notifications_active
+                                      : Icons.notifications_outlined,
+                                  color: isSubscribed
+                                      ? Theme.of(context).colorScheme.primary
+                                      : null,
+                                ),
                         ),
-                        PopupMenuItem(
-                          value: _SeriesDetailsMenuAction.openInBrowser,
-                          child: Text('Open in browser'),
+                        IconButton(
+                          iconSize: 28,
+                          tooltip: 'Add to list',
+                          onPressed: () => TakionAlerts.comingSoon(context, 'Add to list'),
+                          icon: const Icon(Icons.playlist_add_outlined, size: 28),
+                        ),
+                        IconButton(
+                          iconSize: 28,
+                          tooltip: 'Favorite series',
+                          onPressed: () => TakionAlerts.comingSoon(context, 'Favorite series'),
+                          icon: const Icon(Icons.favorite_border, size: 28),
                         ),
                       ],
+                    ),
+                    FloatingActionButton(
+                      onPressed: () =>
+                          _showSeriesIssueActionsSheet(seriesName: details.name),
+                      child: const Icon(Icons.add),
                     ),
                   ],
-                  title: Opacity(
-                    opacity: _titleOpacity,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            details.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                ),
+              );
+            },
+          ),
+          body: Builder(
+            builder: (context) {
+              final coverImageAsync = ref.watch(
+                seriesCoverImageProvider(
+                  (seriesId: widget.seriesId, allowRemoteFetch: true),
+                ),
+              );
+
+              return NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) {
+                  return [
+                    SliverAppBar(
+                      pinned: true,
+                      backgroundColor: colorScheme.surface,
+                      elevation: 0,
+                      surfaceTintColor: colorScheme.surface,
+                      expandedHeight: 260,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: _SeriesHeroFlexibleSpace(
+                          details: details,
+                          coverImageAsync: coverImageAsync,
                         ),
-                        const SizedBox(width: 8),
-                        _subscriptionBadge(isSubscribed),
+                      ),
+                      actions: [
+                        PopupMenuButton<_SeriesDetailsMenuAction>(
+                          tooltip: 'More options',
+                          onSelected: (action) {
+                            _handleMoreAction(action, details);
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                              value: _SeriesDetailsMenuAction.share,
+                              child: Text('Share'),
+                            ),
+                            PopupMenuItem(
+                              value: _SeriesDetailsMenuAction.openInBrowser,
+                              child: Text('Open in browser'),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: _SeriesHeader(
-                      details: details,
-                      seriesId: widget.seriesId,
-                    ),
-                  ),
-                ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SeriesTabBarDelegate(
-                    child: Material(
-                      color: Theme.of(context).colorScheme.surface,
-                      child: const TabBar(
-                        tabs: [
-                          Tab(text: 'About'),
-                          Tab(text: 'Issues'),
-                        ],
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _SeriesTabBarDelegate(
+                        child: Container(
+                          color: Theme.of(context).colorScheme.surface,
+                          child: const TabBar(
+                            tabs: [
+                              Tab(text: 'About'),
+                              Tab(text: 'Issues'),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ];
+                },
+                body: TabBarView(
+                  children: [
+                    _SeriesAboutTab(details: details),
+                    _SeriesIssuesTab(
+                      seriesId: widget.seriesId,
+                      page: _issuesPage,
+                      onPrevious: () {
+                        if (_issuesPage <= 1) return;
+                        setState(() {
+                          _issuesPage = _issuesPage - 1;
+                        });
+                      },
+                      onNext: () {
+                        setState(() {
+                          _issuesPage = _issuesPage + 1;
+                        });
+                      },
+                    ),
+                  ],
                 ),
-              ];
+              );
             },
-            body: TabBarView(
-              children: [
-                _SeriesAboutTab(details: details),
-                _SeriesIssuesTab(
-                  seriesId: widget.seriesId,
-                  page: _issuesPage,
-                  sortOption: sortOption,
-                  onPrevious: () {
-                    if (_issuesPage <= 1) return;
-                    setState(() {
-                      _issuesPage = _issuesPage - 1;
-                    });
-                  },
-                  onNext: () {
-                    setState(() {
-                      _issuesPage = _issuesPage + 1;
-                    });
-                  },
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -931,153 +919,110 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   }
 }
 
-class _SeriesHeader extends ConsumerWidget {
-  const _SeriesHeader({required this.details, required this.seriesId});
+class _SeriesHeroFlexibleSpace extends StatelessWidget {
+  const _SeriesHeroFlexibleSpace({
+    required this.details,
+    required this.coverImageAsync,
+  });
 
   final SeriesDetails details;
-  final int seriesId;
+  final AsyncValue<String?> coverImageAsync;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final backgroundTint = Theme.of(context).scaffoldBackgroundColor;
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final publisher = details.publisher?.name.trim();
     final hasPublisher = details.publisher != null;
-    final coverImageAsync = ref.watch(
-      seriesCoverImageProvider((seriesId: seriesId, allowRemoteFetch: true)),
-    );
-    final subscriptionAsync = ref.watch(seriesSubscriptionProvider(seriesId));
-    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
-    final headerImage = coverImageAsync.asData?.value;
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (headerImage != null)
-          CachedNetworkImage(imageUrl: headerImage, fit: BoxFit.cover)
-        else
-          ColoredBox(color: colorScheme.surfaceContainerHighest),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: backgroundTint.withValues(alpha: 0.5),
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: const [0, 0.55, 1],
-              colors: [
-                Colors.black.withValues(alpha: 0.56),
-                Colors.black.withValues(alpha: 0.30),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Row(
-                  children: [
-                    if (hasPublisher) ...[
-                      Flexible(
-                        child: Text(
-                          publisher?.toUpperCase() ?? '',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                shadows: const [
-                                  Shadow(
-                                    color: Colors.black45,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                        ),
-                      ),
-                      Text(
-                        ' • ',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black45,
-                              blurRadius: 8,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    Flexible(
-                      child: Text(
-                        _yearRange(details).toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black45,
-                              blurRadius: 8,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  details.name.toUpperCase(),
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    shadows: const [
-                      Shadow(
-                        color: Colors.black45,
-                        blurRadius: 8,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+    Widget imageContent() {
+      return coverImageAsync.when(
+        data: (imageUrl) => imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
+                errorWidget: (context, url, error) => Container(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: const Icon(Icons.broken_image_outlined),
+                ),
+              )
+            : Container(
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: const Icon(Icons.image_outlined, size: 40),
+              ),
+        loading: () => Container(
+          color: theme.colorScheme.surfaceContainerHighest,
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+        error: (_, __) => Container(
+          color: theme.colorScheme.surfaceContainerHighest,
+          child: const Icon(Icons.error_outline),
+        ),
+      );
+    }
+
+    return SizedBox.expand(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          imageContent(),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.38),
+                  Colors.black.withValues(alpha: 0.08),
+                  theme.colorScheme.surface.withValues(alpha: 0.86),
+                  theme.colorScheme.surface,
+                ],
+                stops: const [0, 0.32, 0.62, 1],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  details.name,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      isSubscribed
-                          ? Icons.notifications_active
-                          : Icons.notifications_none_outlined,
-                      size: 22,
-                      color: isSubscribed
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.white.withValues(alpha: 0.9),
+                if (hasPublisher)
+                  Text(
+                    publisher?.toUpperCase() ?? '',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                const SizedBox(height: 4),
+                Text(
+                  '${details.yearBegan ?? '—'} • ${details.status ?? 'Unknown'}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
-  }
-
-  String _yearRange(SeriesDetails details) {
-    return details.yearEnd != null
-        ? '${details.yearBegan ?? '—'}-${details.yearEnd}'
-        : '${details.yearBegan ?? '—'}-Present';
   }
 }
 
@@ -1160,13 +1105,10 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     Widget child, {
     VoidCallback? onTap,
   }) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(padding: const EdgeInsets.all(14), child: child),
-      ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: child),
     );
   }
 
@@ -1208,7 +1150,6 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
     return ListView(
-      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
         if (hasDescription)
@@ -1283,7 +1224,7 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
           ),
         if (hasDescription &&
             (hasGrid || hasGenres || hasAssociated || hasModified))
-          const SizedBox(height: 12),
+          const Divider(height: 24),
         if (hasGrid || hasGenres)
           _buildSectionCard(
             context,
@@ -1342,7 +1283,7 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
             ),
           ),
         if ((hasGrid || hasGenres) && (hasAssociated || hasModified))
-          const SizedBox(height: 12),
+          const Divider(height: 24),
         if (hasAssociated)
           _buildSectionCard(
             context,
@@ -1387,7 +1328,7 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
               ],
             ),
           ),
-        if (hasAssociated && hasModified) const SizedBox(height: 12),
+        if (hasAssociated && hasModified) const Divider(height: 24),
         if (hasModified)
           Text(
             'Last modified: $modifiedValue',
@@ -1413,19 +1354,28 @@ class _SeriesIssuesTab extends ConsumerWidget {
   const _SeriesIssuesTab({
     required this.seriesId,
     required this.page,
-    required this.sortOption,
     required this.onPrevious,
     required this.onNext,
   });
 
   final int seriesId;
   final int page;
-  final ContentSortOption sortOption;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
+  double? _issueNumberValue(String input) {
+    final match = RegExp(r'\d+(?:\.\d+)?').firstMatch(input);
+    if (match == null) return null;
+    return double.tryParse(match.group(0)!);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(
+        SortPreferenceContext.seriesDetailsIssues,
+      ),
+    );
     final args = SeriesIssueListArgs(seriesId: seriesId, page: page);
     final issuesAsync = ref.watch(seriesIssueListProvider(args));
 
@@ -1435,21 +1385,74 @@ class _SeriesIssuesTab extends ConsumerWidget {
         errorMessage: 'Failed to load series issues: $error',
       ),
       data: (issuePage) {
-        final sortedIssues = sortIssues(issuePage.results, sortOption);
+        final isDescending =
+            sortOption == ContentSortOption.dateDesc ||
+            sortOption == ContentSortOption.nameDesc;
+        final sortedIssues = [...issuePage.results]
+          ..sort((a, b) {
+            final aValue = _issueNumberValue(a.number);
+            final bValue = _issueNumberValue(b.number);
+
+            if (aValue != null && bValue != null) {
+              final valueCompare = aValue.compareTo(bValue);
+              if (valueCompare != 0) {
+                return isDescending ? -valueCompare : valueCompare;
+              }
+            } else if (aValue != null || bValue != null) {
+              final valueCompare = aValue == null ? 1 : -1;
+              return isDescending ? -valueCompare : valueCompare;
+            }
+
+            final fallbackCompare = a.number.toLowerCase().compareTo(
+              b.number.toLowerCase(),
+            );
+            return isDescending ? -fallbackCompare : fallbackCompare;
+          });
         final totalPages =
             ((issuePage.count /
                         (sortedIssues.isEmpty ? 100 : sortedIssues.length))
                     .ceil())
                 .clamp(1, 9999);
         final hasPagination = totalPages > 1;
+        final nextSortOption = isDescending
+            ? ContentSortOption.dateAsc
+            : ContentSortOption.dateDesc;
+        final sortLabel = isDescending ? 'Descending' : 'Ascending';
+        final issueCount = issuePage.count;
+        final issueLabel = issueCount == 1 ? '1 issue' : '$issueCount issues';
+        Widget issuesHeader({required EdgeInsetsGeometry padding}) {
+          return Padding(
+            padding: padding,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    issueLabel,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    ref.read(sortPreferencesProvider.notifier).setPreference(
+                      SortPreferenceContext.seriesDetailsIssues,
+                      nextSortOption,
+                    );
+                  },
+                  icon: const Icon(Icons.swap_vert),
+                  label: Text(sortLabel),
+                ),
+              ],
+            ),
+          );
+        }
 
         return Stack(
           children: [
             sortedIssues.isEmpty
                 ? ListView(
-                    physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
-                    children: const [
+                    children: [
+                      issuesHeader(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8)),
                       SizedBox(
                         height: 360,
                         child: EmptyContentState(
@@ -1460,20 +1463,24 @@ class _SeriesIssuesTab extends ConsumerWidget {
                     ],
                   )
                 : ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       0,
-                      12,
+                      8,
                       0,
                       hasPagination ? 96 : 12,
                     ),
-                    itemCount: sortedIssues.length,
+                    itemCount: sortedIssues.length + 1,
                     itemBuilder: (context, index) {
-                      final issue = sortedIssues[index];
+                      if (index == 0) {
+                        return issuesHeader(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        );
+                      }
+                      final issue = sortedIssues[index - 1];
                       return IssueListTile(
                         issue: issue,
-                        isFirst: index == 0,
-                        isLast: index == sortedIssues.length - 1,
+                        isFirst: index == 1,
+                        isLast: index == sortedIssues.length,
                       );
                     },
                   ),
@@ -1532,40 +1539,89 @@ class _SeriesDetailsLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     return DefaultTabController(
       length: 2,
-      child: NestedScrollView(
-        headerSliverBuilder: (context, _) => [
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 280.0,
-            backgroundColor: colorScheme.surface,
-            title: const Text('Series'),
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              background: ColoredBox(
-                color: colorScheme.surfaceContainerHighest,
-              ),
-            ),
-          ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SeriesTabBarDelegate(
-              child: Material(
-                color: colorScheme.surface,
-                child: const TabBar(
-                  tabs: [
-                    Tab(text: 'About'),
-                    Tab(text: 'Issues'),
+      child: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: theme.colorScheme.surface,
+              elevation: 0,
+              surfaceTintColor: theme.colorScheme.surface,
+              expandedHeight: 260,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(color: theme.colorScheme.surfaceContainerHighest),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.25),
+                            Colors.black.withValues(alpha: 0.06),
+                            theme.colorScheme.surface.withValues(alpha: 0.86),
+                            theme.colorScheme.surface,
+                          ],
+                          stops: const [0, 0.32, 0.62, 1],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 26,
+                            width: double.infinity,
+                            color: theme.colorScheme.surfaceContainerHighest,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 20,
+                            width: 190,
+                            color: theme.colorScheme.surfaceContainerHighest,
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 16,
+                            width: 160,
+                            color: theme.colorScheme.surfaceContainerHighest,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
-        body: const Center(child: CircularProgressIndicator()),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SeriesTabBarDelegate(
+                child: Container(
+                  color: theme.colorScheme.surface,
+                  child: const TabBar(
+                    tabs: [
+                      Tab(text: 'About'),
+                      Tab(text: 'Issues'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
       ),
     );
   }

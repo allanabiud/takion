@@ -5,8 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/providers/performance_metrics_provider.dart';
 import 'package:takion/src/presentation/providers/settings_provider.dart';
@@ -46,7 +44,7 @@ class SettingsScreen extends ConsumerWidget {
             final metronConnectionAsync = ref.watch(metronConnectionProvider);
 
             return SettingsBottomSheet(
-              title: 'Metron Connection',
+              title: 'Metron',
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -57,21 +55,19 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: ListTile(
-                      leading: const Icon(Icons.link),
-                      title: const Text('Status'),
-                      subtitle: metronConnectionAsync.when(
-                        data: (connection) => connection == null
-                            ? const Text('Not connected')
-                            : Text('Connected as ${connection.username}'),
-                        loading: () => const Text('Checking connection...'),
-                        error: (error, _) => Text(error.toString()),
-                      ),
+                  ListTile(
+                    leading: const Icon(Icons.link),
+                    title: const Text('Status'),
+                    subtitle: metronConnectionAsync.when(
+                      data: (connection) => connection == null
+                          ? const Text('Not connected')
+                          : Text('Connected as ${connection.username}'),
+                      loading: () => const Text('Checking connection...'),
+                      error: (error, _) => Text(error.toString()),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 12),
                   Text(
                     'Account Actions',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -79,45 +75,34 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: () async {
-                                Navigator.of(context).pop();
-                                await _showMetronConnectDialog(context, ref);
-                              },
-                              child: const FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text('Connect / Reconnect Metron'),
-                              ),
-                            ),
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: metronConnectionAsync.value != null
+                              ? null
+                              : () async {
+                                  Navigator.of(context).pop();
+                                  await _showMetronConnectDialog(context, ref);
+                                },
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('Connect Metron'),
                           ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.tonal(
-                              onPressed: () =>
-                                  _disconnectMetronAccount(context, ref),
-                              child: const Text('Disconnect Metron'),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: () => _launchMetronSignup(context),
-                      child: const Text('Create Metron Account'),
-                    ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonal(
+                          onPressed: metronConnectionAsync.value == null
+                              ? null
+                              : () => _disconnectMetronAccount(context, ref),
+                          child: const Text('Disconnect Metron'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -223,50 +208,6 @@ class SettingsScreen extends ConsumerWidget {
     TakionAlerts.info(context, 'Metron account disconnected.');
   }
 
-  Future<void> _confirmAndLogout(BuildContext context, WidgetRef ref) async {
-    if (ref.read(authStateProvider).isLoading) return;
-
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          icon: Icon(
-            Icons.logout,
-            color: Theme.of(dialogContext).colorScheme.error,
-          ),
-          title: const Text('Log Out?'),
-          content: const Text(
-            'You will be signed out and returned to the login screen.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton.tonal(
-              style: FilledButton.styleFrom(
-                foregroundColor: Theme.of(dialogContext).colorScheme.error,
-                backgroundColor: Theme.of(
-                  dialogContext,
-                ).colorScheme.errorContainer.withValues(alpha: 0.5),
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Log Out'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldLogout != true || !context.mounted) return;
-
-    await ref.read(authStateProvider.notifier).logout();
-    if (!context.mounted) return;
-
-    TakionAlerts.authLogoutSuccess(context);
-    context.router.replaceAll([LoginRoute()]);
-  }
-
   void _showAppearanceSettings(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -295,49 +236,46 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: SegmentedButton<ThemeMode>(
-                          segments: const [
-                            ButtonSegment<ThemeMode>(
-                              value: ThemeMode.system,
-                              icon: Icon(Icons.settings_brightness),
-                              label: Text(
-                                'System',
-                                softWrap: false,
-                                overflow: TextOverflow.fade,
-                              ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<ThemeMode>(
+                        segments: const [
+                          ButtonSegment<ThemeMode>(
+                            value: ThemeMode.system,
+                            icon: Icon(Icons.settings_brightness),
+                            label: Text(
+                              'System',
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
                             ),
-                            ButtonSegment<ThemeMode>(
-                              value: ThemeMode.light,
-                              icon: Icon(Icons.light_mode),
-                              label: Text(
-                                'Light',
-                                softWrap: false,
-                                overflow: TextOverflow.fade,
-                              ),
+                          ),
+                          ButtonSegment<ThemeMode>(
+                            value: ThemeMode.light,
+                            icon: Icon(Icons.light_mode),
+                            label: Text(
+                              'Light',
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
                             ),
-                            ButtonSegment<ThemeMode>(
-                              value: ThemeMode.dark,
-                              icon: Icon(Icons.dark_mode),
-                              label: Text(
-                                'Dark',
-                                softWrap: false,
-                                overflow: TextOverflow.fade,
-                              ),
+                          ),
+                          ButtonSegment<ThemeMode>(
+                            value: ThemeMode.dark,
+                            icon: Icon(Icons.dark_mode),
+                            label: Text(
+                              'Dark',
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
                             ),
-                          ],
-                          selected: {themeSettings.themeMode},
-                          onSelectionChanged: (Set<ThemeMode> newSelection) {
-                            ref
-                                .read(themeProvider.notifier)
-                                .setThemeMode(newSelection.first);
-                          },
-                        ),
+                          ),
+                        ],
+                        selected: {themeSettings.themeMode},
+                        onSelectionChanged: (Set<ThemeMode> newSelection) {
+                          ref
+                              .read(themeProvider.notifier)
+                              .setThemeMode(newSelection.first);
+                        },
                       ),
                     ),
                   ),
@@ -349,21 +287,19 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: SwitchListTile(
-                      title: const Text('Pure Black'),
-                      subtitle: const Text(
-                        'Use a true black background in dark mode',
-                      ),
-                      secondary: const Icon(Icons.brightness_2),
-                      value: themeSettings.darkIsTrueBlack,
-                      onChanged: (bool value) {
-                        ref
-                            .read(themeProvider.notifier)
-                            .setDarkIsTrueBlack(value);
-                      },
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Pure Black'),
+                    subtitle: const Text(
+                      'Use a true black background in dark mode',
                     ),
+                    secondary: const Icon(Icons.brightness_2),
+                    value: themeSettings.darkIsTrueBlack,
+                    onChanged: (bool value) {
+                      ref
+                          .read(themeProvider.notifier)
+                          .setDarkIsTrueBlack(value);
+                    },
                   ),
                 ],
               ),
@@ -400,53 +336,43 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          const ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(Icons.tune),
-                            title: Text('Default format when adding issues'),
-                            subtitle: Text(
-                              'Applied when a new item is added to your collection',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: SegmentedButton<CollectionDefaultFormat>(
-                              segments: const [
-                                ButtonSegment<CollectionDefaultFormat>(
-                                  value: CollectionDefaultFormat.print,
-                                  label: Text('Print'),
-                                ),
-                                ButtonSegment<CollectionDefaultFormat>(
-                                  value: CollectionDefaultFormat.digital,
-                                  label: Text('Digital'),
-                                ),
-                                ButtonSegment<CollectionDefaultFormat>(
-                                  value: CollectionDefaultFormat.both,
-                                  label: Text('Both'),
-                                ),
-                              ],
-                              selected: {selected},
-                              onSelectionChanged: formatAsync.isLoading
-                                  ? null
-                                  : (newSelection) {
-                                      ref
-                                          .read(
-                                            collectionDefaultFormatProvider
-                                                .notifier,
-                                          )
-                                          .setDefaultFormat(newSelection.first);
-                                    },
-                            ),
-                          ),
-                        ],
-                      ),
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.tune),
+                    title: Text('Default format when adding issues'),
+                    subtitle: Text(
+                      'Applied when a new item is added to your collection',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<CollectionDefaultFormat>(
+                      segments: const [
+                        ButtonSegment<CollectionDefaultFormat>(
+                          value: CollectionDefaultFormat.print,
+                          label: Text('Print'),
+                        ),
+                        ButtonSegment<CollectionDefaultFormat>(
+                          value: CollectionDefaultFormat.digital,
+                          label: Text('Digital'),
+                        ),
+                        ButtonSegment<CollectionDefaultFormat>(
+                          value: CollectionDefaultFormat.both,
+                          label: Text('Both'),
+                        ),
+                      ],
+                      selected: {selected},
+                      onSelectionChanged: formatAsync.isLoading
+                          ? null
+                          : (newSelection) {
+                              ref
+                                  .read(
+                                    collectionDefaultFormatProvider
+                                        .notifier,
+                                  )
+                                  .setDefaultFormat(newSelection.first);
+                            },
                     ),
                   ),
                 ],
@@ -501,26 +427,26 @@ class SettingsScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Notification delivery is currently disabled in local mode.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                      secondary: const Icon(
-                        Icons.notifications_active_outlined,
-                      ),
-                      title: const Text('Push Notifications for Pulls'),
-                      value: enabled,
-                      onChanged: enabledAsync.isLoading
-                          ? null
-                          : (value) => ref
-                                .read(
-                                  pushPullNotificationsEnabledProvider.notifier,
-                                )
-                                .setEnabled(value),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(
+                      Icons.notifications_active_outlined,
                     ),
+                    title: const Text('Push Notifications for Pulls'),
+                    value: enabled,
+                    onChanged: enabledAsync.isLoading
+                        ? null
+                        : (value) => ref
+                              .read(
+                                pushPullNotificationsEnabledProvider.notifier,
+                              )
+                              .setEnabled(value),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -530,73 +456,67 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
+                  Column(
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.schedule_outlined),
+                        title: const Text('When to Notify'),
+                        subtitle: Text(labelForTiming(timing)),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.schedule_outlined),
-                            title: const Text('When to Notify'),
-                            subtitle: Text(labelForTiming(timing)),
+                          ChoiceChip(
+                            label: const Text('Day before'),
+                            selected:
+                                timing == PullNotificationTiming.dayBefore,
+                            onSelected: (!enabled || timingAsync.isLoading)
+                                ? null
+                                : (_) => ref
+                                      .read(
+                                        pullNotificationTimingProvider
+                                            .notifier,
+                                      )
+                                      .setTiming(
+                                        PullNotificationTiming.dayBefore,
+                                      ),
                           ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              ChoiceChip(
-                                label: const Text('Day before'),
-                                selected:
-                                    timing == PullNotificationTiming.dayBefore,
-                                onSelected: (!enabled || timingAsync.isLoading)
-                                    ? null
-                                    : (_) => ref
-                                          .read(
-                                            pullNotificationTimingProvider
-                                                .notifier,
-                                          )
-                                          .setTiming(
-                                            PullNotificationTiming.dayBefore,
-                                          ),
-                              ),
-                              ChoiceChip(
-                                label: const Text('Release day'),
-                                selected:
-                                    timing == PullNotificationTiming.releaseDay,
-                                onSelected: (!enabled || timingAsync.isLoading)
-                                    ? null
-                                    : (_) => ref
-                                          .read(
-                                            pullNotificationTimingProvider
-                                                .notifier,
-                                          )
-                                          .setTiming(
-                                            PullNotificationTiming.releaseDay,
-                                          ),
-                              ),
-                              ChoiceChip(
-                                label: const Text('Day after'),
-                                selected:
-                                    timing == PullNotificationTiming.dayAfter,
-                                onSelected: (!enabled || timingAsync.isLoading)
-                                    ? null
-                                    : (_) => ref
-                                          .read(
-                                            pullNotificationTimingProvider
-                                                .notifier,
-                                          )
-                                          .setTiming(
-                                            PullNotificationTiming.dayAfter,
-                                          ),
-                              ),
-                            ],
+                          ChoiceChip(
+                            label: const Text('Release day'),
+                            selected:
+                                timing == PullNotificationTiming.releaseDay,
+                            onSelected: (!enabled || timingAsync.isLoading)
+                                ? null
+                                : (_) => ref
+                                      .read(
+                                        pullNotificationTimingProvider
+                                            .notifier,
+                                      )
+                                      .setTiming(
+                                        PullNotificationTiming.releaseDay,
+                                      ),
+                          ),
+                          ChoiceChip(
+                            label: const Text('Day after'),
+                            selected:
+                                timing == PullNotificationTiming.dayAfter,
+                            onSelected: (!enabled || timingAsync.isLoading)
+                                ? null
+                                : (_) => ref
+                                      .read(
+                                        pullNotificationTimingProvider
+                                            .notifier,
+                                      )
+                                      .setTiming(
+                                        PullNotificationTiming.dayAfter,
+                                      ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -651,34 +571,28 @@ class SettingsScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.sync),
-                          title: const Text('Full Sync'),
-                          subtitle: const Text('Update all application data'),
-                          onTap: appSettings.isSyncing
-                              ? null
-                              : () => ref
-                                    .read(settingsProvider.notifier)
-                                    .triggerFullSync(),
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.sync_problem),
-                          title: const Text('Quick Sync'),
-                          subtitle: const Text('Update modified data only'),
-                          onTap: appSettings.isSyncing
-                              ? null
-                              : () => ref
-                                    .read(settingsProvider.notifier)
-                                    .triggerQuickSync(),
-                        ),
-                      ],
-                    ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.sync),
+                    title: const Text('Full Sync'),
+                    subtitle: const Text('Update all application data'),
+                    onTap: appSettings.isSyncing
+                        ? null
+                        : () => ref
+                              .read(settingsProvider.notifier)
+                              .triggerFullSync(),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.sync_problem),
+                    title: const Text('Quick Sync'),
+                    subtitle: const Text('Update modified data only'),
+                    onTap: appSettings.isSyncing
+                        ? null
+                        : () => ref
+                              .read(settingsProvider.notifier)
+                              .triggerQuickSync(),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -687,55 +601,52 @@ class SettingsScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: ListTile(
-                      leading: const Icon(
-                        Icons.delete_sweep_outlined,
-                        color: Colors.red,
-                      ),
-                      title: const Text('Clear Local Cache'),
-                      subtitle: const Text(
-                        'Remove fetched cached releases, issues, and series data',
-                      ),
-                      onTap: appSettings.isSyncing
-                          ? null
-                          : () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Clear Cache?'),
-                                  content: const Text(
-                                    'This will remove fetched cached local data. Your account and preferences remain.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('Clear'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                await ref
-                                    .read(settingsProvider.notifier)
-                                    .clearCache();
-                                if (context.mounted) {
-                                  TakionAlerts.success(
-                                    context,
-                                    'Local cache cleared.',
-                                  );
-                                }
-                              }
-                            },
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.delete_sweep_outlined,
+                      color: Colors.red,
                     ),
+                    title: const Text('Clear Local Cache'),
+                    subtitle: const Text(
+                      'Remove fetched cached releases, issues, and series data',
+                    ),
+                    onTap: appSettings.isSyncing
+                        ? null
+                        : () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Clear Cache?'),
+                                content: const Text(
+                                  'This will remove fetched cached local data. Your account and preferences remain.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text('Clear'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              await ref
+                                  .read(settingsProvider.notifier)
+                                  .clearCache();
+                              if (context.mounted) {
+                                TakionAlerts.success(
+                                  context,
+                                  'Local cache cleared.',
+                                );
+                              }
+                            }
+                          },
                   ),
                 ],
               ),
@@ -905,103 +816,51 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-    final isLoggingOut = authState.isLoading;
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         children: [
-          _SettingsSectionCard(
-            title: 'Personalization',
-            children: [
-              _SettingsNavTile(
-                icon: Icons.palette_outlined,
-                title: 'Appearance',
-                subtitle: 'Theme mode and color settings',
-                onTap: () => _showAppearanceSettings(context, ref),
-              ),
-              _SettingsNavTile(
-                icon: Icons.collections_bookmark_outlined,
-                title: 'Library',
-                subtitle: 'Library defaults and item detail preferences',
-                onTap: () => _showCollectionSettings(context, ref),
-              ),
-              _SettingsNavTile(
-                icon: Icons.notifications_none_outlined,
-                title: 'Notifications',
-                subtitle: 'Push alerts for pulls and notify timing',
-                onTap: () => _showNotificationSettings(context, ref),
-              ),
-            ],
+          _SettingsNavTile(
+            icon: Icons.palette_outlined,
+            title: 'Appearance',
+            subtitle: 'Theme mode and color settings',
+            onTap: () => _showAppearanceSettings(context, ref),
           ),
-          const SizedBox(height: 12),
-          _SettingsSectionCard(
-            title: 'Connections',
-            children: [
-              _SettingsNavTile(
-                icon: Icons.link,
-                title: 'Metron Connection',
-                subtitle: 'View connected account and disconnect',
-                onTap: () => _showMetronConnectionSettings(context, ref),
-              ),
-            ],
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _SettingsNavTile(
+            icon: Icons.collections_bookmark_outlined,
+            title: 'Library',
+            subtitle: 'Library defaults and item detail preferences',
+            onTap: () => _showCollectionSettings(context, ref),
           ),
-          const SizedBox(height: 12),
-          _SettingsSectionCard(
-            title: 'Data & Diagnostics',
-            children: [
-              _SettingsNavTile(
-                icon: Icons.storage_outlined,
-                title: 'Data and Storage',
-                subtitle: 'Manage local database and storage',
-                onTap: () => _showDataStorageSettings(context, ref),
-              ),
-              _SettingsNavTile(
-                icon: Icons.analytics_outlined,
-                title: 'Performance Metrics',
-                subtitle: 'View cache/network/provider timing metrics',
-                onTap: () => _showPerformanceMetrics(context, ref),
-              ),
-            ],
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _SettingsNavTile(
+            icon: Icons.storage_outlined,
+            title: 'Data and Storage',
+            subtitle: 'Manage local database and storage',
+            onTap: () => _showDataStorageSettings(context, ref),
           ),
-          const SizedBox(height: 12),
-          _SettingsSectionCard(
-            title: 'App',
-            children: [
-              _SettingsNavTile(
-                icon: Icons.info_outline,
-                title: 'About',
-                subtitle: 'App info and version',
-                onTap: () => _showAboutSettings(context),
-              ),
-            ],
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _SettingsNavTile(
+            icon: Icons.link,
+            title: 'Metron',
+            subtitle: 'View connected account and disconnect',
+            onTap: () => _showMetronConnectionSettings(context, ref),
           ),
-          const SizedBox(height: 14),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: FilledButton.tonalIcon(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                foregroundColor: colorScheme.error,
-                backgroundColor: colorScheme.errorContainer.withValues(
-                  alpha: 0.5,
-                ),
-              ),
-              icon: isLoggingOut
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.logout),
-              label: const Text('Log Out'),
-              onPressed: isLoggingOut
-                  ? null
-                  : () => _confirmAndLogout(context, ref),
-            ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _SettingsNavTile(
+            icon: Icons.analytics_outlined,
+            title: 'Performance Metrics',
+            subtitle: 'View cache/network/provider timing metrics',
+            onTap: () => _showPerformanceMetrics(context, ref),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _SettingsNavTile(
+            icon: Icons.info_outline,
+            title: 'About',
+            subtitle: 'App info and version',
+            onTap: () => _showAboutSettings(context),
           ),
         ],
       ),
@@ -1009,37 +868,6 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SettingsSectionCard extends StatelessWidget {
-  const _SettingsSectionCard({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
-              child: Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _SettingsNavTile extends StatelessWidget {
   const _SettingsNavTile({
@@ -1059,7 +887,7 @@ class _SettingsNavTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 10),
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,

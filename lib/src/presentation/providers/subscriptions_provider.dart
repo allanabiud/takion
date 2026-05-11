@@ -132,7 +132,7 @@ Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
   final cachedHasNext = cachedMap?['has_next'] as bool? ?? false;
   final hasFreshCache =
       cachedAt != null &&
-      SupabaseCachePolicies.subscriptions.isFresh(cachedAt, DateTime.now());
+      LocalDataCachePolicies.subscriptions.isFresh(cachedAt, DateTime.now());
   if (hasFreshCache) {
     AppPerformanceMetrics.instance.recordCacheHit(metaKey);
     return SeriesListPage(

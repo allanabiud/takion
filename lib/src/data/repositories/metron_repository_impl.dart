@@ -38,11 +38,15 @@ class MetronRepositoryImpl implements MetronRepository {
   Future<T> _coalesce<T>(
     Map<String, Future<T>> inFlight,
     String key,
-    Future<T> Function() loader,
-  ) {
+    Future<T> Function() loader, {
+    Duration timeout = const Duration(seconds: 30),
+  }) {
     final existing = inFlight[key];
     if (existing != null) return existing;
-    final future = loader();
+    final future = loader().timeout(timeout).catchError((e) {
+      inFlight.remove(key);
+      throw e;
+    });
     inFlight[key] = future;
     future.whenComplete(() {
       if (identical(inFlight[key], future)) {
@@ -79,7 +83,7 @@ class MetronRepositoryImpl implements MetronRepository {
         );
         await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
         return remoteDtos.map((entry) => entry.toEntity()).toList();
-      });
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
@@ -294,7 +298,7 @@ class MetronRepositoryImpl implements MetronRepository {
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
         );
-      });
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return IssueSearchPage(
@@ -426,7 +430,7 @@ class MetronRepositoryImpl implements MetronRepository {
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
         );
-      });
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesListPage(
@@ -526,7 +530,7 @@ class MetronRepositoryImpl implements MetronRepository {
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
         );
-      });
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesIssueListPage(

@@ -56,7 +56,7 @@ class WishlistScreen extends ConsumerWidget {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: EmptyContentState(
-                      icon: Icons.favorite_border,
+                      icon: Icons.turned_in_not,
                       message: 'No wishlist comics yet.',
                     ),
                   ),

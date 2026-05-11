@@ -242,8 +242,8 @@ class IssueDetailsScreen extends ConsumerWidget {
                                           },
                                     icon: Icon(
                                       addToWishlist
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
+                                          ? Icons.turned_in
+                                          : Icons.turned_in_not,
                                       color: toggleColor(addToWishlist),
                                     ),
                                   ),
@@ -446,11 +446,39 @@ class IssueDetailsScreen extends ConsumerWidget {
       );
     }
 
+    final showBottomBar = issueAsync.hasValue;
+
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: showScrobbleSheet,
-        child: const Icon(Icons.add),
-      ),
+      bottomNavigationBar: showBottomBar
+          ? BottomAppBar(
+              shape: const CircularNotchedRectangle(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        iconSize: 28,
+                        tooltip: 'Add to list',
+                        onPressed: () => TakionAlerts.comingSoon(context, 'Add to list'),
+                        icon: const Icon(Icons.playlist_add_outlined, size: 28),
+                      ),
+                      IconButton(
+                        iconSize: 28,
+                        tooltip: 'Favorite issue',
+                        onPressed: () => TakionAlerts.comingSoon(context, 'Favorite issue'),
+                        icon: const Icon(Icons.favorite_border, size: 28),
+                      ),
+                    ],
+                  ),
+                  FloatingActionButton(
+                    onPressed: showScrobbleSheet,
+                    child: const Icon(Icons.add),
+                  ),
+                ],
+              ),
+            )
+          : null,
       body: issueAsync.when(
         data: (issue) => _IssueDetailsBody(
           issue: issue,
@@ -717,8 +745,8 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                               const SizedBox(width: 12),
                               Icon(
                                 (widget.collectionStatus?.isWishlisted ?? false)
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
+                                    ? Icons.turned_in
+                                    : Icons.turned_in_not,
                                 size: 20,
                                 color:
                                     (widget.collectionStatus?.isWishlisted ??
@@ -1038,8 +1066,8 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                       context,
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+                   SliverPadding(
+                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     sliver: SliverList.list(
                       children: [
                         IssueAboutTabContent(
@@ -1062,8 +1090,8 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                       context,
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+                   SliverPadding(
+                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     sliver: SliverList.list(
                       children: [
                         IssueMyDetailsTabContent(

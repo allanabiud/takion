@@ -5,10 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/providers/because_you_pulled_provider.dart';
 import 'package:takion/src/presentation/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/widgets/issue_card.dart';
 
@@ -21,7 +21,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  static const _trendingAutoScrollInterval = Duration(seconds: 8);
+  static const _trendingAutoScrollInterval = Duration(seconds: 15);
   final CarouselController _trendingController = CarouselController();
   Timer? _trendingAutoScrollTimer;
   int _trendingCount = 0;
@@ -83,7 +83,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final suggestionsAsync = ref.watch(homeTrendingProvider);
     final continueReadingAsync = ref.watch(continueReadingSuggestionsProvider);
-    final becauseYouPulledAsync = ref.watch(becauseYouPulledIssuesProvider);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -274,7 +273,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               const Spacer(),
                                               Text(
                                                 series?.name ?? issue.name,
-                                                maxLines: 2,
+                                                maxLines: 3,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: Theme.of(context)
                                                     .textTheme
@@ -616,71 +615,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               error: (_, _) => const SizedBox.shrink(),
             ),
             const SizedBox(height: 20),
-            becauseYouPulledAsync.when(
-              data: (issues) {
-                if (issues.isEmpty) return const SizedBox.shrink();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Because You Pulled',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 250,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: issues.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          final issue = issues[index];
-                          final issueId = issue.id;
-                          final collectionStatus = issueId == null
-                              ? null
-                              : ref.watch(
-                                  issueCollectionStatusProvider(issueId),
-                                );
-                          final pullEntry = issueId == null
-                              ? null
-                              : ref.watch(issuePullListEntryProvider(issueId));
-
-                          return IssueCard(
-                            imageUrl: issue.image,
-                            title:
-                                '${issue.series?.name ?? 'Issue'} #${issue.number}',
-                            heroTag: issueId == null
-                                ? null
-                                : 'issue-cover-$issueId',
-                            isCollected: collectionStatus?.isCollected ?? false,
-                            isWishlisted:
-                                collectionStatus?.isWishlisted ?? false,
-                            isRead: collectionStatus?.isRead ?? false,
-                            isPulled: pullEntry?.asData?.value != null,
-                            onTap: issueId == null
-                                ? null
-                                : () => context.pushRoute(
-                                    IssueDetailsRoute(
-                                      issueId: issueId,
-                                      initialImageUrl: issue.image,
-                                    ),
-                                  ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
-            ),
           ],
         ),
       ),
