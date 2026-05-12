@@ -173,7 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 4),
         issuesAsync.when(
           data: buildSectionContent,
           loading: () => const SizedBox(
@@ -534,8 +534,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            const SizedBox(height: 20),
             continueReadingAsync.when(
               data: (items) {
                 if (items.isEmpty) return const SizedBox.shrink();
@@ -562,7 +560,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 4),
                     SizedBox(
                       height: 250,
                       child: ListView.separated(
@@ -625,7 +623,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
                     SizedBox(
                       height: 250,
                       child: ListView.separated(
@@ -692,7 +689,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _buildWeeklyReleaseSection(
               context: context,
               ref: ref,
-              title: 'This Week',
+              title: 'This Week\'s Releases',
               emptyMessage: 'No new releases this week.',
               weekDate: thisWeekStart,
               issuesAsync: thisWeekReleasesAsync,
@@ -701,7 +698,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _buildWeeklyReleaseSection(
               context: context,
               ref: ref,
-              title: 'Upcoming',
+              title: 'Upcoming Realeases',
               emptyMessage: 'No upcoming releases for next week.',
               weekDate: nextWeekStart,
               issuesAsync: nextWeekReleasesAsync,

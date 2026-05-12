@@ -29,7 +29,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
 
-enum _SeriesIssueBulkOperation { addToCollection, markAsRead }
+enum _SeriesIssueBulkOperation { addToCollection, removeFromCollection, markAsRead, markAsUnread }
 
 enum _SeriesIssueSelectionMode { predefined, range }
 
@@ -150,6 +150,14 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           continue;
         }
 
+        if (operation == _SeriesIssueBulkOperation.removeFromCollection) {
+          if (!isCollected) continue;
+          await libraryRepository.deleteItemByIssueId(issueId);
+          affected++;
+          affectedIssueIds.add(issueId);
+          continue;
+        }
+
         if (operation == _SeriesIssueBulkOperation.markAsRead) {
           if (isRead) continue;
           final now = DateTime.now().toUtc();
@@ -175,6 +183,33 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           );
           affected++;
           affectedIssueIds.add(issueId);
+          continue;
+        }
+
+        if (operation == _SeriesIssueBulkOperation.markAsUnread) {
+          if (!isRead) continue;
+          await libraryRepository.upsertItem(
+            metronIssueId: issueId,
+            metronSeriesId: widget.seriesId,
+            ownershipStatus:
+                existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
+            isRead: false,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: null,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+            notes: existing?.notes,
+          );
+          final logs = await libraryRepository.getReadLogsByIssueId(issueId);
+          for (final log in logs) {
+            await libraryRepository.deleteReadLogById(log.id);
+          }
+          affected++;
+          affectedIssueIds.add(issueId);
         }
       }
 
@@ -192,10 +227,12 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (mounted) {
-        final actionText =
-            operation == _SeriesIssueBulkOperation.addToCollection
-            ? 'added to collection'
-            : 'marked as read';
+        final actionText = switch (operation) {
+          _SeriesIssueBulkOperation.addToCollection => 'added to collection',
+          _SeriesIssueBulkOperation.removeFromCollection => 'removed from collection',
+          _SeriesIssueBulkOperation.markAsRead => 'marked as read',
+          _SeriesIssueBulkOperation.markAsUnread => 'marked as unread',
+        };
         TakionAlerts.success(context, '$affected issues $actionText.');
         Navigator.of(context).pop();
       }
@@ -256,8 +293,12 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
               switch (value) {
                 case _SeriesIssueBulkOperation.addToCollection:
                   return 'Add to Collection';
+                case _SeriesIssueBulkOperation.removeFromCollection:
+                  return 'Remove from Collection';
                 case _SeriesIssueBulkOperation.markAsRead:
                   return 'Mark as Read';
+                case _SeriesIssueBulkOperation.markAsUnread:
+                  return 'Mark as Unread';
               }
             }
 
@@ -296,10 +337,22 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                     _SeriesIssueSubset.read,
                     _SeriesIssueSubset.unread,
                   ];
+                case _SeriesIssueBulkOperation.removeFromCollection:
+                  return const [
+                    _SeriesIssueSubset.all,
+                    _SeriesIssueSubset.collected,
+                  ];
                 case _SeriesIssueBulkOperation.markAsRead:
                   return const [
                     _SeriesIssueSubset.all,
                     _SeriesIssueSubset.unread,
+                    _SeriesIssueSubset.collected,
+                    _SeriesIssueSubset.uncollected,
+                  ];
+                case _SeriesIssueBulkOperation.markAsUnread:
+                  return const [
+                    _SeriesIssueSubset.all,
+                    _SeriesIssueSubset.read,
                     _SeriesIssueSubset.collected,
                     _SeriesIssueSubset.uncollected,
                   ];
@@ -316,10 +369,12 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             final startIssueNumber = issues[selectedStart - 1].issueNumber;
             final endIssueNumber = issues[selectedEnd - 1].issueNumber;
 
-            final actionIcon =
-                selectedOperation == _SeriesIssueBulkOperation.addToCollection
-                ? Icons.inventory_2_outlined
-                : Icons.bookmark_added_outlined;
+            final actionIcon = switch (selectedOperation) {
+              _SeriesIssueBulkOperation.addToCollection => Icons.inventory_2_outlined,
+              _SeriesIssueBulkOperation.removeFromCollection => Icons.inventory_2,
+              _SeriesIssueBulkOperation.markAsRead => Icons.bookmark_added_outlined,
+              _SeriesIssueBulkOperation.markAsUnread => Icons.bookmark_add_outlined,
+            };
             final selectionSummary =
                 selectedMode == _SeriesIssueSelectionMode.predefined
                 ? subsetLabel(selectedSubset)
@@ -378,96 +433,29 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
+                      Text('Action', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 8),
                       Container(
-                        width: double.infinity,
-                        height: 80,
-                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              actionIcon,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Action preview',
-                                    style: Theme.of(context).textTheme.labelMedium,
-                                  ),
-                                  Text(
-                                    '${operationLabel(selectedOperation)} • $selectionSummary',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (selectedMode == _SeriesIssueSelectionMode.range)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  '${selectedEnd - selectedStart + 1}',
-                                  style: Theme.of(context).textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onPrimaryContainer,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text('Action', style: Theme.of(context).textTheme.labelLarge),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: SegmentedButton<_SeriesIssueBulkOperation>(
-                          segments: const [
-                            ButtonSegment(
-                              value: _SeriesIssueBulkOperation.addToCollection,
-                              label: Text('Add to Collection'),
-                            ),
-                            ButtonSegment(
-                              value: _SeriesIssueBulkOperation.markAsRead,
-                              label: Text('Mark as Read'),
-                            ),
-                          ],
-                          selected: {selectedOperation},
-                          showSelectedIcon: false,
-                          multiSelectionEnabled: false,
-                          emptySelectionAllowed: false,
-                          style: const ButtonStyle(
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          onSelectionChanged: isApplying
-                              ? null
-                              : (selection) {
-                                  final value = selection.firstOrNull;
-                                  if (value == null) return;
-                                  setModalState(() {
-                                    selectedOperation = value;
-                                  });
-                                },
+                        child: Column(
+                          children: _SeriesIssueBulkOperation.values.map((operation) {
+                            return RadioListTile<_SeriesIssueBulkOperation>(
+                              title: Text(operationLabel(operation)),
+                              value: operation,
+                              groupValue: selectedOperation,
+                              onChanged: isApplying
+                                  ? null
+                                  : (value) {
+                                      if (value == null) return;
+                                      setModalState(() {
+                                        selectedOperation = value;
+                                      });
+                                    },
+                            );
+                          }).toList(),
                         ),
                       ),
                       const SizedBox(height: 16),

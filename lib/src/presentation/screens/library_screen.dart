@@ -10,6 +10,7 @@ import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/rating_picker.dart';
 import 'package:takion/src/presentation/widgets/section_subtitle_header.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class LibraryScreen extends ConsumerWidget {
@@ -222,7 +223,7 @@ class LibraryScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             CompactListSection(
               title: 'Lists',
               items: [
@@ -251,6 +252,13 @@ class LibraryScreen extends ConsumerWidget {
                   },
                 ),
                 CompactListSectionItem(
+                  icon: Icons.list_alt_outlined,
+                  label: 'My Reading Lists',
+                  onTap: () {
+                    TakionAlerts.comingSoon(context, 'Reading Lists');
+                  },
+                ),
+                CompactListSectionItem(
                   icon: Icons.history_outlined,
                   label: 'Reading History',
                   onTap: () {
@@ -263,7 +271,7 @@ class LibraryScreen extends ConsumerWidget {
               loading: () => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: SectionSubtitleHeader(
@@ -284,7 +292,7 @@ class LibraryScreen extends ConsumerWidget {
               error: (error, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: SectionSubtitleHeader(

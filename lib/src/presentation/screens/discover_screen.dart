@@ -96,7 +96,7 @@ class DiscoverScreen extends StatelessWidget {
                   },
                 ),
                 CompactListSectionItem(
-                  icon: Icons.playlist_add_check_circle_outlined,
+                  icon: Icons.list_alt_outlined,
                   label: 'Reading Lists',
                   onTap: () {
                     TakionAlerts.comingSoon(
