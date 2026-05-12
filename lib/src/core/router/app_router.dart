@@ -17,6 +17,7 @@ class AppRouter extends RootStackRouter {
       path: '/authorize-metron',
       guards: [authGuard],
     ),
+    AutoRoute(page: AllDoneRoute.page, path: '/all-done', guards: [authGuard]),
     AutoRoute(
       page: MainRoute.page,
       path: '/app',

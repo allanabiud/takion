@@ -174,6 +174,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       ).animate(_buttonFade),
                       child: SizedBox(
                         width: double.infinity,
+                        height: 56,
                         child: FilledButton(
                           onPressed: _handleGetStarted,
                           child: const Text('Get Started'),

@@ -78,18 +78,13 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
         return;
       }
 
-      // Mark onboarding as seen ONLY after successful connection
-      final hiveService = ref.read(hiveServiceProvider);
-      final settingsBox = await hiveService.openBox('settings_box');
-      await settingsBox.put('has_seen_onboarding', true);
-
       ref.invalidate(metronConnectionProvider);
       await ref
           .read(userProfileProvider.notifier)
           .saveProfile(displayName: username);
       _passwordController.clear();
       _didAutoRedirect = true;
-      context.router.replaceAll([const MainRoute()]);
+      context.router.push(const AllDoneRoute());
     } catch (error) {
       if (!mounted || !context.mounted) return;
       TakionAlerts.error(context, error.toString());
@@ -156,7 +151,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Authorize Takion to access your Metron account to fetch comic data.',
+                  'Connect with The Metron Comic Database to fetch comic metadata and enhance your library.',
                   style: Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -175,9 +170,10 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                         Expanded(
                           child: Text(
                             'You are offline. Internet is required to verify and authorize your Metron account.',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
                           ),
                         ),
                       ],
@@ -207,7 +203,8 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                         obscureText: true,
                         autofillHints: const [AutofillHints.password],
                         textInputAction: TextInputAction.done,
-                        onEditingComplete: () => TextInput.finishAutofillContext(),
+                        onEditingComplete: () =>
+                            TextInput.finishAutofillContext(),
                       ),
                     ],
                   ),
@@ -240,7 +237,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Authorize Metron Account'),
+                        : const Text('Connect Metron'),
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -11,10 +11,7 @@ class MetronInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -40,20 +37,18 @@ class MetronInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 32),
                           Text(
-                            'The Metron Database',
+                            'Metron',
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             textAlign: TextAlign.center,
                           ),
                           SizedBox(height: 16),
                           Text(
                             'Takion uses The Metron Comic Database to keep up to date with comics.',
-                            style: TextStyle(
-                              fontSize: 18,
-                              height: 1.5,
-                            ),
+                            style: TextStyle(fontSize: 18, height: 1.5),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -64,8 +59,9 @@ class MetronInfoScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 56,
                     child: FilledButton(
-                      onPressed: () => context.router.push(const AuthorizeMetronRoute()),
-                      child: const Text('Authorize Metron'),
+                      onPressed: () =>
+                          context.router.push(const AuthorizeMetronRoute()),
+                      child: const Text('Connect Metron'),
                     ),
                   ),
                 ],
