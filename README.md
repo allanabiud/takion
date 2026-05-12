@@ -9,13 +9,16 @@
   Built with Flutter and Riverpod
 </p>
 
-<!-- 
 <p align="center">
-  <img src="assets/images/screenshot1.jpg" alt="Screenshot 1" width="200" style="border-radius:26px;"/>
-  <img src="assets/images/screenshot2.jpg" alt="Screenshot 2" width="200" style="border-radius:26px;"/>
-  <img src="assets/images/screenshot3.jpg" alt="Screenshot 3" width="200" style="border-radius:26px;"/>
+  <table>
+    <tr>
+      <td align="center"><img src="assets/images/home.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/new_releases.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/library.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/issue_details.png" width="200" style="border-radius:16px;"/></td>
+    </tr>
+  </table>
 </p>
--->
 
 <p align="center">
     <a href="https://github.com/allanabiud/takion/releases/latest">
@@ -30,32 +33,33 @@
 ## ✨ Features
 
 ### 📋 Pull List Management
+
 - **Weekly Activity**: Track upcoming issues and manage your weekly pull list efficiently.
 - **Automated Sync**: Keep your list in sync with Metron-powered data.
 
 ### 📚 Library Tracking
+
 - **Collection Management**: Organize your comic book collection with ease.
 - **Reading Progress**: Mark issues as read and keep track of your reading history.
 - **Personal Ratings**: Rate your issues and see statistics of your collection.
 
 ### 🔍 Discovery & Organization
+
 - **Wishlist Support**: Keep a separate, organized list of wanted issues.
 - **Detailed Insights**: View collector-focused stats about your reading habits.
-- **Custom Notifications**: Configure pull alert preferences and timing.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Language** | [Dart](https://dart.dev/) |
-| **Framework** | [Flutter](https://flutter.dev/) |
-| **State Management**| [Riverpod](https://riverpod.dev/) |
-| **Networking** | [Dio](https://pub.dev/packages/dio) |
-| **Database** | [Hive](https://pub.dev/packages/hive) |
-| **Local Persistence**| [Supabase](https://supabase.com/) |
-| **Architecture** | Clean Architecture (Domain-Driven) |
+| Category             | Technology                            |
+| -------------------- | ------------------------------------- |
+| **Language**         | [Dart](https://dart.dev/)             |
+| **Framework**        | [Flutter](https://flutter.dev/)       |
+| **State Management** | [Riverpod](https://riverpod.dev/)     |
+| **Networking**       | [Dio](https://pub.dev/packages/dio)   |
+| **Database**         | [Hive](https://pub.dev/packages/hive) |
+| **Architecture**     | Domain-Driven-Design                  |
 
 ---
 
@@ -70,11 +74,13 @@
 ### Installation
 
 1. **Clone the repository**
+
    ```sh
    git clone https://github.com/allanabiud/takion.git
    ```
 
 2. **Setup Dependencies**
+
    ```sh
    flutter pub get
    ```
