@@ -209,6 +209,31 @@ class LocalPullListRepository implements PullListRepository {
   }
 
   @override
+  Future<void> deleteEntriesBySeriesId(int metronSeriesId) async {
+    final box = await _hiveService.openBox<Map>(_boxName);
+    final now = DateTime.now();
+    final keysToDelete = box.values
+        .where((raw) {
+          final map = raw as Map;
+          final status = map['entry_status'] as String;
+          final releaseDateStr = map['release_date'] as String?;
+          final releaseDate = releaseDateStr != null ? DateTime.tryParse(releaseDateStr) : null;
+          
+          final isUpcoming = status == 'upcoming';
+          final isFuture = releaseDate != null && releaseDate.isAfter(now);
+          
+          return map['metron_series_id'] as int == metronSeriesId &&
+                 isUpcoming &&
+                 isFuture;
+        })
+        .map((raw) => (raw as Map)['metron_issue_id'].toString())
+        .toList();
+    for (final key in keysToDelete) {
+      await box.delete(key);
+    }
+  }
+
+  @override
   Future<void> upsertSubscriptionEntries(
     List<({int metronSeriesId, int metronIssueId, DateTime? releaseDate})>
     entries,

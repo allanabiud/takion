@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -368,8 +369,7 @@ class SettingsScreen extends ConsumerWidget {
                           : (newSelection) {
                               ref
                                   .read(
-                                    collectionDefaultFormatProvider
-                                        .notifier,
+                                    collectionDefaultFormatProvider.notifier,
                                   )
                                   .setDefaultFormat(newSelection.first);
                             },
@@ -435,9 +435,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    secondary: const Icon(
-                      Icons.notifications_active_outlined,
-                    ),
+                    secondary: const Icon(Icons.notifications_active_outlined),
                     title: const Text('Push Notifications for Pulls'),
                     value: enabled,
                     onChanged: enabledAsync.isLoading
@@ -477,8 +475,7 @@ class SettingsScreen extends ConsumerWidget {
                                 ? null
                                 : (_) => ref
                                       .read(
-                                        pullNotificationTimingProvider
-                                            .notifier,
+                                        pullNotificationTimingProvider.notifier,
                                       )
                                       .setTiming(
                                         PullNotificationTiming.dayBefore,
@@ -492,8 +489,7 @@ class SettingsScreen extends ConsumerWidget {
                                 ? null
                                 : (_) => ref
                                       .read(
-                                        pullNotificationTimingProvider
-                                            .notifier,
+                                        pullNotificationTimingProvider.notifier,
                                       )
                                       .setTiming(
                                         PullNotificationTiming.releaseDay,
@@ -501,14 +497,12 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                           ChoiceChip(
                             label: const Text('Day after'),
-                            selected:
-                                timing == PullNotificationTiming.dayAfter,
+                            selected: timing == PullNotificationTiming.dayAfter,
                             onSelected: (!enabled || timingAsync.isLoading)
                                 ? null
                                 : (_) => ref
                                       .read(
-                                        pullNotificationTimingProvider
-                                            .notifier,
+                                        pullNotificationTimingProvider.notifier,
                                       )
                                       .setTiming(
                                         PullNotificationTiming.dayAfter,
@@ -670,53 +664,133 @@ class SettingsScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  'assets/images/takion_logo.svg',
-                  height: 86,
-                  colorFilter: ColorFilter.mode(
-                    Theme.of(context).colorScheme.primary,
-                    BlendMode.srcIn,
+                Row(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/images/takion_logo.svg',
+                      height: 64,
+                      colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.primary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Takion',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: FutureBuilder<PackageInfo>(
+                              future: PackageInfo.fromPlatform(),
+                              builder: (context, snapshot) {
+                                final versionText = snapshot.hasData
+                                    ? snapshot.data!.buildNumber.isEmpty
+                                        ? snapshot.data!.version
+                                        : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+                                    : '...';
+                                return Text(
+                                  'Version $versionText',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => _launchGitHubRepo(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.code,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'GitHub Repository',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Takion',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                FutureBuilder<PackageInfo>(
-                  future: PackageInfo.fromPlatform(),
-                  builder: (context, snapshot) {
-                    final versionText = snapshot.hasData
-                        ? snapshot.data!.buildNumber.isEmpty
-                              ? snapshot.data!.version
-                              : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
-                        : '...';
-                    return Text(
-                      'Version $versionText',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Made by allanabiud',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                IconButton(
-                  tooltip: 'GitHub',
-                  onPressed: () => _launchGitHubRepo(context),
-                  icon: Icon(
-                    Icons.code,
-                    color: Theme.of(context).colorScheme.primary,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundImage: const CachedNetworkImageProvider(
+                          'https://avatars.githubusercontent.com/u/66108188?s=96&v=4',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'allanabiud',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Creator and maintainer',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => launchUrl(
+                          Uri.parse('https://github.com/allanabiud'),
+                        ),
+                        icon: const Icon(Icons.open_in_new),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -867,7 +941,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 }
-
 
 class _SettingsNavTile extends StatelessWidget {
   const _SettingsNavTile({

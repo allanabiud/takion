@@ -641,6 +641,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         await subscriptionRepository.subscribe(metronSeriesId: widget.seriesId);
       } else {
         await subscriptionRepository.unsubscribe(widget.seriesId);
+        await ref
+            .read(pullListRepositoryProvider)
+            .deleteEntriesBySeriesId(widget.seriesId);
       }
       final now = DateTime.now();
       final startOfWeek = DateTime(

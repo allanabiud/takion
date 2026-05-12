@@ -172,6 +172,7 @@ class ReleasesScreen extends ConsumerWidget {
                   child: Text('Could not load pulls preview.'),
                 ),
               ),
+            const SizedBox(height: 24),
             CompactListSection(
               title: 'Browse',
               items: [
