@@ -58,7 +58,7 @@ class ReleasesScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                   ActionCard(
-                    icon: Icons.bookmark_outline,
+                    icon: Icons.notifications_outlined,
                     value: subscriptionsAsync.isLoading
                         ? '--'
                         : subscriptionsCount.toString(),
