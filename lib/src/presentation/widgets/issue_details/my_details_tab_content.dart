@@ -74,37 +74,6 @@ class _IssueMyDetailsTabContentState
     _hydrated = true;
   }
 
-  bool _hasChanges() {
-    final currentNotes = _notesController.text.trim();
-    final currentCondition = _conditionController.text.trim();
-    final currentPrice = _priceController.text.trim();
-    final currentQuantity = _quantityController.text.trim();
-
-    final initialPurchase = _initialPurchaseDate?.toUtc().toIso8601String();
-    final currentPurchase = _purchaseDate?.toUtc().toIso8601String();
-
-    return currentNotes != _initialNotes.trim() ||
-        currentCondition != _initialCondition.trim() ||
-        currentPrice != _initialPrice.trim() ||
-        currentQuantity != _initialQuantity.trim() ||
-        _format != _initialFormat ||
-        currentPurchase != initialPurchase;
-  }
-
-  Future<void> _pickPurchaseDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _purchaseDate ?? now,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(now.year + 2),
-    );
-    if (picked == null) return;
-    setState(() {
-      _purchaseDate = picked;
-    });
-  }
-
   Future<void> _save() async {
     final controller = ref.read(
       issueMyDetailsControllerProvider(widget.issueId).notifier,
@@ -152,6 +121,301 @@ class _IssueMyDetailsTabContentState
     }
 
     TakionAlerts.libraryUpdated(context);
+  }
+
+  String _formatLibraryFormat(LibraryItemFormat? format) {
+    return switch (format) {
+      LibraryItemFormat.print => 'Print',
+      LibraryItemFormat.digital => 'Digital',
+      LibraryItemFormat.both => 'Both',
+      null => '—',
+    };
+  }
+
+  String _displayText(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? '—' : trimmed;
+  }
+
+  String _displayPrice(String value) {
+    final price = double.tryParse(value.trim());
+    if (price == null) return '—';
+    return '\$${price.toStringAsFixed(2)}';
+  }
+
+  String _displayQuantity(String value) {
+    final quantity = int.tryParse(value.trim());
+    if (quantity == null) return '—';
+    return '$quantity';
+  }
+
+  Future<void> _showEditDetailsSheet() async {
+    final notesController = TextEditingController(text: _notesController.text);
+    final conditionController = TextEditingController(
+      text: _conditionController.text,
+    );
+    final priceController = TextEditingController(text: _priceController.text);
+    final quantityController = TextEditingController(
+      text: _quantityController.text,
+    );
+    var purchaseDate = _purchaseDate;
+    var format = _format;
+
+    bool hasChanges() {
+      final currentNotes = notesController.text.trim();
+      final currentCondition = conditionController.text.trim();
+      final currentPrice = priceController.text.trim();
+      final currentQuantity = quantityController.text.trim();
+      final initialPurchase = _initialPurchaseDate?.toUtc().toIso8601String();
+      final currentPurchase = purchaseDate?.toUtc().toIso8601String();
+      return currentNotes != _initialNotes.trim() ||
+          currentCondition != _initialCondition.trim() ||
+          currentPrice != _initialPrice.trim() ||
+          currentQuantity != _initialQuantity.trim() ||
+          format != _initialFormat ||
+          currentPurchase != initialPurchase;
+    }
+
+    Future<void> pickPurchaseDate(StateSetter setSheetState) async {
+      final now = DateTime.now();
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: purchaseDate ?? now,
+        firstDate: DateTime(1900),
+        lastDate: DateTime(now.year + 2),
+      );
+      if (picked == null) return;
+      setSheetState(() {
+        purchaseDate = picked;
+      });
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final saveState = ref.watch(
+              issueMyDetailsControllerProvider(widget.issueId),
+            );
+            return StatefulBuilder(
+              builder: (context, setSheetState) {
+                final formHasChanges = hasChanges();
+                return Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    36 + MediaQuery.viewInsetsOf(context).bottom,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Edit My Details',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.of(sheetContext).pop(),
+                              icon: const Icon(Icons.close),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            const spacing = 10.0;
+                            final itemWidth =
+                                (constraints.maxWidth - spacing) / 2;
+                            return Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      width: itemWidth,
+                                      child: TextFormField(
+                                        controller: quantityController,
+                                        enabled: !saveState.isLoading,
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Quantity Owned',
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: spacing),
+                                    SizedBox(
+                                      width: itemWidth,
+                                      child:
+                                          DropdownButtonFormField<
+                                            LibraryItemFormat?
+                                          >(
+                                            isExpanded: true,
+                                            initialValue: format,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Format',
+                                            ),
+                                            hint: const Text('Select format'),
+                                            items: const [
+                                              DropdownMenuItem<
+                                                LibraryItemFormat?
+                                              >(
+                                                value: null,
+                                                child: Text('Not set'),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: LibraryItemFormat.print,
+                                                child: Text('Print'),
+                                              ),
+                                              DropdownMenuItem(
+                                                value:
+                                                    LibraryItemFormat.digital,
+                                                child: Text('Digital'),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: LibraryItemFormat.both,
+                                                child: Text('Both'),
+                                              ),
+                                            ],
+                                            onChanged: saveState.isLoading
+                                                ? null
+                                                : (value) {
+                                                    setSheetState(
+                                                      () => format = value,
+                                                    );
+                                                  },
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: spacing),
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      width: itemWidth,
+                                      child: TextFormField(
+                                        controller: priceController,
+                                        enabled: !saveState.isLoading,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: true,
+                                            ),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Price Paid',
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: spacing),
+                                    SizedBox(
+                                      width: itemWidth,
+                                      child: TextFormField(
+                                        key: ValueKey(
+                                          purchaseDate?.toIso8601String() ??
+                                              'purchase-none',
+                                        ),
+                                        initialValue: _formatDate(purchaseDate),
+                                        readOnly: true,
+                                        onTap: saveState.isLoading
+                                            ? null
+                                            : () => pickPurchaseDate(
+                                                setSheetState,
+                                              ),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Purchase Date',
+                                          suffixIcon: Icon(
+                                            Icons.calendar_today_outlined,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: conditionController,
+                          enabled: !saveState.isLoading,
+                          decoration: const InputDecoration(
+                            labelText: 'Condition Grade',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: notesController,
+                          enabled: !saveState.isLoading,
+                          minLines: 2,
+                          maxLines: 5,
+                          decoration: const InputDecoration(
+                            labelText: 'Additional Notes',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton(
+                            onPressed: (saveState.isLoading || !formHasChanges)
+                                ? null
+                                : () async {
+                                    _notesController.text =
+                                        notesController.text;
+                                    _conditionController.text =
+                                        conditionController.text;
+                                    _priceController.text =
+                                        priceController.text;
+                                    _quantityController.text =
+                                        quantityController.text;
+                                    _purchaseDate = purchaseDate;
+                                    _format = format;
+
+                                    await _save();
+                                    final state = ref.read(
+                                      issueMyDetailsControllerProvider(
+                                        widget.issueId,
+                                      ),
+                                    );
+                                    if (state.hasError ||
+                                        !sheetContext.mounted) {
+                                      return;
+                                    }
+                                    Navigator.of(sheetContext).pop();
+                                  },
+                            child: saveState.isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Save Details'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+
+    notesController.dispose();
+    conditionController.dispose();
+    priceController.dispose();
+    quantityController.dispose();
   }
 
   Future<void> _logReadWithPicker() async {
@@ -231,7 +495,6 @@ class _IssueMyDetailsTabContentState
         _hydrateFromData(data);
         final item = data.item;
         final readingHistory = data.readLogs;
-        final hasChanges = _hasChanges();
         final sectionHeaderStyle = Theme.of(context).textTheme.titleSmall
             ?.copyWith(
               fontWeight: FontWeight.w700,
@@ -245,7 +508,20 @@ class _IssueMyDetailsTabContentState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('My Details', style: sectionHeaderStyle),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text('My Details', style: sectionHeaderStyle),
+                      ),
+                      IconButton(
+                        tooltip: 'Edit details',
+                        onPressed: saveState.isLoading
+                            ? null
+                            : _showEditDetailsSheet,
+                        icon: const Icon(Icons.edit_outlined),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 14),
                   _DetailRow(
                     label: 'Date Added',
@@ -253,140 +529,40 @@ class _IssueMyDetailsTabContentState
                     italic: true,
                   ),
                   const SizedBox(height: 14),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      const spacing = 10.0;
-                      final itemWidth = (constraints.maxWidth - spacing) / 2;
-
-                      return Column(
-                        children: [
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: itemWidth,
-                                child: TextFormField(
-                                  controller: _quantityController,
-                                  enabled: !saveState.isLoading,
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Quantity Owned',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: spacing),
-                              SizedBox(
-                                width: itemWidth,
-                                child:
-                                    DropdownButtonFormField<LibraryItemFormat?>(
-                                      isExpanded: true,
-                                      value: _format,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Format',
-                                      ),
-                                      hint: const Text('Select format'),
-                                      items: const [
-                                        DropdownMenuItem<LibraryItemFormat?>(
-                                          value: null,
-                                          child: Text('Not set'),
-                                        ),
-                                        DropdownMenuItem(
-                                          value: LibraryItemFormat.print,
-                                          child: Text('Print'),
-                                        ),
-                                        DropdownMenuItem(
-                                          value: LibraryItemFormat.digital,
-                                          child: Text('Digital'),
-                                        ),
-                                        DropdownMenuItem(
-                                          value: LibraryItemFormat.both,
-                                          child: Text('Both'),
-                                        ),
-                                      ],
-                                      onChanged: saveState.isLoading
-                                          ? null
-                                          : (value) {
-                                              setState(() => _format = value);
-                                            },
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: spacing),
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: itemWidth,
-                                child: TextFormField(
-                                  controller: _priceController,
-                                  enabled: !saveState.isLoading,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Price Paid',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: spacing),
-                              SizedBox(
-                                width: itemWidth,
-                                child: TextFormField(
-                                  key: ValueKey(
-                                    _purchaseDate?.toIso8601String() ??
-                                        'purchase-none',
-                                  ),
-                                  initialValue: _formatDate(_purchaseDate),
-                                  readOnly: true,
-                                  onTap: saveState.isLoading
-                                      ? null
-                                      : _pickPurchaseDate,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Purchase Date',
-                                    suffixIcon: Icon(
-                                      Icons.calendar_today_outlined,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
+                  _DetailRow(
+                    label: 'Quantity Owned',
+                    value: _displayQuantity(_quantityController.text),
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _conditionController,
-                    enabled: !saveState.isLoading,
-                    decoration: const InputDecoration(
-                      labelText: 'Condition Grade',
-                    ),
+                  const SizedBox(height: 10),
+                  _DetailRow(
+                    label: 'Format',
+                    value: _formatLibraryFormat(_format),
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _notesController,
-                    enabled: !saveState.isLoading,
-                    minLines: 2,
-                    maxLines: 5,
-                    decoration: const InputDecoration(
-                      labelText: 'Additional Notes',
-                    ),
+                  const SizedBox(height: 10),
+                  _DetailRow(
+                    label: 'Price Paid',
+                    value: _displayPrice(_priceController.text),
                   ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton(
-                      onPressed: (saveState.isLoading || !hasChanges)
-                          ? null
-                          : _save,
-                      child: saveState.isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Save Details'),
+                  const SizedBox(height: 10),
+                  _DetailRow(
+                    label: 'Purchase Date',
+                    value: _formatDate(_purchaseDate),
+                  ),
+                  const SizedBox(height: 10),
+                  _DetailRow(
+                    label: 'Condition Grade',
+                    value: _displayText(_conditionController.text),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Additional Notes',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _displayText(_notesController.text),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

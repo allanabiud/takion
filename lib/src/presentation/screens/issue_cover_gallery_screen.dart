@@ -1,6 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class IssueCoverGalleryScreen extends StatefulWidget {
@@ -28,7 +32,9 @@ class IssueCoverGalleryScreen extends StatefulWidget {
 
 class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
   late final PageController _pageController;
+  final Dio _dio = Dio();
   late int _currentIndex;
+  bool _isDownloading = false;
 
   @override
   void initState() {
@@ -40,8 +46,44 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
 
   @override
   void dispose() {
+    _dio.close(force: true);
     _pageController.dispose();
     super.dispose();
+  }
+
+  String _safeFileComponent(String value) {
+    final normalized = value.trim().toLowerCase();
+    final safe = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    return safe.replaceAll(RegExp(r'^_+|_+$'), '');
+  }
+
+  String _fileExtensionFromUrl(String url) {
+    final uri = Uri.tryParse(url);
+    final path = uri?.path ?? '';
+    final dotIndex = path.lastIndexOf('.');
+    if (dotIndex < 0 || dotIndex == path.length - 1) return 'jpg';
+    final ext = path.substring(dotIndex + 1).toLowerCase();
+    if (ext.length > 5) return 'jpg';
+    return ext;
+  }
+
+  String _downloadFileName() {
+    final label = _labelForIndex(_currentIndex);
+    final title = widget.title ?? 'issue_cover';
+    final titlePart = _safeFileComponent(title);
+    final labelPart = _safeFileComponent(label);
+    final extension = _fileExtensionFromUrl(widget.imageUrls[_currentIndex]);
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final base = [
+      if (titlePart.isNotEmpty) titlePart,
+      if (labelPart.isNotEmpty) labelPart,
+      timestamp.toString(),
+    ].join('_');
+    return '$base.$extension';
+  }
+
+  Future<void> _downloadCurrentCover() async {
+    TakionAlerts.info(context, 'Image saving is currently disabled.');
   }
 
   String _labelForIndex(int index) {
@@ -78,6 +120,19 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Download current cover',
+            onPressed: _isDownloading ? null : _downloadCurrentCover,
+            icon: _isDownloading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_outlined),
+          ),
+        ],
       ),
       body: Column(
         children: [

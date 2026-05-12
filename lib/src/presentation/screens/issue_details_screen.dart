@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
@@ -20,6 +21,97 @@ import 'package:takion/src/presentation/widgets/issue_details/my_details_tab_con
 import 'package:url_launcher/url_launcher.dart';
 
 enum _IssueDetailsMenuAction { share, openInBrowser }
+
+class _IssueSeriesNavArgs {
+  const _IssueSeriesNavArgs({required this.seriesId, required this.issueId});
+
+  final int seriesId;
+  final int issueId;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is _IssueSeriesNavArgs &&
+        other.seriesId == seriesId &&
+        other.issueId == issueId;
+  }
+
+  @override
+  int get hashCode => Object.hash(seriesId, issueId);
+}
+
+class _IssueSeriesNavResult {
+  const _IssueSeriesNavResult({this.previousIssueId, this.nextIssueId});
+
+  final int? previousIssueId;
+  final int? nextIssueId;
+}
+
+double? _issueNumberValue(String input) {
+  final match = RegExp(r'\d+(?:\.\d+)?').firstMatch(input);
+  if (match == null) return null;
+  return double.tryParse(match.group(0)!);
+}
+
+int _compareSeriesIssueNumbers(IssueList a, IssueList b) {
+  final aValue = _issueNumberValue(a.number);
+  final bValue = _issueNumberValue(b.number);
+
+  if (aValue != null && bValue != null) {
+    final valueCompare = aValue.compareTo(bValue);
+    if (valueCompare != 0) return valueCompare;
+  } else if (aValue != null || bValue != null) {
+    return aValue == null ? 1 : -1;
+  }
+
+  return a.number.toLowerCase().compareTo(b.number.toLowerCase());
+}
+
+final _issueSeriesNavigationProvider = FutureProvider.autoDispose
+    .family<_IssueSeriesNavResult, _IssueSeriesNavArgs>((ref, args) async {
+      final repository = ref.watch(catalogRepositoryProvider);
+      final issues = <IssueList>[];
+      var page = 1;
+      var scannedPages = 0;
+      var hasNext = true;
+
+      while (hasNext && scannedPages < 50) {
+        final result = await repository.getSeriesIssueList(
+          args.seriesId,
+          page: page,
+        );
+        issues.addAll(result.results);
+        hasNext = result.hasNext;
+        page = result.nextPage ?? (page + 1);
+        scannedPages++;
+      }
+
+      final dedupedById = <int, IssueList>{};
+      for (final issue in issues) {
+        final id = issue.id;
+        if (id == null) continue;
+        dedupedById[id] = issue;
+      }
+
+      final ordered = dedupedById.values.toList()
+        ..sort(_compareSeriesIssueNumbers);
+      if (ordered.isEmpty) return const _IssueSeriesNavResult();
+
+      final currentIndex = ordered.indexWhere(
+        (issue) => issue.id == args.issueId,
+      );
+      if (currentIndex < 0) return const _IssueSeriesNavResult();
+
+      final previous = currentIndex > 0 ? ordered[currentIndex - 1].id : null;
+      final next = currentIndex < ordered.length - 1
+          ? ordered[currentIndex + 1].id
+          : null;
+
+      return _IssueSeriesNavResult(
+        previousIssueId: previous,
+        nextIssueId: next,
+      );
+    });
 
 @RoutePage()
 class IssueDetailsScreen extends ConsumerWidget {
@@ -38,6 +130,20 @@ class IssueDetailsScreen extends ConsumerWidget {
     final issueStatus = ref.watch(issueCollectionStatusProvider(issueId));
     final pullEntryAsync = ref.watch(issuePullListEntryProvider(issueId));
     final isInPullList = pullEntryAsync.asData?.value != null;
+    final issue = issueAsync.asData?.value;
+    final navAsync = issue?.series == null
+        ? const AsyncValue<_IssueSeriesNavResult>.data(_IssueSeriesNavResult())
+        : ref.watch(
+            _issueSeriesNavigationProvider(
+              _IssueSeriesNavArgs(
+                seriesId: issue!.series!.id,
+                issueId: issueId,
+              ),
+            ),
+          );
+    final navResult = navAsync.asData?.value;
+    final previousIssueId = navResult?.previousIssueId;
+    final nextIssueId = navResult?.nextIssueId;
 
     String _issueTitle(IssueDetails issue) {
       final seriesName = issue.series?.name.trim();
@@ -258,7 +364,9 @@ class IssueDetailsScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
+                          const Divider(),
+                          const SizedBox(height: 12),
                           Text(
                             'Rating',
                             style: Theme.of(context).textTheme.titleSmall,
@@ -459,14 +567,36 @@ class IssueDetailsScreen extends ConsumerWidget {
                     children: [
                       IconButton(
                         iconSize: 28,
+                        tooltip: 'Previous issue in series',
+                        onPressed: previousIssueId == null
+                            ? null
+                            : () => context.router.replace(
+                                IssueDetailsRoute(issueId: previousIssueId),
+                              ),
+                        icon: const Icon(Icons.chevron_left, size: 30),
+                      ),
+                      IconButton(
+                        iconSize: 28,
+                        tooltip: 'Next issue in series',
+                        onPressed: nextIssueId == null
+                            ? null
+                            : () => context.router.replace(
+                                IssueDetailsRoute(issueId: nextIssueId),
+                              ),
+                        icon: const Icon(Icons.chevron_right, size: 30),
+                      ),
+                      IconButton(
+                        iconSize: 28,
                         tooltip: 'Add to list',
-                        onPressed: () => TakionAlerts.comingSoon(context, 'Add to list'),
+                        onPressed: () =>
+                            TakionAlerts.comingSoon(context, 'Add to list'),
                         icon: const Icon(Icons.playlist_add_outlined, size: 28),
                       ),
                       IconButton(
                         iconSize: 28,
                         tooltip: 'Favorite issue',
-                        onPressed: () => TakionAlerts.comingSoon(context, 'Favorite issue'),
+                        onPressed: () =>
+                            TakionAlerts.comingSoon(context, 'Favorite issue'),
                         icon: const Icon(Icons.favorite_border, size: 28),
                       ),
                     ],
@@ -762,7 +892,7 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                               final isFilled = index < ratingValue;
                               return Icon(
                                 isFilled ? Icons.star : Icons.star_border,
-                                size: 18,
+                                size: 20,
                                 color: isFilled
                                     ? Theme.of(context).colorScheme.primary
                                     : Colors.white70,
@@ -1066,8 +1196,8 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                       context,
                     ),
                   ),
-                   SliverPadding(
-                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     sliver: SliverList.list(
                       children: [
                         IssueAboutTabContent(
@@ -1090,8 +1220,8 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                       context,
                     ),
                   ),
-                   SliverPadding(
-                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     sliver: SliverList.list(
                       children: [
                         IssueMyDetailsTabContent(
