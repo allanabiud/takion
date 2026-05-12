@@ -259,6 +259,13 @@ class LibraryScreen extends ConsumerWidget {
                   },
                 ),
                 CompactListSectionItem(
+                  icon: Icons.favorite_border,
+                  label: 'Favorites',
+                  onTap: () {
+                    TakionAlerts.comingSoon(context, 'Favorites');
+                  },
+                ),
+                CompactListSectionItem(
                   icon: Icons.history_outlined,
                   label: 'Reading History',
                   onTap: () {

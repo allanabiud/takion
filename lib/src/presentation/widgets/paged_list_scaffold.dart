@@ -16,6 +16,8 @@ class PagedListScaffold extends StatelessWidget {
     required this.itemBuilder,
     required this.emptyMessage,
     this.emptyIcon = Icons.inbox_outlined,
+    this.header,
+    this.isLoading = false,
   });
 
   final Future<void> Function() onRefresh;
@@ -29,6 +31,8 @@ class PagedListScaffold extends StatelessWidget {
   final IndexedWidgetBuilder itemBuilder;
   final String emptyMessage;
   final IconData emptyIcon;
+  final Widget? header;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +42,17 @@ class PagedListScaffold extends StatelessWidget {
       children: [
         RefreshIndicator(
           onRefresh: onRefresh,
-          child: itemCount == 0
+          child: itemCount == 0 && !isLoading
               ? CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
+                    if (header != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: header,
+                        ),
+                      ),
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: Padding(
@@ -60,12 +71,40 @@ class PagedListScaffold extends StatelessWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(
                     0,
-                    12,
+                    header != null ? 0 : 12,
                     0,
                     hasPagination ? 96 : 12,
                   ),
-                  itemCount: itemCount,
-                  itemBuilder: itemBuilder,
+                  itemCount: (isLoading && itemCount == 0)
+                      ? (header != null ? 1 : 0)
+                      : itemCount + (header != null ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (header != null && index == 0) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: header,
+                          ),
+                          if (isLoading)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: LinearProgressIndicator(minHeight: 2),
+                            ),
+                        ],
+                      );
+                    }
+                    if (isLoading && itemCount == 0) return const SizedBox.shrink();
+                    
+                    return itemBuilder(
+                      context,
+                      header != null ? index - 1 : index,
+                    );
+                  },
                 ),
         ),
         if (hasPagination)
@@ -81,6 +120,7 @@ class PagedListScaffold extends StatelessWidget {
                   hasNext: hasNext,
                   onPrevious: onPrevious,
                   onNext: onNext,
+                  enabled: !isLoading,
                 ),
               ),
             ),

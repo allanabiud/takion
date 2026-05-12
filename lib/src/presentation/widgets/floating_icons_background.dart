@@ -77,6 +77,10 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
       Icons.inventory_2_outlined,         // Collect/Inventory
       Icons.menu_book_outlined,           // Read/Reading
       Icons.bookmark_added_outlined,      // Read status
+      Icons.favorite_border,              // Favourites
+      Icons.list_alt_outlined,            // Reading Lists
+      Icons.face_outlined,                // Characters
+      Icons.business_outlined,            // Publishers
     ];
     return icons[_random.nextInt(icons.length)];
   }

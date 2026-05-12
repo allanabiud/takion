@@ -5,9 +5,9 @@ import 'package:takion/src/presentation/providers/continue_reading_provider.dart
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 
 @RoutePage()
 class ContinueReadingScreen extends ConsumerWidget {
@@ -23,17 +23,6 @@ class ContinueReadingScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Continue Reading'),
-        actions: [
-          DisplaySettingsButton(
-            selectedOption: sortOption,
-            optionLabel: issueSortLabel,
-            onSelected: (option) {
-              ref
-                  .read(sortPreferencesProvider.notifier)
-                  .setPreference(SortPreferenceContext.continueReading, option);
-            },
-          ),
-        ],
       ),
       body: suggestionsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
@@ -57,14 +46,30 @@ class ContinueReadingScreen extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            itemCount: sortedItems.length,
+            padding: const EdgeInsets.only(bottom: 12),
+            itemCount: sortedItems.length + 1,
             itemBuilder: (context, index) {
-              final item = sortedItems[index];
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: ListHeader(
+                    count: sortedItems.length,
+                    unit: 'suggestion',
+                    selectedSortOption: sortOption,
+                    sortOptionLabel: issueSortLabel,
+                    onSortOptionChanged: (option) {
+                      ref
+                          .read(sortPreferencesProvider.notifier)
+                          .setPreference(SortPreferenceContext.continueReading, option);
+                    },
+                  ),
+                );
+              }
+              final item = sortedItems[index - 1];
               return IssueListTile(
                 issue: item.issue,
-                isFirst: index == 0,
-                isLast: index == sortedItems.length - 1,
+                isFirst: index == 1,
+                isLast: index == sortedItems.length,
               );
             },
           );

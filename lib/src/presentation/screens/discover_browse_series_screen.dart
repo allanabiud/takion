@@ -7,7 +7,7 @@ import 'package:takion/src/presentation/providers/series_list_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/browse_paged_list_screen.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
 @RoutePage()
@@ -22,6 +22,7 @@ class DiscoverBrowseSeriesScreen extends ConsumerStatefulWidget {
 class _DiscoverBrowseSeriesScreenState
     extends ConsumerState<DiscoverBrowseSeriesScreen> {
   int _page = 1;
+  int? _lastCount;
   int _coverFetchLimit = seriesCoverFetchBudgetPerSession;
   bool _coverLimitUpdateScheduled = false;
 
@@ -57,6 +58,11 @@ class _DiscoverBrowseSeriesScreenState
       sortPreferenceForContextProvider(SortPreferenceContext.browseSeries),
     );
     final pageAsync = ref.watch(seriesListProvider(_page));
+
+    if (pageAsync.hasValue) {
+      _lastCount = pageAsync.value?.count;
+    }
+
     final browsePageAsync = pageAsync.whenData((pageData) {
       return BrowsePagedData<SeriesList>(
         results: sortSeries(pageData.results, sortOption),
@@ -69,20 +75,27 @@ class _DiscoverBrowseSeriesScreenState
       );
     });
 
+    final displayCount = pageAsync.value?.count ?? _lastCount;
+
     return BrowsePagedListScreen<SeriesList>(
       title: 'Browse Series',
       pageAsync: browsePageAsync,
-      appBarActions: [
-        DisplaySettingsButton(
-          selectedOption: sortOption,
-          optionLabel: seriesSortLabel,
-          onSelected: (option) {
-            ref
-                .read(sortPreferencesProvider.notifier)
-                .setPreference(SortPreferenceContext.browseSeries, option);
-          },
-        ),
-      ],
+      header: displayCount != null
+          ? ListHeader(
+              count: displayCount,
+              unit: 'series',
+              pluralUnit: 'series',
+              enabled: !pageAsync.isLoading,
+              selectedSortOption: sortOption,
+              sortOptionLabel: seriesSortLabel,
+              onSortOptionChanged: (option) {
+                ref.read(sortPreferencesProvider.notifier).setPreference(
+                      SortPreferenceContext.browseSeries,
+                      option,
+                    );
+              },
+            )
+          : null,
       onRefresh: _refreshPage,
       onPrevious: () {
         final current = pageAsync.asData?.value;

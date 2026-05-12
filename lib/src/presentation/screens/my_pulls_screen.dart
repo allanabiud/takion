@@ -11,7 +11,7 @@ import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
@@ -215,16 +215,22 @@ class MyPullsScreen extends ConsumerWidget {
       emptyMessage: 'No pulls for this week.',
       emptyIcon: Icons.shopping_bag_outlined,
       errorTextBuilder: (error) => 'Failed to load pulls: $error',
-      appBarActions: [
-        DisplaySettingsButton(
-          selectedOption: sortOption,
-          optionLabel: issueSortLabel,
-          onSelected: (option) {
-            ref
-                .read(sortPreferencesProvider.notifier)
-                .setPreference(SortPreferenceContext.releasesMyPulls, option);
+      header: pullsAsync.maybeWhen(
+        data: (issues) => ListHeader(
+          count: issues.length,
+          unit: 'issue',
+          selectedSortOption: sortOption,
+          sortOptionLabel: issueSortLabel,
+          onSortOptionChanged: (option) {
+            ref.read(sortPreferencesProvider.notifier).setPreference(
+                  SortPreferenceContext.releasesMyPulls,
+                  option,
+                );
           },
         ),
+        orElse: () => null,
+      ),
+      appBarActions: [
         IconButton(
           tooltip: 'Add',
           onPressed: () => _showPullActionsSheet(context, ref, selectedDate),

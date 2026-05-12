@@ -23,7 +23,7 @@ class BrowsePagedData<T> {
   final int? nextPage;
 }
 
-class BrowsePagedListScreen<T> extends StatelessWidget {
+class BrowsePagedListScreen<T> extends StatefulWidget {
   const BrowsePagedListScreen({
     super.key,
     required this.title,
@@ -36,6 +36,7 @@ class BrowsePagedListScreen<T> extends StatelessWidget {
     required this.emptyIcon,
     required this.errorPrefix,
     this.appBarActions,
+    this.header,
   });
 
   final String title;
@@ -49,39 +50,68 @@ class BrowsePagedListScreen<T> extends StatelessWidget {
   final IconData emptyIcon;
   final String errorPrefix;
   final List<Widget>? appBarActions;
+  final Widget? header;
+
+  @override
+  State<BrowsePagedListScreen<T>> createState() => _BrowsePagedListScreenState<T>();
+}
+
+class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
+  BrowsePagedData<T>? _lastData;
+
+  @override
+  void didUpdateWidget(covariant BrowsePagedListScreen<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.pageAsync.hasValue) {
+      _lastData = widget.pageAsync.value;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title), actions: appBarActions),
-      body: pageAsync.when(
-        loading: () => const AsyncStatePanel.loading(),
-        error: (error, _) =>
-            AsyncStatePanel.error(errorMessage: '$errorPrefix: $error'),
-        data: (pageData) {
-          final pageSize = pageData.results.isEmpty
-              ? 100
-              : pageData.results.length;
-          final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
+    final pageAsync = widget.pageAsync;
+    final isLoading = pageAsync.isLoading;
+    final data = pageAsync.value ?? _lastData;
 
-          return PagedListScaffold(
-            onRefresh: onRefresh,
-            currentPage: pageData.currentPage,
-            totalPages: totalPages,
-            hasPrevious: pageData.hasPrevious,
-            hasNext: pageData.hasNext,
-            onPrevious: onPrevious,
-            onNext: onNext,
-            itemCount: pageData.results.length,
-            itemBuilder: (context, index) {
-              final item = pageData.results[index];
-              return itemBuilder(context, item, index, pageData.results.length);
-            },
-            emptyMessage: emptyMessage,
-            emptyIcon: emptyIcon,
-          );
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title), actions: widget.appBarActions),
+      body: pageAsync.when(
+        loading: () {
+          if (data != null) {
+            return _buildScaffold(data, isLoading: true);
+          }
+          return const AsyncStatePanel.loading();
+        },
+        error: (error, _) =>
+            AsyncStatePanel.error(errorMessage: '${widget.errorPrefix}: $error'),
+        data: (pageData) {
+          return _buildScaffold(pageData, isLoading: false);
         },
       ),
+    );
+  }
+
+  Widget _buildScaffold(BrowsePagedData<T> pageData, {required bool isLoading}) {
+    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
+    final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
+
+    return PagedListScaffold(
+      onRefresh: widget.onRefresh,
+      currentPage: pageData.currentPage,
+      totalPages: totalPages,
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPrevious: widget.onPrevious,
+      onNext: widget.onNext,
+      itemCount: pageData.results.length,
+      header: widget.header,
+      isLoading: isLoading,
+      itemBuilder: (context, index) {
+        final item = pageData.results[index];
+        return widget.itemBuilder(context, item, index, pageData.results.length);
+      },
+      emptyMessage: widget.emptyMessage,
+      emptyIcon: widget.emptyIcon,
     );
   }
 }

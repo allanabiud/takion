@@ -13,9 +13,9 @@ import 'package:takion/src/presentation/providers/series_search_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
@@ -191,17 +191,6 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                   },
                   icon: const Icon(Icons.search),
                 ),
-                DisplaySettingsButton(
-                  selectedOption: sortOption,
-                  optionLabel: _isSeriesSearch
-                      ? seriesSortLabel
-                      : issueSortLabel,
-                  onSelected: (option) {
-                    ref
-                        .read(sortPreferencesProvider.notifier)
-                        .setPreference(sortContext, option);
-                  },
-                ),
               ],
         bottom: isLoading
             ? const PreferredSize(
@@ -228,29 +217,6 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${pageData.count} results for "${widget.query}" in ${widget.searchChoice}',
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Sorted by ${seriesSortLabel(sortOption)}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
                         Expanded(
                           child: sortedSeries.isEmpty
                               ? RefreshIndicator(
@@ -259,6 +225,23 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                     physics:
                                         const AlwaysScrollableScrollPhysics(),
                                     slivers: [
+                                      if (!_isFiltering)
+                                        SliverToBoxAdapter(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 12),
+                                            child: ListHeader(
+                                              count: pageData.count,
+                                              unit: 'result',
+                                              selectedSortOption: sortOption,
+                                              sortOptionLabel: seriesSortLabel,
+                                              onSortOptionChanged: (option) {
+                                                ref
+                                                    .read(sortPreferencesProvider.notifier)
+                                                    .setPreference(sortContext, option);
+                                              },
+                                            ),
+                                          ),
+                                        ),
                                       SliverFillRemaining(
                                         hasScrollBody: false,
                                         child: Padding(
@@ -282,21 +265,38 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                         const AlwaysScrollableScrollPhysics(),
                                     padding: EdgeInsets.fromLTRB(
                                       0,
-                                      12,
+                                      0,
                                       0,
                                       hasPagination ? 96 : 12,
                                     ),
-                                    itemCount: sortedSeries.length,
+                                    itemCount: sortedSeries.length + (_isFiltering ? 0 : 1),
                                     itemBuilder: (context, index) {
+                                      if (!_isFiltering && index == 0) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 12),
+                                          child: ListHeader(
+                                            count: pageData.count,
+                                            unit: 'result',
+                                            selectedSortOption: sortOption,
+                                            sortOptionLabel: seriesSortLabel,
+                                            onSortOptionChanged: (option) {
+                                              ref
+                                                  .read(sortPreferencesProvider.notifier)
+                                                  .setPreference(sortContext, option);
+                                            },
+                                          ),
+                                        );
+                                      }
+                                      final itemIndex = _isFiltering ? index : index - 1;
                                       _maybeExpandSeriesCoverFetchLimit(
-                                        index: index,
+                                        index: itemIndex,
                                         total: sortedSeries.length,
                                       );
-                                      final series = sortedSeries[index];
+                                      final series = sortedSeries[itemIndex];
                                       return SeriesListTile(
                                         series: series,
                                         allowRemoteCoverFetch:
-                                            index < _seriesCoverFetchLimit,
+                                            itemIndex < _seriesCoverFetchLimit,
                                         heroTag: 'series-cover-${series.id}',
                                         onTap: () {
                                           context.pushRoute(
@@ -305,9 +305,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                             ),
                                           );
                                         },
-                                        isFirst: index == 0,
+                                        isFirst: itemIndex == 0,
                                         isLast:
-                                            index == sortedSeries.length - 1,
+                                            itemIndex == sortedSeries.length - 1,
                                       );
                                     },
                                   ),
@@ -366,29 +366,6 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${pageData.count} results for "${widget.query}" in ${widget.searchChoice}',
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Sorted by ${issueSortLabel(sortOption)}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
                         Expanded(
                           child: sortedIssues.isEmpty
                               ? RefreshIndicator(
@@ -397,6 +374,23 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                     physics:
                                         const AlwaysScrollableScrollPhysics(),
                                     slivers: [
+                                      if (!_isFiltering)
+                                        SliverToBoxAdapter(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 12),
+                                            child: ListHeader(
+                                              count: pageData.count,
+                                              unit: 'result',
+                                              selectedSortOption: sortOption,
+                                              sortOptionLabel: issueSortLabel,
+                                              onSortOptionChanged: (option) {
+                                                ref
+                                                    .read(sortPreferencesProvider.notifier)
+                                                    .setPreference(sortContext, option);
+                                              },
+                                            ),
+                                          ),
+                                        ),
                                       SliverFillRemaining(
                                         hasScrollBody: false,
                                         child: Padding(
@@ -419,18 +413,35 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                         const AlwaysScrollableScrollPhysics(),
                                     padding: EdgeInsets.fromLTRB(
                                       0,
-                                      12,
+                                      0,
                                       0,
                                       hasPagination ? 96 : 12,
                                     ),
-                                    itemCount: sortedIssues.length,
+                                    itemCount: sortedIssues.length + (_isFiltering ? 0 : 1),
                                     itemBuilder: (context, index) {
-                                      final issue = sortedIssues[index];
+                                      if (!_isFiltering && index == 0) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 12),
+                                          child: ListHeader(
+                                            count: pageData.count,
+                                            unit: 'result',
+                                            selectedSortOption: sortOption,
+                                            sortOptionLabel: issueSortLabel,
+                                            onSortOptionChanged: (option) {
+                                              ref
+                                                  .read(sortPreferencesProvider.notifier)
+                                                  .setPreference(sortContext, option);
+                                            },
+                                          ),
+                                        );
+                                      }
+                                      final itemIndex = _isFiltering ? index : index - 1;
+                                      final issue = sortedIssues[itemIndex];
                                       return IssueListTile(
                                         issue: issue,
-                                        isFirst: index == 0,
+                                        isFirst: itemIndex == 0,
                                         isLast:
-                                            index == sortedIssues.length - 1,
+                                            itemIndex == sortedIssues.length - 1,
                                       );
                                     },
                                   ),

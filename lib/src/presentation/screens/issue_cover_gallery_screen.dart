@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
@@ -83,7 +87,51 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
   }
 
   Future<void> _downloadCurrentCover() async {
-    TakionAlerts.info(context, 'Image saving is currently disabled.');
+    setState(() => _isDownloading = true);
+
+    try {
+      if (Platform.isAndroid) {
+        final status = await Permission.storage.request();
+        if (status.isPermanentlyDenied) {
+          if (!mounted) return;
+          TakionAlerts.error(
+            context,
+            'Storage permission is required to save images. Please enable it in settings.',
+          );
+          openAppSettings();
+          return;
+        }
+      }
+
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        await Gal.requestAccess();
+      }
+
+      final url = widget.imageUrls[_currentIndex];
+      final tempDir = await getTemporaryDirectory();
+      final fileName = _downloadFileName();
+      final filePath = '${tempDir.path}/$fileName';
+
+      await _dio.download(url, filePath);
+
+      await Gal.putImage(filePath, album: 'Takion');
+
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      if (!mounted) return;
+      TakionAlerts.success(context, 'Cover saved to gallery.');
+    } catch (e) {
+      if (!mounted) return;
+      TakionAlerts.error(context, 'Failed to save cover: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
   }
 
   String _labelForIndex(int index) {

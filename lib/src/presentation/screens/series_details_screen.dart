@@ -7,6 +7,7 @@ import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
+import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
@@ -22,6 +23,7 @@ import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/tappable_link_row.dart';
@@ -1342,7 +1344,7 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
   }
 }
 
-class _SeriesIssuesTab extends ConsumerWidget {
+class _SeriesIssuesTab extends ConsumerStatefulWidget {
   const _SeriesIssuesTab({
     required this.seriesId,
     required this.page,
@@ -1355,6 +1357,13 @@ class _SeriesIssuesTab extends ConsumerWidget {
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
+  @override
+  ConsumerState<_SeriesIssuesTab> createState() => _SeriesIssuesTabState();
+}
+
+class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
+  SeriesIssueListPage? _lastPage;
+
   double? _issueNumberValue(String input) {
     final match = RegExp(r'\d+(?:\.\d+)?').firstMatch(input);
     if (match == null) return null;
@@ -1362,140 +1371,182 @@ class _SeriesIssuesTab extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(
         SortPreferenceContext.seriesDetailsIssues,
       ),
     );
-    final args = SeriesIssueListArgs(seriesId: seriesId, page: page);
+    final args = SeriesIssueListArgs(seriesId: widget.seriesId, page: widget.page);
     final issuesAsync = ref.watch(seriesIssueListProvider(args));
 
+    if (issuesAsync.hasValue) {
+      _lastPage = issuesAsync.value;
+    }
+
     return issuesAsync.when(
-      loading: () => const AsyncStatePanel.loading(),
+      loading: () {
+        if (_lastPage != null) {
+          return _buildContent(
+            context,
+            ref,
+            _lastPage!,
+            sortOption,
+            isLoading: true,
+          );
+        }
+        return const AsyncStatePanel.loading();
+      },
       error: (error, _) => AsyncStatePanel.error(
         errorMessage: 'Failed to load series issues: $error',
       ),
-      data: (issuePage) {
-        final isDescending =
-            sortOption == ContentSortOption.dateDesc ||
-            sortOption == ContentSortOption.nameDesc;
-        final sortedIssues = [...issuePage.results]
-          ..sort((a, b) {
-            final aValue = _issueNumberValue(a.number);
-            final bValue = _issueNumberValue(b.number);
+      data: (issuePage) => _buildContent(
+        context,
+        ref,
+        issuePage,
+        sortOption,
+        isLoading: false,
+      ),
+    );
+  }
 
-            if (aValue != null && bValue != null) {
-              final valueCompare = aValue.compareTo(bValue);
-              if (valueCompare != 0) {
-                return isDescending ? -valueCompare : valueCompare;
-              }
-            } else if (aValue != null || bValue != null) {
-              final valueCompare = aValue == null ? 1 : -1;
-              return isDescending ? -valueCompare : valueCompare;
-            }
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    SeriesIssueListPage issuePage,
+    ContentSortOption sortOption, {
+    required bool isLoading,
+  }) {
+    final isDescending =
+        sortOption == ContentSortOption.dateDesc ||
+        sortOption == ContentSortOption.nameDesc;
+    final sortedIssues = [...issuePage.results]
+      ..sort((a, b) {
+        final aValue = _issueNumberValue(a.number);
+        final bValue = _issueNumberValue(b.number);
 
-            final fallbackCompare = a.number.toLowerCase().compareTo(
-              b.number.toLowerCase(),
-            );
-            return isDescending ? -fallbackCompare : fallbackCompare;
-          });
-        final totalPages =
-            ((issuePage.count /
-                        (sortedIssues.isEmpty ? 100 : sortedIssues.length))
-                    .ceil())
-                .clamp(1, 9999);
-        final hasPagination = totalPages > 1;
-        final nextSortOption = isDescending
-            ? ContentSortOption.dateAsc
-            : ContentSortOption.dateDesc;
-        final sortLabel = isDescending ? 'Descending' : 'Ascending';
-        final issueCount = issuePage.count;
-        final issueLabel = issueCount == 1 ? '1 issue' : '$issueCount issues';
-        Widget issuesHeader({required EdgeInsetsGeometry padding}) {
-          return Padding(
-            padding: padding,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    issueLabel,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    ref.read(sortPreferencesProvider.notifier).setPreference(
-                      SortPreferenceContext.seriesDetailsIssues,
-                      nextSortOption,
-                    );
-                  },
-                  icon: const Icon(Icons.swap_vert),
-                  label: Text(sortLabel),
-                ),
-              ],
-            ),
-          );
+        if (aValue != null && bValue != null) {
+          final valueCompare = aValue.compareTo(bValue);
+          if (valueCompare != 0) {
+            return isDescending ? -valueCompare : valueCompare;
+          }
+        } else if (aValue != null || bValue != null) {
+          final valueCompare = aValue == null ? 1 : -1;
+          return isDescending ? -valueCompare : valueCompare;
         }
 
-        return Stack(
-          children: [
-            sortedIssues.isEmpty
-                ? ListView(
-                    padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
-                    children: [
-                      issuesHeader(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8)),
-                      SizedBox(
-                        height: 360,
-                        child: EmptyContentState(
-                          icon: Icons.menu_book_outlined,
-                          message: 'No issues available.',
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      0,
-                      8,
-                      0,
-                      hasPagination ? 96 : 12,
-                    ),
-                    itemCount: sortedIssues.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return issuesHeader(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        );
-                      }
-                      final issue = sortedIssues[index - 1];
-                      return IssueListTile(
-                        issue: issue,
-                        isFirst: index == 1,
-                        isLast: index == sortedIssues.length,
-                      );
+        final fallbackCompare = a.number.toLowerCase().compareTo(
+          b.number.toLowerCase(),
+        );
+        return isDescending ? -fallbackCompare : fallbackCompare;
+      });
+    final totalPages =
+        ((issuePage.count / (sortedIssues.isEmpty ? 100 : sortedIssues.length))
+                .ceil())
+            .clamp(1, 9999);
+    final hasPagination = totalPages > 1;
+    final nextSortOption =
+        isDescending ? ContentSortOption.dateAsc : ContentSortOption.dateDesc;
+    final sortLabel = isDescending ? 'Descending' : 'Ascending';
+    final issueCount = issuePage.count;
+
+    return Stack(
+      children: [
+        sortedIssues.isEmpty && !isLoading
+            ? ListView(
+                padding: EdgeInsets.only(bottom: hasPagination ? 96 : 12),
+                children: [
+                  ListHeader(
+                    count: issueCount,
+                    unit: 'issue',
+                    sortLabel: sortLabel,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    enabled: !isLoading,
+                    onSortTap: () {
+                      ref.read(sortPreferencesProvider.notifier).setPreference(
+                            SortPreferenceContext.seriesDetailsIssues,
+                            nextSortOption,
+                          );
                     },
                   ),
-            if (hasPagination)
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: PageNavigationBar(
-                      currentPage: page,
-                      totalPages: totalPages,
-                      hasPrevious: issuePage.hasPrevious,
-                      hasNext: issuePage.hasNext,
-                      onPrevious: onPrevious,
-                      onNext: onNext,
+                  const SizedBox(
+                    height: 360,
+                    child: EmptyContentState(
+                      icon: Icons.menu_book_outlined,
+                      message: 'No issues available.',
                     ),
                   ),
+                ],
+              )
+            : ListView.builder(
+                padding: EdgeInsets.fromLTRB(
+                  0,
+                  8,
+                  0,
+                  hasPagination ? 96 : 12,
+                ),
+                itemCount: sortedIssues.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListHeader(
+                          count: issueCount,
+                          unit: 'issue',
+                          sortLabel: sortLabel,
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          enabled: !isLoading,
+                          onSortTap: () {
+                            ref
+                                .read(sortPreferencesProvider.notifier)
+                                .setPreference(
+                                  SortPreferenceContext.seriesDetailsIssues,
+                                  nextSortOption,
+                                );
+                          },
+                        ),
+                        if (isLoading)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: LinearProgressIndicator(minHeight: 2),
+                          ),
+                      ],
+                    );
+                  }
+                  final issue = sortedIssues[index - 1];
+                  return Opacity(
+                    opacity: isLoading ? 0.6 : 1.0,
+                    child: IssueListTile(
+                      issue: issue,
+                      isFirst: index == 1,
+                      isLast: index == sortedIssues.length,
+                    ),
+                  );
+                },
+              ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: widget.page,
+                  totalPages: totalPages,
+                  hasPrevious: issuePage.hasPrevious,
+                  hasNext: issuePage.hasNext,
+                  onPrevious: widget.onPrevious,
+                  onNext: widget.onNext,
+                  enabled: !isLoading,
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+      ],
     );
   }
 }

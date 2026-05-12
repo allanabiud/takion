@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
 @RoutePage()
@@ -28,17 +28,24 @@ class NewFirstIssuesScreen extends ConsumerWidget {
         issues.where((issue) => issue.number == '1').toList(),
         sortOption,
       ),
-      appBarActions: [
-        DisplaySettingsButton(
-          selectedOption: sortOption,
-          optionLabel: issueSortLabel,
-          onSelected: (option) {
-            ref
-                .read(sortPreferencesProvider.notifier)
-                .setPreference(SortPreferenceContext.releasesNewFirst, option);
-          },
-        ),
-      ],
+      header: issuesAsync.maybeWhen(
+        data: (issues) {
+          final firstIssues = issues.where((i) => i.number == '1').toList();
+          return ListHeader(
+            count: firstIssues.length,
+            unit: 'issue',
+            selectedSortOption: sortOption,
+            sortOptionLabel: issueSortLabel,
+            onSortOptionChanged: (option) {
+              ref.read(sortPreferencesProvider.notifier).setPreference(
+                    SortPreferenceContext.releasesNewFirst,
+                    option,
+                  );
+            },
+          );
+        },
+        orElse: () => null,
+      ),
     );
   }
 }

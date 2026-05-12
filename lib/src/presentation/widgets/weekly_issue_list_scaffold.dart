@@ -14,6 +14,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
   final List<IssueList> Function(List<IssueList>) transformIssues;
   final String Function(Object error)? errorTextBuilder;
   final List<Widget>? appBarActions;
+  final Widget? header;
 
   const WeeklyIssueListScaffold({
     super.key,
@@ -24,6 +25,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
     this.transformIssues = _identity,
     this.errorTextBuilder,
     this.appBarActions,
+    this.header,
   });
 
   static List<IssueList> _identity(List<IssueList> issues) => issues;
@@ -53,21 +55,38 @@ class WeeklyIssueListScaffold extends StatelessWidget {
               data: (issues) {
                 final visibleIssues = transformIssues(issues);
                 if (visibleIssues.isEmpty) {
-                  return EmptyContentState(
-                    icon: emptyIcon,
-                    message: emptyMessage,
+                  return Column(
+                    children: [
+                      if (header != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: header,
+                        ),
+                      Expanded(
+                        child: EmptyContentState(
+                          icon: emptyIcon,
+                          message: emptyMessage,
+                        ),
+                      ),
+                    ],
                   );
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  itemCount: visibleIssues.length,
+                  padding: const EdgeInsets.only(bottom: 12),
+                  itemCount: visibleIssues.length + (header != null ? 1 : 0),
                   itemBuilder: (context, index) {
-                    final issue = visibleIssues[index];
+                    if (header != null && index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: header,
+                      );
+                    }
+                    final issue = visibleIssues[header != null ? index - 1 : index];
                     return IssueListTile(
                       issue: issue,
-                      isFirst: index == 0,
-                      isLast: index == visibleIssues.length - 1,
+                      isFirst: header != null ? index == 1 : index == 0,
+                      isLast: index == (visibleIssues.length + (header != null ? 1 : 0) - 1),
                     );
                   },
                 );

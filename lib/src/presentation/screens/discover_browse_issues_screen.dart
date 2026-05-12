@@ -6,8 +6,8 @@ import 'package:takion/src/presentation/providers/discover_browse_provider.dart'
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/browse_paged_list_screen.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 
 @RoutePage()
 class DiscoverBrowseIssuesScreen extends ConsumerStatefulWidget {
@@ -21,6 +21,7 @@ class DiscoverBrowseIssuesScreen extends ConsumerStatefulWidget {
 class _DiscoverBrowseIssuesScreenState
     extends ConsumerState<DiscoverBrowseIssuesScreen> {
   int _page = 1;
+  int? _lastCount;
 
   DiscoverBrowseIssuesArgs get _args => DiscoverBrowseIssuesArgs(
     page: _page,
@@ -38,6 +39,11 @@ class _DiscoverBrowseIssuesScreenState
       sortPreferenceForContextProvider(SortPreferenceContext.browseIssues),
     );
     final pageAsync = ref.watch(discoverBrowseIssuesProvider(_args));
+    
+    if (pageAsync.hasValue) {
+      _lastCount = pageAsync.value?.count;
+    }
+
     final browsePageAsync = pageAsync.whenData((pageData) {
       final hasPrevious = _page > 1;
       final hasNext = pageData.next != null;
@@ -52,20 +58,23 @@ class _DiscoverBrowseIssuesScreenState
       );
     });
 
+    final displayCount = pageAsync.value?.count ?? _lastCount;
+
     return BrowsePagedListScreen<IssueList>(
       title: 'Browse Issues',
       pageAsync: browsePageAsync,
-      appBarActions: [
-        DisplaySettingsButton(
-          selectedOption: sortOption,
-          optionLabel: issueSortLabel,
-          onSelected: (option) {
+      header: displayCount != null ? ListHeader(
+          count: displayCount,
+          unit: 'issue',
+          enabled: !pageAsync.isLoading,
+          selectedSortOption: sortOption,
+          sortOptionLabel: issueSortLabel,
+          onSortOptionChanged: (option) {
             ref
                 .read(sortPreferencesProvider.notifier)
                 .setPreference(SortPreferenceContext.browseIssues, option);
           },
-        ),
-      ],
+        ) : null,
       onRefresh: _refreshPage,
       onPrevious: () {
         if (_page <= 1) return;

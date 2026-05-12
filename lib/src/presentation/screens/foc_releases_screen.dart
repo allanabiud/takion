@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
 @RoutePage()
@@ -23,17 +23,21 @@ class FocReleasesScreen extends ConsumerWidget {
       title: 'FOC Calendar',
       issuesAsync: issuesAsync,
       transformIssues: (issues) => sortIssues(issues, sortOption),
-      appBarActions: [
-        DisplaySettingsButton(
-          selectedOption: sortOption,
-          optionLabel: issueSortLabel,
-          onSelected: (option) {
-            ref
-                .read(sortPreferencesProvider.notifier)
-                .setPreference(SortPreferenceContext.releasesFoc, option);
+      header: issuesAsync.maybeWhen(
+        data: (issues) => ListHeader(
+          count: issues.length,
+          unit: 'issue',
+          selectedSortOption: sortOption,
+          sortOptionLabel: issueSortLabel,
+          onSortOptionChanged: (option) {
+            ref.read(sortPreferencesProvider.notifier).setPreference(
+                  SortPreferenceContext.releasesFoc,
+                  option,
+                );
           },
         ),
-      ],
+        orElse: () => null,
+      ),
       emptyMessage: 'No FOC issues for this week.',
       emptyIcon: Icons.event_note_outlined,
     );

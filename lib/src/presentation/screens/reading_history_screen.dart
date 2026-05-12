@@ -8,8 +8,8 @@ import 'package:takion/src/presentation/providers/sort_preferences_provider.dart
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 
 @RoutePage()
 class ReadingHistoryScreen extends ConsumerWidget {
@@ -32,20 +32,6 @@ class ReadingHistoryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reading History'),
-        actions: [
-          DisplaySettingsButton(
-            selectedOption: sortOption,
-            optionLabel: issueSortLabel,
-            onSelected: (option) {
-              ref
-                  .read(sortPreferencesProvider.notifier)
-                  .setPreference(
-                    SortPreferenceContext.libraryReadingHistory,
-                    option,
-                  );
-            },
-          ),
-        ],
       ),
       body: historyAsync.when(
         loading: () => const AsyncStatePanel.loading(),
@@ -88,10 +74,30 @@ class ReadingHistoryScreen extends ConsumerWidget {
             onRefresh: refresh,
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: sortedEntries.length,
+              padding: const EdgeInsets.only(bottom: 12),
+              itemCount: sortedEntries.length + 1,
               itemBuilder: (context, index) {
-                final entry = sortedEntries[index];
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: ListHeader(
+                      count: sortedEntries.length,
+                      unit: 'entry',
+                      pluralUnit: 'entries',
+                      selectedSortOption: sortOption,
+                      sortOptionLabel: issueSortLabel,
+                      onSortOptionChanged: (option) {
+                        ref
+                            .read(sortPreferencesProvider.notifier)
+                            .setPreference(
+                              SortPreferenceContext.libraryReadingHistory,
+                              option,
+                            );
+                      },
+                    ),
+                  );
+                }
+                final entry = sortedEntries[index - 1];
                 final issue = entry.item.issue;
                 final issueId = issue?.id;
                 final rawSeriesName = issue?.series?.name.trim() ?? '';

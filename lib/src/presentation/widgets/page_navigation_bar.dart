@@ -9,6 +9,7 @@ class PageNavigationBar extends StatelessWidget {
     required this.hasNext,
     this.onPrevious,
     this.onNext,
+    this.enabled = true,
   });
 
   final int currentPage;
@@ -17,6 +18,7 @@ class PageNavigationBar extends StatelessWidget {
   final bool hasNext;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class PageNavigationBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               FilledButton.tonalIcon(
-                onPressed: hasPrevious ? onPrevious : null,
+                onPressed: enabled && hasPrevious ? onPrevious : null,
                 icon: const Icon(Icons.chevron_left),
                 label: const Text('Prev'),
               ),
@@ -43,7 +45,7 @@ class PageNavigationBar extends StatelessWidget {
                 child: Text('Page $currentPage of $totalPages'),
               ),
               FilledButton.tonalIcon(
-                onPressed: hasNext ? onNext : null,
+                onPressed: enabled && hasNext ? onNext : null,
                 icon: const Icon(Icons.chevron_right),
                 label: const Text('Next'),
               ),

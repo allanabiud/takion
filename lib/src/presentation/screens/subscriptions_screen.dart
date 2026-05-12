@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/domain/entities/series_list_page.dart';
 import 'package:takion/src/presentation/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/display_settings_button.dart';
+import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/paged_list_scaffold.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
@@ -23,6 +24,7 @@ class SubscriptionsScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   int _page = 1;
+  SeriesListPage? _lastPage;
   int _coverFetchLimit = seriesCoverFetchBudgetPerSession;
   bool _coverLimitUpdateScheduled = false;
 
@@ -64,77 +66,97 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     );
     final pageAsync = ref.watch(subscribedSeriesPageProvider(_page));
 
+    if (pageAsync.hasValue) {
+      _lastPage = pageAsync.value;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Subscriptions'),
-        actions: [
-          DisplaySettingsButton(
-            selectedOption: sortOption,
-            optionLabel: seriesSortLabel,
-            onSelected: (option) {
-              ref
-                  .read(sortPreferencesProvider.notifier)
-                  .setPreference(SortPreferenceContext.subscriptions, option);
-            },
-          ),
-        ],
       ),
       body: pageAsync.when(
-        loading: () => const AsyncStatePanel.loading(),
+        loading: () {
+          if (_lastPage != null) {
+            return _buildContent(_lastPage!, sortOption, isLoading: true);
+          }
+          return const AsyncStatePanel.loading();
+        },
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: 'Failed to load subscriptions: $error',
         ),
-        data: (pageData) {
-          final pageSize = pageData.results.isEmpty
-              ? 100
-              : pageData.results.length;
-          final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
-          final sortedResults = sortSeries(pageData.results, sortOption);
+        data: (pageData) => _buildContent(pageData, sortOption, isLoading: false),
+      ),
+    );
+  }
 
-          return PagedListScaffold(
-            onRefresh: _refreshPage,
-            currentPage: _page,
-            totalPages: totalPages,
-            hasPrevious: pageData.hasPrevious,
-            hasNext: pageData.hasNext,
-            onPrevious: () {
-              final previousPage = pageData.previousPage;
-              if (previousPage == null) return;
-              setState(() {
-                _page = previousPage;
-                _resetCoverFetchLimit();
-              });
-            },
-            onNext: () {
-              final nextPage = pageData.nextPage;
-              if (nextPage == null) return;
-              setState(() {
-                _page = nextPage;
-                _resetCoverFetchLimit();
-              });
-            },
-            itemCount: sortedResults.length,
-            itemBuilder: (context, index) {
-              _maybeExpandCoverFetchLimit(
-                index: index,
-                total: sortedResults.length,
+  Widget _buildContent(
+    SeriesListPage pageData,
+    ContentSortOption sortOption, {
+    required bool isLoading,
+  }) {
+    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
+    final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
+    final sortedResults = sortSeries(pageData.results, sortOption);
+
+    return PagedListScaffold(
+      onRefresh: _refreshPage,
+      currentPage: _page,
+      totalPages: totalPages,
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      isLoading: isLoading,
+      header: ListHeader(
+        count: pageData.count,
+        unit: 'series',
+        pluralUnit: 'series',
+        enabled: !isLoading,
+        selectedSortOption: sortOption,
+        sortOptionLabel: seriesSortLabel,
+        onSortOptionChanged: (option) {
+          ref.read(sortPreferencesProvider.notifier).setPreference(
+                SortPreferenceContext.subscriptions,
+                option,
               );
-              final series = sortedResults[index];
-              return SeriesListTile(
-                series: series,
-                allowRemoteCoverFetch: index < _coverFetchLimit,
-                isFirst: index == 0,
-                isLast: index == sortedResults.length - 1,
-                onTap: () {
-                  context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
-                },
-              );
-            },
-            emptyMessage: 'No subscriptions yet.',
-            emptyIcon: Icons.subscriptions_outlined,
-          );
         },
       ),
+      onPrevious: () {
+        final previousPage = pageData.previousPage;
+        if (previousPage == null) return;
+        setState(() {
+          _page = previousPage;
+          _resetCoverFetchLimit();
+        });
+      },
+      onNext: () {
+        final nextPage = pageData.nextPage;
+        if (nextPage == null) return;
+        setState(() {
+          _page = nextPage;
+          _resetCoverFetchLimit();
+        });
+      },
+      itemCount: sortedResults.length,
+      itemBuilder: (context, index) {
+        _maybeExpandCoverFetchLimit(
+          index: index,
+          total: sortedResults.length,
+        );
+        final series = sortedResults[index];
+        return Opacity(
+          opacity: isLoading ? 0.6 : 1.0,
+          child: SeriesListTile(
+            series: series,
+            allowRemoteCoverFetch: index < _coverFetchLimit,
+            isFirst: index == 0,
+            isLast: index == sortedResults.length - 1,
+            onTap: () {
+              context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
+            },
+          ),
+        );
+      },
+      emptyMessage: 'No subscriptions yet.',
+      emptyIcon: Icons.subscriptions_outlined,
     );
   }
 }
