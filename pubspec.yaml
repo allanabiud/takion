@@ -74,6 +74,7 @@ flutter_launcher_icons:
   image_path: assets/images/icon.png
   adaptive_icon_background: "#121212"
   adaptive_icon_foreground: assets/images/icon.png
+  adaptive_icon_foreground_inset: 20
 
 flutter_native_splash:
   color: "#121212"
@@ -84,4 +85,5 @@ flutter_native_splash:
   fullscreen: true
   android_12:
     color: "#121212"
-    image: assets/images/icon.png
+    image: assets/images/splash.png
+    icon_background_color: "#121212"

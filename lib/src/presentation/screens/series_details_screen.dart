@@ -197,6 +197,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             ? 'added to collection'
             : 'marked as read';
         TakionAlerts.success(context, '$affected issues $actionText.');
+        Navigator.of(context).pop();
       }
     } catch (error) {
       if (mounted) {
