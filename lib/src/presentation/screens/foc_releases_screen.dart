@@ -5,6 +5,7 @@ import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
 @RoutePage()
@@ -27,14 +28,13 @@ class FocReleasesScreen extends ConsumerWidget {
         data: (issues) => ListHeader(
           count: issues.length,
           unit: 'issue',
-          selectedSortOption: sortOption,
-          sortOptionLabel: issueSortLabel,
-          onSortOptionChanged: (option) {
-            ref.read(sortPreferencesProvider.notifier).setPreference(
-                  SortPreferenceContext.releasesFoc,
-                  option,
-                );
-          },
+          sortLabel: issueSortLabel(sortOption),
+          onSortTap: () => showSortBottomSheet(
+            context,
+            ref,
+            SortPreferenceContext.releasesFoc,
+            issueSortLabel,
+          ),
         ),
         orElse: () => null,
       ),

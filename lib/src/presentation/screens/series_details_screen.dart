@@ -24,6 +24,7 @@ import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/tappable_link_row.dart';
@@ -31,7 +32,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
 
-enum _SeriesIssueBulkOperation { addToCollection, removeFromCollection, markAsRead, markAsUnread }
+enum _SeriesIssueBulkOperation {
+  addToCollection,
+  removeFromCollection,
+  markAsRead,
+  markAsUnread,
+}
 
 enum _SeriesIssueSelectionMode { predefined, range }
 
@@ -63,6 +69,34 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   int _issuesPage = 1;
   bool _isUpdatingSubscription = false;
+  final ScrollController _scrollController = ScrollController();
+  double _titleOpacity = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final offset = _scrollController.offset;
+    final fadeStart = 260 * 0.58;
+    final fadeEnd = 260 - kToolbarHeight;
+    final next = ((offset - fadeStart) / (fadeEnd - fadeStart)).clamp(0.0, 1.0);
+
+    if ((next - _titleOpacity).abs() > 0.01) {
+      setState(() {
+        _titleOpacity = next;
+      });
+    }
+  }
 
   Future<List<_SeriesIssueBulkCandidate>> _allSeriesIssues() async {
     final metronRepository = ref.read(metronRepositoryProvider);
@@ -231,7 +265,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       if (mounted) {
         final actionText = switch (operation) {
           _SeriesIssueBulkOperation.addToCollection => 'added to collection',
-          _SeriesIssueBulkOperation.removeFromCollection => 'removed from collection',
+          _SeriesIssueBulkOperation.removeFromCollection =>
+            'removed from collection',
           _SeriesIssueBulkOperation.markAsRead => 'marked as read',
           _SeriesIssueBulkOperation.markAsUnread => 'marked as unread',
         };
@@ -371,16 +406,16 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             final startIssueNumber = issues[selectedStart - 1].issueNumber;
             final endIssueNumber = issues[selectedEnd - 1].issueNumber;
 
-            final actionIcon = switch (selectedOperation) {
-              _SeriesIssueBulkOperation.addToCollection => Icons.inventory_2_outlined,
-              _SeriesIssueBulkOperation.removeFromCollection => Icons.inventory_2,
-              _SeriesIssueBulkOperation.markAsRead => Icons.bookmark_added_outlined,
-              _SeriesIssueBulkOperation.markAsUnread => Icons.bookmark_add_outlined,
-            };
-            final selectionSummary =
-                selectedMode == _SeriesIssueSelectionMode.predefined
-                ? subsetLabel(selectedSubset)
-                : 'Issues #$startIssueNumber - #$endIssueNumber';
+            // final actionIcon = switch (selectedOperation) {
+            //   _SeriesIssueBulkOperation.addToCollection => Icons.inventory_2_outlined,
+            //   _SeriesIssueBulkOperation.removeFromCollection => Icons.inventory_2,
+            //   _SeriesIssueBulkOperation.markAsRead => Icons.bookmark_added_outlined,
+            //   _SeriesIssueBulkOperation.markAsUnread => Icons.bookmark_add_outlined,
+            // };
+            // final selectionSummary =
+            //     selectedMode == _SeriesIssueSelectionMode.predefined
+            //     ? subsetLabel(selectedSubset)
+            //     : 'Issues #$startIssueNumber - #$endIssueNumber';
 
             return Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -435,15 +470,22 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Text('Action', style: Theme.of(context).textTheme.labelLarge),
+                      Text(
+                        'Action',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                       const SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
-                          children: _SeriesIssueBulkOperation.values.map((operation) {
+                          children: _SeriesIssueBulkOperation.values.map((
+                            operation,
+                          ) {
                             return RadioListTile<_SeriesIssueBulkOperation>(
                               title: Text(operationLabel(operation)),
                               value: operation,
@@ -493,7 +535,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (selectedMode == _SeriesIssueSelectionMode.predefined) ...[
+                      if (selectedMode ==
+                          _SeriesIssueSelectionMode.predefined) ...[
                         Text(
                           'Apply to',
                           style: Theme.of(context).textTheme.labelLarge,
@@ -524,7 +567,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Column(
@@ -538,8 +583,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                               RangeSlider(
                                 min: 1,
                                 max: totalIssues.toDouble(),
-                                divisions: totalIssues > 1 ? totalIssues - 1 : null,
-                                labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                                divisions: totalIssues > 1
+                                    ? totalIssues - 1
+                                    : null,
+                                labels: RangeLabels(
+                                  '$selectedStart',
+                                  '$selectedEnd',
+                                ),
                                 values: selectedRange,
                                 onChanged: isApplying
                                     ? null
@@ -802,23 +852,32 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                                       : null,
                                 ),
                         ),
+                        const VerticalDivider(width: 1),
                         IconButton(
                           iconSize: 28,
                           tooltip: 'Add to list',
-                          onPressed: () => TakionAlerts.comingSoon(context, 'Add to list'),
-                          icon: const Icon(Icons.playlist_add_outlined, size: 28),
+                          onPressed: () =>
+                              TakionAlerts.comingSoon(context, 'Add to list'),
+                          icon: const Icon(
+                            Icons.playlist_add_outlined,
+                            size: 28,
+                          ),
                         ),
                         IconButton(
                           iconSize: 28,
                           tooltip: 'Favorite series',
-                          onPressed: () => TakionAlerts.comingSoon(context, 'Favorite series'),
+                          onPressed: () => TakionAlerts.comingSoon(
+                            context,
+                            'Favorite series',
+                          ),
                           icon: const Icon(Icons.favorite_border, size: 28),
                         ),
                       ],
                     ),
                     FloatingActionButton(
-                      onPressed: () =>
-                          _showSeriesIssueActionsSheet(seriesName: details.name),
+                      onPressed: () => _showSeriesIssueActionsSheet(
+                        seriesName: details.name,
+                      ),
                       child: const Icon(Icons.add),
                     ),
                   ],
@@ -829,12 +888,14 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           body: Builder(
             builder: (context) {
               final coverImageAsync = ref.watch(
-                seriesCoverImageProvider(
-                  (seriesId: widget.seriesId, allowRemoteFetch: true),
-                ),
+                seriesCoverImageProvider((
+                  seriesId: widget.seriesId,
+                  allowRemoteFetch: true,
+                )),
               );
 
               return NestedScrollView(
+                controller: _scrollController,
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
                     SliverAppBar(
@@ -843,6 +904,16 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                       elevation: 0,
                       surfaceTintColor: colorScheme.surface,
                       expandedHeight: 260,
+                      title: Opacity(
+                        opacity: _titleOpacity,
+                        child: Text(
+                          details.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
                       flexibleSpace: FlexibleSpaceBar(
                         background: _SeriesHeroFlexibleSpace(
                           details: details,
@@ -1102,7 +1173,10 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
-      child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: child),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: child,
+      ),
     );
   }
 
@@ -1364,12 +1438,6 @@ class _SeriesIssuesTab extends ConsumerStatefulWidget {
 class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
   SeriesIssueListPage? _lastPage;
 
-  double? _issueNumberValue(String input) {
-    final match = RegExp(r'\d+(?:\.\d+)?').firstMatch(input);
-    if (match == null) return null;
-    return double.tryParse(match.group(0)!);
-  }
-
   @override
   Widget build(BuildContext context) {
     final sortOption = ref.watch(
@@ -1377,7 +1445,10 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
         SortPreferenceContext.seriesDetailsIssues,
       ),
     );
-    final args = SeriesIssueListArgs(seriesId: widget.seriesId, page: widget.page);
+    final args = SeriesIssueListArgs(
+      seriesId: widget.seriesId,
+      page: widget.page,
+    );
     final issuesAsync = ref.watch(seriesIssueListProvider(args));
 
     if (issuesAsync.hasValue) {
@@ -1400,13 +1471,8 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
       error: (error, _) => AsyncStatePanel.error(
         errorMessage: 'Failed to load series issues: $error',
       ),
-      data: (issuePage) => _buildContent(
-        context,
-        ref,
-        issuePage,
-        sortOption,
-        isLoading: false,
-      ),
+      data: (issuePage) =>
+          _buildContent(context, ref, issuePage, sortOption, isLoading: false),
     );
   }
 
@@ -1417,37 +1483,12 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
     ContentSortOption sortOption, {
     required bool isLoading,
   }) {
-    final isDescending =
-        sortOption == ContentSortOption.dateDesc ||
-        sortOption == ContentSortOption.nameDesc;
-    final sortedIssues = [...issuePage.results]
-      ..sort((a, b) {
-        final aValue = _issueNumberValue(a.number);
-        final bValue = _issueNumberValue(b.number);
-
-        if (aValue != null && bValue != null) {
-          final valueCompare = aValue.compareTo(bValue);
-          if (valueCompare != 0) {
-            return isDescending ? -valueCompare : valueCompare;
-          }
-        } else if (aValue != null || bValue != null) {
-          final valueCompare = aValue == null ? 1 : -1;
-          return isDescending ? -valueCompare : valueCompare;
-        }
-
-        final fallbackCompare = a.number.toLowerCase().compareTo(
-          b.number.toLowerCase(),
-        );
-        return isDescending ? -fallbackCompare : fallbackCompare;
-      });
+    final sortedIssues = sortIssues(issuePage.results, sortOption);
     final totalPages =
         ((issuePage.count / (sortedIssues.isEmpty ? 100 : sortedIssues.length))
                 .ceil())
             .clamp(1, 9999);
     final hasPagination = totalPages > 1;
-    final nextSortOption =
-        isDescending ? ContentSortOption.dateAsc : ContentSortOption.dateDesc;
-    final sortLabel = isDescending ? 'Descending' : 'Ascending';
     final issueCount = issuePage.count;
 
     return Stack(
@@ -1459,14 +1500,16 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
                   ListHeader(
                     count: issueCount,
                     unit: 'issue',
-                    sortLabel: sortLabel,
+                    sortLabel: issueSortLabel(sortOption),
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     enabled: !isLoading,
                     onSortTap: () {
-                      ref.read(sortPreferencesProvider.notifier).setPreference(
-                            SortPreferenceContext.seriesDetailsIssues,
-                            nextSortOption,
-                          );
+                      showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.seriesDetailsIssues,
+                        issueSortLabel,
+                      );
                     },
                   ),
                   const SizedBox(
@@ -1479,12 +1522,7 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
                 ],
               )
             : ListView.builder(
-                padding: EdgeInsets.fromLTRB(
-                  0,
-                  8,
-                  0,
-                  hasPagination ? 96 : 12,
-                ),
+                padding: EdgeInsets.fromLTRB(0, 8, 0, hasPagination ? 96 : 12),
                 itemCount: sortedIssues.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
@@ -1494,16 +1532,16 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
                         ListHeader(
                           count: issueCount,
                           unit: 'issue',
-                          sortLabel: sortLabel,
+                          sortLabel: issueSortLabel(sortOption),
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           enabled: !isLoading,
                           onSortTap: () {
-                            ref
-                                .read(sortPreferencesProvider.notifier)
-                                .setPreference(
-                                  SortPreferenceContext.seriesDetailsIssues,
-                                  nextSortOption,
-                                );
+                            showSortBottomSheet(
+                              context,
+                              ref,
+                              SortPreferenceContext.seriesDetailsIssues,
+                              issueSortLabel,
+                            );
                           },
                         ),
                         if (isLoading)

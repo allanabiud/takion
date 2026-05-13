@@ -2,7 +2,7 @@ import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 
-enum ContentSortOption { nameAsc, nameDesc, dateAsc, dateDesc }
+enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 
 enum SortPreferenceContext {
   searchIssues,
@@ -76,7 +76,7 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.browseIssues:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.browseRecentlyAdded:
-        return ContentSortOption.dateDesc;
+        return ContentSortOption.dateNewest;
       case SortPreferenceContext.browseSeries:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.libraryMyComics:
@@ -90,9 +90,9 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.libraryUnread:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.libraryReadingHistory:
-        return ContentSortOption.dateDesc;
+        return ContentSortOption.dateNewest;
       case SortPreferenceContext.seriesDetailsIssues:
-        return ContentSortOption.dateAsc;
+        return ContentSortOption.dateOldest;
       case SortPreferenceContext.releasesWeekly:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.releasesFoc:
@@ -102,7 +102,7 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.releasesNewFirst:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.continueReading:
-        return ContentSortOption.dateDesc;
+        return ContentSortOption.dateNewest;
       case SortPreferenceContext.subscriptions:
         return ContentSortOption.nameAsc;
     }
@@ -112,26 +112,26 @@ extension SortPreferenceContextX on SortPreferenceContext {
 String issueSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
-      return 'Name (A–Z)';
+      return 'Alphabetical (A-Z)';
     case ContentSortOption.nameDesc:
-      return 'Name (Z–A)';
-    case ContentSortOption.dateAsc:
-      return 'Date (Oldest first)';
-    case ContentSortOption.dateDesc:
-      return 'Date (Newest first)';
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
   }
 }
 
 String seriesSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
-      return 'Name (A–Z)';
+      return 'Alphabetical (A-Z)';
     case ContentSortOption.nameDesc:
-      return 'Name (Z–A)';
-    case ContentSortOption.dateAsc:
-      return 'Year Began (Oldest first)';
-    case ContentSortOption.dateDesc:
-      return 'Year Began (Newest first)';
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
   }
 }
 
@@ -166,11 +166,11 @@ List<IssueList> sortIssues(
     case ContentSortOption.nameDesc:
       sorted.sort((a, b) => compareByName(b, a));
       break;
-    case ContentSortOption.dateAsc:
-      sorted.sort(compareByDate);
-      break;
-    case ContentSortOption.dateDesc:
+    case ContentSortOption.dateNewest:
       sorted.sort((a, b) => compareByDate(b, a));
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByDate);
       break;
   }
 
@@ -204,11 +204,11 @@ List<SeriesList> sortSeries(
     case ContentSortOption.nameDesc:
       sorted.sort((a, b) => compareByName(b, a));
       break;
-    case ContentSortOption.dateAsc:
-      sorted.sort(compareByYear);
-      break;
-    case ContentSortOption.dateDesc:
+    case ContentSortOption.dateNewest:
       sorted.sort((a, b) => compareByYear(b, a));
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByYear);
       break;
   }
 
@@ -260,11 +260,11 @@ List<CollectionItem> sortCollectionItems(
     case ContentSortOption.nameDesc:
       sorted.sort((a, b) => compareByName(b, a));
       break;
-    case ContentSortOption.dateAsc:
-      sorted.sort(compareByDate);
-      break;
-    case ContentSortOption.dateDesc:
+    case ContentSortOption.dateNewest:
       sorted.sort((a, b) => compareByDate(b, a));
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByDate);
       break;
   }
 
@@ -301,11 +301,11 @@ List<T> sortItemsByNameAndDate<T>(
     case ContentSortOption.nameDesc:
       sorted.sort((a, b) => compareByName(b, a));
       break;
-    case ContentSortOption.dateAsc:
-      sorted.sort(compareByDate);
-      break;
-    case ContentSortOption.dateDesc:
+    case ContentSortOption.dateNewest:
       sorted.sort((a, b) => compareByDate(b, a));
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByDate);
       break;
   }
 

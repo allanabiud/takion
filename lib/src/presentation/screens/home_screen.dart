@@ -132,7 +132,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return IssueCard(
               imageUrl: issue.image,
               title: '${issue.series?.name ?? issue.name} #${issue.number}',
-              heroTag: issueId == null ? null : 'issue-cover-$issueId',
               isCollected: collectionStatus?.isCollected ?? false,
               isWishlisted: collectionStatus?.isWishlisted ?? false,
               isRead: collectionStatus?.isRead ?? false,
@@ -372,7 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ),
                                           const Spacer(),
                                           Text(
-                                            series?.name ?? issue.name,
+                                            '${series?.name ?? issue.name} #${issue.number}',
                                             maxLines: 3,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
@@ -382,16 +381,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                   fontWeight: FontWeight.w800,
                                                   color: Colors.white,
                                                 ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${series?.yearBegan ?? 'Unknown'}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(color: Colors.white),
                                           ),
                                         ],
                                       );
@@ -471,14 +460,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     Container(
                                       width: 180,
                                       height: 20,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.surfaceContainerHighest,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      width: 64,
-                                      height: 14,
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.surfaceContainerHighest,
@@ -585,9 +566,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             imageUrl: issue.image,
                             title:
                                 '${issue.series?.name ?? 'Issue'} #${issue.number}',
-                            heroTag: issueId == null
-                                ? null
-                                : 'issue-cover-$issueId',
                             isCollected: collectionStatus?.isCollected ?? false,
                             isWishlisted:
                                 collectionStatus?.isWishlisted ?? false,

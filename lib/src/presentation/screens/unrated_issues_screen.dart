@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/collection_issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 
 @RoutePage()
 class UnratedIssuesScreen extends ConsumerWidget {
@@ -67,16 +68,13 @@ class UnratedIssuesScreen extends ConsumerWidget {
                     child: ListHeader(
                       count: sortedItems.length,
                       unit: 'comic',
-                      selectedSortOption: sortOption,
-                      sortOptionLabel: issueSortLabel,
-                      onSortOptionChanged: (option) {
-                        ref
-                            .read(sortPreferencesProvider.notifier)
-                            .setPreference(
-                              SortPreferenceContext.libraryUnrated,
-                              option,
-                            );
-                      },
+                      sortLabel: issueSortLabel(sortOption),
+                      onSortTap: () => showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.libraryUnrated,
+                        issueSortLabel,
+                      ),
                     ),
                   );
                 }

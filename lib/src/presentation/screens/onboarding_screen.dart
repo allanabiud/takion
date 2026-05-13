@@ -19,7 +19,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     with SingleTickerProviderStateMixin {
   static const _settingsBoxName = 'settings_box';
   static const _seenOnboardingKey = 'has_seen_onboarding';
-  static const _logoHeroTag = 'takion-app-logo';
 
   bool _isCheckingFirstLaunch = true;
   late AnimationController _fadeController;

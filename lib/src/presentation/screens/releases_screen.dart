@@ -135,9 +135,6 @@ class ReleasesScreen extends ConsumerWidget {
                             return IssueCard(
                               imageUrl: issue.image,
                               title: issue.name,
-                              heroTag: issueId != null
-                                  ? 'issue-cover-$issueId'
-                                  : null,
                               isCollected: isCollected,
                               isWishlisted: isWishlisted,
                               isRead: isRead,

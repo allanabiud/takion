@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/providers/sort_preferences_provider.dart
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/browse_paged_list_screen.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
 @RoutePage()
@@ -86,14 +87,13 @@ class _DiscoverBrowseSeriesScreenState
               unit: 'series',
               pluralUnit: 'series',
               enabled: !pageAsync.isLoading,
-              selectedSortOption: sortOption,
-              sortOptionLabel: seriesSortLabel,
-              onSortOptionChanged: (option) {
-                ref.read(sortPreferencesProvider.notifier).setPreference(
-                      SortPreferenceContext.browseSeries,
-                      option,
-                    );
-              },
+              sortLabel: seriesSortLabel(sortOption),
+              onSortTap: () => showSortBottomSheet(
+                context,
+                ref,
+                SortPreferenceContext.browseSeries,
+                seriesSortLabel,
+              ),
             )
           : null,
       onRefresh: _refreshPage,

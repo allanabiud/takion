@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/core/storage/local_profile_service.dart';
 import 'package:takion/src/presentation/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/providers/profile_provider.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
@@ -131,7 +130,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: [
                 insightsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, _) => Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text('$error'),
@@ -143,10 +143,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Collection Stats',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -159,18 +160,42 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         mainAxisSpacing: 12,
                         childAspectRatio: 2.5,
                         children: [
-                          _StatChip(label: 'Owned', value: '${insights.totalOwned}', icon: Icons.inventory_2_outlined),
-                          _StatChip(label: 'Read %', value: '${insights.readPercent.toStringAsFixed(1)}%', icon: Icons.menu_book_outlined),
-                          _StatChip(label: 'Wishlist', value: '${insights.wishlistCount}', icon: Icons.turned_in_not),
-                          _StatChip(label: 'Subscriptions', value: '${insights.subscriptionsCount}', icon: Icons.subscriptions_outlined),
-                          _StatChip(label: 'Pulls (Month)', value: '${insights.pullsThisMonth}', icon: Icons.shopping_bag_outlined),
+                          _StatChip(
+                            label: 'Owned',
+                            value: '${insights.totalOwned}',
+                            icon: Icons.inventory_2_outlined,
+                          ),
+                          _StatChip(
+                            label: 'Read %',
+                            value:
+                                '${insights.readPercent.toStringAsFixed(1)}%',
+                            icon: Icons.menu_book_outlined,
+                          ),
+                          _StatChip(
+                            label: 'Wishlist',
+                            value: '${insights.wishlistCount}',
+                            icon: Icons.turned_in_not,
+                          ),
+                          _StatChip(
+                            label: 'Subscriptions',
+                            value: '${insights.subscriptionsCount}',
+                            icon: Icons.subscriptions_outlined,
+                          ),
+                          _StatChip(
+                            label: 'Pulls (Month)',
+                            value: '${insights.pullsThisMonth}',
+                            icon: Icons.shopping_bag_outlined,
+                          ),
                         ],
                       ),
                       if (insights.topPublishers.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _TagSection(title: 'Top publishers', values: insights.topPublishers),
+                          child: _TagSection(
+                            title: 'Top publishers',
+                            values: insights.topPublishers,
+                          ),
                         ),
                       ],
                       const Divider(height: 48, thickness: 1),
@@ -178,10 +203,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Reading Insights',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -191,9 +217,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           spacing: 12,
                           runSpacing: 12,
                           children: [
-                            _StatChip(label: 'Streak', value: '${insights.streakDays}d', icon: Icons.local_fire_department_outlined),
-                            _StatChip(label: 'Avg rating', value: insights.averageRating == 0 ? '-' : insights.averageRating.toStringAsFixed(2), icon: Icons.star_border),
-                            _StatChip(label: 'Most-read', value: insights.mostReadSeries ?? '-', icon: Icons.auto_stories_outlined),
+                            _StatChip(
+                              label: 'Streak',
+                              value: '${insights.streakDays}d',
+                              icon: Icons.local_fire_department_outlined,
+                            ),
+                            _StatChip(
+                              label: 'Avg rating',
+                              value: insights.averageRating == 0
+                                  ? '-'
+                                  : insights.averageRating.toStringAsFixed(2),
+                              icon: Icons.star_border,
+                            ),
+                            _StatChip(
+                              label: 'Most-read',
+                              value: insights.mostReadSeries ?? '-',
+                              icon: Icons.auto_stories_outlined,
+                            ),
                           ],
                         ),
                       ),
@@ -202,7 +242,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Monthly Read Chart',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -210,19 +251,30 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: _MonthlyReadChart(points: insights.monthlyReads),
                       ),
                       const SizedBox(height: 24),
                       ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
                         leading: const Icon(Icons.history_outlined),
-                        title: const Text('View Reading History', style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text('See all read issues in your collection'),
+                        title: const Text(
+                          'View Reading History',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text(
+                          'See all read issues in your collection',
+                        ),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.pushRoute(const ReadingHistoryRoute()),
+                        onTap: () =>
+                            context.pushRoute(const ReadingHistoryRoute()),
                       ),
                     ],
                   ),
@@ -303,7 +355,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   Future<void> _save() async {
     setState(() => _isSaving = true);
-    await ref.read(userProfileProvider.notifier).saveProfile(
+    await ref
+        .read(userProfileProvider.notifier)
+        .saveProfile(
           displayName: _displayNameController.text,
           avatarUrl: _avatarChanged ? _selectedAvatarPath : _avatarStoragePath,
           backdropImagePath: _selectedBackdropPath,
@@ -368,9 +422,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             ),
                             child: CircleAvatar(
                               radius: 42,
-                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              backgroundImage: _avatarImageProvider(_selectedAvatarPath),
-                              child: _avatarImageProvider(_selectedAvatarPath) == null
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              backgroundImage: _avatarImageProvider(
+                                _selectedAvatarPath,
+                              ),
+                              child:
+                                  _avatarImageProvider(_selectedAvatarPath) ==
+                                      null
                                   ? const Icon(Icons.add_a_photo_outlined)
                                   : null,
                             ),
@@ -385,7 +445,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                               color: Theme.of(context).colorScheme.primary,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.edit, size: 14, color: Theme.of(context).colorScheme.onPrimary),
+                            child: Icon(
+                              Icons.edit,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                           ),
                         ),
                       ],
@@ -402,15 +466,23 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           width: 180,
                           height: 84,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              if (_avatarImageProvider(_selectedBackdropPath) != null)
-                                Image(image: _avatarImageProvider(_selectedBackdropPath)!, fit: BoxFit.cover)
+                              if (_avatarImageProvider(_selectedBackdropPath) !=
+                                  null)
+                                Image(
+                                  image: _avatarImageProvider(
+                                    _selectedBackdropPath,
+                                  )!,
+                                  fit: BoxFit.cover,
+                                )
                               else
                                 const Icon(Icons.landscape_outlined),
                               Positioned(
@@ -422,7 +494,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                     color: Colors.black.withValues(alpha: 0.55),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.edit, size: 12, color: Colors.white),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    size: 12,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ],
@@ -525,7 +601,11 @@ class _ProfileHeader extends StatelessWidget {
                           backgroundColor: colorScheme.surfaceContainerHighest,
                           backgroundImage: avatarImage,
                           child: avatarImage == null
-                              ? Icon(Icons.person_outline, size: 42, color: colorScheme.primary)
+                              ? Icon(
+                                  Icons.person_outline,
+                                  size: 42,
+                                  color: colorScheme.primary,
+                                )
                               : null,
                         ),
                         const SizedBox(width: 14),
@@ -536,11 +616,16 @@ class _ProfileHeader extends StatelessWidget {
                               displayName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                     shadows: const [
-                                      Shadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 1)),
+                                      Shadow(
+                                        color: Colors.black45,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 1),
+                                      ),
                                     ],
                                   ),
                             ),
@@ -636,7 +721,9 @@ class _StatChip extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -660,7 +747,9 @@ class _TagSection extends StatelessWidget {
       children: [
         Text(
           title,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Wrap(
@@ -722,7 +811,10 @@ class _MonthlyReadChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxCount = points.isEmpty
         ? 1
-        : points.map((point) => point.count).reduce((a, b) => a > b ? a : b).clamp(1, 9999);
+        : points
+              .map((point) => point.count)
+              .reduce((a, b) => a > b ? a : b)
+              .clamp(1, 9999);
     return SizedBox(
       height: 140,
       child: Row(

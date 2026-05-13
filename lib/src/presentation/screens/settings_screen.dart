@@ -18,14 +18,6 @@ import 'package:url_launcher/url_launcher.dart';
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  Future<void> _launchMetronSignup(BuildContext context) async {
-    final url = Uri.parse('https://metron.cloud/accounts/signup/');
-    if (!await launchUrl(url)) {
-      if (!context.mounted) return;
-      TakionAlerts.signupLaunchFailed(context);
-    }
-  }
-
   Future<void> _launchGitHubRepo(BuildContext context) async {
     final url = Uri.parse('https://github.com/allanabiud/takion');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -384,143 +376,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showNotificationSettings(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final enabledAsync = ref.watch(
-              pushPullNotificationsEnabledProvider,
-            );
-            final timingAsync = ref.watch(pullNotificationTimingProvider);
-            final enabled = enabledAsync.maybeWhen(
-              data: (value) => value,
-              orElse: () => false,
-            );
-            final timing = timingAsync.maybeWhen(
-              data: (value) => value,
-              orElse: () => PullNotificationTiming.releaseDay,
-            );
-
-            String labelForTiming(PullNotificationTiming value) {
-              switch (value) {
-                case PullNotificationTiming.dayBefore:
-                  return 'Day before';
-                case PullNotificationTiming.releaseDay:
-                  return 'Release day';
-                case PullNotificationTiming.dayAfter:
-                  return 'Day after';
-              }
-            }
-
-            return SettingsBottomSheet(
-              title: 'Notifications',
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pull Notifications',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Notification delivery is currently disabled in local mode.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: const Icon(Icons.notifications_active_outlined),
-                    title: const Text('Push Notifications for Pulls'),
-                    value: enabled,
-                    onChanged: enabledAsync.isLoading
-                        ? null
-                        : (value) => ref
-                              .read(
-                                pushPullNotificationsEnabledProvider.notifier,
-                              )
-                              .setEnabled(value),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Notification Timing',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Column(
-                    children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.schedule_outlined),
-                        title: const Text('When to Notify'),
-                        subtitle: Text(labelForTiming(timing)),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('Day before'),
-                            selected:
-                                timing == PullNotificationTiming.dayBefore,
-                            onSelected: (!enabled || timingAsync.isLoading)
-                                ? null
-                                : (_) => ref
-                                      .read(
-                                        pullNotificationTimingProvider.notifier,
-                                      )
-                                      .setTiming(
-                                        PullNotificationTiming.dayBefore,
-                                      ),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Release day'),
-                            selected:
-                                timing == PullNotificationTiming.releaseDay,
-                            onSelected: (!enabled || timingAsync.isLoading)
-                                ? null
-                                : (_) => ref
-                                      .read(
-                                        pullNotificationTimingProvider.notifier,
-                                      )
-                                      .setTiming(
-                                        PullNotificationTiming.releaseDay,
-                                      ),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Day after'),
-                            selected: timing == PullNotificationTiming.dayAfter,
-                            onSelected: (!enabled || timingAsync.isLoading)
-                                ? null
-                                : (_) => ref
-                                      .read(
-                                        pullNotificationTimingProvider.notifier,
-                                      )
-                                      .setTiming(
-                                        PullNotificationTiming.dayAfter,
-                                      ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _showDataStorageSettings(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -686,9 +541,14 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: FutureBuilder<PackageInfo>(
@@ -696,14 +556,13 @@ class SettingsScreen extends ConsumerWidget {
                               builder: (context, snapshot) {
                                 final versionText = snapshot.hasData
                                     ? snapshot.data!.buildNumber.isEmpty
-                                        ? snapshot.data!.version
-                                        : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+                                          ? snapshot.data!.version
+                                          : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
                                     : '...';
                                 return Text(
                                   'Version $versionText',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.w600),
                                 );
                               },
                             ),
@@ -712,9 +571,14 @@ class SettingsScreen extends ConsumerWidget {
                           GestureDetector(
                             onTap: () => _launchGitHubRepo(context),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -723,20 +587,26 @@ class SettingsScreen extends ConsumerWidget {
                                   Icon(
                                     Icons.code,
                                     size: 16,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'GitHub Repository',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),                        ],
+                          ),
+                        ],
                       ),
                     ),
                   ],

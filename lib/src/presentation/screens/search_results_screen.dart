@@ -16,6 +16,7 @@ import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
@@ -232,13 +233,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                             child: ListHeader(
                                               count: pageData.count,
                                               unit: 'result',
-                                              selectedSortOption: sortOption,
-                                              sortOptionLabel: seriesSortLabel,
-                                              onSortOptionChanged: (option) {
-                                                ref
-                                                    .read(sortPreferencesProvider.notifier)
-                                                    .setPreference(sortContext, option);
-                                              },
+                                              sortLabel: seriesSortLabel(sortOption),
+                                              onSortTap: () => showSortBottomSheet(
+                                                context,
+                                                ref,
+                                                sortContext,
+                                                seriesSortLabel,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -277,13 +278,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                           child: ListHeader(
                                             count: pageData.count,
                                             unit: 'result',
-                                            selectedSortOption: sortOption,
-                                            sortOptionLabel: seriesSortLabel,
-                                            onSortOptionChanged: (option) {
-                                              ref
-                                                  .read(sortPreferencesProvider.notifier)
-                                                  .setPreference(sortContext, option);
-                                            },
+                                            sortLabel: seriesSortLabel(sortOption),
+                                            onSortTap: () => showSortBottomSheet(
+                                              context,
+                                              ref,
+                                              sortContext,
+                                              seriesSortLabel,
+                                            ),
                                           ),
                                         );
                                       }
@@ -381,13 +382,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                             child: ListHeader(
                                               count: pageData.count,
                                               unit: 'result',
-                                              selectedSortOption: sortOption,
-                                              sortOptionLabel: issueSortLabel,
-                                              onSortOptionChanged: (option) {
-                                                ref
-                                                    .read(sortPreferencesProvider.notifier)
-                                                    .setPreference(sortContext, option);
-                                              },
+                                              sortLabel: issueSortLabel(sortOption),
+                                              onSortTap: () => showSortBottomSheet(
+                                                context,
+                                                ref,
+                                                sortContext,
+                                                issueSortLabel,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -425,13 +426,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                           child: ListHeader(
                                             count: pageData.count,
                                             unit: 'result',
-                                            selectedSortOption: sortOption,
-                                            sortOptionLabel: issueSortLabel,
-                                            onSortOptionChanged: (option) {
-                                              ref
-                                                  .read(sortPreferencesProvider.notifier)
-                                                  .setPreference(sortContext, option);
-                                            },
+                                            sortLabel: issueSortLabel(sortOption),
+                                            onSortTap: () => showSortBottomSheet(
+                                              context,
+                                              ref,
+                                              sortContext,
+                                              issueSortLabel,
+                                            ),
                                           ),
                                         );
                                       }

@@ -10,6 +10,7 @@ import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 
 @RoutePage()
 class ReadingHistoryScreen extends ConsumerWidget {
@@ -84,16 +85,13 @@ class ReadingHistoryScreen extends ConsumerWidget {
                       count: sortedEntries.length,
                       unit: 'entry',
                       pluralUnit: 'entries',
-                      selectedSortOption: sortOption,
-                      sortOptionLabel: issueSortLabel,
-                      onSortOptionChanged: (option) {
-                        ref
-                            .read(sortPreferencesProvider.notifier)
-                            .setPreference(
-                              SortPreferenceContext.libraryReadingHistory,
-                              option,
-                            );
-                      },
+                      sortLabel: issueSortLabel(sortOption),
+                      onSortTap: () => showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.libraryReadingHistory,
+                        issueSortLabel,
+                      ),
                     ),
                   );
                 }

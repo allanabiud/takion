@@ -6,7 +6,6 @@ class IssueCard extends StatelessWidget {
   final String title;
   final VoidCallback? onTap;
   final double width;
-  final String? heroTag;
   final bool isCollected;
   final bool isWishlisted;
   final bool isRead;
@@ -18,7 +17,6 @@ class IssueCard extends StatelessWidget {
     required this.title,
     this.onTap,
     this.width = 120,
-    this.heroTag,
     this.isCollected = false,
     this.isWishlisted = false,
     this.isRead = false,
@@ -65,7 +63,7 @@ class IssueCard extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                  heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
+                  cover,
                   Padding(
                     padding: const EdgeInsets.all(6),
                     child: Row(

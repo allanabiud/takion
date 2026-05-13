@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/providers/profile_provider.dart';
@@ -141,7 +140,8 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Metron',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.primary,
                             ),

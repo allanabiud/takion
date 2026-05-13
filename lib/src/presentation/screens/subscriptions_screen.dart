@@ -10,6 +10,7 @@ import 'package:takion/src/presentation/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/paged_list_scaffold.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
@@ -110,14 +111,13 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         unit: 'series',
         pluralUnit: 'series',
         enabled: !isLoading,
-        selectedSortOption: sortOption,
-        sortOptionLabel: seriesSortLabel,
-        onSortOptionChanged: (option) {
-          ref.read(sortPreferencesProvider.notifier).setPreference(
-                SortPreferenceContext.subscriptions,
-                option,
-              );
-        },
+        sortLabel: seriesSortLabel(sortOption),
+        onSortTap: () => showSortBottomSheet(
+          context,
+          ref,
+          SortPreferenceContext.subscriptions,
+          seriesSortLabel,
+        ),
       ),
       onPrevious: () {
         final previousPage = pageData.previousPage;

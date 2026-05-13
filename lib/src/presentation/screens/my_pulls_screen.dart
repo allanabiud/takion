@@ -12,6 +12,7 @@ import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/weekly_issue_list_scaffold.dart';
 
@@ -219,14 +220,13 @@ class MyPullsScreen extends ConsumerWidget {
         data: (issues) => ListHeader(
           count: issues.length,
           unit: 'issue',
-          selectedSortOption: sortOption,
-          sortOptionLabel: issueSortLabel,
-          onSortOptionChanged: (option) {
-            ref.read(sortPreferencesProvider.notifier).setPreference(
-                  SortPreferenceContext.releasesMyPulls,
-                  option,
-                );
-          },
+          sortLabel: issueSortLabel(sortOption),
+          onSortTap: () => showSortBottomSheet(
+            context,
+            ref,
+            SortPreferenceContext.releasesMyPulls,
+            issueSortLabel,
+          ),
         ),
         orElse: () => null,
       ),

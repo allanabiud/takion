@@ -53,26 +53,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Hero(
-          tag: kSearchBarHeroTag,
-          child: Material(
-            color: Colors.transparent,
-            child: SearchBar(
-              controller: _searchController,
-              hintText: 'Search comics...',
-              leading: const Icon(Icons.search, size: 24),
-              autoFocus: true,
-              onSubmitted: (_) => _submitSearch(),
-              trailing: [
-                IconButton(
-                  tooltip: 'Clear',
-                  onPressed: () {
-                    _searchController.clear();
-                  },
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SearchBar(
+            controller: _searchController,
+            hintText: 'Search comics...',
+            leading: const Icon(Icons.search, size: 24),
+            autoFocus: true,
+            onSubmitted: (_) => _submitSearch(),
+            trailing: [
+              IconButton(
+                tooltip: 'Clear',
+                onPressed: () {
+                  _searchController.clear();
+                },
+                icon: const Icon(Icons.close),
+              ),
+            ],
           ),
         ),
       ),

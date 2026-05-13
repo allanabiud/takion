@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/providers/search_state_provider.dart';
 import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
@@ -19,16 +18,32 @@ class DiscoverScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Hero(
-                tag: kSearchBarHeroTag,
-                child: Material(
-                  color: Colors.transparent,
-                  child: SearchBar(
-                    hintText: 'Search comics...',
-                    leading: const Icon(Icons.search, size: 24),
-                    onTap: () {
-                      context.pushRoute(const SearchRoute());
-                    },
+              child: InkWell(
+                onTap: () => context.pushRoute(const SearchRoute()),
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  height: 56,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Search comics...',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

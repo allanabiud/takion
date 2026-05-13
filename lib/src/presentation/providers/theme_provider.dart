@@ -25,7 +25,7 @@ class ThemeNotifier extends _$ThemeNotifier {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     
-    final index = box.get(_themeKey, defaultValue: ThemeMode.system.index);
+    final index = box.get(_themeKey, defaultValue: ThemeMode.dark.index);
     final isTrueBlack = box.get(_blackKey, defaultValue: false);
 
     return ThemeSettings(

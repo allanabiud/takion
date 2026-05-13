@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/domain/entities/collection_items_page.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
@@ -9,6 +8,7 @@ import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/collection_issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/paged_list_scaffold.dart';
 
 @RoutePage()
@@ -40,9 +40,7 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Comics'),
-      ),
+      appBar: AppBar(title: const Text('My Comics')),
       body: pageAsync.when(
         loading: () {
           if (_lastPage != null) {
@@ -53,7 +51,8 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: 'Failed to load comics: $error',
         ),
-        data: (pageData) => _buildContent(pageData, sortOption, isLoading: false),
+        data: (pageData) =>
+            _buildContent(pageData, sortOption, isLoading: false),
       ),
     );
   }
@@ -78,14 +77,13 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
         count: pageData.count,
         unit: 'comic',
         enabled: !isLoading,
-        selectedSortOption: sortOption,
-        sortOptionLabel: issueSortLabel,
-        onSortOptionChanged: (option) {
-          ref.read(sortPreferencesProvider.notifier).setPreference(
-                SortPreferenceContext.libraryMyComics,
-                option,
-              );
-        },
+        sortLabel: issueSortLabel(sortOption),
+        onSortTap: () => showSortBottomSheet(
+          context,
+          ref,
+          SortPreferenceContext.libraryMyComics,
+          issueSortLabel,
+        ),
       ),
       onPrevious: () {
         final previousPage = pageData.previousPage;

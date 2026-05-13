@@ -34,7 +34,6 @@ class IssueListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const double imageHeight = 98;
     const double imageWidth = 67;
-    final heroTag = issue.id != null ? 'issue-cover-${issue.id}' : null;
     final effectiveOnTap =
         onTap ??
         (issue.id == null
@@ -94,9 +93,7 @@ class IssueListTile extends ConsumerWidget {
             ),
     );
 
-    final leading = heroTag != null
-        ? Hero(tag: heroTag, child: imageWidget)
-        : imageWidget;
+    final leading = imageWidget;
 
     final tileContent = Padding(
       padding: const EdgeInsets.all(8),

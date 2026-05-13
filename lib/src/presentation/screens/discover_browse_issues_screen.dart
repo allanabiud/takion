@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/browse_paged_list_screen.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 
 @RoutePage()
 class DiscoverBrowseIssuesScreen extends ConsumerStatefulWidget {
@@ -67,13 +68,13 @@ class _DiscoverBrowseIssuesScreenState
           count: displayCount,
           unit: 'issue',
           enabled: !pageAsync.isLoading,
-          selectedSortOption: sortOption,
-          sortOptionLabel: issueSortLabel,
-          onSortOptionChanged: (option) {
-            ref
-                .read(sortPreferencesProvider.notifier)
-                .setPreference(SortPreferenceContext.browseIssues, option);
-          },
+          sortLabel: issueSortLabel(sortOption),
+          onSortTap: () => showSortBottomSheet(
+            context,
+            ref,
+            SortPreferenceContext.browseIssues,
+            issueSortLabel,
+          ),
         ) : null,
       onRefresh: _refreshPage,
       onPrevious: () {

@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
+import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 
 @RoutePage()
 class ContinueReadingScreen extends ConsumerWidget {
@@ -55,13 +56,13 @@ class ContinueReadingScreen extends ConsumerWidget {
                   child: ListHeader(
                     count: sortedItems.length,
                     unit: 'suggestion',
-                    selectedSortOption: sortOption,
-                    sortOptionLabel: issueSortLabel,
-                    onSortOptionChanged: (option) {
-                      ref
-                          .read(sortPreferencesProvider.notifier)
-                          .setPreference(SortPreferenceContext.continueReading, option);
-                    },
+                    sortLabel: issueSortLabel(sortOption),
+                    onSortTap: () => showSortBottomSheet(
+                      context,
+                      ref,
+                      SortPreferenceContext.continueReading,
+                      issueSortLabel,
+                    ),
                   ),
                 );
               }

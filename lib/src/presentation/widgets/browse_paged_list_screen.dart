@@ -53,7 +53,8 @@ class BrowsePagedListScreen<T> extends StatefulWidget {
   final Widget? header;
 
   @override
-  State<BrowsePagedListScreen<T>> createState() => _BrowsePagedListScreenState<T>();
+  State<BrowsePagedListScreen<T>> createState() =>
+      _BrowsePagedListScreenState<T>();
 }
 
 class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
@@ -70,7 +71,6 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
   @override
   Widget build(BuildContext context) {
     final pageAsync = widget.pageAsync;
-    final isLoading = pageAsync.isLoading;
     final data = pageAsync.value ?? _lastData;
 
     return Scaffold(
@@ -82,8 +82,9 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
           }
           return const AsyncStatePanel.loading();
         },
-        error: (error, _) =>
-            AsyncStatePanel.error(errorMessage: '${widget.errorPrefix}: $error'),
+        error: (error, _) => AsyncStatePanel.error(
+          errorMessage: '${widget.errorPrefix}: $error',
+        ),
         data: (pageData) {
           return _buildScaffold(pageData, isLoading: false);
         },
@@ -91,7 +92,10 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
     );
   }
 
-  Widget _buildScaffold(BrowsePagedData<T> pageData, {required bool isLoading}) {
+  Widget _buildScaffold(
+    BrowsePagedData<T> pageData, {
+    required bool isLoading,
+  }) {
     final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
     final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
 
@@ -108,7 +112,12 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
       isLoading: isLoading,
       itemBuilder: (context, index) {
         final item = pageData.results[index];
-        return widget.itemBuilder(context, item, index, pageData.results.length);
+        return widget.itemBuilder(
+          context,
+          item,
+          index,
+          pageData.results.length,
+        );
       },
       emptyMessage: widget.emptyMessage,
       emptyIcon: widget.emptyIcon,
