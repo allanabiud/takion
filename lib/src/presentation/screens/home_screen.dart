@@ -130,6 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 : ref.watch(issuePullListEntryProvider(issueId));
 
             return IssueCard(
+              issueId: issueId,
               imageUrl: issue.image,
               title: '${issue.series?.name ?? issue.name} #${issue.number}',
               isCollected: collectionStatus?.isCollected ?? false,

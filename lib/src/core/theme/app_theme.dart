@@ -13,6 +13,8 @@ class AppThemes {
         tintedDisabledControls: true,
         useM2StyleDividerInM3: true,
         tabBarDividerColor: Color(0x00000000),
+        tabBarIndicatorWeight: 4,
+        tabBarIndicatorTopRadius: 0,
         progressIndicatorYear2023: false,
         filledButtonRadius: 10.0,
         filledButtonTextStyle: WidgetStatePropertyAll(
@@ -77,7 +79,7 @@ class AppThemes {
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: base.colorScheme.outlineVariant,
+        dividerColor: base.colorScheme.primary,
         indicatorColor: base.colorScheme.primary,
         labelColor: base.colorScheme.primary,
         unselectedLabelColor: base.colorScheme.onSurfaceVariant,
@@ -111,6 +113,8 @@ class AppThemes {
         useM2StyleDividerInM3: true,
         adaptiveAppBarScrollUnderOff: FlexAdaptive.all(),
         tabBarDividerColor: Color(0x00000000),
+        tabBarIndicatorWeight: 4,
+        tabBarIndicatorTopRadius: 0,
         progressIndicatorYear2023: false,
         filledButtonRadius: 10.0,
         filledButtonTextStyle: WidgetStatePropertyAll(
@@ -175,7 +179,7 @@ class AppThemes {
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: base.colorScheme.outlineVariant,
+        dividerColor: base.colorScheme.primary,
         indicatorColor: base.colorScheme.primary,
         labelColor: base.colorScheme.primary,
         unselectedLabelColor: base.colorScheme.onSurfaceVariant,

@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
@@ -556,6 +557,29 @@ class IssueDetailsScreen extends ConsumerWidget {
 
     final showBottomBar = issueAsync.hasValue;
 
+    Future<void> toggleFavorite() async {
+      try {
+        final repository = ref.read(favoritesRepositoryProvider);
+        final isFavorite = await ref.read(isIssueFavoriteProvider(issueId).future);
+        
+        await repository.toggleIssueFavorite(issueId);
+        
+        ref.invalidate(isIssueFavoriteProvider(issueId));
+        ref.invalidate(favoriteIssuesListProvider);
+        
+        if (context.mounted) {
+          TakionAlerts.success(
+            context,
+            !isFavorite ? 'Issue added to favorites' : 'Issue removed from favorites',
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          TakionAlerts.error(context, 'Failed to update favorites: $e');
+        }
+      }
+    }
+
     return Scaffold(
       bottomNavigationBar: showBottomBar
           ? BottomAppBar(
@@ -595,9 +619,20 @@ class IssueDetailsScreen extends ConsumerWidget {
                       IconButton(
                         iconSize: 28,
                         tooltip: 'Favorite issue',
-                        onPressed: () =>
-                            TakionAlerts.comingSoon(context, 'Favorite issue'),
-                        icon: const Icon(Icons.favorite_border, size: 28),
+                        onPressed: toggleFavorite,
+                        icon: ref.watch(isIssueFavoriteProvider(issueId)).when(
+                              data: (isFavorite) => Icon(
+                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                size: 28,
+                                color: isFavorite ? Colors.red : null,
+                              ),
+                              loading: () => const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              error: (_, __) => const Icon(Icons.favorite_border, size: 28),
+                            ),
                       ),
                     ],
                   ),

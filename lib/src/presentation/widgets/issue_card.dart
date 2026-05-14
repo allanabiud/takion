@@ -1,7 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
 
-class IssueCard extends StatelessWidget {
+class IssueCard extends ConsumerWidget {
+  final int? issueId;
   final String? imageUrl;
   final String title;
   final VoidCallback? onTap;
@@ -13,6 +16,7 @@ class IssueCard extends StatelessWidget {
 
   const IssueCard({
     super.key,
+    this.issueId,
     this.imageUrl,
     required this.title,
     this.onTap,
@@ -24,30 +28,54 @@ class IssueCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = issueId != null && ref.watch(isIssueFavoriteProvider(issueId!)).asData?.value == true;
+    
     final cover = ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: AspectRatio(
         aspectRatio: 2 / 3,
-        child: imageUrl != null
-            ? CachedNetworkImage(
-                imageUrl: imageUrl!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            imageUrl != null
+                ? CachedNetworkImage(
+                    imageUrl: imageUrl!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: const Icon(Icons.broken_image, size: 32),
+                    ),
+                  )
+                : Container(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: const Icon(Icons.image, size: 32),
+                  ),
+            if (isFavorite)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.favorite,
+                    size: 16,
+                    color: Colors.red,
                   ),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Icon(Icons.broken_image, size: 32),
-                ),
-              )
-            : Container(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Icon(Icons.image, size: 32),
               ),
+          ],
+        ),
       ),
     );
 

@@ -10,6 +10,7 @@ import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/collection_stats_provider.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
@@ -83,6 +84,29 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      final repository = ref.read(favoritesRepositoryProvider);
+      final isFavorite = await ref.read(isSeriesFavoriteProvider(widget.seriesId).future);
+      
+      await repository.toggleSeriesFavorite(widget.seriesId);
+      
+      ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
+      ref.invalidate(favoriteSeriesListProvider);
+      
+      if (mounted) {
+        TakionAlerts.success(
+          context,
+          !isFavorite ? 'Series added to favorites' : 'Series removed from favorites',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to update favorites: $e');
+      }
+    }
   }
 
   void _onScroll() {
@@ -852,7 +876,22 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                                       : null,
                                 ),
                         ),
-                        const VerticalDivider(width: 1),
+                        const SizedBox(width: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: SizedBox(
+                            height: 24,
+                            child: VerticalDivider(
+                              width: 1,
+                              thickness: 1,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
                         IconButton(
                           iconSize: 28,
                           tooltip: 'Add to list',
@@ -866,11 +905,20 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         IconButton(
                           iconSize: 28,
                           tooltip: 'Favorite series',
-                          onPressed: () => TakionAlerts.comingSoon(
-                            context,
-                            'Favorite series',
-                          ),
-                          icon: const Icon(Icons.favorite_border, size: 28),
+                          onPressed: _toggleFavorite,
+                          icon: ref.watch(isSeriesFavoriteProvider(widget.seriesId)).when(
+                                data: (isFavorite) => Icon(
+                                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                                  size: 28,
+                                  color: isFavorite ? Colors.red : null,
+                                ),
+                                loading: () => const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                error: (_, __) => const Icon(Icons.favorite_border, size: 28),
+                              ),
                         ),
                       ],
                     ),
@@ -918,6 +966,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         background: _SeriesHeroFlexibleSpace(
                           details: details,
                           coverImageAsync: coverImageAsync,
+                          isSubscribed: ref.watch(seriesSubscriptionProvider(widget.seriesId)).asData?.value?.isActive ?? false,
                         ),
                       ),
                       actions: [
@@ -988,10 +1037,12 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
   const _SeriesHeroFlexibleSpace({
     required this.details,
     required this.coverImageAsync,
+    required this.isSubscribed,
   });
 
   final SeriesDetails details;
   final AsyncValue<String?> coverImageAsync;
+  final bool isSubscribed;
 
   @override
   Widget build(BuildContext context) {
@@ -1057,6 +1108,36 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (isSubscribed) ...[
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.notifications_active,
+                          size: 14,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'SUBSCRIBED',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Text(
                   details.name,
                   style: theme.textTheme.headlineSmall?.copyWith(
@@ -1106,16 +1187,6 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
 
   SeriesDetails get details => widget.details;
 
-  String _yearRange() {
-    final start = details.yearBegan;
-    final end = details.yearEnd;
-
-    if (start == null && end == null) return 'Unknown';
-    if (start != null && end != null) return '$start - $end';
-    if (start != null) return '$start - Present';
-    return 'Until $end';
-  }
-
   String? _modifiedValue() {
     final modified = details.modified;
     if (modified == null) return null;
@@ -1128,34 +1199,77 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     return '$year-$month-$day $hour:$minute';
   }
 
-  List<({String label, String value})> _gridItems() {
-    final items = <({String label, String value})>[];
+  Widget _buildAdditionalInformationSection(BuildContext context) {
+    final start = details.yearBegan;
+    final end = details.yearEnd;
+    final years = (start == null && end == null)
+        ? 'N/A'
+        : (start != null && end != null)
+            ? '$start - $end'
+            : (start != null)
+                ? '$start - Present'
+                : 'Until $end';
 
-    void addString(String label, String? value) {
-      final text = value?.trim();
-      if (text == null || text.isEmpty) return;
-      items.add((label: label, value: text));
-    }
+    final genreText = details.genres.isNotEmpty
+        ? details.genres.map((g) => g.name).join(', ')
+        : 'N/A';
 
-    void addInt(String label, int? value) {
-      if (value == null) return;
-      items.add((label: label, value: '$value'));
-    }
+    final infoItems = <({String label, String value})>[
+      (label: 'Status', value: details.status?.trim().isNotEmpty == true ? details.status!.trim() : 'N/A'),
+      (label: 'Volume', value: details.volume != null ? '${details.volume}' : 'N/A'),
+      (label: 'Years', value: years),
+      (label: 'Type', value: details.seriesType?.name ?? 'N/A'),
+      (label: 'Issues', value: details.issueCount != null ? '${details.issueCount}' : 'N/A'),
+      (label: 'Publisher', value: details.publisher?.name ?? 'N/A'),
+      (label: 'Imprint', value: details.imprint?.name ?? 'N/A'),
+      (label: 'Metron ID', value: '${details.id}'),
+      if (details.cvId != null) (label: 'CV ID', value: '${details.cvId}'),
+      if (details.gcdId != null) (label: 'GCD ID', value: '${details.gcdId}'),
+      (label: 'Genres', value: genreText),
+    ];
 
-    addString('STATUS', details.status);
-    addInt('VOLUME', details.volume);
-    if (details.yearBegan != null || details.yearEnd != null) {
-      items.add((label: 'YEARS', value: _yearRange()));
-    }
-    addString('TYPE', details.seriesType?.name);
-    addInt('ISSUES', details.issueCount);
-    addString('PUBLISHER', details.publisher?.name);
-    addString('IMPRINT', details.imprint?.name);
-    items.add((label: 'METRON ID', value: '${details.id}'));
-    addInt('CV ID', details.cvId);
-    addInt('GCD ID', details.gcdId);
-
-    return items;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Additional Information', style: _sectionTitleStyle(context)),
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 2.5,
+          ),
+          itemCount: infoItems.length,
+          itemBuilder: (context, index) {
+            final item = infoItems[index];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.label.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.value,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
   }
 
   TextStyle? _sectionTitleStyle(BuildContext context) {
@@ -1209,18 +1323,29 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     final associated = details.associated
         .where((entry) => entry.series.trim().isNotEmpty)
         .toList();
-    final gridItems = _gridItems();
     final modifiedValue = _modifiedValue();
     final hasDescription = description != null && description.isNotEmpty;
-    final hasGrid = gridItems.isNotEmpty;
-    final hasGenres = details.genres.isNotEmpty;
     final hasAssociated = associated.isNotEmpty;
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
+
+    final noContent = !hasDescription && !hasAssociated && !hasModified && details.genres.isEmpty;
+
+    if (noContent) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text(
+            'No about information available.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      );
+    }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
-        if (hasDescription)
+        if (hasDescription) ...[
           _buildSectionCard(
             context,
             Column(
@@ -1290,69 +1415,9 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
               });
             },
           ),
-        if (hasDescription &&
-            (hasGrid || hasGenres || hasAssociated || hasModified))
-          const Divider(height: 24),
-        if (hasGrid || hasGenres)
-          _buildSectionCard(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (hasGrid)
-                  ...gridItems.asMap().entries.map(
-                    (entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text.rich(
-                        TextSpan(
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          children: [
-                            TextSpan(
-                              text: '${entry.value.label.toUpperCase()}: ',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                            TextSpan(text: entry.value.value),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                if (hasGenres) ...[
-                  Text.rich(
-                    TextSpan(
-                      style: Theme.of(context).textTheme.bodySmall,
-                      children: [
-                        TextSpan(
-                          text: 'GENRES: ',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                        TextSpan(
-                          text: details.genres
-                              .map((genre) => genre.name)
-                              .join(' • '),
-                        ),
-                      ],
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        if ((hasGrid || hasGenres) && (hasAssociated || hasModified))
-          const Divider(height: 24),
-        if (hasAssociated)
+        ],
+        if (hasAssociated) ...[
+          if (hasDescription) const Divider(height: 24),
           _buildSectionCard(
             context,
             _buildExpansionTileNoSplash(
@@ -1396,22 +1461,16 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
               ],
             ),
           ),
-        if (hasAssociated && hasModified) const Divider(height: 24),
+        ],
+        if (hasDescription || hasAssociated) const Divider(height: 24),
+        _buildSectionCard(context, _buildAdditionalInformationSection(context)),
+        const Divider(height: 24),
         if (hasModified)
           Text(
             'Last modified: $modifiedValue',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-          ),
-        if (!hasDescription &&
-            !hasGrid &&
-            !hasGenres &&
-            !hasAssociated &&
-            !hasModified)
-          Text(
-            'No about information available.',
-            style: Theme.of(context).textTheme.bodyMedium,
           ),
       ],
     );

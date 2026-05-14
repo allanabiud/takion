@@ -133,6 +133,7 @@ class ReleasesScreen extends ConsumerWidget {
                                 pullEntryAsync?.asData?.value != null;
 
                             return IssueCard(
+                              issueId: issueId,
                               imageUrl: issue.image,
                               title: issue.name,
                               isCollected: isCollected,

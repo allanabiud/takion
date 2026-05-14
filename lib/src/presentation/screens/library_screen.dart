@@ -262,7 +262,7 @@ class LibraryScreen extends ConsumerWidget {
                   icon: Icons.favorite_border,
                   label: 'Favorites',
                   onTap: () {
-                    TakionAlerts.comingSoon(context, 'Favorites');
+                    context.pushRoute(const FavoritesRoute());
                   },
                 ),
                 CompactListSectionItem(

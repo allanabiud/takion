@@ -1,7 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/series_cover_provider.dart';
 
@@ -27,8 +30,12 @@ class SeriesListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const double iconHeight = 100;
     const double iconWidth = 90;
+    final effectiveOnTap = onTap ?? () {
+      context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
+    };
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
+    final isFavorite = ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
     final issueCount = series.issueCount ?? 0;
     final coverImageAsync = ref.watch(
       seriesCoverImageProvider((
@@ -68,7 +75,7 @@ class SeriesListTile extends ConsumerWidget {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: onTap,
+              onTap: effectiveOnTap,
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Row(
@@ -118,6 +125,14 @@ class SeriesListTile extends ConsumerWidget {
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(context).colorScheme.outline,
                         ),
+                        if (isFavorite) ...[
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.favorite,
+                            size: 16,
+                            color: Colors.red,
+                          ),
+                        ],
                       ],
                     ),
                         ],

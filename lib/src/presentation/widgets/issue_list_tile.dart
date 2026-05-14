@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 
@@ -57,6 +58,7 @@ class IssueListTile extends ConsumerWidget {
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
+    final isFavorite = issue.id != null && ref.watch(isIssueFavoriteProvider(issue.id!)).asData?.value == true;
 
     final imageWidget = ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -166,6 +168,14 @@ class IssueListTile extends ConsumerWidget {
                             ? Theme.of(context).colorScheme.primary
                             : Theme.of(context).colorScheme.outline,
                       ),
+                      if (isFavorite) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.favorite,
+                          size: 16,
+                          color: Colors.red,
+                        ),
+                      ],
                       const Spacer(),
                       if ((effectiveRating ?? 0) > 0)
                         ...List.generate(5, (index) {

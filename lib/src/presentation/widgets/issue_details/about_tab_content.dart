@@ -150,169 +150,6 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     );
   }
 
-  Widget _buildIssueMetaSection(BuildContext context) {
-    final seriesType = widget.issue.series?.seriesType?.name ?? 'Unknown';
-    final pages = widget.issue.page != null
-        ? '${widget.issue.page}'
-        : 'Unknown';
-    final currency = widget.issue.priceCurrency?.trim();
-    final priceValue = widget.issue.price?.trim();
-
-    final price = (priceValue != null && priceValue.isNotEmpty)
-        ? (currency != null && currency.isNotEmpty
-              ? '$priceValue $currency'
-              : priceValue)
-        : 'Unknown';
-
-    final distributorSku = (widget.issue.sku?.trim().isNotEmpty ?? false)
-        ? widget.issue.sku!.trim()
-        : 'Unknown';
-    final upc = widget.issue.upc?.trim();
-    final isbn = widget.issue.isbn?.trim();
-    final upcIsbn =
-        (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
-        ? '$upc / $isbn'
-        : (upc != null && upc.isNotEmpty)
-        ? upc
-        : (isbn != null && isbn.isNotEmpty)
-        ? isbn
-        : 'Unknown';
-
-    String formatDate(DateTime? date) {
-      if (date == null) return 'Unknown';
-      return DateFormat.yMMMd().format(date.toLocal());
-    }
-
-    final gridItems = <({String label, String value})>[
-      (label: 'Distributor SKU', value: distributorSku),
-      (label: 'UPC / ISBN', value: upcIsbn),
-      (
-        label: 'Rating',
-        value: (widget.issue.rating?.name.trim().isNotEmpty ?? false)
-            ? widget.issue.rating!.name.trim()
-            : 'Unknown',
-      ),
-      (label: 'FOC Date', value: formatDate(widget.issue.focDate)),
-      (label: 'Cover Date', value: formatDate(widget.issue.coverDate)),
-      (label: 'Store Date', value: formatDate(widget.issue.storeDate)),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$seriesType • $pages pages • $price',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-        ),
-        const SizedBox(height: 10),
-        ...gridItems.asMap().entries.map(
-          (entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text.rich(
-              TextSpan(
-                style: Theme.of(context).textTheme.bodyMedium,
-                children: [
-                  TextSpan(
-                    text: '${entry.value.label.toUpperCase()}: ',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  TextSpan(text: entry.value.value),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenresAndIdsSection(BuildContext context) {
-    final imprint = widget.issue.imprint?.name.trim();
-    final genres =
-        widget.issue.series?.genres
-            .map((genre) => genre.name.trim())
-            .where((name) => name.isNotEmpty)
-            .toList() ??
-        <String>[];
-
-    final ids = <({String label, String value})>[
-      (label: 'METRON ID', value: '${widget.issue.id}'),
-      if (widget.issue.cvId != null)
-        (label: 'CV ID', value: '${widget.issue.cvId}'),
-      if (widget.issue.gcdId != null)
-        (label: 'GCD ID', value: '${widget.issue.gcdId}'),
-    ];
-
-    final genreText = genres.isNotEmpty ? genres.join(' • ') : 'Unknown';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (imprint != null && imprint.isNotEmpty) ...[
-          Text.rich(
-            TextSpan(
-              style: Theme.of(context).textTheme.bodySmall,
-              children: [
-                TextSpan(
-                  text: 'IMPRINT: ',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                TextSpan(text: imprint),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        Text.rich(
-          TextSpan(
-            style: Theme.of(context).textTheme.bodySmall,
-            children: [
-              TextSpan(
-                text: 'GENRES: ',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              TextSpan(text: genreText),
-            ],
-          ),
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 8),
-        ...ids.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text.rich(
-              TextSpan(
-                style: Theme.of(context).textTheme.bodySmall,
-                children: [
-                  TextSpan(
-                    text: '${item.label}: ',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  TextSpan(text: item.value),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   List<String> _storyNames() {
     final names = <String>[];
     for (final name in widget.issue.names) {
@@ -526,10 +363,92 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
     );
   }
 
+  Widget _buildAdditionalInformationSection(BuildContext context) {
+    final seriesType = widget.issue.series?.seriesType?.name ?? 'Unknown';
+    final pages = widget.issue.page != null ? '${widget.issue.page}' : 'Unknown';
+    final currency = widget.issue.priceCurrency?.trim();
+    final priceValue = widget.issue.price?.trim();
+    final price = (priceValue != null && priceValue.isNotEmpty)
+        ? (currency != null && currency.isNotEmpty ? '$priceValue $currency' : priceValue)
+        : 'Unknown';
+
+    final distributorSku = (widget.issue.sku?.trim().isNotEmpty ?? false) ? widget.issue.sku!.trim() : 'N/A';
+    final upc = widget.issue.upc?.trim();
+    final isbn = widget.issue.isbn?.trim();
+    final upcIsbn = (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
+        ? '$upc / $isbn'
+        : (upc != null && upc.isNotEmpty) ? upc : (isbn != null && isbn.isNotEmpty) ? isbn : 'N/A';
+
+    final imprint = widget.issue.imprint?.name.trim() ?? 'N/A';
+    final genres = widget.issue.series?.genres.map((g) => g.name.trim()).where((n) => n.isNotEmpty).toList() ?? [];
+    final genreText = genres.isNotEmpty ? genres.join(', ') : 'N/A';
+
+    String formatDate(DateTime? date) => date == null ? 'N/A' : DateFormat.yMMMd().format(date.toLocal());
+
+    final infoItems = <({String label, String value})>[
+      (label: 'Format', value: seriesType),
+      (label: 'Pages', value: pages),
+      (label: 'Price', value: price),
+      (label: 'Imprint', value: imprint),
+      (label: 'Rating', value: (widget.issue.rating?.name.trim().isNotEmpty ?? false) ? widget.issue.rating!.name.trim() : 'N/A'),
+      (label: 'Distributor SKU', value: distributorSku),
+      (label: 'UPC / ISBN', value: upcIsbn),
+      (label: 'FOC Date', value: formatDate(widget.issue.focDate)),
+      (label: 'Cover Date', value: formatDate(widget.issue.coverDate)),
+      (label: 'Store Date', value: formatDate(widget.issue.storeDate)),
+      (label: 'Metron ID', value: '${widget.issue.id}'),
+      if (widget.issue.cvId != null) (label: 'CV ID', value: '${widget.issue.cvId}'),
+      if (widget.issue.gcdId != null) (label: 'GCD ID', value: '${widget.issue.gcdId}'),
+      (label: 'Genres', value: genreText),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Additional Information', style: _sectionTitleStyle(context)),
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 2.5,
+          ),
+          itemCount: infoItems.length,
+          itemBuilder: (context, index) {
+            final item = infoItems[index];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.label.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.value,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasDescription = widget.issue.description?.trim().isNotEmpty ?? false;
-    final hasMeta = true;
     final hasStories = _storyNames().isNotEmpty;
     final hasReprints = widget.issue.reprints.any((reprint) => reprint.id > 0);
     final hasCreators = widget.issue.credits.isNotEmpty;
@@ -548,47 +467,31 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
               });
             },
           ),
-        if (hasDescription &&
-            (hasMeta ||
-                hasStories ||
-                hasReprints ||
-                hasCreators ||
-                hasCharacters))
-          const Divider(height: 24),
-        if (hasMeta)
-          _buildSectionCard(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildIssueMetaSection(context),
-                _buildGenresAndIdsSection(context),
-              ],
-            ),
-          ),
-        if (hasMeta &&
-            (hasStories || hasReprints || hasCreators || hasCharacters))
-          const Divider(height: 24),
-        if (hasStories)
+        if (hasStories) ...[
+          if (hasDescription) const Divider(height: 24),
           _buildSectionCard(context, _buildStoriesSection(context)),
-        if (hasStories && (hasReprints || hasCreators || hasCharacters))
-          const Divider(height: 24),
-        if (hasReprints)
-          _buildSectionCard(context, _buildReprintsSection(context)),
-        if (hasReprints && (hasCreators || hasCharacters))
-          const Divider(height: 24),
-        if (hasCreators)
+        ],
+        if (hasCreators) ...[
+          if (hasDescription || hasStories) const Divider(height: 24),
           _buildSectionCard(context, _buildCreatorsSection(context)),
-        if (hasCreators && hasCharacters) const Divider(height: 24),
-        if (hasCharacters)
+        ],
+        if (hasCharacters) ...[
+          if (hasDescription || hasStories || hasCreators) const Divider(height: 24),
           _buildSectionCard(context, _buildCharactersSection(context)),
+        ],
+        if (hasReprints) ...[
+          if (hasDescription || hasStories || hasCreators || hasCharacters)
+            const Divider(height: 24),
+          _buildSectionCard(context, _buildReprintsSection(context)),
+        ],
         if (hasDescription ||
-            hasMeta ||
             hasStories ||
-            hasReprints ||
             hasCreators ||
-            hasCharacters)
+            hasCharacters ||
+            hasReprints)
           const Divider(height: 24),
+        _buildSectionCard(context, _buildAdditionalInformationSection(context)),
+        const Divider(height: 24),
         Text(
           'Last modified: ${_formatModified(widget.issue.modified)}',
           style: Theme.of(

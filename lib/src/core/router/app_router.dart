@@ -105,6 +105,11 @@ class AppRouter extends RootStackRouter {
       path: '/my-comics',
       guards: [authGuard],
     ),
+    AutoRoute(
+      page: FavoritesRoute.page,
+      path: '/favorites',
+      guards: [authGuard],
+    ),
     AutoRoute(page: MyPullsRoute.page, path: '/my-pulls', guards: [authGuard]),
     AutoRoute(
       page: SubscriptionsRoute.page,
