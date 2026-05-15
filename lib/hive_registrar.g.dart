@@ -7,6 +7,7 @@ import 'package:takion/src/data/models/issue_details_dto.dart';
 import 'package:takion/src/data/models/issue_list_dto.dart';
 import 'package:takion/src/data/models/issue_list_series_dto.dart';
 import 'package:takion/src/data/models/series_dto.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
@@ -20,6 +21,10 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(IssueDetailsVariantDtoAdapter());
     registerAdapter(IssueListDtoAdapter());
     registerAdapter(IssueListSeriesDtoAdapter());
+    registerAdapter(ItemRoleAdapter());
+    registerAdapter(ListContentTypeAdapter());
+    registerAdapter(ReadingListAdapter());
+    registerAdapter(ReadingListItemAdapter());
     registerAdapter(SeriesDtoAdapter());
   }
 }
@@ -36,6 +41,10 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(IssueDetailsVariantDtoAdapter());
     registerAdapter(IssueListDtoAdapter());
     registerAdapter(IssueListSeriesDtoAdapter());
+    registerAdapter(ItemRoleAdapter());
+    registerAdapter(ListContentTypeAdapter());
+    registerAdapter(ReadingListAdapter());
+    registerAdapter(ReadingListItemAdapter());
     registerAdapter(SeriesDtoAdapter());
   }
 }

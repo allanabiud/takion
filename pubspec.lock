@@ -1341,6 +1341,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.16"
+  timelines_plus:
+    dependency: "direct main"
+    description:
+      name: timelines_plus
+      sha256: b23214b9ac98f4533ead6c46998bc189ce176aede9e7bb7a3d096f1b85dc8dee
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   typed_data:
     dependency: transitive
     description:
@@ -1422,13 +1430,13 @@ packages:
     source: hosted
     version: "3.1.5"
   uuid:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: uuid
-      sha256: a11b666489b1954e01d992f3d601b1804a33937b5a8fe677bd26b8a9f96f96e8
+      sha256: "1fef9e8e11e2991bb773070d4656b7bd5d850967a2456cfc83cf47925ba79489"
       url: "https://pub.dev"
     source: hosted
-    version: "4.5.2"
+    version: "4.5.3"
   vector_graphics:
     dependency: transitive
     description:

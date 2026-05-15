@@ -169,6 +169,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                   filled: false,
                   suffixIcon: IconButton(
                     tooltip: 'Close filter',
+                    iconSize: 28,
+                    padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       setState(() {

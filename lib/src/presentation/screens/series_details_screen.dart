@@ -89,17 +89,21 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   Future<void> _toggleFavorite() async {
     try {
       final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(isSeriesFavoriteProvider(widget.seriesId).future);
-      
+      final isFavorite = await ref.read(
+        isSeriesFavoriteProvider(widget.seriesId).future,
+      );
+
       await repository.toggleSeriesFavorite(widget.seriesId);
-      
+
       ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
       ref.invalidate(favoriteSeriesListProvider);
-      
+
       if (mounted) {
         TakionAlerts.success(
           context,
-          !isFavorite ? 'Series added to favorites' : 'Series removed from favorites',
+          !isFavorite
+              ? 'Series added to favorites'
+              : 'Series removed from favorites',
         );
       }
     } catch (e) {
@@ -906,18 +910,25 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                           iconSize: 28,
                           tooltip: 'Favorite series',
                           onPressed: _toggleFavorite,
-                          icon: ref.watch(isSeriesFavoriteProvider(widget.seriesId)).when(
+                          icon: ref
+                              .watch(isSeriesFavoriteProvider(widget.seriesId))
+                              .when(
                                 data: (isFavorite) => Icon(
-                                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
                                   size: 28,
                                   color: isFavorite ? Colors.red : null,
                                 ),
                                 loading: () => const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
-                                error: (_, __) => const Icon(Icons.favorite_border, size: 28),
+                                error: (_, __) =>
+                                    const Icon(Icons.favorite_border, size: 28),
                               ),
                         ),
                       ],
@@ -966,7 +977,15 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         background: _SeriesHeroFlexibleSpace(
                           details: details,
                           coverImageAsync: coverImageAsync,
-                          isSubscribed: ref.watch(seriesSubscriptionProvider(widget.seriesId)).asData?.value?.isActive ?? false,
+                          isSubscribed:
+                              ref
+                                  .watch(
+                                    seriesSubscriptionProvider(widget.seriesId),
+                                  )
+                                  .asData
+                                  ?.value
+                                  ?.isActive ??
+                              false,
                         ),
                       ),
                       actions: [
@@ -1044,6 +1063,19 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
   final AsyncValue<String?> coverImageAsync;
   final bool isSubscribed;
 
+  String _formatSeriesType(String? type) {
+    if (type == null) return '';
+    final lower = type.toLowerCase();
+    if (lower == 'single issue') return '';
+    if (lower == 'limited series') return '';
+    if (lower.contains('trade paperback') || lower.contains('tpb'))
+      return 'TPB';
+    if (lower.contains('hardcover') || lower.contains('hc')) return 'HC';
+    if (lower.contains('graphic novel') || lower.contains('gn')) return 'GN';
+    if (lower.contains('omnibus')) return 'Omnibus';
+    return type;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1110,8 +1142,10 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
               children: [
                 if (isSubscribed) ...[
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(6),
@@ -1139,7 +1173,11 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
                 Text(
-                  details.name,
+                  details.seriesType?.name != null &&
+                          details.seriesType!.name.isNotEmpty &&
+                          _formatSeriesType(details.seriesType!.name).isNotEmpty
+                      ? '${details.name} (${_formatSeriesType(details.seriesType!.name)})'
+                      : details.name,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -1205,21 +1243,32 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     final years = (start == null && end == null)
         ? 'N/A'
         : (start != null && end != null)
-            ? '$start - $end'
-            : (start != null)
-                ? '$start - Present'
-                : 'Until $end';
+        ? '$start - $end'
+        : (start != null)
+        ? '$start - Present'
+        : 'Until $end';
 
     final genreText = details.genres.isNotEmpty
         ? details.genres.map((g) => g.name).join(', ')
         : 'N/A';
 
     final infoItems = <({String label, String value})>[
-      (label: 'Status', value: details.status?.trim().isNotEmpty == true ? details.status!.trim() : 'N/A'),
-      (label: 'Volume', value: details.volume != null ? '${details.volume}' : 'N/A'),
+      (
+        label: 'Status',
+        value: details.status?.trim().isNotEmpty == true
+            ? details.status!.trim()
+            : 'N/A',
+      ),
+      (
+        label: 'Volume',
+        value: details.volume != null ? '${details.volume}' : 'N/A',
+      ),
       (label: 'Years', value: years),
       (label: 'Type', value: details.seriesType?.name ?? 'N/A'),
-      (label: 'Issues', value: details.issueCount != null ? '${details.issueCount}' : 'N/A'),
+      (
+        label: 'Issues',
+        value: details.issueCount != null ? '${details.issueCount}' : 'N/A',
+      ),
       (label: 'Publisher', value: details.publisher?.name ?? 'N/A'),
       (label: 'Imprint', value: details.imprint?.name ?? 'N/A'),
       (label: 'Metron ID', value: '${details.id}'),
@@ -1252,10 +1301,10 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
                 Text(
                   item.label.toUpperCase(),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1328,7 +1377,11 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     final hasAssociated = associated.isNotEmpty;
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
-    final noContent = !hasDescription && !hasAssociated && !hasModified && details.genres.isEmpty;
+    final noContent =
+        !hasDescription &&
+        !hasAssociated &&
+        !hasModified &&
+        details.genres.isEmpty;
 
     if (noContent) {
       return Center(

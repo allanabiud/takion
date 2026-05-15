@@ -30,6 +30,7 @@ class SeriesDetails {
     this.associated = const [],
     this.cvId,
     this.gcdId,
+    this.image,
     this.resourceUrl,
     this.modified,
   });
@@ -50,6 +51,7 @@ class SeriesDetails {
   final List<SeriesDetailsAssociated> associated;
   final int? cvId;
   final int? gcdId;
+  final String? image;
   final String? resourceUrl;
   final DateTime? modified;
 }

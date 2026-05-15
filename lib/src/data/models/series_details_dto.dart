@@ -61,6 +61,7 @@ class SeriesDetailsDto {
     this.associated = const [],
     this.cvId,
     this.gcdId,
+    this.image,
     this.resourceUrl,
     this.modified,
   });
@@ -81,6 +82,7 @@ class SeriesDetailsDto {
   final List<SeriesDetailsAssociatedDto> associated;
   final int? cvId;
   final int? gcdId;
+  final String? image;
   final String? resourceUrl;
   final String? modified;
 
@@ -127,6 +129,7 @@ class SeriesDetailsDto {
           : const [],
       cvId: (json['cv_id'] as num?)?.toInt(),
       gcdId: (json['gcd_id'] as num?)?.toInt(),
+      image: json['image'] as String?,
       resourceUrl: json['resource_url'] as String?,
       modified: json['modified'] as String?,
     );
@@ -149,6 +152,7 @@ class SeriesDetailsDto {
         'associated': associated.map((entry) => entry.toJson()).toList(),
         'cv_id': cvId,
         'gcd_id': gcdId,
+        'image': image,
         'resource_url': resourceUrl,
         'modified': modified,
       };
@@ -171,6 +175,7 @@ class SeriesDetailsDto {
       associated: associated.map((entry) => entry.toEntity()).toList(),
       cvId: cvId,
       gcdId: gcdId,
+      image: image,
       resourceUrl: resourceUrl,
       modified: modified != null ? DateTime.tryParse(modified!) : null,
     );

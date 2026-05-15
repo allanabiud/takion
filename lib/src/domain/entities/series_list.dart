@@ -2,10 +2,11 @@ class SeriesList {
   const SeriesList({
     required this.id,
     required this.name,
-    this.yearBegan,
-    this.volume,
+    required this.yearBegan,
+    required this.volume,
     this.issueCount,
     this.modified,
+    this.seriesType,
   });
 
   final int id;
@@ -14,4 +15,6 @@ class SeriesList {
   final int? volume;
   final int? issueCount;
   final DateTime? modified;
-}
+  final String? seriesType;
+  }
+

@@ -10,7 +10,6 @@ import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/rating_picker.dart';
 import 'package:takion/src/presentation/widgets/section_subtitle_header.dart';
-import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class LibraryScreen extends ConsumerWidget {
@@ -255,7 +254,7 @@ class LibraryScreen extends ConsumerWidget {
                   icon: Icons.list_alt_outlined,
                   label: 'My Reading Lists',
                   onTap: () {
-                    TakionAlerts.comingSoon(context, 'Reading Lists');
+                    context.pushRoute(const MyReadingListsRoute());
                   },
                 ),
                 CompactListSectionItem(

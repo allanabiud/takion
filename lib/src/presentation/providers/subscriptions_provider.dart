@@ -76,7 +76,12 @@ SeriesList? _seriesListFromJson(Map<String, dynamic> json) {
 }
 
 SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
-  return SeriesList(id: seriesId, name: 'Series $seriesId');
+  return SeriesList(
+    id: seriesId, 
+    name: 'Series $seriesId',
+    yearBegan: 0,
+    volume: 1,
+  );
 }
 
 Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {

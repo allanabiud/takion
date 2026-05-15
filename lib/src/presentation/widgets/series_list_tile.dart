@@ -15,6 +15,7 @@ class SeriesListTile extends ConsumerWidget {
   final bool isLast;
   final String? heroTag;
   final bool allowRemoteCoverFetch;
+  final bool showDivider;
 
   const SeriesListTile({
     super.key,
@@ -24,18 +25,35 @@ class SeriesListTile extends ConsumerWidget {
     this.isLast = false,
     this.heroTag,
     this.allowRemoteCoverFetch = true,
+    this.showDivider = true,
   });
+
+  String _formatSeriesType(String? type) {
+    if (type == null) return '';
+    final lower = type.toLowerCase();
+    if (lower == 'single issue') return '';
+    if (lower == 'limited series') return '';
+    if (lower.contains('trade paperback') || lower.contains('tpb'))
+      return 'TPB';
+    if (lower.contains('hardcover') || lower.contains('hc')) return 'HC';
+    if (lower.contains('graphic novel') || lower.contains('gn')) return 'GN';
+    if (lower.contains('omnibus')) return 'Omnibus';
+    return type;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const double iconHeight = 100;
     const double iconWidth = 90;
-    final effectiveOnTap = onTap ?? () {
-      context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
-    };
+    final effectiveOnTap =
+        onTap ??
+        () {
+          context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
+        };
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
-    final isFavorite = ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
+    final isFavorite =
+        ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
     final issueCount = series.issueCount ?? 0;
     final coverImageAsync = ref.watch(
       seriesCoverImageProvider((
@@ -81,60 +99,66 @@ class SeriesListTile extends ConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-              heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
+                    heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
                     const SizedBox(width: 12),
                     // Text Content
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                    Text(
-                      series.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          '${series.yearBegan ?? 'Unknown'}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(width: 8),
-                        Text('•', style: Theme.of(context).textTheme.bodySmall),
-                        const SizedBox(width: 8),
-                        Text(
-                          '$issueCount ${issueCount == 1 ? 'issue' : 'issues'}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          isSubscribed
-                              ? Icons.notifications_active
-                              : Icons.notifications_none_outlined,
-                          size: 16,
-                          color: isSubscribed
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outline,
-                        ),
-                        if (isFavorite) ...[
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.favorite,
-                            size: 16,
-                            color: Colors.red,
+                          Text(
+                            series.seriesType != null &&
+                                    series.seriesType!.isNotEmpty
+                                ? '${series.name} (${_formatSeriesType(series.seriesType!)})'
+                                : series.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ],
-                    ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                '${series.yearBegan ?? 'Unknown'}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '•',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$issueCount ${issueCount == 1 ? 'issue' : 'issues'}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                isSubscribed
+                                    ? Icons.notifications_active
+                                    : Icons.notifications_none_outlined,
+                                size: 16,
+                                color: isSubscribed
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.outline,
+                              ),
+                              if (isFavorite) ...[
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.favorite,
+                                  size: 16,
+                                  color: Colors.red,
+                                ),
+                              ],
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -143,7 +167,7 @@ class SeriesListTile extends ConsumerWidget {
               ),
             ),
           ),
-          if (!isLast) const Divider(height: 1),
+          if (showDivider && !isLast) const Divider(height: 1),
         ],
       ),
     );

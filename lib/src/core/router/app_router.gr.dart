@@ -9,9 +9,9 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i33;
-import 'package:collection/collection.dart' as _i35;
-import 'package:flutter/material.dart' as _i34;
+import 'package:auto_route/auto_route.dart' as _i35;
+import 'package:collection/collection.dart' as _i37;
+import 'package:flutter/material.dart' as _i36;
 import 'package:takion/src/presentation/screens/all_done_screen.dart' as _i1;
 import 'package:takion/src/presentation/screens/authorize_metron_screen.dart'
     as _i2;
@@ -42,36 +42,40 @@ import 'package:takion/src/presentation/screens/metron_info_screen.dart'
     as _i17;
 import 'package:takion/src/presentation/screens/my_comics_screen.dart' as _i18;
 import 'package:takion/src/presentation/screens/my_pulls_screen.dart' as _i19;
-import 'package:takion/src/presentation/screens/new_first_issues_screen.dart'
+import 'package:takion/src/presentation/screens/my_reading_lists_screen.dart'
     as _i20;
-import 'package:takion/src/presentation/screens/onboarding_screen.dart' as _i21;
-import 'package:takion/src/presentation/screens/profile_screen.dart' as _i30;
+import 'package:takion/src/presentation/screens/new_first_issues_screen.dart'
+    as _i21;
+import 'package:takion/src/presentation/screens/onboarding_screen.dart' as _i22;
+import 'package:takion/src/presentation/screens/profile_screen.dart' as _i32;
 import 'package:takion/src/presentation/screens/reading_history_screen.dart'
-    as _i22;
-import 'package:takion/src/presentation/screens/releases_screen.dart' as _i23;
-import 'package:takion/src/presentation/screens/search_results_screen.dart'
+    as _i23;
+import 'package:takion/src/presentation/screens/reading_list_details_screen.dart'
     as _i24;
-import 'package:takion/src/presentation/screens/search_screen.dart' as _i25;
-import 'package:takion/src/presentation/screens/series_details_screen.dart'
+import 'package:takion/src/presentation/screens/releases_screen.dart' as _i25;
+import 'package:takion/src/presentation/screens/search_results_screen.dart'
     as _i26;
-import 'package:takion/src/presentation/screens/settings_screen.dart' as _i27;
-import 'package:takion/src/presentation/screens/subscriptions_screen.dart'
+import 'package:takion/src/presentation/screens/search_screen.dart' as _i27;
+import 'package:takion/src/presentation/screens/series_details_screen.dart'
     as _i28;
+import 'package:takion/src/presentation/screens/settings_screen.dart' as _i29;
+import 'package:takion/src/presentation/screens/subscriptions_screen.dart'
+    as _i30;
 import 'package:takion/src/presentation/screens/unrated_issues_screen.dart'
-    as _i29;
-import 'package:takion/src/presentation/screens/weekly_releases_screen.dart'
     as _i31;
-import 'package:takion/src/presentation/screens/wishlist_screen.dart' as _i32;
+import 'package:takion/src/presentation/screens/weekly_releases_screen.dart'
+    as _i33;
+import 'package:takion/src/presentation/screens/wishlist_screen.dart' as _i34;
 
 /// generated route for
 /// [_i1.AllDoneScreen]
-class AllDoneRoute extends _i33.PageRouteInfo<void> {
-  const AllDoneRoute({List<_i33.PageRouteInfo>? children})
+class AllDoneRoute extends _i35.PageRouteInfo<void> {
+  const AllDoneRoute({List<_i35.PageRouteInfo>? children})
     : super(AllDoneRoute.name, initialChildren: children);
 
   static const String name = 'AllDoneRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i1.AllDoneScreen();
@@ -81,13 +85,13 @@ class AllDoneRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i2.AuthorizeMetronScreen]
-class AuthorizeMetronRoute extends _i33.PageRouteInfo<void> {
-  const AuthorizeMetronRoute({List<_i33.PageRouteInfo>? children})
+class AuthorizeMetronRoute extends _i35.PageRouteInfo<void> {
+  const AuthorizeMetronRoute({List<_i35.PageRouteInfo>? children})
     : super(AuthorizeMetronRoute.name, initialChildren: children);
 
   static const String name = 'AuthorizeMetronRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i2.AuthorizeMetronScreen();
@@ -98,11 +102,11 @@ class AuthorizeMetronRoute extends _i33.PageRouteInfo<void> {
 /// generated route for
 /// [_i3.CollectionReadStatusScreen]
 class CollectionReadStatusRoute
-    extends _i33.PageRouteInfo<CollectionReadStatusRouteArgs> {
+    extends _i35.PageRouteInfo<CollectionReadStatusRouteArgs> {
   CollectionReadStatusRoute({
-    _i34.Key? key,
+    _i36.Key? key,
     required bool isRead,
-    List<_i33.PageRouteInfo>? children,
+    List<_i35.PageRouteInfo>? children,
   }) : super(
          CollectionReadStatusRoute.name,
          args: CollectionReadStatusRouteArgs(key: key, isRead: isRead),
@@ -111,7 +115,7 @@ class CollectionReadStatusRoute
 
   static const String name = 'CollectionReadStatusRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<CollectionReadStatusRouteArgs>();
@@ -123,7 +127,7 @@ class CollectionReadStatusRoute
 class CollectionReadStatusRouteArgs {
   const CollectionReadStatusRouteArgs({this.key, required this.isRead});
 
-  final _i34.Key? key;
+  final _i36.Key? key;
 
   final bool isRead;
 
@@ -145,13 +149,13 @@ class CollectionReadStatusRouteArgs {
 
 /// generated route for
 /// [_i4.ContinueReadingScreen]
-class ContinueReadingRoute extends _i33.PageRouteInfo<void> {
-  const ContinueReadingRoute({List<_i33.PageRouteInfo>? children})
+class ContinueReadingRoute extends _i35.PageRouteInfo<void> {
+  const ContinueReadingRoute({List<_i35.PageRouteInfo>? children})
     : super(ContinueReadingRoute.name, initialChildren: children);
 
   static const String name = 'ContinueReadingRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i4.ContinueReadingScreen();
@@ -161,13 +165,13 @@ class ContinueReadingRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i5.DiscoverBrowseIssuesScreen]
-class DiscoverBrowseIssuesRoute extends _i33.PageRouteInfo<void> {
-  const DiscoverBrowseIssuesRoute({List<_i33.PageRouteInfo>? children})
+class DiscoverBrowseIssuesRoute extends _i35.PageRouteInfo<void> {
+  const DiscoverBrowseIssuesRoute({List<_i35.PageRouteInfo>? children})
     : super(DiscoverBrowseIssuesRoute.name, initialChildren: children);
 
   static const String name = 'DiscoverBrowseIssuesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i5.DiscoverBrowseIssuesScreen();
@@ -177,13 +181,13 @@ class DiscoverBrowseIssuesRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.DiscoverBrowseRecentlyAddedScreen]
-class DiscoverBrowseRecentlyAddedRoute extends _i33.PageRouteInfo<void> {
-  const DiscoverBrowseRecentlyAddedRoute({List<_i33.PageRouteInfo>? children})
+class DiscoverBrowseRecentlyAddedRoute extends _i35.PageRouteInfo<void> {
+  const DiscoverBrowseRecentlyAddedRoute({List<_i35.PageRouteInfo>? children})
     : super(DiscoverBrowseRecentlyAddedRoute.name, initialChildren: children);
 
   static const String name = 'DiscoverBrowseRecentlyAddedRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i6.DiscoverBrowseRecentlyAddedScreen();
@@ -193,13 +197,13 @@ class DiscoverBrowseRecentlyAddedRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i7.DiscoverBrowseSeriesScreen]
-class DiscoverBrowseSeriesRoute extends _i33.PageRouteInfo<void> {
-  const DiscoverBrowseSeriesRoute({List<_i33.PageRouteInfo>? children})
+class DiscoverBrowseSeriesRoute extends _i35.PageRouteInfo<void> {
+  const DiscoverBrowseSeriesRoute({List<_i35.PageRouteInfo>? children})
     : super(DiscoverBrowseSeriesRoute.name, initialChildren: children);
 
   static const String name = 'DiscoverBrowseSeriesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i7.DiscoverBrowseSeriesScreen();
@@ -209,13 +213,13 @@ class DiscoverBrowseSeriesRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i8.DiscoverScreen]
-class DiscoverRoute extends _i33.PageRouteInfo<void> {
-  const DiscoverRoute({List<_i33.PageRouteInfo>? children})
+class DiscoverRoute extends _i35.PageRouteInfo<void> {
+  const DiscoverRoute({List<_i35.PageRouteInfo>? children})
     : super(DiscoverRoute.name, initialChildren: children);
 
   static const String name = 'DiscoverRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i8.DiscoverScreen();
@@ -225,13 +229,13 @@ class DiscoverRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i9.FavoritesScreen]
-class FavoritesRoute extends _i33.PageRouteInfo<void> {
-  const FavoritesRoute({List<_i33.PageRouteInfo>? children})
+class FavoritesRoute extends _i35.PageRouteInfo<void> {
+  const FavoritesRoute({List<_i35.PageRouteInfo>? children})
     : super(FavoritesRoute.name, initialChildren: children);
 
   static const String name = 'FavoritesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i9.FavoritesScreen();
@@ -241,13 +245,13 @@ class FavoritesRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i10.FocReleasesScreen]
-class FocReleasesRoute extends _i33.PageRouteInfo<void> {
-  const FocReleasesRoute({List<_i33.PageRouteInfo>? children})
+class FocReleasesRoute extends _i35.PageRouteInfo<void> {
+  const FocReleasesRoute({List<_i35.PageRouteInfo>? children})
     : super(FocReleasesRoute.name, initialChildren: children);
 
   static const String name = 'FocReleasesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i10.FocReleasesScreen();
@@ -257,13 +261,13 @@ class FocReleasesRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i11.HomeScreen]
-class HomeRoute extends _i33.PageRouteInfo<void> {
-  const HomeRoute({List<_i33.PageRouteInfo>? children})
+class HomeRoute extends _i35.PageRouteInfo<void> {
+  const HomeRoute({List<_i35.PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i11.HomeScreen();
@@ -274,16 +278,16 @@ class HomeRoute extends _i33.PageRouteInfo<void> {
 /// generated route for
 /// [_i12.IssueCoverGalleryScreen]
 class IssueCoverGalleryRoute
-    extends _i33.PageRouteInfo<IssueCoverGalleryRouteArgs> {
+    extends _i35.PageRouteInfo<IssueCoverGalleryRouteArgs> {
   IssueCoverGalleryRoute({
-    _i34.Key? key,
+    _i36.Key? key,
     required List<String> imageUrls,
     List<String>? imageLabels,
     List<String>? imageCaptions,
     int initialIndex = 0,
     String? title,
     String? heroTag,
-    List<_i33.PageRouteInfo>? children,
+    List<_i35.PageRouteInfo>? children,
   }) : super(
          IssueCoverGalleryRoute.name,
          args: IssueCoverGalleryRouteArgs(
@@ -300,7 +304,7 @@ class IssueCoverGalleryRoute
 
   static const String name = 'IssueCoverGalleryRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<IssueCoverGalleryRouteArgs>();
@@ -328,7 +332,7 @@ class IssueCoverGalleryRouteArgs {
     this.heroTag,
   });
 
-  final _i34.Key? key;
+  final _i36.Key? key;
 
   final List<String> imageUrls;
 
@@ -352,12 +356,12 @@ class IssueCoverGalleryRouteArgs {
     if (identical(this, other)) return true;
     if (other is! IssueCoverGalleryRouteArgs) return false;
     return key == other.key &&
-        const _i35.ListEquality<String>().equals(imageUrls, other.imageUrls) &&
-        const _i35.ListEquality<String>().equals(
+        const _i37.ListEquality<String>().equals(imageUrls, other.imageUrls) &&
+        const _i37.ListEquality<String>().equals(
           imageLabels,
           other.imageLabels,
         ) &&
-        const _i35.ListEquality<String>().equals(
+        const _i37.ListEquality<String>().equals(
           imageCaptions,
           other.imageCaptions,
         ) &&
@@ -369,9 +373,9 @@ class IssueCoverGalleryRouteArgs {
   @override
   int get hashCode =>
       key.hashCode ^
-      const _i35.ListEquality<String>().hash(imageUrls) ^
-      const _i35.ListEquality<String>().hash(imageLabels) ^
-      const _i35.ListEquality<String>().hash(imageCaptions) ^
+      const _i37.ListEquality<String>().hash(imageUrls) ^
+      const _i37.ListEquality<String>().hash(imageLabels) ^
+      const _i37.ListEquality<String>().hash(imageCaptions) ^
       initialIndex.hashCode ^
       title.hashCode ^
       heroTag.hashCode;
@@ -379,12 +383,12 @@ class IssueCoverGalleryRouteArgs {
 
 /// generated route for
 /// [_i13.IssueDetailsScreen]
-class IssueDetailsRoute extends _i33.PageRouteInfo<IssueDetailsRouteArgs> {
+class IssueDetailsRoute extends _i35.PageRouteInfo<IssueDetailsRouteArgs> {
   IssueDetailsRoute({
-    _i34.Key? key,
+    _i36.Key? key,
     required int issueId,
     String? initialImageUrl,
-    List<_i33.PageRouteInfo>? children,
+    List<_i35.PageRouteInfo>? children,
   }) : super(
          IssueDetailsRoute.name,
          args: IssueDetailsRouteArgs(
@@ -398,7 +402,7 @@ class IssueDetailsRoute extends _i33.PageRouteInfo<IssueDetailsRouteArgs> {
 
   static const String name = 'IssueDetailsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       final pathParams = data.inheritedPathParams;
@@ -422,7 +426,7 @@ class IssueDetailsRouteArgs {
     this.initialImageUrl,
   });
 
-  final _i34.Key? key;
+  final _i36.Key? key;
 
   final int issueId;
 
@@ -449,13 +453,13 @@ class IssueDetailsRouteArgs {
 
 /// generated route for
 /// [_i14.LibraryScreen]
-class LibraryRoute extends _i33.PageRouteInfo<void> {
-  const LibraryRoute({List<_i33.PageRouteInfo>? children})
+class LibraryRoute extends _i35.PageRouteInfo<void> {
+  const LibraryRoute({List<_i35.PageRouteInfo>? children})
     : super(LibraryRoute.name, initialChildren: children);
 
   static const String name = 'LibraryRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i14.LibraryScreen();
@@ -465,13 +469,13 @@ class LibraryRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i15.MainScreen]
-class MainRoute extends _i33.PageRouteInfo<void> {
-  const MainRoute({List<_i33.PageRouteInfo>? children})
+class MainRoute extends _i35.PageRouteInfo<void> {
+  const MainRoute({List<_i35.PageRouteInfo>? children})
     : super(MainRoute.name, initialChildren: children);
 
   static const String name = 'MainRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i15.MainScreen();
@@ -481,13 +485,13 @@ class MainRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i16.MetronConnectScreen]
-class MetronConnectRoute extends _i33.PageRouteInfo<void> {
-  const MetronConnectRoute({List<_i33.PageRouteInfo>? children})
+class MetronConnectRoute extends _i35.PageRouteInfo<void> {
+  const MetronConnectRoute({List<_i35.PageRouteInfo>? children})
     : super(MetronConnectRoute.name, initialChildren: children);
 
   static const String name = 'MetronConnectRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i16.MetronConnectScreen();
@@ -497,13 +501,13 @@ class MetronConnectRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i17.MetronInfoScreen]
-class MetronInfoRoute extends _i33.PageRouteInfo<void> {
-  const MetronInfoRoute({List<_i33.PageRouteInfo>? children})
+class MetronInfoRoute extends _i35.PageRouteInfo<void> {
+  const MetronInfoRoute({List<_i35.PageRouteInfo>? children})
     : super(MetronInfoRoute.name, initialChildren: children);
 
   static const String name = 'MetronInfoRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i17.MetronInfoScreen();
@@ -513,13 +517,13 @@ class MetronInfoRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i18.MyComicsScreen]
-class MyComicsRoute extends _i33.PageRouteInfo<void> {
-  const MyComicsRoute({List<_i33.PageRouteInfo>? children})
+class MyComicsRoute extends _i35.PageRouteInfo<void> {
+  const MyComicsRoute({List<_i35.PageRouteInfo>? children})
     : super(MyComicsRoute.name, initialChildren: children);
 
   static const String name = 'MyComicsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i18.MyComicsScreen();
@@ -529,13 +533,13 @@ class MyComicsRoute extends _i33.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i19.MyPullsScreen]
-class MyPullsRoute extends _i33.PageRouteInfo<void> {
-  const MyPullsRoute({List<_i33.PageRouteInfo>? children})
+class MyPullsRoute extends _i35.PageRouteInfo<void> {
+  const MyPullsRoute({List<_i35.PageRouteInfo>? children})
     : super(MyPullsRoute.name, initialChildren: children);
 
   static const String name = 'MyPullsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       return const _i19.MyPullsScreen();
@@ -544,77 +548,146 @@ class MyPullsRoute extends _i33.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i20.NewFirstIssuesScreen]
-class NewFirstIssuesRoute extends _i33.PageRouteInfo<void> {
-  const NewFirstIssuesRoute({List<_i33.PageRouteInfo>? children})
+/// [_i20.MyReadingListsScreen]
+class MyReadingListsRoute extends _i35.PageRouteInfo<void> {
+  const MyReadingListsRoute({List<_i35.PageRouteInfo>? children})
+    : super(MyReadingListsRoute.name, initialChildren: children);
+
+  static const String name = 'MyReadingListsRoute';
+
+  static _i35.PageInfo page = _i35.PageInfo(
+    name,
+    builder: (data) {
+      return const _i20.MyReadingListsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i21.NewFirstIssuesScreen]
+class NewFirstIssuesRoute extends _i35.PageRouteInfo<void> {
+  const NewFirstIssuesRoute({List<_i35.PageRouteInfo>? children})
     : super(NewFirstIssuesRoute.name, initialChildren: children);
 
   static const String name = 'NewFirstIssuesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i20.NewFirstIssuesScreen();
+      return const _i21.NewFirstIssuesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i21.OnboardingScreen]
-class OnboardingRoute extends _i33.PageRouteInfo<void> {
-  const OnboardingRoute({List<_i33.PageRouteInfo>? children})
+/// [_i22.OnboardingScreen]
+class OnboardingRoute extends _i35.PageRouteInfo<void> {
+  const OnboardingRoute({List<_i35.PageRouteInfo>? children})
     : super(OnboardingRoute.name, initialChildren: children);
 
   static const String name = 'OnboardingRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i21.OnboardingScreen();
+      return const _i22.OnboardingScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i22.ReadingHistoryScreen]
-class ReadingHistoryRoute extends _i33.PageRouteInfo<void> {
-  const ReadingHistoryRoute({List<_i33.PageRouteInfo>? children})
+/// [_i23.ReadingHistoryScreen]
+class ReadingHistoryRoute extends _i35.PageRouteInfo<void> {
+  const ReadingHistoryRoute({List<_i35.PageRouteInfo>? children})
     : super(ReadingHistoryRoute.name, initialChildren: children);
 
   static const String name = 'ReadingHistoryRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i22.ReadingHistoryScreen();
+      return const _i23.ReadingHistoryScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i23.ReleasesScreen]
-class ReleasesRoute extends _i33.PageRouteInfo<void> {
-  const ReleasesRoute({List<_i33.PageRouteInfo>? children})
+/// [_i24.ReadingListDetailsScreen]
+class ReadingListDetailsRoute
+    extends _i35.PageRouteInfo<ReadingListDetailsRouteArgs> {
+  ReadingListDetailsRoute({
+    _i36.Key? key,
+    required String listId,
+    List<_i35.PageRouteInfo>? children,
+  }) : super(
+         ReadingListDetailsRoute.name,
+         args: ReadingListDetailsRouteArgs(key: key, listId: listId),
+         rawPathParams: {'listId': listId},
+         initialChildren: children,
+       );
+
+  static const String name = 'ReadingListDetailsRoute';
+
+  static _i35.PageInfo page = _i35.PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<ReadingListDetailsRouteArgs>(
+        orElse: () =>
+            ReadingListDetailsRouteArgs(listId: pathParams.getString('listId')),
+      );
+      return _i24.ReadingListDetailsScreen(key: args.key, listId: args.listId);
+    },
+  );
+}
+
+class ReadingListDetailsRouteArgs {
+  const ReadingListDetailsRouteArgs({this.key, required this.listId});
+
+  final _i36.Key? key;
+
+  final String listId;
+
+  @override
+  String toString() {
+    return 'ReadingListDetailsRouteArgs{key: $key, listId: $listId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ReadingListDetailsRouteArgs) return false;
+    return key == other.key && listId == other.listId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ listId.hashCode;
+}
+
+/// generated route for
+/// [_i25.ReleasesScreen]
+class ReleasesRoute extends _i35.PageRouteInfo<void> {
+  const ReleasesRoute({List<_i35.PageRouteInfo>? children})
     : super(ReleasesRoute.name, initialChildren: children);
 
   static const String name = 'ReleasesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i23.ReleasesScreen();
+      return const _i25.ReleasesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i24.SearchResultsScreen]
-class SearchResultsRoute extends _i33.PageRouteInfo<SearchResultsRouteArgs> {
+/// [_i26.SearchResultsScreen]
+class SearchResultsRoute extends _i35.PageRouteInfo<SearchResultsRouteArgs> {
   SearchResultsRoute({
-    _i34.Key? key,
+    _i36.Key? key,
     required String query,
     String searchChoice = 'Issues',
-    List<_i33.PageRouteInfo>? children,
+    List<_i35.PageRouteInfo>? children,
   }) : super(
          SearchResultsRoute.name,
          args: SearchResultsRouteArgs(
@@ -627,11 +700,11 @@ class SearchResultsRoute extends _i33.PageRouteInfo<SearchResultsRouteArgs> {
 
   static const String name = 'SearchResultsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<SearchResultsRouteArgs>();
-      return _i24.SearchResultsScreen(
+      return _i26.SearchResultsScreen(
         key: args.key,
         query: args.query,
         searchChoice: args.searchChoice,
@@ -647,7 +720,7 @@ class SearchResultsRouteArgs {
     this.searchChoice = 'Issues',
   });
 
-  final _i34.Key? key;
+  final _i36.Key? key;
 
   final String query;
 
@@ -672,28 +745,28 @@ class SearchResultsRouteArgs {
 }
 
 /// generated route for
-/// [_i25.SearchScreen]
-class SearchRoute extends _i33.PageRouteInfo<void> {
-  const SearchRoute({List<_i33.PageRouteInfo>? children})
+/// [_i27.SearchScreen]
+class SearchRoute extends _i35.PageRouteInfo<void> {
+  const SearchRoute({List<_i35.PageRouteInfo>? children})
     : super(SearchRoute.name, initialChildren: children);
 
   static const String name = 'SearchRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i25.SearchScreen();
+      return const _i27.SearchScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i26.SeriesDetailsScreen]
-class SeriesDetailsRoute extends _i33.PageRouteInfo<SeriesDetailsRouteArgs> {
+/// [_i28.SeriesDetailsScreen]
+class SeriesDetailsRoute extends _i35.PageRouteInfo<SeriesDetailsRouteArgs> {
   SeriesDetailsRoute({
-    _i34.Key? key,
+    _i36.Key? key,
     required int seriesId,
-    List<_i33.PageRouteInfo>? children,
+    List<_i35.PageRouteInfo>? children,
   }) : super(
          SeriesDetailsRoute.name,
          args: SeriesDetailsRouteArgs(key: key, seriesId: seriesId),
@@ -703,7 +776,7 @@ class SeriesDetailsRoute extends _i33.PageRouteInfo<SeriesDetailsRouteArgs> {
 
   static const String name = 'SeriesDetailsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
       final pathParams = data.inheritedPathParams;
@@ -711,7 +784,7 @@ class SeriesDetailsRoute extends _i33.PageRouteInfo<SeriesDetailsRouteArgs> {
         orElse: () =>
             SeriesDetailsRouteArgs(seriesId: pathParams.getInt('seriesId')),
       );
-      return _i26.SeriesDetailsScreen(key: args.key, seriesId: args.seriesId);
+      return _i28.SeriesDetailsScreen(key: args.key, seriesId: args.seriesId);
     },
   );
 }
@@ -719,7 +792,7 @@ class SeriesDetailsRoute extends _i33.PageRouteInfo<SeriesDetailsRouteArgs> {
 class SeriesDetailsRouteArgs {
   const SeriesDetailsRouteArgs({this.key, required this.seriesId});
 
-  final _i34.Key? key;
+  final _i36.Key? key;
 
   final int seriesId;
 
@@ -740,97 +813,97 @@ class SeriesDetailsRouteArgs {
 }
 
 /// generated route for
-/// [_i27.SettingsScreen]
-class SettingsRoute extends _i33.PageRouteInfo<void> {
-  const SettingsRoute({List<_i33.PageRouteInfo>? children})
+/// [_i29.SettingsScreen]
+class SettingsRoute extends _i35.PageRouteInfo<void> {
+  const SettingsRoute({List<_i35.PageRouteInfo>? children})
     : super(SettingsRoute.name, initialChildren: children);
 
   static const String name = 'SettingsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i27.SettingsScreen();
+      return const _i29.SettingsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i28.SubscriptionsScreen]
-class SubscriptionsRoute extends _i33.PageRouteInfo<void> {
-  const SubscriptionsRoute({List<_i33.PageRouteInfo>? children})
+/// [_i30.SubscriptionsScreen]
+class SubscriptionsRoute extends _i35.PageRouteInfo<void> {
+  const SubscriptionsRoute({List<_i35.PageRouteInfo>? children})
     : super(SubscriptionsRoute.name, initialChildren: children);
 
   static const String name = 'SubscriptionsRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i28.SubscriptionsScreen();
+      return const _i30.SubscriptionsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i29.UnratedIssuesScreen]
-class UnratedIssuesRoute extends _i33.PageRouteInfo<void> {
-  const UnratedIssuesRoute({List<_i33.PageRouteInfo>? children})
+/// [_i31.UnratedIssuesScreen]
+class UnratedIssuesRoute extends _i35.PageRouteInfo<void> {
+  const UnratedIssuesRoute({List<_i35.PageRouteInfo>? children})
     : super(UnratedIssuesRoute.name, initialChildren: children);
 
   static const String name = 'UnratedIssuesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i29.UnratedIssuesScreen();
+      return const _i31.UnratedIssuesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i30.UserProfileScreen]
-class UserProfileRoute extends _i33.PageRouteInfo<void> {
-  const UserProfileRoute({List<_i33.PageRouteInfo>? children})
+/// [_i32.UserProfileScreen]
+class UserProfileRoute extends _i35.PageRouteInfo<void> {
+  const UserProfileRoute({List<_i35.PageRouteInfo>? children})
     : super(UserProfileRoute.name, initialChildren: children);
 
   static const String name = 'UserProfileRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i30.UserProfileScreen();
+      return const _i32.UserProfileScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i31.WeeklyReleasesScreen]
-class WeeklyReleasesRoute extends _i33.PageRouteInfo<void> {
-  const WeeklyReleasesRoute({List<_i33.PageRouteInfo>? children})
+/// [_i33.WeeklyReleasesScreen]
+class WeeklyReleasesRoute extends _i35.PageRouteInfo<void> {
+  const WeeklyReleasesRoute({List<_i35.PageRouteInfo>? children})
     : super(WeeklyReleasesRoute.name, initialChildren: children);
 
   static const String name = 'WeeklyReleasesRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i31.WeeklyReleasesScreen();
+      return const _i33.WeeklyReleasesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i32.WishlistScreen]
-class WishlistRoute extends _i33.PageRouteInfo<void> {
-  const WishlistRoute({List<_i33.PageRouteInfo>? children})
+/// [_i34.WishlistScreen]
+class WishlistRoute extends _i35.PageRouteInfo<void> {
+  const WishlistRoute({List<_i35.PageRouteInfo>? children})
     : super(WishlistRoute.name, initialChildren: children);
 
   static const String name = 'WishlistRoute';
 
-  static _i33.PageInfo page = _i33.PageInfo(
+  static _i35.PageInfo page = _i35.PageInfo(
     name,
     builder: (data) {
-      return const _i32.WishlistScreen();
+      return const _i34.WishlistScreen();
     },
   );
 }
