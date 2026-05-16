@@ -5,7 +5,9 @@ import 'package:takion/src/presentation/providers/collection_items_provider.dart
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/collection_issue_list_tile.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/extensions/collection_item_extension.dart';
+import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
@@ -90,8 +92,8 @@ class CollectionReadStatusScreen extends ConsumerWidget {
                   );
                 }
                 final item = sortedItems[index - 1];
-                return CollectionIssueListTile(
-                  item: item,
+                return IssueListTile(
+                  issue: item.toIssueList(),
                   isFirst: index == 1,
                   isLast: index == sortedItems.length,
                 );

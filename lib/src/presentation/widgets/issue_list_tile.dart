@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/presentation/providers/favorites_provider.dart';
+import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
+import 'package:takion/src/presentation/providers/issues_provider.dart';
 
 class IssueListTile extends ConsumerWidget {
   final IssueList issue;
@@ -39,36 +41,56 @@ class IssueListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const double imageHeight = 98;
     const double imageWidth = 67;
+
+    // Hydrate if data is incomplete
+    final hydratedIssueAsync = issue.id != null && (issue.image == null || issue.name.contains('Unknown'))
+        ? ref.watch(issueDetailsProvider(issue.id!))
+        : null;
+    
+    final IssueDetails? hydratedIssue = hydratedIssueAsync?.value;
+    final IssueList effectiveIssue = hydratedIssue != null 
+        ? IssueList(
+            id: hydratedIssue.id,
+            name: hydratedIssue.title ?? hydratedIssue.series?.name ?? issue.name,
+            number: hydratedIssue.number,
+            series: null,
+            coverDate: hydratedIssue.coverDate,
+            storeDate: hydratedIssue.storeDate,
+            image: hydratedIssue.image,
+            modified: hydratedIssue.modified,
+          )
+        : issue;
+
     final effectiveOnTap =
         onTap ??
-        (issue.id == null
+        (effectiveIssue.id == null
             ? null
             : () {
                 context.pushRoute(
                   IssueDetailsRoute(
-                    issueId: issue.id!,
-                    initialImageUrl: issue.image,
+                    issueId: effectiveIssue.id!,
+                    initialImageUrl: effectiveIssue.image,
                   ),
                 );
               });
 
-    final providerStatus = ref.watch(issueCollectionStatusProvider(issue.id));
-    final pullEntryAsync = issue.id == null
+    final providerStatus = ref.watch(issueCollectionStatusProvider(effectiveIssue.id ?? 0));
+    final pullEntryAsync = effectiveIssue.id == null
         ? null
-        : ref.watch(issuePullListEntryProvider(issue.id!));
+        : ref.watch(issuePullListEntryProvider(effectiveIssue.id!));
     final effectiveIsCollected =
         isCollected ?? providerStatus?.isCollected ?? false;
     final effectiveIsWishlisted = providerStatus?.isWishlisted ?? false;
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
-    final isFavorite = issue.id != null && ref.watch(isIssueFavoriteProvider(issue.id!)).asData?.value == true;
+    final isFavorite = effectiveIssue.id != null && ref.watch(isIssueFavoriteProvider(effectiveIssue.id!)).asData?.value == true;
 
     final imageWidget = ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: issue.image != null
+      child: effectiveIssue.image != null
           ? CachedNetworkImage(
-              imageUrl: issue.image!,
+              imageUrl: effectiveIssue.image!,
               width: imageWidth,
               height: imageHeight,
               fit: BoxFit.cover,
@@ -113,7 +135,7 @@ class IssueListTile extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  issue.name,
+                  '${effectiveIssue.name}${effectiveIssue.number.isNotEmpty ? ' #${effectiveIssue.number}' : ''}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -121,11 +143,11 @@ class IssueListTile extends ConsumerWidget {
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (issue.storeDate != null)
+                if (effectiveIssue.storeDate != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
-                      DateFormat.yMMMd().format(issue.storeDate!),
+                      DateFormat.yMMMd().format(effectiveIssue.storeDate!),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
@@ -174,11 +196,7 @@ class IssueListTile extends ConsumerWidget {
                       ),
                       if (isFavorite) ...[
                         const SizedBox(width: 8),
-                        const Icon(
-                          Icons.favorite,
-                          size: 16,
-                          color: Colors.red,
-                        ),
+                        const Icon(Icons.favorite, size: 16, color: Colors.red),
                       ],
                       const Spacer(),
                       if ((effectiveRating ?? 0) > 0)
@@ -203,7 +221,11 @@ class IssueListTile extends ConsumerWidget {
     if (useCardBackground) {
       const radius = 24.0;
       return Card(
-        margin: EdgeInsets.only(left: horizontalPadding, right: horizontalPadding, bottom: isLast ? 12 : 2),
+        margin: EdgeInsets.only(
+          left: horizontalPadding,
+          right: horizontalPadding,
+          bottom: isLast ? 12 : 2,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: isFirst ? const Radius.circular(radius) : Radius.zero,

@@ -28,6 +28,7 @@ import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/page_navigation_bar.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
+import 'package:takion/src/presentation/widgets/add_to_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/tappable_link_row.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -576,8 +577,12 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                           children: availableSubsets
                               .map(
                                 (value) => ChoiceChip(
-                                  label: Text(subsetLabel(value)),
+                                  label: Text(
+                                    subsetLabel(value),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                   selected: value == selectedSubset,
+                                  shape: const StadiumBorder(),
                                   onSelected: isApplying
                                       ? null
                                       : (_) {
@@ -852,60 +857,69 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      children: [
-                        IconButton(
-                          iconSize: 28,
-                          tooltip: isSubscribed
-                              ? 'Unsubscribe and remove pull'
-                              : 'Subscribe and pull series',
-                          onPressed: isSubscriptionLoading
-                              ? null
-                              : () {
-                                  _setSeriesSubscription(!isSubscribed);
-                                },
-                          icon: isSubscriptionLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(
-                                  isSubscribed
-                                      ? Icons.notifications_active
-                                      : Icons.notifications_outlined,
-                                  color: isSubscribed
-                                      ? Theme.of(context).colorScheme.primary
-                                      : null,
+                    children: [
+                      IconButton(
+                        iconSize: 28,
+                        tooltip: isSubscribed
+                            ? 'Unsubscribe and remove pull'
+                            : 'Subscribe and pull series',
+                        onPressed: isSubscriptionLoading
+                            ? null
+                            : () {
+                                _setSeriesSubscription(!isSubscribed);
+                              },
+                        icon: isSubscriptionLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
+                              )
+                            : Icon(
+                                isSubscribed
+                                    ? Icons.notifications_active
+                                    : Icons.notifications_outlined,
+                                color: isSubscribed
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                      ),
+                      const SizedBox(width: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: SizedBox(
+                          height: 24,
+                          child: VerticalDivider(
+                            width: 1,
+                            thickness: 1,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant
+                                .withValues(alpha: 0.5),
+                          ),
                         ),
-                        const SizedBox(width: 4),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: SizedBox(
-                            height: 24,
-                            child: VerticalDivider(
-                              width: 1,
-                              thickness: 1,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        iconSize: 28,
+                        tooltip: 'Add to reading list',
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) => SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.7,
+                              child: AddToReadingListBottomSheet(
+                                targetId: widget.seriesId.toString(),
+                                isSeries: true,
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
+                        icon: const Icon(Icons.playlist_add),
+                      ),
                         const SizedBox(width: 4),
-                        IconButton(
-                          iconSize: 28,
-                          tooltip: 'Add to list',
-                          onPressed: () =>
-                              TakionAlerts.comingSoon(context, 'Add to list'),
-                          icon: const Icon(
-                            Icons.playlist_add_outlined,
-                            size: 28,
-                          ),
-                        ),
                         IconButton(
                           iconSize: 28,
                           tooltip: 'Favorite series',

@@ -10,6 +10,9 @@ import 'package:takion/src/presentation/widgets/compact_list_section.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/rating_picker.dart';
 import 'package:takion/src/presentation/widgets/section_subtitle_header.dart';
+import 'package:takion/src/presentation/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/providers/random_reading_list_provider.dart';
+import 'package:takion/src/presentation/widgets/reading_list_card.dart';
 
 @RoutePage()
 class LibraryScreen extends ConsumerWidget {
@@ -253,6 +256,11 @@ class LibraryScreen extends ConsumerWidget {
                 CompactListSectionItem(
                   icon: Icons.list_alt_outlined,
                   label: 'My Reading Lists',
+                  value: ref.watch(readingListsProvider).when(
+                        data: (lists) => lists.length.toString(),
+                        loading: () => '--',
+                        error: (_, __) => '!',
+                      ),
                   onTap: () {
                     context.pushRoute(const MyReadingListsRoute());
                   },
@@ -335,10 +343,38 @@ class LibraryScreen extends ConsumerWidget {
                       issue: suggestion.issue,
                       isFirst: true,
                       isLast: true,
-                      useCardBackground: true,
+                      useCardBackground: false,
                       isCollected: suggestion.isCollected,
                       isRead: suggestion.isRead,
                       rating: suggestion.rating,
+                    ),
+                  ],
+                );
+              },
+            ),
+            Consumer(
+              builder: (context, ref, _) {
+                final suggestion = ref.watch(randomReadingListProvider);
+                if (suggestion == null) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: SectionSubtitleHeader(
+                        title: 'Reading List Suggestion',
+                        subtitle: 'Pick up where you left off!',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ReadingListCard(
+                      list: suggestion,
+                      flat: true,
+                      onTap: () {
+                        context.pushRoute(ReadingListDetailsRoute(listId: suggestion.id));
+                      },
                     ),
                   ],
                 );
@@ -406,7 +442,7 @@ class LibraryScreen extends ConsumerWidget {
                       issue: suggestion.issue,
                       isFirst: true,
                       isLast: true,
-                      useCardBackground: true,
+                      useCardBackground: false,
                       isCollected: suggestion.isCollected,
                       isRead: suggestion.isRead,
                       rating: suggestion.rating,

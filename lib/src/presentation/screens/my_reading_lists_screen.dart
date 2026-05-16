@@ -99,12 +99,14 @@ class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
             );
           }
 
-          return ListView.builder(
+          return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: filtered.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               return ReadingListCard(
                 list: filtered[index],
+                flat: true,
                 onTap: () {
                   context.pushRoute(ReadingListDetailsRoute(listId: filtered[index].id));
                 },

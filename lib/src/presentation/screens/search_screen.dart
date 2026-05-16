@@ -83,8 +83,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: Row(
               children: [
                 ChoiceChip(
-                  label: const Text('Series'),
+                  label: const Text(
+                    'Series',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   selected: state.target == SearchTarget.series,
+                  shape: const StadiumBorder(),
                   onSelected: (_) {
                     ref
                         .read(searchStateProvider.notifier)
@@ -93,8 +97,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text('Issues'),
+                  label: const Text(
+                    'Issues',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   selected: state.target == SearchTarget.issues,
+                  shape: const StadiumBorder(),
                   onSelected: (_) {
                     ref
                         .read(searchStateProvider.notifier)

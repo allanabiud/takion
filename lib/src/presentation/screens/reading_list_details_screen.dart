@@ -37,12 +37,17 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
   List<ReadingListItem>? _editingItems;
   final Set<String> _selectedIds = {};
   bool _isUpdating = false;
+  String? _initialTitle;
+  String? _initialDescription;
+  List<ReadingListItem>? _initialItems;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
+    _titleController.addListener(() => setState(() {}));
+    _descriptionController.addListener(() => setState(() {}));
   }
 
   @override
@@ -251,9 +256,16 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
   Future<void> _toggleFavorite(BuildContext context, WidgetRef ref, ReadingList list) async {
     try {
       final repository = ref.read(favoritesRepositoryProvider);
+      final isFavorite = await repository.isReadingListFavorite(list.id);
       await repository.toggleReadingListFavorite(list.id);
       ref.invalidate(isReadingListFavoriteProvider(list.id));
       ref.invalidate(favoriteReadingListsListProvider);
+      if (context.mounted) {
+        TakionAlerts.success(
+          context,
+          !isFavorite ? 'Added to favorites' : 'Removed from favorites',
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         TakionAlerts.error(context, 'Failed to update favorites: $e');
@@ -390,123 +402,149 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
         
         final hasSelection = _selectedIds.isNotEmpty;
 
-        return Scaffold(
-          appBar: AppBar(
-            leading: hasSelection 
-              ? IconButton(
-                  icon: const Icon(Icons.close), 
-                  onPressed: () => setState(() => _selectedIds.clear())
-                )
-              : null,
-            title: hasSelection ? Text('${_selectedIds.length} selected') : null,
-            actions: [
-              if (hasSelection) ...[
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () => _showBulkActions(context),
-                  tooltip: 'Bulk actions',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: _deleteSelected,
-                  color: theme.colorScheme.error,
-                  tooltip: 'Remove from list',
-                ),
-              ] else if (isEditing) ...[
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _confirmDelete(context, list),
-                  color: theme.colorScheme.error,
-                ),
-              ] else ...[
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  onPressed: () => ref.read(readingListSharingServiceProvider).shareReadingList(list),
-                ),
-              ],
-            ],
-          ),
-          body: Stack(
-            children: [
-              list.isOrdered 
-                ? buildOrderedBody(context, list, displayItems, status.progress, status.readCount, status.totalCount, isEditing) 
-                : buildUnorderedBody(context, list, displayItems, status.progress, status.readCount, status.totalCount, isEditing),
-              if (_isUpdating)
-                Container(
-                  color: Colors.black.withOpacity(0.3),
-                  child: const Center(
-                    child: CircularProgressIndicator(),
+        return PopScope(
+          canPop: !isEditing,
+          onPopInvokedWithResult: (didPop, result) {
+            if (isEditing && !didPop) {
+              ref.read(readingListEditModeProvider(widget.listId).notifier).set(false);
+              _editingItems = null;
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: isEditing ? theme.colorScheme.primaryContainer : null,
+              leading: hasSelection 
+                ? IconButton(
+                    icon: const Icon(Icons.close), 
+                    onPressed: () => setState(() => _selectedIds.clear())
+                  )
+                : null,
+              title: hasSelection ? Text('${_selectedIds.length} selected') : (isEditing ? const Text('Editing List') : null),
+              actions: [
+                if (hasSelection) ...[
+                  IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () => _showBulkActions(context),
+                    tooltip: 'Bulk actions',
                   ),
-                ),
-            ],
-          ),
-          bottomNavigationBar: BottomAppBar(
-            child: Row(
-              children: [
-                IconButton(
-                  iconSize: 28,
-                  icon: Icon(isEditing ? Icons.edit : Icons.edit_outlined),
-                  color: isEditing ? theme.colorScheme.primary : null,
-                  onPressed: () {
-                    if (!isEditing) {
-                      _titleController.text = list.title;
-                      _descriptionController.text = list.description;
-                      _editingItems = List.from(list.items);
-                    } else {
-                      _editingItems = null;
-                    }
-                    ref.read(readingListEditModeProvider(widget.listId).notifier).toggle();
-                  },
-                ),
-                if (!isEditing) ...[
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
-                      return IconButton(
-                        iconSize: 28,
-                        icon: isFavoriteAsync.when(
-                          data: (isFavorite) => Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.red : null,
-                          ),
-                          loading: () => const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          error: (_, __) => const Icon(Icons.favorite_border),
-                        ),
-                        onPressed: () => _toggleFavorite(context, ref, list),
-                      );
-                    },
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: _deleteSelected,
+                    color: theme.colorScheme.error,
+                    tooltip: 'Remove from list',
+                  ),
+                ] else if (isEditing) ...[
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => _confirmDelete(context, list),
+                    color: theme.colorScheme.error,
+                  ),
+                ] else ...[
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    onPressed: () => ref.read(readingListSharingServiceProvider).shareReadingList(list),
                   ),
                 ],
-                const Spacer(),
-                FloatingActionButton(
-                  onPressed: isEditing 
-                    ? () async {
-                        final updatedList = list.copyWith(
-                          title: _titleController.text,
-                          description: _descriptionController.text,
-                          items: _editingItems ?? list.items,
-                          updatedAt: DateTime.now(),
-                        );
-                        await ref.read(readingListsProvider.notifier).updateList(updatedList);
-                        ref.invalidate(readingListDetailsProvider(widget.listId));
-                        ref.read(readingListEditModeProvider(widget.listId).notifier).set(false);
-                        _editingItems = null;
-                        if (context.mounted) {
-                          TakionAlerts.success(context, 'Reading list updated');
-                        }
-                      }
-                    : () => showModalBottomSheet(
-                        context: context, 
-                        isScrollControlled: true, 
-                        builder: (_) => AddReadingListItemsBottomSheet(list: list)
-                      ),
-                  child: Icon(isEditing ? Icons.check : Icons.add),
-                ),
               ],
+            ),
+            body: Stack(
+              children: [
+                list.isOrdered 
+                  ? buildOrderedBody(context, list, displayItems, status.progress, status.readCount, status.totalCount, isEditing) 
+                  : buildUnorderedBody(context, list, displayItems, status.progress, status.readCount, status.totalCount, isEditing),
+                if (_isUpdating)
+                  Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+              ],
+            ),
+            bottomNavigationBar: BottomAppBar(
+              child: Row(
+                children: [
+                  IconButton(
+                    iconSize: 28,
+                    style: isEditing 
+                        ? IconButton.styleFrom(
+                            backgroundColor: theme.colorScheme.secondaryContainer,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          )
+                        : null,
+                    icon: Icon(isEditing ? Icons.edit : Icons.edit_outlined),
+                    color: isEditing ? theme.colorScheme.onSecondaryContainer : null,
+                    onPressed: () {
+                      if (!isEditing) {
+                        _titleController.text = list.title;
+                        _initialTitle = list.title;
+                        _descriptionController.text = list.description;
+                        _initialDescription = list.description;
+                        _editingItems = List.from(list.items);
+                        _initialItems = List.from(list.items);
+                      } else {
+                        _editingItems = null;
+                        _initialItems = null;
+                        _initialTitle = null;
+                        _initialDescription = null;
+                      }
+                      ref.read(readingListEditModeProvider(widget.listId).notifier).toggle();
+                    },
+                  ),
+                  if (!isEditing) ...[
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
+                        return IconButton(
+                          iconSize: 28,
+                          icon: isFavoriteAsync.when(
+                            data: (isFavorite) => Icon(
+                              isFavorite ? Icons.favorite : Icons.favorite_border,
+                              color: isFavorite ? Colors.red : null,
+                            ),
+                            loading: () => const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            error: (_, __) => const Icon(Icons.favorite_border),
+                          ),
+                          onPressed: () => _toggleFavorite(context, ref, list),
+                        );
+                      },
+                    ),
+                  ],
+                  const Spacer(),
+                  isEditing
+                      ? FloatingActionButton.extended(
+                          onPressed: () async {
+                            final updatedList = list.copyWith(
+                              title: _titleController.text,
+                              description: _descriptionController.text,
+                              items: _editingItems ?? list.items,
+                              updatedAt: DateTime.now(),
+                            );
+                            await ref.read(readingListsProvider.notifier).updateList(updatedList);
+                            ref.invalidate(readingListDetailsProvider(widget.listId));
+                            ref.read(readingListEditModeProvider(widget.listId).notifier).set(false);
+                            _editingItems = null;
+                            setState(() => _selectedIds.clear());
+                            if (context.mounted) {
+                              TakionAlerts.success(context, 'Reading list updated');
+                            }
+                          },
+                          icon: const Icon(Icons.check),
+                          label: const Text('Save'),
+                        )
+                      : FloatingActionButton(                          onPressed: () => showModalBottomSheet(
+                              context: context, 
+                              isScrollControlled: true, 
+                              builder: (_) => AddReadingListItemsBottomSheet(list: list)
+                            ),
+                          child: const Icon(Icons.add),
+                        ),
+                ],
+              ),
             ),
           ),
         );

@@ -19,6 +19,7 @@ import 'package:takion/src/presentation/widgets/rating_picker.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 import 'package:takion/src/presentation/widgets/issue_details/about_tab_content.dart';
 import 'package:takion/src/presentation/widgets/issue_details/my_details_tab_content.dart';
+import 'package:takion/src/presentation/widgets/add_to_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _IssueDetailsMenuAction { share, openInBrowser }
@@ -611,10 +612,21 @@ class IssueDetailsScreen extends ConsumerWidget {
                       ),
                       IconButton(
                         iconSize: 28,
-                        tooltip: 'Add to list',
-                        onPressed: () =>
-                            TakionAlerts.comingSoon(context, 'Add to list'),
-                        icon: const Icon(Icons.playlist_add_outlined, size: 28),
+                        tooltip: 'Add to reading list',
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) => SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.7,
+                              child: AddToReadingListBottomSheet(
+                                targetId: issueId.toString(),
+                                isSeries: false,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.playlist_add, size: 28),
                       ),
                       IconButton(
                         iconSize: 28,

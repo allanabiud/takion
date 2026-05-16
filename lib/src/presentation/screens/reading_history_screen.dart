@@ -4,164 +4,131 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
-import 'package:takion/src/presentation/sorting/content_sorting.dart';
-import 'package:takion/src/presentation/providers/issues_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/widgets/list_header.dart';
-import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+
+enum HistoryFilter { day, week, month, year }
 
 @RoutePage()
-class ReadingHistoryScreen extends ConsumerWidget {
+class ReadingHistoryScreen extends ConsumerStatefulWidget {
   const ReadingHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sortOption = ref.watch(
-      sortPreferenceForContextProvider(
-        SortPreferenceContext.libraryReadingHistory,
-      ),
-    );
+  ConsumerState<ReadingHistoryScreen> createState() => _ReadingHistoryScreenState();
+}
+
+class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
+  HistoryFilter _filter = HistoryFilter.month;
+
+  Map<String, List<dynamic>> _groupEntries(List<dynamic> entries) {
+    final Map<String, List<dynamic>> grouped = {};
+    for (final entry in entries) {
+      final date = entry.readAt ?? entry.item.modified ?? DateTime.now();
+      String key;
+      switch (_filter) {
+        case HistoryFilter.day:
+          key = DateFormat.yMMMd().format(date);
+          break;
+        case HistoryFilter.week:
+          final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
+          key = 'Week of ${DateFormat.yMMMd().format(startOfWeek)}';
+          break;
+        case HistoryFilter.month:
+          key = DateFormat.yMMMM().format(date);
+          break;
+        case HistoryFilter.year:
+          key = DateFormat.y().format(date);
+          break;
+      }
+      grouped.putIfAbsent(key, () => []).add(entry);
+    }
+    return grouped;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final historyAsync = ref.watch(readingHistoryCollectionItemsProvider);
 
-    Future<void> refresh() async {
-      ref.invalidate(readingHistoryCollectionItemsProvider);
-      await ref.read(readingHistoryCollectionItemsProvider.future);
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reading History'),
-      ),
+      appBar: AppBar(title: const Text('Reading History')),
       body: historyAsync.when(
         loading: () => const AsyncStatePanel.loading(),
-        error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load reading history: $error',
-        ),
+        error: (error, _) => AsyncStatePanel.error(errorMessage: '$error'),
         data: (entries) {
-          final sortedEntries = sortItemsByNameAndDate(
-            entries,
-            sortOption: sortOption,
-            nameOf: (entry) =>
-                '${entry.item.issue?.series?.name ?? ''} #${entry.item.issue?.number ?? ''}',
-            dateOf: (entry) =>
-                entry.readAt ??
-                entry.item.modified ??
-                entry.item.issue?.storeDate ??
-                entry.item.issue?.coverDate ??
-                entry.item.issue?.modified,
-          );
-
-          if (sortedEntries.isEmpty) {
-            return RefreshIndicator(
-              onRefresh: refresh,
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: const [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: EmptyContentState(
-                      icon: Icons.history_outlined,
-                      message: 'No reading history yet.',
-                    ),
-                  ),
-                ],
-              ),
+          if (entries.isEmpty) {
+            return const EmptyContentState(
+              icon: Icons.history_outlined,
+              message: 'No history.',
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: refresh,
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 12),
-              itemCount: sortedEntries.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: ListHeader(
-                      count: sortedEntries.length,
-                      unit: 'entry',
-                      pluralUnit: 'entries',
-                      sortLabel: issueSortLabel(sortOption),
-                      onSortTap: () => showSortBottomSheet(
-                        context,
-                        ref,
-                        SortPreferenceContext.libraryReadingHistory,
-                        issueSortLabel,
+          final grouped = _groupEntries(entries);
+          final keys = grouped.keys.toList();
+
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: HistoryFilter.values.map((f) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(
+                          f.name[0].toUpperCase() + f.name.substring(1),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        selected: _filter == f,
+                        onSelected: (_) => setState(() => _filter = f),
+                        shape: const StadiumBorder(),
                       ),
+                    )).toList(),
+                  ),
+                ),
+                ...keys.map((key) {
+                  final items = grouped[key]!;
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ExpansionTile(
+                      title: Text(key, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      children: items.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        final issue = item.item.issue;
+                        final issueList = IssueList(
+                          id: issue?.id,
+                          name: issue?.series?.name ?? 'Unknown',
+                          number: issue?.number ?? '',
+                          series: null,
+                          coverDate: issue?.coverDate,
+                          storeDate: issue?.storeDate,
+                          image: issue?.image,
+                          modified: issue?.modified,
+                        );
+                        return IssueListTile(
+                          issue: issueList,
+                          isFirst: index == 0,
+                          isLast: index == items.length - 1,
+                          showDivider: index < items.length - 1,
+                          useCardBackground: false,
+                          isCollected: issue?.id != null,
+                          isRead: true,
+                          onTap: issue?.id != null
+                              ? () => context.pushRoute(IssueDetailsRoute(issueId: issue!.id))
+                              : null,
+                        );
+                      }).toList(),
                     ),
                   );
-                }
-                final entry = sortedEntries[index - 1];
-                final issue = entry.item.issue;
-                final issueId = issue?.id;
-                final rawSeriesName = issue?.series?.name.trim() ?? '';
-                final shouldHydrate =
-                    issueId != null &&
-                    (RegExp(r'^Series \d+$').hasMatch(rawSeriesName) ||
-                        (issue?.number.isEmpty ?? true));
-                final hydratedIssue = shouldHydrate
-                    ? ref.watch(issueDetailsProvider(issueId)).asData?.value
-                    : null;
-                final seriesName =
-                    (hydratedIssue?.series?.name.trim().isNotEmpty ?? false)
-                    ? hydratedIssue!.series!.name.trim()
-                    : (rawSeriesName.isNotEmpty ? rawSeriesName : 'Issue');
-                final displayNumber =
-                    (hydratedIssue?.number.trim().isNotEmpty ?? false)
-                    ? hydratedIssue!.number.trim()
-                    : (issue?.number ?? '');
-                final number = displayNumber.isNotEmpty
-                    ? ' #$displayNumber'
-                    : '';
-                final readAtLabel = entry.readAt == null
-                    ? 'Date unavailable'
-                    : DateFormat.yMMMd().format(entry.readAt!.toLocal());
-                final ratingValue = (entry.item.rating ?? 0).clamp(0, 5);
-
-                return Card(
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: ListTile(
-                    title: Text('$seriesName$number'),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.event_outlined,
-                            size: 14,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(readAtLabel),
-                          const Spacer(),
-                          ...List.generate(5, (starIndex) {
-                            final filled = starIndex < ratingValue;
-                            return Icon(
-                              filled ? Icons.star : Icons.star_border,
-                              size: 14,
-                              color: filled
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline,
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: issueId == null
-                        ? null
-                        : () => context.pushRoute(
-                            IssueDetailsRoute(issueId: issueId),
-                          ),
-                  ),
-                );
-              },
+                }).toList(),
+              ],
             ),
           );
         },

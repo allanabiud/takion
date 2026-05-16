@@ -185,23 +185,20 @@ class _AddReadingListItemsBottomSheetState extends ConsumerState<AddReadingListI
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: ItemRole.values
-                      .map((role) {
-                        final label = role == ItemRole.tieIn 
-                            ? 'Tie-In' 
-                            : role.name.substring(0, 1).toUpperCase() + role.name.substring(1);
-                        return ChoiceChip(
-                            label: Text(label),
-                            selected: _selectedRole == role,
-                            onSelected: (selected) => setState(() => _selectedRole = role),
-                            selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-                            labelStyle: TextStyle(
-                              color: _selectedRole == role ? Theme.of(context).primaryColor : null,
-                              fontWeight: _selectedRole == role ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          );
-                      })
-                      .toList(),
+                  children: ItemRole.values.map((role) {
+                    final label = role == ItemRole.tieIn
+                        ? 'Tie-In'
+                        : role.name.substring(0, 1).toUpperCase() + role.name.substring(1);
+                    return ChoiceChip(
+                      label: Text(
+                        label,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      selected: _selectedRole == role,
+                      shape: const StadiumBorder(),
+                      onSelected: (selected) => setState(() => _selectedRole = role),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 24),
                 if (widget.list.contentType == ListContentType.issue) ...[

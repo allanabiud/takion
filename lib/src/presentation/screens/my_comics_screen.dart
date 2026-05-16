@@ -6,7 +6,9 @@ import 'package:takion/src/presentation/providers/collection_items_provider.dart
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/sorting/content_sorting.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/widgets/collection_issue_list_tile.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/extensions/collection_item_extension.dart';
+import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
 import 'package:takion/src/presentation/widgets/list_header.dart';
 import 'package:takion/src/presentation/widgets/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/paged_list_scaffold.dart';
@@ -104,8 +106,8 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
         final item = sortedItems[index];
         return Opacity(
           opacity: isLoading ? 0.6 : 1.0,
-          child: CollectionIssueListTile(
-            item: item,
+          child: IssueListTile(
+            issue: item.toIssueList(),
             isFirst: index == 0,
             isLast: index == sortedItems.length - 1,
           ),
