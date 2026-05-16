@@ -16,6 +16,8 @@ class SeriesListTile extends ConsumerWidget {
   final String? heroTag;
   final bool allowRemoteCoverFetch;
   final bool showDivider;
+  final bool? isRead;
+  final double horizontalPadding;
 
   const SeriesListTile({
     super.key,
@@ -26,18 +28,31 @@ class SeriesListTile extends ConsumerWidget {
     this.heroTag,
     this.allowRemoteCoverFetch = true,
     this.showDivider = true,
+    this.isRead,
+    this.horizontalPadding = 12,
   });
 
   String _formatSeriesType(String? type) {
     if (type == null) return '';
     final lower = type.toLowerCase();
-    if (lower == 'single issue') return '';
-    if (lower == 'limited series') return '';
-    if (lower.contains('trade paperback') || lower.contains('tpb'))
+    if (lower == 'single issue') {
+      return '';
+    }
+    if (lower == 'limited series') {
+      return '';
+    }
+    if (lower.contains('trade paperback') || lower.contains('tpb')) {
       return 'TPB';
-    if (lower.contains('hardcover') || lower.contains('hc')) return 'HC';
-    if (lower.contains('graphic novel') || lower.contains('gn')) return 'GN';
-    if (lower.contains('omnibus')) return 'Omnibus';
+    }
+    if (lower.contains('hardcover') || lower.contains('hc')) {
+      return 'HC';
+    }
+    if (lower.contains('graphic novel') || lower.contains('gn')) {
+      return 'GN';
+    }
+    if (lower.contains('omnibus')) {
+      return 'Omnibus';
+    }
     return type;
   }
 
@@ -82,8 +97,8 @@ class SeriesListTile extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 12,
-        right: 12,
+        left: horizontalPadding,
+        right: horizontalPadding,
         top: isFirst ? 12 : 2,
         bottom: isLast ? 12 : 0,
       ),
@@ -106,17 +121,23 @@ class SeriesListTile extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            series.seriesType != null &&
-                                    series.seriesType!.isNotEmpty
-                                ? '${series.name} (${_formatSeriesType(series.seriesType!)})'
-                                : series.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                          Builder(
+                            builder: (context) {
+                              final formattedType = series.seriesType != null
+                                  ? _formatSeriesType(series.seriesType!)
+                                  : '';
+                              return Text(
+                                formattedType.isNotEmpty
+                                    ? '${series.name} ($formattedType)'
+                                    : series.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -149,6 +170,14 @@ class SeriesListTile extends ConsumerWidget {
                                     ? Theme.of(context).colorScheme.primary
                                     : Theme.of(context).colorScheme.outline,
                               ),
+                              if (isRead == true) ...[
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.bookmark_added,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ],
                               if (isFavorite) ...[
                                 const SizedBox(width: 8),
                                 const Icon(

@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/favorites_provider.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/presentation/widgets/role_badge.dart';
 
 class ReadingListIssueCard extends ConsumerWidget {
   final int? issueId;
@@ -12,6 +14,7 @@ class ReadingListIssueCard extends ConsumerWidget {
   final bool isWishlisted;
   final bool isRead;
   final bool isPulled;
+  final ItemRole? role;
 
   const ReadingListIssueCard({
     super.key,
@@ -23,13 +26,14 @@ class ReadingListIssueCard extends ConsumerWidget {
     this.isWishlisted = false,
     this.isRead = false,
     this.isPulled = false,
+    this.role,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isFavorite = issueId != null && ref.watch(isIssueFavoriteProvider(issueId!)).asData?.value == true;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -51,6 +55,11 @@ class ReadingListIssueCard extends ConsumerWidget {
                               color: theme.colorScheme.surfaceContainerHighest,
                               child: const Icon(Icons.image, size: 24),
                             ),
+                      if (role != null)
+                        Positioned(
+                          top: 4, left: 4,
+                          child: RoleBadge(role: role!),
+                        ),
                       if (isFavorite)
                         Positioned(
                           top: 4, right: 4,

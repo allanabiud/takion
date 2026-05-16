@@ -17,3 +17,13 @@ class FavoriteIssue {
   final int metronIssueId;
   final DateTime createdAt;
 }
+
+class FavoriteReadingList {
+  const FavoriteReadingList({
+    required this.readingListId,
+    required this.createdAt,
+  });
+
+  final String readingListId;
+  final DateTime createdAt;
+}

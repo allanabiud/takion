@@ -2,10 +2,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/presentation/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/widgets/create_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/reading_list_card.dart';
+import 'package:takion/src/presentation/widgets/takion_alerts.dart';
 
 @RoutePage()
 class MyReadingListsScreen extends ConsumerStatefulWidget {
@@ -75,16 +77,25 @@ class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
       ),
       body: listsAsync.when(
         data: (lists) {
-          final filtered = _isSearching
-              ? lists
-                  .where((l) => l.title.toLowerCase().contains(_searchController.text.toLowerCase()))
-                  .toList()
+          final query = _searchController.text.toLowerCase().trim();
+          final filtered = _isSearching && query.isNotEmpty
+              ? lists.where((l) {
+                  return l.title.toLowerCase().contains(query) ||
+                      l.description.toLowerCase().contains(query);
+                }).toList()
               : lists;
 
-          if (filtered.isEmpty) {
+          if (lists.isEmpty) {
             return const EmptyContentState(
               icon: Icons.list_alt_outlined,
               message: 'No reading lists created yet.',
+            );
+          }
+
+          if (filtered.isEmpty) {
+            return EmptyContentState(
+              icon: Icons.search_off,
+              message: 'No reading lists found for "$query"',
             );
           }
 
@@ -110,9 +121,26 @@ class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
         children: [
           if (_isFabOpen) ...[
             FloatingActionButton.extended(
-              onPressed: () {
+              onPressed: () async {
                 setState(() => _isFabOpen = false);
-                // TODO: Handle Import
+                final list = await ref.read(readingListSharingServiceProvider).importReadingList();
+                if (list != null) {
+                  final existingLists = ref.read(readingListsProvider).value ?? [];
+                  if (existingLists.any((l) => l.id == list.id)) {
+                    if (context.mounted) {
+                      TakionAlerts.error(context, 'Reading list already exists');
+                    }
+                    return;
+                  }
+                  await ref.read(readingListsProvider.notifier).addList(list);
+                  if (context.mounted) {
+                    TakionAlerts.success(context, 'Imported reading list: ${list.title}');
+                  }
+                } else {
+                  if (context.mounted) {
+                    TakionAlerts.error(context, 'Failed to import reading list');
+                  }
+                }
               },
               icon: const Icon(Icons.file_download_outlined),
               label: const Text('Import'),

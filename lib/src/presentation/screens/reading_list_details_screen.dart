@@ -1,24 +1,265 @@
+import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/presentation/providers/reading_list_details_provider.dart';
 import 'package:takion/src/presentation/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/widgets/add_reading_list_items_bottom_sheet.dart';
 import 'package:takion/src/presentation/widgets/reading_list_cover.dart';
 import 'package:takion/src/presentation/widgets/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/widgets/takion_alerts.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
+import 'package:takion/src/presentation/providers/reading_list_item_status_provider.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/scrobble_issue_provider.dart';
+import 'package:takion/src/presentation/providers/bulk_scrobble_provider.dart';
+import 'package:takion/src/presentation/widgets/reading_list_timeline_tile.dart';
 import 'package:takion/src/presentation/widgets/timeline_item_tile.dart';
-import 'package:timelines_plus/timelines_plus.dart';
 
 @RoutePage()
-class ReadingListDetailsScreen extends ConsumerWidget {
+class ReadingListDetailsScreen extends ConsumerStatefulWidget {
   final String listId;
 
   const ReadingListDetailsScreen({
     super.key,
     @PathParam('listId') required this.listId,
   });
+
+  @override
+  ConsumerState<ReadingListDetailsScreen> createState() => _ReadingListDetailsScreenState();
+}
+
+class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScreen> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  List<ReadingListItem>? _editingItems;
+  final Set<String> _selectedIds = {};
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Selected Items'),
+        content: Text('Are you sure you want to remove ${_selectedIds.length} items?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        if (_editingItems != null) {
+          _editingItems!.removeWhere((item) => _selectedIds.contains(item.targetId));
+        }
+        _selectedIds.clear();
+      });
+    }
+  }
+
+  void _markSelectedRead(bool read) async {
+    final listValue = ref.read(readingListDetailsProvider(widget.listId));
+    final list = listValue.value;
+    if (list == null) return;
+
+    setState(() {
+      _isUpdating = true;
+    });
+
+    try {
+      if (_editingItems != null) {
+        final updatedItems = List<ReadingListItem>.from(_editingItems!);
+        final metronRepo = ref.read(metronRepositoryProvider);
+        final allIssueIdsToUpdate = <int>{};
+
+        for (int i = 0; i < updatedItems.length; i++) {
+          final item = updatedItems[i];
+          if (_selectedIds.contains(item.targetId)) {
+            final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+            final id = int.tryParse(idString) ?? 0;
+            
+            if (item.isSeries) {
+              if (id > 0) {
+                int currentPage = 1;
+                bool hasNext = true;
+                while (hasNext) {
+                  final page = await metronRepo.getSeriesIssueList(id, page: currentPage);
+                  for (final issue in page.results) {
+                    if (issue.id != null) allIssueIdsToUpdate.add(issue.id!);
+                  }
+                  hasNext = page.next != null;
+                  currentPage++;
+                  if (currentPage > 20) break;
+                }
+              }
+            } else {
+              if (id > 0) {
+                allIssueIdsToUpdate.add(id);
+              }
+            }
+            updatedItems[i] = item.copyWith(isRead: read);
+          }
+        }
+
+        if (allIssueIdsToUpdate.isNotEmpty) {
+          await ref.read(bulkScrobbleProvider.notifier).scrobbleIssues(
+            issueIds: allIssueIdsToUpdate.toList(),
+            markAsRead: read,
+          );
+        }
+
+        setState(() {
+          _editingItems = updatedItems;
+          _selectedIds.clear();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to update read status: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdating = false;
+        });
+      }
+    }
+  }
+
+  void _changeSelectedRole(ItemRole role) {
+    setState(() {
+      if (_editingItems != null) {
+        _editingItems = _editingItems!.map((item) {
+          if (_selectedIds.contains(item.targetId)) {
+            return item.copyWith(role: role);
+          }
+          return item;
+        }).toList();
+      }
+      _selectedIds.clear();
+    });
+  }
+
+  void _showBulkActions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Bulk Actions (${_selectedIds.length} items)',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.bookmark_added_outlined),
+              title: const Text('Mark as Read'),
+              onTap: () {
+                Navigator.pop(context);
+                _markSelectedRead(true);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bookmark_remove_outlined),
+              title: const Text('Mark as Unread'),
+              onTap: () {
+                Navigator.pop(context);
+                _markSelectedRead(false);
+              },
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Change Role',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ItemRole.values.map((role) {
+                String label = role.name.toUpperCase();
+                if (role == ItemRole.tieIn) label = 'TIE-IN';
+                
+                return ActionChip(
+                  label: Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  backgroundColor: _getRoleColor(context, role).withOpacity(0.1),
+                  side: BorderSide(color: _getRoleColor(context, role)),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _changeSelectedRole(role);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite(BuildContext context, WidgetRef ref, ReadingList list) async {
+    try {
+      final repository = ref.read(favoritesRepositoryProvider);
+      await repository.toggleReadingListFavorite(list.id);
+      ref.invalidate(isReadingListFavoriteProvider(list.id));
+      ref.invalidate(favoriteReadingListsListProvider);
+    } catch (e) {
+      if (context.mounted) {
+        TakionAlerts.error(context, 'Failed to update favorites: $e');
+      }
+    }
+  }
 
   Color _getRoleColor(BuildContext context, ItemRole role) {
     final theme = Theme.of(context);
@@ -31,7 +272,7 @@ class ReadingListDetailsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, ReadingList list) async {
+  Future<void> _confirmDelete(BuildContext context, ReadingList list) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -57,47 +298,66 @@ class ReadingListDetailsScreen extends ConsumerWidget {
     }
   }
 
-  Widget buildHeader(BuildContext context, ReadingList list, double progress, int readCount, int totalCount) {
+  Widget buildHeader(BuildContext context, ReadingList list, double progress, int readCount, int totalCount, bool isEditing) {
     final theme = Theme.of(context);
-    Widget buildBadge(String label, IconData icon) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(6)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: theme.colorScheme.onPrimaryContainer),
-            const SizedBox(width: 4),
-            Text(label.toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-          ],
-        ),
-      );
-    }
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              ReadingListCover(list: list, width: 100, height: 120),
+              ReadingListCover(list: list, width: 100, height: 150),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(list.title, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    if (list.description.isNotEmpty) ...[const SizedBox(height: 4), Text(list.description, style: theme.textTheme.bodyMedium)],
+                    if (isEditing) ...[
+                      TextField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          hintText: 'Title',
+                          isDense: true,
+                          labelText: 'Title',
+                        ),
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _descriptionController,
+                        decoration: const InputDecoration(
+                          hintText: 'Description',
+                          isDense: true,
+                          labelText: 'Description',
+                        ),
+                        style: theme.textTheme.bodyMedium,
+                        maxLines: null,
+                        minLines: 3,
+                      ),
+                    ] else ...[
+                      Text(list.title, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      if (list.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(list.description, style: theme.textTheme.bodyMedium),
+                      ],
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(children: [buildBadge(list.isOrdered ? 'Ordered' : 'Unordered', list.isOrdered ? Icons.account_tree_outlined : Icons.grid_view_outlined), const SizedBox(width: 8), buildBadge(list.contentType.name, Icons.category_outlined)]),
           const SizedBox(height: 16),
-          LinearProgressIndicator(value: progress),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,38 +372,140 @@ class ReadingListDetailsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final listValue = ref.watch(readingListDetailsProvider(listId));
+  Widget build(BuildContext context) {
+    final listValue = ref.watch(readingListDetailsProvider(widget.listId));
+    final isEditing = ref.watch(readingListEditModeProvider(widget.listId));
+    final theme = Theme.of(context);
+
     return listValue.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
       data: (list) {
         if (list == null) return const Scaffold(body: Center(child: Text('List not found')));
-        final readCount = list.items.where((i) => i.isRead).length;
-        final totalCount = list.items.length;
-        final progress = totalCount > 0 ? readCount / totalCount : 0.0;
         
+        final displayItems = isEditing ? (_editingItems ?? list.items) : list.items;
+        
+        final statusAsync = ref.watch(readingListEffectiveStatusProvider(list));
+        final status = statusAsync.value ?? (readCount: 0, totalCount: displayItems.length, progress: 0.0);
+        
+        final hasSelection = _selectedIds.isNotEmpty;
+
         return Scaffold(
           appBar: AppBar(
+            leading: hasSelection 
+              ? IconButton(
+                  icon: const Icon(Icons.close), 
+                  onPressed: () => setState(() => _selectedIds.clear())
+                )
+              : null,
+            title: hasSelection ? Text('${_selectedIds.length} selected') : null,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => _confirmDelete(context, ref, list),
-                color: Theme.of(context).colorScheme.error,
-              ),
+              if (hasSelection) ...[
+                IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () => _showBulkActions(context),
+                  tooltip: 'Bulk actions',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: _deleteSelected,
+                  color: theme.colorScheme.error,
+                  tooltip: 'Remove from list',
+                ),
+              ] else if (isEditing) ...[
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _confirmDelete(context, list),
+                  color: theme.colorScheme.error,
+                ),
+              ] else ...[
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: () => ref.read(readingListSharingServiceProvider).shareReadingList(list),
+                ),
+              ],
             ],
           ),
-          body: list.isOrdered 
-            ? buildOrderedBody(context, list, progress, readCount, totalCount) 
-            : buildUnorderedBody(context, list, progress, readCount, totalCount),
+          body: Stack(
+            children: [
+              list.isOrdered 
+                ? buildOrderedBody(context, list, displayItems, status.progress, status.readCount, status.totalCount, isEditing) 
+                : buildUnorderedBody(context, list, displayItems, status.progress, status.readCount, status.totalCount, isEditing),
+              if (_isUpdating)
+                Container(
+                  color: Colors.black.withOpacity(0.3),
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+            ],
+          ),
           bottomNavigationBar: BottomAppBar(
             child: Row(
               children: [
-                IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () {}),
-                IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
-                IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {}),
+                IconButton(
+                  iconSize: 28,
+                  icon: Icon(isEditing ? Icons.edit : Icons.edit_outlined),
+                  color: isEditing ? theme.colorScheme.primary : null,
+                  onPressed: () {
+                    if (!isEditing) {
+                      _titleController.text = list.title;
+                      _descriptionController.text = list.description;
+                      _editingItems = List.from(list.items);
+                    } else {
+                      _editingItems = null;
+                    }
+                    ref.read(readingListEditModeProvider(widget.listId).notifier).toggle();
+                  },
+                ),
+                if (!isEditing) ...[
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
+                      return IconButton(
+                        iconSize: 28,
+                        icon: isFavoriteAsync.when(
+                          data: (isFavorite) => Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : null,
+                          ),
+                          loading: () => const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          error: (_, __) => const Icon(Icons.favorite_border),
+                        ),
+                        onPressed: () => _toggleFavorite(context, ref, list),
+                      );
+                    },
+                  ),
+                ],
                 const Spacer(),
-                FloatingActionButton(onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => AddReadingListItemsBottomSheet(list: list)), child: const Icon(Icons.add)),
+                FloatingActionButton(
+                  onPressed: isEditing 
+                    ? () async {
+                        final updatedList = list.copyWith(
+                          title: _titleController.text,
+                          description: _descriptionController.text,
+                          items: _editingItems ?? list.items,
+                          updatedAt: DateTime.now(),
+                        );
+                        await ref.read(readingListsProvider.notifier).updateList(updatedList);
+                        ref.invalidate(readingListDetailsProvider(widget.listId));
+                        ref.read(readingListEditModeProvider(widget.listId).notifier).set(false);
+                        _editingItems = null;
+                        if (context.mounted) {
+                          TakionAlerts.success(context, 'Reading list updated');
+                        }
+                      }
+                    : () => showModalBottomSheet(
+                        context: context, 
+                        isScrollControlled: true, 
+                        builder: (_) => AddReadingListItemsBottomSheet(list: list)
+                      ),
+                  child: Icon(isEditing ? Icons.check : Icons.add),
+                ),
               ],
             ),
           ),
@@ -152,56 +514,133 @@ class ReadingListDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget buildOrderedBody(BuildContext context, ReadingList list, double progress, int readCount, int totalCount) {
-    return ListView.builder(
-      itemCount: list.items.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) return buildHeader(context, list, progress, readCount, totalCount);
-        final item = list.items[index - 1];
-        final roleColor = _getRoleColor(context, item.role);
-        final isRead = item.isRead;
+  Widget buildOrderedBody(BuildContext context, ReadingList list, List<ReadingListItem> items, double progress, int readCount, int totalCount, bool isEditing) {
+    if (isEditing) {
+      return ReorderableListView.builder(
+        header: buildHeader(context, list, progress, readCount, totalCount, isEditing),
+        itemCount: items.length,
+        buildDefaultDragHandles: false,
+        proxyDecorator: (Widget child, int index, Animation<double> animation) {
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (BuildContext context, Widget? child) {
+              final double animValue = Curves.easeInOut.transform(animation.value);
+              final double elevation = lerpDouble(0, 8, animValue)!;
+              final theme = Theme.of(context);
+              return Theme(
+                data: theme.copyWith(
+                  colorScheme: theme.colorScheme.copyWith(
+                    surfaceContainer: theme.colorScheme.primaryContainer,
+                  ),
+                ),
+                child: Material(
+                  elevation: elevation,
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  child: child,
+                ),
+              );
+            },
+            child: child,
+          );
+        },
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) newIndex--;
+            final item = _editingItems!.removeAt(oldIndex);
+            _editingItems!.insert(newIndex, item);
+          });
+        },
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final roleColor = _getRoleColor(context, item.role);
+          final isSelected = _selectedIds.contains(item.targetId);
+          return ReadingListTimelineTile(
+            key: ValueKey(item.targetId),
+            list: list.copyWith(items: items),
+            index: index + 1,
+            item: item,
+            roleColor: roleColor,
+            isEditing: isEditing,
+            isSelected: isSelected,
+            onSelected: () => _toggleSelection(item.targetId),
+            onRemove: () {
+              setState(() {
+                if (_editingItems != null) {
+                  _editingItems!.removeAt(index);
+                }
+              });
+            },
+          );
+        },
+      );
+    }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TimelineTile(
-            nodeAlign: TimelineNodeAlign.start,
-            node: TimelineNode(
-              indicator: DotIndicator(
-                size: 28,
-                color: isRead ? roleColor : Theme.of(context).colorScheme.surface,
-                border: Border.all(color: roleColor, width: 2),
-                child: isRead
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
-                    : Center(
-                        child: Text(
-                          '$index',
-                          style: TextStyle(
-                            color: roleColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-              ),
-              startConnector: index - 1 == 0 ? null : SolidLineConnector(color: roleColor, thickness: 3),
-              endConnector: index - 1 == list.items.length - 1 ? null : SolidLineConnector(color: roleColor, thickness: 3),
-            ),
-            contents: item.isSeries ? TimelineSeriesTile(item: item) : TimelineIssueTile(item: item),
-          ),
+    return ListView.builder(
+      itemCount: items.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) return buildHeader(context, list, progress, readCount, totalCount, isEditing);
+        final item = items[index - 1];
+        final roleColor = _getRoleColor(context, item.role);
+        final isSelected = _selectedIds.contains(item.targetId);
+
+        return ReadingListTimelineTile(
+          list: list.copyWith(items: items),
+          index: index,
+          item: item,
+          roleColor: roleColor,
+          isEditing: isEditing,
+          isSelected: isSelected,
+          onSelected: () => _toggleSelection(item.targetId),
+          onRemove: () {
+            setState(() {
+              if (_editingItems != null) {
+                _editingItems!.removeAt(index - 1);
+              }
+            });
+          },
         );
       },
     );
   }
 
-  Widget buildUnorderedBody(BuildContext context, ReadingList list, double progress, int readCount, int totalCount) {
+  Widget buildUnorderedBody(BuildContext context, ReadingList list, List<ReadingListItem> items, double progress, int readCount, int totalCount, bool isEditing) {
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: buildHeader(context, list, progress, readCount, totalCount)),
+        SliverToBoxAdapter(child: buildHeader(context, list, progress, readCount, totalCount, isEditing)),
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.45, crossAxisSpacing: 12, mainAxisSpacing: 12),
-            delegate: SliverChildBuilderDelegate((context, index) => ReadingListGridItem(item: list.items[index], onTap: () {}), childCount: list.items.length),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3, 
+              childAspectRatio: 0.45, 
+              crossAxisSpacing: 12, 
+              mainAxisSpacing: 12
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final item = items[index];
+                final isSelected = _selectedIds.contains(item.targetId);
+                return ReadingListGridItem(
+                  item: item, 
+                  onTap: () {
+                    if (isEditing) {
+                      _toggleSelection(item.targetId);
+                    }
+                  },
+                  isEditing: isEditing,
+                  isSelected: isSelected,
+                  onRemove: () {
+                    setState(() {
+                      if (_editingItems != null) {
+                        _editingItems!.removeAt(index);
+                      }
+                    });
+                  },
+                );
+              }, 
+              childCount: items.length
+            ),
           ),
         ),
       ],

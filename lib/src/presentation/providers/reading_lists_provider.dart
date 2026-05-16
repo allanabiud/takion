@@ -20,6 +20,14 @@ class ReadingListsNotifier extends AsyncNotifier<List<ReadingList>> {
     });
   }
 
+  Future<void> updateList(ReadingList list) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(readingListRepositoryProvider).updateList(list);
+      return ref.read(readingListRepositoryProvider).getAllLists();
+    });
+  }
+
   Future<void> deleteList(String id) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {

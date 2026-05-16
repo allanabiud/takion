@@ -7,6 +7,7 @@ class LocalFavoritesRepository implements FavoritesRepository {
 
   static const _seriesBox = 'local_favorite_series_box';
   static const _issuesBox = 'local_favorite_issues_box';
+  static const _readingListsBox = 'local_favorite_reading_lists_box';
 
   final HiveService _hiveService;
 
@@ -34,6 +35,20 @@ class LocalFavoritesRepository implements FavoritesRepository {
   FavoriteIssue _issueFromMap(Map<String, dynamic> map) {
     return FavoriteIssue(
       metronIssueId: map['metron_issue_id'] as int,
+      createdAt: DateTime.parse(map['created_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> _readingListToMap(FavoriteReadingList list) {
+    return {
+      'reading_list_id': list.readingListId,
+      'created_at': list.createdAt.toIso8601String(),
+    };
+  }
+
+  FavoriteReadingList _readingListFromMap(Map<String, dynamic> map) {
+    return FavoriteReadingList(
+      readingListId: map['reading_list_id'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
@@ -97,6 +112,37 @@ class LocalFavoritesRepository implements FavoritesRepository {
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _issueToMap(favorite));
+    }
+  }
+
+  @override
+  Future<List<FavoriteReadingList>> listFavoriteReadingLists() async {
+    final box = await _hiveService.openBox<Map>(_readingListsBox);
+    final items = box.values
+        .map((raw) => _readingListFromMap(raw.cast<String, dynamic>()))
+        .toList();
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  @override
+  Future<bool> isReadingListFavorite(String readingListId) async {
+    final box = await _hiveService.openBox<Map>(_readingListsBox);
+    return box.containsKey(readingListId);
+  }
+
+  @override
+  Future<void> toggleReadingListFavorite(String readingListId) async {
+    final box = await _hiveService.openBox<Map>(_readingListsBox);
+    final key = readingListId;
+    if (box.containsKey(key)) {
+      await box.delete(key);
+    } else {
+      final favorite = FavoriteReadingList(
+        readingListId: readingListId,
+        createdAt: DateTime.now().toUtc(),
+      );
+      await box.put(key, _readingListToMap(favorite));
     }
   }
 }

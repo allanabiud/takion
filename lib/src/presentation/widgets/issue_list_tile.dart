@@ -19,6 +19,7 @@ class IssueListTile extends ConsumerWidget {
   final int? rating;
   final bool useCardBackground;
   final bool showDivider;
+  final double horizontalPadding;
 
   const IssueListTile({
     super.key,
@@ -31,6 +32,7 @@ class IssueListTile extends ConsumerWidget {
     this.rating,
     this.useCardBackground = false,
     this.showDivider = true,
+    this.horizontalPadding = 12,
   });
 
   @override
@@ -201,7 +203,7 @@ class IssueListTile extends ConsumerWidget {
     if (useCardBackground) {
       const radius = 24.0;
       return Card(
-        margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
+        margin: EdgeInsets.only(left: horizontalPadding, right: horizontalPadding, bottom: isLast ? 12 : 2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: isFirst ? const Radius.circular(radius) : Radius.zero,
@@ -215,8 +217,8 @@ class IssueListTile extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 12,
-        right: 12,
+        left: horizontalPadding,
+        right: horizontalPadding,
         top: isFirst ? 12 : 2,
         bottom: isLast ? 12 : 0,
       ),

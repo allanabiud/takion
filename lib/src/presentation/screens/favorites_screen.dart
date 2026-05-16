@@ -1,10 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/widgets/issue_list_tile.dart';
+import 'package:takion/src/presentation/widgets/reading_list_card.dart';
 import 'package:takion/src/presentation/widgets/series_list_tile.dart';
 
 @RoutePage()
@@ -14,7 +16,7 @@ class FavoritesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Favorites'),
@@ -22,6 +24,7 @@ class FavoritesScreen extends ConsumerWidget {
             tabs: [
               Tab(text: 'Series'),
               Tab(text: 'Issues'),
+              Tab(text: 'Reading Lists'),
             ],
           ),
         ),
@@ -29,6 +32,7 @@ class FavoritesScreen extends ConsumerWidget {
           children: [
             _FavoriteSeriesTab(),
             _FavoriteIssuesTab(),
+            _FavoriteReadingListsTab(),
           ],
         ),
       ),
@@ -107,6 +111,45 @@ class _FavoriteIssuesTab extends ConsumerWidget {
       error: (error, stack) => AsyncStatePanel.error(
         errorMessage: 'Failed to load favorite issues: $error',
         onRetry: () => ref.invalidate(favoriteIssuesListProvider),
+      ),
+    );
+  }
+}
+
+class _FavoriteReadingListsTab extends ConsumerWidget {
+  const _FavoriteReadingListsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favoritesAsync = ref.watch(favoriteReadingListsFullListProvider);
+
+    return favoritesAsync.when(
+      data: (readingLists) {
+        if (readingLists.isEmpty) {
+          return const EmptyContentState(
+            icon: Icons.favorite_border,
+            message: 'No favorite reading lists yet.',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: readingLists.length,
+          itemBuilder: (context, index) {
+            final list = readingLists[index];
+            return ReadingListCard(
+              list: list,
+              onTap: () {
+                context.pushRoute(ReadingListDetailsRoute(listId: list.id));
+              },
+            );
+          },
+        );
+      },
+      loading: () => const AsyncStatePanel.loading(),
+      error: (error, stack) => AsyncStatePanel.error(
+        errorMessage: 'Failed to load favorite reading lists: $error',
+        onRetry: () => ref.invalidate(favoriteReadingListsListProvider),
       ),
     );
   }

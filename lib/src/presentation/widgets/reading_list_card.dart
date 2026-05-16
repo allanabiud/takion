@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/presentation/widgets/reading_list_cover.dart';
 
-class ReadingListCard extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/presentation/providers/favorites_provider.dart';
+import 'package:takion/src/presentation/providers/reading_list_item_status_provider.dart';
+
+class ReadingListCard extends ConsumerWidget {
   final ReadingList list;
   final VoidCallback onTap;
 
@@ -13,11 +17,13 @@ class ReadingListCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final progress = list.items.isEmpty
-        ? 0.0
-        : list.items.where((i) => i.isRead).length / list.items.length;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statusAsync = ref.watch(readingListEffectiveStatusProvider(list));
+    final status = statusAsync.value ?? (readCount: 0, totalCount: list.items.length, progress: 0.0);
+    final progress = status.progress;
     final isCompleted = progress >= 1.0;
+    final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
+    final isFavorite = isFavoriteAsync.value ?? false;
 
     String contentTypeLabel;
     switch (list.contentType) {
@@ -60,6 +66,15 @@ class ReadingListCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        if (isFavorite)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: Icon(
+                              Icons.favorite,
+                              size: 16,
+                              color: Colors.red,
+                            ),
+                          ),
                         Icon(
                           list.isOrdered ? Icons.account_tree_outlined : Icons.grid_view_outlined,
                           size: 16,

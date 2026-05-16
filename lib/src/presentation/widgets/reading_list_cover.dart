@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/presentation/providers/reading_list_item_metadata_provider.dart';
+import 'package:takion/src/presentation/providers/series_cover_provider.dart';
 
 class ReadingListCover extends ConsumerWidget {
   final ReadingList list;
@@ -15,63 +15,66 @@ class ReadingListCover extends ConsumerWidget {
     super.key,
     required this.list,
     this.width = 60,
-    this.height = 70,
+    this.height = 85,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
-    // We always try to get the first item for the primary cover
-    final firstItem = list.items.isNotEmpty ? list.items.first : null;
-    final metadataAsync = firstItem != null 
-        ? ref.watch(readingListItemMetadataProvider((targetId: firstItem.targetId, isSeries: firstItem.isSeries)))
-        : null;
+    // Get up to 3 items for the trio covers
+    final items = list.items.take(3).toList();
+    
+    // Horizontal offset for the peeking side covers
+    const horizontalOffset = 14.0;
+    // Total width including peeking areas
+    final totalWidth = width + (horizontalOffset * 2);
 
     return SizedBox(
-      width: width + 20, 
-      height: height + 10,
+      width: totalWidth,
+      height: height,
       child: Stack(
         alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
-          // Background Left
+          // Left Peeking Cover (2nd or 3rd item)
           Positioned(
             left: 0,
-            child: _buildPlaceholder(context, opacity: 0.3, rotation: -0.2),
+            child: items.length >= 2
+                ? _buildSideCover(context, ref, items[items.length >= 3 ? 2 : 1], opacity: 0.5)
+                : _buildPlaceholder(context, opacity: 0.2),
           ),
-          // Background Right
+
+          // Right Peeking Cover (2nd item if 3 items exist)
           Positioned(
             right: 0,
-            child: _buildPlaceholder(context, opacity: 0.3, rotation: 0.2),
+            child: items.length >= 3
+                ? _buildSideCover(context, ref, items[1], opacity: 0.5)
+                : items.length == 2
+                    ? const SizedBox.shrink() // Already showing on left
+                    : _buildPlaceholder(context, opacity: 0.2),
           ),
-          // Primary Centered
+
+          // Primary Centered Cover (1st item)
           Positioned(
             child: Container(
               width: width,
-              height: height + 10,
+              height: height,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(6),
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: firstItem != null && metadataAsync != null
-                  ? metadataAsync.when(
-                      data: (metadata) {
-                        String? imageUrl;
-                        if (metadata is SeriesDetails) imageUrl = metadata.image;
-                        else if (metadata is IssueDetails) imageUrl = metadata.image;
-
-                        if (imageUrl != null) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
-                          );
-                        }
-                        return _buildItemIcon(firstItem.isSeries, primaryColor);
-                      },
-                      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      error: (_, __) => _buildItemIcon(firstItem.isSeries, primaryColor),
-                    )
+              child: items.isNotEmpty
+                  ? _buildCoverImage(context, ref, items[0], primaryColor)
                   : _buildItemIcon(list.contentType == ListContentType.series, primaryColor),
             ),
           ),
@@ -80,16 +83,78 @@ class ReadingListCover extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context, {required double opacity, required double rotation}) {
-    return Transform.rotate(
-      angle: rotation,
+  Widget _buildSideCover(BuildContext context, WidgetRef ref, ReadingListItem item, {required double opacity}) {
+    return Opacity(
+      opacity: opacity,
       child: Container(
-        width: width * 0.8,
-        height: (height + 10) * 0.8,
+        width: width * 0.85,
+        height: height * 0.9,
         decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: opacity),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         ),
+        child: _buildCoverImage(context, ref, item, Theme.of(context).disabledColor),
+      ),
+    );
+  }
+
+  Widget _buildCoverImage(BuildContext context, WidgetRef ref, ReadingListItem item, Color fallbackColor) {
+    if (item.isSeries) {
+      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+      final coverAsync = ref.watch(seriesCoverImageProvider((seriesId: id, allowRemoteFetch: true)));
+      
+      return coverAsync.when(
+        data: (imageUrl) {
+          if (imageUrl != null) {
+            return _buildCachedImage(imageUrl, item.isSeries, fallbackColor);
+          }
+          return _buildItemIcon(item.isSeries, fallbackColor);
+        },
+        loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        error: (error, stack) => _buildItemIcon(item.isSeries, fallbackColor),
+      );
+    }
+
+    final metadataAsync = ref.watch(readingListItemMetadataProvider((targetId: item.targetId, isSeries: item.isSeries)));
+
+    return metadataAsync.when(
+      data: (metadata) {
+        String? imageUrl;
+        if (metadata is IssueDetails) {
+          imageUrl = metadata.image;
+        }
+
+        if (imageUrl != null) {
+          return _buildCachedImage(imageUrl, item.isSeries, fallbackColor);
+        }
+        return _buildItemIcon(item.isSeries, fallbackColor);
+      },
+      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      error: (error, stack) => _buildItemIcon(item.isSeries, fallbackColor),
+    );
+  }
+
+  Widget _buildCachedImage(String imageUrl, bool isSeries, Color fallbackColor) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        errorWidget: (context, url, error) => _buildItemIcon(isSeries, fallbackColor),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context, {required double opacity}) {
+    return Container(
+      width: width * 0.85,
+      height: height * 0.9,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: opacity),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: opacity), width: 1),
       ),
     );
   }

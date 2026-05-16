@@ -8,4 +8,8 @@ abstract class FavoritesRepository {
   Future<List<FavoriteIssue>> listFavoriteIssues();
   Future<bool> isIssueFavorite(int metronIssueId);
   Future<void> toggleIssueFavorite(int metronIssueId);
+
+  Future<List<FavoriteReadingList>> listFavoriteReadingLists();
+  Future<bool> isReadingListFavorite(String readingListId);
+  Future<void> toggleReadingListFavorite(String readingListId);
 }

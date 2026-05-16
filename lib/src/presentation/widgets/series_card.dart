@@ -5,12 +5,16 @@ import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/presentation/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/series_cover_provider.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/presentation/widgets/role_badge.dart';
 
 class SeriesCard extends ConsumerWidget {
   final SeriesList series;
   final VoidCallback? onTap;
   final double width;
   final bool allowRemoteCoverFetch;
+  final bool? isRead;
+  final ItemRole? role;
 
   const SeriesCard({
     super.key,
@@ -18,6 +22,8 @@ class SeriesCard extends ConsumerWidget {
     this.onTap,
     this.width = 120,
     this.allowRemoteCoverFetch = true,
+    this.isRead,
+    this.role,
   });
 
   @override
@@ -26,7 +32,7 @@ class SeriesCard extends ConsumerWidget {
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final isFavorite = ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
-    
+
     final coverImageAsync = ref.watch(
       seriesCoverImageProvider((
         seriesId: series.id,
@@ -51,6 +57,11 @@ class SeriesCard extends ConsumerWidget {
                     color: theme.colorScheme.surfaceContainerHighest,
                     child: const Icon(Icons.collections_bookmark_outlined, size: 24),
                   ),
+            if (role != null)
+              Positioned(
+                top: 4, left: 4,
+                child: RoleBadge(role: role!),
+              ),
             if (isFavorite)
               Positioned(
                 top: 4, right: 4,
@@ -61,6 +72,15 @@ class SeriesCard extends ConsumerWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.favorite, size: 12, color: Colors.red),
+                ),
+              ),
+            if (isRead == true)
+              Positioned(
+                bottom: 4, right: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                  child: const Icon(Icons.check, color: Colors.white, size: 12),
                 ),
               ),
           ],
@@ -90,14 +110,27 @@ class SeriesCard extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Icon(
-                        isSubscribed
-                            ? Icons.notifications_active
-                            : Icons.notifications_none_outlined,
-                        size: 20,
-                        color: isSubscribed
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isSubscribed
+                                ? Icons.notifications_active
+                                : Icons.notifications_none_outlined,
+                            size: 16,
+                            color: isSubscribed
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outline,
+                          ),
+                          if (isRead == true) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.bookmark_added,
+                              size: 16,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
