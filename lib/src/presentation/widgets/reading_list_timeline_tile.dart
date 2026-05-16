@@ -31,14 +31,18 @@ class ReadingListTimelineTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isReadAsync = ref.watch(readingListItemEffectiveReadStatusProvider(item));
+    final isReadAsync = ref.watch(
+      readingListItemEffectiveReadStatusProvider(item),
+    );
     final isRead = isReadAsync.value ?? item.isRead;
 
     // startConnector is solid if the PREVIOUS item was read
     bool prevIsRead = false;
     if (index - 1 > 0 && index - 2 < list.items.length) {
       final prevItem = list.items[index - 2];
-      final prevReadAsync = ref.watch(readingListItemEffectiveReadStatusProvider(prevItem));
+      final prevReadAsync = ref.watch(
+        readingListItemEffectiveReadStatusProvider(prevItem),
+      );
       prevIsRead = prevReadAsync.value ?? prevItem.isRead;
     }
 
@@ -55,7 +59,10 @@ class ReadingListTimelineTile extends ConsumerWidget {
       ],
     );
 
+    final unreadConnectorColor = theme.colorScheme.outline;
+
     if (isEditing) {
+      // ... (existing editing logic unchanged)
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: InkWell(
@@ -63,12 +70,12 @@ class ReadingListTimelineTile extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected 
+              color: isSelected
                   ? theme.colorScheme.primaryContainer.withOpacity(0.3)
                   : theme.colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected 
+                color: isSelected
                     ? theme.colorScheme.primary
                     : theme.colorScheme.outlineVariant.withOpacity(0.5),
                 width: 1,
@@ -121,6 +128,28 @@ class ReadingListTimelineTile extends ConsumerWidget {
       );
     }
 
+    Color getRoleColor(ItemRole role) {
+      switch (role) {
+        case ItemRole.core:
+          return Colors.red;
+        case ItemRole.prologue:
+          return Colors.orange;
+        case ItemRole.tieIn:
+          return Colors.blue;
+        case ItemRole.epilogue:
+          return Colors.purple;
+        case ItemRole.standard:
+          return theme.colorScheme.primary;
+      }
+    }
+
+    final prevRoleColor = index > 1
+        ? getRoleColor(list.items[index - 2].role)
+        : null;
+    final nextRoleColor = index < list.items.length
+        ? getRoleColor(list.items[index].role)
+        : null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TimelineTile(
@@ -129,14 +158,17 @@ class ReadingListTimelineTile extends ConsumerWidget {
           indicator: DotIndicator(
             size: 28,
             color: isRead ? roleColor : Colors.transparent,
-            border: Border.all(color: roleColor, width: 2),
+            border: Border.all(
+              color: isRead ? roleColor : unreadConnectorColor,
+              width: 2,
+            ),
             child: isRead
                 ? const Icon(Icons.check, size: 16, color: Colors.white)
                 : Center(
                     child: Text(
                       '$index',
                       style: TextStyle(
-                        color: roleColor,
+                        color: unreadConnectorColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -146,19 +178,35 @@ class ReadingListTimelineTile extends ConsumerWidget {
           startConnector: index - 1 == 0
               ? null
               : (prevIsRead
-                  ? SolidLineConnector(color: roleColor, thickness: 3)
-                  : DashedLineConnector(
-                      color: roleColor,
-                      thickness: 3,
-                      dash: 2,
-                      gap: 2,
-                    )),
+                    ? SolidLineConnector(color: roleColor, thickness: 3)
+                    : DashedLineConnector(
+                        color: unreadConnectorColor,
+                        thickness: 3,
+                        dash: 2,
+                        gap: 2,
+                      )),
           endConnector: index - 1 == list.items.length - 1
               ? null
               : (isRead
-                  ? SolidLineConnector(color: roleColor, thickness: 3)
-                  : DashedLineConnector(
-                      color: roleColor, thickness: 3, dash: 2, gap: 2)),
+                    ? (nextRoleColor == null
+                          ? SolidLineConnector(color: roleColor, thickness: 3)
+                          : DecoratedLineConnector(
+                              thickness: 3,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  stops: const [0.4, 1.0],
+                                  colors: [roleColor, nextRoleColor],
+                                ),
+                              ),
+                            ))
+                    : DashedLineConnector(
+                        color: unreadConnectorColor,
+                        thickness: 3,
+                        dash: 2,
+                        gap: 2,
+                      )),
         ),
         contents: contents,
       ),
