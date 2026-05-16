@@ -40,6 +40,7 @@
 ### 📚 Library Tracking
 
 - **Collection Management**: Organize your comic book collection with ease.
+- **Reading Lists**: Create and manage custom reading lists for your favorite arcs, series, or themes.
 - **Reading Progress**: Mark issues as read and keep track of your reading history.
 - **Personal Ratings**: Rate your issues and see statistics of your collection.
 
