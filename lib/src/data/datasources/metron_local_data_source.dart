@@ -1,11 +1,11 @@
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/data/models/collection_item_details_dto.dart';
-import 'package:takion/src/data/models/collection_items_response_dto.dart';
-import 'package:takion/src/data/models/collection_stats_dto.dart';
-import 'package:takion/src/data/models/issue_details_dto.dart';
-import 'package:takion/src/data/models/issue_list_dto.dart';
-import 'package:takion/src/data/models/series_details_dto.dart';
-import 'package:takion/src/data/models/series_list_dto.dart';
+import 'package:takion/src/data/dto/collection_item_details_dto.dart';
+import 'package:takion/src/data/dto/collection_items_response_dto.dart';
+import 'package:takion/src/data/dto/collection_stats_dto.dart';
+import 'package:takion/src/data/dto/issue_details_dto.dart';
+import 'package:takion/src/data/dto/issue_list_dto.dart';
+import 'package:takion/src/data/dto/series_details_dto.dart';
+import 'package:takion/src/data/dto/series_list_dto.dart';
 
 class IssueSearchPageCacheMeta {
   const IssueSearchPageCacheMeta({

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/presentation/sorting/content_sorting.dart';
+import 'package:takion/src/presentation/logic/content_sorting.dart';
 
 class SortPreferencesNotifier extends Notifier<Map<String, ContentSortOption>> {
   static const _settingsBoxName = 'settings_box';

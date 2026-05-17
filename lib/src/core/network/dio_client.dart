@@ -20,7 +20,7 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        AppPerformanceMetrics.instance.recordApiCall(options.path);
+        options.extra['start_time'] = DateTime.now().millisecondsSinceEpoch;
         final metronAccountService = ref.read(metronAccountServiceProvider);
         final creds = await metronAccountService.getApiCredentials();
         if (creds != null) {
@@ -30,7 +30,32 @@ final dioProvider = Provider<Dio>((ref) {
         }
         return handler.next(options);
       },
+      onResponse: (response, handler) {
+        final startTime = response.requestOptions.extra['start_time'] as int?;
+        if (startTime != null) {
+          final duration = Duration(
+            milliseconds: DateTime.now().millisecondsSinceEpoch - startTime,
+          );
+          AppPerformanceMetrics.instance.recordApiCall(
+            response.requestOptions.path,
+            duration: duration,
+            statusCode: response.statusCode,
+          );
+        }
+        return handler.next(response);
+      },
       onError: (error, handler) async {
+        final startTime = error.requestOptions.extra['start_time'] as int?;
+        if (startTime != null) {
+          final duration = Duration(
+            milliseconds: DateTime.now().millisecondsSinceEpoch - startTime,
+          );
+          AppPerformanceMetrics.instance.recordApiCall(
+            error.requestOptions.path,
+            duration: duration,
+            statusCode: error.response?.statusCode,
+          );
+        }
         if (error.response?.statusCode == 429) {
           AppPerformanceMetrics.instance.recordHttp429();
         }

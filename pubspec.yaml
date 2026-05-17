@@ -2,7 +2,7 @@ name: takion
 description: "Android app for Metron-powered comic pull-list and collection tracking."
 publish_to: 'none'
 
-version: 0.6.1+1
+version: 0.6.2+1
 
 environment:
   sdk: ^3.11.0
@@ -26,6 +26,7 @@ dependencies:
   cached_network_image: ^3.4.1
   auto_route: ^11.1.0
   flash: ^3.1.1
+  fl_chart: ^0.70.2
   intl: ^0.20.2
   flutter_svg: ^2.2.3
   package_info_plus: ^8.3.0

@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
-import 'package:takion/src/data/models/collection_item_details_dto.dart';
-import 'package:takion/src/data/models/collection_stats_dto.dart';
-import 'package:takion/src/data/models/collection_items_response_dto.dart';
-import 'package:takion/src/data/models/collection_scrobble_response_dto.dart';
-import 'package:takion/src/data/models/issue_details_dto.dart';
-import 'package:takion/src/data/models/issue_list_dto.dart';
-import 'package:takion/src/data/models/issue_search_response_dto.dart';
-import 'package:takion/src/data/models/series_details_dto.dart';
-import 'package:takion/src/data/models/series_issue_list_response_dto.dart';
-import 'package:takion/src/data/models/series_list_response_dto.dart';
-import 'package:takion/src/data/models/series_search_response_dto.dart';
+import 'package:takion/src/data/dto/collection_item_details_dto.dart';
+import 'package:takion/src/data/dto/collection_stats_dto.dart';
+import 'package:takion/src/data/dto/collection_items_response_dto.dart';
+import 'package:takion/src/data/dto/collection_scrobble_response_dto.dart';
+import 'package:takion/src/data/dto/issue_details_dto.dart';
+import 'package:takion/src/data/dto/issue_list_dto.dart';
+import 'package:takion/src/data/dto/issue_search_response_dto.dart';
+import 'package:takion/src/data/dto/series_details_dto.dart';
+import 'package:takion/src/data/dto/series_issue_list_response_dto.dart';
+import 'package:takion/src/data/dto/series_list_response_dto.dart';
+import 'package:takion/src/data/dto/series_search_response_dto.dart';
 
 abstract class MetronRemoteDataSource {
   Future<CollectionStatsDto> getCollectionStats();
