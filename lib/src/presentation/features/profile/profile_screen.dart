@@ -134,10 +134,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             body: ListView(
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SingleChildScrollView(
+                SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: ProfileFilter.values
                           .map(
@@ -167,7 +166,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           .toList(),
                     ),
                   ),
-                ),
                 const SizedBox(height: 16),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
@@ -845,19 +843,15 @@ class _ProfileHeader extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        CircleAvatar(
-                          radius: 52,
-                          backgroundColor: colorScheme.surfaceContainerHighest,
-                          backgroundImage: avatarImage,
-                          child: avatarImage == null
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.account_circle,
-                                    size: 112,
-                                  ),
-                                )
-                              : null,
-                        ),
+                        avatarImage != null
+                            ? CircleAvatar(
+                                radius: 52,
+                                backgroundImage: avatarImage,
+                              )
+                            : const Icon(
+                                Icons.account_circle,
+                                size: 104,
+                              ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Padding(
