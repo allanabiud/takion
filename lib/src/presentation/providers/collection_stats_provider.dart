@@ -8,8 +8,7 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
   final collectedItems = libraryItems
       .where(
         (item) =>
-            item.ownershipStatus == LibraryOwnershipStatus.owned &&
-            item.quantityOwned > 0,
+            item.ownershipStatus == LibraryOwnershipStatus.owned,
       )
       .toList();
   final wishlistCount = libraryItems
