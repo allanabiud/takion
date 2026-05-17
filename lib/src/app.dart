@@ -10,10 +10,10 @@ import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
-import 'package:takion/src/presentation/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/providers/settings_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
-import 'package:takion/src/presentation/widgets/takion_alerts.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 
 class TakionApp extends ConsumerStatefulWidget {
   const TakionApp({super.key});

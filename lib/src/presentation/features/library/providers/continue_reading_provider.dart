@@ -1,0 +1,198 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/cache_policy.dart';
+import 'package:takion/src/core/perf/performance_metrics.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
+
+class ContinueReadingSuggestion {
+  const ContinueReadingSuggestion({
+    required this.seriesId,
+    required this.issue,
+    required this.lastReadAt,
+  });
+
+  final int seriesId;
+  final IssueList issue;
+  final DateTime lastReadAt;
+}
+
+const _homeContinueReadingPreviewLimit = 5;
+
+Future<IssueList?> _findNextUnreadIssueForSeries(
+  Ref ref, {
+  required int seriesId,
+  required int lastReadIssueId,
+  required Set<int> readIssueIds,
+}) async {
+  if (readIssueIds.isEmpty) return null;
+
+  final repository = ref.read(metronRepositoryProvider);
+  var page = 1;
+  var scannedPages = 0;
+  var hasSeenLastReadIssue = false;
+
+  while (scannedPages < 8) {
+    final issuePage = await repository.getSeriesIssueList(seriesId, page: page);
+
+    for (final issue in issuePage.results) {
+      final issueId = issue.id;
+      if (issueId == null) continue;
+      if (issueId == lastReadIssueId) {
+        hasSeenLastReadIssue = true;
+        continue;
+      }
+      if (hasSeenLastReadIssue && !readIssueIds.contains(issueId)) {
+        return issue;
+      }
+    }
+
+    final nextPage = issuePage.nextPage;
+    if (nextPage == null) {
+      break;
+    }
+    page = nextPage;
+    scannedPages++;
+  }
+
+  if (!hasSeenLastReadIssue) return null;
+  return null;
+}
+
+Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
+  Ref ref, {
+  int? maxSeriesCount,
+}) async {
+  final libraryItems = await ref.watch(allLibraryItemsProvider.future);
+  final readItems = libraryItems.where((item) => item.isRead).toList();
+  if (readItems.isEmpty) return const [];
+
+  final readIssueIdsBySeries = <int, Set<int>>{};
+  final latestReadAtBySeries = <int, DateTime>{};
+  final latestReadIssueIdBySeries = <int, int>{};
+
+  DateTime readTimestamp(LibraryItem item) =>
+      item.firstReadAt ?? item.updatedAt;
+
+  for (final item in readItems) {
+    readIssueIdsBySeries
+        .putIfAbsent(item.metronSeriesId, () => <int>{})
+        .add(item.metronIssueId);
+    final ts = readTimestamp(item);
+    final existing = latestReadAtBySeries[item.metronSeriesId];
+    if (existing == null || ts.isAfter(existing)) {
+      latestReadAtBySeries[item.metronSeriesId] = ts;
+      latestReadIssueIdBySeries[item.metronSeriesId] = item.metronIssueId;
+    }
+  }
+
+  final recentSeriesIds = latestReadAtBySeries.keys.toList()
+    ..sort(
+      (a, b) => latestReadAtBySeries[b]!.compareTo(latestReadAtBySeries[a]!),
+    );
+
+  final seriesIdsToResolve = maxSeriesCount == null
+      ? recentSeriesIds
+      : recentSeriesIds.take(maxSeriesCount).toList();
+
+  final suggestionResults = await Future.wait(
+    seriesIdsToResolve.map((seriesId) async {
+      final lastReadIssueId = latestReadIssueIdBySeries[seriesId];
+      if (lastReadIssueId == null) return null;
+      final nextIssue = await _findNextUnreadIssueForSeries(
+        ref,
+        seriesId: seriesId,
+        lastReadIssueId: lastReadIssueId,
+        readIssueIds: readIssueIdsBySeries[seriesId] ?? const <int>{},
+      );
+      if (nextIssue == null) return null;
+      return ContinueReadingSuggestion(
+        seriesId: seriesId,
+        issue: nextIssue,
+        lastReadAt: latestReadAtBySeries[seriesId]!,
+      );
+    }),
+  );
+
+  return suggestionResults.whereType<ContinueReadingSuggestion>().toList();
+}
+
+final continueReadingSuggestionsProvider =
+    FutureProvider<List<ContinueReadingSuggestion>>((ref) async {
+      final all = await ref.watch(continueReadingAllSuggestionsProvider.future);
+      return all.take(_homeContinueReadingPreviewLimit).toList(growable: false);
+    });
+
+final continueReadingAllSuggestionsProvider =
+    FutureProvider.autoDispose<List<ContinueReadingSuggestion>>((ref) async {
+      final metrics = AppPerformanceMetrics.instance;
+      final cache = ref.read(homeContentCacheProvider);
+      DateTime? cachedAt;
+      var cached = const <ContinueReadingSuggestion>[];
+      try {
+        cachedAt = await cache.getCachedAt(homeContinueReadingMetaKey);
+        final cachedJson = await cache.readJsonList(
+          homeContinueReadingCacheKey,
+        );
+        cached =
+            cachedJson
+                ?.map((json) {
+                  final issue = issueListFromJson(
+                    (json['issue'] as Map?)?.cast<String, dynamic>() ??
+                        const {},
+                  );
+                  final seriesId = (json['series_id'] as num?)?.toInt();
+                  final lastReadAt = DateTime.tryParse(
+                    json['last_read_at'] as String? ?? '',
+                  );
+                  if (issue == null || seriesId == null || lastReadAt == null) {
+                    return null;
+                  }
+                  return ContinueReadingSuggestion(
+                    seriesId: seriesId,
+                    issue: issue,
+                    lastReadAt: lastReadAt,
+                  );
+                })
+                .whereType<ContinueReadingSuggestion>()
+                .toList() ??
+            const <ContinueReadingSuggestion>[];
+      } catch (_) {}
+      final hasFreshCache =
+          cachedAt != null &&
+          HomeCachePolicies.continueReading.isFresh(cachedAt, DateTime.now()) &&
+          cached.isNotEmpty;
+
+      if (hasFreshCache) {
+        metrics.recordCacheHit(homeContinueReadingMetaKey);
+        return cached;
+      }
+      metrics.recordCacheMiss(homeContinueReadingMetaKey);
+
+      try {
+        final fresh = await metrics.trackProvider(
+          'continueReadingAllSuggestionsProvider',
+          () => _computeContinueReadingSuggestions(ref),
+        );
+        try {
+          await cache.writeJsonList(
+            homeContinueReadingCacheKey,
+            fresh
+                .map(
+                  (entry) => {
+                    'series_id': entry.seriesId,
+                    'issue': issueListToJson(entry.issue),
+                    'last_read_at': entry.lastReadAt.toIso8601String(),
+                  },
+                )
+                .toList(),
+          );
+          await cache.writeCachedAtNow(homeContinueReadingMetaKey);
+        } catch (_) {}
+        return fresh;
+      } catch (_) {
+        return cached;
+      }
+    });

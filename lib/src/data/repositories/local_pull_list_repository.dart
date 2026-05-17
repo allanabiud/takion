@@ -213,7 +213,7 @@ class LocalPullListRepository implements PullListRepository {
     final box = await _hiveService.openBox<Map>(_boxName);
     final keysToDelete = box.values
         .where((raw) {
-          final map = raw as Map;
+          final map = raw;
           final status = map['entry_status'] as String;
           
           final isUpcoming = status == 'upcoming';
@@ -221,7 +221,7 @@ class LocalPullListRepository implements PullListRepository {
           return map['metron_series_id'] as int == metronSeriesId &&
                  isUpcoming;
         })
-        .map((raw) => (raw as Map)['metron_issue_id'].toString())
+        .map((raw) => (raw)['metron_issue_id'].toString())
         .toList();
     for (final key in keysToDelete) {
       await box.delete(key);

@@ -12,60 +12,72 @@
 import 'package:auto_route/auto_route.dart' as _i35;
 import 'package:collection/collection.dart' as _i37;
 import 'package:flutter/material.dart' as _i36;
-import 'package:takion/src/presentation/screens/all_done_screen.dart' as _i1;
-import 'package:takion/src/presentation/screens/authorize_metron_screen.dart'
-    as _i2;
-import 'package:takion/src/presentation/screens/collection_read_status_screen.dart'
-    as _i3;
-import 'package:takion/src/presentation/screens/continue_reading_screen.dart'
-    as _i4;
-import 'package:takion/src/presentation/screens/discover_browse_issues_screen.dart'
+import 'package:takion/src/presentation/features/discover/discover_browse_issues_screen.dart'
     as _i5;
-import 'package:takion/src/presentation/screens/discover_browse_recently_added_screen.dart'
+import 'package:takion/src/presentation/features/discover/discover_browse_recently_added_screen.dart'
     as _i6;
-import 'package:takion/src/presentation/screens/discover_browse_series_screen.dart'
+import 'package:takion/src/presentation/features/discover/discover_browse_series_screen.dart'
     as _i7;
-import 'package:takion/src/presentation/screens/discover_screen.dart' as _i8;
-import 'package:takion/src/presentation/screens/favorites_screen.dart' as _i9;
-import 'package:takion/src/presentation/screens/foc_releases_screen.dart'
-    as _i10;
-import 'package:takion/src/presentation/screens/home_screen.dart' as _i11;
-import 'package:takion/src/presentation/screens/issue_cover_gallery_screen.dart'
+import 'package:takion/src/presentation/features/discover/discover_screen.dart'
+    as _i8;
+import 'package:takion/src/presentation/features/home/all_done_screen.dart'
+    as _i1;
+import 'package:takion/src/presentation/features/home/home_screen.dart' as _i11;
+import 'package:takion/src/presentation/features/home/main_screen.dart' as _i15;
+import 'package:takion/src/presentation/features/home/onboarding_screen.dart'
+    as _i22;
+import 'package:takion/src/presentation/features/issues/collection_read_status_screen.dart'
+    as _i3;
+import 'package:takion/src/presentation/features/issues/issue_cover_gallery_screen.dart'
     as _i12;
-import 'package:takion/src/presentation/screens/issue_details_screen.dart'
+import 'package:takion/src/presentation/features/issues/issue_details_screen.dart'
     as _i13;
-import 'package:takion/src/presentation/screens/library_screen.dart' as _i14;
-import 'package:takion/src/presentation/screens/main_screen.dart' as _i15;
-import 'package:takion/src/presentation/screens/metron_connect_screen.dart'
-    as _i16;
-import 'package:takion/src/presentation/screens/metron_info_screen.dart'
-    as _i17;
-import 'package:takion/src/presentation/screens/my_comics_screen.dart' as _i18;
-import 'package:takion/src/presentation/screens/my_pulls_screen.dart' as _i19;
-import 'package:takion/src/presentation/screens/my_reading_lists_screen.dart'
-    as _i20;
-import 'package:takion/src/presentation/screens/new_first_issues_screen.dart'
-    as _i21;
-import 'package:takion/src/presentation/screens/onboarding_screen.dart' as _i22;
-import 'package:takion/src/presentation/screens/profile_screen.dart' as _i32;
-import 'package:takion/src/presentation/screens/reading_history_screen.dart'
+import 'package:takion/src/presentation/features/library/continue_reading_screen.dart'
+    as _i4;
+import 'package:takion/src/presentation/features/library/favorites_screen.dart'
+    as _i9;
+import 'package:takion/src/presentation/features/library/library_screen.dart'
+    as _i14;
+import 'package:takion/src/presentation/features/library/my_comics_screen.dart'
+    as _i18;
+import 'package:takion/src/presentation/features/library/my_pulls_screen.dart'
+    as _i19;
+import 'package:takion/src/presentation/features/library/reading_history_screen.dart'
     as _i23;
-import 'package:takion/src/presentation/screens/reading_list_details_screen.dart'
-    as _i24;
-import 'package:takion/src/presentation/screens/releases_screen.dart' as _i25;
-import 'package:takion/src/presentation/screens/search_results_screen.dart'
-    as _i26;
-import 'package:takion/src/presentation/screens/search_screen.dart' as _i27;
-import 'package:takion/src/presentation/screens/series_details_screen.dart'
-    as _i28;
-import 'package:takion/src/presentation/screens/settings_screen.dart' as _i29;
-import 'package:takion/src/presentation/screens/subscriptions_screen.dart'
+import 'package:takion/src/presentation/features/library/subscriptions_screen.dart'
     as _i30;
-import 'package:takion/src/presentation/screens/unrated_issues_screen.dart'
+import 'package:takion/src/presentation/features/library/unrated_issues_screen.dart'
     as _i31;
-import 'package:takion/src/presentation/screens/weekly_releases_screen.dart'
+import 'package:takion/src/presentation/features/library/wishlist_screen.dart'
+    as _i34;
+import 'package:takion/src/presentation/features/profile/authorize_metron_screen.dart'
+    as _i2;
+import 'package:takion/src/presentation/features/profile/metron_connect_screen.dart'
+    as _i16;
+import 'package:takion/src/presentation/features/profile/metron_info_screen.dart'
+    as _i17;
+import 'package:takion/src/presentation/features/profile/profile_screen.dart'
+    as _i32;
+import 'package:takion/src/presentation/features/reading_lists/my_reading_lists_screen.dart'
+    as _i20;
+import 'package:takion/src/presentation/features/reading_lists/reading_list_details_screen.dart'
+    as _i24;
+import 'package:takion/src/presentation/features/releases/foc_releases_screen.dart'
+    as _i10;
+import 'package:takion/src/presentation/features/releases/new_first_issues_screen.dart'
+    as _i21;
+import 'package:takion/src/presentation/features/releases/releases_screen.dart'
+    as _i25;
+import 'package:takion/src/presentation/features/releases/weekly_releases_screen.dart'
     as _i33;
-import 'package:takion/src/presentation/screens/wishlist_screen.dart' as _i34;
+import 'package:takion/src/presentation/features/search/search_results_screen.dart'
+    as _i26;
+import 'package:takion/src/presentation/features/search/search_screen.dart'
+    as _i27;
+import 'package:takion/src/presentation/features/series/series_details_screen.dart'
+    as _i28;
+import 'package:takion/src/presentation/features/settings/settings_screen.dart'
+    as _i29;
 
 /// generated route for
 /// [_i1.AllDoneScreen]

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:uuid/uuid.dart';
 
 final readingListSharingServiceProvider = Provider((ref) => ReadingListSharingService());
 
@@ -19,10 +18,12 @@ class ReadingListSharingService {
     
     await file.writeAsString(json);
     
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      subject: 'Sharing Reading List: ${list.title}',
-      text: 'Check out this reading list: ${list.title}',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        subject: 'Sharing Reading List: ${list.title}',
+        text: 'Check out this reading list: ${list.title}',
+      ),
     );
   }
 
