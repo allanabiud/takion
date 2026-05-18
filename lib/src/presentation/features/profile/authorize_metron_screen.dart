@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
@@ -42,8 +43,16 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
 
     if (!mounted || !context.mounted || connection == null) return;
 
+    final hiveService = ref.read(hiveServiceProvider);
+    final settingsBox = await hiveService.openBox('settings_box');
+    final hasSeenOnboarding = settingsBox.get('has_seen_onboarding', defaultValue: false) == true;
+
     _didAutoRedirect = true;
-    context.router.replaceAll([const MainRoute()]);
+    if (hasSeenOnboarding) {
+      context.router.replaceAll([const MainRoute()]);
+    } else {
+      context.router.replace(const AllDoneRoute());
+    }
   }
 
   @override
@@ -84,7 +93,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
       if (!mounted) return;
       _passwordController.clear();
       _didAutoRedirect = true;
-      context.router.push(const AllDoneRoute());
+      context.router.replace(const AllDoneRoute());
     } catch (error) {
       if (!mounted || !context.mounted) return;
       TakionAlerts.error(context, error.toString());
