@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 
 class AddReadingListItemsBottomSheet extends ConsumerStatefulWidget {
   final ReadingList list;
@@ -45,6 +46,19 @@ class _AddReadingListItemsBottomSheetState
   ItemRole _selectedRole = ItemRole.standard;
   bool _isAdding = false;
   _AddStep _currentStep = _AddStep.selection;
+
+  String _normalizeTargetId(String targetId, bool isSeries) {
+    final normalized = targetId.trim().toLowerCase();
+    final expectedPrefix = isSeries ? 'series-' : 'issue-';
+    if (normalized.startsWith(expectedPrefix)) return normalized;
+
+    final alternatePrefix = isSeries ? 'issue-' : 'series-';
+    if (normalized.startsWith(alternatePrefix)) {
+      return '$expectedPrefix${normalized.substring(alternatePrefix.length)}';
+    }
+
+    return '$expectedPrefix$normalized';
+  }
 
   void _onAddPressed() async {
     if (_selectedSeries == null) return;
@@ -111,16 +125,50 @@ class _AddReadingListItemsBottomSheetState
         }
       }
 
-      await repository.addItemsToList(widget.list.id, itemsToAdd);
+      final existingIds = widget.list.items
+          .map((i) => _normalizeTargetId(i.targetId, i.isSeries))
+          .toSet();
+      final newItems = itemsToAdd
+          .map(
+            (item) => item.copyWith(
+              targetId: _normalizeTargetId(item.targetId, item.isSeries),
+            ),
+          )
+          .where((i) => !existingIds.contains(i.targetId))
+          .toList();
+
+      if (newItems.isEmpty && itemsToAdd.isNotEmpty) {
+        if (mounted) {
+          TakionAlerts.info(
+            context,
+            'All selected items are already in this list',
+          );
+          Navigator.pop(context);
+        }
+        return;
+      }
+
+      final skippedCount = itemsToAdd.length - newItems.length;
+
+      await repository.addItemsToList(widget.list.id, newItems);
 
       ref.invalidate(readingListsProvider);
       ref.invalidate(readingListDetailsProvider(widget.list.id));
-      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        if (skippedCount > 0) {
+          TakionAlerts.success(
+            context,
+            'Added ${newItems.length} items ($skippedCount already present skipped)',
+          );
+        } else {
+          TakionAlerts.success(context, 'Successfully added to reading list');
+        }
+        Navigator.pop(context);
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add items: $e')));
+        TakionAlerts.error(context, 'Failed to add items: $e');
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);

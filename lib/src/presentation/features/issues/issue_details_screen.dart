@@ -500,7 +500,7 @@ class IssueDetailsScreen extends ConsumerWidget {
                         onPressed: () {
                           AddToReadingListBottomSheet.show(
                             context: context,
-                            targetId: issueId.toString(),
+                            targetId: 'issue-$issueId',
                             isSeries: false,
                           );
                         },

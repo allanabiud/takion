@@ -10,6 +10,7 @@ class ReadingListCard extends ConsumerWidget {
   final ReadingList list;
   final VoidCallback onTap;
   final bool? isSelected;
+  final bool alreadyExists;
   final ValueChanged<bool?>? onSelected;
   final bool compact;
   final bool flat;
@@ -19,6 +20,7 @@ class ReadingListCard extends ConsumerWidget {
     required this.list,
     required this.onTap,
     this.isSelected,
+    this.alreadyExists = false,
     this.onSelected,
     this.compact = false,
     this.flat = false,
@@ -54,115 +56,142 @@ class ReadingListCard extends ConsumerWidget {
       children: [
         InkWell(
           onTap: onTap,
-          child: Padding(
-            padding: compact
-                ? const EdgeInsets.all(8)
-                : const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                ReadingListCover(list: list),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              list.title,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (isFavorite)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 8),
-                              child: Icon(
-                                Icons.favorite,
-                                size: 16,
-                                color: Colors.red,
-                              ),
-                            ),
-                          Icon(
-                            list.isOrdered
-                                ? Icons.account_tree_outlined
-                                : Icons.grid_view_outlined,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$itemCount $unitLabel • $contentTypeLabel',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 12),
-                      if (isCompleted)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Completed',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimaryContainer,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      else
-                        Column(
+          child: Opacity(
+            opacity: alreadyExists ? 0.6 : 1.0,
+            child: Padding(
+              padding: compact
+                  ? const EdgeInsets.all(8)
+                  : const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  ReadingListCover(list: list),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(2),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 6,
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.surfaceContainerHighest,
+                            Expanded(
+                              child: Text(
+                                list.title,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                '${(progress * 100).toInt()}% Done',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
+                            const SizedBox(width: 8),
+                            if (alreadyExists)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.secondaryContainer,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'Added',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ),
+                            if (isFavorite)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: Icon(
+                                  Icons.favorite,
+                                  size: 16,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            Icon(
+                              list.isOrdered
+                                  ? Icons.account_tree_outlined
+                                  : Icons.grid_view_outlined,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ],
                         ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          '$itemCount $unitLabel • $contentTypeLabel',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 12),
+                        if (isCompleted)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Completed',
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        else
+                          Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 6,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  '${(progress * 100).toInt()}% Done',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-        if (isSelected == true)
+        if (isSelected == true || alreadyExists)
           Positioned(
             left: 4,
             top: 4,
             child: Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.primary,
+              isSelected == true ? Icons.check_circle : Icons.check_circle_outline,
+              color: alreadyExists 
+                ? Theme.of(context).colorScheme.outline
+                : Theme.of(context).colorScheme.primary,
               size: 24,
             ),
           ),

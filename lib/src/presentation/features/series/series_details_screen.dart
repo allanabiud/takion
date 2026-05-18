@@ -835,7 +835,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                           onPressed: () {
                             AddToReadingListBottomSheet.show(
                               context: context,
-                              targetId: widget.seriesId.toString(),
+                              targetId: 'series-${widget.seriesId}',
                               isSeries: true,
                             );
                           },

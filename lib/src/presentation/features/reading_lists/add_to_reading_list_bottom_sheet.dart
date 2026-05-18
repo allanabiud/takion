@@ -43,24 +43,70 @@ class _AddToReadingListBottomSheetState
   final Set<String> _selectedListIds = {};
   bool _isAdding = false;
 
+  String get _normalizedTargetId {
+    final normalized = widget.targetId.trim().toLowerCase();
+    final expectedPrefix = widget.isSeries ? 'series-' : 'issue-';
+    if (normalized.startsWith(expectedPrefix)) return normalized;
+
+    final alternatePrefix = widget.isSeries ? 'issue-' : 'series-';
+    if (normalized.startsWith(alternatePrefix)) {
+      return '$expectedPrefix${normalized.substring(alternatePrefix.length)}';
+    }
+
+    return '$expectedPrefix$normalized';
+  }
+
   Future<void> _addItems() async {
     setState(() => _isAdding = true);
     try {
       final repository = ref.read(readingListRepositoryProvider);
+      int addedCount = 0;
+      int skippedCount = 0;
+
       for (final listId in _selectedListIds) {
+        final alreadyExists = await repository.isItemInList(
+          listId,
+          _normalizedTargetId,
+        );
+        if (alreadyExists) {
+          skippedCount++;
+          continue;
+        }
+
         await repository.addItemToList(
           listId,
           ReadingListItem(
-            targetId: widget.targetId,
+            targetId: _normalizedTargetId,
             isSeries: widget.isSeries,
             role: ItemRole.standard,
             isRead: false,
           ),
         );
+        addedCount++;
       }
+
       ref.invalidate(readingListsProvider);
       if (mounted) {
-        TakionAlerts.success(context, 'Successfully added to reading list(s)');
+        if (addedCount == 0 && skippedCount > 0) {
+          TakionAlerts.info(
+            context,
+            'Item already exists in all selected reading lists',
+          );
+          Navigator.of(context).pop();
+          return;
+        }
+
+        if (skippedCount > 0) {
+          TakionAlerts.success(
+            context,
+            'Added to $addedCount list(s), skipped $skippedCount already containing it',
+          );
+        } else {
+          TakionAlerts.success(
+            context,
+            'Successfully added to reading list(s)',
+          );
+        }
         Navigator.of(context).pop();
       }
     } catch (e) {
@@ -126,11 +172,23 @@ class _AddToReadingListBottomSheetState
                 itemBuilder: (context, index) {
                   final list = filteredLists[index];
                   final isSelected = _selectedListIds.contains(list.id);
+                  final alreadyExists = list.items.any(
+                    (item) => item.targetId == _normalizedTargetId,
+                  );
+
                   return ReadingListCard(
                     list: list,
                     compact: true,
                     flat: true,
+                    alreadyExists: alreadyExists,
                     onTap: () {
+                      if (alreadyExists) {
+                        TakionAlerts.info(
+                          context,
+                          'This item is already in "${list.title}"',
+                        );
+                        return;
+                      }
                       setState(() {
                         if (isSelected) {
                           _selectedListIds.remove(list.id);
