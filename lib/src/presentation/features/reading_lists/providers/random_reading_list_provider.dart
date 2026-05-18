@@ -2,27 +2,52 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 
 final randomReadingListProvider = Provider<ReadingList?>((ref) {
   final listsAsync = ref.watch(readingListsProvider);
+  final statusMapAsync = ref.watch(collectionIssueStatusMapProvider);
+
   return listsAsync.when(
     data: (lists) {
       if (lists.isEmpty) return null;
+
+      final statusMap = statusMapAsync.value;
 
       // Filter out empty and completed lists
       final relevantLists = lists.where((list) {
         if (list.items.isEmpty) return false;
 
-        // Check if list is completed
-        // We can't easily use readingListEffectiveStatusProvider here because it's a family
-        // and would require watching all lists' status, which is expensive.
-        // Instead, we check the simple 'isRead' status on items first as a fast filter,
-        // though full validation would require effective status.
-        // For a suggestion, a slightly imperfect but fast filter is better.
-        final allInitiallyRead = list.items.every((item) => item.isRead);
-        if (allInitiallyRead) return false;
+        // Check if list is completed using effective status
+        bool allRead = true;
+        for (final item in list.items) {
+          bool effectiveIsRead = item.isRead;
 
-        return true;
+          if (!item.isSeries) {
+            final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+            final id = int.tryParse(idString) ?? 0;
+            if (id > 0) {
+              if (statusMap != null) {
+                // If we have the status map, use it.
+                // If not in library (status == null), it's unread (false).
+                final status = statusMap[id];
+                effectiveIsRead = status?.isRead ?? false;
+              } else {
+                // If status map is still loading, fallback to internal state
+                effectiveIsRead = item.isRead;
+              }
+            }
+          }
+          // Note: For series items, we still use item.isRead for now to avoid
+          // complex async lookups in this sync provider.
+
+          if (!effectiveIsRead) {
+            allRead = false;
+            break;
+          }
+        }
+
+        return !allRead;
       }).toList();
 
       if (relevantLists.isEmpty) return null;
