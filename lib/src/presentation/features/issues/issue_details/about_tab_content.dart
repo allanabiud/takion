@@ -365,40 +365,64 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
 
   Widget _buildAdditionalInformationSection(BuildContext context) {
     final seriesType = widget.issue.series?.seriesType?.name ?? 'Unknown';
-    final pages = widget.issue.page != null ? '${widget.issue.page}' : 'Unknown';
+    final pages = widget.issue.page != null
+        ? '${widget.issue.page}'
+        : 'Unknown';
     final currency = widget.issue.priceCurrency?.trim();
     final priceValue = widget.issue.price?.trim();
     final price = (priceValue != null && priceValue.isNotEmpty)
-        ? (currency != null && currency.isNotEmpty ? '$priceValue $currency' : priceValue)
+        ? (currency != null && currency.isNotEmpty
+              ? '$priceValue $currency'
+              : priceValue)
         : 'Unknown';
 
-    final distributorSku = (widget.issue.sku?.trim().isNotEmpty ?? false) ? widget.issue.sku!.trim() : 'N/A';
+    final distributorSku = (widget.issue.sku?.trim().isNotEmpty ?? false)
+        ? widget.issue.sku!.trim()
+        : 'N/A';
     final upc = widget.issue.upc?.trim();
     final isbn = widget.issue.isbn?.trim();
-    final upcIsbn = (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
+    final upcIsbn =
+        (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
         ? '$upc / $isbn'
-        : (upc != null && upc.isNotEmpty) ? upc : (isbn != null && isbn.isNotEmpty) ? isbn : 'N/A';
+        : (upc != null && upc.isNotEmpty)
+        ? upc
+        : (isbn != null && isbn.isNotEmpty)
+        ? isbn
+        : 'N/A';
 
     final imprint = widget.issue.imprint?.name.trim() ?? 'N/A';
-    final genres = widget.issue.series?.genres.map((g) => g.name.trim()).where((n) => n.isNotEmpty).toList() ?? [];
+    final genres =
+        widget.issue.series?.genres
+            .map((g) => g.name.trim())
+            .where((n) => n.isNotEmpty)
+            .toList() ??
+        [];
     final genreText = genres.isNotEmpty ? genres.join(', ') : 'N/A';
 
-    String formatDate(DateTime? date) => date == null ? 'N/A' : DateFormat.yMMMd().format(date.toLocal());
+    String formatDate(DateTime? date) =>
+        date == null ? 'N/A' : DateFormat.yMMMd().format(date.toLocal());
 
     final infoItems = <({String label, String value})>[
       (label: 'Format', value: seriesType),
       (label: 'Pages', value: pages),
       (label: 'Price', value: price),
       (label: 'Imprint', value: imprint),
-      (label: 'Rating', value: (widget.issue.rating?.name.trim().isNotEmpty ?? false) ? widget.issue.rating!.name.trim() : 'N/A'),
+      (
+        label: 'Rating',
+        value: (widget.issue.rating?.name.trim().isNotEmpty ?? false)
+            ? widget.issue.rating!.name.trim()
+            : 'N/A',
+      ),
       (label: 'Distributor SKU', value: distributorSku),
       (label: 'UPC / ISBN', value: upcIsbn),
       (label: 'FOC Date', value: formatDate(widget.issue.focDate)),
       (label: 'Cover Date', value: formatDate(widget.issue.coverDate)),
       (label: 'Store Date', value: formatDate(widget.issue.storeDate)),
       (label: 'Metron ID', value: '${widget.issue.id}'),
-      if (widget.issue.cvId != null) (label: 'CV ID', value: '${widget.issue.cvId}'),
-      if (widget.issue.gcdId != null) (label: 'GCD ID', value: '${widget.issue.gcdId}'),
+      if (widget.issue.cvId != null)
+        (label: 'CV ID', value: '${widget.issue.cvId}'),
+      if (widget.issue.gcdId != null)
+        (label: 'GCD ID', value: '${widget.issue.gcdId}'),
       (label: 'Genres', value: genreText),
     ];
 
@@ -426,10 +450,10 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
                 Text(
                   item.label.toUpperCase(),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -476,7 +500,8 @@ class _IssueAboutTabContentState extends State<IssueAboutTabContent> {
           _buildSectionCard(context, _buildCreatorsSection(context)),
         ],
         if (hasCharacters) ...[
-          if (hasDescription || hasStories || hasCreators) const Divider(height: 24),
+          if (hasDescription || hasStories || hasCreators)
+            const Divider(height: 24),
           _buildSectionCard(context, _buildCharactersSection(context)),
         ],
         if (hasReprints) ...[

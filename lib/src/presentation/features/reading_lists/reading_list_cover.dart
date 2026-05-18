@@ -25,7 +25,7 @@ class ReadingListCover extends ConsumerWidget {
 
     // Get up to 3 items for the trio covers
     final items = list.items.take(3).toList();
-    
+
     // Horizontal offset for the peeking side covers
     const horizontalOffset = 14.0;
     // Total width including peeking areas
@@ -42,7 +42,12 @@ class ReadingListCover extends ConsumerWidget {
           Positioned(
             left: 0,
             child: items.length >= 2
-                ? _buildSideCover(context, ref, items[items.length >= 3 ? 2 : 1], opacity: 0.5)
+                ? _buildSideCover(
+                    context,
+                    ref,
+                    items[items.length >= 3 ? 2 : 1],
+                    opacity: 0.5,
+                  )
                 : _buildPlaceholder(context, opacity: 0.2),
           ),
 
@@ -52,8 +57,8 @@ class ReadingListCover extends ConsumerWidget {
             child: items.length >= 3
                 ? _buildSideCover(context, ref, items[1], opacity: 0.5)
                 : items.length == 2
-                    ? const SizedBox.shrink() // Already showing on left
-                    : _buildPlaceholder(context, opacity: 0.2),
+                ? const SizedBox.shrink() // Already showing on left
+                : _buildPlaceholder(context, opacity: 0.2),
           ),
 
           // Primary Centered Cover (1st item)
@@ -64,7 +69,10 @@ class ReadingListCover extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
+                border: Border.all(
+                  color: primaryColor.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.4),
@@ -75,7 +83,10 @@ class ReadingListCover extends ConsumerWidget {
               ),
               child: items.isNotEmpty
                   ? _buildCoverImage(context, ref, items[0], primaryColor)
-                  : _buildItemIcon(list.contentType == ListContentType.series, primaryColor),
+                  : _buildItemIcon(
+                      list.contentType == ListContentType.series,
+                      primaryColor,
+                    ),
             ),
           ),
         ],
@@ -83,7 +94,12 @@ class ReadingListCover extends ConsumerWidget {
     );
   }
 
-  Widget _buildSideCover(BuildContext context, WidgetRef ref, ReadingListItem item, {required double opacity}) {
+  Widget _buildSideCover(
+    BuildContext context,
+    WidgetRef ref,
+    ReadingListItem item, {
+    required double opacity,
+  }) {
     return Opacity(
       opacity: opacity,
       child: Container(
@@ -94,16 +110,28 @@ class ReadingListCover extends ConsumerWidget {
           borderRadius: BorderRadius.circular(6),
           border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         ),
-        child: _buildCoverImage(context, ref, item, Theme.of(context).disabledColor),
+        child: _buildCoverImage(
+          context,
+          ref,
+          item,
+          Theme.of(context).disabledColor,
+        ),
       ),
     );
   }
 
-  Widget _buildCoverImage(BuildContext context, WidgetRef ref, ReadingListItem item, Color fallbackColor) {
+  Widget _buildCoverImage(
+    BuildContext context,
+    WidgetRef ref,
+    ReadingListItem item,
+    Color fallbackColor,
+  ) {
     if (item.isSeries) {
       final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
-      final coverAsync = ref.watch(seriesCoverImageProvider((seriesId: id, allowRemoteFetch: true)));
-      
+      final coverAsync = ref.watch(
+        seriesCoverImageProvider((seriesId: id, allowRemoteFetch: true)),
+      );
+
       return coverAsync.when(
         data: (imageUrl) {
           if (imageUrl != null) {
@@ -111,12 +139,18 @@ class ReadingListCover extends ConsumerWidget {
           }
           return _buildItemIcon(item.isSeries, fallbackColor);
         },
-        loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         error: (error, stack) => _buildItemIcon(item.isSeries, fallbackColor),
       );
     }
 
-    final metadataAsync = ref.watch(readingListItemMetadataProvider((targetId: item.targetId, isSeries: item.isSeries)));
+    final metadataAsync = ref.watch(
+      readingListItemMetadataProvider((
+        targetId: item.targetId,
+        isSeries: item.isSeries,
+      )),
+    );
 
     return metadataAsync.when(
       data: (metadata) {
@@ -130,19 +164,26 @@ class ReadingListCover extends ConsumerWidget {
         }
         return _buildItemIcon(item.isSeries, fallbackColor);
       },
-      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      loading: () =>
+          const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       error: (error, stack) => _buildItemIcon(item.isSeries, fallbackColor),
     );
   }
 
-  Widget _buildCachedImage(String imageUrl, bool isSeries, Color fallbackColor) {
+  Widget _buildCachedImage(
+    String imageUrl,
+    bool isSeries,
+    Color fallbackColor,
+  ) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
-        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        errorWidget: (context, url, error) => _buildItemIcon(isSeries, fallbackColor),
+        placeholder: (context, url) =>
+            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        errorWidget: (context, url, error) =>
+            _buildItemIcon(isSeries, fallbackColor),
       ),
     );
   }
@@ -152,9 +193,14 @@ class ReadingListCover extends ConsumerWidget {
       width: width * 0.85,
       height: height * 0.9,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: opacity),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: opacity),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: opacity), width: 1),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: opacity),
+          width: 1,
+        ),
       ),
     );
   }

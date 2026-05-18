@@ -29,7 +29,7 @@ class _CreateReadingListBottomSheetState
   final _descController = TextEditingController();
 
   bool _isOrdered = true;
-  ListContentType _contentType = ListContentType.series;
+  ListContentType _contentType = ListContentType.issue;
 
   @override
   void dispose() {
@@ -74,9 +74,11 @@ class _CreateReadingListBottomSheetState
                 labelText: 'Title',
                 hintText: 'e.g. Batman: Knightfall',
                 border: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor)),
+                  borderSide: BorderSide(color: primaryColor),
+                ),
                 enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor)),
+                  borderSide: BorderSide(color: primaryColor),
+                ),
               ),
               validator: (v) => v?.isEmpty == true ? 'Required' : null,
             ),
@@ -87,24 +89,32 @@ class _CreateReadingListBottomSheetState
                 labelText: 'Description',
                 hintText: 'Optional summary...',
                 border: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor)),
+                  borderSide: BorderSide(color: primaryColor),
+                ),
                 enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor)),
+                  borderSide: BorderSide(color: primaryColor),
+                ),
               ),
               maxLines: 2,
             ),
             const SizedBox(height: 16),
-            const Text('Content Type',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Content Type',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<ListContentType>(
                 segments: const [
                   ButtonSegment(
-                      value: ListContentType.series, label: Text('SERIES')),
+                    value: ListContentType.issue,
+                    label: Text('ISSUES'),
+                  ),
                   ButtonSegment(
-                      value: ListContentType.issue, label: Text('ISSUES')),
+                    value: ListContentType.series,
+                    label: Text('SERIES'),
+                  ),
                 ],
                 selected: {_contentType},
                 onSelectionChanged: (newSelection) =>

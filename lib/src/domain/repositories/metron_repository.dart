@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -6,6 +7,7 @@ import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/domain/entities/series_list_page.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
 import 'package:takion/src/domain/repositories/catalog_repository.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 
 abstract class MetronRepository implements CatalogRepository {
   @override
@@ -30,6 +32,8 @@ abstract class MetronRepository implements CatalogRepository {
   Future<IssueSearchPage> searchIssues(
     String query, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 
@@ -40,18 +44,23 @@ abstract class MetronRepository implements CatalogRepository {
     String? ordering,
     DateTime? modifiedGt,
     int? limit,
+    CancelToken? cancelToken,
   });
 
   @override
   Future<SeriesSearchPage> searchSeries(
     String query, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 
   @override
   Future<SeriesListPage> getSeriesList({
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 
@@ -65,6 +74,8 @@ abstract class MetronRepository implements CatalogRepository {
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 }

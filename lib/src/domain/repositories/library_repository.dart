@@ -4,10 +4,7 @@ import 'package:takion/src/domain/entities/library_read_log.dart';
 abstract class LibraryRepository {
   Future<int> getItemCount();
 
-  Future<List<LibraryItem>> listItems({
-    int limit = 50,
-    int offset = 0,
-  });
+  Future<List<LibraryItem>> listItems({int limit = 50, int offset = 0});
 
   Future<LibraryItem?> getItemByIssueId(int metronIssueId);
 

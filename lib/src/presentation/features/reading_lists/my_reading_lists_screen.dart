@@ -11,11 +11,11 @@ import 'package:takion/src/presentation/common/takion_alerts.dart';
 
 @RoutePage()
 class MyReadingListsScreen extends ConsumerStatefulWidget {
-
   const MyReadingListsScreen({super.key});
 
   @override
-  ConsumerState<MyReadingListsScreen> createState() => _MyReadingListsScreenState();
+  ConsumerState<MyReadingListsScreen> createState() =>
+      _MyReadingListsScreenState();
 }
 
 class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
@@ -108,7 +108,9 @@ class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
                 list: filtered[index],
                 flat: true,
                 onTap: () {
-                  context.pushRoute(ReadingListDetailsRoute(listId: filtered[index].id));
+                  context.pushRoute(
+                    ReadingListDetailsRoute(listId: filtered[index].id),
+                  );
                 },
               );
             },
@@ -125,22 +127,34 @@ class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
             FloatingActionButton.extended(
               onPressed: () async {
                 setState(() => _isFabOpen = false);
-                final list = await ref.read(readingListSharingServiceProvider).importReadingList();
+                final list = await ref
+                    .read(readingListSharingServiceProvider)
+                    .importReadingList();
                 if (list != null) {
-                  final existingLists = ref.read(readingListsProvider).value ?? [];
+                  final existingLists =
+                      ref.read(readingListsProvider).value ?? [];
                   if (existingLists.any((l) => l.id == list.id)) {
                     if (context.mounted) {
-                      TakionAlerts.error(context, 'Reading list already exists');
+                      TakionAlerts.error(
+                        context,
+                        'Reading list already exists',
+                      );
                     }
                     return;
                   }
                   await ref.read(readingListsProvider.notifier).addList(list);
                   if (context.mounted) {
-                    TakionAlerts.success(context, 'Imported reading list: ${list.title}');
+                    TakionAlerts.success(
+                      context,
+                      'Imported reading list: ${list.title}',
+                    );
                   }
                 } else {
                   if (context.mounted) {
-                    TakionAlerts.error(context, 'Failed to import reading list');
+                    TakionAlerts.error(
+                      context,
+                      'Failed to import reading list',
+                    );
                   }
                 }
               },

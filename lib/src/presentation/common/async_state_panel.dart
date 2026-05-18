@@ -78,10 +78,7 @@ class AsyncStatePanel extends StatelessWidget {
                   ),
                   if (onRetry != null) ...[
                     const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: onRetry,
-                      child: Text(retryLabel),
-                    ),
+                    FilledButton(onPressed: onRetry, child: Text(retryLabel)),
                   ],
                 ],
               ),

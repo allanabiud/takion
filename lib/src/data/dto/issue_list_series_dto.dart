@@ -14,16 +14,12 @@ abstract class IssueListSeriesDto with _$IssueListSeriesDto {
     @HiveField(2) @JsonKey(name: 'year_began') required int yearBegan,
   }) = _IssueListSeriesDto;
 
-  factory IssueListSeriesDto.fromJson(Map<String, dynamic> json) => _$IssueListSeriesDtoFromJson(json);
+  factory IssueListSeriesDto.fromJson(Map<String, dynamic> json) =>
+      _$IssueListSeriesDtoFromJson(json);
 
   const IssueListSeriesDto._();
 
   Series toEntity() {
-    return Series(
-      id: 0,
-      name: name,
-      volume: volume,
-      yearBegan: yearBegan,
-    );
+    return Series(id: 0, name: name, volume: volume, yearBegan: yearBegan);
   }
 }

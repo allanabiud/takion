@@ -16,7 +16,8 @@ class ReadingHistoryScreen extends ConsumerStatefulWidget {
   const ReadingHistoryScreen({super.key});
 
   @override
-  ConsumerState<ReadingHistoryScreen> createState() => _ReadingHistoryScreenState();
+  ConsumerState<ReadingHistoryScreen> createState() =>
+      _ReadingHistoryScreenState();
 }
 
 class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
@@ -74,30 +75,45 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
-                    children: HistoryFilter.values.map((f) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(
-                          f.name[0].toUpperCase() + f.name.substring(1),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        selected: _filter == f,
-                        onSelected: (_) => setState(() => _filter = f),
-                        shape: const StadiumBorder(),
-                      ),
-                    )).toList(),
+                    children: HistoryFilter.values
+                        .map(
+                          (f) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(
+                                f.name[0].toUpperCase() + f.name.substring(1),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              selected: _filter == f,
+                              onSelected: (_) => setState(() => _filter = f),
+                              shape: const StadiumBorder(),
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
                 ...keys.map((key) {
                   final items = grouped[key]!;
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: ExpansionTile(
-                      title: Text(key, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        key,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       children: items.asMap().entries.map((entry) {
                         final index = entry.key;
                         final item = entry.value;
@@ -121,7 +137,9 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
                           isCollected: issue?.id != null,
                           isRead: true,
                           onTap: issue?.id != null
-                              ? () => context.pushRoute(IssueDetailsRoute(issueId: issue!.id))
+                              ? () => context.pushRoute(
+                                  IssueDetailsRoute(issueId: issue!.id),
+                                )
                               : null,
                         );
                       }).toList(),

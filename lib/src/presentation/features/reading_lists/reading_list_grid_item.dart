@@ -21,8 +21,8 @@ class ReadingListGridItem extends ConsumerWidget {
   final VoidCallback? onRemove;
 
   const ReadingListGridItem({
-    super.key, 
-    required this.item, 
+    super.key,
+    required this.item,
     required this.onTap,
     this.isEditing = false,
     this.isSelected = false,
@@ -32,8 +32,15 @@ class ReadingListGridItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final metadataAsync = ref.watch(readingListItemMetadataProvider((targetId: item.targetId, isSeries: item.isSeries)));
-    final isReadAsync = ref.watch(readingListItemEffectiveReadStatusProvider(item));
+    final metadataAsync = ref.watch(
+      readingListItemMetadataProvider((
+        targetId: item.targetId,
+        isSeries: item.isSeries,
+      )),
+    );
+    final isReadAsync = ref.watch(
+      readingListItemEffectiveReadStatusProvider(item),
+    );
     final effectiveIsRead = isReadAsync.value ?? item.isRead;
 
     return Stack(
@@ -45,7 +52,9 @@ class ReadingListGridItem extends ConsumerWidget {
             duration: const Duration(milliseconds: 200),
             padding: isSelected ? const EdgeInsets.all(4) : EdgeInsets.zero,
             decoration: BoxDecoration(
-              color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Stack(
@@ -69,10 +78,12 @@ class ReadingListGridItem extends ConsumerWidget {
                         role: item.role,
                       );
                     } else if (metadata is IssueDetails) {
-                      final status =
-                          ref.watch(issueCollectionStatusProvider(metadata.id));
-                      final pullEntryAsync =
-                          ref.watch(issuePullListEntryProvider(metadata.id));
+                      final status = ref.watch(
+                        issueCollectionStatusProvider(metadata.id),
+                      );
+                      final pullEntryAsync = ref.watch(
+                        issuePullListEntryProvider(metadata.id),
+                      );
 
                       return IssueCard(
                         issueId: metadata.id,
@@ -91,7 +102,8 @@ class ReadingListGridItem extends ConsumerWidget {
                     return const Center(child: Icon(Icons.error));
                   },
                   loading: () => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                   error: (error, stack) =>
                       const Center(child: Icon(Icons.error, size: 20)),
                 ),
@@ -99,7 +111,9 @@ class ReadingListGridItem extends ConsumerWidget {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -121,8 +135,11 @@ class ReadingListGridItem extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.check_rounded,
-                          size: 16, color: Colors.white),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
               ],
@@ -147,7 +164,10 @@ class ReadingListGridItem extends ConsumerWidget {
                       offset: const Offset(0, 2),
                     ),
                   ],
-                  border: Border.all(color: theme.colorScheme.surface, width: 2),
+                  border: Border.all(
+                    color: theme.colorScheme.surface,
+                    width: 2,
+                  ),
                 ),
                 child: const Icon(
                   Icons.close_rounded,

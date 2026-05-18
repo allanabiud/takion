@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -129,13 +130,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   }
 
   int _estimatedTotalPages(IssueSearchPage pageData) {
-    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
-    return (pageData.count / pageSize).ceil().clamp(1, 99999);
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
   }
 
   int _estimatedSeriesTotalPages(SeriesSearchPage pageData) {
-    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
-    return (pageData.count / pageSize).ceil().clamp(1, 99999);
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
   }
 
   @override
@@ -231,17 +230,23 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                       if (!_isFiltering)
                                         SliverToBoxAdapter(
                                           child: Padding(
-                                            padding: const EdgeInsets.only(top: 12),
+                                            padding: const EdgeInsets.only(
+                                              top: 12,
+                                            ),
                                             child: ListHeader(
                                               count: pageData.count,
                                               unit: 'result',
-                                              sortLabel: seriesSortLabel(sortOption),
-                                              onSortTap: () => showSortBottomSheet(
-                                                context,
-                                                ref,
-                                                sortContext,
-                                                seriesSortLabel,
+                                              pageCount: sortedSeries.length,
+                                              sortLabel: seriesSortLabel(
+                                                sortOption,
                                               ),
+                                              onSortTap: () =>
+                                                  showSortBottomSheet(
+                                                    context,
+                                                    ref,
+                                                    sortContext,
+                                                    seriesSortLabel,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -272,25 +277,35 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                       0,
                                       hasPagination ? 96 : 12,
                                     ),
-                                    itemCount: sortedSeries.length + (_isFiltering ? 0 : 1),
+                                    itemCount:
+                                        sortedSeries.length +
+                                        (_isFiltering ? 0 : 1),
                                     itemBuilder: (context, index) {
                                       if (!_isFiltering && index == 0) {
                                         return Padding(
-                                          padding: const EdgeInsets.only(top: 12),
+                                          padding: const EdgeInsets.only(
+                                            top: 12,
+                                          ),
                                           child: ListHeader(
                                             count: pageData.count,
                                             unit: 'result',
-                                            sortLabel: seriesSortLabel(sortOption),
-                                            onSortTap: () => showSortBottomSheet(
-                                              context,
-                                              ref,
-                                              sortContext,
-                                              seriesSortLabel,
+                                            pageCount: sortedSeries.length,
+                                            sortLabel: seriesSortLabel(
+                                              sortOption,
                                             ),
+                                            onSortTap: () =>
+                                                showSortBottomSheet(
+                                                  context,
+                                                  ref,
+                                                  sortContext,
+                                                  seriesSortLabel,
+                                                ),
                                           ),
                                         );
                                       }
-                                      final itemIndex = _isFiltering ? index : index - 1;
+                                      final itemIndex = _isFiltering
+                                          ? index
+                                          : index - 1;
                                       _maybeExpandSeriesCoverFetchLimit(
                                         index: itemIndex,
                                         total: sortedSeries.length,
@@ -310,7 +325,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                         },
                                         isFirst: itemIndex == 0,
                                         isLast:
-                                            itemIndex == sortedSeries.length - 1,
+                                            itemIndex ==
+                                            sortedSeries.length - 1,
                                       );
                                     },
                                   ),
@@ -380,17 +396,23 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                       if (!_isFiltering)
                                         SliverToBoxAdapter(
                                           child: Padding(
-                                            padding: const EdgeInsets.only(top: 12),
+                                            padding: const EdgeInsets.only(
+                                              top: 12,
+                                            ),
                                             child: ListHeader(
                                               count: pageData.count,
                                               unit: 'result',
-                                              sortLabel: issueSortLabel(sortOption),
-                                              onSortTap: () => showSortBottomSheet(
-                                                context,
-                                                ref,
-                                                sortContext,
-                                                issueSortLabel,
+                                              pageCount: sortedIssues.length,
+                                              sortLabel: issueSortLabel(
+                                                sortOption,
                                               ),
+                                              onSortTap: () =>
+                                                  showSortBottomSheet(
+                                                    context,
+                                                    ref,
+                                                    sortContext,
+                                                    issueSortLabel,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -420,31 +442,42 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                       0,
                                       hasPagination ? 96 : 12,
                                     ),
-                                    itemCount: sortedIssues.length + (_isFiltering ? 0 : 1),
+                                    itemCount:
+                                        sortedIssues.length +
+                                        (_isFiltering ? 0 : 1),
                                     itemBuilder: (context, index) {
                                       if (!_isFiltering && index == 0) {
                                         return Padding(
-                                          padding: const EdgeInsets.only(top: 12),
+                                          padding: const EdgeInsets.only(
+                                            top: 12,
+                                          ),
                                           child: ListHeader(
                                             count: pageData.count,
                                             unit: 'result',
-                                            sortLabel: issueSortLabel(sortOption),
-                                            onSortTap: () => showSortBottomSheet(
-                                              context,
-                                              ref,
-                                              sortContext,
-                                              issueSortLabel,
+                                            pageCount: sortedIssues.length,
+                                            sortLabel: issueSortLabel(
+                                              sortOption,
                                             ),
+                                            onSortTap: () =>
+                                                showSortBottomSheet(
+                                                  context,
+                                                  ref,
+                                                  sortContext,
+                                                  issueSortLabel,
+                                                ),
                                           ),
                                         );
                                       }
-                                      final itemIndex = _isFiltering ? index : index - 1;
+                                      final itemIndex = _isFiltering
+                                          ? index
+                                          : index - 1;
                                       final issue = sortedIssues[itemIndex];
                                       return IssueListTile(
                                         issue: issue,
                                         isFirst: itemIndex == 0,
                                         isLast:
-                                            itemIndex == sortedIssues.length - 1,
+                                            itemIndex ==
+                                            sortedIssues.length - 1,
                                       );
                                     },
                                   ),

@@ -56,11 +56,7 @@ class EntityCover extends StatelessWidget {
                     child: Icon(placeholderIcon, size: iconSize),
                   ),
             if (role != null)
-              Positioned(
-                top: 4,
-                left: 4,
-                child: RoleBadge(role: role!),
-              ),
+              Positioned(top: 4, left: 4, child: RoleBadge(role: role!)),
             if (isFavorite)
               Positioned(
                 top: 4,
@@ -88,11 +84,7 @@ class EntityCover extends StatelessWidget {
                     color: Colors.green,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 12,
-                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 12),
                 ),
               ),
           ],

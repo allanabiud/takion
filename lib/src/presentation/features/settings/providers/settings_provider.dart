@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -23,6 +24,7 @@ import 'package:takion/src/presentation/features/profile/providers/profile_insig
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
+import 'package:takion/src/core/notifications/push_notification_service.dart';
 
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';
@@ -35,6 +37,126 @@ abstract class AppSettings with _$AppSettings {
     @Default(false) bool isSyncing,
     String? lastSyncMessage,
   }) = _AppSettings;
+}
+
+final pushPullNotificationsEnabledProvider =
+    AsyncNotifierProvider<PushPullNotificationsEnabledNotifier, bool>(
+      PushPullNotificationsEnabledNotifier.new,
+    );
+
+class PushPullNotificationsEnabledNotifier extends AsyncNotifier<bool> {
+  static const _boxName = 'settings_box';
+  static const _key = 'push_pull_notifications_enabled';
+
+  @override
+  Future<bool> build() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    return box.get(_key, defaultValue: false) as bool;
+  }
+
+  Future<void> setEnabled(bool value) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+
+    // Request permission via the push notification service if enabling
+    final service = ref.read(pushNotificationServiceProvider);
+    if (value) {
+      try {
+        final granted = await service.requestPermission();
+        if (!granted) {
+          // Do not enable if permission not granted
+          state = AsyncValue.data(false);
+          await box.put(_key, false);
+          return;
+        }
+      } catch (_) {
+        // Permission request failed; stop enabling
+        state = AsyncValue.data(false);
+        await box.put(_key, false);
+        return;
+      }
+    }
+
+    await box.put(_key, value);
+    state = AsyncValue.data(value);
+
+    // Inform push service to (un)register as needed
+    try {
+      final initialCount = ref.read(currentWeekPullsCountProvider);
+      final scheduleAsync = ref.read(pullReminderScheduleProvider);
+      final schedule = scheduleAsync.value ?? const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
+      await service.syncRegistration(
+        enabled: value,
+        initialPullCount: initialCount,
+        weekday: schedule.weekday,
+        hour: schedule.hour,
+        minute: schedule.minute,
+      );
+    } catch (_) {}
+  }
+}
+
+
+class PullReminderSchedule {
+  final int weekday; // 1=Mon .. 7=Sun
+  final int hour;
+  final int minute;
+
+  const PullReminderSchedule({required this.weekday, required this.hour, required this.minute});
+
+  @override
+  String toString() => '$weekday:$hour:$minute';
+
+  static PullReminderSchedule fromString(String raw) {
+    final parts = raw.split(':');
+    if (parts.length != 3) return const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
+    final w = int.tryParse(parts[0]) ?? 2;
+    final h = int.tryParse(parts[1]) ?? 20;
+    final m = int.tryParse(parts[2]) ?? 0;
+    return PullReminderSchedule(weekday: w, hour: h, minute: m);
+  }
+}
+
+final pullReminderScheduleProvider = AsyncNotifierProvider<PullReminderScheduleNotifier, PullReminderSchedule>(
+  PullReminderScheduleNotifier.new,
+);
+
+class PullReminderScheduleNotifier extends AsyncNotifier<PullReminderSchedule> {
+  static const _boxName = 'settings_box';
+  static const _key = 'pull_reminder_schedule';
+
+  @override
+  Future<PullReminderSchedule> build() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    final raw = (box.get(_key, defaultValue: '2:20:0') as String?) ?? '2:20:0';
+    return PullReminderSchedule.fromString(raw);
+  }
+
+  Future<void> setSchedule(PullReminderSchedule schedule) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    await box.put(_key, schedule.toString());
+    state = AsyncValue.data(schedule);
+
+    // If notifications are enabled, re-sync the registration to reschedule
+    try {
+      final enabledAsync = ref.read(pushPullNotificationsEnabledProvider);
+      final enabled = enabledAsync.value ?? false;
+      if (enabled) {
+        final service = ref.read(pushNotificationServiceProvider);
+        final initialCount = ref.read(currentWeekPullsCountProvider);
+        await service.syncRegistration(
+          enabled: true,
+          initialPullCount: initialCount,
+          weekday: schedule.weekday,
+          hour: schedule.hour,
+          minute: schedule.minute,
+        );
+      }
+    } catch (_) {}
+  }
 }
 
 @riverpod
@@ -129,7 +251,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   ({String query, int page})? _parseSearchKey(Object? key) {
     if (key is! String) return null;
-    final match = RegExp(r'^(.*)::p(\d+)$').firstMatch(key);
+    final match = RegExp(r'^(.*)::p(\d+):l(\d+)$').firstMatch(key);
     if (match == null) return null;
     final query = match.group(1)?.trim() ?? '';
     final page = int.tryParse(match.group(2) ?? '');
@@ -139,7 +261,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   int? _parseSeriesListPageKey(Object? key) {
     if (key is! String) return null;
-    final match = RegExp(r'^series_list:p(\d+)$').firstMatch(key);
+    final match = RegExp(r'^series_list:p(\d+):l(\d+)$').firstMatch(key);
     final page = int.tryParse(match?.group(1) ?? '');
     if (page == null || page <= 0) return null;
     return page;
@@ -147,7 +269,9 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   ({int seriesId, int page})? _parseSeriesIssueListKey(Object? key) {
     if (key is! String) return null;
-    final match = RegExp(r'^series_issue_list:(\d+):p(\d+)$').firstMatch(key);
+    final match = RegExp(
+      r'^series_issue_list:(\d+):p(\d+):l(\d+)$',
+    ).firstMatch(key);
     if (match == null) return null;
     final seriesId = int.tryParse(match.group(1) ?? '');
     final page = int.tryParse(match.group(2) ?? '');
@@ -250,17 +374,26 @@ class SettingsNotifier extends _$SettingsNotifier {
       if (quick) {
         final cachedAt = await localDataSource.getSeriesListResultsCachedAt(
           page: page,
+          limit: metronDefaultPageSize,
         );
         if (_isStaleOrMissing(
           cachedAt: cachedAt,
           policy: MetronCachePolicies.searchResults,
           now: now,
         )) {
-          await repository.getSeriesList(page: page, forceRefresh: true);
+          await repository.getSeriesList(
+            page: page,
+            limit: metronDefaultPageSize,
+            forceRefresh: true,
+          );
           synced++;
         }
       } else {
-        await repository.getSeriesList(page: page, forceRefresh: true);
+        await repository.getSeriesList(
+          page: page,
+          limit: metronDefaultPageSize,
+          forceRefresh: true,
+        );
         synced++;
       }
     }
@@ -273,6 +406,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         final cachedAt = await localDataSource.getIssueSearchResultsCachedAt(
           parsed.query,
           page: parsed.page,
+          limit: metronDefaultPageSize,
         );
         if (_isStaleOrMissing(
           cachedAt: cachedAt,
@@ -282,6 +416,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           await repository.searchIssues(
             parsed.query,
             page: parsed.page,
+            limit: metronDefaultPageSize,
             forceRefresh: true,
           );
           synced++;
@@ -290,6 +425,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         await repository.searchIssues(
           parsed.query,
           page: parsed.page,
+          limit: metronDefaultPageSize,
           forceRefresh: true,
         );
         synced++;
@@ -304,6 +440,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         final cachedAt = await localDataSource.getSeriesSearchResultsCachedAt(
           parsed.query,
           page: parsed.page,
+          limit: metronDefaultPageSize,
         );
         if (_isStaleOrMissing(
           cachedAt: cachedAt,
@@ -313,6 +450,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           await repository.searchSeries(
             parsed.query,
             page: parsed.page,
+            limit: metronDefaultPageSize,
             forceRefresh: true,
           );
           synced++;
@@ -321,6 +459,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         await repository.searchSeries(
           parsed.query,
           page: parsed.page,
+          limit: metronDefaultPageSize,
           forceRefresh: true,
         );
         synced++;
@@ -338,6 +477,7 @@ class SettingsNotifier extends _$SettingsNotifier {
             .getSeriesIssueListResultsCachedAt(
               parsed.seriesId,
               page: parsed.page,
+              limit: metronDefaultPageSize,
             );
         if (_isStaleOrMissing(
           cachedAt: cachedAt,
@@ -347,6 +487,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           await repository.getSeriesIssueList(
             parsed.seriesId,
             page: parsed.page,
+            limit: metronDefaultPageSize,
             forceRefresh: true,
           );
           synced++;
@@ -355,6 +496,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         await repository.getSeriesIssueList(
           parsed.seriesId,
           page: parsed.page,
+          limit: metronDefaultPageSize,
           forceRefresh: true,
         );
         synced++;
@@ -475,7 +617,8 @@ class CollectionDefaultFormatNotifier
   Future<CollectionDefaultFormat> build() async {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
-    final raw = (box.get(_key, defaultValue: 'digital') as String?) ?? 'digital';
+    final raw =
+        (box.get(_key, defaultValue: 'digital') as String?) ?? 'digital';
 
     switch (raw) {
       case 'print':
@@ -502,30 +645,6 @@ class CollectionDefaultFormatNotifier
 }
 
 enum PullNotificationTiming { dayBefore, releaseDay, dayAfter }
-
-final pushPullNotificationsEnabledProvider =
-    AsyncNotifierProvider<PushPullNotificationsEnabledNotifier, bool>(
-      PushPullNotificationsEnabledNotifier.new,
-    );
-
-class PushPullNotificationsEnabledNotifier extends AsyncNotifier<bool> {
-  static const _boxName = 'settings_box';
-  static const _key = 'push_pull_notifications_enabled';
-
-  @override
-  Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    return (box.get(_key, defaultValue: false) as bool?) ?? false;
-  }
-
-  Future<void> setEnabled(bool enabled) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, enabled);
-    state = AsyncValue.data(enabled);
-  }
-}
 
 final pullNotificationTimingProvider =
     AsyncNotifierProvider<
@@ -603,6 +722,30 @@ final autoPullToCollectionProvider =
 class AutoPullToCollectionNotifier extends AsyncNotifier<bool> {
   static const _boxName = 'settings_box';
   static const _key = 'auto_pull_to_collection';
+
+  @override
+  Future<bool> build() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    return (box.get(_key, defaultValue: false) as bool?) ?? false;
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    await box.put(_key, enabled);
+    state = AsyncValue.data(enabled);
+  }
+}
+
+final showReadIssueTickOverlayProvider =
+    AsyncNotifierProvider<ShowReadIssueTickOverlayNotifier, bool>(
+      ShowReadIssueTickOverlayNotifier.new,
+    );
+
+class ShowReadIssueTickOverlayNotifier extends AsyncNotifier<bool> {
+  static const _boxName = 'settings_box';
+  static const _key = 'show_read_issue_tick_overlay';
 
   @override
   Future<bool> build() async {

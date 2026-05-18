@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/profile/widgets/profile_charts.dart';
-import 'package:takion/src/presentation/components/entity_cover.dart';
 
 @RoutePage()
 class UserProfileScreen extends ConsumerStatefulWidget {
@@ -132,40 +130,43 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
               ),
             ],
             body: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.only(
+                top: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 24,
+              ),
               children: [
                 SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: ProfileFilter.values
-                          .map(
-                            (f) => Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text(
-                                  f == ProfileFilter.allTime
-                                      ? 'All-Time'
-                                      : f.name[0].toUpperCase() +
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: ProfileFilter.values
+                        .map(
+                          (f) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(
+                                f == ProfileFilter.allTime
+                                    ? 'All-Time'
+                                    : f.name[0].toUpperCase() +
                                           f.name.substring(1),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                selected: _filter == f,
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setState(() => _filter = f);
-                                  }
-                                },
-                                shape: const StadiumBorder(),
-                                showCheckmark: true,
                               ),
+                              selected: _filter == f,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() => _filter = f);
+                                }
+                              },
+                              shape: const StadiumBorder(),
+                              showCheckmark: true,
                             ),
-                          )
-                          .toList(),
-                    ),
+                          ),
+                        )
+                        .toList(),
                   ),
+                ),
                 const SizedBox(height: 16),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
@@ -187,26 +188,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'Reading Trends',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ReadingTrendChart(
-                            data: insights.readingTrends,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'Library Snapshot',
+                            'Library Stats',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -222,7 +204,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 2.5,
+                          childAspectRatio: 2.2,
                           children: [
                             _StatCard(
                               label: 'Total Owned',
@@ -258,10 +240,29 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             _StatCard(
                               label: 'Subscriptions',
                               value: '${insights.subscriptionsCount}',
-                              icon: Icons.subscriptions_outlined,
+                              icon: Icons.notifications_outlined,
                               color: Theme.of(context).colorScheme.error,
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 32),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Reading Trends',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: ReadingTrendChart(
+                            data: insights.readingTrends,
+                          ),
                         ),
                         const SizedBox(height: 32),
                         Padding(
@@ -306,13 +307,51 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                   iconColor: Colors.amber,
                                 ),
                                 const Divider(height: 24),
-                                _InsightRow(
-                                  label: 'Most-Read Series',
-                                  value: insights.mostReadSeries ?? '-',
-                                  icon: Icons.library_books,
-                                  iconColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
+                                // Most-Read Series: wrap to two lines and use app series icon
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.collections_bookmark_outlined,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        'Most-Read Series',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 180,
+                                      ),
+                                      child: Text(
+                                        insights.mostReadSeries ?? '-',
+                                        textAlign: TextAlign.right,
+                                        maxLines: 2,
+                                        softWrap: true,
+                                        overflow: TextOverflow.clip,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -341,51 +380,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             ),
                           ),
                         ],
-                        if (insights.recentlyFinished.isNotEmpty) ...[
-                          const SizedBox(height: 32),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Recently Finished',
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                                ),
-                                TextButton(
-                                  onPressed: () => context.pushRoute(
-                                    const ReadingHistoryRoute(),
-                                  ),
-                                  child: const Text('View History'),
-                                ),
-                              ],
+                        const SizedBox(height: 32),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.history_outlined,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            height: 200,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: insights.recentlyFinished.length,
-                              itemBuilder: (context, index) {
-                                final item = insights.recentlyFinished[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 12),
-                                  child: _RecentlyFinishedCard(item: item),
-                                );
-                              },
+                            title: Text(
+                              'Reading History',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
+                            subtitle: const Text(
+                              'View all issues you have finished reading',
+                            ),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () =>
+                                context.pushRoute(const ReadingHistoryRoute()),
                           ),
-                        ],
+                        ),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -491,68 +507,35 @@ class _InsightRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: iconColor, size: 24),
         const SizedBox(width: 16),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-}
-
-class _RecentlyFinishedCard extends StatelessWidget {
-  const _RecentlyFinishedCard({required this.item});
-
-  final CollectionItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 100,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 2 / 3,
-            child: GestureDetector(
-              onTap: () {
-                if (item.issue?.id != null) {
-                  context.pushRoute(IssueDetailsRoute(issueId: item.issue!.id));
-                }
-              },
-              child: EntityCover(imageUrl: item.issue?.image),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.issue?.series?.name ?? 'Unknown',
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            'Issue #${item.issue?.number}',
-            style: TextStyle(
-              fontSize: 10,
+        Expanded(
+          flex: 3,
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 4,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -848,10 +831,7 @@ class _ProfileHeader extends StatelessWidget {
                                 radius: 52,
                                 backgroundImage: avatarImage,
                               )
-                            : const Icon(
-                                Icons.account_circle,
-                                size: 104,
-                              ),
+                            : const Icon(Icons.account_circle, size: 104),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Padding(

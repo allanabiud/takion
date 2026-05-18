@@ -26,11 +26,15 @@ abstract class IssueDetails with _$IssueDetails {
     String? description,
     String? image,
     String? coverHash,
-    @Default(<IssueDetailsParticipation>[]) List<IssueDetailsParticipation> arcs,
+    @Default(<IssueDetailsParticipation>[])
+    List<IssueDetailsParticipation> arcs,
     @Default(<IssueDetailsCredit>[]) List<IssueDetailsCredit> credits,
-    @Default(<IssueDetailsParticipation>[]) List<IssueDetailsParticipation> characters,
-    @Default(<IssueDetailsParticipation>[]) List<IssueDetailsParticipation> teams,
-    @Default(<IssueDetailsParticipation>[]) List<IssueDetailsParticipation> universes,
+    @Default(<IssueDetailsParticipation>[])
+    List<IssueDetailsParticipation> characters,
+    @Default(<IssueDetailsParticipation>[])
+    List<IssueDetailsParticipation> teams,
+    @Default(<IssueDetailsParticipation>[])
+    List<IssueDetailsParticipation> universes,
     @Default(<IssueDetailsReprint>[]) List<IssueDetailsReprint> reprints,
     @Default(<IssueDetailsVariant>[]) List<IssueDetailsVariant> variants,
     int? cvId,
@@ -70,8 +74,10 @@ abstract class IssueDetailsParticipation with _$IssueDetailsParticipation {
 
 @freezed
 abstract class IssueDetailsCreditRole with _$IssueDetailsCreditRole {
-  const factory IssueDetailsCreditRole({required int id, required String name}) =
-      _IssueDetailsCreditRole;
+  const factory IssueDetailsCreditRole({
+    required int id,
+    required String name,
+  }) = _IssueDetailsCreditRole;
 }
 
 @freezed

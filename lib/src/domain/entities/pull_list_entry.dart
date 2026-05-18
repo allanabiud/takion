@@ -1,14 +1,6 @@
-enum PullListEntryStatus {
-  upcoming,
-  missing,
-  owned,
-  skipped,
-}
+enum PullListEntryStatus { upcoming, missing, owned, skipped }
 
-enum PullListEntrySource {
-  subscription,
-  manual,
-}
+enum PullListEntrySource { subscription, manual }
 
 class PullListEntry {
   const PullListEntry({

@@ -1,13 +1,12 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 class SeriesSearchArgs {
-  const SeriesSearchArgs({
-    required this.query,
-    required this.page,
-  });
+  const SeriesSearchArgs({required this.query, required this.page});
 
   final String query;
   final int page;
@@ -24,11 +23,8 @@ class SeriesSearchArgs {
   int get hashCode => Object.hash(query, page);
 }
 
-final seriesSearchResultsProvider =
-    FutureProvider.autoDispose.family<SeriesSearchPage, SeriesSearchArgs>((
-      ref,
-      args,
-    ) async {
+final seriesSearchResultsProvider = FutureProvider.autoDispose
+    .family<SeriesSearchPage, SeriesSearchArgs>((ref, args) async {
       if (args.query.trim().isEmpty) {
         return const SeriesSearchPage(results: [], count: 0, currentPage: 1);
       }
@@ -44,7 +40,32 @@ final seriesSearchResultsProvider =
       ref.onDispose(() => timer?.cancel());
 
       final repository = ref.watch(metronRepositoryProvider);
-      final results = await repository.searchSeries(args.query, page: args.page);
+      final cancelToken = CancelToken();
+      ref.onDispose(cancelToken.cancel);
+      final results = await repository.searchSeries(
+        args.query,
+        page: args.page,
+        limit: metronDefaultPageSize,
+        cancelToken: cancelToken,
+      );
+      if (results.previousPage != null) {
+        unawaited(
+          repository.searchSeries(
+            args.query,
+            page: results.previousPage!,
+            limit: metronDefaultPageSize,
+          ),
+        );
+      }
+      if (results.nextPage != null) {
+        unawaited(
+          repository.searchSeries(
+            args.query,
+            page: results.nextPage!,
+            limit: metronDefaultPageSize,
+          ),
+        );
+      }
 
       // Cache for 5 minutes
       timer = Timer(const Duration(minutes: 5), () {

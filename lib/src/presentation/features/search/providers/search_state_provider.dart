@@ -14,10 +14,7 @@ class SearchState {
   final SearchTarget target;
   final List<String> history;
 
-  SearchState copyWith({
-    SearchTarget? target,
-    List<String>? history,
-  }) {
+  SearchState copyWith({SearchTarget? target, List<String>? history}) {
     return SearchState(
       target: target ?? this.target,
       history: history ?? this.history,
@@ -98,7 +95,6 @@ class SearchStateNotifier extends Notifier<SearchState> {
   }
 }
 
-final searchStateProvider =
-    NotifierProvider<SearchStateNotifier, SearchState>(
-      () => SearchStateNotifier(),
-    );
+final searchStateProvider = NotifierProvider<SearchStateNotifier, SearchState>(
+  () => SearchStateNotifier(),
+);

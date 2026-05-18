@@ -1,10 +1,7 @@
 import 'package:takion/src/domain/entities/collection_item.dart';
 
 class CollectionUserRefDto {
-  const CollectionUserRefDto({
-    required this.id,
-    required this.username,
-  });
+  const CollectionUserRefDto({required this.id, required this.username});
 
   final int id;
   final String username;
@@ -17,10 +14,7 @@ class CollectionUserRefDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-    };
+    return {'id': id, 'username': username};
   }
 
   CollectionUserRef toEntity() => CollectionUserRef(id: id, username: username);
@@ -46,11 +40,7 @@ class CollectionIssueSeriesRefDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'volume': volume,
-      'year_began': yearBegan,
-    };
+    return {'name': name, 'volume': volume, 'year_began': yearBegan};
   }
 
   CollectionIssueSeriesRef toEntity() {
@@ -142,11 +132,7 @@ class CollectionReadDateDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'read_date': readDate,
-      'created_on': createdOn,
-    };
+    return {'id': id, 'read_date': readDate, 'created_on': createdOn};
   }
 
   CollectionReadDate toEntity() {
@@ -212,10 +198,10 @@ class CollectionItemDto {
       isRead: json['is_read'] as bool? ?? false,
       readDates: rawReadDates is List
           ? rawReadDates
-            .whereType<Map>()
-            .map((entry) => entry.cast<String, dynamic>())
-            .map(CollectionReadDateDto.fromJson)
-              .toList()
+                .whereType<Map>()
+                .map((entry) => entry.cast<String, dynamic>())
+                .map(CollectionReadDateDto.fromJson)
+                .toList()
           : const [],
       readCount: (json['read_count'] as num?)?.toInt() ?? 0,
       rating: (json['rating'] as num?)?.toInt(),
@@ -250,7 +236,9 @@ class CollectionItemDto {
       bookFormat: bookFormat,
       grade: grade,
       gradingCompany: gradingCompany,
-      purchaseDate: purchaseDate != null ? DateTime.tryParse(purchaseDate!) : null,
+      purchaseDate: purchaseDate != null
+          ? DateTime.tryParse(purchaseDate!)
+          : null,
       isRead: isRead,
       readDates: readDates.map((entry) => entry.toEntity()).toList(),
       readCount: readCount,
@@ -277,10 +265,10 @@ class CollectionItemsResponseDto {
     final rawResults = json['results'];
     final results = rawResults is List
         ? rawResults
-        .whereType<Map>()
-        .map((entry) => entry.cast<String, dynamic>())
-        .map(CollectionItemDto.fromJson)
-            .toList()
+              .whereType<Map>()
+              .map((entry) => entry.cast<String, dynamic>())
+              .map(CollectionItemDto.fromJson)
+              .toList()
         : <CollectionItemDto>[];
 
     return CollectionItemsResponseDto(

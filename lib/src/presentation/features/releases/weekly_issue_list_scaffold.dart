@@ -82,11 +82,14 @@ class WeeklyIssueListScaffold extends StatelessWidget {
                         child: header,
                       );
                     }
-                    final issue = visibleIssues[header != null ? index - 1 : index];
+                    final issue =
+                        visibleIssues[header != null ? index - 1 : index];
                     return IssueListTile(
                       issue: issue,
                       isFirst: header != null ? index == 1 : index == 0,
-                      isLast: index == (visibleIssues.length + (header != null ? 1 : 0) - 1),
+                      isLast:
+                          index ==
+                          (visibleIssues.length + (header != null ? 1 : 0) - 1),
                     );
                   },
                 );

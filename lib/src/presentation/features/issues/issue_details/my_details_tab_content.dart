@@ -34,7 +34,7 @@ class _IssueMyDetailsTabContentState
   bool _isCollected = false;
   bool _isRead = false;
   int? _rating;
-  bool _hydrated = false;
+  String? _lastHydrationKey;
 
   DateTime? _initialPurchaseDate;
   LibraryItemFormat? _initialFormat;
@@ -53,9 +53,31 @@ class _IssueMyDetailsTabContentState
   }
 
   void _hydrateFromData(IssueMyDetailsData data) {
-    if (_hydrated) return;
-
     final item = data.item;
+    var latestReadAtIso = '';
+    if (data.readLogs.isNotEmpty) {
+      final sortedReadAts =
+          data.readLogs.map((log) => log.readAt.toUtc()).toList()..sort();
+      latestReadAtIso = sortedReadAts.last.toIso8601String();
+    }
+    final hydrationKey = [
+      item?.id ?? 'none',
+      item?.updatedAt.toUtc().toIso8601String() ?? '',
+      item?.ownershipStatus.name ?? '',
+      item?.isRead.toString() ?? '',
+      item?.rating?.toString() ?? '',
+      item?.purchaseDate?.toUtc().toIso8601String() ?? '',
+      item?.pricePaid?.toString() ?? '',
+      item?.quantityOwned.toString() ?? '',
+      item?.format.name ?? '',
+      item?.conditionGrade ?? '',
+      item?.notes ?? '',
+      data.readLogs.length.toString(),
+      latestReadAtIso,
+    ].join('|');
+
+    if (_lastHydrationKey == hydrationKey) return;
+
     _isCollected = item?.ownershipStatus == LibraryOwnershipStatus.owned;
     _isRead = item?.isRead ?? false;
     _rating = item?.rating;
@@ -72,7 +94,7 @@ class _IssueMyDetailsTabContentState
     _initialCondition = _conditionController.text;
     _initialPrice = _priceController.text;
     _initialQuantity = _quantityController.text;
-    _hydrated = true;
+    _lastHydrationKey = hydrationKey;
   }
 
   Future<void> _save() async {
@@ -229,41 +251,42 @@ class _IssueMyDetailsTabContentState
                                 const SizedBox(width: spacing),
                                 SizedBox(
                                   width: itemWidth,
-                                  child: DropdownButtonFormField<
-                                    LibraryItemFormat?
-                                  >(
-                                    isExpanded: true,
-                                    initialValue: format,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Format',
-                                    ),
-                                    hint: const Text('Select format'),
-                                    items: const [
-                                      DropdownMenuItem<LibraryItemFormat?>(
-                                        value: null,
-                                        child: Text('Not set'),
+                                  child:
+                                      DropdownButtonFormField<
+                                        LibraryItemFormat?
+                                      >(
+                                        isExpanded: true,
+                                        initialValue: format,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Format',
+                                        ),
+                                        hint: const Text('Select format'),
+                                        items: const [
+                                          DropdownMenuItem<LibraryItemFormat?>(
+                                            value: null,
+                                            child: Text('Not set'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: LibraryItemFormat.print,
+                                            child: Text('Print'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: LibraryItemFormat.digital,
+                                            child: Text('Digital'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: LibraryItemFormat.both,
+                                            child: Text('Both'),
+                                          ),
+                                        ],
+                                        onChanged: saveState.isLoading
+                                            ? null
+                                            : (value) {
+                                                setSheetState(
+                                                  () => format = value,
+                                                );
+                                              },
                                       ),
-                                      DropdownMenuItem(
-                                        value: LibraryItemFormat.print,
-                                        child: Text('Print'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: LibraryItemFormat.digital,
-                                        child: Text('Digital'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: LibraryItemFormat.both,
-                                        child: Text('Both'),
-                                      ),
-                                    ],
-                                    onChanged: saveState.isLoading
-                                        ? null
-                                        : (value) {
-                                            setSheetState(
-                                              () => format = value,
-                                            );
-                                          },
-                                  ),
                                 ),
                               ],
                             ),

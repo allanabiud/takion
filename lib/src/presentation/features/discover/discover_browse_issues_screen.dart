@@ -40,7 +40,7 @@ class _DiscoverBrowseIssuesScreenState
       sortPreferenceForContextProvider(SortPreferenceContext.browseIssues),
     );
     final pageAsync = ref.watch(discoverBrowseIssuesProvider(_args));
-    
+
     if (pageAsync.hasValue) {
       _lastCount = pageAsync.value?.count;
     }
@@ -64,18 +64,21 @@ class _DiscoverBrowseIssuesScreenState
     return BrowsePagedListScreen<IssueList>(
       title: 'Browse Issues',
       pageAsync: browsePageAsync,
-      header: displayCount != null ? ListHeader(
-          count: displayCount,
-          unit: 'issue',
-          enabled: !pageAsync.isLoading,
-          sortLabel: issueSortLabel(sortOption),
-          onSortTap: () => showSortBottomSheet(
-            context,
-            ref,
-            SortPreferenceContext.browseIssues,
-            issueSortLabel,
-          ),
-        ) : null,
+      header: displayCount != null
+          ? ListHeader(
+              count: displayCount,
+              unit: 'issue',
+              pageCount: pageAsync.value?.results.length,
+              enabled: !pageAsync.isLoading,
+              sortLabel: issueSortLabel(sortOption),
+              onSortTap: () => showSortBottomSheet(
+                context,
+                ref,
+                SortPreferenceContext.browseIssues,
+                issueSortLabel,
+              ),
+            )
+          : null,
       onRefresh: _refreshPage,
       onPrevious: () {
         if (_page <= 1) return;

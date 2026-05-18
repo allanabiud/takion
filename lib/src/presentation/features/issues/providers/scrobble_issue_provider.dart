@@ -3,11 +3,13 @@ import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
-final scrobbleIssueProvider = NotifierProvider.family<ScrobbleIssueController, AsyncValue<void>, int>(
+final scrobbleIssueProvider =
+    NotifierProvider.family<ScrobbleIssueController, AsyncValue<void>, int>(
       ScrobbleIssueController.new,
     );
 
@@ -95,6 +97,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           }
           await invalidateLibraryItemsLocalCache(ref);
 
+          ref.invalidate(issueMyDetailsProvider(_issueId));
           ref.invalidate(collectionIssueStatusMapProvider);
           ref.invalidate(collectionStatsProvider);
           invalidateLibraryCollectionProviders(ref);
@@ -127,7 +130,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
                   return remaining.first.readAt;
                 })(),
           format: existing?.format ?? _resolveDefaultFormat(),
-          acquiredOn: existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
+          acquiredOn:
+              existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
         );
 
         if (targetIsRead && !wasRead) {
@@ -150,6 +154,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         }
         await invalidateLibraryItemsLocalCache(ref);
 
+        ref.invalidate(issueMyDetailsProvider(_issueId));
         ref.invalidate(collectionIssueStatusMapProvider);
         ref.invalidate(collectionStatsProvider);
         invalidateLibraryCollectionProviders(ref);

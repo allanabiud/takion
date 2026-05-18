@@ -45,11 +45,14 @@ LibraryItem _randomLibraryItemByPredicate(
 LibraryItem _pickStableUnreadSuggestion(List<LibraryItem> items) {
   final unread = items.where((item) {
     final isCollected = item.ownershipStatus == LibraryOwnershipStatus.owned;
-    final isWishlisted = item.ownershipStatus == LibraryOwnershipStatus.wishlist;
+    final isWishlisted =
+        item.ownershipStatus == LibraryOwnershipStatus.wishlist;
     return isCollected && !item.isRead && !isWishlisted;
   }).toList();
   if (unread.isEmpty) {
-    throw StateError('No collected and unread issues found in your collection.');
+    throw StateError(
+      'No collected and unread issues found in your collection.',
+    );
   }
   unread.sort((a, b) {
     final byUpdated = b.updatedAt.compareTo(a.updatedAt);

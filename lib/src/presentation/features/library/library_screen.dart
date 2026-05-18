@@ -70,8 +70,8 @@ class LibraryScreen extends ConsumerWidget {
                       Text(
                         errorMessage,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -83,9 +83,7 @@ class LibraryScreen extends ConsumerWidget {
                             : () async {
                                 await ref
                                     .read(
-                                      scrobbleIssueProvider(
-                                        issueId,
-                                      ).notifier,
+                                      scrobbleIssueProvider(issueId).notifier,
                                     )
                                     .scrobble(
                                       dateRead: DateTime.now(),
@@ -215,7 +213,9 @@ class LibraryScreen extends ConsumerWidget {
                 CompactListSectionItem(
                   icon: Icons.list_alt_outlined,
                   label: 'My Reading Lists',
-                  value: ref.watch(readingListsProvider).when(
+                  value: ref
+                      .watch(readingListsProvider)
+                      .when(
                         data: (lists) => lists.length.toString(),
                         loading: () => '--',
                         error: (_, _) => '!',
@@ -332,7 +332,9 @@ class LibraryScreen extends ConsumerWidget {
                       list: suggestion,
                       flat: true,
                       onTap: () {
-                        context.pushRoute(ReadingListDetailsRoute(listId: suggestion.id));
+                        context.pushRoute(
+                          ReadingListDetailsRoute(listId: suggestion.id),
+                        );
                       },
                     ),
                   ],

@@ -13,10 +13,7 @@ class SeriesDetailsNamedRefDto {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
 
   SeriesDetailsNamedRef toEntity() => SeriesDetailsNamedRef(id: id, name: name);
 }
@@ -34,10 +31,7 @@ class SeriesDetailsAssociatedDto {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'series': series,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'series': series};
 
   SeriesDetailsAssociated toEntity() =>
       SeriesDetailsAssociated(id: id, series: series);
@@ -89,6 +83,23 @@ class SeriesDetailsDto {
   factory SeriesDetailsDto.fromJson(Map<String, dynamic> json) {
     final rawGenres = json['genres'];
     final rawAssociated = json['associated'];
+    final publisherMap = json['publisher'];
+    final publisherFromMap = publisherMap is Map<String, dynamic>
+        ? SeriesDetailsNamedRefDto.fromJson(publisherMap)
+        : null;
+    final publisherName = (json['publisher_name'] as String?)?.trim();
+    final resolvedPublisher = (() {
+      if (publisherFromMap != null && publisherFromMap.name.trim().isNotEmpty) {
+        return publisherFromMap;
+      }
+      if (publisherName != null && publisherName.isNotEmpty) {
+        return SeriesDetailsNamedRefDto(
+          id: publisherFromMap?.id ?? 0,
+          name: publisherName,
+        );
+      }
+      return publisherFromMap;
+    })();
 
     return SeriesDetailsDto(
       id: (json['id'] as num?)?.toInt() ?? 0,
@@ -101,11 +112,7 @@ class SeriesDetailsDto {
             )
           : null,
       status: json['status'] as String?,
-      publisher: json['publisher'] is Map<String, dynamic>
-          ? SeriesDetailsNamedRefDto.fromJson(
-              json['publisher'] as Map<String, dynamic>,
-            )
-          : null,
+      publisher: resolvedPublisher,
       imprint: json['imprint'] is Map<String, dynamic>
           ? SeriesDetailsNamedRefDto.fromJson(
               json['imprint'] as Map<String, dynamic>,
@@ -117,15 +124,15 @@ class SeriesDetailsDto {
       issueCount: (json['issue_count'] as num?)?.toInt(),
       genres: rawGenres is List
           ? rawGenres
-              .whereType<Map<String, dynamic>>()
-              .map(SeriesDetailsNamedRefDto.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(SeriesDetailsNamedRefDto.fromJson)
+                .toList()
           : const [],
       associated: rawAssociated is List
           ? rawAssociated
-              .whereType<Map<String, dynamic>>()
-              .map(SeriesDetailsAssociatedDto.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(SeriesDetailsAssociatedDto.fromJson)
+                .toList()
           : const [],
       cvId: (json['cv_id'] as num?)?.toInt(),
       gcdId: (json['gcd_id'] as num?)?.toInt(),
@@ -136,26 +143,26 @@ class SeriesDetailsDto {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'sort_name': sortName,
-        'volume': volume,
-        'series_type': seriesType?.toJson(),
-        'status': status,
-        'publisher': publisher?.toJson(),
-        'imprint': imprint?.toJson(),
-        'year_began': yearBegan,
-        'year_end': yearEnd,
-        'desc': description,
-        'issue_count': issueCount,
-        'genres': genres.map((entry) => entry.toJson()).toList(),
-        'associated': associated.map((entry) => entry.toJson()).toList(),
-        'cv_id': cvId,
-        'gcd_id': gcdId,
-        'image': image,
-        'resource_url': resourceUrl,
-        'modified': modified,
-      };
+    'id': id,
+    'name': name,
+    'sort_name': sortName,
+    'volume': volume,
+    'series_type': seriesType?.toJson(),
+    'status': status,
+    'publisher': publisher?.toJson(),
+    'imprint': imprint?.toJson(),
+    'year_began': yearBegan,
+    'year_end': yearEnd,
+    'desc': description,
+    'issue_count': issueCount,
+    'genres': genres.map((entry) => entry.toJson()).toList(),
+    'associated': associated.map((entry) => entry.toJson()).toList(),
+    'cv_id': cvId,
+    'gcd_id': gcdId,
+    'image': image,
+    'resource_url': resourceUrl,
+    'modified': modified,
+  };
 
   SeriesDetails toEntity() {
     return SeriesDetails(

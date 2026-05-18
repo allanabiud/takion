@@ -4,6 +4,7 @@ import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/components/status_indicator_icons.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
+import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 class IssueCard extends ConsumerWidget {
   final int? issueId;
@@ -36,8 +37,11 @@ class IssueCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isFavorite = issueId != null &&
+    final isFavorite =
+        issueId != null &&
         ref.watch(isIssueFavoriteProvider(issueId!)).asData?.value == true;
+    final showReadTickOverlay =
+        ref.watch(showReadIssueTickOverlayProvider).value ?? false;
 
     return SizedBox(
       width: width,
@@ -55,7 +59,7 @@ class IssueCard extends ConsumerWidget {
                   EntityCover(
                     imageUrl: imageUrl,
                     isFavorite: isFavorite,
-                    isRead: isRead,
+                    isRead: isRead && showReadTickOverlay,
                     role: role,
                   ),
                   Padding(

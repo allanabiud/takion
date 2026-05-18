@@ -16,5 +16,4 @@ class SeriesList {
   final int? issueCount;
   final DateTime? modified;
   final String? seriesType;
-  }
-
+}

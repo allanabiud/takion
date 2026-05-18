@@ -4,7 +4,9 @@ import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/domain/repositories/reading_list_repository.dart';
 
 final readingListRepositoryProvider = Provider<ReadingListRepository>((ref) {
-  return ReadingListRepositoryImpl(ref.read(readingListLocalDataSourceProvider));
+  return ReadingListRepositoryImpl(
+    ref.read(readingListLocalDataSourceProvider),
+  );
 });
 
 class ReadingListRepositoryImpl implements ReadingListRepository {
@@ -42,15 +44,21 @@ class ReadingListRepositoryImpl implements ReadingListRepository {
   }
 
   @override
-  Future<void> addItemsToList(String listId, List<ReadingListItem> items) async {
+  Future<void> addItemsToList(
+    String listId,
+    List<ReadingListItem> items,
+  ) async {
     final list = await _dataSource.getListById(listId);
     if (list != null) {
       final existingIds = list.items.map((i) => i.targetId).toSet();
-      final newUniqueItems = items.where((i) => !existingIds.contains(i.targetId)).toList();
-      
+      final newUniqueItems = items
+          .where((i) => !existingIds.contains(i.targetId))
+          .toList();
+
       if (newUniqueItems.isEmpty) return;
 
-      final updatedItems = List<ReadingListItem>.from(list.items)..addAll(newUniqueItems);
+      final updatedItems = List<ReadingListItem>.from(list.items)
+        ..addAll(newUniqueItems);
       final updatedList = list.copyWith(
         items: updatedItems,
         updatedAt: DateTime.now(),

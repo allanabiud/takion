@@ -44,18 +44,22 @@ class IssueListTile extends ConsumerWidget {
     const double imageWidth = 67;
 
     // Hydrate if data is incomplete
-    final isHydrationNeeded = issue.id != null && (issue.image == null || issue.name.isEmpty || issue.name == 'Unknown');
+    final isHydrationNeeded =
+        issue.id != null &&
+        (issue.image == null || issue.name.isEmpty || issue.name == 'Unknown');
     final hydratedIssueAsync = isHydrationNeeded
         ? ref.watch(issueDetailsProvider(issue.id!))
         : null;
-    
+
     final bool isHydrating = hydratedIssueAsync?.isLoading == true;
     final IssueDetails? hydratedIssue = hydratedIssueAsync?.value;
-    final String effectiveName = hydratedIssue != null 
-        ? (hydratedIssue.title?.isNotEmpty == true ? hydratedIssue.title! : (hydratedIssue.series?.name ?? issue.name))
+    final String effectiveName = hydratedIssue != null
+        ? (hydratedIssue.title?.isNotEmpty == true
+              ? hydratedIssue.title!
+              : (hydratedIssue.series?.name ?? issue.name))
         : issue.name;
 
-    final IssueList effectiveIssue = hydratedIssue != null 
+    final IssueList effectiveIssue = hydratedIssue != null
         ? IssueList(
             id: hydratedIssue.id,
             name: effectiveName,
@@ -81,7 +85,9 @@ class IssueListTile extends ConsumerWidget {
                 );
               });
 
-    final providerStatus = ref.watch(issueCollectionStatusProvider(effectiveIssue.id ?? 0));
+    final providerStatus = ref.watch(
+      issueCollectionStatusProvider(effectiveIssue.id ?? 0),
+    );
     final pullEntryAsync = effectiveIssue.id == null
         ? null
         : ref.watch(issuePullListEntryProvider(effectiveIssue.id!));
@@ -91,58 +97,67 @@ class IssueListTile extends ConsumerWidget {
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
-    final isFavorite = effectiveIssue.id != null && ref.watch(isIssueFavoriteProvider(effectiveIssue.id!)).asData?.value == true;
+    final isFavorite =
+        effectiveIssue.id != null &&
+        ref.watch(isIssueFavoriteProvider(effectiveIssue.id!)).asData?.value ==
+            true;
 
-    final Widget leading = isHydrating 
-      ? Container(
-          width: imageWidth,
-          height: imageHeight,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
+    final Widget leading = isHydrating
+        ? Container(
+            width: imageWidth,
+            height: imageHeight,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-        )
-      : ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: effectiveIssue.image != null
-              ? CachedNetworkImage(
-                  imageUrl: effectiveIssue.image!,
-                  width: imageWidth,
-                  height: imageHeight,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: effectiveIssue.image != null
+                ? CachedNetworkImage(
+                    imageUrl: effectiveIssue.image!,
                     width: imageWidth,
                     height: imageHeight,
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: const Center(
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: imageWidth,
+                      height: imageHeight,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      child: const Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
+                    errorWidget: (context, url, error) => Container(
+                      width: imageWidth,
+                      height: imageHeight,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      child: const Icon(Icons.broken_image, size: 40),
+                    ),
+                  )
+                : Container(
                     width: imageWidth,
                     height: imageHeight,
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: const Icon(Icons.broken_image, size: 40),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    child: const Icon(Icons.image, size: 40),
                   ),
-                )
-              : Container(
-                  width: imageWidth,
-                  height: imageHeight,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Icon(Icons.image, size: 40),
-                ),
-        );
+          );
 
     final tileContent = Padding(
       padding: const EdgeInsets.all(8),
@@ -152,82 +167,100 @@ class IssueListTile extends ConsumerWidget {
           leading,
           const SizedBox(width: 12),
           Expanded(
-            child: isHydrating 
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 16,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 14,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      effectiveIssue.name.contains('#${effectiveIssue.number}') || effectiveIssue.number.isEmpty
-                          ? effectiveIssue.name
-                          : '${effectiveIssue.name} #${effectiveIssue.number}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (effectiveIssue.storeDate != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          DateFormat.yMMMd().format(effectiveIssue.storeDate!),
-                          style: Theme.of(context).textTheme.bodySmall,
+            child: isHydrating
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child: Row(
-                        children: [
-                          StatusIndicatorIcons(
-                            isCollected: effectiveIsCollected,
-                            isRead: effectiveIsRead,
-                            isPulled: effectiveIsPulled,
-                            isWishlisted: effectiveIsWishlisted,
-                            iconSize: 16,
-                            spacing: 8,
-                          ),
-                          if (isFavorite) ...[
-                            const SizedBox(width: 8),
-                            const Icon(Icons.favorite, size: 16, color: Colors.red),
-                          ],
-                          const Spacer(),
-                          if ((effectiveRating ?? 0) > 0)
-                            ...List.generate(5, (index) {
-                              final value = (effectiveRating ?? 0).clamp(0, 5);
-                              return Icon(
-                                index < value ? Icons.star : Icons.star_border,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              );
-                            }),
-                        ],
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 14,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        effectiveIssue.name.contains(
+                                  '#${effectiveIssue.number}',
+                                ) ||
+                                effectiveIssue.number.isEmpty
+                            ? effectiveIssue.name
+                            : '${effectiveIssue.name} #${effectiveIssue.number}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (effectiveIssue.storeDate != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            DateFormat.yMMMd().format(
+                              effectiveIssue.storeDate!,
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6.0),
+                        child: Row(
+                          children: [
+                            StatusIndicatorIcons(
+                              isCollected: effectiveIsCollected,
+                              isRead: effectiveIsRead,
+                              isPulled: effectiveIsPulled,
+                              isWishlisted: effectiveIsWishlisted,
+                              iconSize: 16,
+                              spacing: 8,
+                            ),
+                            if (isFavorite) ...[
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.favorite,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                            ],
+                            const Spacer(),
+                            if ((effectiveRating ?? 0) > 0)
+                              ...List.generate(5, (index) {
+                                final value = (effectiveRating ?? 0).clamp(
+                                  0,
+                                  5,
+                                );
+                                return Icon(
+                                  index < value
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.primary,
+                                );
+                              }),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),

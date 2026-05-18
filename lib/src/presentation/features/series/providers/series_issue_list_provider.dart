@@ -1,12 +1,12 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 class SeriesIssueListArgs {
-  const SeriesIssueListArgs({
-    required this.seriesId,
-    required this.page,
-  });
+  const SeriesIssueListArgs({required this.seriesId, required this.page});
 
   final int seriesId;
   final int page;
@@ -23,13 +23,37 @@ class SeriesIssueListArgs {
   int get hashCode => Object.hash(seriesId, page);
 }
 
-final seriesIssueListProvider =
-    FutureProvider.autoDispose.family<SeriesIssueListPage, SeriesIssueListArgs>(
-      (ref, args) {
-        final repository = ref.watch(metronRepositoryProvider);
-        return repository.getSeriesIssueList(
-          args.seriesId,
-          page: args.page,
-        );
-      },
-    );
+final seriesIssueListProvider = FutureProvider.autoDispose
+    .family<SeriesIssueListPage, SeriesIssueListArgs>((ref, args) {
+      final repository = ref.watch(metronRepositoryProvider);
+      final cancelToken = CancelToken();
+      ref.onDispose(cancelToken.cancel);
+      return repository
+          .getSeriesIssueList(
+            args.seriesId,
+            page: args.page,
+            limit: metronDefaultPageSize,
+            cancelToken: cancelToken,
+          )
+          .then((results) {
+            if (results.previousPage != null) {
+              unawaited(
+                repository.getSeriesIssueList(
+                  args.seriesId,
+                  page: results.previousPage!,
+                  limit: metronDefaultPageSize,
+                ),
+              );
+            }
+            if (results.nextPage != null) {
+              unawaited(
+                repository.getSeriesIssueList(
+                  args.seriesId,
+                  page: results.nextPage!,
+                  limit: metronDefaultPageSize,
+                ),
+              );
+            }
+            return results;
+          });
+    });

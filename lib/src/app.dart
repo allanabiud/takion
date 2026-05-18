@@ -40,7 +40,17 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   }
 
   Future<void> _initializePushNotifications() async {
-    await ref.read(pushNotificationServiceProvider).initialize();
+    await ref
+        .read(pushNotificationServiceProvider)
+        .initialize(
+          onNotificationTap: (payload) async {
+            if (payload == 'my-pulls') {
+              // Navigate to My Pulls when the notification is tapped
+              if (!mounted) return;
+              _appRouter.push(const MyPullsRoute());
+            }
+          },
+        );
     await _syncPushRegistration();
   }
 
@@ -53,9 +63,18 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     if (!enabled && !includeDisable) return;
 
     try {
-      await ref
-          .read(pushNotificationServiceProvider)
-          .syncRegistration(enabled: enabled);
+      final service = ref.read(pushNotificationServiceProvider);
+      final initialCount = ref.read(currentWeekPullsCountProvider);
+      final scheduleAsync = ref.read(pullReminderScheduleProvider);
+      final schedule = scheduleAsync.value ?? const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
+
+      await service.syncRegistration(
+        enabled: enabled,
+        initialPullCount: initialCount,
+        weekday: schedule.weekday,
+        hour: schedule.hour,
+        minute: schedule.minute,
+      );
     } catch (error) {
       if (!mounted) return;
       TakionAlerts.error(
@@ -150,17 +169,20 @@ class _TakionAppState extends ConsumerState<TakionApp> {
           themeMode: ThemeMode.system,
           darkIsTrueBlack: false,
         );
-
     return MaterialApp.router(
       title: 'Takion',
       theme: AppThemes.light(),
-      darkTheme: AppThemes.dark(darkIsTrueBlack: themeSettings.darkIsTrueBlack),
+      darkTheme: AppThemes.dark(
+        darkIsTrueBlack: themeSettings.darkIsTrueBlack,
+      ),
       themeMode: themeSettings.themeMode,
       debugShowCheckedModeBanner: false,
       routerConfig: _appRouter.config(),
       builder: (context, child) {
         final bannerColor = Theme.of(context).colorScheme.errorContainer;
-        final bannerTextColor = Theme.of(context).colorScheme.onErrorContainer;
+        final bannerTextColor = Theme.of(
+          context,
+        ).colorScheme.onErrorContainer;
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value:
@@ -207,7 +229,12 @@ class _TakionAppState extends ConsumerState<TakionApp> {
                             key: const ValueKey('offline-banner'),
                             child: Container(
                               width: double.infinity,
-                              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                              margin: const EdgeInsets.fromLTRB(
+                                12,
+                                8,
+                                12,
+                                0,
+                              ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 8,
@@ -231,14 +258,18 @@ class _TakionAppState extends ConsumerState<TakionApp> {
                                       style: Theme.of(context)
                                           .textTheme
                                           .labelLarge
-                                          ?.copyWith(color: bannerTextColor),
+                                          ?.copyWith(
+                                            color: bannerTextColor,
+                                          ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           )
-                        : const SizedBox.shrink(key: ValueKey('offline-none')),
+                        : const SizedBox.shrink(
+                            key: ValueKey('offline-none'),
+                          ),
                   ),
                 ),
               ),

@@ -2,9 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 
-final readingListsProvider = AsyncNotifierProvider<ReadingListsNotifier, List<ReadingList>>(() {
-  return ReadingListsNotifier();
-});
+final readingListsProvider =
+    AsyncNotifierProvider<ReadingListsNotifier, List<ReadingList>>(() {
+      return ReadingListsNotifier();
+    });
 
 class ReadingListsNotifier extends AsyncNotifier<List<ReadingList>> {
   @override

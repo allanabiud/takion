@@ -54,4 +54,3 @@ final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
   return LocalFavoritesRepository(hiveService);
 });
-

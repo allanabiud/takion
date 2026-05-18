@@ -79,11 +79,8 @@ class TakionBottomSheet extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) => TakionBottomSheet(
-        title: title,
-        actions: actions,
-        child: child,
-      ),
+      builder: (context) =>
+          TakionBottomSheet(title: title, actions: actions, child: child),
     );
   }
 }

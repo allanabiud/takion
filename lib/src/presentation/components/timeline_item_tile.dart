@@ -16,7 +16,11 @@ class TimelineIssueTile extends ConsumerWidget {
   final ReadingListItem item;
   final double horizontalPadding;
 
-  const TimelineIssueTile({super.key, required this.item, this.horizontalPadding = 12});
+  const TimelineIssueTile({
+    super.key,
+    required this.item,
+    this.horizontalPadding = 12,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +31,9 @@ class TimelineIssueTile extends ConsumerWidget {
       )),
     );
 
-    final isReadAsync = ref.watch(readingListItemEffectiveReadStatusProvider(item));
+    final isReadAsync = ref.watch(
+      readingListItemEffectiveReadStatusProvider(item),
+    );
     final effectiveIsRead = isReadAsync.value ?? item.isRead;
 
     return metadataAsync.when(
@@ -70,7 +76,11 @@ class TimelineSeriesTile extends ConsumerWidget {
   final ReadingListItem item;
   final double horizontalPadding;
 
-  const TimelineSeriesTile({super.key, required this.item, this.horizontalPadding = 12});
+  const TimelineSeriesTile({
+    super.key,
+    required this.item,
+    this.horizontalPadding = 12,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,7 +91,9 @@ class TimelineSeriesTile extends ConsumerWidget {
       )),
     );
 
-    final isReadAsync = ref.watch(readingListItemEffectiveReadStatusProvider(item));
+    final isReadAsync = ref.watch(
+      readingListItemEffectiveReadStatusProvider(item),
+    );
     final effectiveIsRead = isReadAsync.value ?? item.isRead;
 
     return metadataAsync.when(

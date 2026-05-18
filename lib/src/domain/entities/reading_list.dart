@@ -6,17 +6,24 @@ part 'reading_list.g.dart';
 
 @HiveType(typeId: 20) // Use an available ID
 enum ListContentType {
-  @HiveField(0) series,
-  @HiveField(1) issue,
+  @HiveField(0)
+  series,
+  @HiveField(1)
+  issue,
 }
 
 @HiveType(typeId: 21)
 enum ItemRole {
-  @HiveField(0) standard,
-  @HiveField(1) prologue,
-  @HiveField(2) core,
-  @HiveField(3) tieIn,
-  @HiveField(4) epilogue,
+  @HiveField(0)
+  standard,
+  @HiveField(1)
+  prologue,
+  @HiveField(2)
+  core,
+  @HiveField(3)
+  tieIn,
+  @HiveField(4)
+  epilogue,
 }
 
 @freezed

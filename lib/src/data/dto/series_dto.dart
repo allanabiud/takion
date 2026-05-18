@@ -15,10 +15,13 @@ abstract class SeriesDto with _$SeriesDto {
     @HiveField(3) @JsonKey(name: 'year_began') int? yearBegan,
     @HiveField(4) @JsonKey(name: 'publisher_name') String? publisherName,
     @HiveField(5) @JsonKey(name: 'desc') String? description,
-    @HiveField(6) @JsonKey(name: 'series') String? seriesName, // Used by /api/series/
+    @HiveField(6)
+    @JsonKey(name: 'series')
+    String? seriesName, // Used by /api/series/
   }) = _SeriesDto;
 
-  factory SeriesDto.fromJson(Map<String, dynamic> json) => _$SeriesDtoFromJson(json);
+  factory SeriesDto.fromJson(Map<String, dynamic> json) =>
+      _$SeriesDtoFromJson(json);
 
   const SeriesDto._();
 

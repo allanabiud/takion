@@ -24,7 +24,7 @@ class ThemeNotifier extends _$ThemeNotifier {
   FutureOr<ThemeSettings> build() async {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
-    
+
     final index = box.get(_themeKey, defaultValue: ThemeMode.dark.index);
     final isTrueBlack = box.get(_blackKey, defaultValue: false);
 
@@ -38,8 +38,13 @@ class ThemeNotifier extends _$ThemeNotifier {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_themeKey, mode.index);
-    
-    final currentSettings = state.value ?? const ThemeSettings(themeMode: ThemeMode.system, darkIsTrueBlack: false);
+
+    final currentSettings =
+        state.value ??
+        const ThemeSettings(
+          themeMode: ThemeMode.system,
+          darkIsTrueBlack: false,
+        );
     state = AsyncValue.data(currentSettings.copyWith(themeMode: mode));
   }
 
@@ -47,8 +52,13 @@ class ThemeNotifier extends _$ThemeNotifier {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_blackKey, value);
-    
-    final currentSettings = state.value ?? const ThemeSettings(themeMode: ThemeMode.system, darkIsTrueBlack: false);
+
+    final currentSettings =
+        state.value ??
+        const ThemeSettings(
+          themeMode: ThemeMode.system,
+          darkIsTrueBlack: false,
+        );
     state = AsyncValue.data(currentSettings.copyWith(darkIsTrueBlack: value));
   }
 }

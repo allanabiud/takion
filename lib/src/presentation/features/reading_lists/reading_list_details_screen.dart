@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
@@ -27,10 +28,12 @@ class ReadingListDetailsScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ReadingListDetailsScreen> createState() => _ReadingListDetailsScreenState();
+  ConsumerState<ReadingListDetailsScreen> createState() =>
+      _ReadingListDetailsScreenState();
 }
 
-class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScreen> {
+class _ReadingListDetailsScreenState
+    extends ConsumerState<ReadingListDetailsScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   List<ReadingListItem>? _editingItems;
@@ -63,16 +66,52 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     });
   }
 
+  void _selectAllItems() {
+    final items = _editingItems;
+    if (items == null || items.isEmpty) return;
+    setState(() {
+      _selectedIds
+        ..clear()
+        ..addAll(items.map((item) => item.targetId));
+    });
+  }
+
+  void _deselectAllItems() {
+    if (_selectedIds.isEmpty) return;
+    setState(() {
+      _selectedIds.clear();
+    });
+  }
+
+  void _openReadingListItemDetails(ReadingListItem item) {
+    final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+    final id = int.tryParse(idString);
+    if (id == null || id <= 0) return;
+
+    if (item.isSeries) {
+      context.pushRoute(SeriesDetailsRoute(seriesId: id));
+      return;
+    }
+    context.pushRoute(IssueDetailsRoute(issueId: id));
+  }
+
   Future<void> _deleteSelected() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove Selected Items'),
-        content: Text('Are you sure you want to remove ${_selectedIds.length} items?'),
+        content: Text(
+          'Are you sure you want to remove ${_selectedIds.length} items?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Remove'),
           ),
@@ -83,8 +122,9 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     if (confirmed == true) {
       setState(() {
         if (_editingItems != null) {
-          _editingItems!
-              .removeWhere((item) => _selectedIds.contains(item.targetId));
+          _editingItems!.removeWhere(
+            (item) => _selectedIds.contains(item.targetId),
+          );
         }
         _selectedIds.clear();
       });
@@ -120,8 +160,10 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                 int currentPage = 1;
                 bool hasNext = true;
                 while (hasNext) {
-                  final page = await metronRepo.getSeriesIssueList(id,
-                      page: currentPage);
+                  final page = await metronRepo.getSeriesIssueList(
+                    id,
+                    page: currentPage,
+                  );
                   for (final issue in page.results) {
                     if (issue.id != null) allIssueIdsToUpdate.add(issue.id!);
                   }
@@ -140,7 +182,9 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
         }
 
         if (allIssueIdsToUpdate.isNotEmpty) {
-          await ref.read(bulkScrobbleProvider.notifier).scrobbleIssues(
+          await ref
+              .read(bulkScrobbleProvider.notifier)
+              .scrobbleIssues(
                 issueIds: allIssueIdsToUpdate.toList(),
                 markAsRead: read,
               );
@@ -153,7 +197,9 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
 
         if (mounted) {
           TakionAlerts.success(
-              context, read ? 'Marked as read' : 'Marked as unread');
+            context,
+            read ? 'Marked as read' : 'Marked as unread',
+          );
         }
       }
     } catch (e) {
@@ -217,8 +263,8 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
               child: Text(
                 'Change Role',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
@@ -234,8 +280,10 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                   label,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                backgroundColor:
-                    _getRoleColor(context, role).withValues(alpha: 0.1),
+                backgroundColor: _getRoleColor(
+                  context,
+                  role,
+                ).withValues(alpha: 0.1),
                 side: BorderSide(color: _getRoleColor(context, role)),
                 onPressed: () {
                   Navigator.pop(context);
@@ -249,7 +297,11 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     );
   }
 
-  Future<void> _toggleFavorite(BuildContext context, WidgetRef ref, ReadingList list) async {
+  Future<void> _toggleFavorite(
+    BuildContext context,
+    WidgetRef ref,
+    ReadingList list,
+  ) async {
     try {
       final repository = ref.read(favoritesRepositoryProvider);
       final isFavorite = await repository.isReadingListFavorite(list.id);
@@ -272,11 +324,16 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
   Color _getRoleColor(BuildContext context, ItemRole role) {
     final theme = Theme.of(context);
     switch (role) {
-      case ItemRole.core: return Colors.red;
-      case ItemRole.prologue: return Colors.orange;
-      case ItemRole.tieIn: return Colors.blue;
-      case ItemRole.epilogue: return Colors.purple;
-      case ItemRole.standard: return theme.colorScheme.primary;
+      case ItemRole.core:
+        return Colors.red;
+      case ItemRole.prologue:
+        return Colors.orange;
+      case ItemRole.tieIn:
+        return Colors.blue;
+      case ItemRole.epilogue:
+        return Colors.purple;
+      case ItemRole.standard:
+        return theme.colorScheme.primary;
     }
   }
 
@@ -287,9 +344,14 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
         title: const Text('Delete Reading List'),
         content: Text('Are you sure you want to delete "${list.title}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -306,8 +368,16 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     }
   }
 
-  Widget buildHeader(BuildContext context, ReadingList list, double progress, int readCount, int totalCount, bool isEditing) {
+  Widget buildHeader(
+    BuildContext context,
+    ReadingList list,
+    double progress,
+    int readCount,
+    int totalCount,
+    bool isEditing,
+  ) {
     final theme = Theme.of(context);
+    final hasDescription = list.description.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -326,70 +396,90 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                           color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.collections_bookmark_outlined,
-                            color: Colors.white, size: 32),
+                        child: const Icon(
+                          Icons.collections_bookmark_outlined,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                       ),
                     ),
                 ],
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isEditing) ...[
-                      TextField(
-                        controller: _titleController,
-                        decoration: InputDecoration(
-                          hintText: 'Title',
-                          labelText: 'List Title',
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                child: SizedBox(
+                  height: 150,
+                  child: Column(
+                    mainAxisAlignment: isEditing
+                        ? MainAxisAlignment.start
+                        : MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isEditing) ...[
+                        TextField(
+                          controller: _titleController,
+                          decoration: InputDecoration(
+                            hintText: 'Title',
+                            labelText: 'List Title',
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                        ),
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _descriptionController,
-                        decoration: InputDecoration(
-                          hintText: 'Description',
-                          labelText: 'Description',
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
                         ),
-                        style: theme.textTheme.bodyMedium,
-                        maxLines: null,
-                        minLines: 2,
-                      ),
-                    ] else ...[
-                      Text(list.title,
-                          style: theme.textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      if (list.description.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(list.description,
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _descriptionController,
+                          decoration: InputDecoration(
+                            hintText: 'Description',
+                            labelText: 'Description',
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          style: theme.textTheme.bodyMedium,
+                          maxLines: null,
+                          minLines: 2,
+                        ),
+                      ] else ...[
+                        Text(
+                          list.title,
+                          textAlign: TextAlign.start,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (hasDescription) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            list.description,
+                            textAlign: TextAlign.start,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
-                            )),
+                            ),
+                          ),
+                        ],
                       ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -443,23 +533,32 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     final theme = Theme.of(context);
 
     return listValue.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
       data: (list) {
-        if (list == null) return const Scaffold(body: Center(child: Text('List not found')));
-        
-        final displayItems = isEditing ? (_editingItems ?? list.items) : list.items;
-        
+        if (list == null) {
+          return const Scaffold(body: Center(child: Text('List not found')));
+        }
+
+        final displayItems = isEditing
+            ? (_editingItems ?? list.items)
+            : list.items;
+
         final statusAsync = ref.watch(readingListEffectiveStatusProvider(list));
-        final status = statusAsync.value ?? (readCount: 0, totalCount: displayItems.length, progress: 0.0);
-        
+        final status =
+            statusAsync.value ??
+            (readCount: 0, totalCount: displayItems.length, progress: 0.0);
+
         final hasSelection = _selectedIds.isNotEmpty;
 
         return PopScope(
           canPop: !isEditing,
           onPopInvokedWithResult: (didPop, result) {
             if (isEditing && !didPop) {
-              ref.read(readingListEditModeProvider(widget.listId).notifier).set(false);
+              ref
+                  .read(readingListEditModeProvider(widget.listId).notifier)
+                  .set(false);
               _editingItems = null;
             }
           },
@@ -468,8 +567,8 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
               backgroundColor: hasSelection
                   ? theme.colorScheme.secondaryContainer
                   : isEditing
-                      ? theme.colorScheme.primaryContainer
-                      : null,
+                  ? theme.colorScheme.primaryContainer
+                  : null,
               leading: hasSelection
                   ? IconButton(
                       icon: const Icon(Icons.close_rounded),
@@ -485,14 +584,14 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                       ),
                     )
                   : isEditing
-                      ? Text(
-                          'Editing List',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        )
-                      : null,
+                  ? Text(
+                      'Editing List',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    )
+                  : null,
               centerTitle: true,
               actions: [
                 if (hasSelection) ...[
@@ -528,18 +627,28 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
             body: Stack(
               children: [
                 list.isOrdered
-                    ? buildOrderedBody(context, list, displayItems,
-                        status.progress, status.readCount, status.totalCount,
-                        isEditing)
-                    : buildUnorderedBody(context, list, displayItems,
-                        status.progress, status.readCount, status.totalCount,
-                        isEditing),
+                    ? buildOrderedBody(
+                        context,
+                        list,
+                        displayItems,
+                        status.progress,
+                        status.readCount,
+                        status.totalCount,
+                        isEditing,
+                      )
+                    : buildUnorderedBody(
+                        context,
+                        list,
+                        displayItems,
+                        status.progress,
+                        status.readCount,
+                        status.totalCount,
+                        isEditing,
+                      ),
                 if (_isUpdating)
                   Container(
                     color: Colors.black.withValues(alpha: 0.3),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: const Center(child: CircularProgressIndicator()),
                   ),
               ],
             ),
@@ -550,30 +659,38 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                 children: [
                   if (hasSelection) ...[
                     TextButton.icon(
-                      onPressed: () => _markSelectedRead(true),
-                      icon: const Icon(Icons.bookmark_added_outlined, size: 20),
-                      label: const Text('Read'),
+                      onPressed: _selectAllItems,
+                      icon: const Icon(Icons.select_all_rounded, size: 20),
+                      label: const Text('Select All'),
                     ),
                     const SizedBox(width: 8),
                     TextButton.icon(
-                      onPressed: () => _markSelectedRead(false),
-                      icon: const Icon(Icons.bookmark_remove_outlined, size: 20),
-                      label: const Text('Unread'),
+                      onPressed: _deselectAllItems,
+                      icon: const Icon(Icons.deselect_rounded, size: 20),
+                      label: const Text('Deselect All'),
                     ),
                   ] else ...[
                     IconButton(
                       iconSize: 28,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
                       style: isEditing
                           ? IconButton.styleFrom(
                               backgroundColor:
                                   theme.colorScheme.secondaryContainer,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             )
                           : null,
-                      icon: Icon(isEditing
-                          ? Icons.edit_note_rounded
-                          : Icons.edit_note_rounded),
+                      icon: Icon(
+                        isEditing
+                            ? Icons.edit_note_rounded
+                            : Icons.edit_note_rounded,
+                      ),
                       color: isEditing
                           ? theme.colorScheme.onSecondaryContainer
                           : null,
@@ -587,18 +704,27 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                           _selectedIds.clear();
                         }
                         ref
-                            .read(readingListEditModeProvider(widget.listId)
-                                .notifier)
+                            .read(
+                              readingListEditModeProvider(
+                                widget.listId,
+                              ).notifier,
+                            )
                             .toggle();
                       },
                     ),
                     if (!isEditing) ...[
                       Consumer(
                         builder: (context, ref, _) {
-                          final isFavoriteAsync =
-                              ref.watch(isReadingListFavoriteProvider(list.id));
+                          final isFavoriteAsync = ref.watch(
+                            isReadingListFavoriteProvider(list.id),
+                          );
                           return IconButton(
                             iconSize: 28,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 48,
+                              height: 48,
+                            ),
                             icon: isFavoriteAsync.when(
                               data: (isFavorite) => Icon(
                                 isFavorite
@@ -609,12 +735,15 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                               loading: () => const SizedBox(
                                 width: 24,
                                 height: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                               error: (_, _) =>
                                   const Icon(Icons.favorite_border_rounded),
                             ),
-                            onPressed: () => _toggleFavorite(context, ref, list),
+                            onPressed: () =>
+                                _toggleFavorite(context, ref, list),
                           );
                         },
                       ),
@@ -635,10 +764,14 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                                 .read(readingListsProvider.notifier)
                                 .updateList(updatedList);
                             ref.invalidate(
-                                readingListDetailsProvider(widget.listId));
+                              readingListDetailsProvider(widget.listId),
+                            );
                             ref
-                                .read(readingListEditModeProvider(widget.listId)
-                                    .notifier)
+                                .read(
+                                  readingListEditModeProvider(
+                                    widget.listId,
+                                  ).notifier,
+                                )
                                 .set(false);
                             _editingItems = null;
                             setState(() => _selectedIds.clear());
@@ -651,7 +784,9 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
                       : FloatingActionButton(
                           elevation: 0,
                           onPressed: () => AddReadingListItemsBottomSheet.show(
-                              context, list),
+                            context,
+                            list,
+                          ),
                           child: const Icon(Icons.add_rounded),
                         ),
                 ],
@@ -663,17 +798,34 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     );
   }
 
-  Widget buildOrderedBody(BuildContext context, ReadingList list, List<ReadingListItem> items, double progress, int readCount, int totalCount, bool isEditing) {
+  Widget buildOrderedBody(
+    BuildContext context,
+    ReadingList list,
+    List<ReadingListItem> items,
+    double progress,
+    int readCount,
+    int totalCount,
+    bool isEditing,
+  ) {
     if (isEditing) {
       return ReorderableListView.builder(
-        header: buildHeader(context, list, progress, readCount, totalCount, isEditing),
+        header: buildHeader(
+          context,
+          list,
+          progress,
+          readCount,
+          totalCount,
+          isEditing,
+        ),
         itemCount: items.length,
         buildDefaultDragHandles: false,
         proxyDecorator: (Widget child, int index, Animation<double> animation) {
           return AnimatedBuilder(
             animation: animation,
             builder: (BuildContext context, Widget? child) {
-              final double animValue = Curves.easeInOut.transform(animation.value);
+              final double animValue = Curves.easeInOut.transform(
+                animation.value,
+              );
               final double elevation = lerpDouble(0, 8, animValue)!;
               final theme = Theme.of(context);
               return Theme(
@@ -728,7 +880,16 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     return ListView.builder(
       itemCount: items.length + 1,
       itemBuilder: (context, index) {
-        if (index == 0) return buildHeader(context, list, progress, readCount, totalCount, isEditing);
+        if (index == 0) {
+          return buildHeader(
+            context,
+            list,
+            progress,
+            readCount,
+            totalCount,
+            isEditing,
+          );
+        }
         final item = items[index - 1];
         final roleColor = _getRoleColor(context, item.role);
         final isSelected = _selectedIds.contains(item.targetId);
@@ -753,43 +914,59 @@ class _ReadingListDetailsScreenState extends ConsumerState<ReadingListDetailsScr
     );
   }
 
-  Widget buildUnorderedBody(BuildContext context, ReadingList list, List<ReadingListItem> items, double progress, int readCount, int totalCount, bool isEditing) {
+  Widget buildUnorderedBody(
+    BuildContext context,
+    ReadingList list,
+    List<ReadingListItem> items,
+    double progress,
+    int readCount,
+    int totalCount,
+    bool isEditing,
+  ) {
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: buildHeader(context, list, progress, readCount, totalCount, isEditing)),
+        SliverToBoxAdapter(
+          child: buildHeader(
+            context,
+            list,
+            progress,
+            readCount,
+            totalCount,
+            isEditing,
+          ),
+        ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, 
-              childAspectRatio: 0.45, 
-              crossAxisSpacing: 12, 
-              mainAxisSpacing: 12
+              crossAxisCount: 3,
+              childAspectRatio: 0.45,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final item = items[index];
-                final isSelected = _selectedIds.contains(item.targetId);
-                return ReadingListGridItem(
-                  item: item, 
-                  onTap: () {
-                    if (isEditing) {
-                      _toggleSelection(item.targetId);
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final item = items[index];
+              final isSelected = _selectedIds.contains(item.targetId);
+              return ReadingListGridItem(
+                item: item,
+                onTap: () {
+                  if (isEditing) {
+                    _toggleSelection(item.targetId);
+                    return;
+                  }
+                  _openReadingListItemDetails(item);
+                },
+                isEditing: isEditing,
+                isSelected: isSelected,
+                onRemove: () {
+                  setState(() {
+                    if (_editingItems != null) {
+                      _editingItems!.removeAt(index);
                     }
-                  },
-                  isEditing: isEditing,
-                  isSelected: isSelected,
-                  onRemove: () {
-                    setState(() {
-                      if (_editingItems != null) {
-                        _editingItems!.removeAt(index);
-                      }
-                    });
-                  },
-                );
-              }, 
-              childCount: items.length
-            ),
+                  });
+                },
+              );
+            }, childCount: items.length),
           ),
         ),
       ],

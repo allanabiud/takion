@@ -28,9 +28,7 @@ class UnratedIssuesScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Unrated Comics'),
-      ),
+      appBar: AppBar(title: const Text('Unrated Comics')),
       body: itemsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(

@@ -57,9 +57,7 @@ class StatusIndicatorIcons extends StatelessWidget {
     return Icon(
       icon,
       size: iconSize,
-      color: isActive
-          ? theme.colorScheme.primary
-          : theme.colorScheme.outline,
+      color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline,
     );
   }
 }

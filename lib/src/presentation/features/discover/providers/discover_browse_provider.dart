@@ -1,10 +1,12 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 enum DiscoverBrowseIssueOrder { standard, recentlyAdded }
 
-const _discoverBrowsePageLimit = 50;
 const _recentlyAddedWindow = Duration(days: 7);
 
 final recentlyAddedCutoffProvider = Provider<DateTime>((ref) {
@@ -32,15 +34,39 @@ class DiscoverBrowseIssuesArgs {
 }
 
 final discoverBrowseIssuesProvider = FutureProvider.autoDispose
-    .family<IssueSearchPage, DiscoverBrowseIssuesArgs>((ref, args) {
+    .family<IssueSearchPage, DiscoverBrowseIssuesArgs>((ref, args) async {
       final repository = ref.watch(metronRepositoryProvider);
       final isRecentlyAdded =
           args.order == DiscoverBrowseIssueOrder.recentlyAdded;
       final recentlyAddedCutoff = ref.watch(recentlyAddedCutoffProvider);
-      return repository.getIssueList(
+      final cancelToken = CancelToken();
+      ref.onDispose(cancelToken.cancel);
+      final results = await repository.getIssueList(
         page: args.page,
         ordering: isRecentlyAdded ? '-modified' : null,
         modifiedGt: isRecentlyAdded ? recentlyAddedCutoff : null,
-        limit: _discoverBrowsePageLimit,
+        limit: metronDefaultPageSize,
+        cancelToken: cancelToken,
       );
+      if (results.previousPage != null) {
+        unawaited(
+          repository.getIssueList(
+            page: results.previousPage!,
+            ordering: isRecentlyAdded ? '-modified' : null,
+            modifiedGt: isRecentlyAdded ? recentlyAddedCutoff : null,
+            limit: metronDefaultPageSize,
+          ),
+        );
+      }
+      if (results.nextPage != null) {
+        unawaited(
+          repository.getIssueList(
+            page: results.nextPage!,
+            ordering: isRecentlyAdded ? '-modified' : null,
+            modifiedGt: isRecentlyAdded ? recentlyAddedCutoff : null,
+            limit: metronDefaultPageSize,
+          ),
+        );
+      }
+      return results;
     });

@@ -70,6 +70,7 @@ class _DiscoverBrowseRecentlyAddedScreenState
           ? ListHeader(
               count: displayCount,
               unit: 'issue',
+              pageCount: pageAsync.value?.results.length,
               enabled: !pageAsync.isLoading,
               sortLabel: issueSortLabel(sortOption),
               onSortTap: () => showSortBottomSheet(

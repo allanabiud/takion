@@ -302,8 +302,8 @@ class IssueDetailsScreen extends ConsumerWidget {
                       Text(
                         submitError,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -323,9 +323,7 @@ class IssueDetailsScreen extends ConsumerWidget {
                               : () async {
                                   await ref
                                       .read(
-                                        scrobbleIssueProvider(
-                                          issueId,
-                                        ).notifier,
+                                        scrobbleIssueProvider(issueId).notifier,
                                       )
                                       .scrobble(
                                         markAsRead:
@@ -368,7 +366,8 @@ class IssueDetailsScreen extends ConsumerWidget {
                                           .upsertManualEntry(
                                             metronSeriesId: series.id,
                                             metronIssueId: issueId,
-                                            releaseDate: issueData?.storeDate ??
+                                            releaseDate:
+                                                issueData?.storeDate ??
                                                 issueData?.coverDate,
                                           );
                                     }
@@ -398,9 +397,7 @@ class IssueDetailsScreen extends ConsumerWidget {
                                       );
                                     }
                                     if (markedReadNow) {
-                                      TakionAlerts.libraryMarkedAsRead(
-                                        context,
-                                      );
+                                      TakionAlerts.libraryMarkedAsRead(context);
                                     }
                                     if (!addedNow && !markedReadNow) {
                                       TakionAlerts.libraryUpdated(context);
@@ -439,23 +436,26 @@ class IssueDetailsScreen extends ConsumerWidget {
       );
     }
 
-
     final showBottomBar = issueAsync.hasValue;
 
     Future<void> toggleFavorite() async {
       try {
         final repository = ref.read(favoritesRepositoryProvider);
-        final isFavorite = await ref.read(isIssueFavoriteProvider(issueId).future);
-        
+        final isFavorite = await ref.read(
+          isIssueFavoriteProvider(issueId).future,
+        );
+
         await repository.toggleIssueFavorite(issueId);
-        
+
         ref.invalidate(isIssueFavoriteProvider(issueId));
         ref.invalidate(favoriteIssuesListProvider);
-        
+
         if (context.mounted) {
           TakionAlerts.success(
             context,
-            !isFavorite ? 'Issue added to favorites' : 'Issue removed from favorites',
+            !isFavorite
+                ? 'Issue added to favorites'
+                : 'Issue removed from favorites',
           );
         }
       } catch (e) {
@@ -510,18 +510,25 @@ class IssueDetailsScreen extends ConsumerWidget {
                         iconSize: 28,
                         tooltip: 'Favorite issue',
                         onPressed: toggleFavorite,
-                        icon: ref.watch(isIssueFavoriteProvider(issueId)).when(
+                        icon: ref
+                            .watch(isIssueFavoriteProvider(issueId))
+                            .when(
                               data: (isFavorite) => Icon(
-                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
                                 size: 28,
                                 color: isFavorite ? Colors.red : null,
                               ),
                               loading: () => const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
-                              error: (_, _) => const Icon(Icons.favorite_border, size: 28),
+                              error: (_, _) =>
+                                  const Icon(Icons.favorite_border, size: 28),
                             ),
                       ),
                     ],
@@ -747,7 +754,7 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                           SizedBox(height: subtitleGap),
                           Text(
                             _subtitle(),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.left,
                             style: Theme.of(context).textTheme.bodyMedium
@@ -1184,11 +1191,7 @@ class _ScrobbleActionIcon extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          icon: Icon(icon),
-          color: color,
-          onPressed: onPressed,
-        ),
+        IconButton(icon: Icon(icon), color: color, onPressed: onPressed),
         Text(
           label,
           style: TextStyle(

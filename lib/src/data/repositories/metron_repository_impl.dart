@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'dart:async';
 import 'dart:collection';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
@@ -55,6 +57,9 @@ class MetronRepositoryImpl implements MetronRepository {
     });
     return future;
   }
+
+  bool _isCancelled(Object error) =>
+      error is DioException && error.type == DioExceptionType.cancel;
 
   @override
   Future<List<IssueList>> getWeeklyReleasesForDate(
@@ -162,19 +167,24 @@ class MetronRepositoryImpl implements MetronRepository {
   Future<IssueSearchPage> searchIssues(
     String query, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
     final cachedDtos = await _localDataSource.getIssueSearchResults(
       query,
       page: page,
+      limit: limit,
     );
     final cachedAt = await _localDataSource.getIssueSearchResultsCachedAt(
       query,
       page: page,
+      limit: limit,
     );
     final cachedMeta = await _localDataSource.getIssueSearchResultsMeta(
       query,
       page: page,
+      limit: limit,
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
@@ -196,11 +206,14 @@ class MetronRepositoryImpl implements MetronRepository {
       final remotePage = await _remoteDataSource.searchIssues(
         query,
         page: page,
+        limit: limit,
+        cancelToken: cancelToken,
       );
       await _localDataSource.cacheIssueSearchResults(
         query,
         remotePage.results,
         page: page,
+        limit: limit,
         count: remotePage.count,
         next: remotePage.next,
         previous: remotePage.previous,
@@ -212,7 +225,8 @@ class MetronRepositoryImpl implements MetronRepository {
         results: remotePage.results.map((entry) => entry.toEntity()).toList(),
         currentPage: page,
       );
-    } catch (_) {
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return IssueSearchPage(
           count: cachedMeta.count,
@@ -233,6 +247,7 @@ class MetronRepositoryImpl implements MetronRepository {
     String? ordering,
     DateTime? modifiedGt,
     int? limit,
+    CancelToken? cancelToken,
   }) async {
     final metrics = AppPerformanceMetrics.instance;
     final cachedDtos = await _localDataSource.getIssueListResults(
@@ -280,6 +295,7 @@ class MetronRepositoryImpl implements MetronRepository {
           ordering: ordering,
           modifiedGt: modifiedGt,
           limit: limit,
+          cancelToken: cancelToken,
         );
         await _localDataSource.cacheIssueListResults(
           remotePage.results,
@@ -299,7 +315,8 @@ class MetronRepositoryImpl implements MetronRepository {
           currentPage: page,
         );
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return IssueSearchPage(
           count: cachedMeta.count,
@@ -317,19 +334,24 @@ class MetronRepositoryImpl implements MetronRepository {
   Future<SeriesSearchPage> searchSeries(
     String query, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
     final cachedDtos = await _localDataSource.getSeriesSearchResults(
       query,
       page: page,
+      limit: limit,
     );
     final cachedAt = await _localDataSource.getSeriesSearchResultsCachedAt(
       query,
       page: page,
+      limit: limit,
     );
     final cachedMeta = await _localDataSource.getSeriesSearchResultsMeta(
       query,
       page: page,
+      limit: limit,
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
@@ -351,11 +373,14 @@ class MetronRepositoryImpl implements MetronRepository {
       final remotePage = await _remoteDataSource.searchSeries(
         query,
         page: page,
+        limit: limit,
+        cancelToken: cancelToken,
       );
       await _localDataSource.cacheSeriesSearchResults(
         query,
         remotePage.results,
         page: page,
+        limit: limit,
         count: remotePage.count,
         next: remotePage.next,
         previous: remotePage.previous,
@@ -367,7 +392,8 @@ class MetronRepositoryImpl implements MetronRepository {
         results: remotePage.results.map((entry) => entry.toEntity()).toList(),
         currentPage: page,
       );
-    } catch (_) {
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesSearchPage(
           count: cachedMeta.count,
@@ -385,14 +411,21 @@ class MetronRepositoryImpl implements MetronRepository {
   Future<SeriesListPage> getSeriesList({
     int page = 1,
     bool forceRefresh = false,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
   }) async {
     final metrics = AppPerformanceMetrics.instance;
-    final cachedDtos = await _localDataSource.getSeriesListResults(page: page);
+    final cachedDtos = await _localDataSource.getSeriesListResults(
+      page: page,
+      limit: limit,
+    );
     final cachedAt = await _localDataSource.getSeriesListResultsCachedAt(
       page: page,
+      limit: limit,
     );
     final cachedMeta = await _localDataSource.getSeriesListResultsMeta(
       page: page,
+      limit: limit,
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
@@ -415,10 +448,15 @@ class MetronRepositoryImpl implements MetronRepository {
     try {
       final key = '$page|$forceRefresh';
       return _coalesce(_seriesListInFlight, key, () async {
-        final remotePage = await _remoteDataSource.getSeriesList(page: page);
+        final remotePage = await _remoteDataSource.getSeriesList(
+          page: page,
+          limit: limit,
+          cancelToken: cancelToken,
+        );
         await _localDataSource.cacheSeriesListResults(
           remotePage.results,
           page: page,
+          limit: limit,
           count: remotePage.count,
           next: remotePage.next,
           previous: remotePage.previous,
@@ -431,7 +469,8 @@ class MetronRepositoryImpl implements MetronRepository {
           currentPage: page,
         );
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesListPage(
           count: cachedMeta.count,
@@ -478,19 +517,24 @@ class MetronRepositoryImpl implements MetronRepository {
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
     final cachedDtos = await _localDataSource.getSeriesIssueListResults(
       seriesId,
       page: page,
+      limit: limit,
     );
     final cachedAt = await _localDataSource.getSeriesIssueListResultsCachedAt(
       seriesId,
       page: page,
+      limit: limit,
     );
     final cachedMeta = await _localDataSource.getSeriesIssueListResultsMeta(
       seriesId,
       page: page,
+      limit: limit,
     );
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
@@ -514,11 +558,14 @@ class MetronRepositoryImpl implements MetronRepository {
         final remotePage = await _remoteDataSource.getSeriesIssueList(
           seriesId,
           page: page,
+          limit: limit,
+          cancelToken: cancelToken,
         );
         await _localDataSource.cacheSeriesIssueListResults(
           seriesId,
           remotePage.results,
           page: page,
+          limit: limit,
           count: remotePage.count,
           next: remotePage.next,
           previous: remotePage.previous,
@@ -531,7 +578,8 @@ class MetronRepositoryImpl implements MetronRepository {
           currentPage: page,
         );
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesIssueListPage(
           count: cachedMeta.count,

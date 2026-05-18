@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/series_list_page.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
-const _subscriptionsPageSize = 25;
+const _subscriptionsPageSize = metronDefaultPageSize;
 const _subscriptionsCacheBoxName = 'subscriptions_cache_box';
 
 String _subscriptionsPageKey(int page) => 'active_series:p$page';
@@ -77,7 +78,7 @@ SeriesList? _seriesListFromJson(Map<String, dynamic> json) {
 
 SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
   return SeriesList(
-    id: seriesId, 
+    id: seriesId,
     name: 'Series $seriesId',
     yearBegan: 0,
     volume: 1,

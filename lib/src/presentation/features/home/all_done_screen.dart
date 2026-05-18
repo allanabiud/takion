@@ -93,7 +93,8 @@ class _AllDoneScreenState extends ConsumerState<AllDoneScreen>
                     child: FilledButton(
                       onPressed: _finishSetup,
                       child: const Text('Finish Setup'),
-                    ),                  ),
+                    ),
+                  ),
                 ],
               ),
             ),

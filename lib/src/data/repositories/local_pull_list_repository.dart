@@ -215,11 +215,10 @@ class LocalPullListRepository implements PullListRepository {
         .where((raw) {
           final map = raw;
           final status = map['entry_status'] as String;
-          
+
           final isUpcoming = status == 'upcoming';
-          
-          return map['metron_series_id'] as int == metronSeriesId &&
-                 isUpcoming;
+
+          return map['metron_series_id'] as int == metronSeriesId && isUpcoming;
         })
         .map((raw) => (raw)['metron_issue_id'].toString())
         .toList();

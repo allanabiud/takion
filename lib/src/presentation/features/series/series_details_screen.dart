@@ -439,10 +439,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Action',
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
+                Text('Action', style: Theme.of(context).textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
@@ -520,8 +517,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                           (value) => ChoiceChip(
                             label: Text(
                               subsetLabel(value),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             selected: value == selectedSubset,
                             shape: const StadiumBorder(),
@@ -552,19 +550,14 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                       children: [
                         Text(
                           'Issue range: #$startIssueNumber - #$endIssueNumber',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         RangeSlider(
                           min: 1,
                           max: totalIssues.toDouble(),
                           divisions: totalIssues > 1 ? totalIssues - 1 : null,
-                          labels: RangeLabels(
-                            '$selectedStart',
-                            '$selectedEnd',
-                          ),
+                          labels: RangeLabels('$selectedStart', '$selectedEnd'),
                           values: selectedRange,
                           onChanged: isApplying
                               ? null
@@ -610,20 +603,19 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                                   issues: issues,
                                   subset:
                                       selectedMode ==
-                                              _SeriesIssueSelectionMode
-                                                  .predefined
-                                          ? selectedSubset
-                                          : null,
+                                          _SeriesIssueSelectionMode.predefined
+                                      ? selectedSubset
+                                      : null,
                                   startOrderIndex:
                                       selectedMode ==
-                                              _SeriesIssueSelectionMode.range
-                                          ? selectedStart
-                                          : null,
+                                          _SeriesIssueSelectionMode.range
+                                      ? selectedStart
+                                      : null,
                                   endOrderIndex:
                                       selectedMode ==
-                                              _SeriesIssueSelectionMode.range
-                                          ? selectedEnd
-                                          : null,
+                                          _SeriesIssueSelectionMode.range
+                                      ? selectedEnd
+                                      : null,
                                 );
                               } finally {
                                 if (context.mounted) {
@@ -637,9 +629,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Apply'),
                     ),
@@ -795,62 +785,62 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                    children: [
-                      IconButton(
-                        iconSize: 28,
-                        tooltip: isSubscribed
-                            ? 'Unsubscribe and remove pull'
-                            : 'Subscribe and pull series',
-                        onPressed: isSubscriptionLoading
-                            ? null
-                            : () {
-                                _setSeriesSubscription(!isSubscribed);
-                              },
-                        icon: isSubscriptionLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                      children: [
+                        IconButton(
+                          iconSize: 28,
+                          tooltip: isSubscribed
+                              ? 'Unsubscribe and remove pull'
+                              : 'Subscribe and pull series',
+                          onPressed: isSubscriptionLoading
+                              ? null
+                              : () {
+                                  _setSeriesSubscription(!isSubscribed);
+                                },
+                          icon: isSubscriptionLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  isSubscribed
+                                      ? Icons.notifications_active
+                                      : Icons.notifications_outlined,
+                                  color: isSubscribed
+                                      ? Theme.of(context).colorScheme.primary
+                                      : null,
                                 ),
-                              )
-                            : Icon(
-                                isSubscribed
-                                    ? Icons.notifications_active
-                                    : Icons.notifications_outlined,
-                                color: isSubscribed
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                      ),
-                      const SizedBox(width: 4),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: SizedBox(
-                          height: 24,
-                          child: VerticalDivider(
-                            width: 1,
-                            thickness: 1,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .outlineVariant
-                                .withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(width: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: SizedBox(
+                            height: 24,
+                            child: VerticalDivider(
+                              width: 1,
+                              thickness: 1,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.5),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        iconSize: 28,
-                        tooltip: 'Add to reading list',
-                        onPressed: () {
-                          AddToReadingListBottomSheet.show(
-                            context: context,
-                            targetId: widget.seriesId.toString(),
-                            isSeries: true,
-                          );
-                        },
-                        icon: const Icon(Icons.playlist_add),
-                      ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          iconSize: 28,
+                          tooltip: 'Add to reading list',
+                          onPressed: () {
+                            AddToReadingListBottomSheet.show(
+                              context: context,
+                              targetId: widget.seriesId.toString(),
+                              isSeries: true,
+                            );
+                          },
+                          icon: const Icon(Icons.playlist_add),
+                        ),
                         const SizedBox(width: 4),
                         IconButton(
                           iconSize: 28,
@@ -1027,7 +1017,7 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final publisher = details.publisher?.name.trim();
-    final hasPublisher = details.publisher != null;
+    final hasPublisher = publisher != null && publisher.isNotEmpty;
     Widget imageContent() {
       return coverImageAsync.when(
         data: (imageUrl) => imageUrl != null
@@ -1071,12 +1061,27 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.38),
-                  Colors.black.withValues(alpha: 0.08),
-                  theme.colorScheme.surface.withValues(alpha: 0.86),
+                  Colors.black.withValues(alpha: 0.48),
+                  Colors.black.withValues(alpha: 0.18),
+                  theme.colorScheme.surface.withValues(alpha: 0.90),
                   theme.colorScheme.surface,
                 ],
-                stops: const [0, 0.32, 0.62, 1],
+                stops: const [0.0, 0.28, 0.70, 1.0],
+              ),
+            ),
+          ),
+          // Extra subtle overlay to smooth transitions between cover and surface
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.08),
+                  Colors.transparent,
+                  theme.colorScheme.surface.withValues(alpha: 0.96),
+                ],
+                stops: const [0.0, 0.5, 1.0],
               ),
             ),
           ),
@@ -1134,7 +1139,7 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
                 const SizedBox(height: 8),
                 if (hasPublisher)
                   Text(
-                    publisher?.toUpperCase() ?? '',
+                    publisher.toUpperCase(),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -1198,6 +1203,7 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
     final genreText = details.genres.isNotEmpty
         ? details.genres.map((g) => g.name).join(', ')
         : 'N/A';
+    final publisherName = details.publisher?.name.trim();
 
     final infoItems = <({String label, String value})>[
       (
@@ -1216,7 +1222,12 @@ class _SeriesAboutTabState extends State<_SeriesAboutTab> {
         label: 'Issues',
         value: details.issueCount != null ? '${details.issueCount}' : 'N/A',
       ),
-      (label: 'Publisher', value: details.publisher?.name ?? 'N/A'),
+      (
+        label: 'Publisher',
+        value: publisherName != null && publisherName.isNotEmpty
+            ? publisherName
+            : 'N/A',
+      ),
       (label: 'Imprint', value: details.imprint?.name ?? 'N/A'),
       (label: 'Metron ID', value: '${details.id}'),
       if (details.cvId != null) (label: 'CV ID', value: '${details.cvId}'),
@@ -1559,6 +1570,7 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
                   ListHeader(
                     count: issueCount,
                     unit: 'issue',
+                    pageCount: sortedIssues.length,
                     sortLabel: issueSortLabel(sortOption),
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     enabled: !isLoading,
@@ -1591,6 +1603,7 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
                         ListHeader(
                           count: issueCount,
                           unit: 'issue',
+                          pageCount: sortedIssues.length,
                           sortLabel: issueSortLabel(sortOption),
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           enabled: !isLoading,
@@ -1639,6 +1652,7 @@ class _SeriesIssuesTabState extends ConsumerState<_SeriesIssuesTab> {
                   onPrevious: widget.onPrevious,
                   onNext: widget.onNext,
                   enabled: !isLoading,
+                  isLoading: isLoading,
                 ),
               ),
             ),
@@ -1703,12 +1717,12 @@ class _SeriesDetailsLoading extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.25),
-                            Colors.black.withValues(alpha: 0.06),
-                            theme.colorScheme.surface.withValues(alpha: 0.86),
+                            Colors.black.withValues(alpha: 0.35),
+                            Colors.black.withValues(alpha: 0.12),
+                            theme.colorScheme.surface.withValues(alpha: 0.92),
                             theme.colorScheme.surface,
                           ],
-                          stops: const [0, 0.32, 0.62, 1],
+                          stops: const [0.0, 0.28, 0.70, 1.0],
                         ),
                       ),
                     ),

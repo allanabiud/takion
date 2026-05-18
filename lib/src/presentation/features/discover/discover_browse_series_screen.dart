@@ -86,6 +86,7 @@ class _DiscoverBrowseSeriesScreenState
               count: displayCount,
               unit: 'series',
               pluralUnit: 'series',
+              pageCount: pageAsync.value?.results.length,
               enabled: !pageAsync.isLoading,
               sortLabel: seriesSortLabel(sortOption),
               onSortTap: () => showSortBottomSheet(

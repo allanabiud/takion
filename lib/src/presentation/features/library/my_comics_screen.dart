@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/collection_items_page.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
@@ -64,8 +65,10 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
     required bool isLoading,
   }) {
     final sortedItems = sortCollectionItems(pageData.results, sortOption);
-    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
-    final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
+    final totalPages = (pageData.count / metronDefaultPageSize).ceil().clamp(
+      1,
+      9999,
+    );
 
     return PagedListScaffold(
       onRefresh: _refreshPage,

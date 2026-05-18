@@ -23,11 +23,7 @@ class CompactListTile extends StatelessWidget {
     const double radius = 24.0;
 
     return Card(
-      margin: EdgeInsets.only(
-        left: 12,
-        right: 12,
-        bottom: isLast ? 12 : 2,
-      ),
+      margin: EdgeInsets.only(left: 12, right: 12, bottom: isLast ? 12 : 2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: isFirst ? const Radius.circular(radius) : Radius.zero,
@@ -43,10 +39,7 @@ class CompactListTile extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
           size: 20,
         ),
-        title: Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
+        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -54,8 +47,8 @@ class CompactListTile extends StatelessWidget {
               Text(
                 value!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
             const SizedBox(width: 4),
             Icon(

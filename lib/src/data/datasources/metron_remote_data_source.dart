@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/data/dto/collection_item_details_dto.dart';
 import 'package:takion/src/data/dto/collection_stats_dto.dart';
 import 'package:takion/src/data/dto/collection_items_response_dto.dart';
@@ -23,19 +24,36 @@ abstract class MetronRemoteDataSource {
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
   Future<List<IssueListDto>> getFocReleasesForDate(DateTime date);
   Future<IssueDetailsDto> getIssueDetails(int issueId);
-  Future<IssueSearchResponseDto> searchIssues(String query, {int page = 1});
+  Future<IssueSearchResponseDto> searchIssues(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
   Future<IssueSearchResponseDto> getIssueList({
     int page = 1,
     String? ordering,
     DateTime? modifiedGt,
     int? limit,
+    CancelToken? cancelToken,
   });
-  Future<SeriesListResponseDto> getSeriesList({int page = 1});
-  Future<SeriesSearchResponseDto> searchSeries(String query, {int page = 1});
+  Future<SeriesListResponseDto> getSeriesList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+  Future<SeriesSearchResponseDto> searchSeries(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
   Future<SeriesDetailsDto> getSeriesDetails(int seriesId);
   Future<SeriesIssueListResponseDto> getSeriesIssueList(
     int seriesId, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
   });
 }
 
@@ -181,6 +199,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<IssueSearchResponseDto> searchIssues(
     String query, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
   }) async {
     final candidates = _queryCandidates(query);
     if (candidates.isEmpty) {
@@ -191,7 +211,12 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     for (final candidate in candidates) {
       final response = await _dio.get(
         'issue/',
-        queryParameters: {'series_name': candidate, 'page': page},
+        queryParameters: {
+          'series_name': candidate,
+          'page': page,
+          'limit': limit,
+        },
+        cancelToken: cancelToken,
       );
 
       final parsed = IssueSearchResponseDto.fromJson(
@@ -213,6 +238,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     String? ordering,
     DateTime? modifiedGt,
     int? limit,
+    CancelToken? cancelToken,
   }) async {
     final queryParameters = <String, dynamic>{'page': page};
     if (ordering != null && ordering.trim().isNotEmpty) {
@@ -225,15 +251,27 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters['limit'] = limit;
     }
 
-    final response = await _dio.get('issue/', queryParameters: queryParameters);
+    final response = await _dio.get(
+      'issue/',
+      queryParameters: queryParameters,
+      cancelToken: cancelToken,
+    );
     return IssueSearchResponseDto.fromJson(
       response.data as Map<String, dynamic>,
     );
   }
 
   @override
-  Future<SeriesListResponseDto> getSeriesList({int page = 1}) async {
-    final response = await _dio.get('series/', queryParameters: {'page': page});
+  Future<SeriesListResponseDto> getSeriesList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'series/',
+      queryParameters: {'page': page, 'limit': limit},
+      cancelToken: cancelToken,
+    );
 
     return SeriesListResponseDto.fromJson(
       response.data as Map<String, dynamic>,
@@ -244,6 +282,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<SeriesSearchResponseDto> searchSeries(
     String query, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
   }) async {
     final candidates = _queryCandidates(query);
     if (candidates.isEmpty) {
@@ -254,7 +294,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     for (final candidate in candidates) {
       final response = await _dio.get(
         'series/',
-        queryParameters: {'name': candidate, 'page': page},
+        queryParameters: {'name': candidate, 'page': page, 'limit': limit},
+        cancelToken: cancelToken,
       );
 
       final parsed = SeriesSearchResponseDto.fromJson(
@@ -280,10 +321,13 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<SeriesIssueListResponseDto> getSeriesIssueList(
     int seriesId, {
     int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
   }) async {
     final response = await _dio.get(
       'series/$seriesId/issue_list/',
-      queryParameters: {'page': page},
+      queryParameters: {'page': page, 'limit': limit},
+      cancelToken: cancelToken,
     );
 
     return SeriesIssueListResponseDto.fromJson(

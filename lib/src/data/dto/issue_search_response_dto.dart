@@ -17,9 +17,9 @@ class IssueSearchResponseDto {
     final rawResults = json['results'];
     final results = rawResults is List
         ? rawResults
-            .whereType<Map<String, dynamic>>()
-            .map(IssueListDto.fromJson)
-            .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(IssueListDto.fromJson)
+              .toList()
         : <IssueListDto>[];
 
     return IssueSearchResponseDto(

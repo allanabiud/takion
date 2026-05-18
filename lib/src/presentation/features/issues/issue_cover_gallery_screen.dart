@@ -153,9 +153,22 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
     return null;
   }
 
+  String? _priceFromCaption(int index) {
+    final caption = _captionForIndex(index);
+    if (caption == null) return null;
+    final parts = caption.split('•');
+    if (parts.length < 2) return null;
+    final trailing = parts.last.trim();
+    if (!trailing.startsWith('\$') || trailing.length <= 1) return null;
+    return trailing;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final label = _labelForIndex(_currentIndex);
+    final price = _priceFromCaption(_currentIndex);
 
     return Scaffold(
       appBar: AppBar(
@@ -211,40 +224,68 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
           ),
           SafeArea(
             top: false,
-            minimum: const EdgeInsets.fromLTRB(16, 0, 16, 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 4, 0, 10),
-                  child: Text(
-                    _captionForIndex(_currentIndex) ??
-                        _labelForIndex(_currentIndex),
-                    maxLines: 1,
+            minimum: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(widget.imageUrls.length, (index) {
-                    final isSelected = _currentIndex == index;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: isSelected ? 14 : 6,
-                      height: 6,
+                  if (price != null) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.outlineVariant,
+                        color: colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(999),
                       ),
-                    );
-                  }),
-                ),
-              ],
+                      child: Text(
+                        price,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: List.generate(widget.imageUrls.length, (index) {
+                      final isSelected = _currentIndex == index;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: isSelected ? 14 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

@@ -15,12 +15,7 @@ class MetronAccountConnection {
   const MetronAccountConnection({required this.username});
 }
 
-enum MetronConnectionStatus {
-  valid,
-  missing,
-  invalid,
-  unreachable,
-}
+enum MetronConnectionStatus { valid, missing, invalid, unreachable }
 
 class MetronAccountService {
   final HiveService _hiveService;

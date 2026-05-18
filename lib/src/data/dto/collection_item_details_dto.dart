@@ -74,10 +74,10 @@ class CollectionItemDetailsDto {
       dateRead: json['date_read'] as String?,
       readDates: rawReadDates is List
           ? rawReadDates
-            .whereType<Map>()
-            .map((entry) => entry.cast<String, dynamic>())
-            .map(CollectionReadDateDto.fromJson)
-              .toList()
+                .whereType<Map>()
+                .map((entry) => entry.cast<String, dynamic>())
+                .map(CollectionReadDateDto.fromJson)
+                .toList()
           : const [],
       readCount: (json['read_count'] as num?)?.toInt() ?? 0,
       rating: (json['rating'] as num?)?.toInt(),
@@ -121,7 +121,9 @@ class CollectionItemDetailsDto {
       bookFormat: bookFormat,
       grade: grade,
       gradingCompany: gradingCompany,
-      purchaseDate: purchaseDate != null ? DateTime.tryParse(purchaseDate!) : null,
+      purchaseDate: purchaseDate != null
+          ? DateTime.tryParse(purchaseDate!)
+          : null,
       purchasePrice: purchasePrice,
       purchaseStore: purchaseStore,
       storageLocation: storageLocation,

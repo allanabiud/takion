@@ -22,9 +22,7 @@ class ContinueReadingScreen extends ConsumerWidget {
     final suggestionsAsync = ref.watch(continueReadingAllSuggestionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Continue Reading'),
-      ),
+      appBar: AppBar(title: const Text('Continue Reading')),
       body: suggestionsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(

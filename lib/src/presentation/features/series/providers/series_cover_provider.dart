@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
@@ -63,6 +64,7 @@ final seriesCoverImageProvider = FutureProvider.autoDispose
       final localIssues = await localDataSource.getSeriesIssueListResults(
         seriesId,
         page: 1,
+        limit: metronDefaultPageSize,
       );
       final localCover = localIssues == null
           ? null

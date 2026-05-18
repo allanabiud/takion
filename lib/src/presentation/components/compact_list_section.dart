@@ -16,11 +16,7 @@ class CompactListSectionItem {
 }
 
 class CompactListSection extends StatelessWidget {
-  const CompactListSection({
-    super.key,
-    required this.items,
-    this.title,
-  });
+  const CompactListSection({super.key, required this.items, this.title});
 
   final String? title;
   final List<CompactListSectionItem> items;
@@ -37,9 +33,9 @@ class CompactListSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               title!,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 8),

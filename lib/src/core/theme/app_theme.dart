@@ -59,7 +59,10 @@ class AppThemes {
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
     );
 
+    final scheme = base.colorScheme;
+
     return base.copyWith(
+      colorScheme: scheme,
       splashFactory: NoSplash.splashFactory,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
@@ -74,19 +77,19 @@ class AppThemes {
           fontSize: 26,
           fontWeight: FontWeight.bold,
           fontFamily: 'Rubik',
-          color: base.colorScheme.onSurface,
+          color: scheme.onSurface,
         ),
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: base.colorScheme.primary,
-        indicatorColor: base.colorScheme.primary,
-        labelColor: base.colorScheme.primary,
-        unselectedLabelColor: base.colorScheme.onSurfaceVariant,
+        dividerColor: scheme.primary,
+        indicatorColor: scheme.primary,
+        labelColor: scheme.primary,
+        unselectedLabelColor: scheme.onSurfaceVariant,
       ),
       floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
-        backgroundColor: base.colorScheme.primaryContainer,
-        foregroundColor: base.colorScheme.onPrimaryContainer,
+        backgroundColor: scheme.primaryContainer,
+        foregroundColor: scheme.onPrimaryContainer,
         extendedSizeConstraints: const BoxConstraints.tightFor(height: 70),
         extendedTextStyle: const TextStyle(
           fontSize: 18,
@@ -98,7 +101,9 @@ class AppThemes {
     );
   }
 
-  static ThemeData dark({bool darkIsTrueBlack = false}) {
+  static ThemeData dark({
+    bool darkIsTrueBlack = false,
+  }) {
     final ThemeData base = FlexThemeData.dark(
       scheme: FlexScheme.bigStone,
       fontFamily: 'Rubik',
@@ -159,7 +164,10 @@ class AppThemes {
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
     );
 
+    final scheme = base.colorScheme;
+
     return base.copyWith(
+      colorScheme: scheme,
       splashFactory: NoSplash.splashFactory,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
@@ -174,19 +182,19 @@ class AppThemes {
           fontSize: 26,
           fontWeight: FontWeight.bold,
           fontFamily: 'Rubik',
-          color: base.colorScheme.onSurface,
+          color: scheme.onSurface,
         ),
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: base.colorScheme.primary,
-        indicatorColor: base.colorScheme.primary,
-        labelColor: base.colorScheme.primary,
-        unselectedLabelColor: base.colorScheme.onSurfaceVariant,
+        dividerColor: scheme.primary,
+        indicatorColor: scheme.primary,
+        labelColor: scheme.primary,
+        unselectedLabelColor: scheme.onSurfaceVariant,
       ),
       floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
-        backgroundColor: base.colorScheme.primaryContainer,
-        foregroundColor: base.colorScheme.onPrimaryContainer,
+        backgroundColor: scheme.primaryContainer,
+        foregroundColor: scheme.onPrimaryContainer,
         extendedSizeConstraints: const BoxConstraints.tightFor(height: 70),
         extendedTextStyle: const TextStyle(
           fontSize: 18,

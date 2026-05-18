@@ -22,10 +22,9 @@ Future<void> showSortBottomSheet(
       groupValue: currentOption,
       onChanged: (value) {
         if (value != null) {
-          ref.read(sortPreferencesProvider.notifier).setPreference(
-                sortContext,
-                value,
-              );
+          ref
+              .read(sortPreferencesProvider.notifier)
+              .setPreference(sortContext, value);
           Navigator.pop(context);
         }
       },

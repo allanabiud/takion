@@ -1,14 +1,6 @@
-enum LibraryOwnershipStatus {
-  owned,
-  notOwned,
-  wishlist,
-}
+enum LibraryOwnershipStatus { owned, notOwned, wishlist }
 
-enum LibraryItemFormat {
-  print,
-  digital,
-  both,
-}
+enum LibraryItemFormat { print, digital, both }
 
 class LibraryItem {
   const LibraryItem({

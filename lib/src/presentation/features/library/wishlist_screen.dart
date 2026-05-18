@@ -28,9 +28,7 @@ class WishlistScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wishlist'),
-      ),
+      appBar: AppBar(title: const Text('Wishlist')),
       body: itemsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(

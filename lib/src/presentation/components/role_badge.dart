@@ -40,8 +40,9 @@ class RoleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _getRoleColor(context, role);
-    final isLight = ThemeData.estimateBrightnessForColor(color) == Brightness.light;
-    
+    final isLight =
+        ThemeData.estimateBrightnessForColor(color) == Brightness.light;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(

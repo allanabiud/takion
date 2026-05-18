@@ -16,7 +16,10 @@ abstract class IssueDetailsDto with _$IssueDetailsDto {
     @HiveField(4) required String number,
     @HiveField(5) @JsonKey(name: 'alt_number') String? altNumber,
     @HiveField(6) String? title,
-    @HiveField(7) @JsonKey(name: 'name') @Default(<String>[]) List<String> names,
+    @HiveField(7)
+    @JsonKey(name: 'name')
+    @Default(<String>[])
+    List<String> names,
     @HiveField(8) @JsonKey(name: 'cover_date') String? coverDate,
     @HiveField(9) @JsonKey(name: 'store_date') String? storeDate,
     @HiveField(10) @JsonKey(name: 'foc_date') String? focDate,
@@ -132,8 +135,12 @@ abstract class IssueDetailsSeriesDto with _$IssueDetailsSeriesDto {
     @HiveField(2) @JsonKey(name: 'sort_name') String? sortName,
     @HiveField(3) int? volume,
     @HiveField(4) @JsonKey(name: 'year_began') int? yearBegan,
-    @HiveField(5) @JsonKey(name: 'series_type') IssueDetailsNamedRefDto? seriesType,
-    @HiveField(6) @Default(<IssueDetailsNamedRefDto>[]) List<IssueDetailsNamedRefDto> genres,
+    @HiveField(5)
+    @JsonKey(name: 'series_type')
+    IssueDetailsNamedRefDto? seriesType,
+    @HiveField(6)
+    @Default(<IssueDetailsNamedRefDto>[])
+    List<IssueDetailsNamedRefDto> genres,
   }) = _IssueDetailsSeriesDto;
 
   factory IssueDetailsSeriesDto.fromJson(Map<String, dynamic> json) =>
@@ -156,7 +163,8 @@ abstract class IssueDetailsSeriesDto with _$IssueDetailsSeriesDto {
 
 @freezed
 @HiveType(typeId: 13)
-abstract class IssueDetailsParticipationDto with _$IssueDetailsParticipationDto {
+abstract class IssueDetailsParticipationDto
+    with _$IssueDetailsParticipationDto {
   const factory IssueDetailsParticipationDto({
     @HiveField(0) required int id,
     @HiveField(1) required String name,

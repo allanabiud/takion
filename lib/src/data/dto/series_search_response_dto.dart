@@ -17,10 +17,10 @@ class SeriesSearchResponseDto {
     final rawResults = json['results'];
     final results = rawResults is List
         ? rawResults
-            .whereType<Map<String, dynamic>>()
-            .map(SeriesListDto.fromJson)
-            .toList()
-          : <SeriesListDto>[];
+              .whereType<Map<String, dynamic>>()
+              .map(SeriesListDto.fromJson)
+              .toList()
+        : <SeriesListDto>[];
 
     return SeriesSearchResponseDto(
       count: (json['count'] as num?)?.toInt() ?? results.length,

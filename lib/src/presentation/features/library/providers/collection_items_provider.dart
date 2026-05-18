@@ -1,13 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/domain/entities/collection_items_page.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
-const _collectionPageSize = 25;
+const _collectionPageSize = metronDefaultPageSize;
 const _libraryCacheBoxName = 'library_items_cache_box';
 const _libraryAllItemsKey = 'all_items';
 const _libraryAllItemsMetaKey = 'library_items:all';

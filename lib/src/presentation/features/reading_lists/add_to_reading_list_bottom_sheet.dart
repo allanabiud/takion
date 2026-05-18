@@ -75,8 +75,9 @@ class _AddToReadingListBottomSheetState
   @override
   Widget build(BuildContext context) {
     final readingListsAsync = ref.watch(readingListsProvider);
-    final contentType =
-        widget.isSeries ? ListContentType.series : ListContentType.issue;
+    final contentType = widget.isSeries
+        ? ListContentType.series
+        : ListContentType.issue;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -87,9 +88,7 @@ class _AddToReadingListBottomSheetState
           decoration: InputDecoration(
             hintText: 'Search reading lists',
             prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
             filled: true,
           ),
         ),
@@ -100,9 +99,11 @@ class _AddToReadingListBottomSheetState
           data: (lists) {
             final filteredLists = lists
                 .where((list) => list.contentType == contentType)
-                .where((list) => list.title
-                    .toLowerCase()
-                    .contains(_searchQuery.toLowerCase()))
+                .where(
+                  (list) => list.title.toLowerCase().contains(
+                    _searchQuery.toLowerCase(),
+                  ),
+                )
                 .toList();
 
             if (filteredLists.isEmpty) {

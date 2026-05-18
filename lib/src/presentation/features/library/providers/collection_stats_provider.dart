@@ -6,10 +6,7 @@ import 'package:takion/src/presentation/features/library/providers/collection_it
 final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
   final collectedItems = libraryItems
-      .where(
-        (item) =>
-            item.ownershipStatus == LibraryOwnershipStatus.owned,
-      )
+      .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
       .toList();
   final wishlistCount = libraryItems
       .where((item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist)

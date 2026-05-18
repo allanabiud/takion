@@ -14,7 +14,9 @@ class ReadingTrendChart extends StatelessWidget {
 
     if (data.isEmpty) return const SizedBox.shrink();
 
-    final maxCount = data.map((e) => e.count).fold(0, (prev, curr) => curr > prev ? curr : prev);
+    final maxCount = data
+        .map((e) => e.count)
+        .fold(0, (prev, curr) => curr > prev ? curr : prev);
     final interval = maxCount > 5 ? (maxCount / 5).ceil().toDouble() : 1.0;
 
     return AspectRatio(
@@ -32,8 +34,12 @@ class ReadingTrendChart extends StatelessWidget {
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -41,10 +47,11 @@ class ReadingTrendChart extends StatelessWidget {
                 interval: 1,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (index < 0 || index >= data.length) return const SizedBox.shrink();
+                  if (index < 0 || index >= data.length)
+                    return const SizedBox.shrink();
                   final label = data[index].label;
                   if (label.isEmpty) return const SizedBox.shrink();
-                  
+
                   return SideTitleWidget(
                     meta: meta,
                     space: 8,
@@ -85,21 +92,31 @@ class ReadingTrendChart extends StatelessWidget {
           maxY: (maxCount + 1).toDouble(),
           lineBarsData: [
             LineChartBarData(
-              spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble())).toList(),
+              spots: data
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => FlSpot(e.key.toDouble(), e.value.count.toDouble()),
+                  )
+                  .toList(),
               isCurved: true,
               gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.5)],
+                colors: [
+                  colorScheme.primary,
+                  colorScheme.primary.withValues(alpha: 0.5),
+                ],
               ),
               barWidth: 4,
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: data.length < 15,
-                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                  radius: 4,
-                  color: colorScheme.primary,
-                  strokeWidth: 2,
-                  strokeColor: colorScheme.surface,
-                ),
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                      radius: 4,
+                      color: colorScheme.primary,
+                      strokeWidth: 2,
+                      strokeColor: colorScheme.surface,
+                    ),
               ),
               belowBarData: BarAreaData(
                 show: true,
@@ -150,7 +167,9 @@ class PublisherDistributionChart extends StatelessWidget {
 
     if (publishers.isEmpty) return const SizedBox.shrink();
 
-    final maxCount = publishers.map((e) => e.value).fold(0, (prev, curr) => curr > prev ? curr : prev);
+    final maxCount = publishers
+        .map((e) => e.value)
+        .fold(0, (prev, curr) => curr > prev ? curr : prev);
 
     return AspectRatio(
       aspectRatio: 1.5,
@@ -180,11 +199,14 @@ class PublisherDistributionChart extends StatelessWidget {
                 reservedSize: 40,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (index < 0 || index >= publishers.length) return const SizedBox.shrink();
+                  if (index < 0 || index >= publishers.length)
+                    return const SizedBox.shrink();
                   final name = publishers[index].key;
                   // Shorten name if too long
-                  final displayName = name.length > 10 ? '${name.substring(0, 8)}..' : name;
-                  
+                  final displayName = name.length > 10
+                      ? '${name.substring(0, 8)}..'
+                      : name;
+
                   return SideTitleWidget(
                     meta: meta,
                     space: 8,
@@ -202,9 +224,15 @@ class PublisherDistributionChart extends StatelessWidget {
                 },
               ),
             ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: const FlGridData(show: false),
           borderData: FlBorderData(show: false),
@@ -216,11 +244,15 @@ class PublisherDistributionChart extends StatelessWidget {
                   toY: e.value.value.toDouble(),
                   color: colorScheme.secondary,
                   width: 16,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4),
+                  ),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,
                     toY: maxCount.toDouble(),
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                   ),
                 ),
               ],

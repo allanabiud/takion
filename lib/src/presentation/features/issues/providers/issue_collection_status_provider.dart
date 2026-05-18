@@ -24,7 +24,7 @@ final collectionIssueStatusMapProvider =
 
       for (final item in items) {
         final issueId = item.metronIssueId;
-    if (issueId <= 0) continue;
+        if (issueId <= 0) continue;
         map[issueId] = IssueCollectionStatus(
           isCollected: item.ownershipStatus == LibraryOwnershipStatus.owned,
           isWishlisted: item.ownershipStatus == LibraryOwnershipStatus.wishlist,

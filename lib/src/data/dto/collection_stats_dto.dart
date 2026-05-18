@@ -16,10 +16,7 @@ class CollectionStatsByFormatDto {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'book_format': bookFormat,
-        'count': count,
-      };
+  Map<String, dynamic> toJson() => {'book_format': bookFormat, 'count': count};
 
   CollectionStatsByFormat toEntity() {
     return CollectionStatsByFormat(bookFormat: bookFormat, count: count);
@@ -54,21 +51,21 @@ class CollectionStatsDto {
       unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
       byFormat: rawByFormat is List
           ? rawByFormat
-              .whereType<Map<String, dynamic>>()
-              .map(CollectionStatsByFormatDto.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(CollectionStatsByFormatDto.fromJson)
+                .toList()
           : const [],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'total_items': totalItems,
-        'total_quantity': totalQuantity,
-        'total_value': totalValue,
-        'read_count': readCount,
-        'unread_count': unreadCount,
-        'by_format': byFormat.map((entry) => entry.toJson()).toList(),
-      };
+    'total_items': totalItems,
+    'total_quantity': totalQuantity,
+    'total_value': totalValue,
+    'read_count': readCount,
+    'unread_count': unreadCount,
+    'by_format': byFormat.map((entry) => entry.toJson()).toList(),
+  };
 
   CollectionStats toEntity() {
     return CollectionStats(

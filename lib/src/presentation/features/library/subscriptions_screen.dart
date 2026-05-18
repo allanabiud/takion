@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/series_list_page.dart';
@@ -72,9 +73,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Subscriptions'),
-      ),
+      appBar: AppBar(title: const Text('Subscriptions')),
       body: pageAsync.when(
         loading: () {
           if (_lastPage != null) {
@@ -85,7 +84,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: 'Failed to load subscriptions: $error',
         ),
-        data: (pageData) => _buildContent(pageData, sortOption, isLoading: false),
+        data: (pageData) =>
+            _buildContent(pageData, sortOption, isLoading: false),
       ),
     );
   }
@@ -95,8 +95,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     ContentSortOption sortOption, {
     required bool isLoading,
   }) {
-    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
-    final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
+    final totalPages = (pageData.count / metronDefaultPageSize).ceil().clamp(
+      1,
+      9999,
+    );
     final sortedResults = sortSeries(pageData.results, sortOption);
 
     return PagedListScaffold(
@@ -137,10 +139,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
       },
       itemCount: sortedResults.length,
       itemBuilder: (context, index) {
-        _maybeExpandCoverFetchLimit(
-          index: index,
-          total: sortedResults.length,
-        );
+        _maybeExpandCoverFetchLimit(index: index, total: sortedResults.length);
         final series = sortedResults[index];
         return Opacity(
           opacity: isLoading ? 0.6 : 1.0,

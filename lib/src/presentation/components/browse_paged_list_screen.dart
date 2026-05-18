@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/components/paged_list_scaffold.dart';
 
@@ -96,7 +97,7 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
     BrowsePagedData<T> pageData, {
     required bool isLoading,
   }) {
-    final pageSize = pageData.results.isEmpty ? 100 : pageData.results.length;
+    final pageSize = metronDefaultPageSize;
     final totalPages = (pageData.count / pageSize).ceil().clamp(1, 9999);
 
     return PagedListScaffold(
