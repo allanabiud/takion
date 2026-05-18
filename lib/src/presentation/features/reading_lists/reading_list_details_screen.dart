@@ -11,6 +11,7 @@ import 'package:takion/src/presentation/features/reading_lists/add_reading_list_
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
@@ -878,7 +879,7 @@ class _ReadingListDetailsScreenState
     }
 
     return ListView.builder(
-      itemCount: items.length + 1,
+      itemCount: items.isEmpty ? 2 : items.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return buildHeader(
@@ -890,6 +891,17 @@ class _ReadingListDetailsScreenState
             isEditing,
           );
         }
+
+        if (items.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 64),
+            child: EmptyContentState(
+              icon: Icons.list_alt_rounded,
+              message: 'This reading list is empty.',
+            ),
+          );
+        }
+
         final item = items[index - 1];
         final roleColor = _getRoleColor(context, item.role);
         final isSelected = _selectedIds.contains(item.targetId);
@@ -935,40 +947,49 @@ class _ReadingListDetailsScreenState
             isEditing,
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.45,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+        if (items.isEmpty)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: EmptyContentState(
+              icon: Icons.grid_view_rounded,
+              message: 'This reading list is empty.',
             ),
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final item = items[index];
-              final isSelected = _selectedIds.contains(item.targetId);
-              return ReadingListGridItem(
-                item: item,
-                onTap: () {
-                  if (isEditing) {
-                    _toggleSelection(item.targetId);
-                    return;
-                  }
-                  _openReadingListItemDetails(item);
-                },
-                isEditing: isEditing,
-                isSelected: isSelected,
-                onRemove: () {
-                  setState(() {
-                    if (_editingItems != null) {
-                      _editingItems!.removeAt(index);
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 0.45,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final item = items[index];
+                final isSelected = _selectedIds.contains(item.targetId);
+                return ReadingListGridItem(
+                  item: item,
+                  onTap: () {
+                    if (isEditing) {
+                      _toggleSelection(item.targetId);
+                      return;
                     }
-                  });
-                },
-              );
-            }, childCount: items.length),
+                    _openReadingListItemDetails(item);
+                  },
+                  isEditing: isEditing,
+                  isSelected: isSelected,
+                  onRemove: () {
+                    setState(() {
+                      if (_editingItems != null) {
+                        _editingItems!.removeAt(index);
+                      }
+                    });
+                  },
+                );
+              }, childCount: items.length),
+            ),
           ),
-        ),
       ],
     );
   }

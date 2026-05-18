@@ -11,8 +11,16 @@ final readingListItemEffectiveReadStatusProvider = Provider.autoDispose
       if (item.isSeries) {
         return ref.watch(seriesAllIssuesReadProvider(id));
       } else {
-        final status = ref.watch(issueCollectionStatusProvider(id));
-        return AsyncValue.data(status?.isRead ?? item.isRead);
+        final statusAsync = ref.watch(collectionIssueStatusMapProvider);
+        return statusAsync.when(
+          data: (statusMap) {
+            final status = statusMap[id];
+            // If we have library data, use it. If not in library, it's not read.
+            return AsyncValue.data(status?.isRead ?? false);
+          },
+          loading: () => AsyncValue.data(item.isRead),
+          error: (_, __) => AsyncValue.data(item.isRead),
+        );
       }
     });
 
