@@ -102,6 +102,10 @@ class IssueListTile extends ConsumerWidget {
         ref.watch(isIssueFavoriteProvider(effectiveIssue.id!)).asData?.value ==
             true;
 
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final cacheWidth = (imageWidth * devicePixelRatio).round();
+    final cacheHeight = (imageHeight * devicePixelRatio).round();
+
     final Widget leading = isHydrating
         ? Container(
             width: imageWidth,
@@ -118,45 +122,48 @@ class IssueListTile extends ConsumerWidget {
               ),
             ),
           )
-        : ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: effectiveIssue.image != null
-                ? CachedNetworkImage(
-                    imageUrl: effectiveIssue.image!,
-                    width: imageWidth,
-                    height: imageHeight,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
+        : RepaintBoundary(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: effectiveIssue.image != null
+                  ? CachedNetworkImage(
+                      imageUrl: effectiveIssue.image!,
                       width: imageWidth,
                       height: imageHeight,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      child: const Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                      fit: BoxFit.cover,
+                      memCacheWidth: cacheWidth,
+                      placeholder: (context, url) => Container(
+                        width: imageWidth,
+                        height: imageHeight,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                       ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
+                      errorWidget: (context, url, error) => Container(
+                        width: imageWidth,
+                        height: imageHeight,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        child: const Icon(Icons.broken_image, size: 40),
+                      ),
+                    )
+                  : Container(
                       width: imageWidth,
                       height: imageHeight,
                       color: Theme.of(
                         context,
                       ).colorScheme.surfaceContainerHighest,
-                      child: const Icon(Icons.broken_image, size: 40),
+                      child: const Icon(Icons.image, size: 40),
                     ),
-                  )
-                : Container(
-                    width: imageWidth,
-                    height: imageHeight,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    child: const Icon(Icons.image, size: 40),
-                  ),
+            ),
           );
 
     final tileContent = Padding(

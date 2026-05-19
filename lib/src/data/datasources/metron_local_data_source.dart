@@ -1,3 +1,4 @@
+import 'package:hive_ce/hive_ce.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/collection_item_details_dto.dart';
 import 'package:takion/src/data/dto/collection_items_response_dto.dart';
@@ -227,7 +228,20 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _collectionItemDetailsBox = 'collection_item_details_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
+  final Map<String, Box> _openedBoxes = {};
+
   MetronLocalDataSourceImpl(this._hiveService);
+
+  Future<Box<T>> _getBox<T>(String boxName) async {
+    final cached = _openedBoxes[boxName];
+    if (cached != null && cached is Box<T>) {
+      return cached;
+    }
+
+    final box = await _hiveService.openBox<T>(boxName);
+    _openedBoxes[boxName] = box;
+    return box;
+  }
 
   String _getWeekKey(DateTime date) {
     // Standardize to Sunday start
@@ -287,10 +301,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<void> cacheCollectionStats(CollectionStatsDto stats) async {
-    final box = await _hiveService.openBox<Map>(_collectionStatsBox);
+    final box = await _getBox<Map>(_collectionStatsBox);
     await box.put('singleton', stats.toJson());
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getCollectionStatsMetaKey(),
       DateTime.now().millisecondsSinceEpoch,
@@ -299,7 +313,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<CollectionStatsDto?> getCollectionStats() async {
-    final box = await _hiveService.openBox<Map>(_collectionStatsBox);
+    final box = await _getBox<Map>(_collectionStatsBox);
     final data = box.get('singleton');
     if (data == null) return null;
     return CollectionStatsDto.fromJson(data.cast<String, dynamic>());
@@ -307,7 +321,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<DateTime?> getCollectionStatsCachedAt() async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getCollectionStatsMetaKey());
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -318,10 +332,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int page,
     CollectionItemsResponseDto response,
   ) async {
-    final box = await _hiveService.openBox<Map>(_collectionItemsBox);
+    final box = await _getBox<Map>(_collectionItemsBox);
     await box.put('p$page', response.toJson());
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getCollectionItemsMetaKey(page),
       DateTime.now().millisecondsSinceEpoch,
@@ -330,7 +344,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<CollectionItemsResponseDto?> getCollectionItemsPage(int page) async {
-    final box = await _hiveService.openBox<Map>(_collectionItemsBox);
+    final box = await _getBox<Map>(_collectionItemsBox);
     final data = box.get('p$page');
     if (data == null) return null;
     return CollectionItemsResponseDto.fromJson(data.cast<String, dynamic>());
@@ -338,7 +352,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<DateTime?> getCollectionItemsPageCachedAt(int page) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getCollectionItemsMetaKey(page));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -348,10 +362,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   Future<void> cacheCollectionItemDetails(
     CollectionItemDetailsDto details,
   ) async {
-    final box = await _hiveService.openBox<Map>(_collectionItemDetailsBox);
+    final box = await _getBox<Map>(_collectionItemDetailsBox);
     await box.put(details.id, details.toJson());
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getCollectionItemDetailsMetaKey(details.id),
       DateTime.now().millisecondsSinceEpoch,
@@ -362,7 +376,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   Future<CollectionItemDetailsDto?> getCollectionItemDetails(
     int collectionId,
   ) async {
-    final box = await _hiveService.openBox<Map>(_collectionItemDetailsBox);
+    final box = await _getBox<Map>(_collectionItemDetailsBox);
     final data = box.get(collectionId);
     if (data == null) return null;
     return CollectionItemDetailsDto.fromJson(data.cast<String, dynamic>());
@@ -370,7 +384,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<DateTime?> getCollectionItemDetailsCachedAt(int collectionId) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getCollectionItemDetailsMetaKey(collectionId));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -382,16 +396,16 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     List<IssueListDto> issues,
   ) async {
     final key = _getWeekKey(weekStart);
-    final box = await _hiveService.openBox<List>(_weeklyBox);
+    final box = await _getBox<List>(_weeklyBox);
     await box.put(key, issues);
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(_getMetaKey(key), DateTime.now().millisecondsSinceEpoch);
   }
 
   @override
   Future<List<IssueListDto>?> getWeeklyReleases(DateTime weekStart) async {
-    final box = await _hiveService.openBox<List>(_weeklyBox);
+    final box = await _getBox<List>(_weeklyBox);
     final data = box.get(_getWeekKey(weekStart));
     if (data != null) {
       return data.cast<IssueListDto>();
@@ -402,7 +416,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   @override
   Future<DateTime?> getWeeklyReleasesCachedAt(DateTime weekStart) async {
     final key = _getWeekKey(weekStart);
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getMetaKey(key));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -414,10 +428,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     List<IssueListDto> issues,
   ) async {
     final key = _getWeekKey(weekStart);
-    final box = await _hiveService.openBox<List>(_focBox);
+    final box = await _getBox<List>(_focBox);
     await box.put(key, issues);
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getFocMetaKey(key),
       DateTime.now().millisecondsSinceEpoch,
@@ -426,7 +440,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<List<IssueListDto>?> getFocReleases(DateTime weekStart) async {
-    final box = await _hiveService.openBox<List>(_focBox);
+    final box = await _getBox<List>(_focBox);
     final data = box.get(_getWeekKey(weekStart));
     if (data != null) {
       return data.cast<IssueListDto>();
@@ -437,7 +451,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   @override
   Future<DateTime?> getFocReleasesCachedAt(DateTime weekStart) async {
     final key = _getWeekKey(weekStart);
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getFocMetaKey(key));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -445,10 +459,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<void> cacheIssueDetails(IssueDetailsDto issue) async {
-    final box = await _hiveService.openBox<IssueDetailsDto>(_issueDetailsBox);
+    final box = await _getBox<IssueDetailsDto>(_issueDetailsBox);
     await box.put(issue.id, issue);
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getIssueDetailsMetaKey(issue.id),
       DateTime.now().millisecondsSinceEpoch,
@@ -457,13 +471,13 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<IssueDetailsDto?> getIssueDetails(int issueId) async {
-    final box = await _hiveService.openBox<IssueDetailsDto>(_issueDetailsBox);
+    final box = await _getBox<IssueDetailsDto>(_issueDetailsBox);
     return box.get(issueId);
   }
 
   @override
   Future<DateTime?> getIssueDetailsCachedAt(int issueId) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getIssueDetailsMetaKey(issueId));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -480,17 +494,17 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final searchKey = _getIssueSearchKey(query, page, limit);
-    final box = await _hiveService.openBox<List>(_issueSearchBox);
+    final box = await _getBox<List>(_issueSearchBox);
     await box.put(searchKey, issues);
 
-    final searchMetaBox = await _hiveService.openBox<Map>(_issueSearchMetaBox);
+    final searchMetaBox = await _getBox<Map>(_issueSearchMetaBox);
     await searchMetaBox.put(searchKey, {
       'count': count,
       'next': next,
       'previous': previous,
     });
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getIssueSearchMetaKey(query, page, limit),
       DateTime.now().millisecondsSinceEpoch,
@@ -504,7 +518,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final searchKey = _getIssueSearchKey(query, page, limit);
-    final box = await _hiveService.openBox<List>(_issueSearchBox);
+    final box = await _getBox<List>(_issueSearchBox);
     final data = box.get(searchKey);
     if (data != null) {
       return data.cast<IssueListDto>();
@@ -518,7 +532,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getIssueSearchMetaKey(query, page, limit));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -531,7 +545,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final searchKey = _getIssueSearchKey(query, page, limit);
-    final box = await _hiveService.openBox<Map>(_issueSearchMetaBox);
+    final box = await _getBox<Map>(_issueSearchMetaBox);
     final data = box.get(searchKey);
     if (data == null) return null;
 
@@ -562,17 +576,17 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    final box = await _hiveService.openBox<List>(_issueListBox);
+    final box = await _getBox<List>(_issueListBox);
     await box.put(key, issues);
 
-    final metaBox = await _hiveService.openBox<Map>(_issueListMetaBox);
+    final metaBox = await _getBox<Map>(_issueListMetaBox);
     await metaBox.put(key, {
       'count': count,
       'next': next,
       'previous': previous,
     });
 
-    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
     await cacheMetaBox.put(
       _getIssueListMetaKey(
         page: page,
@@ -597,7 +611,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    final box = await _hiveService.openBox<List>(_issueListBox);
+    final box = await _getBox<List>(_issueListBox);
     final data = box.get(key);
     if (data != null) {
       return data.cast<IssueListDto>();
@@ -612,7 +626,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
     int? limit,
   }) async {
-    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = cacheMetaBox.get(
       _getIssueListMetaKey(
         page: page,
@@ -638,7 +652,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    final box = await _hiveService.openBox<Map>(_issueListMetaBox);
+    final box = await _getBox<Map>(_issueListMetaBox);
     final data = box.get(key);
     if (data == null) return null;
 
@@ -663,17 +677,17 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final searchKey = _getSeriesSearchKey(query, page, limit);
-    final box = await _hiveService.openBox<List>(_seriesSearchBox);
+    final box = await _getBox<List>(_seriesSearchBox);
     await box.put(searchKey, series.map((entry) => entry.toJson()).toList());
 
-    final searchMetaBox = await _hiveService.openBox<Map>(_seriesSearchMetaBox);
+    final searchMetaBox = await _getBox<Map>(_seriesSearchMetaBox);
     await searchMetaBox.put(searchKey, {
       'count': count,
       'next': next,
       'previous': previous,
     });
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getSeriesSearchMetaKey(query, page, limit),
       DateTime.now().millisecondsSinceEpoch,
@@ -687,7 +701,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final searchKey = _getSeriesSearchKey(query, page, limit);
-    final box = await _hiveService.openBox<List>(_seriesSearchBox);
+    final box = await _getBox<List>(_seriesSearchBox);
     final rawData = box.get(searchKey);
     if (rawData != null) {
       return rawData
@@ -705,7 +719,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getSeriesSearchMetaKey(query, page, limit));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -718,7 +732,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final searchKey = _getSeriesSearchKey(query, page, limit);
-    final box = await _hiveService.openBox<Map>(_seriesSearchMetaBox);
+    final box = await _getBox<Map>(_seriesSearchMetaBox);
     final data = box.get(searchKey);
     if (data == null) return null;
 
@@ -742,17 +756,17 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getSeriesListKey(page, limit);
-    final box = await _hiveService.openBox<List>(_seriesListBox);
+    final box = await _getBox<List>(_seriesListBox);
     await box.put(key, series.map((entry) => entry.toJson()).toList());
 
-    final metaBox = await _hiveService.openBox<Map>(_seriesListMetaBox);
+    final metaBox = await _getBox<Map>(_seriesListMetaBox);
     await metaBox.put(key, {
       'count': count,
       'next': next,
       'previous': previous,
     });
 
-    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
     await cacheMetaBox.put(
       _getSeriesListMetaKey(page, limit),
       DateTime.now().millisecondsSinceEpoch,
@@ -765,7 +779,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesListKey(page, limit);
-    final box = await _hiveService.openBox<List>(_seriesListBox);
+    final box = await _getBox<List>(_seriesListBox);
     final rawData = box.get(key);
     if (rawData != null) {
       return rawData
@@ -782,7 +796,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = cacheMetaBox.get(_getSeriesListMetaKey(page, limit));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -794,7 +808,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesListKey(page, limit);
-    final box = await _hiveService.openBox<Map>(_seriesListMetaBox);
+    final box = await _getBox<Map>(_seriesListMetaBox);
     final data = box.get(key);
     if (data == null) return null;
 
@@ -810,10 +824,10 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<void> cacheSeriesDetails(SeriesDetailsDto details) async {
-    final box = await _hiveService.openBox<Map>(_seriesDetailsBox);
+    final box = await _getBox<Map>(_seriesDetailsBox);
     await box.put(details.id, details.toJson());
 
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     await metaBox.put(
       _getSeriesDetailsMetaKey(details.id),
       DateTime.now().millisecondsSinceEpoch,
@@ -822,7 +836,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<SeriesDetailsDto?> getSeriesDetails(int seriesId) async {
-    final box = await _hiveService.openBox<Map>(_seriesDetailsBox);
+    final box = await _getBox<Map>(_seriesDetailsBox);
     final data = box.get(seriesId);
     if (data == null) return null;
     return SeriesDetailsDto.fromJson(data.cast<String, dynamic>());
@@ -830,7 +844,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   @override
   Future<DateTime?> getSeriesDetailsCachedAt(int seriesId) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getSeriesDetailsMetaKey(seriesId));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
@@ -847,17 +861,17 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getSeriesIssueListKey(seriesId, page, limit);
-    final box = await _hiveService.openBox<List>(_seriesIssueListBox);
+    final box = await _getBox<List>(_seriesIssueListBox);
     await box.put(key, issues);
 
-    final metaBox = await _hiveService.openBox<Map>(_seriesIssueListMetaBox);
+    final metaBox = await _getBox<Map>(_seriesIssueListMetaBox);
     await metaBox.put(key, {
       'count': count,
       'next': next,
       'previous': previous,
     });
 
-    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
     await cacheMetaBox.put(
       _getSeriesIssueListMetaKey(seriesId, page, limit),
       DateTime.now().millisecondsSinceEpoch,
@@ -871,7 +885,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesIssueListKey(seriesId, page, limit);
-    final box = await _hiveService.openBox<List>(_seriesIssueListBox);
+    final box = await _getBox<List>(_seriesIssueListBox);
     final data = box.get(key);
     if (data != null) {
       return data.cast<IssueListDto>();
@@ -885,7 +899,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final cacheMetaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = cacheMetaBox.get(
       _getSeriesIssueListMetaKey(seriesId, page, limit),
     );
@@ -900,7 +914,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesIssueListKey(seriesId, page, limit);
-    final box = await _hiveService.openBox<Map>(_seriesIssueListMetaBox);
+    final box = await _getBox<Map>(_seriesIssueListMetaBox);
     final data = box.get(key);
     if (data == null) return null;
 
@@ -914,3 +928,4 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     );
   }
 }
+

@@ -615,13 +615,18 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
     required String heroTag,
     required bool isInPullList,
   }) {
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     return Stack(
       fit: StackFit.expand,
       children: [
         if (imageUrl != null)
           ImageFiltered(
             imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              memCacheWidth: (MediaQuery.of(context).size.width / 4 * devicePixelRatio).round(),
+            ),
           )
         else
           ColoredBox(color: colorScheme.surfaceContainerHighest),
@@ -726,6 +731,7 @@ class _IssueDetailsBodyState extends ConsumerState<_IssueDetailsBody> {
                                     width: coverWidth,
                                     height: coverHeight,
                                     fit: BoxFit.cover,
+                                    memCacheWidth: (coverWidth * devicePixelRatio).round(),
                                   ),
                                 )
                               : Container(
@@ -1262,6 +1268,7 @@ class _IssueDetailsLoading extends StatelessWidget {
                       child: CachedNetworkImage(
                         imageUrl: imageUrl!,
                         fit: BoxFit.cover,
+                        memCacheWidth: (MediaQuery.of(context).size.width / 4 * MediaQuery.of(context).devicePixelRatio).round(),
                       ),
                     )
                   else
@@ -1323,6 +1330,7 @@ class _IssueDetailsLoading extends StatelessWidget {
                                         width: coverWidth,
                                         height: coverHeight,
                                         fit: BoxFit.cover,
+                                        memCacheWidth: (coverWidth * MediaQuery.of(context).devicePixelRatio).round(),
                                       )
                                     : Container(
                                         width: coverWidth,

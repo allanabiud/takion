@@ -19,7 +19,7 @@ final readingListItemEffectiveReadStatusProvider = Provider.autoDispose
             return AsyncValue.data(status?.isRead ?? false);
           },
           loading: () => AsyncValue.data(item.isRead),
-          error: (_, __) => AsyncValue.data(item.isRead),
+          error: (error, stack) => AsyncValue.data(item.isRead),
         );
       }
     });

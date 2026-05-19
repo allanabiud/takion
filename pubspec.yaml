@@ -11,7 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.2.1
   riverpod_annotation: ^4.0.2
   dio: ^5.9.1

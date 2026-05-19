@@ -1018,12 +1018,15 @@ class _SeriesHeroFlexibleSpace extends StatelessWidget {
     final theme = Theme.of(context);
     final publisher = details.publisher?.name.trim();
     final hasPublisher = publisher != null && publisher.isNotEmpty;
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final screenWidth = MediaQuery.of(context).size.width;
     Widget imageContent() {
       return coverImageAsync.when(
         data: (imageUrl) => imageUrl != null
             ? CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: (screenWidth * devicePixelRatio).round(),
                 placeholder: (context, url) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: const Center(

@@ -43,6 +43,9 @@ class IssueCard extends ConsumerWidget {
     final showReadTickOverlay =
         ref.watch(showReadIssueTickOverlayProvider).value ?? false;
 
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final cacheWidth = (width * devicePixelRatio).round();
+
     return SizedBox(
       width: width,
       child: InkWell(
@@ -61,6 +64,7 @@ class IssueCard extends ConsumerWidget {
                     isFavorite: isFavorite,
                     isRead: isRead && showReadTickOverlay,
                     role: role,
+                    cacheWidth: cacheWidth,
                   ),
                   Padding(
                     padding: EdgeInsets.all(compact ? 4 : 6),

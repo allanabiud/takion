@@ -41,6 +41,9 @@ class SeriesCard extends ConsumerWidget {
     );
     final coverImage = coverImageAsync.asData?.value;
 
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final cacheWidth = (width * devicePixelRatio).round();
+
     return SizedBox(
       width: width,
       child: InkWell(
@@ -60,6 +63,7 @@ class SeriesCard extends ConsumerWidget {
                     isRead: isRead ?? false,
                     role: role,
                     placeholderIcon: Icons.collections_bookmark_outlined,
+                    cacheWidth: cacheWidth,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),

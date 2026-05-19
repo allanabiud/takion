@@ -45,7 +45,10 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
 
     final hiveService = ref.read(hiveServiceProvider);
     final settingsBox = await hiveService.openBox('settings_box');
-    final hasSeenOnboarding = settingsBox.get('has_seen_onboarding', defaultValue: false) == true;
+    final hasSeenOnboarding =
+        settingsBox.get('has_seen_onboarding', defaultValue: false) == true;
+
+    if (!mounted || !context.mounted) return;
 
     _didAutoRedirect = true;
     if (hasSeenOnboarding) {

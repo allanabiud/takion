@@ -78,6 +78,9 @@ class SeriesListTile extends ConsumerWidget {
     );
     final coverImage = coverImageAsync.asData?.value;
 
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final cacheWidth = (iconWidth * devicePixelRatio).round();
+
     final cover = SizedBox(
       width: iconWidth,
       height: iconHeight,
@@ -87,6 +90,7 @@ class SeriesListTile extends ConsumerWidget {
         isRead: false, // Handled below in the row
         placeholderIcon: Icons.collections_bookmark_outlined,
         aspectRatio: iconWidth / iconHeight,
+        cacheWidth: cacheWidth,
       ),
     );
 

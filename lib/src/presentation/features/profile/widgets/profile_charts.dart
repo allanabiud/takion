@@ -47,8 +47,9 @@ class ReadingTrendChart extends StatelessWidget {
                 interval: 1,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (index < 0 || index >= data.length)
+                  if (index < 0 || index >= data.length) {
                     return const SizedBox.shrink();
+                  }
                   final label = data[index].label;
                   if (label.isEmpty) return const SizedBox.shrink();
 
@@ -199,8 +200,9 @@ class PublisherDistributionChart extends StatelessWidget {
                 reservedSize: 40,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (index < 0 || index >= publishers.length)
+                  if (index < 0 || index >= publishers.length) {
                     return const SizedBox.shrink();
+                  }
                   final name = publishers[index].key;
                   // Shorten name if too long
                   final displayName = name.length > 10
