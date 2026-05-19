@@ -72,6 +72,7 @@ class ReadingListGridItem extends ConsumerWidget {
                       );
                       return SeriesCard(
                         series: series,
+                        imageUrl: metadata.image,
                         onTap: onTap,
                         width: double.infinity,
                         isRead: effectiveIsRead,
@@ -91,6 +92,7 @@ class ReadingListGridItem extends ConsumerWidget {
                         title:
                             '${metadata.series?.name ?? ''} #${metadata.number}',
                         onTap: onTap,
+                        width: double.infinity,
                         isRead: effectiveIsRead,
                         isCollected: status?.isCollected ?? false,
                         isWishlisted: status?.isWishlisted ?? false,

@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/series/providers/series_cover_p
 
 class SeriesCard extends ConsumerWidget {
   final SeriesList series;
+  final String? imageUrl;
   final VoidCallback? onTap;
   final double width;
   final bool allowRemoteCoverFetch;
@@ -18,6 +19,7 @@ class SeriesCard extends ConsumerWidget {
   const SeriesCard({
     super.key,
     required this.series,
+    this.imageUrl,
     this.onTap,
     this.width = 120,
     this.allowRemoteCoverFetch = true,
@@ -39,10 +41,11 @@ class SeriesCard extends ConsumerWidget {
         allowRemoteFetch: allowRemoteCoverFetch,
       )),
     );
-    final coverImage = coverImageAsync.asData?.value;
+    final coverImage = imageUrl ?? coverImageAsync.asData?.value;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth = (width * devicePixelRatio).round();
+    final cacheWidth =
+        width.isInfinite ? null : (width * devicePixelRatio).round();
 
     return SizedBox(
       width: width,

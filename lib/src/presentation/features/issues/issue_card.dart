@@ -44,7 +44,8 @@ class IssueCard extends ConsumerWidget {
         ref.watch(showReadIssueTickOverlayProvider).value ?? false;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth = (width * devicePixelRatio).round();
+    final cacheWidth =
+        width.isInfinite ? null : (width * devicePixelRatio).round();
 
     return SizedBox(
       width: width,
