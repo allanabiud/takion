@@ -11,7 +11,8 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
   final wishlistCount = libraryItems
       .where((item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist)
       .length;
-  final readCount = collectedItems.where((item) => item.isRead).length;
+  final readCount = libraryItems.where((item) => item.isRead).length;
+  final unreadCount = collectedItems.where((item) => !item.isRead).length;
   final unratedCount = libraryItems
       .where(
         (item) => item.isRead && (item.rating == null || item.rating! <= 0),
@@ -26,7 +27,7 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
     ),
     totalValue: '--',
     readCount: readCount,
-    unreadCount: collectedItems.length - readCount,
+    unreadCount: unreadCount,
     unratedCount: unratedCount,
     wishlistCount: wishlistCount,
     byFormat: const <CollectionStatsByFormat>[],

@@ -412,7 +412,9 @@ final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((
     libraryItems,
     (item) => _enrichLibraryItem(ref, item),
   );
-  return enriched.where((item) => item.quantity > 0).toList();
+  return enriched
+      .where((item) => item.quantity > 0 || item.isRead)
+      .toList();
 });
 
 final collectionItemsByOwnershipStatusProvider = FutureProvider.autoDispose
@@ -428,7 +430,7 @@ final collectionItemsByReadStatusProvider = FutureProvider.autoDispose
     .family<List<CollectionItem>, bool>((ref, isRead) async {
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final filtered = libraryItems
-          .where((item) => item.isRead == isRead && item.quantityOwned > 0)
+          .where((item) => item.isRead == isRead && (isRead || item.quantityOwned > 0))
           .toList();
       return Future.wait(filtered.map((item) => _enrichLibraryItem(ref, item)));
     });

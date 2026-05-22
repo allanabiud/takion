@@ -124,7 +124,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
       final owned = libraryItems
           .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
           .toList();
-      final readOwned = owned.where((item) => item.isRead).toList();
+      final allRead = libraryItems.where((item) => item.isRead).toList();
 
       final totalOwned = owned.fold<int>(
         0,
@@ -133,7 +133,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
 
       final readPercent = owned.isEmpty
           ? 0.0
-          : ((readOwned.length / owned.length) * 100).toDouble();
+          : ((allRead.length / owned.length) * 100).toDouble();
 
       final wishlistCount = libraryItems
           .where(
@@ -141,7 +141,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
           )
           .length;
 
-      final readsInPeriod = readOwned.where((item) {
+      final readsInPeriod = allRead.where((item) {
         final readAt = item.firstReadAt?.toLocal();
         if (readAt == null) return false;
         if (startDate == null) return true;
@@ -156,7 +156,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
               limit: 1000,
             )).length;
 
-      final ratings = readOwned
+      final ratings = allRead
           .map((entry) => entry.rating)
           .whereType<int>()
           .toList();
@@ -177,7 +177,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
                 .first
                 .key;
 
-      final readDates = readOwned
+      final readDates = allRead
           .map((item) => item.firstReadAt)
           .whereType<DateTime>()
           .map((date) => date.toLocal())
@@ -264,7 +264,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
       }
 
       final readDateByIssueId = {
-        for (final item in readOwned)
+        for (final item in allRead)
           if (item.firstReadAt != null) item.metronIssueId: item.firstReadAt!,
       };
       final recentlyFinished =
@@ -282,11 +282,10 @@ final profileInsightsProvider = FutureProvider.autoDispose
             });
 
       final topPublisherCounts = <String, int>{};
-      final ownedIssueIds = owned
-          .map((item) => item.metronIssueId)
-          .toSet()
+      final insightIssueIds = (owned.map((item) => item.metronIssueId).toSet()
+            ..addAll(allRead.map((item) => item.metronIssueId)))
           .toList();
-      final sampleIssueIds = ownedIssueIds.take(120).toList();
+      final sampleIssueIds = insightIssueIds.take(120).toList();
       final cachedDetails = await Future.wait(
         sampleIssueIds.map(localDataSource.getIssueDetails),
       );
