@@ -3,7 +3,7 @@ import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/discover/providers/collection_suggestions_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';

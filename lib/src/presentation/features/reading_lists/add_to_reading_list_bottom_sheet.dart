@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -129,22 +130,25 @@ class _AddToReadingListBottomSheetState
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          onChanged: (value) => setState(() => _searchQuery = value),
-          decoration: InputDecoration(
-            hintText: 'Search reading lists',
-            prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-            filled: true,
-          ),
-        ),
-        const SizedBox(height: 16),
         readingListsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => Text('Error: $err'),
           data: (lists) {
-            final filteredLists = lists
+            final contentTypeLists = lists
                 .where((list) => list.contentType == contentType)
+                .toList();
+
+            if (contentTypeLists.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: EmptyContentState(
+                  icon: Icons.list_alt_outlined,
+                  message: 'No reading lists yet.\nCreate one to get started.',
+                ),
+              );
+            }
+
+            final filteredLists = contentTypeLists
                 .where(
                   (list) => list.title.toLowerCase().contains(
                     _searchQuery.toLowerCase(),
@@ -152,71 +156,110 @@ class _AddToReadingListBottomSheetState
                 )
                 .toList();
 
-            if (filteredLists.isEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text('No matching lists found'),
+            if (_searchQuery.isNotEmpty && filteredLists.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: EmptyContentState(
+                  icon: Icons.search_off_outlined,
+                  message: 'No matching lists found',
                 ),
               );
             }
 
-            return ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4,
-              ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: filteredLists.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final list = filteredLists[index];
-                  final isSelected = _selectedListIds.contains(list.id);
-                  final alreadyExists = list.items.any(
-                    (item) => item.targetId == _normalizedTargetId,
-                  );
-
-                  return ReadingListCard(
-                    list: list,
-                    compact: true,
-                    flat: true,
-                    alreadyExists: alreadyExists,
-                    onTap: () {
-                      if (alreadyExists) {
-                        TakionAlerts.info(
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  decoration: InputDecoration(
+                    hintText: 'Search reading lists',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(
+                        color: Theme.of(
                           context,
-                          'This item is already in "${list.title}"',
-                        );
-                        return;
-                      }
-                      setState(() {
-                        if (isSelected) {
-                          _selectedListIds.remove(list.id);
-                        } else {
-                          _selectedListIds.add(list.id);
-                        }
-                      });
+                        ).colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    filled: true,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.4,
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: filteredLists.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final list = filteredLists[index];
+                      final isSelected = _selectedListIds.contains(list.id);
+                      final alreadyExists = list.items.any(
+                        (item) => item.targetId == _normalizedTargetId,
+                      );
+
+                      return ReadingListCard(
+                        list: list,
+                        compact: true,
+                        flat: true,
+                        alreadyExists: alreadyExists,
+                        onTap: () {
+                          if (alreadyExists) {
+                            TakionAlerts.info(
+                              context,
+                              'This item is already in "${list.title}"',
+                            );
+                            return;
+                          }
+                          setState(() {
+                            if (isSelected) {
+                              _selectedListIds.remove(list.id);
+                            } else {
+                              _selectedListIds.add(list.id);
+                            }
+                          });
+                        },
+                        isSelected: isSelected,
+                      );
                     },
-                    isSelected: isSelected,
-                  );
-                },
-              ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: FilledButton(
+                    onPressed:
+                        _isAdding || _selectedListIds.isEmpty ? null : _addItems,
+                    child: _isAdding
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Add'),
+                  ),
+                ),
+              ],
             );
           },
-        ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.bottomRight,
-          child: FilledButton(
-            onPressed: _isAdding || _selectedListIds.isEmpty ? null : _addItems,
-            child: _isAdding
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Add'),
-          ),
         ),
       ],
     );

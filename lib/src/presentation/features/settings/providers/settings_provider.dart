@@ -15,8 +15,8 @@ import 'package:takion/src/presentation/features/series/providers/series_details
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/features/discover/providers/collection_suggestions_provider.dart';
-import 'package:takion/src/presentation/features/discover/providers/because_you_pulled_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/because_you_pulled_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';

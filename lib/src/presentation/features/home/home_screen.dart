@@ -207,6 +207,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.only(top: 20, bottom: 20),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: InkWell(
+                onTap: () => context.pushRoute(const SearchRoute()),
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.search,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Search comics...',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             suggestionsAsync.when(
               data: (suggestions) {
                 _syncTrendingAutoScroll(suggestions.length);
@@ -489,14 +522,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _QuickActionTile(
-                      icon: Icons.search,
-                      label: 'Search',
-                      onTap: () => context.pushRoute(const SearchRoute()),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: _QuickActionTile(
                       icon: Icons.star_border,

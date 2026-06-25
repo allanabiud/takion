@@ -10,7 +10,7 @@ class MainScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final titles = ['Home', 'Releases', 'Library', 'Discover'];
+    final titles = ['Home', 'Releases', 'Library'];
     final profileAsync = ref.watch(userProfileProvider);
     final avatarUrl = profileAsync.maybeWhen(
       data: (profile) => (profile?['avatar_url'] as String?)?.trim(),
@@ -23,7 +23,6 @@ class MainScreen extends ConsumerWidget {
         HomeRoute(),
         ReleasesRoute(),
         LibraryRoute(),
-        DiscoverRoute(),
       ],
       appBarBuilder: (context, tabsRouter) => AppBar(
         leading: IconButton(
@@ -50,33 +49,38 @@ class MainScreen extends ConsumerWidget {
         ],
       ),
       bottomNavigationBuilder: (_, tabsRouter) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-          child: NavigationBar(
-            selectedIndex: tabsRouter.activeIndex,
-            onDestinationSelected: tabsRouter.setActiveIndex,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.new_releases_outlined),
-                selectedIcon: Icon(Icons.new_releases),
-                label: 'Releases',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.collections_bookmark_outlined),
-                selectedIcon: Icon(Icons.collections_bookmark),
-                label: 'Library',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.explore_outlined),
-                selectedIcon: Icon(Icons.explore),
-                label: 'Discover',
-              ),
-            ],
+        return PopScope(
+          canPop: tabsRouter.activeIndex == 0,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && tabsRouter.activeIndex != 0) {
+              tabsRouter.setActiveIndex(0);
+            }
+          },
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(25),
+            ),
+            child: NavigationBar(
+              selectedIndex: tabsRouter.activeIndex,
+              onDestinationSelected: tabsRouter.setActiveIndex,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.new_releases_outlined),
+                  selectedIcon: Icon(Icons.new_releases),
+                  label: 'Releases',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.collections_bookmark_outlined),
+                  selectedIcon: Icon(Icons.collections_bookmark),
+                  label: 'Library',
+                ),
+              ],
+            ),
           ),
         );
       },

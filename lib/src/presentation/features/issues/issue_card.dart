@@ -53,7 +53,7 @@ class IssueCard extends ConsumerWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Card(
               margin: EdgeInsets.zero,
@@ -97,6 +97,7 @@ class IssueCard extends ConsumerWidget {
             SizedBox(height: compact ? 4 : 8),
             Text(
               title,
+              textAlign: TextAlign.center,
               style: compact
                   ? theme.textTheme.labelSmall?.copyWith(
                       fontSize: 11,

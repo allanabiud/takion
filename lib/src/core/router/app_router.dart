@@ -26,7 +26,6 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: HomeRoute.page, path: 'home'),
         AutoRoute(page: ReleasesRoute.page, path: 'releases'),
         AutoRoute(page: LibraryRoute.page, path: 'library'),
-        AutoRoute(page: DiscoverRoute.page, path: 'discover'),
       ],
     ),
     AutoRoute(
@@ -54,25 +53,20 @@ class AppRouter extends RootStackRouter {
       path: '/issue-cover-gallery',
       guards: [authGuard],
     ),
+    AutoRoute(
+      page: IssueCreatorsRoute.page,
+      path: '/issue/:issueId/creators',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: IssueCharactersRoute.page,
+      path: '/issue/:issueId/characters',
+      guards: [authGuard],
+    ),
     AutoRoute(page: SearchRoute.page, path: '/search', guards: [authGuard]),
     AutoRoute(
       page: SearchResultsRoute.page,
       path: '/search/results',
-      guards: [authGuard],
-    ),
-    AutoRoute(
-      page: DiscoverBrowseRecentlyAddedRoute.page,
-      path: '/discover/browse/recently-added',
-      guards: [authGuard],
-    ),
-    AutoRoute(
-      page: DiscoverBrowseIssuesRoute.page,
-      path: '/discover/browse/issues',
-      guards: [authGuard],
-    ),
-    AutoRoute(
-      page: DiscoverBrowseSeriesRoute.page,
-      path: '/discover/browse/series',
       guards: [authGuard],
     ),
     AutoRoute(
@@ -129,6 +123,11 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: SeriesDetailsRoute.page,
       path: '/series/:seriesId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: SeriesIssuesRoute.page,
+      path: '/series/:seriesId/issues',
       guards: [authGuard],
     ),
     AutoRoute(
