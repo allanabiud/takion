@@ -40,6 +40,7 @@ class WeeklyReleasesNotifier extends _$WeeklyReleasesNotifier {
 class IssueDetailsNotifier extends _$IssueDetailsNotifier {
   @override
   Future<IssueDetails> build(int issueId) async {
+    ref.keepAlive();
     final repository = ref.watch(catalogRepositoryProvider);
     return AppPerformanceMetrics.instance.trackProvider(
       'issueDetailsProvider',

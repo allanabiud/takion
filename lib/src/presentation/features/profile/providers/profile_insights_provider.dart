@@ -90,6 +90,7 @@ int _streakDays(List<DateTime> readDates) {
 
 final profileInsightsProvider = FutureProvider.autoDispose
     .family<ProfileInsights, ProfileFilter>((ref, filter) async {
+      ref.keepAlive();
       final libraryItemsFuture = ref.watch(allLibraryItemsProvider.future);
       final collectionItemsFuture = ref.watch(
         allCollectionItemsProvider.future,

@@ -19,14 +19,16 @@ class TakionBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final viewInsets = MediaQuery.of(context).viewInsets;
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsets = mediaQuery.viewInsets;
+    final safeAreaBottom = mediaQuery.padding.bottom;
 
     return Container(
       padding: EdgeInsets.only(
         left: horizontalPadding,
         right: horizontalPadding,
         top: 12,
-        bottom: viewInsets.bottom + 12,
+        bottom: viewInsets.bottom + (viewInsets.bottom > 0 ? 12 : safeAreaBottom + 24),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

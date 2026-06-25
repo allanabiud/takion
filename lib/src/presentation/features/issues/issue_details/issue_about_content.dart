@@ -216,13 +216,47 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
             final label = issueText != null && issueText.isNotEmpty
                 ? issueText
                 : 'Issue ${reprint.id}';
-            return ActionChip(
-              label: Text(label),
-              onPressed: () {
-                context.pushRoute(
-                  IssueDetailsRoute(issueId: reprint.id),
-                );
-              },
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    context.pushRoute(
+                      IssueDetailsRoute(issueId: reprint.id),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.link,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          label,
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             );
           }).toList(),
         ),

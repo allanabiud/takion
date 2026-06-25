@@ -20,7 +20,6 @@ import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/common/tappable_link_row.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -603,8 +602,10 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 child: _SeriesInfoCard(details: details),
               ),
             ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 16),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).padding.bottom + 24,
+              ),
             ),
             ],
           ),
@@ -627,8 +628,11 @@ class _SeriesDetailsSkeleton extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
-                Center(
-                  child: SkeletonBox(width: 180, height: 270, borderRadius: 12),
+                const Center(
+                  child: Icon(
+                    Icons.image,
+                    size: 48,
+                  ),
                 ),
               ],
             ),
@@ -649,47 +653,26 @@ class _SeriesDetailsSkeleton extends StatelessWidget {
               child: CustomScrollView(
                 controller: scrollController,
                 slivers: [
-                  SliverToBoxAdapter(
+                  SliverFillRemaining(
+                    hasScrollBody: false,
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          Center(child: SkeletonBox(width: 32, height: 4, borderRadius: 2)),
-                          const SizedBox(height: 16),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: SkeletonBox(width: 200, height: 28),
-                          ),
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: SkeletonBox(width: 160, height: 18),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(flex: 3, child: SkeletonBox(height: 48)),
-                              const SizedBox(width: 8),
-                              Expanded(flex: 1, child: SkeletonBox(height: 48)),
-                              const SizedBox(width: 8),
-                              Expanded(flex: 1, child: SkeletonBox(height: 48)),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: SkeletonBox(width: 100, height: 20),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 250,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: 3,
-                              separatorBuilder: (_, _) => const SizedBox(width: 12),
-                              itemBuilder: (_, _) => const SkeletonBox(
-                                width: 160, height: 250, borderRadius: 8,
+                          Center(
+                            child: Container(
+                              width: 32,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(2),
                               ),
+                            ),
+                          ),
+                          const Expanded(
+                            child: Center(
+                              child: CircularProgressIndicator(),
                             ),
                           ),
                         ],
