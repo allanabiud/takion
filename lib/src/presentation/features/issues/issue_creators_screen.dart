@@ -4,6 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
 
+String _initials(String? name) {
+  if (name == null || name.isEmpty) return '?';
+  final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
+  final valid = parts.where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p)).toList();
+  if (valid.isEmpty) return '?';
+  if (valid.length >= 2) {
+    return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
+  }
+  return valid[0][0].toUpperCase();
+}
+
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
     'writer', 'artist', 'penciler', 'penciller', 'colorist',
@@ -86,10 +97,15 @@ class IssueCreatorsScreen extends ConsumerWidget {
                             .withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
-                        Icons.person_outline,
-                        color: theme.colorScheme.primary,
-                        size: 30,
+                      child: Center(
+                        child: Text(
+                          _initials(creator),
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),

@@ -429,9 +429,10 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -548,19 +549,22 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ),
-            if (showDescription)
+            if (showDescription) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SeriesDescriptionCard(
                     description: description!,
                     seriesId: details.id,
                   ),
                 ),
               ),
+            ],
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: HorizontalPreviewSection(
                   title: 'Issues',
                   count: totalIssueCount,
@@ -593,25 +597,30 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ),
-            if (showAssociated)
+            if (showAssociated) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SeriesAssociatedCard(
                     associated: associated,
                   ),
                 ),
               ),
-            if (details.genres.isNotEmpty)
+            ],
+            if (details.genres.isNotEmpty) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SeriesGenresCard(genres: details.genres),
                 ),
               ),
+            ],
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _SeriesInfoCard(details: details),
               ),
             ),

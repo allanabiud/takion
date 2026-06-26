@@ -9,20 +9,33 @@ import 'package:takion/src/presentation/components/person_preview_card.dart';
 
 String _currencySymbol(String? code) {
   switch (code?.toUpperCase()) {
-    case 'USD': return r'$';
-    case 'GBP': return '£';
-    case 'EUR': return '€';
-    case 'JPY': return '¥';
-    case 'CAD': return r'CA$';
-    case 'AUD': return r'A$';
-    default: return r'$';
+    case 'USD':
+      return r'$';
+    case 'GBP':
+      return '£';
+    case 'EUR':
+      return '€';
+    case 'JPY':
+      return '¥';
+    case 'CAD':
+      return r'CA$';
+    case 'AUD':
+      return r'A$';
+    default:
+      return r'$';
   }
 }
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
-    'writer', 'artist', 'penciler', 'penciller', 'colorist',
-    'letterer', 'inker', 'cover',
+    'writer',
+    'artist',
+    'penciler',
+    'penciller',
+    'colorist',
+    'letterer',
+    'inker',
+    'cover',
   ];
   for (final role in credit.roles) {
     final name = role.name.trim().toLowerCase();
@@ -66,10 +79,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: child,
-      ),
+      child: child,
     );
   }
 
@@ -189,15 +199,20 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         Wrap(
           spacing: 8,
           runSpacing: 4,
-          children: stories.map(
-            (story) => Chip(
-              label: Text(story, style: Theme.of(context).textTheme.labelSmall),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-          ).toList(),
+          children: stories
+              .map(
+                (story) => Chip(
+                  label: Text(
+                    story,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -230,10 +245,14 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               constraints: BoxConstraints(maxWidth: chipWidth),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.25),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -242,12 +261,13 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: () {
-                      context.pushRoute(
-                        IssueDetailsRoute(issueId: reprint.id),
-                      );
+                      context.pushRoute(IssueDetailsRoute(issueId: reprint.id));
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -262,10 +282,13 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
                               label,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                           ),
                         ],
@@ -290,9 +313,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     return HorizontalPreviewSection(
       title: 'Creators',
-      onViewAll: () => context.pushRoute(
-        IssueCreatorsRoute(issueId: widget.issueId),
-      ),
+      onViewAll: () =>
+          context.pushRoute(IssueCreatorsRoute(issueId: widget.issueId)),
       itemCount: credits.length,
       height: 160,
       separatorWidth: 0,
@@ -323,9 +345,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     return HorizontalPreviewSection(
       title: 'Characters',
-      onViewAll: () => context.pushRoute(
-        IssueCharactersRoute(issueId: widget.issueId),
-      ),
+      onViewAll: () =>
+          context.pushRoute(IssueCharactersRoute(issueId: widget.issueId)),
       itemCount: characters.length,
       height: 160,
       separatorWidth: 0,
@@ -335,7 +356,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           name: character.name.trim().isNotEmpty
               ? character.name.trim()
               : 'Unknown Character',
-          placeholderIcon: Icons.people_outline,
           width: 95,
         );
       },
@@ -348,7 +368,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final distributorSku = widget.issue.sku?.trim();
     final upc = widget.issue.upc?.trim();
     final isbn = widget.issue.isbn?.trim();
-    final upcIsbn = (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
+    final upcIsbn =
+        (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
         ? '$upc / $isbn'
         : (upc != null && upc.isNotEmpty)
         ? upc
@@ -367,7 +388,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     final infoItems = <({String label, String value})>{
       if (seriesType != null) (label: 'Format', value: seriesType),
-      if (imprint != null && imprint.isNotEmpty) (label: 'Imprint', value: imprint),
+      if (imprint != null && imprint.isNotEmpty)
+        (label: 'Imprint', value: imprint),
       if (hasSku) (label: 'Distributor SKU', value: distributorSku),
       if (upcIsbn != null) (label: 'UPC / ISBN', value: upcIsbn),
       if (focDate != null) (label: 'FOC Date', value: focDate),
@@ -405,10 +427,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    item.value,
-                    style: theme.textTheme.bodyMedium,
-                  ),
+                  child: Text(item.value, style: theme.textTheme.bodyMedium),
                 ),
               ],
             ),
@@ -417,7 +436,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       ],
     );
   }
-
 
   Widget _buildIssueMetadataSection(BuildContext context) {
     final pages = widget.issue.page;
@@ -444,15 +462,12 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     if (parts.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        parts.join(' • '),
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontStyle: FontStyle.italic,
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
+    return Text(
+      parts.join(' • '),
+      style: theme.textTheme.titleSmall?.copyWith(
+        fontStyle: FontStyle.italic,
+        fontWeight: FontWeight.w600,
+        color: theme.colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -468,18 +483,20 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         Wrap(
           spacing: 8,
           runSpacing: 4,
-          children: genres.map(
-            (genre) => Chip(
-              label: Text(
-                genre.name,
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-          ).toList(),
+          children: genres
+              .map(
+                (genre) => Chip(
+                  label: Text(
+                    genre.name,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -492,13 +509,34 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final hasReprints = widget.issue.reprints.any((reprint) => reprint.id > 0);
     final hasCreators = widget.issue.credits.isNotEmpty;
     final hasCharacters = widget.issue.characters.isNotEmpty;
-    final hasGenres =
-        widget.issue.series?.genres.isNotEmpty ?? false;
+    final hasGenres = widget.issue.series?.genres.isNotEmpty ?? false;
+
+    final seriesType = widget.issue.series?.seriesType?.name;
+    final hasMetadata =
+        seriesType != null ||
+        widget.issue.page != null ||
+        (widget.issue.price?.trim().isNotEmpty ?? false) ||
+        (widget.issue.rating?.name.trim().isNotEmpty ?? false);
+
+    final sku = widget.issue.sku?.trim();
+    final upc = widget.issue.upc?.trim();
+    final isbn = widget.issue.isbn?.trim();
+    final imprint = widget.issue.imprint?.name.trim();
+    final hasAdditionalInfo =
+        (sku != null && sku.isNotEmpty) ||
+        (upc != null && upc.isNotEmpty) ||
+        (isbn != null && isbn.isNotEmpty) ||
+        (imprint != null && imprint.isNotEmpty) ||
+        widget.issue.focDate != null ||
+        widget.issue.coverDate != null ||
+        widget.issue.storeDate != null ||
+        widget.issue.cvId != null ||
+        widget.issue.gcdId != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (hasDescription)
+        if (hasDescription) ...[
           _buildSectionCard(
             context,
             _buildDescriptionSection(context),
@@ -508,26 +546,39 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               });
             },
           ),
-        _buildIssueMetadataSection(context),
-        if (hasStories)
-          _buildSectionCard(context, _buildStoriesSection(context)),
-        if (hasCreators)
-          _buildSectionCard(context, _buildCreatorsSection(context)),
-        if (hasCharacters)
-          _buildSectionCard(context, _buildCharactersSection(context)),
-        if (hasReprints)
-          _buildSectionCard(context, _buildReprintsSection(context)),
-        if (hasDescription ||
-            hasStories ||
-            hasCreators ||
-            hasCharacters ||
-            hasReprints)
           const SizedBox(height: 12),
-        if (hasGenres)
+        ],
+        if (hasMetadata) ...[
+          _buildIssueMetadataSection(context),
+          const SizedBox(height: 12),
+        ],
+        if (hasStories) ...[
+          _buildSectionCard(context, _buildStoriesSection(context)),
+          const SizedBox(height: 12),
+        ],
+        if (hasCreators) ...[
+          _buildSectionCard(context, _buildCreatorsSection(context)),
+          const SizedBox(height: 12),
+        ],
+        if (hasCharacters) ...[
+          _buildSectionCard(context, _buildCharactersSection(context)),
+          const SizedBox(height: 12),
+        ],
+        if (hasReprints) ...[
+          _buildSectionCard(context, _buildReprintsSection(context)),
+          const SizedBox(height: 12),
+        ],
+        if (hasGenres) ...[
           _buildSectionCard(context, _buildGenresSection(context)),
-        const SizedBox(height: 12),
-        _buildSectionCard(context, _buildAdditionalInformationSection(context)),
-        const SizedBox(height: 12),
+          const SizedBox(height: 12),
+        ],
+        if (hasAdditionalInfo) ...[
+          _buildSectionCard(
+            context,
+            _buildAdditionalInformationSection(context),
+          ),
+          const SizedBox(height: 12),
+        ],
         Text(
           'Last modified: ${_formatModified(widget.issue.modified)}',
           style: Theme.of(

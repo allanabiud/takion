@@ -197,11 +197,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           _goToPage(_currentPage - 1);
         }
       },
-      child: Scaffold(
-        body: Stack(
-          children: [
-            const FloatingIconsBackground(),
-            PageView(
+      child: Stack(
+        children: [
+          const FloatingIconsBackground(),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            body: PageView(
               physics: const NeverScrollableScrollPhysics(),
               controller: _pageController,
               onPageChanged: (page) => setState(() => _currentPage = page),
@@ -212,8 +213,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 _buildAllDonePage(theme),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -314,13 +315,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Hero(
-                      tag: 'metron-atom-icon',
-                      child: Icon(
-                        LucideIcons.atom,
-                        size: 100,
-                        color: theme.colorScheme.primary,
-                      ),
+                    Icon(
+                      LucideIcons.atom,
+                      size: 100,
+                      color: theme.colorScheme.primary,
                     ),
                     const SizedBox(height: 32),
                     Text(
@@ -365,7 +363,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -375,13 +373,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   Center(
                     child: Column(
                       children: [
-                        Hero(
-                          tag: 'metron-atom-icon',
-                          child: Icon(
-                            LucideIcons.atom,
-                            size: 48,
-                            color: theme.colorScheme.primary,
-                          ),
+                        Icon(
+                          LucideIcons.atom,
+                          size: 48,
+                          color: theme.colorScheme.primary,
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -553,3 +548,4 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 }
+
