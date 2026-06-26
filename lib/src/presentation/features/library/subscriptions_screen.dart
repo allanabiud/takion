@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/series_list_page.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
@@ -148,9 +147,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
             allowRemoteCoverFetch: index < _coverFetchLimit,
             isFirst: index == 0,
             isLast: index == sortedResults.length - 1,
-            onTap: () {
-              context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
-            },
           ),
         );
       },

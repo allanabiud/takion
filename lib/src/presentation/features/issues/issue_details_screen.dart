@@ -177,12 +177,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     final dateStr = storeDate != null
         ? DateFormat.yMMMd().format(storeDate.toLocal())
         : null;
-    final issueType = issue.series?.seriesType?.name.trim();
 
     final parts = <String>[
       ?publisher,
       ?dateStr,
-      if (issueType != null && issueType.isNotEmpty) issueType,
     ];
 
     if (parts.isNotEmpty) return parts.join(' • ');
@@ -715,7 +713,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     if (issue == null) {
       return Scaffold(
         body: issueAsync.when(
-          loading: () => _IssueDetailsSkeleton(),
+          loading: () => _IssueDetailsSkeleton(imageUrl: widget.initialImageUrl),
           error: (error, stack) => Scaffold(
             appBar: AppBar(),
             body: AsyncStatePanel.error(
@@ -1245,6 +1243,10 @@ class _IssueDetailsSheet extends StatelessWidget {
 }
 
 class _IssueDetailsSkeleton extends StatelessWidget {
+  const _IssueDetailsSkeleton({this.imageUrl});
+
+  final String? imageUrl;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1256,7 +1258,35 @@ class _IssueDetailsSkeleton extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
+                if (imageUrl != null && imageUrl!.isNotEmpty)
+                  ImageFiltered(
+                    imageFilter: ImageFilter.blur(
+                      sigmaX: 8,
+                      sigmaY: 8,
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl!,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  ColoredBox(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        theme.colorScheme.surface.withValues(alpha: 0.75),
+                        Colors.transparent,
+                        theme.colorScheme.surface.withValues(alpha: 0.75),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
                 Center(
                   child: Container(
                     width: 180,
@@ -1265,9 +1295,18 @@ class _IssueDetailsSkeleton extends StatelessWidget {
                       color: theme.colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.image,
-                      size: 48,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: imageUrl != null && imageUrl!.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: imageUrl!,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => const Icon(
+                                Icons.image,
+                                size: 48,
+                              ),
+                            )
+                          : const Icon(Icons.image, size: 48),
                     ),
                   ),
                 ),

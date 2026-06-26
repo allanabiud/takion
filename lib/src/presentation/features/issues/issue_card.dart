@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/components/status_indicator_icons.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 class IssueCard extends ConsumerWidget {
@@ -12,10 +14,10 @@ class IssueCard extends ConsumerWidget {
   final String title;
   final VoidCallback? onTap;
   final double width;
-  final bool isCollected;
-  final bool isWishlisted;
-  final bool isRead;
-  final bool isPulled;
+  final bool? isCollected;
+  final bool? isWishlisted;
+  final bool? isRead;
+  final bool? isPulled;
   final ItemRole? role;
   final bool compact;
 
@@ -26,10 +28,10 @@ class IssueCard extends ConsumerWidget {
     required this.title,
     this.onTap,
     this.width = 120,
-    this.isCollected = false,
-    this.isWishlisted = false,
-    this.isRead = false,
-    this.isPulled = false,
+    this.isCollected,
+    this.isWishlisted,
+    this.isRead,
+    this.isPulled,
     this.role,
     this.compact = false,
   });
@@ -42,6 +44,21 @@ class IssueCard extends ConsumerWidget {
         ref.watch(isIssueFavoriteProvider(issueId!)).asData?.value == true;
     final showReadTickOverlay =
         ref.watch(showReadIssueTickOverlayProvider).value ?? false;
+    final id = issueId;
+    final providerStatus = id == null
+        ? null
+        : ref.watch(issueCollectionStatusProvider(id));
+    final pullEntryAsync = id == null
+        ? null
+        : ref.watch(issuePullListEntryProvider(id));
+
+    final effectiveIsCollected =
+        isCollected ?? providerStatus?.isCollected ?? false;
+    final effectiveIsWishlisted =
+        isWishlisted ?? providerStatus?.isWishlisted ?? false;
+    final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
+    final effectiveIsPulled =
+        isPulled ?? pullEntryAsync?.asData?.value != null;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth =
@@ -60,10 +77,10 @@ class IssueCard extends ConsumerWidget {
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                  EntityCover(
+                    EntityCover(
                     imageUrl: imageUrl,
                     isFavorite: isFavorite,
-                    isRead: isRead && showReadTickOverlay,
+                    isRead: effectiveIsRead && showReadTickOverlay,
                     role: role,
                     cacheWidth: cacheWidth,
                   ),
@@ -74,19 +91,19 @@ class IssueCard extends ConsumerWidget {
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: StatusIndicatorIcons(
-                              isCollected: isCollected,
-                              isRead: isRead,
-                              isPulled: isPulled,
-                              isWishlisted: isWishlisted,
+                              isCollected: effectiveIsCollected,
+                              isRead: effectiveIsRead,
+                              isPulled: effectiveIsPulled,
+                              isWishlisted: effectiveIsWishlisted,
                               iconSize: 14,
                               spacing: 4,
                             ),
                           )
                         : StatusIndicatorIcons(
-                            isCollected: isCollected,
-                            isRead: isRead,
-                            isPulled: isPulled,
-                            isWishlisted: isWishlisted,
+                            isCollected: effectiveIsCollected,
+                            isRead: effectiveIsRead,
+                            isPulled: effectiveIsPulled,
+                            isWishlisted: effectiveIsWishlisted,
                             iconSize: 16,
                             spacing: 8,
                           ),

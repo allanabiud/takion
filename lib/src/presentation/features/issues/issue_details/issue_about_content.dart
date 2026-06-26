@@ -7,6 +7,18 @@ import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/person_preview_card.dart';
 
+String _currencySymbol(String? code) {
+  switch (code?.toUpperCase()) {
+    case 'USD': return r'$';
+    case 'GBP': return '£';
+    case 'EUR': return '€';
+    case 'JPY': return '¥';
+    case 'CAD': return r'CA$';
+    case 'AUD': return r'A$';
+    default: return r'$';
+  }
+}
+
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
     'writer', 'artist', 'penciler', 'penciller', 'colorist',
@@ -64,90 +76,87 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   Widget _buildDescriptionSection(BuildContext context) {
     final rawDescription = widget.issue.description?.trim();
     final hasDescription = rawDescription != null && rawDescription.isNotEmpty;
-    final sectionTitleStyle = _sectionTitleStyle(context);
 
     if (!hasDescription) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Description', style: sectionTitleStyle),
-          const SizedBox(height: 6),
-          Text(
-            'No description available.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+      return Text(
+        'No description available.',
+        style: Theme.of(context).textTheme.bodyMedium,
       );
     }
 
     final description = rawDescription;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Description', style: sectionTitleStyle),
-        const SizedBox(height: 6),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final fullPainter = TextPainter(
-              text: TextSpan(text: description, style: textStyle),
-              maxLines: null,
-              textDirection: Directionality.of(context),
-            )..layout(maxWidth: constraints.maxWidth);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fullPainter = TextPainter(
+          text: TextSpan(text: description, style: textStyle),
+          textDirection: Directionality.of(context),
+        )..layout(maxWidth: constraints.maxWidth);
 
-            final clippedPainter = TextPainter(
-              text: TextSpan(text: description, style: textStyle),
-              maxLines: _descriptionMaxLines,
-              textDirection: Directionality.of(context),
-            )..layout(maxWidth: constraints.maxWidth);
+        final collapsedPainter = TextPainter(
+          text: TextSpan(text: description, style: textStyle),
+          maxLines: _descriptionMaxLines,
+          textDirection: Directionality.of(context),
+        )..layout(maxWidth: constraints.maxWidth);
 
-            final isOverflowing = clippedPainter.didExceedMaxLines;
-            final fullHeight = fullPainter.size.height;
-            final clippedHeight = clippedPainter.size.height;
+        final isOverflowing = collapsedPainter.didExceedMaxLines;
+        final collapsedHeight = isOverflowing
+            ? collapsedPainter.height
+            : fullPainter.height;
+        final heightFactor = fullPainter.height > 0
+            ? collapsedHeight / fullPainter.height
+            : 1.0;
 
-            if (!isOverflowing) {
-              return Text(description, style: textStyle);
-            }
-
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRect(
-                  child: AnimatedAlign(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                    alignment: Alignment.topCenter,
-                    heightFactor: _isDescriptionExpanded
-                        ? 1.0
-                        : clippedHeight / fullHeight,
-                    child: Text(
-                      description,
-                      style: textStyle,
-                    ),
-                  ),
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRect(
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  heightFactor: _isDescriptionExpanded ? 1.0 : heightFactor,
+                  child: Text(description, style: textStyle),
                 ),
-                const SizedBox(height: 8),
+              ),
+              if (isOverflowing) ...[
+                const SizedBox(height: 4),
                 GestureDetector(
                   onTap: () => setState(() {
                     _isDescriptionExpanded = !_isDescriptionExpanded;
                   }),
-                  child: Text(
-                    _isDescriptionExpanded
-                        ? 'Tap to read less'
-                        : 'Tap to read more',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        alignment: Alignment.topLeft,
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      _isDescriptionExpanded
+                          ? 'Tap to read less'
+                          : 'Tap to read more',
+                      key: ValueKey(_isDescriptionExpanded),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ],
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -216,43 +225,51 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
             final label = issueText != null && issueText.isNotEmpty
                 ? issueText
                 : 'Issue ${reprint.id}';
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                  width: 1,
-                ),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
+            final chipWidth = MediaQuery.of(context).size.width - 48;
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: chipWidth),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () {
-                    context.pushRoute(
-                      IssueDetailsRoute(issueId: reprint.id),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.link,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          label,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      context.pushRoute(
+                        IssueDetailsRoute(issueId: reprint.id),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.link,
+                            size: 14,
                             color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -328,14 +345,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   Widget _buildAdditionalInformationSection(BuildContext context) {
     final theme = Theme.of(context);
     final seriesType = widget.issue.series?.seriesType?.name;
-    final pages = widget.issue.page;
-    final priceValue = widget.issue.price?.trim();
-    final currency = widget.issue.priceCurrency?.trim();
-    final price = (priceValue != null && priceValue.isNotEmpty)
-        ? (currency != null && currency.isNotEmpty
-              ? '$priceValue $currency'
-              : priceValue)
-        : null;
     final distributorSku = widget.issue.sku?.trim();
     final upc = widget.issue.upc?.trim();
     final isbn = widget.issue.isbn?.trim();
@@ -347,8 +356,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         ? isbn
         : null;
     final imprint = widget.issue.imprint?.name.trim();
-    final rating = widget.issue.rating?.name.trim();
-    final hasRating = rating != null && rating.isNotEmpty;
     final hasSku = distributorSku != null && distributorSku.isNotEmpty;
 
     String? formatDate(DateTime? date) =>
@@ -360,10 +367,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     final infoItems = <({String label, String value})>{
       if (seriesType != null) (label: 'Format', value: seriesType),
-      if (pages != null) (label: 'Pages', value: '$pages'),
-      if (price != null) (label: 'Price', value: price),
       if (imprint != null && imprint.isNotEmpty) (label: 'Imprint', value: imprint),
-      if (hasRating) (label: 'Rating', value: rating),
       if (hasSku) (label: 'Distributor SKU', value: distributorSku),
       if (upcIsbn != null) (label: 'UPC / ISBN', value: upcIsbn),
       if (focDate != null) (label: 'FOC Date', value: focDate),
@@ -414,6 +418,44 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     );
   }
 
+
+  Widget _buildIssueMetadataSection(BuildContext context) {
+    final pages = widget.issue.page;
+    final priceValue = widget.issue.price?.trim();
+    final currency = widget.issue.priceCurrency?.trim();
+    final rating = widget.issue.rating?.name.trim();
+    final seriesType = widget.issue.series?.seriesType?.name;
+
+    final parts = <String>[];
+    if (seriesType != null) {
+      parts.add(seriesType);
+    }
+    if (pages != null) {
+      parts.add('$pages pages');
+    }
+    if (priceValue != null && priceValue.isNotEmpty) {
+      final symbol = _currencySymbol(currency);
+      parts.add('$symbol$priceValue');
+    }
+    if (rating != null && rating.isNotEmpty) {
+      parts.add(rating);
+    }
+
+    if (parts.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        parts.join(' • '),
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontStyle: FontStyle.italic,
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
 
   Widget _buildGenresSection(BuildContext context) {
     final genres = widget.issue.series?.genres;
@@ -466,6 +508,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               });
             },
           ),
+        _buildIssueMetadataSection(context),
         if (hasStories)
           _buildSectionCard(context, _buildStoriesSection(context)),
         if (hasCreators)

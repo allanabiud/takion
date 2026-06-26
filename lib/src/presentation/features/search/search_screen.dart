@@ -49,28 +49,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(searchStateProvider);
+    final bgColor = Theme.of(context).colorScheme.surfaceContainerHigh;
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
         titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SearchBar(
-            controller: _searchController,
+        title: TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: InputDecoration(
             hintText: 'Search comics...',
-            leading: const Icon(Icons.search, size: 24),
-            autoFocus: true,
-            onSubmitted: (_) => _submitSearch(),
-            trailing: [
-              IconButton(
-                tooltip: 'Clear',
-                onPressed: () {
-                  _searchController.clear();
-                },
-                icon: const Icon(Icons.close),
-              ),
-            ],
+            border: InputBorder.none,
+            filled: false,
+            isDense: true,
+            suffixIcon: IconButton(
+              tooltip: 'Clear',
+              onPressed: () => _searchController.clear(),
+              icon: const Icon(Icons.close, size: 24),
+            ),
           ),
+          onSubmitted: (_) => _submitSearch(),
         ),
       ),
       body: Column(

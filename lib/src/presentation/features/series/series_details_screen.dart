@@ -19,17 +19,23 @@ import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
-import 'package:takion/src/presentation/common/tappable_link_row.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
+import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
-  const SeriesDetailsScreen({super.key, @pathParam required this.seriesId});
+  const SeriesDetailsScreen({
+    super.key,
+    @pathParam required this.seriesId,
+    this.initialImageUrl,
+  });
 
   final int seriesId;
+  final String? initialImageUrl;
 
   @override
   ConsumerState<SeriesDetailsScreen> createState() =>
@@ -182,7 +188,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
 
     return detailsAsync.when(
-      loading: () => _SeriesDetailsSkeleton(),
+      loading: () => _SeriesDetailsSkeleton(imageUrl: widget.initialImageUrl),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: AsyncStatePanel.error(
@@ -209,9 +215,17 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             page: 1,
           )),
         );
-        final issuesPreview =
-            issuesPreviewAsync.asData?.value.results.take(5).toList() ??
-                <IssueList>[];
+        final sortOption = ref.watch(
+          sortPreferenceForContextProvider(
+            SortPreferenceContext.seriesDetailsIssues,
+          ),
+        );
+        final issuesPreview = issuesPreviewAsync.asData != null
+            ? sortIssues(
+                issuesPreviewAsync.asData!.value.results,
+                sortOption,
+              ).take(5).toList()
+            : <IssueList>[];
         final totalIssueCount =
             issuesPreviewAsync.asData?.value.count ?? 0;
 
@@ -584,7 +598,6 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: _SeriesAssociatedCard(
-                    details: details,
                     associated: associated,
                   ),
                 ),
@@ -615,6 +628,10 @@ class _SeriesDetailsSheet extends ConsumerWidget {
 }
 
 class _SeriesDetailsSkeleton extends StatelessWidget {
+  const _SeriesDetailsSkeleton({this.imageUrl});
+
+  final String? imageUrl;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -627,13 +644,12 @@ class _SeriesDetailsSkeleton extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
-                const Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 48,
-                  ),
-                ),
+                imageUrl != null && imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
               ],
             ),
           ),
@@ -696,29 +712,6 @@ TextStyle? _sectionTitleStyle(BuildContext context) {
   );
 }
 
-Widget _buildExpansionTileNoSplash(
-  BuildContext context, {
-  Key? key,
-  required Widget title,
-  required List<Widget> children,
-}) {
-  return Theme(
-    data: Theme.of(context).copyWith(
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      hoverColor: Colors.transparent,
-      splashFactory: NoSplash.splashFactory,
-    ),
-    child: ExpansionTile(
-      key: key,
-      tilePadding: EdgeInsets.zero,
-      childrenPadding: EdgeInsets.zero,
-      title: title,
-      children: children,
-    ),
-  );
-}
-
 class _SeriesDescriptionCard extends StatefulWidget {
   const _SeriesDescriptionCard({
     required this.description,
@@ -738,125 +731,153 @@ class _SeriesDescriptionCardState extends State<_SeriesDescriptionCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Description', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 6),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final textStyle = Theme.of(context).textTheme.bodyMedium;
-            final painter = TextPainter(
-              text: TextSpan(text: widget.description, style: textStyle),
-              maxLines: _descriptionMaxLines,
-              textDirection: Directionality.of(context),
-            )..layout(maxWidth: constraints.maxWidth);
-            final isOverflowing = painter.didExceedMaxLines;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textStyle = Theme.of(context).textTheme.bodyMedium;
+        final fullPainter = TextPainter(
+          text: TextSpan(text: widget.description, style: textStyle),
+          textDirection: Directionality.of(context),
+        )..layout(maxWidth: constraints.maxWidth);
 
-            if (!isOverflowing || _isExpanded) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.description, style: textStyle),
-                  if (isOverflowing) ...[
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isExpanded = !_isExpanded;
-                        });
-                      },
-                      child: Text(
-                        'Tap to read less',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              );
-            }
+        final collapsedPainter = TextPainter(
+          text: TextSpan(text: widget.description, style: textStyle),
+          maxLines: _descriptionMaxLines,
+          textDirection: Directionality.of(context),
+        )..layout(maxWidth: constraints.maxWidth);
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.description,
-                  style: textStyle,
-                  maxLines: _descriptionMaxLines,
-                  overflow: TextOverflow.ellipsis,
+        final isOverflowing = collapsedPainter.didExceedMaxLines;
+        final collapsedHeight = isOverflowing
+            ? collapsedPainter.height
+            : fullPainter.height;
+        final heightFactor = fullPainter.height > 0
+            ? collapsedHeight / fullPainter.height
+            : 1.0;
+
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRect(
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  heightFactor: _isExpanded ? 1.0 : heightFactor,
+                  child: Text(widget.description, style: textStyle),
                 ),
-                const SizedBox(height: 8),
+              ),
+              if (isOverflowing) ...[
+                const SizedBox(height: 4),
                 GestureDetector(
                   onTap: () {
                     setState(() {
                       _isExpanded = !_isExpanded;
                     });
                   },
-                  child: Text(
-                    'Tap to read more',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        alignment: Alignment.topLeft,
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      _isExpanded
+                          ? 'Tap to read less'
+                          : 'Tap to read more',
+                      key: ValueKey(_isExpanded),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
 class _SeriesAssociatedCard extends StatelessWidget {
   const _SeriesAssociatedCard({
-    required this.details,
     required this.associated,
   });
 
-  final SeriesDetails details;
   final List<SeriesDetailsAssociated> associated;
 
   @override
   Widget build(BuildContext context) {
-    return _buildExpansionTileNoSplash(
-      context,
-      key: PageStorageKey('series-associated-${details.id}'),
-      title: Text('Associated Series', style: _sectionTitleStyle(context)),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: associated
-                .asMap()
-                .entries
-                .map(
-                  (item) => Padding(
-                    padding: EdgeInsets.only(
-                      bottom: item.key == associated.length - 1 ? 0 : 6,
-                    ),
-                    child: TappableLinkRow(
-                      label: item.value.series,
-                      isCurrent: item.value.id == details.id,
-                      onTap: item.value.id == details.id
-                          ? null
-                          : () {
-                              context.pushRoute(
-                                SeriesDetailsRoute(
-                                  seriesId: item.value.id,
-                                ),
-                              );
-                            },
+        Text('Associated Series', style: _sectionTitleStyle(context)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: associated.map((entry) {
+            final chipWidth = MediaQuery.of(context).size.width - 48;
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: chipWidth),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      context.pushRoute(
+                        SeriesDetailsRoute(seriesId: entry.id),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.link,
+                            size: 14,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              entry.series,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                )
-                .toList(),
-          ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );

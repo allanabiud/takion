@@ -64,7 +64,7 @@ class ReadingListCard extends ConsumerWidget {
                   : const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  ReadingListCover(list: list),
+                  ReadingListCover(list: list, peekOffset: 6),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(

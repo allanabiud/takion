@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/router/auth_guard.dart';
 
@@ -11,13 +12,11 @@ class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
     AutoRoute(page: OnboardingRoute.page, path: '/', initial: true),
-    AutoRoute(page: MetronInfoRoute.page, path: '/metron-info'),
     AutoRoute(
       page: AuthorizeMetronRoute.page,
       path: '/authorize-metron',
       guards: [authGuard],
     ),
-    AutoRoute(page: AllDoneRoute.page, path: '/all-done', guards: [authGuard]),
     AutoRoute(
       page: MainRoute.page,
       path: '/app',
@@ -63,7 +62,27 @@ class AppRouter extends RootStackRouter {
       path: '/issue/:issueId/characters',
       guards: [authGuard],
     ),
-    AutoRoute(page: SearchRoute.page, path: '/search', guards: [authGuard]),
+    CustomRoute(page: SearchRoute.page, path: '/search', guards: [authGuard],
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final curved = Curves.easeOut.transform(animation.value);
+            final scale = 0.3 + (curved * 0.7);
+            return Opacity(
+              opacity: curved.clamp(0.0, 1.0),
+              child: Transform(
+                alignment: Alignment(0, -0.74),
+                transform: Matrix4.diagonal3Values(scale, scale, 1.0),
+                child: child,
+              ),
+            );
+          },
+          child: child,
+        );
+      },
+      duration: const Duration(milliseconds: 350),
+    ),
     AutoRoute(
       page: SearchResultsRoute.page,
       path: '/search/results',
@@ -107,6 +126,11 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: ReadingListDetailsRoute.page,
       path: '/my-comics/reading-lists/:listId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: ReadingListEditRoute.page,
+      path: '/my-comics/reading-lists/:listId/edit',
       guards: [authGuard],
     ),
     AutoRoute(

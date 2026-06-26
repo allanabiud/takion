@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
@@ -316,13 +315,6 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                         allowRemoteCoverFetch:
                                             itemIndex < _seriesCoverFetchLimit,
                                         heroTag: 'series-cover-${series.id}',
-                                        onTap: () {
-                                          context.pushRoute(
-                                            SeriesDetailsRoute(
-                                              seriesId: series.id,
-                                            ),
-                                          );
-                                        },
                                         isFirst: itemIndex == 0,
                                         isLast:
                                             itemIndex ==

@@ -50,7 +50,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 12, top: 8),
+          padding: const EdgeInsets.only(left: 12, top: 8, right: 12),
           child: RoleBadge(role: item.role),
         ),
         item.isSeries
@@ -63,97 +63,93 @@ class ReadingListTimelineTile extends ConsumerWidget {
 
     if (isEditing) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isSelected
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
-                : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-              width: 1.5,
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: IntrinsicHeight(
-              child: Row(
-                children: [
-                  ReorderableDragStartListener(
-                    index: index - 1,
-                    child: Container(
-                      width: 36,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.3),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.drag_indicator_rounded,
-                          size: 18,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 0.95 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                      : theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    width: isSelected ? 1.5 : 1,
                   ),
-                  InkWell(
-                    onTap: onSelected,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: Checkbox(
-                          value: isSelected,
-                          onChanged: (_) => onSelected?.call(),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: onSelected,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: IgnorePointer(child: contents),
-                      ),
-                    ),
-                  ),
-                  if (onRemove != null)
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: onRemove,
+                ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      ReorderableDragStartListener(
+                        index: index - 1,
                         child: Container(
-                          width: 44,
-                          height: double.infinity,
+                          width: 36,
                           decoration: BoxDecoration(
-                            border: Border(
-                              left: BorderSide(
-                                color: theme.colorScheme.outlineVariant
-                                    .withValues(alpha: 0.3),
-                                width: 1,
-                              ),
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
+                            borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(12),
                             ),
                           ),
-                          child: Icon(
-                            Icons.delete_outline_rounded,
-                            size: 20,
-                            color: theme.colorScheme.error,
+                          child: Center(
+                            child: Icon(
+                              Icons.drag_indicator_rounded,
+                              size: 24,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: InkWell(
+                            onTap: onSelected,
+                            child: IgnorePointer(child: contents),
+                          ),
+                        ),
+                      ),
+                      if (onRemove != null)
+                        SizedBox(
+                          width: 44,
+                          child: Center(
+                            child: IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                              color: theme.colorScheme.error,
+                              onPressed: onRemove,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
+            if (isSelected)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: Checkbox(
+                    value: true,
+                    onChanged: (_) => onSelected?.call(),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+          ],
         ),
       );
     }

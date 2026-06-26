@@ -92,7 +92,7 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.libraryReadingHistory:
         return ContentSortOption.dateNewest;
       case SortPreferenceContext.seriesDetailsIssues:
-        return ContentSortOption.dateOldest;
+        return ContentSortOption.dateNewest;
       case SortPreferenceContext.releasesWeekly:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.releasesFoc:

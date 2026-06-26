@@ -10,12 +10,14 @@ class ReadingListCover extends ConsumerWidget {
   final ReadingList list;
   final double width;
   final double height;
+  final double peekOffset;
 
   const ReadingListCover({
     super.key,
     required this.list,
     this.width = 60,
     this.height = 85,
+    this.peekOffset = 14,
   });
 
   @override
@@ -27,7 +29,7 @@ class ReadingListCover extends ConsumerWidget {
     final items = list.items.take(3).toList();
 
     // Horizontal offset for the peeking side covers
-    const horizontalOffset = 14.0;
+    final horizontalOffset = peekOffset;
     // Total width including peeking areas
     final totalWidth = width + (horizontalOffset * 2);
 

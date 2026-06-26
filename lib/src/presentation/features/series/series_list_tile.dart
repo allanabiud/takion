@@ -60,11 +60,6 @@ class SeriesListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const double iconHeight = 100;
     const double iconWidth = 90;
-    final effectiveOnTap =
-        onTap ??
-        () {
-          context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
-        };
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final isFavorite =
@@ -77,6 +72,14 @@ class SeriesListTile extends ConsumerWidget {
       )),
     );
     final coverImage = coverImageAsync.asData?.value;
+    final effectiveOnTap =
+        onTap ??
+        () {
+          context.pushRoute(SeriesDetailsRoute(
+            seriesId: series.id,
+            initialImageUrl: coverImage,
+          ));
+        };
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth = (iconWidth * devicePixelRatio).round();
@@ -160,15 +163,39 @@ class SeriesListTile extends ConsumerWidget {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(
-                                isSubscribed
-                                    ? Icons.notifications_active
-                                    : Icons.notifications_none_outlined,
-                                size: 16,
-                                color: isSubscribed
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.outline,
-                              ),
+                              if (isSubscribed)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.notifications_active,
+                                        size: 12,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'SUBSCRIBED',
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Icon(
+                                  Icons.notifications_none_outlined,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
                               if (isRead == true) ...[
                                 const SizedBox(width: 8),
                                 Icon(
