@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/presentation/features/home/main_screen.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
@@ -156,24 +157,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          child: InkWell(
+            onTap: () =>
+                _openWeeklyReleasesForWeek(context, ref, weekDate),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
               ),
-              TextButton(
-                onPressed: () =>
-                    _openWeeklyReleasesForWeek(context, ref, weekDate),
-                child: const Text('More'),
-              ),
-            ],
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         issuesAsync.when(
           data: buildSectionContent,
           loading: () => const SizedBox(
@@ -204,13 +209,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 20, bottom: 20),
+        padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: InkWell(
-                onTap: () => context.pushRoute(const SearchRoute()),
+              child:               InkWell(
+                onTap: () {
+                  context
+                      .findAncestorStateOfType<MainScreenState>()
+                      ?.openSearch();
+                },
                 borderRadius: BorderRadius.circular(28),
                 child: Container(
                   height: 56,
@@ -239,7 +248,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 44,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: 5,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  return _buildActionPill(
+                    context: context,
+                    index: index,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
             suggestionsAsync.when(
               data: (suggestions) {
                 _syncTrendingAutoScroll(suggestions.length);
@@ -517,30 +542,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _QuickActionTile(
-                      icon: Icons.star_border,
-                      label: 'Rate',
-                      onTap: () =>
-                          context.pushRoute(const UnratedIssuesRoute()),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _QuickActionTile(
-                      icon: Icons.shopping_bag_outlined,
-                      label: 'Pulls',
-                      onTap: () => context.pushRoute(const MyPullsRoute()),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 20),
             continueReadingAsync.when(
               data: (items) {
                 if (items.isEmpty) return const SizedBox.shrink();
@@ -550,24 +552,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Continue Reading',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                      child: InkWell(
+                        onTap: () {
+                          context.pushRoute(const ContinueReadingRoute());
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Continue Reading',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const Icon(Icons.chevron_right),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () {
-                              context.pushRoute(const ContinueReadingRoute());
-                            },
-                            child: const Text('More'),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 250,
                       child: ListView.separated(
@@ -627,6 +633,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 250,
                       child: ListView.separated(
@@ -713,53 +720,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-}
 
-class _QuickActionTile extends StatelessWidget {
-  const _QuickActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 74,
-      child: Card(
-        elevation: 0,
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
+  Widget _buildActionPill({
+    required BuildContext context,
+    required int index,
+  }) {
+    final theme = Theme.of(context);
+    final actions = [
+      (Icons.inventory_2_outlined, 'My Comics', () => context.pushRoute(const MyComicsRoute())),
+      (Icons.shopping_bag_outlined, 'Pulls', () => context.pushRoute(const MyPullsRoute())),
+      (Icons.turned_in_not, 'Wishlist', () => context.pushRoute(const WishlistRoute())),
+      (Icons.notifications_outlined, 'Subscriptions', () => context.pushRoute(const SubscriptionsRoute())),
+      (Icons.list_alt_outlined, 'Reading Lists', () => context.pushRoute(const MyReadingListsRoute())),
+    ];
+    final action = actions[index];
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: action.$3,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(action.$1, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                action.$2,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  label,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    height: 1,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
