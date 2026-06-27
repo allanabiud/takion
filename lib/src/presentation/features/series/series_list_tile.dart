@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -18,6 +19,7 @@ class SeriesListTile extends ConsumerWidget {
   final bool showDivider;
   final bool? isRead;
   final double horizontalPadding;
+  final ItemRole? role;
 
   const SeriesListTile({
     super.key,
@@ -30,6 +32,7 @@ class SeriesListTile extends ConsumerWidget {
     this.showDivider = true,
     this.isRead,
     this.horizontalPadding = 12,
+    this.role,
   });
 
   String _formatSeriesType(String? type) {
@@ -89,8 +92,9 @@ class SeriesListTile extends ConsumerWidget {
       height: iconHeight,
       child: EntityCover(
         imageUrl: coverImage,
-        isFavorite: false, // Handled below in the row
-        isRead: false, // Handled below in the row
+        isFavorite: false,
+        isRead: false,
+        role: role,
         placeholderIcon: Icons.collections_bookmark_outlined,
         aspectRatio: iconWidth / iconHeight,
         cacheWidth: cacheWidth,
@@ -109,7 +113,7 @@ class SeriesListTile extends ConsumerWidget {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               onTap: effectiveOnTap,
               child: Padding(
                 padding: const EdgeInsets.all(8),

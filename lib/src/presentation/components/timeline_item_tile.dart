@@ -15,11 +15,13 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 class TimelineIssueTile extends ConsumerWidget {
   final ReadingListItem item;
   final double horizontalPadding;
+  final ItemRole? role;
 
   const TimelineIssueTile({
     super.key,
     required this.item,
     this.horizontalPadding = 12,
+    this.role,
   });
 
   @override
@@ -62,6 +64,7 @@ class TimelineIssueTile extends ConsumerWidget {
             isRead: effectiveIsRead,
             showDivider: false,
             horizontalPadding: horizontalPadding,
+            role: role,
           );
         }
         return const ListTile(title: Text('Loading...'));
@@ -75,11 +78,13 @@ class TimelineIssueTile extends ConsumerWidget {
 class TimelineSeriesTile extends ConsumerWidget {
   final ReadingListItem item;
   final double horizontalPadding;
+  final ItemRole? role;
 
   const TimelineSeriesTile({
     super.key,
     required this.item,
     this.horizontalPadding = 12,
+    this.role,
   });
 
   @override
@@ -112,6 +117,7 @@ class TimelineSeriesTile extends ConsumerWidget {
             showDivider: false,
             isRead: effectiveIsRead,
             horizontalPadding: horizontalPadding,
+            role: role,
           );
         }
 

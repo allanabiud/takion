@@ -31,6 +31,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
   late TextEditingController _descriptionController;
   List<ReadingListItem>? _editingItems;
   final Set<String> _selectedIds = {};
+  final Set<String> _removingIds = {};
   bool _isUpdating = false;
   bool _initialized = false;
 
@@ -86,17 +87,21 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
     );
 
     if (confirmed == true) {
+      final idsToRemove = Set<String>.from(_selectedIds);
       setState(() {
-        if (_editingItems != null) {
-          _editingItems!.removeWhere(
-            (item) => _selectedIds.contains(item.targetId),
-          );
-        }
+        _removingIds.addAll(idsToRemove);
         _selectedIds.clear();
       });
-      if (mounted) {
-        TakionAlerts.success(context, 'Items removed from list');
-      }
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _editingItems?.removeWhere(
+              (item) => idsToRemove.contains(item.targetId),
+            );
+            _removingIds.removeAll(idsToRemove);
+          });
+        }
+      });
     }
   }
 
@@ -158,13 +163,6 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
           _editingItems = updatedItems;
           _selectedIds.clear();
         });
-
-        if (mounted) {
-          TakionAlerts.success(
-            context,
-            read ? 'Marked as read' : 'Marked as unread',
-          );
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -187,7 +185,6 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
       }
       _selectedIds.clear();
     });
-    TakionAlerts.success(context, 'Role updated for selected items');
   }
 
   void _showBulkActions(BuildContext context) {
@@ -339,33 +336,47 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
                     ? () => setState(() => _selectedIds.clear())
                     : () => context.router.maybePop(),
               ),
-              title: hasSelection
-                  ? Text(
-                      '${_selectedIds.length} Selected',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSecondaryContainer,
+              title: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.5),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
+                child: hasSelection
+                    ? Text(
+                        key: const ValueKey('selected'),
+                        '${_selectedIds.length} Selected',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      )
+                    : Column(
+                        key: const ValueKey('editing'),
+                        children: [
+                          Text(
+                            'Editing List',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          Text(
+                            list.title,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer
+                                  .withValues(alpha: 0.7),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                    )
-                  : Column(
-                      children: [
-                        Text(
-                          'Editing List',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                        Text(
-                          list.title,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer
-                                .withValues(alpha: 0.7),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+              ),
               centerTitle: true,
               actions: [
                 if (hasSelection)
@@ -418,81 +429,71 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
                   ),
               ],
             ),
+            bottomNavigationBar: hasSelection
+                ? BottomAppBar(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _deleteSelected,
+                          icon: Icon(Icons.delete_outline, size: 20, color: theme.colorScheme.onErrorContainer),
+                          label: Text('Delete', style: TextStyle(color: theme.colorScheme.onErrorContainer)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: theme.colorScheme.errorContainer,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => _showBulkActions(context),
+                          icon: Icon(Icons.playlist_add_check_rounded, size: 20, color: theme.colorScheme.primary),
+                          label: Text('Bulk', style: TextStyle(color: theme.colorScheme.primary)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : null,
             floatingActionButton: AnimatedSlide(
               offset: hasSelection ? const Offset(0, 2) : Offset.zero,
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
               child: AnimatedOpacity(
-                opacity: hasSelection ? 0 : 1,
-                duration: const Duration(milliseconds: 250),
-                child: IgnorePointer(
-                  ignoring: hasSelection,
-                  child: FloatingActionButton.extended(
-                    elevation: 0,
-                    onPressed: () async {
-                      final updatedList = list.copyWith(
-                        title: _titleController.text,
-                        description: _descriptionController.text,
-                        items: _editingItems ?? list.items,
-                        updatedAt: DateTime.now(),
-                      );
-                      await ref
-                          .read(readingListsProvider.notifier)
-                          .updateList(updatedList);
-                      ref.invalidate(
-                        readingListDetailsProvider(widget.listId),
-                      );
-                      if (context.mounted) {
-                        TakionAlerts.success(context, 'Changes saved');
-                        context.router.maybePop();
-                      }
-                    },
-                    icon: const Icon(Icons.save_rounded),
-                    label: const Text('Save'),
-                  ),
+              opacity: hasSelection ? 0 : 1,
+              duration: const Duration(milliseconds: 250),
+              child: IgnorePointer(
+                ignoring: hasSelection,
+                child: FloatingActionButton.extended(
+                  elevation: 0,
+                  onPressed: () async {
+                    final updatedList = list.copyWith(
+                      title: _titleController.text,
+                      description: _descriptionController.text,
+                      items: _editingItems ?? list.items,
+                      updatedAt: DateTime.now(),
+                    );
+                    await ref
+                        .read(readingListsProvider.notifier)
+                        .updateList(updatedList);
+                    ref.invalidate(
+                      readingListDetailsProvider(widget.listId),
+                    );
+                    if (context.mounted) {
+                      TakionAlerts.success(context, 'Changes saved');
+                      context.router.maybePop();
+                    }
+                  },
+                  icon: const Icon(Icons.save_rounded),
+                  label: const Text('Save'),
                 ),
               ),
-            ),
-            bottomNavigationBar: AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
-              child: hasSelection
-                  ? BottomAppBar(
-                      height: 72,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton.icon(
-                            onPressed: _deleteSelected,
-                            icon: Icon(Icons.delete_outline, size: 20, color: theme.colorScheme.error),
-                            label: Text('Delete Selected', style: TextStyle(color: theme.colorScheme.error)),
-                            style: TextButton.styleFrom(
-                              backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          TextButton.icon(
-                            onPressed: () => _showBulkActions(context),
-                            icon: Icon(Icons.playlist_add_check_rounded, size: 20, color: theme.colorScheme.primary),
-                            label: Text('Bulk Actions', style: TextStyle(color: theme.colorScheme.primary)),
-                            style: TextButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox(height: 0),
+              ),
             ),
           ),
         );
@@ -553,11 +554,18 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
           roleColor: roleColor,
           isEditing: true,
           isSelected: isSelected,
+          isRemoving: _removingIds.contains(item.targetId),
           onSelected: () => _toggleSelection(item.targetId),
           onRemove: () {
             setState(() {
-              if (_editingItems != null) {
-                _editingItems!.removeAt(index);
+              _removingIds.add(item.targetId);
+            });
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                setState(() {
+                  _editingItems?.removeWhere((i) => i.targetId == item.targetId);
+                  _removingIds.remove(item.targetId);
+                });
               }
             });
           },

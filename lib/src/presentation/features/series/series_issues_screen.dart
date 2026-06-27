@@ -21,19 +21,19 @@ import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 
-enum _SeriesIssueBulkOperation {
+enum SeriesIssueBulkOperation {
   addToCollection,
   removeFromCollection,
   markAsRead,
   markAsUnread,
 }
 
-enum _SeriesIssueSelectionMode { predefined, range }
+enum SeriesIssueSelectionMode { predefined, range }
 
-enum _SeriesIssueSubset { all, collected, uncollected, read, unread }
+enum SeriesIssueSubset { all, collected, uncollected, read, unread }
 
-class _SeriesIssueBulkCandidate {
-  const _SeriesIssueBulkCandidate({
+class SeriesIssueBulkCandidate {
+  const SeriesIssueBulkCandidate({
     required this.issueId,
     required this.orderIndex,
     required this.issueNumber,
@@ -121,6 +121,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
             icon: const Icon(Icons.add),
             onPressed: () => _showSeriesIssueActionsSheet(
               seriesName: seriesName,
+              yearBegan: yearBegan,
             ),
             tooltip: 'Bulk actions',
           ),
@@ -268,520 +269,561 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     );
   }
 
-  Future<List<_SeriesIssueBulkCandidate>> _allSeriesIssues() async {
-    final metronRepository = ref.read(metronRepositoryProvider);
-    var page = 1;
-    var orderIndex = 1;
-    final issues = <_SeriesIssueBulkCandidate>[];
-
-    while (true) {
-      final issuePage = await metronRepository.getSeriesIssueList(
-        widget.seriesId,
-        page: page,
-      );
-      for (final issue in issuePage.results) {
-        final issueId = issue.id;
-        if (issueId != null) {
-          issues.add(
-            _SeriesIssueBulkCandidate(
-              issueId: issueId,
-              orderIndex: orderIndex,
-              issueNumber: issue.number,
-            ),
-          );
-          orderIndex++;
-        }
-      }
-      final nextPage = issuePage.nextPage;
-      if (nextPage == null) break;
-      page = nextPage;
-    }
-
-    return issues;
-  }
-
-  Future<void> _applySeriesIssueBulkAction({
-    required _SeriesIssueBulkOperation operation,
-    required _SeriesIssueSelectionMode selectionMode,
-    required List<_SeriesIssueBulkCandidate> issues,
-    _SeriesIssueSubset? subset,
-    int? startOrderIndex,
-    int? endOrderIndex,
-  }) async {
-    try {
-      final libraryRepository = ref.read(libraryRepositoryProvider);
-      var affected = 0;
-      final affectedIssueIds = <int>{};
-
-      for (final issue in issues) {
-        final issueId = issue.issueId;
-        final existing = await libraryRepository.getItemByIssueId(issueId);
-        final isCollected =
-            existing?.ownershipStatus == LibraryOwnershipStatus.owned;
-        final isRead = existing?.isRead ?? false;
-
-        final matchesSelection =
-            selectionMode == _SeriesIssueSelectionMode.range
-            ? (startOrderIndex != null &&
-                  endOrderIndex != null &&
-                  issue.orderIndex >= startOrderIndex &&
-                  issue.orderIndex <= endOrderIndex)
-            : (subset != null &&
-                  _matchesSubset(
-                    subset: subset,
-                    isCollected: isCollected,
-                    isRead: isRead,
-                  ));
-        if (!matchesSelection) continue;
-
-        if (operation == _SeriesIssueBulkOperation.addToCollection) {
-          if (isCollected) continue;
-          await libraryRepository.upsertItem(
-            metronIssueId: issueId,
-            metronSeriesId: widget.seriesId,
-            ownershipStatus: LibraryOwnershipStatus.owned,
-            isRead: existing?.isRead ?? false,
-            rating: existing?.rating,
-            purchaseDate: existing?.purchaseDate,
-            pricePaid: existing?.pricePaid,
-            quantityOwned: existing?.quantityOwned ?? 1,
-            format: existing?.format ?? LibraryItemFormat.print,
-            firstReadAt: existing?.firstReadAt,
-            conditionGrade: existing?.conditionGrade,
-            acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
-            notes: existing?.notes,
-          );
-          affected++;
-          affectedIssueIds.add(issueId);
-          continue;
-        }
-
-        if (operation == _SeriesIssueBulkOperation.removeFromCollection) {
-          if (!isCollected) continue;
-          await libraryRepository.deleteItemByIssueId(issueId);
-          affected++;
-          affectedIssueIds.add(issueId);
-          continue;
-        }
-
-        if (operation == _SeriesIssueBulkOperation.markAsRead) {
-          if (isRead) continue;
-          final now = DateTime.now().toUtc();
-          await libraryRepository.upsertItem(
-            metronIssueId: issueId,
-            metronSeriesId: widget.seriesId,
-            ownershipStatus:
-                existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
-            isRead: true,
-            rating: existing?.rating,
-            purchaseDate: existing?.purchaseDate,
-            pricePaid: existing?.pricePaid,
-            quantityOwned: existing?.quantityOwned ?? 1,
-            format: existing?.format ?? LibraryItemFormat.print,
-            firstReadAt: existing?.firstReadAt ?? now,
-            conditionGrade: existing?.conditionGrade,
-            acquiredOn: existing?.acquiredOn ?? now,
-            notes: existing?.notes,
-          );
-          await libraryRepository.addReadLog(
-            metronIssueId: issueId,
-            readAt: now,
-          );
-          affected++;
-          affectedIssueIds.add(issueId);
-          continue;
-        }
-
-        if (operation == _SeriesIssueBulkOperation.markAsUnread) {
-          if (!isRead) continue;
-          await libraryRepository.upsertItem(
-            metronIssueId: issueId,
-            metronSeriesId: widget.seriesId,
-            ownershipStatus:
-                existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
-            isRead: false,
-            rating: existing?.rating,
-            purchaseDate: existing?.purchaseDate,
-            pricePaid: existing?.pricePaid,
-            quantityOwned: existing?.quantityOwned ?? 1,
-            format: existing?.format ?? LibraryItemFormat.print,
-            firstReadAt: null,
-            conditionGrade: existing?.conditionGrade,
-            acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
-            notes: existing?.notes,
-          );
-          final logs = await libraryRepository.getReadLogsByIssueId(issueId);
-          for (final log in logs) {
-            await libraryRepository.deleteReadLogById(log.id);
-          }
-          affected++;
-          affectedIssueIds.add(issueId);
-        }
-      }
-
-      await invalidateLibraryItemsLocalCacheWithHive(
-        ref.read(hiveServiceProvider),
-      );
-      ref.invalidate(allLibraryItemsProvider);
-      await ref.read(allLibraryItemsProvider.future);
-      ref.invalidate(collectionIssueStatusMapProvider);
-      await ref.read(collectionIssueStatusMapProvider.future);
-      for (final issueId in affectedIssueIds) {
-        ref.invalidate(issueCollectionStatusProvider(issueId));
-      }
-      ref.invalidate(collectionStatsProvider);
-      invalidateLibraryCollectionProvidersForWidget(ref);
-
-      if (mounted) {
-        final actionText = switch (operation) {
-          _SeriesIssueBulkOperation.addToCollection => 'added to collection',
-          _SeriesIssueBulkOperation.removeFromCollection =>
-            'removed from collection',
-          _SeriesIssueBulkOperation.markAsRead => 'marked as read',
-          _SeriesIssueBulkOperation.markAsUnread => 'marked as unread',
-        };
-        TakionAlerts.success(context, '$affected issues $actionText.');
-        Navigator.of(context).pop();
-      }
-    } catch (error) {
-      if (mounted) {
-        TakionAlerts.error(
-          context,
-          'Failed to apply series issue action: $error',
-        );
-      }
-    }
-  }
-
-  bool _matchesSubset({
-    required _SeriesIssueSubset subset,
-    required bool isCollected,
-    required bool isRead,
-  }) {
-    switch (subset) {
-      case _SeriesIssueSubset.all:
-        return true;
-      case _SeriesIssueSubset.collected:
-        return isCollected;
-      case _SeriesIssueSubset.uncollected:
-        return !isCollected;
-      case _SeriesIssueSubset.read:
-        return isRead;
-      case _SeriesIssueSubset.unread:
-        return !isRead;
-    }
-  }
-
   Future<void> _showSeriesIssueActionsSheet({
     required String seriesName,
+    int? yearBegan,
   }) async {
-    final issues = await _allSeriesIssues();
-    if (!mounted) return;
-    if (issues.isEmpty) {
-      TakionAlerts.info(context, 'No issues found for this series yet.');
-      return;
+    return showSeriesIssueBulkActionsSheet(
+      context: context,
+      ref: ref,
+      seriesId: widget.seriesId,
+      seriesName: seriesName,
+      seriesYear: yearBegan,
+    );
+  }
+}
+
+Future<List<SeriesIssueBulkCandidate>> allSeriesIssues(
+  WidgetRef ref,
+  int seriesId,
+) async {
+  final metronRepository = ref.read(metronRepositoryProvider);
+  var page = 1;
+  var orderIndex = 1;
+  final issues = <SeriesIssueBulkCandidate>[];
+
+  while (true) {
+    final issuePage = await metronRepository.getSeriesIssueList(
+      seriesId,
+      page: page,
+    );
+    for (final issue in issuePage.results) {
+      final issueId = issue.id;
+      if (issueId != null) {
+        issues.add(
+          SeriesIssueBulkCandidate(
+            issueId: issueId,
+            orderIndex: orderIndex,
+            issueNumber: issue.number,
+          ),
+        );
+        orderIndex++;
+      }
+    }
+    final nextPage = issuePage.nextPage;
+    if (nextPage == null) break;
+    page = nextPage;
+  }
+
+  return issues;
+}
+
+bool matchesSubset({
+  required SeriesIssueSubset subset,
+  required bool isCollected,
+  required bool isRead,
+}) {
+  switch (subset) {
+    case SeriesIssueSubset.all:
+      return true;
+    case SeriesIssueSubset.collected:
+      return isCollected;
+    case SeriesIssueSubset.uncollected:
+      return !isCollected;
+    case SeriesIssueSubset.read:
+      return isRead;
+    case SeriesIssueSubset.unread:
+      return !isRead;
+  }
+}
+
+Future<void> applySeriesIssueBulkAction({
+  required BuildContext context,
+  required WidgetRef ref,
+  required int seriesId,
+  required SeriesIssueBulkOperation operation,
+  required SeriesIssueSelectionMode selectionMode,
+  required List<SeriesIssueBulkCandidate> issues,
+  SeriesIssueSubset? subset,
+  int? startOrderIndex,
+  int? endOrderIndex,
+}) async {
+  try {
+    final libraryRepository = ref.read(libraryRepositoryProvider);
+    var affected = 0;
+    final affectedIssueIds = <int>{};
+
+    for (final issue in issues) {
+      final issueId = issue.issueId;
+      final existing = await libraryRepository.getItemByIssueId(issueId);
+      final isCollected =
+          existing?.ownershipStatus == LibraryOwnershipStatus.owned;
+      final isRead = existing?.isRead ?? false;
+
+      final matchesSelection =
+          selectionMode == SeriesIssueSelectionMode.range
+          ? (startOrderIndex != null &&
+                endOrderIndex != null &&
+                issue.orderIndex >= startOrderIndex &&
+                issue.orderIndex <= endOrderIndex)
+          : (subset != null &&
+                matchesSubset(
+                  subset: subset,
+                  isCollected: isCollected,
+                  isRead: isRead,
+                ));
+      if (!matchesSelection) continue;
+
+      if (operation == SeriesIssueBulkOperation.addToCollection) {
+        if (isCollected) continue;
+        await libraryRepository.upsertItem(
+          metronIssueId: issueId,
+          metronSeriesId: seriesId,
+          ownershipStatus: LibraryOwnershipStatus.owned,
+          isRead: existing?.isRead ?? false,
+          rating: existing?.rating,
+          purchaseDate: existing?.purchaseDate,
+          pricePaid: existing?.pricePaid,
+          quantityOwned: existing?.quantityOwned ?? 1,
+          format: existing?.format ?? LibraryItemFormat.print,
+          firstReadAt: existing?.firstReadAt,
+          conditionGrade: existing?.conditionGrade,
+          acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+          notes: existing?.notes,
+        );
+        affected++;
+        affectedIssueIds.add(issueId);
+        continue;
+      }
+
+      if (operation == SeriesIssueBulkOperation.removeFromCollection) {
+        if (!isCollected) continue;
+        await libraryRepository.deleteItemByIssueId(issueId);
+        affected++;
+        affectedIssueIds.add(issueId);
+        continue;
+      }
+
+      if (operation == SeriesIssueBulkOperation.markAsRead) {
+        if (isRead) continue;
+        final now = DateTime.now().toUtc();
+        await libraryRepository.upsertItem(
+          metronIssueId: issueId,
+          metronSeriesId: seriesId,
+          ownershipStatus:
+              existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
+          isRead: true,
+          rating: existing?.rating,
+          purchaseDate: existing?.purchaseDate,
+          pricePaid: existing?.pricePaid,
+          quantityOwned: existing?.quantityOwned ?? 1,
+          format: existing?.format ?? LibraryItemFormat.print,
+          firstReadAt: existing?.firstReadAt ?? now,
+          conditionGrade: existing?.conditionGrade,
+          acquiredOn: existing?.acquiredOn ?? now,
+          notes: existing?.notes,
+        );
+        await libraryRepository.addReadLog(
+          metronIssueId: issueId,
+          readAt: now,
+        );
+        affected++;
+        affectedIssueIds.add(issueId);
+        continue;
+      }
+
+      if (operation == SeriesIssueBulkOperation.markAsUnread) {
+        if (!isRead) continue;
+        await libraryRepository.upsertItem(
+          metronIssueId: issueId,
+          metronSeriesId: seriesId,
+          ownershipStatus:
+              existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
+          isRead: false,
+          rating: existing?.rating,
+          purchaseDate: existing?.purchaseDate,
+          pricePaid: existing?.pricePaid,
+          quantityOwned: existing?.quantityOwned ?? 1,
+          format: existing?.format ?? LibraryItemFormat.print,
+          firstReadAt: null,
+          conditionGrade: existing?.conditionGrade,
+          acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+          notes: existing?.notes,
+        );
+        final logs = await libraryRepository.getReadLogsByIssueId(issueId);
+        for (final log in logs) {
+          await libraryRepository.deleteReadLogById(log.id);
+        }
+        affected++;
+        affectedIssueIds.add(issueId);
+      }
     }
 
-    final totalIssues = issues.length;
-    var selectedOperation = _SeriesIssueBulkOperation.addToCollection;
-    var selectedMode = _SeriesIssueSelectionMode.predefined;
-    var selectedSubset = _SeriesIssueSubset.uncollected;
-    var selectedRange = RangeValues(1, totalIssues.toDouble());
-    var isApplying = false;
+    await invalidateLibraryItemsLocalCacheWithHive(
+      ref.read(hiveServiceProvider),
+    );
+    ref.invalidate(allLibraryItemsProvider);
+    await ref.read(allLibraryItemsProvider.future);
+    ref.invalidate(collectionIssueStatusMapProvider);
+    await ref.read(collectionIssueStatusMapProvider.future);
+    for (final issueId in affectedIssueIds) {
+      ref.invalidate(issueCollectionStatusProvider(issueId));
+    }
+    ref.invalidate(collectionStatsProvider);
+    invalidateLibraryCollectionProvidersForWidget(ref);
 
-    TakionBottomSheet.show<void>(
-      context: context,
-      title: seriesName,
-      child: StatefulBuilder(
-        builder: (context, setModalState) {
-          String operationLabel(_SeriesIssueBulkOperation value) {
-            switch (value) {
-              case _SeriesIssueBulkOperation.addToCollection:
-                return 'Add to Collection';
-              case _SeriesIssueBulkOperation.removeFromCollection:
-                return 'Remove from Collection';
-              case _SeriesIssueBulkOperation.markAsRead:
-                return 'Mark as Read';
-              case _SeriesIssueBulkOperation.markAsUnread:
-                return 'Mark as Unread';
-            }
+    if (context.mounted) {
+      final actionText = switch (operation) {
+        SeriesIssueBulkOperation.addToCollection => 'added to collection',
+        SeriesIssueBulkOperation.removeFromCollection =>
+          'removed from collection',
+        SeriesIssueBulkOperation.markAsRead => 'marked as read',
+        SeriesIssueBulkOperation.markAsUnread => 'marked as unread',
+      };
+      TakionAlerts.success(context, '$affected issues $actionText.');
+      Navigator.of(context).pop();
+    }
+  } catch (error) {
+    if (context.mounted) {
+      TakionAlerts.error(
+        context,
+        'Failed to apply series issue action: $error',
+      );
+    }
+  }
+}
+
+Future<void> showSeriesIssueBulkActionsSheet({
+  required BuildContext context,
+  required WidgetRef ref,
+  required int seriesId,
+  required String seriesName,
+  int? seriesYear,
+}) async {
+  var totalIssues = 0;
+  var isLoading = true;
+  var hasStarted = false;
+  List<SeriesIssueBulkCandidate> issues = [];
+  var selectedOperation = SeriesIssueBulkOperation.addToCollection;
+  var selectedMode = SeriesIssueSelectionMode.predefined;
+  var selectedSubset = SeriesIssueSubset.uncollected;
+  var selectedRange = const RangeValues(1, 1);
+  var isApplying = false;
+
+  TakionBottomSheet.show<void>(
+    context: context,
+    title: seriesYear != null ? '$seriesName ($seriesYear)' : seriesName,
+    child: StatefulBuilder(
+      builder: (context, setModalState) {
+        if (isLoading) {
+          if (!hasStarted) {
+            hasStarted = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              final fetched = await allSeriesIssues(ref, seriesId);
+              if (!context.mounted) return;
+              if (fetched.isEmpty) {
+                Navigator.of(context).pop();
+                TakionAlerts.info(context, 'No issues found for this series yet.');
+                return;
+              }
+              setModalState(() {
+                issues = fetched;
+                totalIssues = fetched.length;
+                selectedRange = RangeValues(1, totalIssues.toDouble());
+                isLoading = false;
+              });
+            });
           }
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
-          String selectionModeLabel(_SeriesIssueSelectionMode value) {
-            switch (value) {
-              case _SeriesIssueSelectionMode.predefined:
-                return 'Filters';
-              case _SeriesIssueSelectionMode.range:
-                return 'Issue range';
-            }
+        String operationLabel(SeriesIssueBulkOperation value) {
+          switch (value) {
+            case SeriesIssueBulkOperation.addToCollection:
+              return 'Add to Collection';
+            case SeriesIssueBulkOperation.removeFromCollection:
+              return 'Remove from Collection';
+            case SeriesIssueBulkOperation.markAsRead:
+              return 'Mark as Read';
+            case SeriesIssueBulkOperation.markAsUnread:
+              return 'Mark as Unread';
           }
+        }
 
-          String subsetLabel(_SeriesIssueSubset value) {
-            switch (value) {
-              case _SeriesIssueSubset.all:
-                return 'All issues';
-              case _SeriesIssueSubset.collected:
-                return 'Collected issues';
-              case _SeriesIssueSubset.uncollected:
-                return 'Uncollected issues';
-              case _SeriesIssueSubset.read:
-                return 'Read issues';
-              case _SeriesIssueSubset.unread:
-                return 'Unread issues';
-            }
+        String selectionModeLabel(SeriesIssueSelectionMode value) {
+          switch (value) {
+            case SeriesIssueSelectionMode.predefined:
+              return 'Filters';
+            case SeriesIssueSelectionMode.range:
+              return 'Issue range';
           }
+        }
 
-          List<_SeriesIssueSubset> applicableSubsets(
-            _SeriesIssueBulkOperation operation,
-          ) {
-            switch (operation) {
-              case _SeriesIssueBulkOperation.addToCollection:
-                return const [
-                  _SeriesIssueSubset.all,
-                  _SeriesIssueSubset.uncollected,
-                  _SeriesIssueSubset.read,
-                  _SeriesIssueSubset.unread,
-                ];
-              case _SeriesIssueBulkOperation.removeFromCollection:
-                return const [
-                  _SeriesIssueSubset.all,
-                  _SeriesIssueSubset.collected,
-                ];
-              case _SeriesIssueBulkOperation.markAsRead:
-                return const [
-                  _SeriesIssueSubset.all,
-                  _SeriesIssueSubset.unread,
-                  _SeriesIssueSubset.collected,
-                  _SeriesIssueSubset.uncollected,
-                ];
-              case _SeriesIssueBulkOperation.markAsUnread:
-                return const [
-                  _SeriesIssueSubset.all,
-                  _SeriesIssueSubset.read,
-                  _SeriesIssueSubset.collected,
-                  _SeriesIssueSubset.uncollected,
-                ];
-            }
+        String subsetLabel(SeriesIssueSubset value) {
+          switch (value) {
+            case SeriesIssueSubset.all:
+              return 'All issues';
+            case SeriesIssueSubset.collected:
+              return 'Collected issues';
+            case SeriesIssueSubset.uncollected:
+              return 'Uncollected issues';
+            case SeriesIssueSubset.read:
+              return 'Read issues';
+            case SeriesIssueSubset.unread:
+              return 'Unread issues';
           }
+        }
 
-          final availableSubsets = applicableSubsets(selectedOperation);
-          if (!availableSubsets.contains(selectedSubset)) {
-            selectedSubset = availableSubsets.first;
+        List<SeriesIssueSubset> applicableSubsets(
+          SeriesIssueBulkOperation operation,
+        ) {
+          switch (operation) {
+            case SeriesIssueBulkOperation.addToCollection:
+              return const [
+                SeriesIssueSubset.all,
+                SeriesIssueSubset.uncollected,
+                SeriesIssueSubset.read,
+                SeriesIssueSubset.unread,
+              ];
+            case SeriesIssueBulkOperation.removeFromCollection:
+              return const [
+                SeriesIssueSubset.all,
+                SeriesIssueSubset.collected,
+              ];
+            case SeriesIssueBulkOperation.markAsRead:
+              return const [
+                SeriesIssueSubset.all,
+                SeriesIssueSubset.unread,
+                SeriesIssueSubset.collected,
+                SeriesIssueSubset.uncollected,
+              ];
+            case SeriesIssueBulkOperation.markAsUnread:
+              return const [
+                SeriesIssueSubset.all,
+                SeriesIssueSubset.read,
+                SeriesIssueSubset.collected,
+                SeriesIssueSubset.uncollected,
+              ];
           }
+        }
 
-          final selectedStart = selectedRange.start.round();
-          final selectedEnd = selectedRange.end.round();
-          final startIssueNumber = issues[selectedStart - 1].issueNumber;
-          final endIssueNumber = issues[selectedEnd - 1].issueNumber;
+        final availableSubsets = applicableSubsets(selectedOperation);
+        if (!availableSubsets.contains(selectedSubset)) {
+          selectedSubset = availableSubsets.first;
+        }
 
-          return SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Action', style: Theme.of(context).textTheme.labelLarge),
+        final selectedStart = selectedRange.start.round();
+        final selectedEnd = selectedRange.end.round();
+        final startIssueNumber = issues[selectedStart - 1].issueNumber;
+        final endIssueNumber = issues[selectedEnd - 1].issueNumber;
+
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Action', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              RadioGroup<SeriesIssueBulkOperation>(
+                groupValue: selectedOperation,
+                onChanged: (value) {
+                  if (isApplying || value == null) return;
+                  setModalState(() {
+                    selectedOperation = value;
+                  });
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: SeriesIssueBulkOperation.values.map((
+                    operation,
+                  ) {
+                    return RadioListTile<SeriesIssueBulkOperation>(
+                      title: Text(operationLabel(operation)),
+                      value: operation,
+                      contentPadding: EdgeInsets.zero,
+                      enabled: !isApplying,
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Selection method',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<SeriesIssueSelectionMode>(
+                  segments: SeriesIssueSelectionMode.values
+                      .map(
+                        (value) => ButtonSegment(
+                          value: value,
+                          label: Text(selectionModeLabel(value)),
+                        ),
+                      )
+                      .toList(),
+                  selected: {selectedMode},
+                  showSelectedIcon: false,
+                  multiSelectionEnabled: false,
+                  emptySelectionAllowed: false,
+                  onSelectionChanged: isApplying
+                      ? null
+                      : (selection) {
+                          final value = selection.firstOrNull;
+                          if (value == null) return;
+                          setModalState(() {
+                            selectedMode = value;
+                          });
+                        },
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (selectedMode == SeriesIssueSelectionMode.predefined) ...[
+                Text(
+                  'Apply to',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: availableSubsets
+                      .map(
+                        (value) => ChoiceChip(
+                          label: Text(
+                            subsetLabel(value),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          selected: value == selectedSubset,
+                          shape: const StadiumBorder(),
+                          onSelected: isApplying
+                              ? null
+                              : (_) {
+                                  setModalState(() {
+                                    selectedSubset = value;
+                                  });
+                                },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+              if (selectedMode == SeriesIssueSelectionMode.range) ...[
                 Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
                     ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: RadioGroup<_SeriesIssueBulkOperation>(
-                    groupValue: selectedOperation,
-                    onChanged: (value) {
-                      if (isApplying || value == null) return;
-                      setModalState(() {
-                        selectedOperation = value;
-                      });
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: _SeriesIssueBulkOperation.values.map((
-                        operation,
-                      ) {
-                        return RadioListTile<_SeriesIssueBulkOperation>(
-                          title: Text(operationLabel(operation)),
-                          value: operation,
-                          enabled: !isApplying,
-                        );
-                      }).toList(),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Issue range: #$startIssueNumber - #$endIssueNumber',
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      RangeSlider(
+                        min: 1,
+                        max: totalIssues.toDouble(),
+                        divisions: totalIssues > 1 ? totalIssues - 1 : null,
+                        labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                        values: selectedRange,
+                        onChanged: isApplying
+                            ? null
+                            : (value) {
+                                setModalState(() {
+                                  selectedRange = RangeValues(
+                                    value.start.roundToDouble(),
+                                    value.end.roundToDouble(),
+                                  );
+                                });
+                              },
+                      ),
+                      Text(
+                        'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Selection method',
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<_SeriesIssueSelectionMode>(
-                    segments: _SeriesIssueSelectionMode.values
-                        .map(
-                          (value) => ButtonSegment(
-                            value: value,
-                            label: Text(selectionModeLabel(value)),
-                          ),
-                        )
-                        .toList(),
-                    selected: {selectedMode},
-                    showSelectedIcon: false,
-                    multiSelectionEnabled: false,
-                    emptySelectionAllowed: false,
-                    onSelectionChanged: isApplying
-                        ? null
-                        : (selection) {
-                            final value = selection.firstOrNull;
-                            if (value == null) return;
-                            setModalState(() {
-                              selectedMode = value;
-                            });
-                          },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (selectedMode == _SeriesIssueSelectionMode.predefined) ...[
-                  Text(
-                    'Apply to',
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: availableSubsets
-                        .map(
-                          (value) => ChoiceChip(
-                            label: Text(
-                              subsetLabel(value),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            selected: value == selectedSubset,
-                            shape: const StadiumBorder(),
-                            onSelected: isApplying
-                                ? null
-                                : (_) {
-                                    setModalState(() {
-                                      selectedSubset = value;
-                                    });
-                                  },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ],
-                if (selectedMode == _SeriesIssueSelectionMode.range) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Issue range: #$startIssueNumber - #$endIssueNumber',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        RangeSlider(
-                          min: 1,
-                          max: totalIssues.toDouble(),
-                          divisions: totalIssues > 1 ? totalIssues - 1 : null,
-                          labels: RangeLabels('$selectedStart', '$selectedEnd'),
-                          values: selectedRange,
-                          onChanged: isApplying
-                              ? null
-                              : (value) {
-                                  setModalState(() {
-                                    selectedRange = RangeValues(
-                                      value.start.roundToDouble(),
-                                      value.end.roundToDouble(),
-                                    );
-                                  });
-                                },
-                        ),
-                        Text(
-                          'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: isApplying
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: isApplying
-                          ? null
-                          : () async {
-                              setModalState(() {
-                                isApplying = true;
-                              });
-                              try {
-                                await _applySeriesIssueBulkAction(
-                                  operation: selectedOperation,
-                                  selectionMode: selectedMode,
-                                  issues: issues,
-                                  subset:
-                                      selectedMode ==
-                                              _SeriesIssueSelectionMode.predefined
-                                          ? selectedSubset
-                                          : null,
-                                  startOrderIndex:
-                                      selectedMode ==
-                                              _SeriesIssueSelectionMode.range
-                                          ? selectedStart
-                                          : null,
-                                  endOrderIndex:
-                                      selectedMode ==
-                                              _SeriesIssueSelectionMode.range
-                                          ? selectedEnd
-                                          : null,
-                                );
-                              } finally {
-                                if (context.mounted) {
-                                  setModalState(() {
-                                    isApplying = false;
-                                  });
-                                }
-                              }
-                            },
-                      child: isApplying
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Apply'),
-                    ),
-                  ],
                 ),
               ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: isApplying
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: isApplying
+                        ? null
+                        : () async {
+                            setModalState(() {
+                              isApplying = true;
+                            });
+                            try {
+                              await applySeriesIssueBulkAction(
+                                context: context,
+                                ref: ref,
+                                seriesId: seriesId,
+                                operation: selectedOperation,
+                                selectionMode: selectedMode,
+                                issues: issues,
+                                subset:
+                                    selectedMode ==
+                                            SeriesIssueSelectionMode.predefined
+                                        ? selectedSubset
+                                        : null,
+                                startOrderIndex:
+                                    selectedMode ==
+                                            SeriesIssueSelectionMode.range
+                                        ? selectedStart
+                                        : null,
+                                endOrderIndex:
+                                    selectedMode ==
+                                            SeriesIssueSelectionMode.range
+                                        ? selectedEnd
+                                        : null,
+                              );
+                            } finally {
+                              if (context.mounted) {
+                                setModalState(() {
+                                  isApplying = false;
+                                });
+                              }
+                            }
+                          },
+                    child: isApplying
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Apply'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
 
 class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {

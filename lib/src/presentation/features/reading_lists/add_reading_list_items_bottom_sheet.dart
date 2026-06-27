@@ -189,9 +189,6 @@ class _AddReadingListItemsBottomSheetState
           decoration: const InputDecoration(
             labelText: 'Search Series',
             prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25)),
-            ),
           ),
           onChanged: (v) => setState(() => _query = v),
         ),
@@ -323,7 +320,6 @@ class _AddReadingListItemsBottomSheetState
                                         .toString(),
                                     decoration: const InputDecoration(
                                       labelText: 'From',
-                                      border: OutlineInputBorder(),
                                     ),
                                     keyboardType: TextInputType.number,
                                     onChanged: (v) {
@@ -347,7 +343,6 @@ class _AddReadingListItemsBottomSheetState
                                         .toString(),
                                     decoration: const InputDecoration(
                                       labelText: 'To',
-                                      border: OutlineInputBorder(),
                                     ),
                                     keyboardType: TextInputType.number,
                                     onChanged: (val) {

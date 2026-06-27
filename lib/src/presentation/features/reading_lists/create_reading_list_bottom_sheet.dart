@@ -59,8 +59,6 @@ class _CreateReadingListBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -70,30 +68,18 @@ class _CreateReadingListBottomSheetState
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Title',
                 hintText: 'e.g. Batman: Knightfall',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: primaryColor),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: primaryColor),
-                ),
               ),
               validator: (v) => v?.isEmpty == true ? 'Required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Description',
                 hintText: 'Optional summary...',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: primaryColor),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: primaryColor),
-                ),
               ),
               maxLines: 2,
             ),
@@ -128,9 +114,9 @@ class _CreateReadingListBottomSheetState
               value: _isOrdered,
               onChanged: (v) => setState(() => _isOrdered = v),
             ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
               child: FilledButton(
                 onPressed: _submit,
                 child: const Text('Create List'),

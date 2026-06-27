@@ -48,19 +48,18 @@ class ReadingListCover extends ConsumerWidget {
                     context,
                     ref,
                     items[items.length >= 3 ? 2 : 1],
-                    opacity: 0.5,
                   )
-                : _buildPlaceholder(context, opacity: 0.2),
+                : _buildPlaceholder(context),
           ),
 
           // Right Peeking Cover (2nd item if 3 items exist)
           Positioned(
             right: 0,
             child: items.length >= 3
-                ? _buildSideCover(context, ref, items[1], opacity: 0.5)
+                ? _buildSideCover(context, ref, items[1])
                 : items.length == 2
                 ? const SizedBox.shrink() // Already showing on left
-                : _buildPlaceholder(context, opacity: 0.2),
+                : _buildPlaceholder(context),
           ),
 
           // Primary Centered Cover (1st item)
@@ -99,25 +98,21 @@ class ReadingListCover extends ConsumerWidget {
   Widget _buildSideCover(
     BuildContext context,
     WidgetRef ref,
-    ReadingListItem item, {
-    required double opacity,
-  }) {
-    return Opacity(
-      opacity: opacity,
-      child: Container(
-        width: width * 0.85,
-        height: height * 0.9,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
-        ),
-        child: _buildCoverImage(
-          context,
-          ref,
-          item,
-          Theme.of(context).disabledColor,
-        ),
+    ReadingListItem item,
+  ) {
+    return Container(
+      width: width * 0.85,
+      height: height * 0.9,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+      ),
+      child: _buildCoverImage(
+        context,
+        ref,
+        item,
+        Theme.of(context).disabledColor,
       ),
     );
   }
@@ -190,17 +185,15 @@ class ReadingListCover extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context, {required double opacity}) {
+  Widget _buildPlaceholder(BuildContext context) {
     return Container(
       width: width * 0.85,
       height: height * 0.9,
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: opacity),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: opacity),
+          color: Theme.of(context).dividerColor,
           width: 1,
         ),
       ),

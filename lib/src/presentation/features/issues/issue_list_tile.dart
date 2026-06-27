@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/presentation/components/role_badge.dart';
 import 'package:takion/src/presentation/components/status_indicator_icons.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
@@ -23,6 +25,7 @@ class IssueListTile extends ConsumerWidget {
   final bool useCardBackground;
   final bool showDivider;
   final double horizontalPadding;
+  final ItemRole? role;
 
   const IssueListTile({
     super.key,
@@ -36,6 +39,7 @@ class IssueListTile extends ConsumerWidget {
     this.useCardBackground = false,
     this.showDivider = true,
     this.horizontalPadding = 12,
+    this.role,
   });
 
   @override
@@ -112,7 +116,7 @@ class IssueListTile extends ConsumerWidget {
             height: imageHeight,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Center(
               child: SizedBox(
@@ -124,7 +128,7 @@ class IssueListTile extends ConsumerWidget {
           )
         : RepaintBoundary(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               child: effectiveIssue.image != null
                   ? CachedNetworkImage(
                       imageUrl: effectiveIssue.image!,
@@ -266,6 +270,15 @@ class IssueListTile extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      if (role != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              RoleBadge(role: role!),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
           ),
@@ -304,7 +317,7 @@ class IssueListTile extends ConsumerWidget {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               onTap: effectiveOnTap,
               child: tileContent,
             ),

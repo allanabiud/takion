@@ -768,9 +768,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             controller: _displayNameController,
             decoration: const InputDecoration(labelText: 'Display name'),
           ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
             child: FilledButton(
               onPressed: _isSaving ? null : _save,
               child: _isSaving

@@ -299,8 +299,11 @@ Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
   final safePage = page < 1 ? 1 : page;
   final offset = (safePage - 1) * _collectionPageSize;
   final allItems = await ref.watch(allLibraryItemsProvider.future);
-  final totalCount = allItems.length;
-  final libraryItems = allItems.skip(offset).take(_collectionPageSize).toList();
+  final ownedItems = allItems
+      .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
+      .toList();
+  final totalCount = ownedItems.length;
+  final libraryItems = ownedItems.skip(offset).take(_collectionPageSize).toList();
 
   final enriched = await _mapWithConcurrency<LibraryItem, CollectionItem>(
     libraryItems,

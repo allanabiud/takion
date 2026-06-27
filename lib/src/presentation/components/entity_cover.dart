@@ -21,7 +21,7 @@ class EntityCover extends StatelessWidget {
     this.isFavorite = false,
     this.isRead = false,
     this.role,
-    this.borderRadius = 12,
+    this.borderRadius = 8,
     this.aspectRatio = 2 / 3,
     this.placeholderIcon = Icons.image,
     this.iconSize = 24,

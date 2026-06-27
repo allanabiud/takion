@@ -98,11 +98,7 @@ class MainScreenState extends ConsumerState<MainScreen>
     final searchBarTop = topPadding + kToolbarHeight;
 
     final mainContent = AutoTabsScaffold(
-      routes: const [
-        HomeRoute(),
-        ReleasesRoute(),
-        LibraryRoute(),
-      ],
+      routes: const [HomeRoute(), ReleasesRoute(), LibraryRoute()],
       appBarBuilder: (context, tabsRouter) => AppBar(
         leading: IconButton(
           icon: hasAvatar
@@ -136,9 +132,7 @@ class MainScreenState extends ConsumerState<MainScreen>
             }
           },
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(25),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
             child: NavigationBar(
               selectedIndex: tabsRouter.activeIndex,
               onDestinationSelected: tabsRouter.setActiveIndex,
@@ -172,10 +166,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       },
       child: Stack(
         children: [
-          IgnorePointer(
-            ignoring: _overlayVisible,
-            child: mainContent,
-          ),
+          IgnorePointer(ignoring: _overlayVisible, child: mainContent),
           if (_overlayVisible)
             GestureDetector(
               onTap: () => _dismissSearch(),
@@ -214,10 +205,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                       child: Column(
                         children: [
                           if (t > 0.01) SizedBox(height: topInset),
-                          SizedBox(
-                            height: 56,
-                            child: _buildSearchFieldRow(),
-                          ),
+                          SizedBox(height: 56, child: _buildSearchFieldRow()),
                           if (t > 0.2)
                             Expanded(
                               child: Opacity(
@@ -312,7 +300,6 @@ class MainScreenState extends ConsumerState<MainScreen>
             ],
           ),
         ),
-        const SizedBox(height: 12),
         Expanded(
           child: state.history.isEmpty
               ? const EmptyContentState(
@@ -336,10 +323,10 @@ class MainScreenState extends ConsumerState<MainScreen>
                               _searchController.text = item;
                               _searchController.selection =
                                   TextSelection.fromPosition(
-                                TextPosition(
-                                  offset: _searchController.text.length,
-                                ),
-                              );
+                                    TextPosition(
+                                      offset: _searchController.text.length,
+                                    ),
+                                  );
                             },
                           ),
                           IconButton(
@@ -355,11 +342,9 @@ class MainScreenState extends ConsumerState<MainScreen>
                       ),
                       onTap: () {
                         _searchController.text = item;
-                        _searchController.selection =
-                            TextSelection.fromPosition(
-                          TextPosition(
-                            offset: _searchController.text.length,
-                          ),
+                        _searchController
+                            .selection = TextSelection.fromPosition(
+                          TextPosition(offset: _searchController.text.length),
                         );
                         _submitSearch();
                       },

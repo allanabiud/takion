@@ -46,105 +46,103 @@ class ReadingListGridItem extends ConsumerWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: isSelected ? const EdgeInsets.all(4) : EdgeInsets.zero,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Stack(
-              children: [
-                metadataAsync.when(
-                  data: (metadata) {
-                    if (metadata is SeriesDetails) {
-                      final series = SeriesList(
-                        id: metadata.id,
-                        name: metadata.name,
-                        yearBegan: metadata.yearBegan,
-                        volume: metadata.volume,
-                        issueCount: metadata.issueCount,
-                        seriesType: metadata.seriesType?.name,
-                      );
-                      return SeriesCard(
-                        series: series,
-                        imageUrl: metadata.image,
-                        onTap: onTap,
-                        width: double.infinity,
-                        isRead: effectiveIsRead,
-                        role: item.role,
-                      );
-                    } else if (metadata is IssueDetails) {
-                      final status = ref.watch(
-                        issueCollectionStatusProvider(metadata.id),
-                      );
-                      final pullEntryAsync = ref.watch(
-                        issuePullListEntryProvider(metadata.id),
-                      );
-
-                      return IssueCard(
-                        issueId: metadata.id,
-                        imageUrl: metadata.image,
-                        title:
-                            '${metadata.series?.name ?? ''} #${metadata.number}',
-                        onTap: onTap,
-                        width: double.infinity,
-                        isRead: effectiveIsRead,
-                        isCollected: status?.isCollected ?? false,
-                        isWishlisted: status?.isWishlisted ?? false,
-                        isPulled: pullEntryAsync.asData?.value != null,
-                        role: item.role,
-                        compact: true,
-                      );
-                    }
-                    return const Center(child: Icon(Icons.error));
-                  },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  error: (error, stack) =>
-                      const Center(child: Icon(Icons.error, size: 20)),
-                ),
-                if (isSelected)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.15,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                if (isSelected)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
+        AnimatedScale(
+          scale: isSelected ? 0.95 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child: GestureDetector(
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: isSelected ? const EdgeInsets.all(4) : EdgeInsets.zero,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: isSelected
+                    ? Border.all(
                         color: theme.colorScheme.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        size: 16,
-                        color: Colors.white,
+                        width: 1.5,
+                      )
+                    : null,
+              ),
+              child: Stack(
+                children: [
+                  metadataAsync.when(
+                    data: (metadata) {
+                      if (metadata is SeriesDetails) {
+                        final series = SeriesList(
+                          id: metadata.id,
+                          name: metadata.name,
+                          yearBegan: metadata.yearBegan,
+                          volume: metadata.volume,
+                          issueCount: metadata.issueCount,
+                          seriesType: metadata.seriesType?.name,
+                        );
+                        return SeriesCard(
+                          series: series,
+                          imageUrl: metadata.image,
+                          onTap: onTap,
+                          width: double.infinity,
+                          isRead: effectiveIsRead,
+                          role: item.role,
+                        );
+                      } else if (metadata is IssueDetails) {
+                        final status = ref.watch(
+                          issueCollectionStatusProvider(metadata.id),
+                        );
+                        final pullEntryAsync = ref.watch(
+                          issuePullListEntryProvider(metadata.id),
+                        );
+
+                        return IssueCard(
+                          issueId: metadata.id,
+                          imageUrl: metadata.image,
+                          title:
+                              '${metadata.series?.name ?? ''} #${metadata.number}',
+                          onTap: onTap,
+                          width: double.infinity,
+                          isRead: effectiveIsRead,
+                          isCollected: status?.isCollected ?? false,
+                          isWishlisted: status?.isWishlisted ?? false,
+                          isPulled: pullEntryAsync.asData?.value != null,
+                          role: item.role,
+                          compact: true,
+                        );
+                      }
+                      return const Center(child: Icon(Icons.error));
+                    },
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    error: (error, stack) =>
+                        const Center(child: Icon(Icons.error, size: 20)),
+                  ),
+                  if (isSelected)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -157,7 +155,7 @@ class ReadingListGridItem extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.error,
+                  color: theme.colorScheme.errorContainer,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -171,10 +169,10 @@ class ReadingListGridItem extends ConsumerWidget {
                     width: 2,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close_rounded,
                   size: 12,
-                  color: Colors.white,
+                  color: theme.colorScheme.onErrorContainer,
                 ),
               ),
             ),

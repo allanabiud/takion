@@ -29,6 +29,7 @@ String _currencySymbol(String? code) {
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
     'writer',
+    'script',
     'artist',
     'penciler',
     'penciller',
@@ -231,7 +232,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Reprints', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -408,7 +409,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Additional Information', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         ...infoItems.map(
           (item) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -479,7 +480,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Genres', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 4,
@@ -546,38 +547,38 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               });
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasMetadata) ...[
           _buildIssueMetadataSection(context),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasStories) ...[
           _buildSectionCard(context, _buildStoriesSection(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasCreators) ...[
           _buildSectionCard(context, _buildCreatorsSection(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasCharacters) ...[
           _buildSectionCard(context, _buildCharactersSection(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasReprints) ...[
           _buildSectionCard(context, _buildReprintsSection(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasGenres) ...[
           _buildSectionCard(context, _buildGenresSection(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         if (hasAdditionalInfo) ...[
           _buildSectionCard(
             context,
             _buildAdditionalInformationSection(context),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         Text(
           'Last modified: ${_formatModified(widget.issue.modified)}',

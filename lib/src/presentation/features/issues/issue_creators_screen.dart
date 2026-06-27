@@ -17,8 +17,8 @@ String _initials(String? name) {
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
-    'writer', 'artist', 'penciler', 'penciller', 'colorist',
-    'letterer', 'inker', 'cover',
+    'writer', 'script', 'artist', 'penciler', 'penciller',
+    'colorist', 'letterer', 'inker', 'cover',
   ];
   for (final role in credit.roles) {
     final name = role.name.trim().toLowerCase();

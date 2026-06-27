@@ -7,7 +7,6 @@ import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
@@ -18,8 +17,11 @@ import 'package:takion/src/presentation/features/series/providers/subscriptions_
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
+import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -44,33 +46,6 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 
 class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   bool _isUpdatingSubscription = false;
-
-  Future<void> _toggleFavorite() async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(
-        isSeriesFavoriteProvider(widget.seriesId).future,
-      );
-
-      await repository.toggleSeriesFavorite(widget.seriesId);
-
-      ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
-      ref.invalidate(favoriteSeriesListProvider);
-
-      if (mounted) {
-        TakionAlerts.success(
-          context,
-          !isFavorite
-              ? 'Series added to favorites'
-              : 'Series removed from favorites',
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favorites: $e');
-      }
-    }
-  }
 
   Future<void> _setSeriesSubscription(bool enabled) async {
     if (_isUpdatingSubscription) return;
@@ -183,6 +158,33 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     }
   }
 
+  Future<void> _toggleFavorite() async {
+    try {
+      final repository = ref.read(favoritesRepositoryProvider);
+      final isFavorite = await ref.read(
+        isSeriesFavoriteProvider(widget.seriesId).future,
+      );
+
+      await repository.toggleSeriesFavorite(widget.seriesId);
+
+      ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
+      ref.invalidate(favoriteSeriesListProvider);
+
+      if (context.mounted) {
+        TakionAlerts.success(
+          context,
+          !isFavorite
+              ? 'Series added to favorites'
+              : 'Series removed from favorites',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        TakionAlerts.error(context, 'Failed to update favorites: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
@@ -234,6 +236,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             subscriptionAsync.asData?.value?.isActive ?? false;
         final isSubscriptionLoading =
             subscriptionAsync.isLoading || _isUpdatingSubscription;
+
+        final isFavoriteAsync = ref.watch(isSeriesFavoriteProvider(widget.seriesId));
+        final isFavorite = isFavoriteAsync.asData?.value ?? false;
 
         return Scaffold(
           body: Stack(
@@ -332,6 +337,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                     totalIssueCount: totalIssueCount,
                     isSubscribed: isSubscribed,
                     isSubscriptionLoading: isSubscriptionLoading,
+                    isFavorite: isFavorite,
                     onToggleSubscription: _setSeriesSubscription,
                     onToggleFavorite: _toggleFavorite,
                   );
@@ -358,6 +364,7 @@ class _SeriesDetailsSheet extends ConsumerWidget {
     required this.totalIssueCount,
     required this.isSubscribed,
     required this.isSubscriptionLoading,
+    required this.isFavorite,
     required this.onToggleSubscription,
     required this.onToggleFavorite,
   });
@@ -373,8 +380,9 @@ class _SeriesDetailsSheet extends ConsumerWidget {
   final int totalIssueCount;
   final bool isSubscribed;
   final bool isSubscriptionLoading;
+  final bool isFavorite;
   final Future<void> Function(bool enabled) onToggleSubscription;
-  final Future<void> Function() onToggleFavorite;
+  final VoidCallback onToggleFavorite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -429,7 +437,7 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -495,62 +503,67 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                                   ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           flex: 1,
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () {
-                              AddToReadingListBottomSheet.show(
-                                context: context,
-                                targetId: 'series-$seriesId',
-                                isSeries: true,
-                              );
-                            },
-                            child: const Icon(Icons.playlist_add),
-                          ),
+                          child: isFavorite
+                              ? FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primaryContainer,
+                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onToggleFavorite,
+                                  child: const Icon(Icons.favorite),
+                                )
+                              : FilledButton.tonal(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onToggleFavorite,
+                                  child: const Icon(Icons.favorite_border),
+                                ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           flex: 1,
                           child: FilledButton.tonal(
                             style: FilledButton.styleFrom(
+                              backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                              foregroundColor: theme.colorScheme.onSurfaceVariant,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               iconSize: 28,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: onToggleFavorite,
-                            child: ref.watch(isSeriesFavoriteProvider(seriesId)).when(
-                              data: (isFavorite) => Icon(
-                                isFavorite ? Icons.favorite : Icons.favorite_border,
-                                color: isFavorite ? Colors.red : null,
-                              ),
-                              loading: () => const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              error: (_, _) =>
-                                  const Icon(Icons.favorite_border),
+                            onPressed: () => _showSeriesMoreOptionsSheet(
+                              context,
+                              ref,
+                              seriesId,
+                              seriesName: details.name,
+                              seriesYear: details.yearBegan,
                             ),
+                            child: const Icon(Icons.more_vert),
                           ),
                         ),
                       ],
                     ),
+
                   ],
                 ),
               ),
             ),
             if (showDescription) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -561,7 +574,7 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ],
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -598,7 +611,7 @@ class _SeriesDetailsSheet extends ConsumerWidget {
               ),
             ),
             if (showAssociated) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -609,7 +622,7 @@ class _SeriesDetailsSheet extends ConsumerWidget {
               ),
             ],
             if (details.genres.isNotEmpty) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -617,7 +630,7 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ],
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -715,7 +728,7 @@ class _SeriesDetailsSkeleton extends StatelessWidget {
 }
 
 TextStyle? _sectionTitleStyle(BuildContext context) {
-  return Theme.of(context).textTheme.titleMedium?.copyWith(
+  return Theme.of(context).textTheme.titleSmall?.copyWith(
     fontWeight: FontWeight.w700,
     color: Theme.of(context).colorScheme.primary,
   );
@@ -1017,4 +1030,48 @@ class _SeriesInfoCard extends StatelessWidget {
       ],
     );
   }
+}
+
+void _showSeriesMoreOptionsSheet(
+  BuildContext context,
+  WidgetRef ref,
+  int seriesId, {
+  String seriesName = '',
+  int? seriesYear,
+}) {
+  TakionBottomSheet.show<void>(
+    context: context,
+    title: 'More Options',
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.playlist_add),
+          title: const Text('Add to Reading List'),
+          onTap: () {
+            Navigator.of(context).pop();
+            AddToReadingListBottomSheet.show(
+              context: context,
+              targetId: 'series-$seriesId',
+              isSeries: true,
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.playlist_add_check_rounded),
+          title: const Text('Bulk Series Actions'),
+          onTap: () {
+            Navigator.of(context).pop();
+            showSeriesIssueBulkActionsSheet(
+              context: context,
+              ref: ref,
+              seriesId: seriesId,
+              seriesName: seriesName,
+              seriesYear: seriesYear,
+            );
+          },
+        ),
+      ],
+    ),
+  );
 }

@@ -172,32 +172,9 @@ class _AddToReadingListBottomSheetState
               children: [
                 TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Search reading lists',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    filled: true,
+                    prefixIcon: Icon(Icons.search),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -243,8 +220,8 @@ class _AddToReadingListBottomSheetState
                   ),
                 ),
                 const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.bottomRight,
+                SizedBox(
+                  width: double.infinity,
                   child: FilledButton(
                     onPressed:
                         _isAdding || _selectedListIds.isEmpty ? null : _addItems,

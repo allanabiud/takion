@@ -500,9 +500,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: isSubmitting
@@ -510,7 +509,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                             : () => Navigator.of(context).pop(),
                         child: const Text('Cancel'),
                       ),
-                      const SizedBox(width: 8),
+                      const Spacer(),
                       FilledButton(
                         onPressed: isSubmitting
                             ? null
@@ -814,7 +813,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                                   'issue-cover-${_currentIssueId}',
                               child: ClipRRect(
                                 borderRadius:
-                                    BorderRadius.circular(12),
+                                    BorderRadius.circular(8),
                                 child: SizedBox(
                                   width: 180,
                                   height: 270,
@@ -1044,7 +1043,7 @@ class _IssueDetailsSheet extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Icon(
@@ -1073,7 +1072,7 @@ class _IssueDetailsSheet extends StatelessWidget {
                               : Icons.shopping_bag_outlined,
                           size: 22,
                           color: isInPullList
-                              ? theme.colorScheme.primary
+                              ? theme.colorScheme.secondary
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 10),
@@ -1083,7 +1082,7 @@ class _IssueDetailsSheet extends StatelessWidget {
                               : Icons.turned_in_not,
                           size: 22,
                           color: (collectionStatus?.isWishlisted ?? false)
-                              ? theme.colorScheme.primary
+                              ? theme.colorScheme.tertiary
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const Spacer(),
@@ -1106,114 +1105,125 @@ class _IssueDetailsSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (collectionStatus?.isCollected ?? false)
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.errorContainer,
-                          foregroundColor: theme.colorScheme.onErrorContainer,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          textStyle: Theme.of(context).textTheme.titleMedium,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: onShowScrobbleSheet,
-                        icon: const Icon(Icons.delete_outline, size: 22),
-                        label: const Text('Remove'),
-                      )
-                    else
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          textStyle: Theme.of(context).textTheme.titleMedium,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: onShowScrobbleSheet,
-                        icon: const Icon(Icons.add, size: 22),
-                        label: const Text('Add'),
-                      ),
-                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: onNavigateToSeries,
-                            child: const Icon(Icons.view_agenda_outlined),
-                          ),
+                          flex: 3,
+                        child: (collectionStatus?.isCollected == true)
+                            ? FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.errorContainer,
+                                  foregroundColor: theme.colorScheme.onErrorContainer,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  textStyle: Theme.of(context).textTheme.titleMedium,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: onShowScrobbleSheet,
+                                icon: const Icon(Icons.delete_outline, size: 22),
+                                label: const Text('Remove'),
+                              )
+                            : (collectionStatus?.isWishlisted == true)
+                                ? FilledButton.icon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: theme.colorScheme.tertiaryContainer,
+                                      foregroundColor: theme.colorScheme.onTertiaryContainer,
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      textStyle: Theme.of(context).textTheme.titleMedium,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: onShowScrobbleSheet,
+                                    icon: const Icon(Icons.turned_in, size: 22),
+                                    label: const Text('Wishlisted'),
+                                  )
+                                : isInPullList
+                                    ? FilledButton.icon(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.secondaryContainer,
+                                          foregroundColor: theme.colorScheme.onSecondaryContainer,
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
+                                          textStyle: Theme.of(context).textTheme.titleMedium,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: onShowScrobbleSheet,
+                                        icon: const Icon(Icons.shopping_bag, size: 22),
+                                        label: const Text('Pulled'),
+                                      )
+                                    : FilledButton.icon(
+                                        style: FilledButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
+                                          textStyle: Theme.of(context).textTheme.titleMedium,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: onShowScrobbleSheet,
+                                        icon: const Icon(Icons.add, size: 22),
+                                        label: const Text('Add'),
+                                      ),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: onAddToReadingList,
-                            child: const Icon(Icons.playlist_add),
-                          ),
+                          flex: 1,
+                          child: isFavorite
+                              ? FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primaryContainer,
+                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onToggleFavorite,
+                                  child: const Icon(Icons.favorite),
+                                )
+                              : FilledButton.tonal(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onToggleFavorite,
+                                  child: const Icon(Icons.favorite_border),
+                                ),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
+                          flex: 1,
                           child: FilledButton.tonal(
                             style: FilledButton.styleFrom(
+                              backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                              foregroundColor: theme.colorScheme.onSurfaceVariant,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               iconSize: 28,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: onToggleFavorite,
-                            child: Icon(
-                              isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : null,
+                            onPressed: () => _showIssueMoreOptionsSheet(
+                              context,
+                              onNavigateToSeries,
+                              onAddToReadingList,
+                              onMyDetails,
+                              onReadingHistory,
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: onMyDetails,
-                            child: const Icon(Icons.library_books_outlined),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: onReadingHistory,
-                            child: const Icon(Icons.history),
+                            child: const Icon(Icons.more_vert),
                           ),
                         ),
                       ],
@@ -1222,7 +1232,7 @@ class _IssueDetailsSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1385,7 +1395,7 @@ class _ScrobbleActionIcon extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(icon: Icon(icon), color: color, onPressed: onPressed),
+        IconButton(icon: Icon(icon), iconSize: 32, color: color, onPressed: onPressed),
         Text(
           label,
           style: TextStyle(
@@ -1397,4 +1407,54 @@ class _ScrobbleActionIcon extends StatelessWidget {
       ],
     );
   }
+}
+
+void _showIssueMoreOptionsSheet(
+  BuildContext context,
+  VoidCallback onNavigateToSeries,
+  VoidCallback onAddToReadingList,
+  VoidCallback onMyDetails,
+  VoidCallback onReadingHistory,
+) {
+  TakionBottomSheet.show<void>(
+    context: context,
+    title: 'More Options',
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.view_agenda_outlined),
+          title: const Text('Go to Series'),
+          onTap: () {
+            Navigator.of(context).pop();
+            onNavigateToSeries();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.playlist_add),
+          title: const Text('Add to Reading List'),
+          onTap: () {
+            Navigator.of(context).pop();
+            onAddToReadingList();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.library_books_outlined),
+          title: const Text('My Details'),
+          onTap: () {
+            Navigator.of(context).pop();
+            onMyDetails();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.history),
+          title: const Text('Reading History'),
+          onTap: () {
+            Navigator.of(context).pop();
+            onReadingHistory();
+          },
+        ),
+      ],
+    ),
+  );
 }

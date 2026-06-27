@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/router/auth_guard.dart';
 
@@ -61,27 +60,6 @@ class AppRouter extends RootStackRouter {
       page: IssueCharactersRoute.page,
       path: '/issue/:issueId/characters',
       guards: [authGuard],
-    ),
-    CustomRoute(page: SearchRoute.page, path: '/search', guards: [authGuard],
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            final curved = Curves.easeOut.transform(animation.value);
-            final scale = 0.3 + (curved * 0.7);
-            return Opacity(
-              opacity: curved.clamp(0.0, 1.0),
-              child: Transform(
-                alignment: Alignment(0, -0.74),
-                transform: Matrix4.diagonal3Values(scale, scale, 1.0),
-                child: child,
-              ),
-            );
-          },
-          child: child,
-        );
-      },
-      duration: const Duration(milliseconds: 350),
     ),
     AutoRoute(
       page: SearchResultsRoute.page,

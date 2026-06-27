@@ -8,8 +8,10 @@ import 'package:takion/src/presentation/common/takion_alerts.dart';
 
 Future<void> showEditMyDetailsSheet(
     BuildContext context, WidgetRef ref, int issueId) async {
-  final detailsAsync = ref.read(issueMyDetailsProvider(issueId));
-  final item = detailsAsync.asData?.value.item;
+  ref.invalidate(issueMyDetailsProvider(issueId));
+  final detailsAsync = await ref.read(issueMyDetailsProvider(issueId).future);
+  if (!context.mounted) return;
+  final item = detailsAsync.item;
   final quantityController = TextEditingController(
     text: item != null ? item.quantityOwned.toString() : '',
   );
@@ -331,8 +333,8 @@ Future<void> showEditMyDetailsSheet(
                     ),
                   ],
                   const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerRight,
+                  SizedBox(
+                    width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () => setSheetState(
                         () => isEditing = true,
@@ -464,9 +466,9 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                       },
                     ),
                   ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
                   child: FilledButton.tonalIcon(
                     onPressed: () => showLogReadPicker(context, ref, issueId),
                     icon: const Icon(Icons.add, size: 18),

@@ -405,39 +405,34 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: RadioGroup<ThemeMode>(
-                    groupValue: themeSettings.themeMode,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      ref.read(themeProvider.notifier).setThemeMode(value);
-                    },
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.system,
-                          title: Text('System'),
-                          secondary: Icon(Icons.brightness_auto_outlined),
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.light,
-                          title: Text('Light'),
-                          secondary: Icon(Icons.light_mode_outlined),
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.dark,
-                          title: Text('Dark'),
-                          secondary: Icon(Icons.dark_mode_outlined),
-                        ),
-                      ],
-                    ),
+                RadioGroup<ThemeMode>(
+                  groupValue: themeSettings.themeMode,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    ref.read(themeProvider.notifier).setThemeMode(value);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.system,
+                        title: Text('System'),
+                        secondary: Icon(Icons.brightness_auto_outlined),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.light,
+                        title: Text('Light'),
+                        secondary: Icon(Icons.light_mode_outlined),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.dark,
+                        title: Text('Dark'),
+                        secondary: Icon(Icons.dark_mode_outlined),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
                   ),
                 ),
               ]),
@@ -511,42 +506,39 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: RadioGroup<CollectionDefaultFormat>(
-                groupValue: selected,
-                onChanged: (value) {
-                  if (formatAsync.isLoading || value == null) return;
-                  ref
-                      .read(collectionDefaultFormatProvider.notifier)
-                      .setDefaultFormat(value);
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RadioListTile<CollectionDefaultFormat>(
-                      value: CollectionDefaultFormat.digital,
-                      title: const Text('Digital'),
-                      enabled: !formatAsync.isLoading,
-                    ),
-                    RadioListTile<CollectionDefaultFormat>(
-                      value: CollectionDefaultFormat.print,
-                      title: const Text('Print'),
-                      enabled: !formatAsync.isLoading,
-                    ),
-                    RadioListTile<CollectionDefaultFormat>(
-                      value: CollectionDefaultFormat.both,
-                      title: const Text('Both'),
-                      enabled: !formatAsync.isLoading,
-                    ),
-                  ],
-                ),
+            RadioGroup<CollectionDefaultFormat>(
+              groupValue: selected,
+              onChanged: (value) {
+                if (formatAsync.isLoading || value == null) return;
+                ref
+                    .read(collectionDefaultFormatProvider.notifier)
+                    .setDefaultFormat(value);
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<CollectionDefaultFormat>(
+                    value: CollectionDefaultFormat.digital,
+                    title: const Text('Digital'),
+                    contentPadding: EdgeInsets.zero,
+                    enabled: !formatAsync.isLoading,
+                  ),
+                  RadioListTile<CollectionDefaultFormat>(
+                    value: CollectionDefaultFormat.print,
+                    title: const Text('Print'),
+                    contentPadding: EdgeInsets.zero,
+                    enabled: !formatAsync.isLoading,
+                  ),
+                  RadioListTile<CollectionDefaultFormat>(
+                    value: CollectionDefaultFormat.both,
+                    title: const Text('Both'),
+                    contentPadding: EdgeInsets.zero,
+                    enabled: !formatAsync.isLoading,
+                  ),
+                ],
               ),
             ),
-            const Divider(height: 32),
+            const Divider(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text(

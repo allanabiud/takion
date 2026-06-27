@@ -197,24 +197,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           _goToPage(_currentPage - 1);
         }
       },
-      child: Stack(
-        children: [
-          const FloatingIconsBackground(),
-          Scaffold(
-            backgroundColor: Colors.transparent,
-            body: PageView(
-              physics: const NeverScrollableScrollPhysics(),
-              controller: _pageController,
-              onPageChanged: (page) => setState(() => _currentPage = page),
-              children: [
-                _buildWelcomePage(theme),
-                _buildMetronInfoPage(theme),
-                _buildAuthorizePage(theme),
-                _buildAllDonePage(theme),
-              ],
+      child: Container(
+        color: theme.colorScheme.surface,
+        child: Stack(
+          children: [
+            const FloatingIconsBackground(),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              body: PageView(
+                physics: const NeverScrollableScrollPhysics(),
+                controller: _pageController,
+                onPageChanged: (page) => setState(() => _currentPage = page),
+                children: [
+                  _buildWelcomePage(theme),
+                  _buildMetronInfoPage(theme),
+                  _buildAuthorizePage(theme),
+                  _buildAllDonePage(theme),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

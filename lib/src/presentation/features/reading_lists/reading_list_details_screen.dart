@@ -36,6 +36,8 @@ class ReadingListDetailsScreen extends ConsumerStatefulWidget {
       _ReadingListDetailsScreenState();
 }
 
+enum _ReadingListDetailsMenuAction { edit, share, delete }
+
 class _ReadingListDetailsScreenState
     extends ConsumerState<ReadingListDetailsScreen> {
   bool _isDescriptionExpanded = false;
@@ -328,49 +330,34 @@ class _ReadingListDetailsScreenState
               backgroundColor: Colors.transparent,
               elevation: 0,
               actions: [
-                PopupMenuButton<String>(
+                PopupMenuButton<_ReadingListDetailsMenuAction>(
                   tooltip: 'More options',
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'edit':
+                  onSelected: (action) {
+                    switch (action) {
+                      case _ReadingListDetailsMenuAction.edit:
                         context.pushRoute(
                           ReadingListEditRoute(listId: widget.listId),
                         );
-                      case 'share':
+                      case _ReadingListDetailsMenuAction.share:
                         ref
                             .read(readingListSharingServiceProvider)
                             .shareReadingList(list);
-                      case 'delete':
+                      case _ReadingListDetailsMenuAction.delete:
                         _confirmDelete(context, list);
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: ListTile(
-                        leading: Icon(Icons.edit_outlined),
-                        title: Text('Edit'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _ReadingListDetailsMenuAction.edit,
+                      child: Text('Edit'),
                     ),
-                    const PopupMenuItem(
-                      value: 'share',
-                      child: ListTile(
-                        leading: Icon(Icons.share_outlined),
-                        title: Text('Share'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
+                    PopupMenuItem(
+                      value: _ReadingListDetailsMenuAction.share,
+                      child: Text('Share'),
                     ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: ListTile(
-                        leading: Icon(Icons.delete_outline),
-                        title: Text('Delete'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
+                    PopupMenuItem(
+                      value: _ReadingListDetailsMenuAction.delete,
+                      child: Text('Delete'),
                     ),
                   ],
                 ),
@@ -388,7 +375,7 @@ class _ReadingListDetailsScreenState
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: ReadingListCover(list: list, width: 140, height: 210, peekOffset: 20),
+                      child: ReadingListCover(list: list, width: 140, height: 210, peekOffset: 35),
                     ),
                   ],
               ),
@@ -497,34 +484,30 @@ class _ReadingListDetailsScreenState
       );
     }
 
-    return Column(
-      children: [
-        _buildSheetHeader(list, progress, readCount, totalCount),
-        Expanded(
-          child: CustomScrollView(
-            controller: scrollController,
-            slivers: [
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = items[index];
-                    final roleColor = _getRoleColor(context, item.role);
+    return CustomScrollView(
+      controller: scrollController,
+      slivers: [
+        SliverToBoxAdapter(
+          child: _buildSheetHeader(list, progress, readCount, totalCount),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final item = items[index];
+              final roleColor = _getRoleColor(context, item.role);
 
-                    return GestureDetector(
-                      onTap: () => _openReadingListItemDetails(item),
-                      child: ReadingListTimelineTile(
-                        list: list.copyWith(items: items),
-                        index: index + 1,
-                        item: item,
-                        roleColor: roleColor,
-                        isEditing: false,
-                      ),
-                    );
-                  },
-                  childCount: items.length,
+              return GestureDetector(
+                onTap: () => _openReadingListItemDetails(item),
+                child: ReadingListTimelineTile(
+                  list: list.copyWith(items: items),
+                  index: index + 1,
+                  item: item,
+                  roleColor: roleColor,
+                  isEditing: false,
                 ),
-              ),
-            ],
+              );
+            },
+            childCount: items.length,
           ),
         ),
       ],
@@ -558,35 +541,31 @@ class _ReadingListDetailsScreenState
       );
     }
 
-    return Column(
-      children: [
-        _buildSheetHeader(list, progress, readCount, totalCount),
-        Expanded(
-          child: CustomScrollView(
-            controller: scrollController,
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: 0.45,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = items[index];
-                    return ReadingListGridItem(
-                      item: item,
-                      onTap: () => _openReadingListItemDetails(item),
-                      isEditing: false,
-                      isSelected: false,
-                      onRemove: null,
-                    );
-                  }, childCount: items.length),
-                ),
-              ),
-            ],
+    return CustomScrollView(
+      controller: scrollController,
+      slivers: [
+        SliverToBoxAdapter(
+          child: _buildSheetHeader(list, progress, readCount, totalCount),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.45,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final item = items[index];
+              return ReadingListGridItem(
+                item: item,
+                onTap: () => _openReadingListItemDetails(item),
+                isEditing: false,
+                isSelected: false,
+                onRemove: null,
+              );
+            }, childCount: items.length),
           ),
         ),
       ],
