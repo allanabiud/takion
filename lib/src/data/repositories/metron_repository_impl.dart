@@ -6,6 +6,9 @@ import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
+import 'package:takion/src/domain/entities/character_details.dart';
+import 'package:takion/src/domain/entities/character_issue_list_page.dart';
+import 'package:takion/src/domain/entities/character_list_page.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -29,7 +32,11 @@ class MetronRepositoryImpl implements MetronRepository {
       <String, Future<SeriesListPage>>{};
   final Map<String, Future<SeriesIssueListPage>> _seriesIssueListInFlight =
       <String, Future<SeriesIssueListPage>>{};
+  final Map<String, Future<CharacterIssueListPage>>
+      _characterIssueListInFlight =
+      <String, Future<CharacterIssueListPage>>{};
   final _AsyncConcurrencyGate _issueDetailsGate = _AsyncConcurrencyGate(4);
+  final _AsyncConcurrencyGate _characterDetailsGate = _AsyncConcurrencyGate(3);
 
   MetronRepositoryImpl(
     this._remoteDataSource,
@@ -582,6 +589,203 @@ class MetronRepositoryImpl implements MetronRepository {
       if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
         return SeriesIssueListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CharacterListPage> searchCharacters(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getCharacterSearchResults(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedAt = await _localDataSource.getCharacterSearchResultsCachedAt(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedMeta = await _localDataSource.getCharacterSearchResultsMeta(
+      query,
+      page: page,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        return CharacterListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final remotePage = await _remoteDataSource.searchCharacters(
+        query,
+        page: page,
+        limit: limit,
+        cancelToken: cancelToken,
+      );
+      await _localDataSource.cacheCharacterSearchResults(
+        query,
+        remotePage.results,
+        page: page,
+        limit: limit,
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+      );
+      return CharacterListPage(
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+        results:
+            remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: page,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return CharacterListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CharacterDetails> getCharacterDetails(
+    int characterId, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDto = await _localDataSource.getCharacterDetails(characterId);
+    final cachedAt =
+        await _localDataSource.getCharacterDetailsCachedAt(characterId);
+
+    if (!forceRefresh && cachedDto != null) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.characterDetails.isFresh(cachedAt, _now());
+      if (isFresh) {
+        return cachedDto.toEntity();
+      }
+    }
+
+    try {
+      await _characterDetailsGate.acquire();
+      try {
+        final remoteDto =
+            await _remoteDataSource.getCharacterDetails(characterId);
+        await _localDataSource.cacheCharacterDetails(remoteDto);
+        return remoteDto.toEntity();
+      } finally {
+        _characterDetailsGate.release();
+      }
+    } catch (_) {
+      if (cachedDto != null) {
+        return cachedDto.toEntity();
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CharacterIssueListPage> getCharacterIssueList(
+    int characterId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getCharacterIssueListResults(
+      characterId,
+      page: page,
+      limit: limit,
+    );
+    final cachedAt =
+        await _localDataSource.getCharacterIssueListResultsCachedAt(
+      characterId,
+      page: page,
+      limit: limit,
+    );
+    final cachedMeta =
+        await _localDataSource.getCharacterIssueListResultsMeta(
+      characterId,
+      page: page,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.characterIssueList.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        return CharacterIssueListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final key = '$characterId|$page|$forceRefresh';
+      return _coalesce(_characterIssueListInFlight, key, () async {
+        final remotePage = await _remoteDataSource.getCharacterIssueList(
+          characterId,
+          page: page,
+          limit: limit,
+          cancelToken: cancelToken,
+        );
+        await _localDataSource.cacheCharacterIssueListResults(
+          characterId,
+          remotePage.results,
+          page: page,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return CharacterIssueListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results:
+              remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return CharacterIssueListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
           previous: cachedMeta.previous,

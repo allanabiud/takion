@@ -1,5 +1,7 @@
 import 'package:hive_ce/hive_ce.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/data/dto/character_details_dto.dart';
+import 'package:takion/src/data/dto/character_list_dto.dart';
 import 'package:takion/src/data/dto/collection_item_details_dto.dart';
 import 'package:takion/src/data/dto/collection_items_response_dto.dart';
 import 'package:takion/src/data/dto/collection_stats_dto.dart';
@@ -46,6 +48,30 @@ class SeriesListPageCacheMeta {
 
 class SeriesIssueListPageCacheMeta {
   const SeriesIssueListPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class CharacterSearchPageCacheMeta {
+  const CharacterSearchPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class CharacterIssueListPageCacheMeta {
+  const CharacterIssueListPageCacheMeta({
     required this.count,
     this.next,
     this.previous,
@@ -205,6 +231,57 @@ abstract class MetronLocalDataSource {
     required int page,
     required int limit,
   });
+  Future<void> cacheCharacterSearchResults(
+    String query,
+    List<CharacterListDto> characters, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<CharacterListDto>?> getCharacterSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  });
+  Future<DateTime?> getCharacterSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  });
+  Future<CharacterSearchPageCacheMeta?> getCharacterSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  });
+  Future<void> cacheCharacterDetails(CharacterDetailsDto details);
+  Future<CharacterDetailsDto?> getCharacterDetails(int characterId);
+  Future<DateTime?> getCharacterDetailsCachedAt(int characterId);
+  Future<void> cacheCharacterIssueListResults(
+    int characterId,
+    List<IssueListDto> issues, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<IssueListDto>?> getCharacterIssueListResults(
+    int characterId, {
+    required int page,
+    required int limit,
+  });
+  Future<DateTime?> getCharacterIssueListResultsCachedAt(
+    int characterId, {
+    required int page,
+    required int limit,
+  });
+  Future<CharacterIssueListPageCacheMeta?> getCharacterIssueListResultsMeta(
+    int characterId, {
+    required int page,
+    required int limit,
+  });
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
@@ -226,6 +303,12 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _collectionStatsBox = 'collection_stats_box';
   static const String _collectionItemsBox = 'collection_items_box';
   static const String _collectionItemDetailsBox = 'collection_item_details_box';
+  static const String _characterSearchBox = 'character_search_box';
+  static const String _characterSearchMetaBox = 'character_search_meta_box';
+  static const String _characterDetailsBox = 'character_details_box';
+  static const String _characterIssueListBox = 'character_issue_list_box';
+  static const String _characterIssueListMetaBox =
+      'character_issue_list_meta_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   final Map<String, Box> _openedBoxes = {};
@@ -262,6 +345,8 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       'collection_item_details:$collectionId';
   String _getIssueDetailsMetaKey(int issueId) => 'issue_details:$issueId';
   String _getSeriesDetailsMetaKey(int seriesId) => 'series_details:$seriesId';
+  String _getCharacterDetailsMetaKey(int characterId) =>
+      'character_details:$characterId';
   String _normalizeSearchQuery(String query) => query.trim().toLowerCase();
   String _getIssueSearchKey(String query, int page, int limit) =>
       '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
@@ -298,6 +383,15 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       'series_issue_list:$seriesId:p$page:l${_normalizeLimit(limit)}';
   String _getSeriesIssueListMetaKey(int seriesId, int page, int limit) =>
       'series_issue_list:${_getSeriesIssueListKey(seriesId, page, limit)}';
+  String _getCharacterSearchKey(String query, int page, int limit) =>
+      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+  String _getCharacterSearchMetaKey(String query, int page, int limit) =>
+      'character_search:${_getCharacterSearchKey(query, page, limit)}';
+  String _getCharacterIssueListKey(int characterId, int page, int limit) =>
+      'character_issue_list:$characterId:p$page:l${_normalizeLimit(limit)}';
+  String _getCharacterIssueListMetaKey(
+          int characterId, int page, int limit) =>
+      'character_issue_list:${_getCharacterIssueListKey(characterId, page, limit)}';
 
   @override
   Future<void> cacheCollectionStats(CollectionStatsDto stats) async {
@@ -922,6 +1016,194 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     if (count == null) return null;
 
     return SeriesIssueListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheCharacterSearchResults(
+    String query,
+    List<CharacterListDto> characters, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final searchKey = _getCharacterSearchKey(query, page, limit);
+    final box = await _getBox<List>(_characterSearchBox);
+    await box.put(
+        searchKey, characters.map((entry) => entry.toJson()).toList());
+
+    final searchMetaBox = await _getBox<Map>(_characterSearchMetaBox);
+    await searchMetaBox.put(searchKey, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getCharacterSearchMetaKey(query, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<CharacterListDto>?> getCharacterSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getCharacterSearchKey(query, page, limit);
+    final box = await _getBox<List>(_characterSearchBox);
+    final rawData = box.get(searchKey);
+    if (rawData != null) {
+      return rawData
+          .whereType<Map>()
+          .map((entry) => entry.cast<String, dynamic>())
+          .map(CharacterListDto.fromJson)
+          .toList();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getCharacterSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch =
+        metaBox.get(_getCharacterSearchMetaKey(query, page, limit));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<CharacterSearchPageCacheMeta?> getCharacterSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getCharacterSearchKey(query, page, limit);
+    final box = await _getBox<Map>(_characterSearchMetaBox);
+    final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return CharacterSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheCharacterDetails(CharacterDetailsDto details) async {
+    final box = await _getBox<Map>(_characterDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getCharacterDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<CharacterDetailsDto?> getCharacterDetails(int characterId) async {
+    final box = await _getBox<Map>(_characterDetailsBox);
+    final data = box.get(characterId);
+    if (data == null) return null;
+    return CharacterDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getCharacterDetailsCachedAt(int characterId) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getCharacterDetailsMetaKey(characterId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheCharacterIssueListResults(
+    int characterId,
+    List<IssueListDto> issues, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getCharacterIssueListKey(characterId, page, limit);
+    final box = await _getBox<List>(_characterIssueListBox);
+    await box.put(key, issues);
+
+    final metaBox = await _getBox<Map>(_characterIssueListMetaBox);
+    await metaBox.put(key, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
+    await cacheMetaBox.put(
+      _getCharacterIssueListMetaKey(characterId, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<IssueListDto>?> getCharacterIssueListResults(
+    int characterId, {
+    required int page,
+    required int limit,
+  }) async {
+    final key = _getCharacterIssueListKey(characterId, page, limit);
+    final box = await _getBox<List>(_characterIssueListBox);
+    final data = box.get(key);
+    if (data != null) {
+      return data.cast<IssueListDto>();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getCharacterIssueListResultsCachedAt(
+    int characterId, {
+    required int page,
+    required int limit,
+  }) async {
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = cacheMetaBox.get(
+      _getCharacterIssueListMetaKey(characterId, page, limit),
+    );
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<CharacterIssueListPageCacheMeta?> getCharacterIssueListResultsMeta(
+    int characterId, {
+    required int page,
+    required int limit,
+  }) async {
+    final key = _getCharacterIssueListKey(characterId, page, limit);
+    final box = await _getBox<Map>(_characterIssueListMetaBox);
+    final data = box.get(key);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return CharacterIssueListPageCacheMeta(
       count: count,
       next: data['next'] as String?,
       previous: data['previous'] as String?,

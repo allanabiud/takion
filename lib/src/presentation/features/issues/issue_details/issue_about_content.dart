@@ -6,6 +6,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/person_preview_card.dart';
+import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 
 String _currencySymbol(String? code) {
   switch (code?.toUpperCase()) {
@@ -353,11 +354,11 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       separatorWidth: 0,
       itemBuilder: (context, index) {
         final character = characters[index];
-        return PersonPreviewCard(
+        return _CharacterPreviewCard(
+          characterId: character.id,
           name: character.name.trim().isNotEmpty
               ? character.name.trim()
               : 'Unknown Character',
-          width: 95,
         );
       },
     );
@@ -598,5 +599,27 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
+  }
+}
+
+class _CharacterPreviewCard extends ConsumerWidget {
+  const _CharacterPreviewCard({
+    required this.characterId,
+    required this.name,
+  });
+
+  final int characterId;
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final characterAsync = ref.watch(characterDetailsProvider(characterId));
+    final imageUrl = characterAsync.whenOrNull(data: (c) => c.image);
+
+    return PersonPreviewCard(
+      name: name,
+      imageUrl: imageUrl,
+      width: 95,
+    );
   }
 }

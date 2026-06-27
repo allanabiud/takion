@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:takion/src/core/constants/pagination.dart';
+import 'package:takion/src/data/dto/character_details_dto.dart';
+import 'package:takion/src/data/dto/character_list_response_dto.dart';
 import 'package:takion/src/data/dto/collection_item_details_dto.dart';
 import 'package:takion/src/data/dto/collection_stats_dto.dart';
 import 'package:takion/src/data/dto/collection_items_response_dto.dart';
@@ -51,6 +53,24 @@ abstract class MetronRemoteDataSource {
   Future<SeriesDetailsDto> getSeriesDetails(int seriesId);
   Future<SeriesIssueListResponseDto> getSeriesIssueList(
     int seriesId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+  Future<CharacterListResponseDto> getCharacterList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+  Future<CharacterListResponseDto> searchCharacters(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+  Future<CharacterDetailsDto> getCharacterDetails(int characterId);
+  Future<SeriesIssueListResponseDto> getCharacterIssueList(
+    int characterId, {
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -326,6 +346,80 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }) async {
     final response = await _dio.get(
       'series/$seriesId/issue_list/',
+      queryParameters: {'page': page, 'limit': limit},
+      cancelToken: cancelToken,
+    );
+
+    return SeriesIssueListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<CharacterListResponseDto> getCharacterList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'character/',
+      queryParameters: {'page': page, 'limit': limit},
+      cancelToken: cancelToken,
+    );
+
+    return CharacterListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<CharacterListResponseDto> searchCharacters(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final candidates = _queryCandidates(query);
+    if (candidates.isEmpty) {
+      return const CharacterListResponseDto(count: 0, results: []);
+    }
+
+    CharacterListResponseDto? lastResponse;
+    for (final candidate in candidates) {
+      final response = await _dio.get(
+        'character/',
+        queryParameters: {'name': candidate, 'page': page, 'limit': limit},
+        cancelToken: cancelToken,
+      );
+
+      final parsed = CharacterListResponseDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      lastResponse = parsed;
+
+      if (parsed.results.isNotEmpty) {
+        return parsed;
+      }
+    }
+
+    return lastResponse ?? const CharacterListResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<CharacterDetailsDto> getCharacterDetails(int characterId) async {
+    final response = await _dio.get('character/$characterId/');
+    return CharacterDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<SeriesIssueListResponseDto> getCharacterIssueList(
+    int characterId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'character/$characterId/issue_list/',
       queryParameters: {'page': page, 'limit': limit},
       cancelToken: cancelToken,
     );

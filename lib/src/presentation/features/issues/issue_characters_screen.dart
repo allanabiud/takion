@@ -1,12 +1,16 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
 
 String _initials(String name) {
   if (name.isEmpty) return '?';
   final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
-  final valid = parts.where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p)).toList();
+  final valid = parts
+      .where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p))
+      .toList();
   if (valid.isEmpty) return '?';
   if (valid.length >= 2) {
     return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
@@ -63,51 +67,86 @@ class IssueCharactersScreen extends ConsumerWidget {
             itemCount: characters.length,
             itemBuilder: (context, index) {
               final character = characters[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer
-                            .withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _initials(character.name),
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            character.name.trim().isNotEmpty
-                                ? character.name.trim()
-                                : 'Unknown Character',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              return _CharacterRow(
+                characterId: character.id,
+                name: character.name.trim().isNotEmpty
+                    ? character.name.trim()
+                    : 'Unknown Character',
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _CharacterRow extends ConsumerWidget {
+  const _CharacterRow({
+    required this.characterId,
+    required this.name,
+  });
+
+  final int characterId;
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final characterAsync = ref.watch(characterDetailsProvider(characterId));
+    final imageUrl = characterAsync.whenOrNull(data: (c) => c.image);
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: imageUrl != null && imageUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => _initialsAvatar(theme),
+                      errorWidget: (context, url, error) =>
+                          _initialsAvatar(theme),
+                    )
+                  : _initialsAvatar(theme),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              name,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _initialsAvatar(ThemeData theme) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Text(
+          _initials(name),
+          style: TextStyle(
+            color: theme.colorScheme.primary,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

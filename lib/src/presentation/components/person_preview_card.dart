@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 String _initials(String name) {
@@ -52,10 +53,20 @@ class PersonPreviewCard extends StatelessWidget {
               child: imageUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        imageUrl!,
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Center(
+                        placeholder: (context, url) => Center(
+                          child: Text(
+                            _initials(name),
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Center(
                           child: Text(
                             _initials(name),
                             style: TextStyle(

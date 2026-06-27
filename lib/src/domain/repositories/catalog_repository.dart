@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:takion/src/domain/entities/character_details.dart';
+import 'package:takion/src/domain/entities/character_issue_list_page.dart';
+import 'package:takion/src/domain/entities/character_list_page.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -63,6 +66,24 @@ abstract class CatalogRepository {
 
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+  Future<CharacterListPage> searchCharacters(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+  Future<CharacterDetails> getCharacterDetails(
+    int characterId, {
+    bool forceRefresh = false,
+  });
+  Future<CharacterIssueListPage> getCharacterIssueList(
+    int characterId, {
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
