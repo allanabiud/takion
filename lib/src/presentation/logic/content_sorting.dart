@@ -17,6 +17,7 @@ enum SortPreferenceContext {
   libraryUnread,
   libraryReadingHistory,
   seriesDetailsIssues,
+  characterIssues,
   releasesWeekly,
   releasesFoc,
   releasesMyPulls,
@@ -52,6 +53,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'library_reading_history';
       case SortPreferenceContext.seriesDetailsIssues:
         return 'series_details_issues';
+      case SortPreferenceContext.characterIssues:
+        return 'character_issues_sort';
       case SortPreferenceContext.releasesWeekly:
         return 'releases_weekly';
       case SortPreferenceContext.releasesFoc:
@@ -93,6 +96,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return ContentSortOption.dateNewest;
       case SortPreferenceContext.seriesDetailsIssues:
         return ContentSortOption.dateNewest;
+      case SortPreferenceContext.characterIssues:
+        return ContentSortOption.dateOldest;
       case SortPreferenceContext.releasesWeekly:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.releasesFoc:

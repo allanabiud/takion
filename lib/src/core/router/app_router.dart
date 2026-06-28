@@ -62,6 +62,21 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: CharacterDetailsRoute.page,
+      path: '/character/:characterId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: CharacterIssuesRoute.page,
+      path: '/character/:characterId/issues',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: ImagePreviewRoute.page,
+      path: '/image-preview',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: SearchResultsRoute.page,
       path: '/search/results',
       guards: [authGuard],

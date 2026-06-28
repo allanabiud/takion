@@ -620,6 +620,9 @@ class _CharacterPreviewCard extends ConsumerWidget {
       name: name,
       imageUrl: imageUrl,
       width: 95,
+      onTap: () => context.pushRoute(
+        CharacterDetailsRoute(characterId: characterId),
+      ),
     );
   }
 }

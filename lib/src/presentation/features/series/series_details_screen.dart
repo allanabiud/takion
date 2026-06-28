@@ -23,7 +23,6 @@ import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _SeriesDetailsMenuAction { share, openInBrowser }
@@ -217,15 +216,10 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             page: 1,
           )),
         );
-        final sortOption = ref.watch(
-          sortPreferenceForContextProvider(
-            SortPreferenceContext.seriesDetailsIssues,
-          ),
-        );
         final issuesPreview = issuesPreviewAsync.asData != null
             ? sortIssues(
                 issuesPreviewAsync.asData!.value.results,
-                sortOption,
+                ContentSortOption.dateNewest,
               ).take(5).toList()
             : <IssueList>[];
         final totalIssueCount =

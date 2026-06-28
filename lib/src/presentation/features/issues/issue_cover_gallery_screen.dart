@@ -211,14 +211,23 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
                   fit: BoxFit.contain,
                 );
 
+                final zoomable = InteractiveViewer(
+                  minScale: 1.0,
+                  maxScale: 4.0,
+                  child: image,
+                );
+
                 if (index == 0 && widget.heroTag != null) {
                   return Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Hero(tag: widget.heroTag!, child: image),
+                    child: Hero(tag: widget.heroTag!, child: zoomable),
                   );
                 }
 
-                return Padding(padding: const EdgeInsets.all(16), child: image);
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: zoomable,
+                );
               },
             ),
           ),

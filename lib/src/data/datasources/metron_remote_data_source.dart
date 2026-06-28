@@ -234,7 +234,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
         queryParameters: {
           'series_name': candidate,
           'page': page,
-          'limit': limit,
         },
         cancelToken: cancelToken,
       );
@@ -267,10 +266,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     if (modifiedGt != null) {
       queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
     }
-    if (limit != null && limit > 0) {
-      queryParameters['limit'] = limit;
-    }
-
     final response = await _dio.get(
       'issue/',
       queryParameters: queryParameters,
@@ -289,7 +284,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }) async {
     final response = await _dio.get(
       'series/',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'page': page},
       cancelToken: cancelToken,
     );
 
@@ -314,7 +309,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     for (final candidate in candidates) {
       final response = await _dio.get(
         'series/',
-        queryParameters: {'name': candidate, 'page': page, 'limit': limit},
+        queryParameters: {'name': candidate, 'page': page},
         cancelToken: cancelToken,
       );
 
@@ -346,7 +341,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }) async {
     final response = await _dio.get(
       'series/$seriesId/issue_list/',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'page': page},
       cancelToken: cancelToken,
     );
 
@@ -363,7 +358,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }) async {
     final response = await _dio.get(
       'character/',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'page': page},
       cancelToken: cancelToken,
     );
 
@@ -388,7 +383,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     for (final candidate in candidates) {
       final response = await _dio.get(
         'character/',
-        queryParameters: {'name': candidate, 'page': page, 'limit': limit},
+        queryParameters: {'name': candidate, 'page': page},
         cancelToken: cancelToken,
       );
 
@@ -420,7 +415,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }) async {
     final response = await _dio.get(
       'character/$characterId/issue_list/',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'page': page},
       cancelToken: cancelToken,
     );
 

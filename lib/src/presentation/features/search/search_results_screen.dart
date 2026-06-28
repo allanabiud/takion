@@ -42,6 +42,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   int _page = 1;
   int _seriesCoverFetchLimit = seriesCoverFetchBudgetPerSession;
   bool _seriesCoverLimitUpdateScheduled = false;
+  IssueSearchPage? _lastIssuePage;
+  SeriesSearchPage? _lastSeriesPage;
   bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
 
   IssueSearchArgs get _currentIssueArgs =>
@@ -136,6 +138,351 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
   }
 
+  Widget _buildSeriesBody(
+    AsyncValue<SeriesSearchPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastSeriesPage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _buildSeriesResultsContent(
+      context,
+      ref,
+      pageData,
+      sortOption,
+      sortContext,
+      isLoading: async.isLoading,
+    );
+  }
+
+  Widget _buildIssueBody(
+    AsyncValue<IssueSearchPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastIssuePage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _buildIssueResultsContent(
+      context,
+      ref,
+      pageData,
+      sortOption,
+      sortContext,
+      isLoading: async.isLoading,
+    );
+  }
+
+  Widget _buildSeriesResultsContent(
+    BuildContext context,
+    WidgetRef ref,
+    SeriesSearchPage pageData,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext, {
+    required bool isLoading,
+  }) {
+    final sortedSeries = sortSeries(
+      _applySeriesFilter(pageData.results),
+      sortOption,
+    );
+    final totalPages = _estimatedSeriesTotalPages(pageData);
+    final hasPagination = totalPages > 1;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: sortedSeries.isEmpty && !isLoading
+                  ? RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (!_isFiltering)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: ListHeader(
+                                  count: pageData.count,
+                                  unit: 'result',
+                                  pageCount: sortedSeries.length,
+                                  sortLabel: seriesSortLabel(sortOption),
+                                  onSortTap: () =>
+                                      showSortBottomSheet(
+                                        context,
+                                        ref,
+                                        sortContext,
+                                        seriesSortLabel,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: hasPagination ? 96 : 12,
+                              ),
+                              child: const EmptyContentState(
+                                icon: Icons.collections_bookmark_outlined,
+                                message: 'No series found.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 0, 0,
+                          hasPagination ? 96 : 12,
+                        ),
+                        itemCount:
+                            sortedSeries.length + (_isFiltering ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (!_isFiltering && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ListHeader(
+                                count: pageData.count,
+                                unit: 'result',
+                                pageCount: sortedSeries.length,
+                                sortLabel: seriesSortLabel(sortOption),
+                                onSortTap: isLoading
+                                    ? null
+                                    : () => showSortBottomSheet(
+                                          context,
+                                          ref,
+                                          sortContext,
+                                          seriesSortLabel,
+                                        ),
+                              ),
+                            );
+                          }
+                          final itemIndex = _isFiltering
+                              ? index
+                              : index - 1;
+                          _maybeExpandSeriesCoverFetchLimit(
+                            index: itemIndex,
+                            total: sortedSeries.length,
+                          );
+                          final series = sortedSeries[itemIndex];
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: SeriesListTile(
+                              series: series,
+                              allowRemoteCoverFetch:
+                                  itemIndex < _seriesCoverFetchLimit,
+                              heroTag: 'series-cover-${series.id}',
+                              isFirst: itemIndex == 0,
+                              isLast: itemIndex == sortedSeries.length - 1,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: _page,
+                  totalPages: totalPages,
+                  hasPrevious: pageData.hasPrevious,
+                  hasNext: pageData.hasNext,
+                  onPrevious: () {
+                    final previousPage = pageData.previousPage;
+                    if (previousPage == null) return;
+                    setState(() {
+                      _page = previousPage;
+                      _resetSeriesCoverFetchLimit();
+                    });
+                  },
+                  onNext: () {
+                    final nextPage = pageData.nextPage;
+                    if (nextPage == null) return;
+                    setState(() {
+                      _page = nextPage;
+                      _resetSeriesCoverFetchLimit();
+                    });
+                  },
+                  enabled: !isLoading,
+                  isLoading: isLoading,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildIssueResultsContent(
+    BuildContext context,
+    WidgetRef ref,
+    IssueSearchPage pageData,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext, {
+    required bool isLoading,
+  }) {
+    final sortedIssues = sortIssues(
+      _applyFilter(pageData.results),
+      sortOption,
+    );
+    final totalPages = _estimatedTotalPages(pageData);
+    final hasPagination = totalPages > 1;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: sortedIssues.isEmpty && !isLoading
+                  ? RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (!_isFiltering)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: ListHeader(
+                                  count: pageData.count,
+                                  unit: 'result',
+                                  pageCount: sortedIssues.length,
+                                  sortLabel: issueSortLabel(sortOption),
+                                  onSortTap: () =>
+                                      showSortBottomSheet(
+                                        context,
+                                        ref,
+                                        sortContext,
+                                        issueSortLabel,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: hasPagination ? 96 : 12,
+                              ),
+                              child: const EmptyContentState(
+                                icon: Icons.menu_book_outlined,
+                                message: 'No issues found.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 0, 0,
+                          hasPagination ? 96 : 12,
+                        ),
+                        itemCount:
+                            sortedIssues.length + (_isFiltering ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (!_isFiltering && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ListHeader(
+                                count: pageData.count,
+                                unit: 'result',
+                                pageCount: sortedIssues.length,
+                                sortLabel: issueSortLabel(sortOption),
+                                onSortTap: isLoading
+                                    ? null
+                                    : () => showSortBottomSheet(
+                                          context,
+                                          ref,
+                                          sortContext,
+                                          issueSortLabel,
+                                        ),
+                              ),
+                            );
+                          }
+                          final itemIndex = _isFiltering
+                              ? index
+                              : index - 1;
+                          final issue = sortedIssues[itemIndex];
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: IssueListTile(
+                              issue: issue,
+                              isFirst: itemIndex == 0,
+                              isLast: itemIndex == sortedIssues.length - 1,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: _page,
+                  totalPages: totalPages,
+                  hasPrevious: pageData.hasPrevious,
+                  hasNext: pageData.hasNext,
+                  onPrevious: () {
+                    final previousPage = pageData.previousPage;
+                    if (previousPage == null) return;
+                    setState(() {
+                      _page = previousPage;
+                    });
+                  },
+                  onNext: () {
+                    final nextPage = pageData.nextPage;
+                    if (nextPage == null) return;
+                    setState(() {
+                      _page = nextPage;
+                    });
+                  },
+                  enabled: !isLoading,
+                  isLoading: isLoading,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortContext = _isSeriesSearch
@@ -151,6 +498,16 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     final isLoading = _isSeriesSearch
         ? seriesResultsAsync?.isLoading == true
         : issueResultsAsync?.isLoading == true;
+
+    if (_isSeriesSearch) {
+      if (seriesResultsAsync?.hasValue == true) {
+        _lastSeriesPage = seriesResultsAsync!.value;
+      }
+    } else {
+      if (issueResultsAsync?.hasValue == true) {
+        _lastIssuePage = issueResultsAsync!.value;
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -201,314 +558,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             : null,
       ),
       body: _isSeriesSearch
-          ? seriesResultsAsync!.when(
-              loading: () => const SizedBox.shrink(),
-              error: (error, _) =>
-                  AsyncStatePanel.error(errorMessage: 'Search failed: $error'),
-              data: (pageData) {
-                final sortedSeries = sortSeries(
-                  _applySeriesFilter(pageData.results),
-                  sortOption,
-                );
-                final totalPages = _estimatedSeriesTotalPages(pageData);
-                final hasPagination = totalPages > 1;
-
-                return Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: sortedSeries.isEmpty
-                              ? RefreshIndicator(
-                                  onRefresh: _forceRefreshResults,
-                                  child: CustomScrollView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    slivers: [
-                                      if (!_isFiltering)
-                                        SliverToBoxAdapter(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 12,
-                                            ),
-                                            child: ListHeader(
-                                              count: pageData.count,
-                                              unit: 'result',
-                                              pageCount: sortedSeries.length,
-                                              sortLabel: seriesSortLabel(
-                                                sortOption,
-                                              ),
-                                              onSortTap: () =>
-                                                  showSortBottomSheet(
-                                                    context,
-                                                    ref,
-                                                    sortContext,
-                                                    seriesSortLabel,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                      SliverFillRemaining(
-                                        hasScrollBody: false,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(
-                                            bottom: hasPagination ? 96 : 12,
-                                          ),
-                                          child: const EmptyContentState(
-                                            icon: Icons
-                                                .collections_bookmark_outlined,
-                                            message: 'No series found.',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : RefreshIndicator(
-                                  onRefresh: _forceRefreshResults,
-                                  child: ListView.builder(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    padding: EdgeInsets.fromLTRB(
-                                      0,
-                                      0,
-                                      0,
-                                      hasPagination ? 96 : 12,
-                                    ),
-                                    itemCount:
-                                        sortedSeries.length +
-                                        (_isFiltering ? 0 : 1),
-                                    itemBuilder: (context, index) {
-                                      if (!_isFiltering && index == 0) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 12,
-                                          ),
-                                          child: ListHeader(
-                                            count: pageData.count,
-                                            unit: 'result',
-                                            pageCount: sortedSeries.length,
-                                            sortLabel: seriesSortLabel(
-                                              sortOption,
-                                            ),
-                                            onSortTap: () =>
-                                                showSortBottomSheet(
-                                                  context,
-                                                  ref,
-                                                  sortContext,
-                                                  seriesSortLabel,
-                                                ),
-                                          ),
-                                        );
-                                      }
-                                      final itemIndex = _isFiltering
-                                          ? index
-                                          : index - 1;
-                                      _maybeExpandSeriesCoverFetchLimit(
-                                        index: itemIndex,
-                                        total: sortedSeries.length,
-                                      );
-                                      final series = sortedSeries[itemIndex];
-                                      return SeriesListTile(
-                                        series: series,
-                                        allowRemoteCoverFetch:
-                                            itemIndex < _seriesCoverFetchLimit,
-                                        heroTag: 'series-cover-${series.id}',
-                                        isFirst: itemIndex == 0,
-                                        isLast:
-                                            itemIndex ==
-                                            sortedSeries.length - 1,
-                                      );
-                                    },
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                    SafeArea(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                          child: PageNavigationBar(
-                            currentPage: _page,
-                            totalPages: totalPages,
-                            hasPrevious: pageData.hasPrevious,
-                            hasNext: pageData.hasNext,
-                            onPrevious: () {
-                              final previousPage = pageData.previousPage;
-                              if (previousPage == null) return;
-                              setState(() {
-                                _page = previousPage;
-                                _resetSeriesCoverFetchLimit();
-                              });
-                            },
-                            onNext: () {
-                              final nextPage = pageData.nextPage;
-                              if (nextPage == null) return;
-                              setState(() {
-                                _page = nextPage;
-                                _resetSeriesCoverFetchLimit();
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            )
-          : issueResultsAsync!.when(
-              loading: () => const SizedBox.shrink(),
-              error: (error, _) =>
-                  AsyncStatePanel.error(errorMessage: 'Search failed: $error'),
-              data: (pageData) {
-                final sortedIssues = sortIssues(
-                  _applyFilter(pageData.results),
-                  sortOption,
-                );
-                final totalPages = _estimatedTotalPages(pageData);
-                final hasPagination = totalPages > 1;
-
-                return Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: sortedIssues.isEmpty
-                              ? RefreshIndicator(
-                                  onRefresh: _forceRefreshResults,
-                                  child: CustomScrollView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    slivers: [
-                                      if (!_isFiltering)
-                                        SliverToBoxAdapter(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 12,
-                                            ),
-                                            child: ListHeader(
-                                              count: pageData.count,
-                                              unit: 'result',
-                                              pageCount: sortedIssues.length,
-                                              sortLabel: issueSortLabel(
-                                                sortOption,
-                                              ),
-                                              onSortTap: () =>
-                                                  showSortBottomSheet(
-                                                    context,
-                                                    ref,
-                                                    sortContext,
-                                                    issueSortLabel,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                      SliverFillRemaining(
-                                        hasScrollBody: false,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(
-                                            bottom: hasPagination ? 96 : 12,
-                                          ),
-                                          child: const EmptyContentState(
-                                            icon: Icons.menu_book_outlined,
-                                            message: 'No issues found.',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : RefreshIndicator(
-                                  onRefresh: _forceRefreshResults,
-                                  child: ListView.builder(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    padding: EdgeInsets.fromLTRB(
-                                      0,
-                                      0,
-                                      0,
-                                      hasPagination ? 96 : 12,
-                                    ),
-                                    itemCount:
-                                        sortedIssues.length +
-                                        (_isFiltering ? 0 : 1),
-                                    itemBuilder: (context, index) {
-                                      if (!_isFiltering && index == 0) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 12,
-                                          ),
-                                          child: ListHeader(
-                                            count: pageData.count,
-                                            unit: 'result',
-                                            pageCount: sortedIssues.length,
-                                            sortLabel: issueSortLabel(
-                                              sortOption,
-                                            ),
-                                            onSortTap: () =>
-                                                showSortBottomSheet(
-                                                  context,
-                                                  ref,
-                                                  sortContext,
-                                                  issueSortLabel,
-                                                ),
-                                          ),
-                                        );
-                                      }
-                                      final itemIndex = _isFiltering
-                                          ? index
-                                          : index - 1;
-                                      final issue = sortedIssues[itemIndex];
-                                      return IssueListTile(
-                                        issue: issue,
-                                        isFirst: itemIndex == 0,
-                                        isLast:
-                                            itemIndex ==
-                                            sortedIssues.length - 1,
-                                      );
-                                    },
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                    SafeArea(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                          child: PageNavigationBar(
-                            currentPage: _page,
-                            totalPages: totalPages,
-                            hasPrevious: pageData.hasPrevious,
-                            hasNext: pageData.hasNext,
-                            onPrevious: () {
-                              final previousPage = pageData.previousPage;
-                              if (previousPage == null) return;
-                              setState(() {
-                                _page = previousPage;
-                              });
-                            },
-                            onNext: () {
-                              final nextPage = pageData.nextPage;
-                              if (nextPage == null) return;
-                              setState(() {
-                                _page = nextPage;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+          ? _buildSeriesBody(seriesResultsAsync!, sortOption, sortContext)
+          : _buildIssueBody(issueResultsAsync!, sortOption, sortContext),
     );
   }
 }

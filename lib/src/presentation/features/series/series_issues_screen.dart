@@ -237,7 +237,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
               ),
                 ],
               ),
-        if (hasPagination && sortedIssues.isNotEmpty)
+        if (hasPagination)
           SafeArea(
             child: Align(
               alignment: Alignment.bottomCenter,

@@ -1,1 +1,1 @@
-const metronDefaultPageSize = 50;
+const metronDefaultPageSize = 100;
