@@ -23,11 +23,13 @@ class MainScreenState extends ConsumerState<MainScreen>
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   final _chipKeys = <SearchTarget, GlobalKey>{};
+  SearchTarget? _lastTarget;
 
   bool _overlayVisible = false;
 
   void openSearch() {
     if (_overlayVisible) return;
+    ref.read(searchStateProvider.notifier).setTarget(SearchTarget.series);
     setState(() => _overlayVisible = true);
     _animController.forward();
   }
@@ -35,6 +37,7 @@ class MainScreenState extends ConsumerState<MainScreen>
   void _dismissSearch([VoidCallback? onComplete]) {
     _searchController.clear();
     _searchFocusNode.unfocus();
+    _lastTarget = null;
     _animController.reverse().then((_) {
       if (!mounted) return;
       setState(() => _overlayVisible = false);
@@ -53,6 +56,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       SearchTarget.characters => 'Characters',
       SearchTarget.creators => 'Creators',
       SearchTarget.universes => 'Universes',
+      SearchTarget.imprints => 'Imprints',
     };
     _searchFocusNode.unfocus();
     context.pushRoute(
@@ -262,21 +266,31 @@ class MainScreenState extends ConsumerState<MainScreen>
     );
   }
 
+  void _scrollToSelectedChip({required bool animate}) {
+    if (!mounted || !_overlayVisible) return;
+    final target = ref.read(searchStateProvider).target;
+    final key = _chipKeys[target];
+    final context = key?.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: animate ? const Duration(milliseconds: 200) : Duration.zero,
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   Widget _buildSearchBody() {
     final state = ref.watch(searchStateProvider);
+    final target = state.target;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final key = _chipKeys[state.target];
-      final context = key?.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          alignment: 0.5,
-          duration: const Duration(milliseconds: 200),
-        );
-      }
-    });
+    if (_lastTarget != target) {
+      _lastTarget = target;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelectedChip(animate: !_animController.isAnimating);
+      });
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,6 +373,21 @@ class MainScreenState extends ConsumerState<MainScreen>
                   ref
                       .read(searchStateProvider.notifier)
                       .setTarget(SearchTarget.universes);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.imprints] ??= GlobalKey(),
+                label: const Text(
+                  'Imprints',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.imprints,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.imprints);
                 },
               ),
             ],

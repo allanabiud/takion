@@ -13,6 +13,8 @@ import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/data/dto/issue_list_dto.dart';
 import 'package:takion/src/data/dto/series_details_dto.dart';
 import 'package:takion/src/data/dto/series_list_dto.dart';
+import 'package:takion/src/data/dto/imprint_details_dto.dart';
+import 'package:takion/src/data/dto/imprint_list_dto.dart';
 
 class IssueSearchPageCacheMeta {
   const IssueSearchPageCacheMeta({
@@ -88,6 +90,18 @@ class CreatorSearchPageCacheMeta {
 
 class UniverseSearchPageCacheMeta {
   const UniverseSearchPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class ImprintSearchPageCacheMeta {
+  const ImprintSearchPageCacheMeta({
     required this.count,
     this.next,
     this.previous,
@@ -380,6 +394,40 @@ abstract class MetronLocalDataSource {
   Future<UniverseDetailsDto?> getUniverseDetails(int universeId);
 
   Future<DateTime?> getUniverseDetailsCachedAt(int universeId);
+
+  Future<void> cacheImprintSearchResults(
+    String query,
+    List<ImprintListDto> imprints, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+
+  Future<List<ImprintListDto>?> getImprintSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<DateTime?> getImprintSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<ImprintSearchPageCacheMeta?> getImprintSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<void> cacheImprintDetails(ImprintDetailsDto details);
+
+  Future<ImprintDetailsDto?> getImprintDetails(int imprintId);
+
+  Future<DateTime?> getImprintDetailsCachedAt(int imprintId);
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
@@ -413,6 +461,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _universeSearchBox = 'universe_search_box';
   static const String _universeSearchMetaBox = 'universe_search_meta_box';
   static const String _universeDetailsBox = 'universe_details_box';
+  static const String _imprintSearchBox = 'imprint_search_box';
+  static const String _imprintSearchMetaBox = 'imprint_search_meta_box';
+  static const String _imprintDetailsBox = 'imprint_details_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   final Map<String, Box> _openedBoxes = {};
@@ -509,6 +560,12 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       'universe_search:${_getUniverseSearchKey(query, page, limit)}';
   String _getUniverseDetailsMetaKey(int universeId) =>
       'universe_details:$universeId';
+  String _getImprintSearchKey(String query, int page, int limit) =>
+      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+  String _getImprintSearchMetaKey(String query, int page, int limit) =>
+      'imprint_search:${_getImprintSearchKey(query, page, limit)}';
+  String _getImprintDetailsMetaKey(int imprintId) =>
+      'imprint_details:$imprintId';
 
   @override
   Future<void> cacheCollectionStats(CollectionStatsDto stats) async {
@@ -1543,6 +1600,116 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   Future<DateTime?> getUniverseDetailsCachedAt(int universeId) async {
     final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getUniverseDetailsMetaKey(universeId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheImprintSearchResults(
+    String query,
+    List<ImprintListDto> imprints, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final searchKey = _getImprintSearchKey(query, page, limit);
+    final box = await _getBox<List>(_imprintSearchBox);
+    await box.put(
+        searchKey, imprints.map((entry) => entry.toJson()).toList());
+
+    final searchMetaBox = await _getBox<Map>(_imprintSearchMetaBox);
+    await searchMetaBox.put(searchKey, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getImprintSearchMetaKey(query, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<ImprintListDto>?> getImprintSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getImprintSearchKey(query, page, limit);
+    final box = await _getBox<List>(_imprintSearchBox);
+    final rawData = box.get(searchKey);
+    if (rawData != null) {
+      return rawData
+          .whereType<Map>()
+          .map((entry) => entry.cast<String, dynamic>())
+          .map(ImprintListDto.fromJson)
+          .toList();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getImprintSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch =
+        metaBox.get(_getImprintSearchMetaKey(query, page, limit));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<ImprintSearchPageCacheMeta?> getImprintSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getImprintSearchKey(query, page, limit);
+    final box = await _getBox<Map>(_imprintSearchMetaBox);
+    final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return ImprintSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheImprintDetails(ImprintDetailsDto details) async {
+    final box = await _getBox<Map>(_imprintDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getImprintDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<ImprintDetailsDto?> getImprintDetails(int imprintId) async {
+    final box = await _getBox<Map>(_imprintDetailsBox);
+    final data = box.get(imprintId);
+    if (data == null) return null;
+    return ImprintDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getImprintDetailsCachedAt(int imprintId) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getImprintDetailsMetaKey(imprintId));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
   }

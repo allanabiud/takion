@@ -82,6 +82,11 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: ImprintDetailsRoute.page,
+      path: '/imprint/:imprintId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: ImagePreviewRoute.page,
       path: '/image-preview',
       guards: [authGuard],

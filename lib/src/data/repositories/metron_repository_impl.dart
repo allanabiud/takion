@@ -13,6 +13,8 @@ import 'package:takion/src/domain/entities/creator_details.dart';
 import 'package:takion/src/domain/entities/creator_list_page.dart';
 import 'package:takion/src/domain/entities/universe_details.dart';
 import 'package:takion/src/domain/entities/universe_list_page.dart';
+import 'package:takion/src/domain/entities/imprint_details.dart';
+import 'package:takion/src/domain/entities/imprint_list_page.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -43,6 +45,7 @@ class MetronRepositoryImpl implements MetronRepository {
   final _AsyncConcurrencyGate _characterDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _creatorDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _universeDetailsGate = _AsyncConcurrencyGate(3);
+  final _AsyncConcurrencyGate _imprintDetailsGate = _AsyncConcurrencyGate(3);
 
   MetronRepositoryImpl(
     this._remoteDataSource,
@@ -1022,6 +1025,120 @@ class MetronRepositoryImpl implements MetronRepository {
         return remoteDto.toEntity();
       } finally {
         _universeDetailsGate.release();
+      }
+    } catch (_) {
+      if (cachedDto != null) {
+        return cachedDto.toEntity();
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ImprintListPage> searchImprints(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getImprintSearchResults(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedAt = await _localDataSource.getImprintSearchResultsCachedAt(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedMeta = await _localDataSource.getImprintSearchResultsMeta(
+      query,
+      page: page,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.universeSearchResults.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        return ImprintListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final remotePage = await _remoteDataSource.searchImprints(
+        query,
+        page: page,
+        limit: limit,
+        cancelToken: cancelToken,
+      );
+      await _localDataSource.cacheImprintSearchResults(
+        query,
+        remotePage.results,
+        page: page,
+        limit: limit,
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+      );
+      return ImprintListPage(
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+        results:
+            remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: page,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return ImprintListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ImprintDetails> getImprintDetails(
+    int imprintId, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDto = await _localDataSource.getImprintDetails(imprintId);
+    final cachedAt =
+        await _localDataSource.getImprintDetailsCachedAt(imprintId);
+
+    if (!forceRefresh && cachedDto != null) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.universeDetails.isFresh(cachedAt, _now());
+      if (isFresh) {
+        return cachedDto.toEntity();
+      }
+    }
+
+    try {
+      await _imprintDetailsGate.acquire();
+      try {
+        final remoteDto =
+            await _remoteDataSource.getImprintDetails(imprintId);
+        await _localDataSource.cacheImprintDetails(remoteDto);
+        return remoteDto.toEntity();
+      } finally {
+        _imprintDetailsGate.release();
       }
     } catch (_) {
       if (cachedDto != null) {

@@ -17,6 +17,8 @@ import 'package:takion/src/data/dto/series_details_dto.dart';
 import 'package:takion/src/data/dto/series_issue_list_response_dto.dart';
 import 'package:takion/src/data/dto/series_list_response_dto.dart';
 import 'package:takion/src/data/dto/series_search_response_dto.dart';
+import 'package:takion/src/data/dto/imprint_details_dto.dart';
+import 'package:takion/src/data/dto/imprint_list_response_dto.dart';
 
 abstract class MetronRemoteDataSource {
   Future<CollectionStatsDto> getCollectionStats();
@@ -97,6 +99,15 @@ abstract class MetronRemoteDataSource {
   });
 
   Future<UniverseDetailsDto> getUniverseDetails(int universeId);
+
+  Future<ImprintListResponseDto> searchImprints(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+
+  Future<ImprintDetailsDto> getImprintDetails(int imprintId);
 }
 
 class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
@@ -524,5 +535,45 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<UniverseDetailsDto> getUniverseDetails(int universeId) async {
     final response = await _dio.get('universe/$universeId/');
     return UniverseDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ImprintListResponseDto> searchImprints(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final candidates = _queryCandidates(query);
+    if (candidates.isEmpty) {
+      return const ImprintListResponseDto(count: 0, results: []);
+    }
+
+    ImprintListResponseDto? lastResponse;
+    for (final candidate in candidates) {
+      final response = await _dio.get(
+        'imprint/',
+        queryParameters: {'name': candidate, 'page': page},
+        cancelToken: cancelToken,
+      );
+
+      final parsed = ImprintListResponseDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      lastResponse = parsed;
+
+      if (parsed.results.isNotEmpty) {
+        return parsed;
+      }
+    }
+
+    return lastResponse ??
+        const ImprintListResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<ImprintDetailsDto> getImprintDetails(int imprintId) async {
+    final response = await _dio.get('imprint/$imprintId/');
+    return ImprintDetailsDto.fromJson(response.data as Map<String, dynamic>);
   }
 }

@@ -12,6 +12,8 @@ import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
 import 'package:takion/src/domain/entities/universe_list.dart';
 import 'package:takion/src/domain/entities/universe_list_page.dart';
+import 'package:takion/src/domain/entities/imprint_list.dart';
+import 'package:takion/src/domain/entities/imprint_list_page.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
@@ -19,11 +21,13 @@ import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
 import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
+import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/components/person_list_tile.dart';
 import 'package:takion/src/presentation/components/universe_list_tile.dart';
+import 'package:takion/src/presentation/components/imprint_list_tile.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/components/list_header.dart';
@@ -58,6 +62,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   CharacterListPage? _lastCharacterPage;
   CreatorListPage? _lastCreatorPage;
   UniverseListPage? _lastUniversePage;
+  ImprintListPage? _lastImprintPage;
   bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
   bool get _isCharacterSearch =>
       widget.searchChoice.toLowerCase() == 'characters';
@@ -65,6 +70,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       widget.searchChoice.toLowerCase() == 'creators';
   bool get _isUniverseSearch =>
       widget.searchChoice.toLowerCase() == 'universes';
+  bool get _isImprintSearch =>
+      widget.searchChoice.toLowerCase() == 'imprints';
 
   IssueSearchArgs get _currentIssueArgs =>
       IssueSearchArgs(query: widget.query, page: _page);
@@ -76,6 +83,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       CreatorSearchArgs(query: widget.query, page: _page);
   UniverseSearchArgs get _currentUniverseArgs =>
       UniverseSearchArgs(query: widget.query, page: _page);
+  ImprintSearchArgs get _currentImprintArgs =>
+      ImprintSearchArgs(query: widget.query, page: _page);
 
   Future<void> _forceRefreshResults() async {
     if (_isCharacterSearch) {
@@ -99,6 +108,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       ref.invalidate(universeSearchResultsProvider(_currentUniverseArgs));
       await ref
           .read(universeSearchResultsProvider(_currentUniverseArgs).future);
+    } else if (_isImprintSearch) {
+      await ref
+          .read(metronRepositoryProvider)
+          .searchImprints(widget.query, page: _page, forceRefresh: true);
+      ref.invalidate(imprintSearchResultsProvider(_currentImprintArgs));
+      await ref
+          .read(imprintSearchResultsProvider(_currentImprintArgs).future);
     } else if (_isSeriesSearch) {
       await ref
           .read(metronRepositoryProvider)
@@ -222,6 +238,20 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (filter.isEmpty) return universes;
 
     return universes.where((entry) {
+      final name = entry.name.toLowerCase();
+      return name.contains(filter);
+    }).toList();
+  }
+
+  int _estimatedImprintTotalPages(ImprintListPage pageData) {
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
+  }
+
+  List<ImprintList> _applyImprintFilter(List<ImprintList> imprints) {
+    final filter = _filterController.text.trim().toLowerCase();
+    if (filter.isEmpty) return imprints;
+
+    return imprints.where((entry) {
       final name = entry.name.toLowerCase();
       return name.contains(filter);
     }).toList();
@@ -353,6 +383,175 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                               name: universe.name,
                               isFirst: itemIndex == 0,
                               isLast: itemIndex == sortedUniverses.length - 1,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: _page,
+                  totalPages: totalPages,
+                  hasPrevious: pageData.hasPrevious,
+                  hasNext: pageData.hasNext,
+                  onPrevious: () {
+                    final previousPage = pageData.previousPage;
+                    if (previousPage == null) return;
+                    setState(() {
+                      _page = previousPage;
+                    });
+                  },
+                  onNext: () {
+                    final nextPage = pageData.nextPage;
+                    if (nextPage == null) return;
+                    setState(() {
+                      _page = nextPage;
+                    });
+                  },
+                  enabled: !isLoading,
+                  isLoading: isLoading,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImprintBody(
+    AsyncValue<ImprintListPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastImprintPage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _buildImprintResultsContent(
+      context,
+      ref,
+      pageData,
+      sortOption,
+      sortContext,
+      isLoading: async.isLoading,
+    );
+  }
+
+  Widget _buildImprintResultsContent(
+    BuildContext context,
+    WidgetRef ref,
+    ImprintListPage pageData,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext, {
+    required bool isLoading,
+  }) {
+    final sortedImprints = sortImprints(
+      _applyImprintFilter(pageData.results),
+      sortOption,
+    );
+    final totalPages = _estimatedImprintTotalPages(pageData);
+    final hasPagination = totalPages > 1;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: sortedImprints.isEmpty && !isLoading
+                  ? RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (!_isFiltering)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: ListHeader(
+                                  count: pageData.count,
+                                  unit: 'result',
+                                  pageCount: sortedImprints.length,
+                                  sortLabel: imprintSortLabel(sortOption),
+                                  onSortTap: () =>
+                                      showSortBottomSheet(
+                                        context,
+                                        ref,
+                                        sortContext,
+                                        imprintSortLabel,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: hasPagination ? 96 : 12,
+                              ),
+                              child: const EmptyContentState(
+                                icon: Icons.business_outlined,
+                                message: 'No imprints found.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 0, 0,
+                          hasPagination ? 96 : 12,
+                        ),
+                        itemCount:
+                            sortedImprints.length + (_isFiltering ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (!_isFiltering && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ListHeader(
+                                count: pageData.count,
+                                unit: 'result',
+                                pageCount: sortedImprints.length,
+                                sortLabel: imprintSortLabel(sortOption),
+                                onSortTap: isLoading
+                                    ? null
+                                    : () => showSortBottomSheet(
+                                          context,
+                                          ref,
+                                          sortContext,
+                                          imprintSortLabel,
+                                        ),
+                              ),
+                            );
+                          }
+                          final itemIndex = _isFiltering
+                              ? index
+                              : index - 1;
+                          final imprint = sortedImprints[itemIndex];
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: ImprintListTile(
+                              imprintId: imprint.id,
+                              name: imprint.name,
+                              isFirst: itemIndex == 0,
+                              isLast: itemIndex == sortedImprints.length - 1,
                             ),
                           );
                         },
@@ -1087,12 +1286,17 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             ? SortPreferenceContext.searchCreators
             : _isUniverseSearch
                 ? SortPreferenceContext.searchUniverses
-                : _isSeriesSearch
-                    ? SortPreferenceContext.searchSeries
-                    : SortPreferenceContext.searchIssues;
+                : _isImprintSearch
+                    ? SortPreferenceContext.searchImprints
+                    : _isSeriesSearch
+                        ? SortPreferenceContext.searchSeries
+                        : SortPreferenceContext.searchIssues;
     final sortOption = ref.watch(sortPreferenceForContextProvider(sortContext));
     final universeResultsAsync = _isUniverseSearch
         ? ref.watch(universeSearchResultsProvider(_currentUniverseArgs))
+        : null;
+    final imprintResultsAsync = _isImprintSearch
+        ? ref.watch(imprintSearchResultsProvider(_currentImprintArgs))
         : null;
     final creatorResultsAsync = _isCreatorSearch
         ? ref.watch(creatorSearchResultsProvider(_currentCreatorArgs))
@@ -1103,7 +1307,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     final issueResultsAsync = _isSeriesSearch ||
             _isCharacterSearch ||
             _isCreatorSearch ||
-            _isUniverseSearch
+            _isUniverseSearch ||
+            _isImprintSearch
         ? null
         : ref.watch(issueSearchResultsProvider(_currentIssueArgs));
     final seriesResultsAsync = _isSeriesSearch
@@ -1115,9 +1320,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             ? characterResultsAsync?.isLoading == true
             : _isUniverseSearch
                 ? universeResultsAsync?.isLoading == true
-                : _isSeriesSearch
-                    ? seriesResultsAsync?.isLoading == true
-                    : issueResultsAsync?.isLoading == true;
+                : _isImprintSearch
+                    ? imprintResultsAsync?.isLoading == true
+                    : _isSeriesSearch
+                        ? seriesResultsAsync?.isLoading == true
+                        : issueResultsAsync?.isLoading == true;
 
     if (_isCreatorSearch) {
       if (creatorResultsAsync?.hasValue == true) {
@@ -1130,6 +1337,10 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     } else if (_isUniverseSearch) {
       if (universeResultsAsync?.hasValue == true) {
         _lastUniversePage = universeResultsAsync!.value;
+      }
+    } else if (_isImprintSearch) {
+      if (imprintResultsAsync?.hasValue == true) {
+        _lastImprintPage = imprintResultsAsync!.value;
       }
     } else if (_isSeriesSearch) {
       if (seriesResultsAsync?.hasValue == true) {
@@ -1198,11 +1409,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               : _isUniverseSearch
                   ? _buildUniverseBody(
                       universeResultsAsync!, sortOption, sortContext)
-                  : _isSeriesSearch
-                      ? _buildSeriesBody(
-                          seriesResultsAsync!, sortOption, sortContext)
-                      : _buildIssueBody(
-                          issueResultsAsync!, sortOption, sortContext),
+                  : _isImprintSearch
+                      ? _buildImprintBody(
+                          imprintResultsAsync!, sortOption, sortContext)
+                      : _isSeriesSearch
+                          ? _buildSeriesBody(
+                              seriesResultsAsync!, sortOption, sortContext)
+                          : _buildIssueBody(
+                              issueResultsAsync!, sortOption, sortContext),
     );
   }
 }

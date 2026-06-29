@@ -6,7 +6,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/person_card.dart';
-
+import 'package:takion/src/presentation/components/imprint_card.dart';
 
 String _currencySymbol(String? code) {
   switch (code?.toUpperCase()) {
@@ -318,7 +318,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       onViewAll: () =>
           context.pushRoute(IssueCreatorsRoute(issueId: widget.issueId)),
       itemCount: credits.length,
-      height: 140,
+      height: 150,
       separatorWidth: 0,
       itemBuilder: (context, index) {
         final credit = credits[index];
@@ -351,7 +351,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       onViewAll: () =>
           context.pushRoute(IssueCharactersRoute(issueId: widget.issueId)),
       itemCount: characters.length,
-      height: 140,
+      height: 130,
       separatorWidth: 0,
       itemBuilder: (context, index) {
         final character = characters[index];
@@ -380,7 +380,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         : (isbn != null && isbn.isNotEmpty)
         ? isbn
         : null;
-    final imprint = widget.issue.imprint?.name.trim();
     final hasSku = distributorSku != null && distributorSku.isNotEmpty;
 
     String? formatDate(DateTime? date) =>
@@ -392,8 +391,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     final infoItems = <({String label, String value})>{
       if (seriesType != null) (label: 'Format', value: seriesType),
-      if (imprint != null && imprint.isNotEmpty)
-        (label: 'Imprint', value: imprint),
       if (hasSku) (label: 'Distributor SKU', value: distributorSku),
       if (upcIsbn != null) (label: 'UPC / ISBN', value: upcIsbn),
       if (focDate != null) (label: 'FOC Date', value: focDate),
@@ -476,6 +473,22 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     );
   }
 
+  Widget _buildImprintSection(BuildContext context) {
+    final imprint = widget.issue.imprint;
+    if (imprint == null || imprint.name.trim().isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Imprint', style: _sectionTitleStyle(context)),
+        const SizedBox(height: 16),
+        ImprintCard(
+          imprintId: imprint.id,
+          name: imprint.name,
+        ),
+      ],
+    );
+  }
+
   Widget _buildGenresSection(BuildContext context) {
     final genres = widget.issue.series?.genres;
     if (genres == null || genres.isEmpty) return const SizedBox.shrink();
@@ -513,6 +526,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final hasReprints = widget.issue.reprints.any((reprint) => reprint.id > 0);
     final hasCreators = widget.issue.credits.isNotEmpty;
     final hasCharacters = widget.issue.characters.isNotEmpty;
+    final hasImprint = widget.issue.imprint?.name.trim().isNotEmpty ?? false;
     final hasGenres = widget.issue.series?.genres.isNotEmpty ?? false;
 
     final seriesType = widget.issue.series?.seriesType?.name;
@@ -525,12 +539,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final sku = widget.issue.sku?.trim();
     final upc = widget.issue.upc?.trim();
     final isbn = widget.issue.isbn?.trim();
-    final imprint = widget.issue.imprint?.name.trim();
     final hasAdditionalInfo =
         (sku != null && sku.isNotEmpty) ||
         (upc != null && upc.isNotEmpty) ||
         (isbn != null && isbn.isNotEmpty) ||
-        (imprint != null && imprint.isNotEmpty) ||
         widget.issue.focDate != null ||
         widget.issue.coverDate != null ||
         widget.issue.storeDate != null ||
@@ -572,6 +584,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           _buildSectionCard(context, _buildReprintsSection(context)),
           const SizedBox(height: 16),
         ],
+        if (hasImprint) ...[
+          _buildSectionCard(context, _buildImprintSection(context)),
+          const SizedBox(height: 16),
+        ],
         if (hasGenres) ...[
           _buildSectionCard(context, _buildGenresSection(context)),
           const SizedBox(height: 16),
@@ -603,5 +619,3 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return '$year-$month-$day $hour:$minute';
   }
 }
-
-

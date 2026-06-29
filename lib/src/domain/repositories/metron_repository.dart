@@ -11,6 +11,10 @@ import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/domain/entities/series_list_page.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
+import 'package:takion/src/domain/entities/universe_details.dart';
+import 'package:takion/src/domain/entities/universe_list_page.dart';
+import 'package:takion/src/domain/entities/imprint_details.dart';
+import 'package:takion/src/domain/entities/imprint_list_page.dart';
 import 'package:takion/src/domain/repositories/catalog_repository.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 
@@ -120,6 +124,36 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<CreatorDetails> getCreatorDetails(
     int creatorId, {
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<UniverseListPage> searchUniverses(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<UniverseDetails> getUniverseDetails(
+    int universeId, {
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<ImprintListPage> searchImprints(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<ImprintDetails> getImprintDetails(
+    int imprintId, {
     bool forceRefresh = false,
   });
 }
