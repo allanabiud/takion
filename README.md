@@ -12,10 +12,10 @@
 <p align="center">
   <table>
     <tr>
-      <td align="center"><img src="assets/images/home.png" width="200" style="border-radius:16px;"/></td>
-      <td align="center"><img src="assets/images/new_releases.png" width="200" style="border-radius:16px;"/></td>
-      <td align="center"><img src="assets/images/library.png" width="200" style="border-radius:16px;"/></td>
-      <td align="center"><img src="assets/images/issue_details.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/screenshots/home.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/screenshots/new_releases.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/screenshots/issue_details.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/screenshots/series_details.png" width="200" style="border-radius:16px;"/></td>
     </tr>
   </table>
 </p>
