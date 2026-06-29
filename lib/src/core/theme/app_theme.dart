@@ -82,8 +82,6 @@ class AppThemes {
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: scheme.primary,
-        indicatorColor: scheme.primary,
         labelColor: scheme.primary,
         unselectedLabelColor: scheme.onSurfaceVariant,
       ),
@@ -187,8 +185,6 @@ class AppThemes {
         actionsIconTheme: const IconThemeData(size: 30),
       ),
       tabBarTheme: base.tabBarTheme.copyWith(
-        dividerColor: scheme.primary,
-        indicatorColor: scheme.primary,
         labelColor: scheme.primary,
         unselectedLabelColor: scheme.onSurfaceVariant,
       ),

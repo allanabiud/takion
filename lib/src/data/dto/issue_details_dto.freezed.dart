@@ -1627,7 +1627,7 @@ as String,
 /// @nodoc
 mixin _$IssueDetailsCreditDto {
 
-@HiveField(0) int get id;@HiveField(1) String? get creator;@HiveField(2)@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> get roles;
+@HiveField(0) int get id;@HiveField(1) String? get creator;@HiveField(2)@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> get roles;@HiveField(3)@JsonKey(name: 'creator_id') int? get creatorId;
 /// Create a copy of IssueDetailsCreditDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1640,16 +1640,16 @@ $IssueDetailsCreditDtoCopyWith<IssueDetailsCreditDto> get copyWith => _$IssueDet
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDetailsCreditDto&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&const DeepCollectionEquality().equals(other.roles, roles));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDetailsCreditDto&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,creator,const DeepCollectionEquality().hash(roles));
+int get hashCode => Object.hash(runtimeType,id,creator,const DeepCollectionEquality().hash(roles),creatorId);
 
 @override
 String toString() {
-  return 'IssueDetailsCreditDto(id: $id, creator: $creator, roles: $roles)';
+  return 'IssueDetailsCreditDto(id: $id, creator: $creator, roles: $roles, creatorId: $creatorId)';
 }
 
 
@@ -1660,7 +1660,7 @@ abstract mixin class $IssueDetailsCreditDtoCopyWith<$Res>  {
   factory $IssueDetailsCreditDtoCopyWith(IssueDetailsCreditDto value, $Res Function(IssueDetailsCreditDto) _then) = _$IssueDetailsCreditDtoCopyWithImpl;
 @useResult
 $Res call({
-@HiveField(0) int id,@HiveField(1) String? creator,@HiveField(2)@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> roles
+@HiveField(0) int id,@HiveField(1) String? creator,@HiveField(2)@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> roles,@HiveField(3)@JsonKey(name: 'creator_id') int? creatorId
 });
 
 
@@ -1677,12 +1677,13 @@ class _$IssueDetailsCreditDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueDetailsCreditDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? creator = freezed,Object? roles = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? creator = freezed,Object? roles = null,Object? creatorId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
 as String?,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
-as List<IssueDetailsCreditRoleDto>,
+as List<IssueDetailsCreditRoleDto>,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -1767,10 +1768,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String? creator, @HiveField(2)@JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String? creator, @HiveField(2)@JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles, @HiveField(3)@JsonKey(name: 'creator_id')  int? creatorId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDetailsCreditDto() when $default != null:
-return $default(_that.id,_that.creator,_that.roles);case _:
+return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
   return orElse();
 
 }
@@ -1788,10 +1789,10 @@ return $default(_that.id,_that.creator,_that.roles);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String? creator, @HiveField(2)@JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  int id, @HiveField(1)  String? creator, @HiveField(2)@JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles, @HiveField(3)@JsonKey(name: 'creator_id')  int? creatorId)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsCreditDto():
-return $default(_that.id,_that.creator,_that.roles);case _:
+return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1808,10 +1809,10 @@ return $default(_that.id,_that.creator,_that.roles);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  int id, @HiveField(1)  String? creator, @HiveField(2)@JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  int id, @HiveField(1)  String? creator, @HiveField(2)@JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles, @HiveField(3)@JsonKey(name: 'creator_id')  int? creatorId)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsCreditDto() when $default != null:
-return $default(_that.id,_that.creator,_that.roles);case _:
+return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
   return null;
 
 }
@@ -1823,7 +1824,7 @@ return $default(_that.id,_that.creator,_that.roles);case _:
 @JsonSerializable()
 
 class _IssueDetailsCreditDto extends IssueDetailsCreditDto {
-  const _IssueDetailsCreditDto({@HiveField(0) required this.id, @HiveField(1) this.creator, @HiveField(2)@JsonKey(name: 'role') final  List<IssueDetailsCreditRoleDto> roles = const <IssueDetailsCreditRoleDto>[]}): _roles = roles,super._();
+  const _IssueDetailsCreditDto({@HiveField(0) required this.id, @HiveField(1) this.creator, @HiveField(2)@JsonKey(name: 'role') final  List<IssueDetailsCreditRoleDto> roles = const <IssueDetailsCreditRoleDto>[], @HiveField(3)@JsonKey(name: 'creator_id') this.creatorId}): _roles = roles,super._();
   factory _IssueDetailsCreditDto.fromJson(Map<String, dynamic> json) => _$IssueDetailsCreditDtoFromJson(json);
 
 @override@HiveField(0) final  int id;
@@ -1835,6 +1836,7 @@ class _IssueDetailsCreditDto extends IssueDetailsCreditDto {
   return EqualUnmodifiableListView(_roles);
 }
 
+@override@HiveField(3)@JsonKey(name: 'creator_id') final  int? creatorId;
 
 /// Create a copy of IssueDetailsCreditDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1849,16 +1851,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDetailsCreditDto&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&const DeepCollectionEquality().equals(other._roles, _roles));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDetailsCreditDto&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,creator,const DeepCollectionEquality().hash(_roles));
+int get hashCode => Object.hash(runtimeType,id,creator,const DeepCollectionEquality().hash(_roles),creatorId);
 
 @override
 String toString() {
-  return 'IssueDetailsCreditDto(id: $id, creator: $creator, roles: $roles)';
+  return 'IssueDetailsCreditDto(id: $id, creator: $creator, roles: $roles, creatorId: $creatorId)';
 }
 
 
@@ -1869,7 +1871,7 @@ abstract mixin class _$IssueDetailsCreditDtoCopyWith<$Res> implements $IssueDeta
   factory _$IssueDetailsCreditDtoCopyWith(_IssueDetailsCreditDto value, $Res Function(_IssueDetailsCreditDto) _then) = __$IssueDetailsCreditDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@HiveField(0) int id,@HiveField(1) String? creator,@HiveField(2)@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> roles
+@HiveField(0) int id,@HiveField(1) String? creator,@HiveField(2)@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> roles,@HiveField(3)@JsonKey(name: 'creator_id') int? creatorId
 });
 
 
@@ -1886,12 +1888,13 @@ class __$IssueDetailsCreditDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueDetailsCreditDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? creator = freezed,Object? roles = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? creator = freezed,Object? roles = null,Object? creatorId = freezed,}) {
   return _then(_IssueDetailsCreditDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
 as String?,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
-as List<IssueDetailsCreditRoleDto>,
+as List<IssueDetailsCreditRoleDto>,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

@@ -62,7 +62,6 @@ class TimelineIssueTile extends ConsumerWidget {
           return IssueListTile(
             issue: issue,
             isRead: effectiveIsRead,
-            showDivider: false,
             horizontalPadding: horizontalPadding,
             role: role,
           );
@@ -114,7 +113,6 @@ class TimelineSeriesTile extends ConsumerWidget {
           );
           return SeriesListTile(
             series: series,
-            showDivider: false,
             isRead: effectiveIsRead,
             horizontalPadding: horizontalPadding,
             role: role,

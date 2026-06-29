@@ -1,12 +1,18 @@
+import 'package:takion/src/domain/entities/character_list.dart';
+import 'package:takion/src/domain/entities/creator_list.dart';
 import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/domain/entities/universe_list.dart';
 
 enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 
 enum SortPreferenceContext {
   searchIssues,
   searchSeries,
+  searchCharacters,
+  searchCreators,
+  searchUniverses,
   browseIssues,
   browseRecentlyAdded,
   browseSeries,
@@ -33,6 +39,12 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'search_issues';
       case SortPreferenceContext.searchSeries:
         return 'search_series';
+      case SortPreferenceContext.searchCharacters:
+        return 'search_characters';
+      case SortPreferenceContext.searchCreators:
+        return 'search_creators';
+      case SortPreferenceContext.searchUniverses:
+        return 'search_universes';
       case SortPreferenceContext.browseIssues:
         return 'browse_issues';
       case SortPreferenceContext.browseRecentlyAdded:
@@ -75,6 +87,12 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.searchIssues:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.searchSeries:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.searchCharacters:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.searchCreators:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.searchUniverses:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.browseIssues:
         return ContentSortOption.nameAsc;
@@ -128,6 +146,45 @@ String issueSortLabel(ContentSortOption option) {
 }
 
 String seriesSortLabel(ContentSortOption option) {
+  switch (option) {
+    case ContentSortOption.nameAsc:
+      return 'Alphabetical (A-Z)';
+    case ContentSortOption.nameDesc:
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
+  }
+}
+
+String characterSortLabel(ContentSortOption option) {
+  switch (option) {
+    case ContentSortOption.nameAsc:
+      return 'Alphabetical (A-Z)';
+    case ContentSortOption.nameDesc:
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
+  }
+}
+
+String creatorSortLabel(ContentSortOption option) {
+  switch (option) {
+    case ContentSortOption.nameAsc:
+      return 'Alphabetical (A-Z)';
+    case ContentSortOption.nameDesc:
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
+  }
+}
+
+String universeSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
       return 'Alphabetical (A-Z)';
@@ -214,6 +271,87 @@ List<SeriesList> sortSeries(
       break;
     case ContentSortOption.dateOldest:
       sorted.sort(compareByYear);
+      break;
+  }
+
+  return sorted;
+}
+
+List<CharacterList> sortCharacters(
+  List<CharacterList> characters,
+  ContentSortOption sortOption,
+) {
+  final sorted = [...characters];
+
+  int compareByName(CharacterList a, CharacterList b) =>
+      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  switch (sortOption) {
+    case ContentSortOption.nameAsc:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.nameDesc:
+      sorted.sort((a, b) => compareByName(b, a));
+      break;
+    case ContentSortOption.dateNewest:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByName);
+      break;
+  }
+
+  return sorted;
+}
+
+List<CreatorList> sortCreators(
+  List<CreatorList> creators,
+  ContentSortOption sortOption,
+) {
+  final sorted = [...creators];
+
+  int compareByName(CreatorList a, CreatorList b) =>
+      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  switch (sortOption) {
+    case ContentSortOption.nameAsc:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.nameDesc:
+      sorted.sort((a, b) => compareByName(b, a));
+      break;
+    case ContentSortOption.dateNewest:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByName);
+      break;
+  }
+
+  return sorted;
+}
+
+List<UniverseList> sortUniverses(
+  List<UniverseList> universes,
+  ContentSortOption sortOption,
+) {
+  final sorted = [...universes];
+
+  int compareByName(UniverseList a, UniverseList b) =>
+      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  switch (sortOption) {
+    case ContentSortOption.nameAsc:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.nameDesc:
+      sorted.sort((a, b) => compareByName(b, a));
+      break;
+    case ContentSortOption.dateNewest:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByName);
       break;
   }
 

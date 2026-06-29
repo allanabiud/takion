@@ -9,19 +9,32 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/character_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
-import 'package:takion/src/presentation/components/person_preview_card.dart';
+import 'package:takion/src/presentation/components/person_card.dart';
+import 'package:takion/src/presentation/components/universe_card.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
+import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 String _monthYear(DateTime date) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   return '${months[date.month - 1]} ${date.year}';
 }
@@ -29,8 +42,9 @@ String _monthYear(DateTime date) {
 String _initials(String name) {
   if (name.isEmpty) return '?';
   final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
-  final valid =
-      parts.where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p)).toList();
+  final valid = parts
+      .where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p))
+      .toList();
   if (valid.isEmpty) return '?';
   if (valid.length >= 2) {
     return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
@@ -99,18 +113,52 @@ class _CharacterDetailsScreenState
     }
   }
 
+  Future<void> _toggleFavorite() async {
+    try {
+      final repository = ref.read(favoritesRepositoryProvider);
+      final isFavorite = await ref.read(
+        isCharacterFavoriteProvider(widget.characterId).future,
+      );
+
+      await repository.toggleCharacterFavorite(widget.characterId);
+
+      ref.invalidate(isCharacterFavoriteProvider(widget.characterId));
+      ref.invalidate(favoriteCharactersListProvider);
+
+      if (context.mounted) {
+        TakionAlerts.success(
+          context,
+          !isFavorite
+              ? 'Character added to favorites'
+              : 'Character removed from favorites',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        TakionAlerts.error(context, 'Failed to update favorites: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final detailsAsync = ref.watch(characterDetailsProvider(widget.characterId));
+    final detailsAsync = ref.watch(
+      characterDetailsProvider(widget.characterId),
+    );
     final scaffoldBg = Theme.of(context).colorScheme.surface;
 
     return detailsAsync.when(
-      loading: () => _CharacterDetailsSkeleton(imageUrl: widget.initialImageUrl),
+      loading: () =>
+          _CharacterDetailsSkeleton(imageUrl: widget.initialImageUrl),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: Center(child: Text('Failed to load character details: $error')),
       ),
       data: (details) {
+        final isFavoriteAsync = ref.watch(
+          isCharacterFavoriteProvider(widget.characterId),
+        );
+        final isFavorite = isFavoriteAsync.asData?.value ?? false;
         final issueListAsync = ref.watch(
           characterDetailsIssuesProvider(widget.characterId),
         );
@@ -119,9 +167,10 @@ class _CharacterDetailsScreenState
         final isIssuesLoading = issueListAsync.isLoading;
 
         final previewIssues = allIssues.isNotEmpty
-            ? sortIssues(allIssues, ContentSortOption.dateNewest)
-                .take(5)
-                .toList()
+            ? sortIssues(
+                allIssues,
+                ContentSortOption.dateNewest,
+              ).take(5).toList()
             : <IssueList>[];
 
         return Scaffold(
@@ -132,37 +181,31 @@ class _CharacterDetailsScreenState
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (details.image != null &&
-                        details.image!.isNotEmpty)
+                    if (details.image != null && details.image!.isNotEmpty)
                       ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                          sigmaX: 20,
-                          sigmaY: 20,
-                        ),
+                        imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                         child: CachedNetworkImage(
                           imageUrl: details.image!,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => ColoredBox(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                           ),
                           errorWidget: (context, url, error) => ColoredBox(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                           ),
                         ),
                       )
                     else
                       ColoredBox(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                       ),
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.55),
-                    ),
+                    Container(color: Colors.black.withValues(alpha: 0.55)),
                     DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -190,8 +233,7 @@ class _CharacterDetailsScreenState
                                   ImagePreviewRoute(
                                     imageUrl: details.image!,
                                     title: details.name,
-                                    heroTag:
-                                        'character-image-${details.id}',
+                                    heroTag: 'character-image-${details.id}',
                                   ),
                                 ),
                                 child: ClipOval(
@@ -203,10 +245,14 @@ class _CharacterDetailsScreenState
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) =>
                                           _initialsAvatar(
-                                              context, details.name),
+                                            context,
+                                            details.name,
+                                          ),
                                       errorWidget: (context, url, error) =>
                                           _initialsAvatar(
-                                              context, details.name),
+                                            context,
+                                            details.name,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -242,7 +288,7 @@ class _CharacterDetailsScreenState
                               ),
                               PopupMenuItem(
                                 value: _CharacterMenuAction.openInBrowser,
-                                child: Text('Open in browser'),
+                                child: Text('Open in Metron'),
                               ),
                             ],
                           ),
@@ -266,6 +312,8 @@ class _CharacterDetailsScreenState
                     previewIssues: previewIssues,
                     totalIssueCount: totalIssueCount,
                     isIssuesLoading: isIssuesLoading,
+                    isFavorite: isFavorite,
+                    onToggleFavorite: _toggleFavorite,
                   );
                 },
               ),
@@ -278,7 +326,9 @@ class _CharacterDetailsScreenState
 
   Widget _initialsAvatar(BuildContext context, String name) {
     return Container(
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+      color: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withValues(alpha: 0.8),
       child: Center(
         child: Text(
           _initials(name),
@@ -308,6 +358,8 @@ class _CharacterDetailsSheet extends ConsumerWidget {
     required this.previewIssues,
     required this.totalIssueCount,
     required this.isIssuesLoading,
+    required this.isFavorite,
+    required this.onToggleFavorite,
   });
 
   final ScrollController scrollController;
@@ -316,6 +368,8 @@ class _CharacterDetailsSheet extends ConsumerWidget {
   final List<IssueList> previewIssues;
   final int totalIssueCount;
   final bool isIssuesLoading;
+  final bool isFavorite;
+  final VoidCallback onToggleFavorite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -329,8 +383,7 @@ class _CharacterDetailsSheet extends ConsumerWidget {
     final hasTeams = details.teams.isNotEmpty;
     final hasUniverses = details.universes.isNotEmpty;
 
-    DateTime? issueDate(IssueList issue) =>
-        issue.storeDate ?? issue.coverDate;
+    DateTime? issueDate(IssueList issue) => issue.storeDate ?? issue.coverDate;
 
     final dates = allIssues
         .map((i) => issueDate(i))
@@ -359,7 +412,7 @@ class _CharacterDetailsSheet extends ConsumerWidget {
     final showStats = hasIssues || isIssuesLoading;
     final showFirstAppearance =
         (firstAppearance != null && firstAppearance.id != null) ||
-            isIssuesLoading;
+        isIssuesLoading;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -380,28 +433,73 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                         width: 32,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.4,
+                          ),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      details.name,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (hasAlias) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        '@$alias',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                details.name,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (hasAlias) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  '@$alias',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 52,
+                          height: 52,
+                          child: isFavorite
+                              ? FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor:
+                                        theme.colorScheme.primaryContainer,
+                                    foregroundColor:
+                                        theme.colorScheme.onPrimaryContainer,
+                                    padding: EdgeInsets.zero,
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onToggleFavorite,
+                                  child: const Icon(Icons.favorite),
+                                )
+                              : FilledButton.tonal(
+                                  style: FilledButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onToggleFavorite,
+                                  child: const Icon(Icons.favorite_border),
+                                ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -421,38 +519,29 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: isIssuesLoading
-                  ? Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: SkeletonBox(
-                            borderRadius: 12,
-                            height: 70,
-                          ),
+                      ? Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: SkeletonBox(borderRadius: 12, height: 70),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              flex: 2,
+                              child: SkeletonBox(borderRadius: 12, height: 70),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              flex: 4,
+                              child: SkeletonBox(borderRadius: 12, height: 70),
+                            ),
+                          ],
+                        )
+                      : _CharacterStatsCard(
+                          issueCount: totalIssueCount,
+                          seriesCount: distinctSeries,
+                          dateRange: dateRange,
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 2,
-                          child: SkeletonBox(
-                            borderRadius: 12,
-                            height: 70,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 4,
-                          child: SkeletonBox(
-                            borderRadius: 12,
-                            height: 70,
-                          ),
-                        ),
-                      ],
-                    )
-                  : _CharacterStatsCard(
-                    issueCount: totalIssueCount,
-                    seriesCount: distinctSeries,
-                    dateRange: dateRange,
-                  ),
                 ),
               ),
             ],
@@ -461,14 +550,9 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: isIssuesLoading
-                        ? const SkeletonBox(
-                            borderRadius: 14,
-                            height: 90,
-                          )
-                        : _CharacterFirstAppearanceCard(
-                            issue: firstAppearance!,
-                          ),
+                  child: isIssuesLoading
+                      ? const SkeletonBox(borderRadius: 14, height: 90)
+                      : _CharacterFirstAppearanceCard(issue: firstAppearance!),
                 ),
               ),
             ],
@@ -503,8 +587,7 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                                 itemCount: 5,
                                 padding: EdgeInsets.zero,
                                 itemBuilder: (context, index) => Padding(
-                                  padding:
-                                      const EdgeInsets.only(right: 12),
+                                  padding: const EdgeInsets.only(right: 12),
                                   child: SkeletonBox(
                                     width: 150,
                                     height: 250,
@@ -516,34 +599,34 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                           ],
                         )
                       : HorizontalPreviewSection(
-                    title: 'Recently Appeared In',
-                    onViewAll: () => context.pushRoute(
-                      CharacterIssuesRoute(characterId: details.id),
-                    ),
-                    itemCount: previewIssues.length,
-                    height: 250,
-                    emptyText: 'No issues available.',
-                    itemBuilder: (context, index) {
-                      final issue = previewIssues[index];
-                      final issueId = issue.id;
-                      return IssueCard(
-                        issueId: issueId,
-                        imageUrl: issue.image,
-                        title:
-                            '${issue.series?.name ?? issue.name} #${issue.number}',
-                        onTap: issueId == null
-                            ? null
-                            : () {
-                                context.pushRoute(
-                                  IssueDetailsRoute(
-                                    issueId: issueId,
-                                    initialImageUrl: issue.image,
-                                  ),
-                                );
-                              },
-                      );
-                    },
-                  ),
+                          title: 'Recently Appeared In',
+                          onViewAll: () => context.pushRoute(
+                            CharacterIssuesRoute(characterId: details.id),
+                          ),
+                          itemCount: previewIssues.length,
+                          height: 250,
+                          emptyText: 'No issues available.',
+                          itemBuilder: (context, index) {
+                            final issue = previewIssues[index];
+                            final issueId = issue.id;
+                            return IssueCard(
+                              issueId: issueId,
+                              imageUrl: issue.image,
+                              title:
+                                  '${issue.series?.name ?? issue.name} #${issue.number}',
+                              onTap: issueId == null
+                                  ? null
+                                  : () {
+                                      context.pushRoute(
+                                        IssueDetailsRoute(
+                                          issueId: issueId,
+                                          initialImageUrl: issue.image,
+                                        ),
+                                      );
+                                    },
+                            );
+                          },
+                        ),
                 ),
               ),
             ],
@@ -564,9 +647,26 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _CharacterListSection(
-                    title: 'Universes',
-                    items: details.universes,
+                  child: Text('Universes', style: _sectionTitleStyle(context)),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 130,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: details.universes.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 4),
+                    itemBuilder: (context, index) {
+                      final universe = details.universes[index];
+                      return UniverseCard(
+                        universeId: universe.id,
+                        name: universe.name,
+                        width: 140,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -608,19 +708,14 @@ class _CharacterDetailsSkeleton extends StatelessWidget {
               children: [
                 imageUrl != null && imageUrl!.isNotEmpty
                     ? ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                          sigmaX: 20,
-                          sigmaY: 20,
-                        ),
+                        imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                         child: CachedNetworkImage(
                           imageUrl: imageUrl!,
                           fit: BoxFit.cover,
                         ),
                       )
                     : const SizedBox.shrink(),
-                ColoredBox(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                ),
+                ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
               ],
             ),
           ),
@@ -658,9 +753,7 @@ class _CharacterDetailsSkeleton extends StatelessWidget {
                             ),
                           ),
                           const Expanded(
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                            child: Center(child: CircularProgressIndicator()),
                           ),
                         ],
                       ),
@@ -748,9 +841,7 @@ class _CharacterDescriptionCardState extends State<_CharacterDescriptionCard> {
                       ),
                     ),
                     child: Text(
-                      _isExpanded
-                          ? 'Tap to read less'
-                          : 'Tap to read more',
+                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
                       key: ValueKey(_isExpanded),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
@@ -781,7 +872,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
         Text('Creators', style: _sectionTitleStyle(context)),
         const SizedBox(height: 12),
         SizedBox(
-          height: 160,
+          height: 120,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
@@ -789,7 +880,8 @@ class _CharacterCreatorsCard extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 0),
             itemBuilder: (context, index) {
               final creator = creators[index];
-              return PersonPreviewCard(
+              return PersonCard(
+                creatorId: creator.id,
                 name: creator.name.trim().isNotEmpty
                     ? creator.name.trim()
                     : 'Unknown Creator',
@@ -804,10 +896,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
 }
 
 class _CharacterListSection extends StatelessWidget {
-  const _CharacterListSection({
-    required this.title,
-    required this.items,
-  });
+  const _CharacterListSection({required this.title, required this.items});
 
   final String title;
   final List<CharacterDetailsNamedRef> items;
@@ -863,7 +952,9 @@ class _CharacterStatsCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: child,
@@ -873,7 +964,8 @@ class _CharacterStatsCard extends StatelessWidget {
 
     return Row(
       children: [
-        statCard(flex: 2,
+        statCard(
+          flex: 2,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -893,7 +985,8 @@ class _CharacterStatsCard extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        statCard(flex: 2,
+        statCard(
+          flex: 2,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -914,7 +1007,8 @@ class _CharacterStatsCard extends StatelessWidget {
         ),
         if (dateRange != null) ...[
           const SizedBox(width: 6),
-          statCard(flex: 4,
+          statCard(
+            flex: 4,
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -959,10 +1053,7 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => context.pushRoute(
-        IssueDetailsRoute(
-          issueId: issue.id!,
-          initialImageUrl: issue.image,
-        ),
+        IssueDetailsRoute(issueId: issue.id!, initialImageUrl: issue.image),
       ),
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -1000,10 +1091,7 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'First Appearance',
-                    style: _sectionTitleStyle(context),
-                  ),
+                  Text('First Appearance', style: _sectionTitleStyle(context)),
                   const SizedBox(height: 4),
                   Text(
                     label,

@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
-import 'package:takion/src/presentation/components/person_preview_card.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
+import 'package:takion/src/presentation/components/person_card.dart';
+
 
 String _currencySymbol(String? code) {
   switch (code?.toUpperCase()) {
@@ -318,7 +318,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       onViewAll: () =>
           context.pushRoute(IssueCreatorsRoute(issueId: widget.issueId)),
       itemCount: credits.length,
-      height: 160,
+      height: 140,
       separatorWidth: 0,
       itemBuilder: (context, index) {
         final credit = credits[index];
@@ -328,7 +328,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
             .where((n) => n.isNotEmpty)
             .toSet()
             .toList();
-        return PersonPreviewCard(
+        return PersonCard(
+          creatorId: credit.id,
           name: creator != null && creator.isNotEmpty
               ? creator
               : 'Unknown Creator',
@@ -350,15 +351,16 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       onViewAll: () =>
           context.pushRoute(IssueCharactersRoute(issueId: widget.issueId)),
       itemCount: characters.length,
-      height: 160,
+      height: 140,
       separatorWidth: 0,
       itemBuilder: (context, index) {
         final character = characters[index];
-        return _CharacterPreviewCard(
+        return PersonCard(
           characterId: character.id,
           name: character.name.trim().isNotEmpty
               ? character.name.trim()
               : 'Unknown Character',
+          width: 95,
         );
       },
     );
@@ -602,27 +604,4 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   }
 }
 
-class _CharacterPreviewCard extends ConsumerWidget {
-  const _CharacterPreviewCard({
-    required this.characterId,
-    required this.name,
-  });
 
-  final int characterId;
-  final String name;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final characterAsync = ref.watch(characterDetailsProvider(characterId));
-    final imageUrl = characterAsync.whenOrNull(data: (c) => c.image);
-
-    return PersonPreviewCard(
-      name: name,
-      imageUrl: imageUrl,
-      width: 95,
-      onTap: () => context.pushRoute(
-        CharacterDetailsRoute(characterId: characterId),
-      ),
-    );
-  }
-}

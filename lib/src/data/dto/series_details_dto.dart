@@ -106,16 +106,16 @@ class SeriesDetailsDto {
       name: (json['name'] as String?) ?? '',
       sortName: json['sort_name'] as String?,
       volume: (json['volume'] as num?)?.toInt(),
-      seriesType: json['series_type'] is Map<String, dynamic>
+      seriesType: json['series_type'] is Map
           ? SeriesDetailsNamedRefDto.fromJson(
-              json['series_type'] as Map<String, dynamic>,
+              Map<String, dynamic>.from(json['series_type']),
             )
           : null,
       status: json['status'] as String?,
       publisher: resolvedPublisher,
-      imprint: json['imprint'] is Map<String, dynamic>
+      imprint: json['imprint'] is Map
           ? SeriesDetailsNamedRefDto.fromJson(
-              json['imprint'] as Map<String, dynamic>,
+              Map<String, dynamic>.from(json['imprint']),
             )
           : null,
       yearBegan: (json['year_began'] as num?)?.toInt(),
@@ -124,13 +124,15 @@ class SeriesDetailsDto {
       issueCount: (json['issue_count'] as num?)?.toInt(),
       genres: rawGenres is List
           ? rawGenres
-                .whereType<Map<String, dynamic>>()
+                .where((e) => e is Map)
+                .map((e) => Map<String, dynamic>.from(e as Map))
                 .map(SeriesDetailsNamedRefDto.fromJson)
                 .toList()
           : const [],
       associated: rawAssociated is List
           ? rawAssociated
-                .whereType<Map<String, dynamic>>()
+                .where((e) => e is Map)
+                .map((e) => Map<String, dynamic>.from(e as Map))
                 .map(SeriesDetailsAssociatedDto.fromJson)
                 .toList()
           : const [],

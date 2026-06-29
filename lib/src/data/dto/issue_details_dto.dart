@@ -213,6 +213,9 @@ abstract class IssueDetailsCreditDto with _$IssueDetailsCreditDto {
     @JsonKey(name: 'role')
     @Default(<IssueDetailsCreditRoleDto>[])
     List<IssueDetailsCreditRoleDto> roles,
+    @HiveField(3)
+    @JsonKey(name: 'creator_id')
+    int? creatorId,
   }) = _IssueDetailsCreditDto;
 
   factory IssueDetailsCreditDto.fromJson(Map<String, dynamic> json) =>
@@ -224,6 +227,7 @@ abstract class IssueDetailsCreditDto with _$IssueDetailsCreditDto {
     return IssueDetailsCredit(
       id: id,
       creator: creator,
+      creatorId: creatorId,
       roles: roles.map((entry) => entry.toEntity()).toList(),
     );
   }

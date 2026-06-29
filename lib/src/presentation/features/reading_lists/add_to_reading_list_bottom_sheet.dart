@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:takion/src/presentation/features/reading_lists/create_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -139,11 +139,45 @@ class _AddToReadingListBottomSheetState
                 .toList();
 
             if (contentTypeLists.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: EmptyContentState(
-                  icon: Icons.list_alt_outlined,
-                  message: 'No reading lists yet.\nCreate one to get started.',
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.list_alt_outlined,
+                      size: 56,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Reading Lists yet.',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create one to get started.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          CreateReadingListBottomSheet.show(
+                            context,
+                            initialContentType: contentType,
+                          );
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Create Reading List'),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }
@@ -159,9 +193,13 @@ class _AddToReadingListBottomSheetState
             if (_searchQuery.isNotEmpty && filteredLists.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
-                child: EmptyContentState(
-                  icon: Icons.search_off_outlined,
-                  message: 'No matching lists found',
+                child: Center(
+                  child: Text(
+                    'No matching lists found',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               );
             }

@@ -1596,7 +1596,7 @@ as String,
 /// @nodoc
 mixin _$IssueDetailsCredit {
 
- int get id; String? get creator; List<IssueDetailsCreditRole> get roles;
+ int get id; String? get creator; int? get creatorId; List<IssueDetailsCreditRole> get roles;
 /// Create a copy of IssueDetailsCredit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1607,16 +1607,16 @@ $IssueDetailsCreditCopyWith<IssueDetailsCredit> get copyWith => _$IssueDetailsCr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDetailsCredit&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&const DeepCollectionEquality().equals(other.roles, roles));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDetailsCredit&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&const DeepCollectionEquality().equals(other.roles, roles));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,creator,const DeepCollectionEquality().hash(roles));
+int get hashCode => Object.hash(runtimeType,id,creator,creatorId,const DeepCollectionEquality().hash(roles));
 
 @override
 String toString() {
-  return 'IssueDetailsCredit(id: $id, creator: $creator, roles: $roles)';
+  return 'IssueDetailsCredit(id: $id, creator: $creator, creatorId: $creatorId, roles: $roles)';
 }
 
 
@@ -1627,7 +1627,7 @@ abstract mixin class $IssueDetailsCreditCopyWith<$Res>  {
   factory $IssueDetailsCreditCopyWith(IssueDetailsCredit value, $Res Function(IssueDetailsCredit) _then) = _$IssueDetailsCreditCopyWithImpl;
 @useResult
 $Res call({
- int id, String? creator, List<IssueDetailsCreditRole> roles
+ int id, String? creator, int? creatorId, List<IssueDetailsCreditRole> roles
 });
 
 
@@ -1644,11 +1644,12 @@ class _$IssueDetailsCreditCopyWithImpl<$Res>
 
 /// Create a copy of IssueDetailsCredit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? creator = freezed,Object? roles = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? creator = freezed,Object? creatorId = freezed,Object? roles = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
-as String?,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
+as String?,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as int?,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
 as List<IssueDetailsCreditRole>,
   ));
 }
@@ -1734,10 +1735,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? creator,  List<IssueDetailsCreditRole> roles)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? creator,  int? creatorId,  List<IssueDetailsCreditRole> roles)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDetailsCredit() when $default != null:
-return $default(_that.id,_that.creator,_that.roles);case _:
+return $default(_that.id,_that.creator,_that.creatorId,_that.roles);case _:
   return orElse();
 
 }
@@ -1755,10 +1756,10 @@ return $default(_that.id,_that.creator,_that.roles);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? creator,  List<IssueDetailsCreditRole> roles)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? creator,  int? creatorId,  List<IssueDetailsCreditRole> roles)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsCredit():
-return $default(_that.id,_that.creator,_that.roles);case _:
+return $default(_that.id,_that.creator,_that.creatorId,_that.roles);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1775,10 +1776,10 @@ return $default(_that.id,_that.creator,_that.roles);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? creator,  List<IssueDetailsCreditRole> roles)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? creator,  int? creatorId,  List<IssueDetailsCreditRole> roles)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsCredit() when $default != null:
-return $default(_that.id,_that.creator,_that.roles);case _:
+return $default(_that.id,_that.creator,_that.creatorId,_that.roles);case _:
   return null;
 
 }
@@ -1790,11 +1791,12 @@ return $default(_that.id,_that.creator,_that.roles);case _:
 
 
 class _IssueDetailsCredit implements IssueDetailsCredit {
-  const _IssueDetailsCredit({required this.id, this.creator, final  List<IssueDetailsCreditRole> roles = const <IssueDetailsCreditRole>[]}): _roles = roles;
+  const _IssueDetailsCredit({required this.id, this.creator, this.creatorId, final  List<IssueDetailsCreditRole> roles = const <IssueDetailsCreditRole>[]}): _roles = roles;
   
 
 @override final  int id;
 @override final  String? creator;
+@override final  int? creatorId;
  final  List<IssueDetailsCreditRole> _roles;
 @override@JsonKey() List<IssueDetailsCreditRole> get roles {
   if (_roles is EqualUnmodifiableListView) return _roles;
@@ -1813,16 +1815,16 @@ _$IssueDetailsCreditCopyWith<_IssueDetailsCredit> get copyWith => __$IssueDetail
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDetailsCredit&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&const DeepCollectionEquality().equals(other._roles, _roles));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDetailsCredit&&(identical(other.id, id) || other.id == id)&&(identical(other.creator, creator) || other.creator == creator)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&const DeepCollectionEquality().equals(other._roles, _roles));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,creator,const DeepCollectionEquality().hash(_roles));
+int get hashCode => Object.hash(runtimeType,id,creator,creatorId,const DeepCollectionEquality().hash(_roles));
 
 @override
 String toString() {
-  return 'IssueDetailsCredit(id: $id, creator: $creator, roles: $roles)';
+  return 'IssueDetailsCredit(id: $id, creator: $creator, creatorId: $creatorId, roles: $roles)';
 }
 
 
@@ -1833,7 +1835,7 @@ abstract mixin class _$IssueDetailsCreditCopyWith<$Res> implements $IssueDetails
   factory _$IssueDetailsCreditCopyWith(_IssueDetailsCredit value, $Res Function(_IssueDetailsCredit) _then) = __$IssueDetailsCreditCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String? creator, List<IssueDetailsCreditRole> roles
+ int id, String? creator, int? creatorId, List<IssueDetailsCreditRole> roles
 });
 
 
@@ -1850,11 +1852,12 @@ class __$IssueDetailsCreditCopyWithImpl<$Res>
 
 /// Create a copy of IssueDetailsCredit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? creator = freezed,Object? roles = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? creator = freezed,Object? creatorId = freezed,Object? roles = null,}) {
   return _then(_IssueDetailsCredit(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
-as String?,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
+as String?,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as int?,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
 as List<IssueDetailsCreditRole>,
   ));
 }

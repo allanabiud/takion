@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/domain/entities/character_list.dart';
+import 'package:takion/src/domain/entities/creator_list.dart';
 import 'package:takion/src/domain/entities/favorite_item.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
@@ -135,4 +137,79 @@ final isReadingListFavoriteProvider = FutureProvider.family<bool, String>((
 ) async {
   final repository = ref.watch(favoritesRepositoryProvider);
   return repository.isReadingListFavorite(listId);
+});
+
+final favoriteCharactersListProvider = FutureProvider<List<FavoriteCharacter>>((
+  ref,
+) async {
+  final repository = ref.watch(favoritesRepositoryProvider);
+  return repository.listFavoriteCharacters();
+});
+
+final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
+  ref,
+) async {
+  final favorites = await ref.watch(favoriteCharactersListProvider.future);
+
+  final results = <CharacterList>[];
+  for (final fav in favorites) {
+    try {
+      final repository = ref.watch(metronRepositoryProvider);
+      final details = await repository.getCharacterDetails(fav.metronCharacterId);
+      results.add(
+        CharacterList(
+          id: details.id,
+          name: details.name,
+          slug: details.slug,
+          modified: details.modified,
+        ),
+      );
+    } catch (_) {}
+  }
+  return results;
+});
+
+final isCharacterFavoriteProvider = FutureProvider.family<bool, int>((
+  ref,
+  characterId,
+) async {
+  final repository = ref.watch(favoritesRepositoryProvider);
+  return repository.isCharacterFavorite(characterId);
+});
+
+final favoriteCreatorsListProvider = FutureProvider<List<FavoriteCreator>>((
+  ref,
+) async {
+  final repository = ref.watch(favoritesRepositoryProvider);
+  return repository.listFavoriteCreators();
+});
+
+final favoriteCreatorsFullListProvider = FutureProvider<List<CreatorList>>((
+  ref,
+) async {
+  final favorites = await ref.watch(favoriteCreatorsListProvider.future);
+
+  final results = <CreatorList>[];
+  for (final fav in favorites) {
+    try {
+      final repository = ref.watch(metronRepositoryProvider);
+      final details = await repository.getCreatorDetails(fav.metronCreatorId);
+      results.add(
+        CreatorList(
+          id: details.id,
+          name: details.name,
+          modified: details.modified,
+        ),
+      );
+    } catch (_) {}
+  }
+  return results;
+});
+
+final isCreatorFavoriteProvider = FutureProvider.family<bool, int>((
+  ref,
+  creatorId,
+) async {
+  final repository = ref.watch(favoritesRepositoryProvider);
+  return repository.isCreatorFavorite(creatorId);
 });

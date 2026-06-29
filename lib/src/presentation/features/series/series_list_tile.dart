@@ -16,7 +16,6 @@ class SeriesListTile extends ConsumerWidget {
   final bool isLast;
   final String? heroTag;
   final bool allowRemoteCoverFetch;
-  final bool showDivider;
   final bool? isRead;
   final double horizontalPadding;
   final ItemRole? role;
@@ -29,7 +28,6 @@ class SeriesListTile extends ConsumerWidget {
     this.isLast = false,
     this.heroTag,
     this.allowRemoteCoverFetch = true,
-    this.showDivider = true,
     this.isRead,
     this.horizontalPadding = 12,
     this.role,
@@ -226,7 +224,6 @@ class SeriesListTile extends ConsumerWidget {
               ),
             ),
           ),
-          if (showDivider && !isLast) const Divider(height: 1),
         ],
       ),
     );

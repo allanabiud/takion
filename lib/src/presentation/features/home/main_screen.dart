@@ -22,6 +22,7 @@ class MainScreenState extends ConsumerState<MainScreen>
   late CurvedAnimation _anim;
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
+  final _chipKeys = <SearchTarget, GlobalKey>{};
 
   bool _overlayVisible = false;
 
@@ -46,14 +47,17 @@ class MainScreenState extends ConsumerState<MainScreen>
     if (query.isEmpty) return;
     final target = ref.read(searchStateProvider).target;
     ref.read(searchStateProvider.notifier).addHistory(query);
-    final choice = target == SearchTarget.issues ? 'Issues' : 'Series';
-    _dismissSearch(() {
-      if (mounted) {
-        context.pushRoute(
-          SearchResultsRoute(query: query, searchChoice: choice),
-        );
-      }
-    });
+    final choice = switch (target) {
+      SearchTarget.series => 'Series',
+      SearchTarget.issues => 'Issues',
+      SearchTarget.characters => 'Characters',
+      SearchTarget.creators => 'Creators',
+      SearchTarget.universes => 'Universes',
+    };
+    _searchFocusNode.unfocus();
+    context.pushRoute(
+      SearchResultsRoute(query: query, searchChoice: choice),
+    );
   }
 
   @override
@@ -261,6 +265,19 @@ class MainScreenState extends ConsumerState<MainScreen>
   Widget _buildSearchBody() {
     final state = ref.watch(searchStateProvider);
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final key = _chipKeys[state.target];
+      final context = key?.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 200),
+        );
+      }
+    });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -271,6 +288,7 @@ class MainScreenState extends ConsumerState<MainScreen>
           child: Row(
             children: [
               ChoiceChip(
+                key: _chipKeys[SearchTarget.series] ??= GlobalKey(),
                 label: const Text(
                   'Series',
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -285,6 +303,7 @@ class MainScreenState extends ConsumerState<MainScreen>
               ),
               const SizedBox(width: 8),
               ChoiceChip(
+                key: _chipKeys[SearchTarget.issues] ??= GlobalKey(),
                 label: const Text(
                   'Issues',
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -295,6 +314,51 @@ class MainScreenState extends ConsumerState<MainScreen>
                   ref
                       .read(searchStateProvider.notifier)
                       .setTarget(SearchTarget.issues);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.characters] ??= GlobalKey(),
+                label: const Text(
+                  'Characters',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.characters,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.characters);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.creators] ??= GlobalKey(),
+                label: const Text(
+                  'Creators',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.creators,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.creators);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.universes] ??= GlobalKey(),
+                label: const Text(
+                  'Universes',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.universes,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.universes);
                 },
               ),
             ],

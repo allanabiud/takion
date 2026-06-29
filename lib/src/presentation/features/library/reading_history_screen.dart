@@ -132,7 +132,6 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
                           issue: issueList,
                           isFirst: index == 0,
                           isLast: index == items.length - 1,
-                          showDivider: index < items.length - 1,
                           useCardBackground: false,
                           isCollected: issue?.id != null,
                           isRead: true,

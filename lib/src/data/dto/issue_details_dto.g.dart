@@ -334,19 +334,22 @@ class IssueDetailsCreditDtoAdapter extends TypeAdapter<IssueDetailsCreditDto> {
       roles: fields[2] == null
           ? []
           : (fields[2] as List).cast<IssueDetailsCreditRoleDto>(),
+      creatorId: (fields[3] as num?)?.toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, IssueDetailsCreditDto obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.creator)
       ..writeByte(2)
-      ..write(obj.roles);
+      ..write(obj.roles)
+      ..writeByte(3)
+      ..write(obj.creatorId);
   }
 
   @override
@@ -677,6 +680,7 @@ _IssueDetailsCreditDto _$IssueDetailsCreditDtoFromJson(
           )
           .toList() ??
       const <IssueDetailsCreditRoleDto>[],
+  creatorId: (json['creator_id'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$IssueDetailsCreditDtoToJson(
@@ -685,6 +689,7 @@ Map<String, dynamic> _$IssueDetailsCreditDtoToJson(
   'id': instance.id,
   'creator': instance.creator,
   'role': instance.roles,
+  'creator_id': instance.creatorId,
 };
 
 _IssueDetailsReprintDto _$IssueDetailsReprintDtoFromJson(

@@ -9,6 +9,10 @@ import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
 import 'package:takion/src/domain/entities/character_details.dart';
 import 'package:takion/src/domain/entities/character_issue_list_page.dart';
 import 'package:takion/src/domain/entities/character_list_page.dart';
+import 'package:takion/src/domain/entities/creator_details.dart';
+import 'package:takion/src/domain/entities/creator_list_page.dart';
+import 'package:takion/src/domain/entities/universe_details.dart';
+import 'package:takion/src/domain/entities/universe_list_page.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -37,6 +41,8 @@ class MetronRepositoryImpl implements MetronRepository {
       <String, Future<CharacterIssueListPage>>{};
   final _AsyncConcurrencyGate _issueDetailsGate = _AsyncConcurrencyGate(4);
   final _AsyncConcurrencyGate _characterDetailsGate = _AsyncConcurrencyGate(3);
+  final _AsyncConcurrencyGate _creatorDetailsGate = _AsyncConcurrencyGate(3);
+  final _AsyncConcurrencyGate _universeDetailsGate = _AsyncConcurrencyGate(3);
 
   MetronRepositoryImpl(
     this._remoteDataSource,
@@ -792,6 +798,234 @@ class MetronRepositoryImpl implements MetronRepository {
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
         );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CreatorListPage> searchCreators(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getCreatorSearchResults(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedAt = await _localDataSource.getCreatorSearchResultsCachedAt(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedMeta = await _localDataSource.getCreatorSearchResultsMeta(
+      query,
+      page: page,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.creatorSearchResults.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        return CreatorListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final remotePage = await _remoteDataSource.searchCreators(
+        query,
+        page: page,
+        limit: limit,
+        cancelToken: cancelToken,
+      );
+      await _localDataSource.cacheCreatorSearchResults(
+        query,
+        remotePage.results,
+        page: page,
+        limit: limit,
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+      );
+      return CreatorListPage(
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+        results:
+            remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: page,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return CreatorListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CreatorDetails> getCreatorDetails(
+    int creatorId, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDto = await _localDataSource.getCreatorDetails(creatorId);
+    final cachedAt =
+        await _localDataSource.getCreatorDetailsCachedAt(creatorId);
+
+    if (!forceRefresh && cachedDto != null) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.creatorDetails.isFresh(cachedAt, _now());
+      if (isFresh) {
+        return cachedDto.toEntity();
+      }
+    }
+
+    try {
+      await _creatorDetailsGate.acquire();
+      try {
+        final remoteDto =
+            await _remoteDataSource.getCreatorDetails(creatorId);
+        await _localDataSource.cacheCreatorDetails(remoteDto);
+        return remoteDto.toEntity();
+      } finally {
+        _creatorDetailsGate.release();
+      }
+    } catch (_) {
+      if (cachedDto != null) {
+        return cachedDto.toEntity();
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UniverseListPage> searchUniverses(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getUniverseSearchResults(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedAt = await _localDataSource.getUniverseSearchResultsCachedAt(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedMeta = await _localDataSource.getUniverseSearchResultsMeta(
+      query,
+      page: page,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.universeSearchResults.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        return UniverseListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final remotePage = await _remoteDataSource.searchUniverses(
+        query,
+        page: page,
+        limit: limit,
+        cancelToken: cancelToken,
+      );
+      await _localDataSource.cacheUniverseSearchResults(
+        query,
+        remotePage.results,
+        page: page,
+        limit: limit,
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+      );
+      return UniverseListPage(
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+        results:
+            remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: page,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return UniverseListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UniverseDetails> getUniverseDetails(
+    int universeId, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDto = await _localDataSource.getUniverseDetails(universeId);
+    final cachedAt =
+        await _localDataSource.getUniverseDetailsCachedAt(universeId);
+
+    if (!forceRefresh && cachedDto != null) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.universeDetails.isFresh(cachedAt, _now());
+      if (isFresh) {
+        return cachedDto.toEntity();
+      }
+    }
+
+    try {
+      await _universeDetailsGate.acquire();
+      try {
+        final remoteDto =
+            await _remoteDataSource.getUniverseDetails(universeId);
+        await _localDataSource.cacheUniverseDetails(remoteDto);
+        return remoteDto.toEntity();
+      } finally {
+        _universeDetailsGate.release();
+      }
+    } catch (_) {
+      if (cachedDto != null) {
+        return cachedDto.toEntity();
       }
       rethrow;
     }

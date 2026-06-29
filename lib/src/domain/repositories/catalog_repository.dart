@@ -2,6 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:takion/src/domain/entities/character_details.dart';
 import 'package:takion/src/domain/entities/character_issue_list_page.dart';
 import 'package:takion/src/domain/entities/character_list_page.dart';
+import 'package:takion/src/domain/entities/creator_details.dart';
+import 'package:takion/src/domain/entities/creator_list_page.dart';
+import 'package:takion/src/domain/entities/universe_details.dart';
+import 'package:takion/src/domain/entities/universe_list_page.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -87,6 +91,32 @@ abstract class CatalogRepository {
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<CreatorListPage> searchCreators(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<CreatorDetails> getCreatorDetails(
+    int creatorId, {
+    bool forceRefresh = false,
+  });
+
+  Future<UniverseListPage> searchUniverses(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<UniverseDetails> getUniverseDetails(
+    int universeId, {
     bool forceRefresh = false,
   });
 }

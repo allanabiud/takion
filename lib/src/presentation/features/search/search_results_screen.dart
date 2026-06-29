@@ -2,17 +2,28 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
+import 'package:takion/src/domain/entities/character_list.dart';
+import 'package:takion/src/domain/entities/character_list_page.dart';
+import 'package:takion/src/domain/entities/creator_list.dart';
+import 'package:takion/src/domain/entities/creator_list_page.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/series_search_page.dart';
+import 'package:takion/src/domain/entities/universe_list.dart';
+import 'package:takion/src/domain/entities/universe_list_page.dart';
+import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
+import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
+import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
+import 'package:takion/src/presentation/components/person_list_tile.dart';
+import 'package:takion/src/presentation/components/universe_list_tile.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/components/list_header.dart';
@@ -44,15 +55,51 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   bool _seriesCoverLimitUpdateScheduled = false;
   IssueSearchPage? _lastIssuePage;
   SeriesSearchPage? _lastSeriesPage;
+  CharacterListPage? _lastCharacterPage;
+  CreatorListPage? _lastCreatorPage;
+  UniverseListPage? _lastUniversePage;
   bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
+  bool get _isCharacterSearch =>
+      widget.searchChoice.toLowerCase() == 'characters';
+  bool get _isCreatorSearch =>
+      widget.searchChoice.toLowerCase() == 'creators';
+  bool get _isUniverseSearch =>
+      widget.searchChoice.toLowerCase() == 'universes';
 
   IssueSearchArgs get _currentIssueArgs =>
       IssueSearchArgs(query: widget.query, page: _page);
   SeriesSearchArgs get _currentSeriesArgs =>
       SeriesSearchArgs(query: widget.query, page: _page);
+  CharacterSearchArgs get _currentCharacterArgs =>
+      CharacterSearchArgs(query: widget.query, page: _page);
+  CreatorSearchArgs get _currentCreatorArgs =>
+      CreatorSearchArgs(query: widget.query, page: _page);
+  UniverseSearchArgs get _currentUniverseArgs =>
+      UniverseSearchArgs(query: widget.query, page: _page);
 
   Future<void> _forceRefreshResults() async {
-    if (_isSeriesSearch) {
+    if (_isCharacterSearch) {
+      await ref
+          .read(metronRepositoryProvider)
+          .searchCharacters(widget.query, page: _page, forceRefresh: true);
+      ref.invalidate(characterSearchResultsProvider(_currentCharacterArgs));
+      await ref
+          .read(characterSearchResultsProvider(_currentCharacterArgs).future);
+    } else if (_isCreatorSearch) {
+      await ref
+          .read(metronRepositoryProvider)
+          .searchCreators(widget.query, page: _page, forceRefresh: true);
+      ref.invalidate(creatorSearchResultsProvider(_currentCreatorArgs));
+      await ref
+          .read(creatorSearchResultsProvider(_currentCreatorArgs).future);
+    } else if (_isUniverseSearch) {
+      await ref
+          .read(metronRepositoryProvider)
+          .searchUniverses(widget.query, page: _page, forceRefresh: true);
+      ref.invalidate(universeSearchResultsProvider(_currentUniverseArgs));
+      await ref
+          .read(universeSearchResultsProvider(_currentUniverseArgs).future);
+    } else if (_isSeriesSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchSeries(widget.query, page: _page, forceRefresh: true);
@@ -138,6 +185,265 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
   }
 
+  int _estimatedCharacterTotalPages(CharacterListPage pageData) {
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
+  }
+
+  List<CharacterList> _applyCharacterFilter(List<CharacterList> characters) {
+    final filter = _filterController.text.trim().toLowerCase();
+    if (filter.isEmpty) return characters;
+
+    return characters.where((entry) {
+      final name = entry.name.toLowerCase();
+      return name.contains(filter);
+    }).toList();
+  }
+
+  int _estimatedCreatorTotalPages(CreatorListPage pageData) {
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
+  }
+
+  List<CreatorList> _applyCreatorFilter(List<CreatorList> creators) {
+    final filter = _filterController.text.trim().toLowerCase();
+    if (filter.isEmpty) return creators;
+
+    return creators.where((entry) {
+      final name = entry.name.toLowerCase();
+      return name.contains(filter);
+    }).toList();
+  }
+
+  int _estimatedUniverseTotalPages(UniverseListPage pageData) {
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
+  }
+
+  List<UniverseList> _applyUniverseFilter(List<UniverseList> universes) {
+    final filter = _filterController.text.trim().toLowerCase();
+    if (filter.isEmpty) return universes;
+
+    return universes.where((entry) {
+      final name = entry.name.toLowerCase();
+      return name.contains(filter);
+    }).toList();
+  }
+
+  Widget _buildUniverseBody(
+    AsyncValue<UniverseListPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastUniversePage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _buildUniverseResultsContent(
+      context,
+      ref,
+      pageData,
+      sortOption,
+      sortContext,
+      isLoading: async.isLoading,
+    );
+  }
+
+  Widget _buildUniverseResultsContent(
+    BuildContext context,
+    WidgetRef ref,
+    UniverseListPage pageData,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext, {
+    required bool isLoading,
+  }) {
+    final sortedUniverses = sortUniverses(
+      _applyUniverseFilter(pageData.results),
+      sortOption,
+    );
+    final totalPages = _estimatedUniverseTotalPages(pageData);
+    final hasPagination = totalPages > 1;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: sortedUniverses.isEmpty && !isLoading
+                  ? RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (!_isFiltering)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: ListHeader(
+                                  count: pageData.count,
+                                  unit: 'result',
+                                  pageCount: sortedUniverses.length,
+                                  sortLabel: universeSortLabel(sortOption),
+                                  onSortTap: () =>
+                                      showSortBottomSheet(
+                                        context,
+                                        ref,
+                                        sortContext,
+                                        universeSortLabel,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: hasPagination ? 96 : 12,
+                              ),
+                              child: const EmptyContentState(
+                                icon: Icons.language_outlined,
+                                message: 'No universes found.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 0, 0,
+                          hasPagination ? 96 : 12,
+                        ),
+                        itemCount:
+                            sortedUniverses.length + (_isFiltering ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (!_isFiltering && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ListHeader(
+                                count: pageData.count,
+                                unit: 'result',
+                                pageCount: sortedUniverses.length,
+                                sortLabel: universeSortLabel(sortOption),
+                                onSortTap: isLoading
+                                    ? null
+                                    : () => showSortBottomSheet(
+                                          context,
+                                          ref,
+                                          sortContext,
+                                          universeSortLabel,
+                                        ),
+                              ),
+                            );
+                          }
+                          final itemIndex = _isFiltering
+                              ? index
+                              : index - 1;
+                          final universe = sortedUniverses[itemIndex];
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: UniverseListTile(
+                              universeId: universe.id,
+                              name: universe.name,
+                              isFirst: itemIndex == 0,
+                              isLast: itemIndex == sortedUniverses.length - 1,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: _page,
+                  totalPages: totalPages,
+                  hasPrevious: pageData.hasPrevious,
+                  hasNext: pageData.hasNext,
+                  onPrevious: () {
+                    final previousPage = pageData.previousPage;
+                    if (previousPage == null) return;
+                    setState(() {
+                      _page = previousPage;
+                    });
+                  },
+                  onNext: () {
+                    final nextPage = pageData.nextPage;
+                    if (nextPage == null) return;
+                    setState(() {
+                      _page = nextPage;
+                    });
+                  },
+                  enabled: !isLoading,
+                  isLoading: isLoading,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCreatorBody(
+    AsyncValue<CreatorListPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastCreatorPage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _buildCreatorResultsContent(
+      context,
+      ref,
+      pageData,
+      sortOption,
+      sortContext,
+      isLoading: async.isLoading,
+    );
+  }
+
+  Widget _buildCharacterBody(
+    AsyncValue<CharacterListPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastCharacterPage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _buildCharacterResultsContent(
+      context,
+      ref,
+      pageData,
+      sortOption,
+      sortContext,
+      isLoading: async.isLoading,
+    );
+  }
+
   Widget _buildSeriesBody(
     AsyncValue<SeriesSearchPage> async,
     ContentSortOption sortOption,
@@ -183,6 +489,296 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       sortOption,
       sortContext,
       isLoading: async.isLoading,
+    );
+  }
+
+  Widget _buildCharacterResultsContent(
+    BuildContext context,
+    WidgetRef ref,
+    CharacterListPage pageData,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext, {
+    required bool isLoading,
+  }) {
+    final sortedCharacters = sortCharacters(
+      _applyCharacterFilter(pageData.results),
+      sortOption,
+    );
+    final totalPages = _estimatedCharacterTotalPages(pageData);
+    final hasPagination = totalPages > 1;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: sortedCharacters.isEmpty && !isLoading
+                  ? RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (!_isFiltering)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: ListHeader(
+                                  count: pageData.count,
+                                  unit: 'result',
+                                  pageCount: sortedCharacters.length,
+                                  sortLabel: characterSortLabel(sortOption),
+                                  onSortTap: () =>
+                                      showSortBottomSheet(
+                                        context,
+                                        ref,
+                                        sortContext,
+                                        characterSortLabel,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: hasPagination ? 96 : 12,
+                              ),
+                              child: const EmptyContentState(
+                                icon: Icons.people_outline,
+                                message: 'No characters found.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 0, 0,
+                          hasPagination ? 96 : 12,
+                        ),
+                        itemCount:
+                            sortedCharacters.length + (_isFiltering ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (!_isFiltering && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ListHeader(
+                                count: pageData.count,
+                                unit: 'result',
+                                pageCount: sortedCharacters.length,
+                                sortLabel: characterSortLabel(sortOption),
+                                onSortTap: isLoading
+                                    ? null
+                                    : () => showSortBottomSheet(
+                                          context,
+                                          ref,
+                                          sortContext,
+                                          characterSortLabel,
+                                        ),
+                              ),
+                            );
+                          }
+                          final itemIndex = _isFiltering
+                              ? index
+                              : index - 1;
+                          final character = sortedCharacters[itemIndex];
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: PersonListTile(
+                              characterId: character.id,
+                              name: character.name,
+                              isFirst: itemIndex == 0,
+                              isLast: itemIndex == sortedCharacters.length - 1,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: _page,
+                  totalPages: totalPages,
+                  hasPrevious: pageData.hasPrevious,
+                  hasNext: pageData.hasNext,
+                  onPrevious: () {
+                    final previousPage = pageData.previousPage;
+                    if (previousPage == null) return;
+                    setState(() {
+                      _page = previousPage;
+                    });
+                  },
+                  onNext: () {
+                    final nextPage = pageData.nextPage;
+                    if (nextPage == null) return;
+                    setState(() {
+                      _page = nextPage;
+                    });
+                  },
+                  enabled: !isLoading,
+                  isLoading: isLoading,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCreatorResultsContent(
+    BuildContext context,
+    WidgetRef ref,
+    CreatorListPage pageData,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext, {
+    required bool isLoading,
+  }) {
+    final sortedCreators = sortCreators(
+      _applyCreatorFilter(pageData.results),
+      sortOption,
+    );
+    final totalPages = _estimatedCreatorTotalPages(pageData);
+    final hasPagination = totalPages > 1;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: sortedCreators.isEmpty && !isLoading
+                  ? RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (!_isFiltering)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: ListHeader(
+                                  count: pageData.count,
+                                  unit: 'result',
+                                  pageCount: sortedCreators.length,
+                                  sortLabel: creatorSortLabel(sortOption),
+                                  onSortTap: () =>
+                                      showSortBottomSheet(
+                                        context,
+                                        ref,
+                                        sortContext,
+                                        creatorSortLabel,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: hasPagination ? 96 : 12,
+                              ),
+                              child: const EmptyContentState(
+                                icon: Icons.person_outline,
+                                message: 'No creators found.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _forceRefreshResults,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 0, 0,
+                          hasPagination ? 96 : 12,
+                        ),
+                        itemCount:
+                            sortedCreators.length + (_isFiltering ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (!_isFiltering && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ListHeader(
+                                count: pageData.count,
+                                unit: 'result',
+                                pageCount: sortedCreators.length,
+                                sortLabel: creatorSortLabel(sortOption),
+                                onSortTap: isLoading
+                                    ? null
+                                    : () => showSortBottomSheet(
+                                          context,
+                                          ref,
+                                          sortContext,
+                                          creatorSortLabel,
+                                        ),
+                              ),
+                            );
+                          }
+                          final itemIndex = _isFiltering
+                              ? index
+                              : index - 1;
+                          final creator = sortedCreators[itemIndex];
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: PersonListTile(
+                              creatorId: creator.id,
+                              name: creator.name,
+                              isFirst: itemIndex == 0,
+                              isLast: itemIndex == sortedCreators.length - 1,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+        if (hasPagination)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PageNavigationBar(
+                  currentPage: _page,
+                  totalPages: totalPages,
+                  hasPrevious: pageData.hasPrevious,
+                  hasNext: pageData.hasNext,
+                  onPrevious: () {
+                    final previousPage = pageData.previousPage;
+                    if (previousPage == null) return;
+                    setState(() {
+                      _page = previousPage;
+                    });
+                  },
+                  onNext: () {
+                    final nextPage = pageData.nextPage;
+                    if (nextPage == null) return;
+                    setState(() {
+                      _page = nextPage;
+                    });
+                  },
+                  enabled: !isLoading,
+                  isLoading: isLoading,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -485,21 +1081,57 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sortContext = _isSeriesSearch
-        ? SortPreferenceContext.searchSeries
-        : SortPreferenceContext.searchIssues;
+    final sortContext = _isCharacterSearch
+        ? SortPreferenceContext.searchCharacters
+        : _isCreatorSearch
+            ? SortPreferenceContext.searchCreators
+            : _isUniverseSearch
+                ? SortPreferenceContext.searchUniverses
+                : _isSeriesSearch
+                    ? SortPreferenceContext.searchSeries
+                    : SortPreferenceContext.searchIssues;
     final sortOption = ref.watch(sortPreferenceForContextProvider(sortContext));
-    final issueResultsAsync = _isSeriesSearch
+    final universeResultsAsync = _isUniverseSearch
+        ? ref.watch(universeSearchResultsProvider(_currentUniverseArgs))
+        : null;
+    final creatorResultsAsync = _isCreatorSearch
+        ? ref.watch(creatorSearchResultsProvider(_currentCreatorArgs))
+        : null;
+    final characterResultsAsync = _isCharacterSearch
+        ? ref.watch(characterSearchResultsProvider(_currentCharacterArgs))
+        : null;
+    final issueResultsAsync = _isSeriesSearch ||
+            _isCharacterSearch ||
+            _isCreatorSearch ||
+            _isUniverseSearch
         ? null
         : ref.watch(issueSearchResultsProvider(_currentIssueArgs));
     final seriesResultsAsync = _isSeriesSearch
         ? ref.watch(seriesSearchResultsProvider(_currentSeriesArgs))
         : null;
-    final isLoading = _isSeriesSearch
-        ? seriesResultsAsync?.isLoading == true
-        : issueResultsAsync?.isLoading == true;
+    final isLoading = _isCreatorSearch
+        ? creatorResultsAsync?.isLoading == true
+        : _isCharacterSearch
+            ? characterResultsAsync?.isLoading == true
+            : _isUniverseSearch
+                ? universeResultsAsync?.isLoading == true
+                : _isSeriesSearch
+                    ? seriesResultsAsync?.isLoading == true
+                    : issueResultsAsync?.isLoading == true;
 
-    if (_isSeriesSearch) {
+    if (_isCreatorSearch) {
+      if (creatorResultsAsync?.hasValue == true) {
+        _lastCreatorPage = creatorResultsAsync!.value;
+      }
+    } else if (_isCharacterSearch) {
+      if (characterResultsAsync?.hasValue == true) {
+        _lastCharacterPage = characterResultsAsync!.value;
+      }
+    } else if (_isUniverseSearch) {
+      if (universeResultsAsync?.hasValue == true) {
+        _lastUniversePage = universeResultsAsync!.value;
+      }
+    } else if (_isSeriesSearch) {
       if (seriesResultsAsync?.hasValue == true) {
         _lastSeriesPage = seriesResultsAsync!.value;
       }
@@ -557,9 +1189,20 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               )
             : null,
       ),
-      body: _isSeriesSearch
-          ? _buildSeriesBody(seriesResultsAsync!, sortOption, sortContext)
-          : _buildIssueBody(issueResultsAsync!, sortOption, sortContext),
+      body: _isCreatorSearch
+          ? _buildCreatorBody(
+              creatorResultsAsync!, sortOption, sortContext)
+          : _isCharacterSearch
+              ? _buildCharacterBody(
+                  characterResultsAsync!, sortOption, sortContext)
+              : _isUniverseSearch
+                  ? _buildUniverseBody(
+                      universeResultsAsync!, sortOption, sortContext)
+                  : _isSeriesSearch
+                      ? _buildSeriesBody(
+                          seriesResultsAsync!, sortOption, sortContext)
+                      : _buildIssueBody(
+                          issueResultsAsync!, sortOption, sortContext),
     );
   }
 }

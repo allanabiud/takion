@@ -7,13 +7,20 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 import 'package:uuid/uuid.dart';
 
 class CreateReadingListBottomSheet extends ConsumerStatefulWidget {
-  const CreateReadingListBottomSheet({super.key});
+  final ListContentType? initialContentType;
 
-  static Future<void> show(BuildContext context) {
+  const CreateReadingListBottomSheet({super.key, this.initialContentType});
+
+  static Future<void> show(
+    BuildContext context, {
+    ListContentType? initialContentType,
+  }) {
     return TakionBottomSheet.show<void>(
       context: context,
       title: 'Create Reading List',
-      child: const CreateReadingListBottomSheet(),
+      child: CreateReadingListBottomSheet(
+        initialContentType: initialContentType,
+      ),
     );
   }
 
@@ -29,7 +36,14 @@ class _CreateReadingListBottomSheetState
   final _descController = TextEditingController();
 
   bool _isOrdered = true;
-  ListContentType _contentType = ListContentType.issue;
+  late ListContentType _contentType;
+
+  @override
+  void initState() {
+    super.initState();
+    _contentType =
+        widget.initialContentType ?? ListContentType.issue;
+  }
 
   @override
   void dispose() {

@@ -2,6 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/data/dto/character_details_dto.dart';
 import 'package:takion/src/data/dto/character_list_response_dto.dart';
+import 'package:takion/src/data/dto/creator_details_dto.dart';
+import 'package:takion/src/data/dto/creator_list_response_dto.dart';
+import 'package:takion/src/data/dto/universe_details_dto.dart';
+import 'package:takion/src/data/dto/universe_list_response_dto.dart';
 import 'package:takion/src/data/dto/collection_item_details_dto.dart';
 import 'package:takion/src/data/dto/collection_stats_dto.dart';
 import 'package:takion/src/data/dto/collection_items_response_dto.dart';
@@ -75,6 +79,24 @@ abstract class MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   });
+
+  Future<CreatorListResponseDto> searchCreators(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+
+  Future<CreatorDetailsDto> getCreatorDetails(int creatorId);
+
+  Future<UniverseListResponseDto> searchUniverses(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+
+  Future<UniverseDetailsDto> getUniverseDetails(int universeId);
 }
 
 class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
@@ -422,5 +444,85 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     return SeriesIssueListResponseDto.fromJson(
       response.data as Map<String, dynamic>,
     );
+  }
+
+  @override
+  Future<CreatorListResponseDto> searchCreators(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final candidates = _queryCandidates(query);
+    if (candidates.isEmpty) {
+      return const CreatorListResponseDto(count: 0, results: []);
+    }
+
+    CreatorListResponseDto? lastResponse;
+    for (final candidate in candidates) {
+      final response = await _dio.get(
+        'creator/',
+        queryParameters: {'name': candidate, 'page': page},
+        cancelToken: cancelToken,
+      );
+
+      final parsed = CreatorListResponseDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      lastResponse = parsed;
+
+      if (parsed.results.isNotEmpty) {
+        return parsed;
+      }
+    }
+
+    return lastResponse ??
+        const CreatorListResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<CreatorDetailsDto> getCreatorDetails(int creatorId) async {
+    final response = await _dio.get('creator/$creatorId/');
+    return CreatorDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<UniverseListResponseDto> searchUniverses(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final candidates = _queryCandidates(query);
+    if (candidates.isEmpty) {
+      return const UniverseListResponseDto(count: 0, results: []);
+    }
+
+    UniverseListResponseDto? lastResponse;
+    for (final candidate in candidates) {
+      final response = await _dio.get(
+        'universe/',
+        queryParameters: {'name': candidate, 'page': page},
+        cancelToken: cancelToken,
+      );
+
+      final parsed = UniverseListResponseDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      lastResponse = parsed;
+
+      if (parsed.results.isNotEmpty) {
+        return parsed;
+      }
+    }
+
+    return lastResponse ??
+        const UniverseListResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<UniverseDetailsDto> getUniverseDetails(int universeId) async {
+    final response = await _dio.get('universe/$universeId/');
+    return UniverseDetailsDto.fromJson(response.data as Map<String, dynamic>);
   }
 }

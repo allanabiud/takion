@@ -23,7 +23,6 @@ class IssueListTile extends ConsumerWidget {
   final bool? isRead;
   final int? rating;
   final bool useCardBackground;
-  final bool showDivider;
   final double horizontalPadding;
   final ItemRole? role;
 
@@ -37,7 +36,6 @@ class IssueListTile extends ConsumerWidget {
     this.isRead,
     this.rating,
     this.useCardBackground = false,
-    this.showDivider = true,
     this.horizontalPadding = 12,
     this.role,
   });
@@ -322,7 +320,6 @@ class IssueListTile extends ConsumerWidget {
               child: tileContent,
             ),
           ),
-          if (showDivider && !isLast) const Divider(height: 1),
         ],
       ),
     );

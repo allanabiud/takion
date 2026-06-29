@@ -8,6 +8,8 @@ class LocalFavoritesRepository implements FavoritesRepository {
   static const _seriesBox = 'local_favorite_series_box';
   static const _issuesBox = 'local_favorite_issues_box';
   static const _readingListsBox = 'local_favorite_reading_lists_box';
+  static const _charactersBox = 'local_favorite_characters_box';
+  static const _creatorsBox = 'local_favorite_creators_box';
 
   final HiveService _hiveService;
 
@@ -143,6 +145,96 @@ class LocalFavoritesRepository implements FavoritesRepository {
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _readingListToMap(favorite));
+    }
+  }
+
+  Map<String, dynamic> _characterToMap(FavoriteCharacter character) {
+    return {
+      'metron_character_id': character.metronCharacterId,
+      'created_at': character.createdAt.toIso8601String(),
+    };
+  }
+
+  FavoriteCharacter _characterFromMap(Map<String, dynamic> map) {
+    return FavoriteCharacter(
+      metronCharacterId: map['metron_character_id'] as int,
+      createdAt: DateTime.parse(map['created_at'] as String),
+    );
+  }
+
+  @override
+  Future<List<FavoriteCharacter>> listFavoriteCharacters() async {
+    final box = await _hiveService.openBox<Map>(_charactersBox);
+    final items = box.values
+        .map((raw) => _characterFromMap(raw.cast<String, dynamic>()))
+        .toList();
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  @override
+  Future<bool> isCharacterFavorite(int metronCharacterId) async {
+    final box = await _hiveService.openBox<Map>(_charactersBox);
+    return box.containsKey(metronCharacterId.toString());
+  }
+
+  @override
+  Future<void> toggleCharacterFavorite(int metronCharacterId) async {
+    final box = await _hiveService.openBox<Map>(_charactersBox);
+    final key = metronCharacterId.toString();
+    if (box.containsKey(key)) {
+      await box.delete(key);
+    } else {
+      final favorite = FavoriteCharacter(
+        metronCharacterId: metronCharacterId,
+        createdAt: DateTime.now().toUtc(),
+      );
+      await box.put(key, _characterToMap(favorite));
+    }
+  }
+
+  Map<String, dynamic> _creatorToMap(FavoriteCreator creator) {
+    return {
+      'metron_creator_id': creator.metronCreatorId,
+      'created_at': creator.createdAt.toIso8601String(),
+    };
+  }
+
+  FavoriteCreator _creatorFromMap(Map<String, dynamic> map) {
+    return FavoriteCreator(
+      metronCreatorId: map['metron_creator_id'] as int,
+      createdAt: DateTime.parse(map['created_at'] as String),
+    );
+  }
+
+  @override
+  Future<List<FavoriteCreator>> listFavoriteCreators() async {
+    final box = await _hiveService.openBox<Map>(_creatorsBox);
+    final items = box.values
+        .map((raw) => _creatorFromMap(raw.cast<String, dynamic>()))
+        .toList();
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  @override
+  Future<bool> isCreatorFavorite(int metronCreatorId) async {
+    final box = await _hiveService.openBox<Map>(_creatorsBox);
+    return box.containsKey(metronCreatorId.toString());
+  }
+
+  @override
+  Future<void> toggleCreatorFavorite(int metronCreatorId) async {
+    final box = await _hiveService.openBox<Map>(_creatorsBox);
+    final key = metronCreatorId.toString();
+    if (box.containsKey(key)) {
+      await box.delete(key);
+    } else {
+      final favorite = FavoriteCreator(
+        metronCreatorId: metronCreatorId,
+        createdAt: DateTime.now().toUtc(),
+      );
+      await box.put(key, _creatorToMap(favorite));
     }
   }
 }

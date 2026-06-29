@@ -2,6 +2,10 @@ import 'package:hive_ce/hive_ce.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/character_details_dto.dart';
 import 'package:takion/src/data/dto/character_list_dto.dart';
+import 'package:takion/src/data/dto/creator_details_dto.dart';
+import 'package:takion/src/data/dto/creator_list_dto.dart';
+import 'package:takion/src/data/dto/universe_details_dto.dart';
+import 'package:takion/src/data/dto/universe_list_dto.dart';
 import 'package:takion/src/data/dto/collection_item_details_dto.dart';
 import 'package:takion/src/data/dto/collection_items_response_dto.dart';
 import 'package:takion/src/data/dto/collection_stats_dto.dart';
@@ -60,6 +64,30 @@ class SeriesIssueListPageCacheMeta {
 
 class CharacterSearchPageCacheMeta {
   const CharacterSearchPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class CreatorSearchPageCacheMeta {
+  const CreatorSearchPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class UniverseSearchPageCacheMeta {
+  const UniverseSearchPageCacheMeta({
     required this.count,
     this.next,
     this.previous,
@@ -282,6 +310,76 @@ abstract class MetronLocalDataSource {
     required int page,
     required int limit,
   });
+
+  Future<void> cacheCreatorSearchResults(
+    String query,
+    List<CreatorListDto> creators, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+
+  Future<List<CreatorListDto>?> getCreatorSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<DateTime?> getCreatorSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<CreatorSearchPageCacheMeta?> getCreatorSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<void> cacheCreatorDetails(
+    CreatorDetailsDto details);
+
+  Future<CreatorDetailsDto?> getCreatorDetails(int creatorId);
+
+  Future<DateTime?> getCreatorDetailsCachedAt(int creatorId);
+
+  Future<void> cacheUniverseSearchResults(
+    String query,
+    List<UniverseListDto> universes, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+
+  Future<List<UniverseListDto>?> getUniverseSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<DateTime?> getUniverseSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<UniverseSearchPageCacheMeta?> getUniverseSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<void> cacheUniverseDetails(
+    UniverseDetailsDto details);
+
+  Future<UniverseDetailsDto?> getUniverseDetails(int universeId);
+
+  Future<DateTime?> getUniverseDetailsCachedAt(int universeId);
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
@@ -309,6 +407,12 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _characterIssueListBox = 'character_issue_list_box';
   static const String _characterIssueListMetaBox =
       'character_issue_list_meta_box';
+  static const String _creatorSearchBox = 'creator_search_box';
+  static const String _creatorSearchMetaBox = 'creator_search_meta_box';
+  static const String _creatorDetailsBox = 'creator_details_box';
+  static const String _universeSearchBox = 'universe_search_box';
+  static const String _universeSearchMetaBox = 'universe_search_meta_box';
+  static const String _universeDetailsBox = 'universe_details_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   final Map<String, Box> _openedBoxes = {};
@@ -392,6 +496,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   String _getCharacterIssueListMetaKey(
           int characterId, int page, int limit) =>
       'character_issue_list:${_getCharacterIssueListKey(characterId, page, limit)}';
+
+  String _getCreatorSearchKey(String query, int page, int limit) =>
+      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+  String _getCreatorSearchMetaKey(String query, int page, int limit) =>
+      'creator_search:${_getCreatorSearchKey(query, page, limit)}';
+  String _getCreatorDetailsMetaKey(int creatorId) =>
+      'creator_details:$creatorId';
+  String _getUniverseSearchKey(String query, int page, int limit) =>
+      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+  String _getUniverseSearchMetaKey(String query, int page, int limit) =>
+      'universe_search:${_getUniverseSearchKey(query, page, limit)}';
+  String _getUniverseDetailsMetaKey(int universeId) =>
+      'universe_details:$universeId';
 
   @override
   Future<void> cacheCollectionStats(CollectionStatsDto stats) async {
@@ -1208,6 +1325,226 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       next: data['next'] as String?,
       previous: data['previous'] as String?,
     );
+  }
+
+  @override
+  Future<void> cacheCreatorSearchResults(
+    String query,
+    List<CreatorListDto> creators, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final searchKey = _getCreatorSearchKey(query, page, limit);
+    final box = await _getBox<List>(_creatorSearchBox);
+    await box.put(
+        searchKey, creators.map((entry) => entry.toJson()).toList());
+
+    final searchMetaBox = await _getBox<Map>(_creatorSearchMetaBox);
+    await searchMetaBox.put(searchKey, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getCreatorSearchMetaKey(query, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<CreatorListDto>?> getCreatorSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getCreatorSearchKey(query, page, limit);
+    final box = await _getBox<List>(_creatorSearchBox);
+    final rawData = box.get(searchKey);
+    if (rawData != null) {
+      return rawData
+          .whereType<Map>()
+          .map((entry) => entry.cast<String, dynamic>())
+          .map(CreatorListDto.fromJson)
+          .toList();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getCreatorSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch =
+        metaBox.get(_getCreatorSearchMetaKey(query, page, limit));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<CreatorSearchPageCacheMeta?> getCreatorSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getCreatorSearchKey(query, page, limit);
+    final box = await _getBox<Map>(_creatorSearchMetaBox);
+    final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return CreatorSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheCreatorDetails(CreatorDetailsDto details) async {
+    final box = await _getBox<Map>(_creatorDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getCreatorDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<CreatorDetailsDto?> getCreatorDetails(int creatorId) async {
+    final box = await _getBox<Map>(_creatorDetailsBox);
+    final data = box.get(creatorId);
+    if (data == null) return null;
+    return CreatorDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getCreatorDetailsCachedAt(int creatorId) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getCreatorDetailsMetaKey(creatorId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheUniverseSearchResults(
+    String query,
+    List<UniverseListDto> universes, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final searchKey = _getUniverseSearchKey(query, page, limit);
+    final box = await _getBox<List>(_universeSearchBox);
+    await box.put(
+        searchKey, universes.map((entry) => entry.toJson()).toList());
+
+    final searchMetaBox = await _getBox<Map>(_universeSearchMetaBox);
+    await searchMetaBox.put(searchKey, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getUniverseSearchMetaKey(query, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<UniverseListDto>?> getUniverseSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getUniverseSearchKey(query, page, limit);
+    final box = await _getBox<List>(_universeSearchBox);
+    final rawData = box.get(searchKey);
+    if (rawData != null) {
+      return rawData
+          .whereType<Map>()
+          .map((entry) => entry.cast<String, dynamic>())
+          .map(UniverseListDto.fromJson)
+          .toList();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getUniverseSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch =
+        metaBox.get(_getUniverseSearchMetaKey(query, page, limit));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<UniverseSearchPageCacheMeta?> getUniverseSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getUniverseSearchKey(query, page, limit);
+    final box = await _getBox<Map>(_universeSearchMetaBox);
+    final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return UniverseSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheUniverseDetails(UniverseDetailsDto details) async {
+    final box = await _getBox<Map>(_universeDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getUniverseDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<UniverseDetailsDto?> getUniverseDetails(int universeId) async {
+    final box = await _getBox<Map>(_universeDetailsBox);
+    final data = box.get(universeId);
+    if (data == null) return null;
+    return UniverseDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getUniverseDetailsCachedAt(int universeId) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getUniverseDetailsMetaKey(universeId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
   }
 }
 

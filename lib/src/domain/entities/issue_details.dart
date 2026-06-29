@@ -85,6 +85,7 @@ abstract class IssueDetailsCredit with _$IssueDetailsCredit {
   const factory IssueDetailsCredit({
     required int id,
     String? creator,
+    int? creatorId,
     @Default(<IssueDetailsCreditRole>[]) List<IssueDetailsCreditRole> roles,
   }) = _IssueDetailsCredit;
 }

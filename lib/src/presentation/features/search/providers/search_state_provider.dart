@@ -3,7 +3,7 @@ import 'package:takion/src/core/storage/hive_service.dart';
 
 const kSearchBarHeroTag = 'discover-search-bar-hero';
 
-enum SearchTarget { series, issues }
+enum SearchTarget { series, issues, characters, creators, universes }
 
 class SearchState {
   const SearchState({

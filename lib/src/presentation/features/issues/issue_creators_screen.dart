@@ -2,18 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/presentation/components/person_list_tile.dart';
 import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
-
-String _initials(String? name) {
-  if (name == null || name.isEmpty) return '?';
-  final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
-  final valid = parts.where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p)).toList();
-  if (valid.isEmpty) return '?';
-  if (valid.length >= 2) {
-    return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
-  }
-  return valid[0][0].toUpperCase();
-}
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
@@ -85,58 +75,15 @@ class IssueCreatorsScreen extends ConsumerWidget {
                   .where((n) => n.isNotEmpty)
                   .toSet()
                   .toList();
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer
-                            .withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _initials(creator),
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            creator != null && creator.isNotEmpty
-                                ? creator
-                                : 'Unknown Creator',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (roles.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              roles.join(' • '),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              return PersonListTile(
+                creatorId: credit.id,
+                name: creator != null && creator.isNotEmpty
+                    ? creator
+                    : 'Unknown Creator',
+                subtitle: roles.isNotEmpty ? roles.join(' • ') : null,
+                isFirst: index == 0,
+                isLast: index == credits.length - 1,
+                horizontalPadding: 0,
               );
             },
           );

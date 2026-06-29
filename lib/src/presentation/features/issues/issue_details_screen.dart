@@ -880,7 +880,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                               PopupMenuItem(
                                 value: _IssueDetailsMenuAction
                                     .openInBrowser,
-                                child: Text('Open in browser'),
+                                child: Text('Open in Metron'),
                               ),
                             ],
                           ),

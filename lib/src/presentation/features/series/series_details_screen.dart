@@ -302,7 +302,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                               ),
                               PopupMenuItem(
                                 value: _SeriesDetailsMenuAction.openInBrowser,
-                                child: Text('Open in browser'),
+                                child: Text('Open in Metron'),
                               ),
                             ],
                           ),

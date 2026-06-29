@@ -21,3 +21,23 @@ class FavoriteReadingList {
   final String readingListId;
   final DateTime createdAt;
 }
+
+class FavoriteCharacter {
+  const FavoriteCharacter({
+    required this.metronCharacterId,
+    required this.createdAt,
+  });
+
+  final int metronCharacterId;
+  final DateTime createdAt;
+}
+
+class FavoriteCreator {
+  const FavoriteCreator({
+    required this.metronCreatorId,
+    required this.createdAt,
+  });
+
+  final int metronCreatorId;
+  final DateTime createdAt;
+}

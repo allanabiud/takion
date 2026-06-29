@@ -151,7 +151,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         );
       },
       emptyMessage: 'No subscriptions yet.',
-      emptyIcon: Icons.subscriptions_outlined,
+      emptyIcon: Icons.notifications_outlined,
     );
   }
 }
