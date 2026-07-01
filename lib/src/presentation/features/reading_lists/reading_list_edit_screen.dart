@@ -535,9 +535,8 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
           child: child,
         );
       },
-      onReorder: (oldIndex, newIndex) {
+      onReorderItem: (oldIndex, newIndex) {
         setState(() {
-          if (newIndex > oldIndex) newIndex--;
           final item = _editingItems!.removeAt(oldIndex);
           _editingItems!.insert(newIndex, item);
         });

@@ -124,15 +124,15 @@ class SeriesDetailsDto {
       issueCount: (json['issue_count'] as num?)?.toInt(),
       genres: rawGenres is List
           ? rawGenres
-                .where((e) => e is Map)
-                .map((e) => Map<String, dynamic>.from(e as Map))
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
                 .map(SeriesDetailsNamedRefDto.fromJson)
                 .toList()
           : const [],
       associated: rawAssociated is List
           ? rawAssociated
-                .where((e) => e is Map)
-                .map((e) => Map<String, dynamic>.from(e as Map))
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
                 .map(SeriesDetailsAssociatedDto.fromJson)
                 .toList()
           : const [],

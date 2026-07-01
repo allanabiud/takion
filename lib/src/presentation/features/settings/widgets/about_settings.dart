@@ -1,0 +1,159 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
+
+Future<void> launchGitHubRepo(BuildContext context) async {
+  final url = Uri.parse('https://github.com/allanabiud/takion');
+  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+    if (!context.mounted) return;
+    TakionAlerts.couldNotOpenInBrowser(context, 'repository');
+  }
+}
+
+void showAboutSettings(BuildContext context) {
+  TakionBottomSheet.show(
+    context: context,
+    title: 'About',
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              SvgPicture.asset(
+                'assets/images/takion_logo.svg',
+                height: 64,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).colorScheme.primary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Takion',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: FutureBuilder<PackageInfo>(
+                        future: PackageInfo.fromPlatform(),
+                        builder: (context, snapshot) {
+                          final versionText = snapshot.hasData
+                              ? snapshot.data!.buildNumber.isEmpty
+                                    ? snapshot.data!.version
+                                    : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+                              : '...';
+                          return Text(
+                            'Version $versionText',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => launchGitHubRepo(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.code,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'GitHub Repository',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          buildSettingsGroup(context, 'Developer', [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundImage: const CachedNetworkImageProvider(
+                    'https://avatars.githubusercontent.com/u/66108188?s=96&v=4',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'allanabiud',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Creator and maintainer',
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () =>
+                      launchUrl(Uri.parse('https://github.com/allanabiud')),
+                  icon: const Icon(Icons.open_in_new),
+                ),
+              ],
+            ),
+          ]),
+        ],
+      ),
+    ),
+  );
+}

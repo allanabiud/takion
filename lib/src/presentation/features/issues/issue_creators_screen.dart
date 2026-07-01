@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/components/person_list_tile.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [

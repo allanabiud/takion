@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/reading_history_provider.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';

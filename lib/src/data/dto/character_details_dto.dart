@@ -79,8 +79,8 @@ class CharacterDetailsDto {
   ) {
     if (raw is! List) return const [];
     return raw
-        .where((e) => e is Map)
-        .map((e) => Map<String, dynamic>.from(e as Map))
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
         .map(CharacterDetailsNamedRefDto.fromJson)
         .toList();
   }

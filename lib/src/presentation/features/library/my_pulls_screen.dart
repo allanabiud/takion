@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
@@ -15,7 +16,7 @@ import 'package:takion/src/presentation/components/list_header.dart';
 import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/releases/weekly_issue_list_scaffold.dart';
+import 'package:takion/src/presentation/components/paged_issue_list_scaffold.dart';
 
 @RoutePage()
 class MyPullsScreen extends ConsumerWidget {
@@ -180,7 +181,7 @@ class MyPullsScreen extends ConsumerWidget {
     );
     final pullsAsync = ref.watch(pullsIssuesForWeekProvider(selectedDate));
 
-    return WeeklyIssueListScaffold(
+    return PagedIssueListScaffold(
       title: 'My Pulls',
       issuesAsync: pullsAsync,
       transformIssues: (issues) => sortIssues(issues, sortOption),

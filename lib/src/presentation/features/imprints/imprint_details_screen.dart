@@ -10,21 +10,8 @@ import 'package:takion/src/domain/entities/imprint_details.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-String _initials(String name) {
-  if (name.isEmpty) return '?';
-  final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
-  final valid = parts
-      .where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p))
-      .toList();
-  if (valid.isEmpty) return '?';
-  if (valid.length >= 2) {
-    return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
-  }
-  return valid[0][0].toUpperCase();
-}
-
-enum _ImprintMenuAction { share, openInBrowser }
+import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 
 @RoutePage()
 class ImprintDetailsScreen extends ConsumerStatefulWidget {
@@ -72,17 +59,7 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen> {
     }
   }
 
-  Future<void> _handleMoreAction(
-    _ImprintMenuAction action,
-    ImprintDetails details,
-  ) async {
-    switch (action) {
-      case _ImprintMenuAction.share:
-        await _shareResourceUrl(details);
-      case _ImprintMenuAction.openInBrowser:
-        await _openResourceUrlInBrowser(details);
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -209,20 +186,9 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen> {
                         backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
-                          PopupMenuButton<_ImprintMenuAction>(
-                            tooltip: 'More options',
-                            onSelected: (action) =>
-                                _handleMoreAction(action, details),
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                value: _ImprintMenuAction.share,
-                                child: Text('Share'),
-                              ),
-                              PopupMenuItem(
-                                value: _ImprintMenuAction.openInBrowser,
-                                child: Text('Open in Metron'),
-                              ),
-                            ],
+                          EntityDetailActions(
+                            onShare: () => _shareResourceUrl(details),
+                            onOpenInBrowser: () => _openResourceUrlInBrowser(details),
                           ),
                         ],
                       ),
@@ -257,7 +223,7 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen> {
       ).colorScheme.primaryContainer.withValues(alpha: 0.8),
       child: Center(
         child: Text(
-          _initials(name),
+          initials(name),
           style: TextStyle(
             color: Theme.of(context).colorScheme.primary,
             fontSize: 40,

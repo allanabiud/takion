@@ -24,36 +24,21 @@ class SeriesIssueListArgs {
 }
 
 final seriesIssueListProvider = FutureProvider.autoDispose
-    .family<SeriesIssueListPage, SeriesIssueListArgs>((ref, args) {
+    .family<SeriesIssueListPage, SeriesIssueListArgs>((ref, args) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final repository = ref.watch(metronRepositoryProvider);
       final cancelToken = CancelToken();
       ref.onDispose(cancelToken.cancel);
-      return repository
-          .getSeriesIssueList(
-            args.seriesId,
-            page: args.page,
-            limit: metronDefaultPageSize,
-            cancelToken: cancelToken,
-          )
-          .then((results) {
-            if (results.previousPage != null) {
-              unawaited(
-                repository.getSeriesIssueList(
-                  args.seriesId,
-                  page: results.previousPage!,
-                  limit: metronDefaultPageSize,
-                ),
-              );
-            }
-            if (results.nextPage != null) {
-              unawaited(
-                repository.getSeriesIssueList(
-                  args.seriesId,
-                  page: results.nextPage!,
-                  limit: metronDefaultPageSize,
-                ),
-              );
-            }
-            return results;
-          });
+      final result = await repository.getSeriesIssueList(
+        args.seriesId,
+        page: args.page,
+        limit: metronDefaultPageSize,
+        cancelToken: cancelToken,
+      );
+
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });

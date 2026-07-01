@@ -4,17 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
-
-String _initials(String name) {
-  if (name.isEmpty) return '?';
-  final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
-  final valid = parts.where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p)).toList();
-  if (valid.isEmpty) return '?';
-  if (valid.length >= 2) {
-    return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
-  }
-  return valid[0][0].toUpperCase();
-}
+import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class ImprintCard extends ConsumerWidget {
   const ImprintCard({
@@ -56,8 +46,8 @@ class ImprintCard extends ConsumerWidget {
                     ? CachedNetworkImage(
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _buildInitials(theme),
-                        placeholder: (_, __) => const Center(
+                        errorWidget: (_, _, _) => _buildInitials(theme),
+                        placeholder: (_, _) => const Center(
                           child: SizedBox(
                             width: 20,
                             height: 20,
@@ -108,7 +98,7 @@ class ImprintCard extends ConsumerWidget {
   Widget _buildInitials(ThemeData theme) {
     return Center(
       child: Text(
-        _initials(name),
+        initials(name),
         style: TextStyle(
           color: theme.colorScheme.primary,
           fontSize: 20,

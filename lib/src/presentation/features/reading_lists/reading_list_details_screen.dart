@@ -13,6 +13,7 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 import 'package:takion/src/presentation/features/reading_lists/add_reading_list_items_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
+import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -392,7 +393,10 @@ class _ReadingListDetailsScreenState
     final theme = Theme.of(context);
 
     return listValue.when(
-      loading: () => const _ReadingListDetailsSkeleton(),
+      loading: () => DetailScreenSkeleton(
+        initialChildSize: 0.65,
+        header: ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+      ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
         body: Center(child: Text('Error: $e')),
@@ -606,78 +610,4 @@ class _ReadingListDetailsScreenState
   }
 }
 
-class _ReadingListDetailsSkeleton extends StatelessWidget {
-  const _ReadingListDetailsSkeleton();
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          SizedBox(
-            height: 350,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ColoredBox(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                ),
-              ],
-            ),
-          ),
-          DraggableScrollableSheet(
-                initialChildSize: 0.65,
-                minChildSize: 0.65,
-                maxChildSize: 0.9,
-                snap: true,
-                snapSizes: const [0.65, 0.9],
-            builder: (context, scrollController) => DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  _SkeletonDragHandle(),
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SkeletonDragHandle extends StatelessWidget {
-  const _SkeletonDragHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 8),
-          child: Container(
-            width: 32,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurfaceVariant
-                  .withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

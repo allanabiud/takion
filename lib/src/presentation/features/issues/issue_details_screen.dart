@@ -8,122 +8,24 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/components/rating_picker.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_library_sheets.dart';
+import 'package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart';
+import 'package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart';
+import 'package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart';
+import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-enum _IssueDetailsMenuAction { share, openInBrowser }
-
-class _IssueSeriesNavArgs {
-  const _IssueSeriesNavArgs({required this.seriesId, required this.issueId});
-
-  final int seriesId;
-  final int issueId;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is _IssueSeriesNavArgs &&
-        other.seriesId == seriesId &&
-        other.issueId == issueId;
-  }
-
-  @override
-  int get hashCode => Object.hash(seriesId, issueId);
-}
-
-class _IssueSeriesNavResult {
-  const _IssueSeriesNavResult({this.previousIssueId, this.nextIssueId});
-
-  final int? previousIssueId;
-  final int? nextIssueId;
-}
-
-double? _issueNumberValue(String input) {
-  final match = RegExp(r'\d+(?:\.\d+)?').firstMatch(input);
-  if (match == null) return null;
-  return double.tryParse(match.group(0)!);
-}
-
-int _compareSeriesIssueNumbers(IssueList a, IssueList b) {
-  final aValue = _issueNumberValue(a.number);
-  final bValue = _issueNumberValue(b.number);
-
-  if (aValue != null && bValue != null) {
-    final valueCompare = aValue.compareTo(bValue);
-    if (valueCompare != 0) return valueCompare;
-  } else if (aValue != null || bValue != null) {
-    return aValue == null ? 1 : -1;
-  }
-
-  return a.number.toLowerCase().compareTo(b.number.toLowerCase());
-}
-
-final _seriesIssuesCacheProvider = FutureProvider.autoDispose
-    .family<List<IssueList>, int>((ref, seriesId) async {
-      ref.keepAlive();
-      final repository = ref.watch(catalogRepositoryProvider);
-      final issues = <IssueList>[];
-      var page = 1;
-      var scannedPages = 0;
-      var hasNext = true;
-
-      while (hasNext && scannedPages < 50) {
-        final result = await repository.getSeriesIssueList(
-          seriesId,
-          page: page,
-        );
-        issues.addAll(result.results);
-        hasNext = result.hasNext;
-        page = result.nextPage ?? (page + 1);
-        scannedPages++;
-      }
-      return issues;
-    });
-
-final _issueSeriesNavigationProvider = FutureProvider.autoDispose
-    .family<_IssueSeriesNavResult, _IssueSeriesNavArgs>((ref, args) async {
-      final issues = await ref.watch(_seriesIssuesCacheProvider(args.seriesId).future);
-
-      final dedupedById = <int, IssueList>{};
-      for (final issue in issues) {
-        final id = issue.id;
-        if (id == null) continue;
-        dedupedById[id] = issue;
-      }
-
-      final ordered = dedupedById.values.toList()
-        ..sort(_compareSeriesIssueNumbers);
-      if (ordered.isEmpty) return const _IssueSeriesNavResult();
-
-      final currentIndex = ordered.indexWhere(
-        (issue) => issue.id == args.issueId,
-      );
-      if (currentIndex < 0) return const _IssueSeriesNavResult();
-
-      final previous =
-          currentIndex > 0 ? ordered[currentIndex - 1].id : null;
-      final next = currentIndex < ordered.length - 1
-          ? ordered[currentIndex + 1].id
-          : null;
-
-      return _IssueSeriesNavResult(
-        previousIssueId: previous,
-        nextIssueId: next,
-      );
-    });
+import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 
 @RoutePage()
 class IssueDetailsScreen extends ConsumerStatefulWidget {
@@ -279,7 +181,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
         imageCaptions: captions,
         initialIndex: 0,
         title: _displayTitle(issue),
-        heroTag: 'issue-cover-${_currentIssueId}',
+        heroTag: 'issue-cover-$_currentIssueId',
       ),
     );
   }
@@ -326,19 +228,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
   }
 
-  Future<void> _handleMoreAction(
-    _IssueDetailsMenuAction action,
-    IssueDetails issue,
-  ) async {
-    switch (action) {
-      case _IssueDetailsMenuAction.share:
-        await _shareResourceUrl(issue);
-        break;
-      case _IssueDetailsMenuAction.openInBrowser:
-        await _openResourceUrlInBrowser(issue);
-        break;
-    }
-  }
+
 
   void showScrobbleSheet(
     IssueDetails issue,
@@ -643,7 +533,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
       ref.invalidate(isIssueFavoriteProvider(_currentIssueId));
       ref.invalidate(favoriteIssuesListProvider);
 
-      if (context.mounted) {
+      if (mounted) {
         TakionAlerts.success(
           context,
           !isFavorite
@@ -652,7 +542,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         TakionAlerts.error(context, 'Failed to update favorites: $e');
       }
     }
@@ -674,11 +564,11 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     final seriesId = issue?.series?.id;
 
     final navAsync = seriesId == null
-        ? const AsyncValue<_IssueSeriesNavResult>.data(
-            _IssueSeriesNavResult())
+        ? const AsyncValue<IssueSeriesNavResult>.data(
+            IssueSeriesNavResult())
         : ref.watch(
-            _issueSeriesNavigationProvider(
-              _IssueSeriesNavArgs(
+            issueSeriesNavigationProvider(
+              IssueSeriesNavArgs(
                 seriesId: seriesId,
                 issueId: _currentIssueId,
               ),
@@ -689,8 +579,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
 
     if (seriesId != null) {
       ref.listen(
-        _issueSeriesNavigationProvider(
-          _IssueSeriesNavArgs(
+        issueSeriesNavigationProvider(
+          IssueSeriesNavArgs(
             seriesId: seriesId,
             issueId: _currentIssueId,
           ),
@@ -712,7 +602,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     if (issue == null) {
       return Scaffold(
         body: issueAsync.when(
-          loading: () => _IssueDetailsSkeleton(imageUrl: widget.initialImageUrl),
+          loading: () => IssueDetailsSkeleton(imageUrl: widget.initialImageUrl),
           error: (error, stack) => Scaffold(
             appBar: AppBar(),
             body: AsyncStatePanel.error(
@@ -810,7 +700,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                                 : null,
                             child: Hero(
                               tag:
-                                  'issue-cover-${_currentIssueId}',
+                                  'issue-cover-$_currentIssueId',
                               child: ClipRRect(
                                 borderRadius:
                                     BorderRadius.circular(8),
@@ -865,24 +755,9 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                         backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
-                          PopupMenuButton<_IssueDetailsMenuAction>(
-                            tooltip: 'More options',
-                            onSelected: isCurrentData
-                                ? (action) =>
-                                    _handleMoreAction(action, issue)
-                                : null,
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                value:
-                                    _IssueDetailsMenuAction.share,
-                                child: Text('Share'),
-                              ),
-                              PopupMenuItem(
-                                value: _IssueDetailsMenuAction
-                                    .openInBrowser,
-                                child: Text('Open in Metron'),
-                              ),
-                            ],
+                          EntityDetailActions(
+                            onShare: isCurrentData ? () => _shareResourceUrl(issue) : null,
+                            onOpenInBrowser: isCurrentData ? () => _openResourceUrlInBrowser(issue) : null,
                           ),
                         ],
                       ),
@@ -897,7 +772,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                 snap: true,
                 snapSizes: [0.60, 0.9],
                 builder: (context, scrollController) {
-                  return _IssueDetailsSheet(
+                  return IssueDetailsSheet(
                     scrollController: scrollController,
                     issue: issue,
                     issueId: _currentIssueId,
@@ -929,7 +804,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                             AddToReadingListBottomSheet.show(
                               context: context,
                               targetId:
-                                  'issue-${_currentIssueId}',
+                                  'issue-$_currentIssueId',
                               isSeries: false,
                             );
                           }
@@ -954,424 +829,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _IssueDetailsSheet extends StatelessWidget {
-  const _IssueDetailsSheet({
-    required this.scrollController,
-    required this.issue,
-    required this.issueId,
-    required this.collectionStatus,
-    required this.isInPullList,
-    required this.isFavorite,
-    required this.displayTitle,
-    required this.subtitle,
-    required this.onShowScrobbleSheet,
-    required this.onToggleFavorite,
-    required this.onAddToReadingList,
-    required this.onNavigateToSeries,
-    required this.onMyDetails,
-    required this.onReadingHistory,
-  });
-
-  final ScrollController scrollController;
-  final IssueDetails issue;
-  final int issueId;
-  final IssueCollectionStatus? collectionStatus;
-  final bool isInPullList;
-  final bool isFavorite;
-  final String displayTitle;
-  final String subtitle;
-  final VoidCallback onShowScrobbleSheet;
-  final VoidCallback onToggleFavorite;
-  final VoidCallback onAddToReadingList;
-  final VoidCallback onNavigateToSeries;
-  final VoidCallback onMyDetails;
-  final VoidCallback onReadingHistory;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ratingValue = (collectionStatus?.rating ?? 0).clamp(0, 5);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
-        child: CustomScrollView(
-          controller: scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Container(
-                        width: 32,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      displayTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Icon(
-                          (collectionStatus?.isCollected ?? false)
-                              ? Icons.inventory_2
-                              : Icons.inventory_2_outlined,
-                          size: 22,
-                          color: (collectionStatus?.isCollected ?? false)
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 10),
-                        Icon(
-                          (collectionStatus?.isRead ?? false)
-                              ? Icons.bookmark_added
-                              : Icons.bookmark_added_outlined,
-                          size: 22,
-                          color: (collectionStatus?.isRead ?? false)
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 10),
-                        Icon(
-                          isInPullList
-                              ? Icons.shopping_bag
-                              : Icons.shopping_bag_outlined,
-                          size: 22,
-                          color: isInPullList
-                              ? theme.colorScheme.secondary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 10),
-                        Icon(
-                          (collectionStatus?.isWishlisted ?? false)
-                              ? Icons.turned_in
-                              : Icons.turned_in_not,
-                          size: 22,
-                          color: (collectionStatus?.isWishlisted ?? false)
-                              ? theme.colorScheme.tertiary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const Spacer(),
-                        ...List.generate(5, (index) {
-                          final isFilled = index < ratingValue;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 3),
-                            child: Icon(
-                              isFilled ? Icons.star : Icons.star_border,
-                              size: 22,
-                              color: isFilled
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                        child: (collectionStatus?.isCollected == true)
-                            ? FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.errorContainer,
-                                  foregroundColor: theme.colorScheme.onErrorContainer,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  textStyle: Theme.of(context).textTheme.titleMedium,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: onShowScrobbleSheet,
-                                icon: const Icon(Icons.delete_outline, size: 22),
-                                label: const Text('Remove'),
-                              )
-                            : (collectionStatus?.isWishlisted == true)
-                                ? FilledButton.icon(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: theme.colorScheme.tertiaryContainer,
-                                      foregroundColor: theme.colorScheme.onTertiaryContainer,
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      textStyle: Theme.of(context).textTheme.titleMedium,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    onPressed: onShowScrobbleSheet,
-                                    icon: const Icon(Icons.turned_in, size: 22),
-                                    label: const Text('Wishlisted'),
-                                  )
-                                : isInPullList
-                                    ? FilledButton.icon(
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: theme.colorScheme.secondaryContainer,
-                                          foregroundColor: theme.colorScheme.onSecondaryContainer,
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          textStyle: Theme.of(context).textTheme.titleMedium,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        onPressed: onShowScrobbleSheet,
-                                        icon: const Icon(Icons.shopping_bag, size: 22),
-                                        label: const Text('Pulled'),
-                                      )
-                                    : FilledButton.icon(
-                                        style: FilledButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          textStyle: Theme.of(context).textTheme.titleMedium,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        onPressed: onShowScrobbleSheet,
-                                        icon: const Icon(Icons.add, size: 22),
-                                        label: const Text('Add'),
-                                      ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: isFavorite
-                              ? FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primaryContainer,
-                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite),
-                                )
-                              : FilledButton.tonal(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite_border),
-                                ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: theme.colorScheme.surfaceContainerHigh,
-                              foregroundColor: theme.colorScheme.onSurfaceVariant,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => _showIssueMoreOptionsSheet(
-                              context,
-                              onNavigateToSeries,
-                              onAddToReadingList,
-                              onMyDetails,
-                              onReadingHistory,
-                            ),
-                            child: const Icon(Icons.more_vert),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: IssueAboutContent(
-                  issue: issue,
-                  issueId: issueId,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).padding.bottom + 24,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _IssueDetailsSkeleton extends StatelessWidget {
-  const _IssueDetailsSkeleton({this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      body: Stack(
-        children: [
-          SizedBox(
-            height: 350,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (imageUrl != null && imageUrl!.isNotEmpty)
-                  ImageFiltered(
-                    imageFilter: ImageFilter.blur(
-                      sigmaX: 8,
-                      sigmaY: 8,
-                    ),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                else
-                  ColoredBox(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                  ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        theme.colorScheme.surface.withValues(alpha: 0.75),
-                        Colors.transparent,
-                        theme.colorScheme.surface.withValues(alpha: 0.75),
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Container(
-                    width: 180,
-                    height: 270,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: imageUrl != null && imageUrl!.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: imageUrl!,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => const Icon(
-                                Icons.image,
-                                size: 48,
-                              ),
-                            )
-                          : const Icon(Icons.image, size: 48),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DraggableScrollableSheet(
-            initialChildSize: 0.60,
-            minChildSize: 0.60,
-            maxChildSize: 0.9,
-            snap: true,
-            snapSizes: const [0.60, 0.9],
-            builder: (context, scrollController) => DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-              ),
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 32,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1409,52 +866,3 @@ class _ScrobbleActionIcon extends StatelessWidget {
   }
 }
 
-void _showIssueMoreOptionsSheet(
-  BuildContext context,
-  VoidCallback onNavigateToSeries,
-  VoidCallback onAddToReadingList,
-  VoidCallback onMyDetails,
-  VoidCallback onReadingHistory,
-) {
-  TakionBottomSheet.show<void>(
-    context: context,
-    title: 'More Options',
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.view_agenda_outlined),
-          title: const Text('Go to Series'),
-          onTap: () {
-            Navigator.of(context).pop();
-            onNavigateToSeries();
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.playlist_add),
-          title: const Text('Add to Reading List'),
-          onTap: () {
-            Navigator.of(context).pop();
-            onAddToReadingList();
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.library_books_outlined),
-          title: const Text('My Details'),
-          onTap: () {
-            Navigator.of(context).pop();
-            onMyDetails();
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.history),
-          title: const Text('Reading History'),
-          onTap: () {
-            Navigator.of(context).pop();
-            onReadingHistory();
-          },
-        ),
-      ],
-    ),
-  );
-}

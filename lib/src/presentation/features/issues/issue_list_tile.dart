@@ -12,7 +12,7 @@ import 'package:takion/src/presentation/components/status_indicator_icons.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 
 class IssueListTile extends ConsumerWidget {
   final IssueList issue;
@@ -106,7 +106,6 @@ class IssueListTile extends ConsumerWidget {
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth = (imageWidth * devicePixelRatio).round();
-    final cacheHeight = (imageHeight * devicePixelRatio).round();
 
     final Widget leading = isHydrating
         ? Container(

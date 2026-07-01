@@ -6,9 +6,6 @@ import 'package:takion/src/data/dto/creator_details_dto.dart';
 import 'package:takion/src/data/dto/creator_list_dto.dart';
 import 'package:takion/src/data/dto/universe_details_dto.dart';
 import 'package:takion/src/data/dto/universe_list_dto.dart';
-import 'package:takion/src/data/dto/collection_item_details_dto.dart';
-import 'package:takion/src/data/dto/collection_items_response_dto.dart';
-import 'package:takion/src/data/dto/collection_stats_dto.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/data/dto/issue_list_dto.dart';
 import 'package:takion/src/data/dto/series_details_dto.dart';
@@ -125,19 +122,6 @@ class CharacterIssueListPageCacheMeta {
 }
 
 abstract class MetronLocalDataSource {
-  Future<void> cacheCollectionStats(CollectionStatsDto stats);
-  Future<CollectionStatsDto?> getCollectionStats();
-  Future<DateTime?> getCollectionStatsCachedAt();
-  Future<void> cacheCollectionItemsPage(
-    int page,
-    CollectionItemsResponseDto response,
-  );
-  Future<CollectionItemsResponseDto?> getCollectionItemsPage(int page);
-  Future<DateTime?> getCollectionItemsPageCachedAt(int page);
-  Future<void> cacheCollectionItemDetails(CollectionItemDetailsDto details);
-  Future<CollectionItemDetailsDto?> getCollectionItemDetails(int collectionId);
-  Future<DateTime?> getCollectionItemDetailsCachedAt(int collectionId);
-
   Future<void> cacheWeeklyReleases(
     DateTime weekStart,
     List<IssueListDto> issues,
@@ -446,9 +430,6 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _seriesDetailsBox = 'series_details_box';
   static const String _seriesIssueListBox = 'series_issue_list_box';
   static const String _seriesIssueListMetaBox = 'series_issue_list_meta_box';
-  static const String _collectionStatsBox = 'collection_stats_box';
-  static const String _collectionItemsBox = 'collection_items_box';
-  static const String _collectionItemDetailsBox = 'collection_item_details_box';
   static const String _characterSearchBox = 'character_search_box';
   static const String _characterSearchMetaBox = 'character_search_meta_box';
   static const String _characterDetailsBox = 'character_details_box';
@@ -494,10 +475,6 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   String _getMetaKey(String key) => 'weekly_releases:$key';
   String _getFocMetaKey(String key) => 'foc_releases:$key';
-  String _getCollectionStatsMetaKey() => 'collection_stats:singleton';
-  String _getCollectionItemsMetaKey(int page) => 'collection_items:p$page';
-  String _getCollectionItemDetailsMetaKey(int collectionId) =>
-      'collection_item_details:$collectionId';
   String _getIssueDetailsMetaKey(int issueId) => 'issue_details:$issueId';
   String _getSeriesDetailsMetaKey(int seriesId) => 'series_details:$seriesId';
   String _getCharacterDetailsMetaKey(int characterId) =>
@@ -566,97 +543,6 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       'imprint_search:${_getImprintSearchKey(query, page, limit)}';
   String _getImprintDetailsMetaKey(int imprintId) =>
       'imprint_details:$imprintId';
-
-  @override
-  Future<void> cacheCollectionStats(CollectionStatsDto stats) async {
-    final box = await _getBox<Map>(_collectionStatsBox);
-    await box.put('singleton', stats.toJson());
-
-    final metaBox = await _getBox<int>(_cacheMetaBox);
-    await metaBox.put(
-      _getCollectionStatsMetaKey(),
-      DateTime.now().millisecondsSinceEpoch,
-    );
-  }
-
-  @override
-  Future<CollectionStatsDto?> getCollectionStats() async {
-    final box = await _getBox<Map>(_collectionStatsBox);
-    final data = box.get('singleton');
-    if (data == null) return null;
-    return CollectionStatsDto.fromJson(data.cast<String, dynamic>());
-  }
-
-  @override
-  Future<DateTime?> getCollectionStatsCachedAt() async {
-    final metaBox = await _getBox<int>(_cacheMetaBox);
-    final epoch = metaBox.get(_getCollectionStatsMetaKey());
-    if (epoch == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(epoch);
-  }
-
-  @override
-  Future<void> cacheCollectionItemsPage(
-    int page,
-    CollectionItemsResponseDto response,
-  ) async {
-    final box = await _getBox<Map>(_collectionItemsBox);
-    await box.put('p$page', response.toJson());
-
-    final metaBox = await _getBox<int>(_cacheMetaBox);
-    await metaBox.put(
-      _getCollectionItemsMetaKey(page),
-      DateTime.now().millisecondsSinceEpoch,
-    );
-  }
-
-  @override
-  Future<CollectionItemsResponseDto?> getCollectionItemsPage(int page) async {
-    final box = await _getBox<Map>(_collectionItemsBox);
-    final data = box.get('p$page');
-    if (data == null) return null;
-    return CollectionItemsResponseDto.fromJson(data.cast<String, dynamic>());
-  }
-
-  @override
-  Future<DateTime?> getCollectionItemsPageCachedAt(int page) async {
-    final metaBox = await _getBox<int>(_cacheMetaBox);
-    final epoch = metaBox.get(_getCollectionItemsMetaKey(page));
-    if (epoch == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(epoch);
-  }
-
-  @override
-  Future<void> cacheCollectionItemDetails(
-    CollectionItemDetailsDto details,
-  ) async {
-    final box = await _getBox<Map>(_collectionItemDetailsBox);
-    await box.put(details.id, details.toJson());
-
-    final metaBox = await _getBox<int>(_cacheMetaBox);
-    await metaBox.put(
-      _getCollectionItemDetailsMetaKey(details.id),
-      DateTime.now().millisecondsSinceEpoch,
-    );
-  }
-
-  @override
-  Future<CollectionItemDetailsDto?> getCollectionItemDetails(
-    int collectionId,
-  ) async {
-    final box = await _getBox<Map>(_collectionItemDetailsBox);
-    final data = box.get(collectionId);
-    if (data == null) return null;
-    return CollectionItemDetailsDto.fromJson(data.cast<String, dynamic>());
-  }
-
-  @override
-  Future<DateTime?> getCollectionItemDetailsCachedAt(int collectionId) async {
-    final metaBox = await _getBox<int>(_cacheMetaBox);
-    final epoch = metaBox.get(_getCollectionItemDetailsMetaKey(collectionId));
-    if (epoch == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(epoch);
-  }
 
   @override
   Future<void> cacheWeeklyReleases(

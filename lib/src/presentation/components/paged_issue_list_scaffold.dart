@@ -4,9 +4,9 @@ import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/releases/week_picker_bar.dart';
+import 'package:takion/src/presentation/components/week_picker_bar.dart';
 
-class WeeklyIssueListScaffold extends StatelessWidget {
+class PagedIssueListScaffold extends StatelessWidget {
   final String title;
   final AsyncValue<List<IssueList>> issuesAsync;
   final String emptyMessage;
@@ -16,7 +16,7 @@ class WeeklyIssueListScaffold extends StatelessWidget {
   final List<Widget>? appBarActions;
   final Widget? header;
 
-  const WeeklyIssueListScaffold({
+  const PagedIssueListScaffold({
     super.key,
     required this.title,
     required this.issuesAsync,

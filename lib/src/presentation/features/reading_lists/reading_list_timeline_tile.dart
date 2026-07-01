@@ -7,7 +7,7 @@ import 'package:timelines_plus/timelines_plus.dart';
 
 class ReadingListTimelineTile extends ConsumerWidget {
   final ReadingList list;
-  final int index; // 1-based index in the timeline
+  final int index;
   final ReadingListItem item;
   final Color roleColor;
   final bool isEditing;
@@ -37,7 +37,6 @@ class ReadingListTimelineTile extends ConsumerWidget {
     );
     final isRead = isReadAsync.value ?? item.isRead;
 
-    // startConnector is solid if the PREVIOUS item was read
     bool prevIsRead = false;
     if (index - 1 > 0 && index - 2 < list.items.length) {
       final prevItem = list.items[index - 2];

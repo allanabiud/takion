@@ -41,6 +41,12 @@ class MetronRepositoryImpl implements MetronRepository {
   final Map<String, Future<CharacterIssueListPage>>
       _characterIssueListInFlight =
       <String, Future<CharacterIssueListPage>>{};
+  final Map<String, Future<SeriesDetails>> _seriesDetailsInFlight =
+      <String, Future<SeriesDetails>>{};
+  final Map<String, Future<List<IssueList>>> _focReleasesInFlight =
+      <String, Future<List<IssueList>>>{};
+  final Map<String, Future<CharacterDetails>> _characterDetailsInFlight =
+      <String, Future<CharacterDetails>>{};
   final _AsyncConcurrencyGate _issueDetailsGate = _AsyncConcurrencyGate(4);
   final _AsyncConcurrencyGate _characterDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _creatorDetailsGate = _AsyncConcurrencyGate(3);
@@ -129,9 +135,13 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
-      final remoteDtos = await _remoteDataSource.getFocReleasesForDate(date);
-      await _localDataSource.cacheFocReleases(date, remoteDtos);
-      return remoteDtos.map((entry) => entry.toEntity()).toList();
+      final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
+      return _coalesce(_focReleasesInFlight, key, () async {
+        final remoteDtos =
+            await _remoteDataSource.getFocReleasesForDate(date);
+        await _localDataSource.cacheFocReleases(date, remoteDtos);
+        return remoteDtos.map((entry) => entry.toEntity()).toList();
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
@@ -518,9 +528,12 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
-      final remoteDto = await _remoteDataSource.getSeriesDetails(seriesId);
-      await _localDataSource.cacheSeriesDetails(remoteDto);
-      return remoteDto.toEntity();
+      final key = '$seriesId|$forceRefresh';
+      return _coalesce(_seriesDetailsInFlight, key, () async {
+        final remoteDto = await _remoteDataSource.getSeriesDetails(seriesId);
+        await _localDataSource.cacheSeriesDetails(remoteDto);
+        return remoteDto.toEntity();
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDto != null) {
         return cachedDto.toEntity();
@@ -706,15 +719,18 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
-      await _characterDetailsGate.acquire();
-      try {
-        final remoteDto =
-            await _remoteDataSource.getCharacterDetails(characterId);
-        await _localDataSource.cacheCharacterDetails(remoteDto);
-        return remoteDto.toEntity();
-      } finally {
-        _characterDetailsGate.release();
-      }
+      final key = '$characterId|$forceRefresh';
+      return _coalesce(_characterDetailsInFlight, key, () async {
+        await _characterDetailsGate.acquire();
+        try {
+          final remoteDto =
+              await _remoteDataSource.getCharacterDetails(characterId);
+          await _localDataSource.cacheCharacterDetails(remoteDto);
+          return remoteDto.toEntity();
+        } finally {
+          _characterDetailsGate.release();
+        }
+      }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDto != null) {
         return cachedDto.toEntity();

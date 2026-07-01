@@ -31,42 +31,31 @@ class CharacterIssueListArgs {
 }
 
 final characterIssueListProvider = FutureProvider.autoDispose
-    .family<CharacterIssueListPage, CharacterIssueListArgs>((ref, args) {
+    .family<CharacterIssueListPage, CharacterIssueListArgs>((ref, args) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final repository = ref.watch(catalogRepositoryProvider);
       final cancelToken = CancelToken();
       ref.onDispose(cancelToken.cancel);
-      return repository
-          .getCharacterIssueList(
-            args.characterId,
-            page: args.page,
-            limit: args.limit,
-            cancelToken: cancelToken,
-          )
-          .then((results) {
-            if (results.previousPage != null) {
-              unawaited(
-                repository.getCharacterIssueList(
-                  args.characterId,
-                  page: results.previousPage!,
-                  limit: args.limit,
-                ),
-              );
-            }
-            if (results.nextPage != null) {
-              unawaited(
-                repository.getCharacterIssueList(
-                  args.characterId,
-                  page: results.nextPage!,
-                  limit: args.limit,
-                ),
-              );
-            }
-            return results;
-          });
+      final result = await repository.getCharacterIssueList(
+        args.characterId,
+        page: args.page,
+        limit: args.limit,
+        cancelToken: cancelToken,
+      );
+
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });
 
 final characterDetailsIssuesProvider = FutureProvider.autoDispose
     .family<CharacterIssueListPage, int>((ref, characterId) async {
+  final link = ref.keepAlive();
+  Timer? timer;
+  ref.onDispose(() => timer?.cancel());
+
   final page1 = await ref.watch(characterIssueListProvider(
     CharacterIssueListArgs(characterId: characterId, page: 1),
   ).future);
@@ -107,6 +96,7 @@ final characterDetailsIssuesProvider = FutureProvider.autoDispose
     }
   }
 
+  timer = Timer(const Duration(minutes: 5), () => link.close());
   return CharacterIssueListPage(
     count: page1.count,
     results: results,

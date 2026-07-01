@@ -28,12 +28,9 @@ import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/components/person_list_tile.dart';
 import 'package:takion/src/presentation/components/universe_list_tile.dart';
 import 'package:takion/src/presentation/components/imprint_list_tile.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/components/list_header.dart';
-import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
-import 'package:takion/src/presentation/components/page_navigation_bar.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
+import 'package:takion/src/presentation/components/paged_search_section.dart';
 
 @RoutePage()
 class SearchResultsScreen extends ConsumerStatefulWidget {
@@ -271,158 +268,38 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _buildUniverseResultsContent(
-      context,
-      ref,
-      pageData,
-      sortOption,
-      sortContext,
-      isLoading: async.isLoading,
-    );
-  }
-
-  Widget _buildUniverseResultsContent(
-    BuildContext context,
-    WidgetRef ref,
-    UniverseListPage pageData,
-    ContentSortOption sortOption,
-    SortPreferenceContext sortContext, {
-    required bool isLoading,
-  }) {
-    final sortedUniverses = sortUniverses(
+    final sortedItems = sortUniverses(
       _applyUniverseFilter(pageData.results),
       sortOption,
     );
-    final totalPages = _estimatedUniverseTotalPages(pageData);
-    final hasPagination = totalPages > 1;
-
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: sortedUniverses.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!_isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: pageData.count,
-                                  unit: 'result',
-                                  pageCount: sortedUniverses.length,
-                                  sortLabel: universeSortLabel(sortOption),
-                                  onSortTap: () =>
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        universeSortLabel,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: const EmptyContentState(
-                                icon: Icons.language_outlined,
-                                message: 'No universes found.',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
-                        ),
-                        itemCount:
-                            sortedUniverses.length + (_isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!_isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: pageData.count,
-                                unit: 'result',
-                                pageCount: sortedUniverses.length,
-                                sortLabel: universeSortLabel(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          universeSortLabel,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = _isFiltering
-                              ? index
-                              : index - 1;
-                          final universe = sortedUniverses[itemIndex];
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: UniverseListTile(
-                              universeId: universe.id,
-                              name: universe.name,
-                              isFirst: itemIndex == 0,
-                              isLast: itemIndex == sortedUniverses.length - 1,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: pageData.hasPrevious,
-                  hasNext: pageData.hasNext,
-                  onPrevious: () {
-                    final previousPage = pageData.previousPage;
-                    if (previousPage == null) return;
-                    setState(() {
-                      _page = previousPage;
-                    });
-                  },
-                  onNext: () {
-                    final nextPage = pageData.nextPage;
-                    if (nextPage == null) return;
-                    setState(() {
-                      _page = nextPage;
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
-              ),
-            ),
+    return PagedSearchSection<UniverseList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedUniverseTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() => _page = pageData.previousPage!)
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() => _page = pageData.nextPage!)
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: universeSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
+      isLoading: async.isLoading,
+      emptyIcon: Icons.language_outlined,
+      emptyMessage: 'No universes found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          UniverseListTile(
+            universeId: item.id,
+            name: item.name,
+            isFirst: isFirst,
+            isLast: isLast,
           ),
-      ],
     );
   }
 
@@ -440,158 +317,38 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _buildImprintResultsContent(
-      context,
-      ref,
-      pageData,
-      sortOption,
-      sortContext,
-      isLoading: async.isLoading,
-    );
-  }
-
-  Widget _buildImprintResultsContent(
-    BuildContext context,
-    WidgetRef ref,
-    ImprintListPage pageData,
-    ContentSortOption sortOption,
-    SortPreferenceContext sortContext, {
-    required bool isLoading,
-  }) {
-    final sortedImprints = sortImprints(
+    final sortedItems = sortImprints(
       _applyImprintFilter(pageData.results),
       sortOption,
     );
-    final totalPages = _estimatedImprintTotalPages(pageData);
-    final hasPagination = totalPages > 1;
-
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: sortedImprints.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!_isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: pageData.count,
-                                  unit: 'result',
-                                  pageCount: sortedImprints.length,
-                                  sortLabel: imprintSortLabel(sortOption),
-                                  onSortTap: () =>
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        imprintSortLabel,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: const EmptyContentState(
-                                icon: Icons.business_outlined,
-                                message: 'No imprints found.',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
-                        ),
-                        itemCount:
-                            sortedImprints.length + (_isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!_isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: pageData.count,
-                                unit: 'result',
-                                pageCount: sortedImprints.length,
-                                sortLabel: imprintSortLabel(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          imprintSortLabel,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = _isFiltering
-                              ? index
-                              : index - 1;
-                          final imprint = sortedImprints[itemIndex];
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: ImprintListTile(
-                              imprintId: imprint.id,
-                              name: imprint.name,
-                              isFirst: itemIndex == 0,
-                              isLast: itemIndex == sortedImprints.length - 1,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: pageData.hasPrevious,
-                  hasNext: pageData.hasNext,
-                  onPrevious: () {
-                    final previousPage = pageData.previousPage;
-                    if (previousPage == null) return;
-                    setState(() {
-                      _page = previousPage;
-                    });
-                  },
-                  onNext: () {
-                    final nextPage = pageData.nextPage;
-                    if (nextPage == null) return;
-                    setState(() {
-                      _page = nextPage;
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
-              ),
-            ),
+    return PagedSearchSection<ImprintList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedImprintTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() => _page = pageData.previousPage!)
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() => _page = pageData.nextPage!)
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: imprintSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
+      isLoading: async.isLoading,
+      emptyIcon: Icons.business_outlined,
+      emptyMessage: 'No imprints found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          ImprintListTile(
+            imprintId: item.id,
+            name: item.name,
+            isFirst: isFirst,
+            isLast: isLast,
           ),
-      ],
     );
   }
 
@@ -609,13 +366,38 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _buildCreatorResultsContent(
-      context,
-      ref,
-      pageData,
+    final sortedItems = sortCreators(
+      _applyCreatorFilter(pageData.results),
       sortOption,
-      sortContext,
+    );
+    return PagedSearchSection<CreatorList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedCreatorTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() => _page = pageData.previousPage!)
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() => _page = pageData.nextPage!)
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: creatorSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
       isLoading: async.isLoading,
+      emptyIcon: Icons.person_outline,
+      emptyMessage: 'No creators found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          PersonListTile(
+            creatorId: item.id,
+            name: item.name,
+            isFirst: isFirst,
+            isLast: isLast,
+          ),
     );
   }
 
@@ -633,13 +415,38 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _buildCharacterResultsContent(
-      context,
-      ref,
-      pageData,
+    final sortedItems = sortCharacters(
+      _applyCharacterFilter(pageData.results),
       sortOption,
-      sortContext,
+    );
+    return PagedSearchSection<CharacterList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedCharacterTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() => _page = pageData.previousPage!)
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() => _page = pageData.nextPage!)
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: characterSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
       isLoading: async.isLoading,
+      emptyIcon: Icons.people_outline,
+      emptyMessage: 'No characters found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          PersonListTile(
+            characterId: item.id,
+            name: item.name,
+            isFirst: isFirst,
+            isLast: isLast,
+          ),
     );
   }
 
@@ -657,13 +464,47 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _buildSeriesResultsContent(
-      context,
-      ref,
-      pageData,
+    final sortedItems = sortSeries(
+      _applySeriesFilter(pageData.results),
       sortOption,
-      sortContext,
+    );
+    return PagedSearchSection<SeriesList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedSeriesTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() {
+              _page = pageData.previousPage!;
+              _resetSeriesCoverFetchLimit();
+            })
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() {
+              _page = pageData.nextPage!;
+              _resetSeriesCoverFetchLimit();
+            })
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: seriesSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
       isLoading: async.isLoading,
+      emptyIcon: Icons.collections_bookmark_outlined,
+      emptyMessage: 'No series found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          SeriesListTile(
+            series: item,
+            allowRemoteCoverFetch: index < _seriesCoverFetchLimit,
+            heroTag: 'series-cover-${item.id}',
+            isFirst: isFirst,
+            isLast: isLast,
+          ),
+      onItemIndexed: (index, total) =>
+          _maybeExpandSeriesCoverFetchLimit(index: index, total: total),
     );
   }
 
@@ -681,600 +522,37 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _buildIssueResultsContent(
-      context,
-      ref,
-      pageData,
-      sortOption,
-      sortContext,
-      isLoading: async.isLoading,
-    );
-  }
-
-  Widget _buildCharacterResultsContent(
-    BuildContext context,
-    WidgetRef ref,
-    CharacterListPage pageData,
-    ContentSortOption sortOption,
-    SortPreferenceContext sortContext, {
-    required bool isLoading,
-  }) {
-    final sortedCharacters = sortCharacters(
-      _applyCharacterFilter(pageData.results),
-      sortOption,
-    );
-    final totalPages = _estimatedCharacterTotalPages(pageData);
-    final hasPagination = totalPages > 1;
-
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: sortedCharacters.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!_isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: pageData.count,
-                                  unit: 'result',
-                                  pageCount: sortedCharacters.length,
-                                  sortLabel: characterSortLabel(sortOption),
-                                  onSortTap: () =>
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        characterSortLabel,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: const EmptyContentState(
-                                icon: Icons.people_outline,
-                                message: 'No characters found.',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
-                        ),
-                        itemCount:
-                            sortedCharacters.length + (_isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!_isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: pageData.count,
-                                unit: 'result',
-                                pageCount: sortedCharacters.length,
-                                sortLabel: characterSortLabel(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          characterSortLabel,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = _isFiltering
-                              ? index
-                              : index - 1;
-                          final character = sortedCharacters[itemIndex];
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: PersonListTile(
-                              characterId: character.id,
-                              name: character.name,
-                              isFirst: itemIndex == 0,
-                              isLast: itemIndex == sortedCharacters.length - 1,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: pageData.hasPrevious,
-                  hasNext: pageData.hasNext,
-                  onPrevious: () {
-                    final previousPage = pageData.previousPage;
-                    if (previousPage == null) return;
-                    setState(() {
-                      _page = previousPage;
-                    });
-                  },
-                  onNext: () {
-                    final nextPage = pageData.nextPage;
-                    if (nextPage == null) return;
-                    setState(() {
-                      _page = nextPage;
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCreatorResultsContent(
-    BuildContext context,
-    WidgetRef ref,
-    CreatorListPage pageData,
-    ContentSortOption sortOption,
-    SortPreferenceContext sortContext, {
-    required bool isLoading,
-  }) {
-    final sortedCreators = sortCreators(
-      _applyCreatorFilter(pageData.results),
-      sortOption,
-    );
-    final totalPages = _estimatedCreatorTotalPages(pageData);
-    final hasPagination = totalPages > 1;
-
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: sortedCreators.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!_isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: pageData.count,
-                                  unit: 'result',
-                                  pageCount: sortedCreators.length,
-                                  sortLabel: creatorSortLabel(sortOption),
-                                  onSortTap: () =>
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        creatorSortLabel,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: const EmptyContentState(
-                                icon: Icons.person_outline,
-                                message: 'No creators found.',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
-                        ),
-                        itemCount:
-                            sortedCreators.length + (_isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!_isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: pageData.count,
-                                unit: 'result',
-                                pageCount: sortedCreators.length,
-                                sortLabel: creatorSortLabel(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          creatorSortLabel,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = _isFiltering
-                              ? index
-                              : index - 1;
-                          final creator = sortedCreators[itemIndex];
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: PersonListTile(
-                              creatorId: creator.id,
-                              name: creator.name,
-                              isFirst: itemIndex == 0,
-                              isLast: itemIndex == sortedCreators.length - 1,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: pageData.hasPrevious,
-                  hasNext: pageData.hasNext,
-                  onPrevious: () {
-                    final previousPage = pageData.previousPage;
-                    if (previousPage == null) return;
-                    setState(() {
-                      _page = previousPage;
-                    });
-                  },
-                  onNext: () {
-                    final nextPage = pageData.nextPage;
-                    if (nextPage == null) return;
-                    setState(() {
-                      _page = nextPage;
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSeriesResultsContent(
-    BuildContext context,
-    WidgetRef ref,
-    SeriesSearchPage pageData,
-    ContentSortOption sortOption,
-    SortPreferenceContext sortContext, {
-    required bool isLoading,
-  }) {
-    final sortedSeries = sortSeries(
-      _applySeriesFilter(pageData.results),
-      sortOption,
-    );
-    final totalPages = _estimatedSeriesTotalPages(pageData);
-    final hasPagination = totalPages > 1;
-
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: sortedSeries.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!_isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: pageData.count,
-                                  unit: 'result',
-                                  pageCount: sortedSeries.length,
-                                  sortLabel: seriesSortLabel(sortOption),
-                                  onSortTap: () =>
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        seriesSortLabel,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: const EmptyContentState(
-                                icon: Icons.collections_bookmark_outlined,
-                                message: 'No series found.',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
-                        ),
-                        itemCount:
-                            sortedSeries.length + (_isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!_isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: pageData.count,
-                                unit: 'result',
-                                pageCount: sortedSeries.length,
-                                sortLabel: seriesSortLabel(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          seriesSortLabel,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = _isFiltering
-                              ? index
-                              : index - 1;
-                          _maybeExpandSeriesCoverFetchLimit(
-                            index: itemIndex,
-                            total: sortedSeries.length,
-                          );
-                          final series = sortedSeries[itemIndex];
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: SeriesListTile(
-                              series: series,
-                              allowRemoteCoverFetch:
-                                  itemIndex < _seriesCoverFetchLimit,
-                              heroTag: 'series-cover-${series.id}',
-                              isFirst: itemIndex == 0,
-                              isLast: itemIndex == sortedSeries.length - 1,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: pageData.hasPrevious,
-                  hasNext: pageData.hasNext,
-                  onPrevious: () {
-                    final previousPage = pageData.previousPage;
-                    if (previousPage == null) return;
-                    setState(() {
-                      _page = previousPage;
-                      _resetSeriesCoverFetchLimit();
-                    });
-                  },
-                  onNext: () {
-                    final nextPage = pageData.nextPage;
-                    if (nextPage == null) return;
-                    setState(() {
-                      _page = nextPage;
-                      _resetSeriesCoverFetchLimit();
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildIssueResultsContent(
-    BuildContext context,
-    WidgetRef ref,
-    IssueSearchPage pageData,
-    ContentSortOption sortOption,
-    SortPreferenceContext sortContext, {
-    required bool isLoading,
-  }) {
-    final sortedIssues = sortIssues(
+    final sortedItems = sortIssues(
       _applyFilter(pageData.results),
       sortOption,
     );
-    final totalPages = _estimatedTotalPages(pageData);
-    final hasPagination = totalPages > 1;
-
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: sortedIssues.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!_isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: pageData.count,
-                                  unit: 'result',
-                                  pageCount: sortedIssues.length,
-                                  sortLabel: issueSortLabel(sortOption),
-                                  onSortTap: () =>
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        issueSortLabel,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: const EmptyContentState(
-                                icon: Icons.menu_book_outlined,
-                                message: 'No issues found.',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _forceRefreshResults,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
-                        ),
-                        itemCount:
-                            sortedIssues.length + (_isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!_isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: pageData.count,
-                                unit: 'result',
-                                pageCount: sortedIssues.length,
-                                sortLabel: issueSortLabel(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          issueSortLabel,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = _isFiltering
-                              ? index
-                              : index - 1;
-                          final issue = sortedIssues[itemIndex];
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: IssueListTile(
-                              issue: issue,
-                              isFirst: itemIndex == 0,
-                              isLast: itemIndex == sortedIssues.length - 1,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: pageData.hasPrevious,
-                  hasNext: pageData.hasNext,
-                  onPrevious: () {
-                    final previousPage = pageData.previousPage;
-                    if (previousPage == null) return;
-                    setState(() {
-                      _page = previousPage;
-                    });
-                  },
-                  onNext: () {
-                    final nextPage = pageData.nextPage;
-                    if (nextPage == null) return;
-                    setState(() {
-                      _page = nextPage;
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
-              ),
-            ),
+    return PagedSearchSection<IssueList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() => _page = pageData.previousPage!)
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() => _page = pageData.nextPage!)
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: issueSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
+      isLoading: async.isLoading,
+      emptyIcon: Icons.menu_book_outlined,
+      emptyMessage: 'No issues found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          IssueListTile(
+            issue: item,
+            isFirst: isFirst,
+            isLast: isLast,
           ),
-      ],
     );
   }
 

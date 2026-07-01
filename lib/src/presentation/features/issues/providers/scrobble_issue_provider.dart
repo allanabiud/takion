@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
@@ -158,6 +160,10 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         ref.invalidate(collectionIssueStatusMapProvider);
         ref.invalidate(collectionStatsProvider);
         invalidateLibraryCollectionProviders(ref);
+        ref.invalidate(readingSuggestionProvider);
+        ref.invalidate(readingSuggestionIssueProvider);
+        ref.invalidate(rateSuggestionProvider);
+        ref.invalidate(rateSuggestionIssueProvider);
       } finally {
         keepAlive.close();
       }

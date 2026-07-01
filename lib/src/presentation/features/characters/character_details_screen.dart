@@ -18,8 +18,11 @@ import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 
 String _monthYear(DateTime date) {
   const months = [
@@ -39,20 +42,7 @@ String _monthYear(DateTime date) {
   return '${months[date.month - 1]} ${date.year}';
 }
 
-String _initials(String name) {
-  if (name.isEmpty) return '?';
-  final parts = name.trim().split(RegExp(r'[\s\-\/]+'));
-  final valid = parts
-      .where((p) => p.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(p))
-      .toList();
-  if (valid.isEmpty) return '?';
-  if (valid.length >= 2) {
-    return '${valid[0][0]}${valid[1][0]}'.toUpperCase();
-  }
-  return valid[0][0].toUpperCase();
-}
 
-enum _CharacterMenuAction { share, openInBrowser }
 
 @RoutePage()
 class CharacterDetailsScreen extends ConsumerStatefulWidget {
@@ -101,17 +91,7 @@ class _CharacterDetailsScreenState
     }
   }
 
-  Future<void> _handleMoreAction(
-    _CharacterMenuAction action,
-    CharacterDetails details,
-  ) async {
-    switch (action) {
-      case _CharacterMenuAction.share:
-        await _shareResourceUrl(details);
-      case _CharacterMenuAction.openInBrowser:
-        await _openResourceUrlInBrowser(details);
-    }
-  }
+
 
   Future<void> _toggleFavorite() async {
     try {
@@ -125,7 +105,7 @@ class _CharacterDetailsScreenState
       ref.invalidate(isCharacterFavoriteProvider(widget.characterId));
       ref.invalidate(favoriteCharactersListProvider);
 
-      if (context.mounted) {
+      if (mounted) {
         TakionAlerts.success(
           context,
           !isFavorite
@@ -134,7 +114,7 @@ class _CharacterDetailsScreenState
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         TakionAlerts.error(context, 'Failed to update favorites: $e');
       }
     }
@@ -149,7 +129,23 @@ class _CharacterDetailsScreenState
 
     return detailsAsync.when(
       loading: () =>
-          _CharacterDetailsSkeleton(imageUrl: widget.initialImageUrl),
+          DetailScreenSkeleton(
+            header: widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.initialImageUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                    ],
+                  )
+                : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+          ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: Center(child: Text('Failed to load character details: $error')),
@@ -277,20 +273,9 @@ class _CharacterDetailsScreenState
                         backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
-                          PopupMenuButton<_CharacterMenuAction>(
-                            tooltip: 'More options',
-                            onSelected: (action) =>
-                                _handleMoreAction(action, details),
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                value: _CharacterMenuAction.share,
-                                child: Text('Share'),
-                              ),
-                              PopupMenuItem(
-                                value: _CharacterMenuAction.openInBrowser,
-                                child: Text('Open in Metron'),
-                              ),
-                            ],
+                          EntityDetailActions(
+                            onShare: () => _shareResourceUrl(details),
+                            onOpenInBrowser: () => _openResourceUrlInBrowser(details),
                           ),
                         ],
                       ),
@@ -331,7 +316,7 @@ class _CharacterDetailsScreenState
       ).colorScheme.primaryContainer.withValues(alpha: 0.8),
       child: Center(
         child: Text(
-          _initials(name),
+          initials(name),
           style: TextStyle(
             color: Theme.of(context).colorScheme.primary,
             fontSize: 64,
@@ -467,36 +452,10 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        SizedBox(
-                          width: 52,
-                          height: 52,
-                          child: isFavorite
-                              ? FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.primaryContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onPrimaryContainer,
-                                    padding: EdgeInsets.zero,
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite),
-                                )
-                              : FilledButton.tonal(
-                                  style: FilledButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite_border),
-                                ),
+                        FavoriteToggleButton(
+                          isFavorite: isFavorite,
+                          onToggleFavorite: onToggleFavorite,
+                          compact: true,
                         ),
                       ],
                     ),
@@ -690,84 +649,7 @@ class _CharacterDetailsSheet extends ConsumerWidget {
   }
 }
 
-class _CharacterDetailsSkeleton extends StatelessWidget {
-  const _CharacterDetailsSkeleton({this.imageUrl});
 
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      body: Stack(
-        children: [
-          SizedBox(
-            height: 350,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                imageUrl != null && imageUrl!.isNotEmpty
-                    ? ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: CachedNetworkImage(
-                          imageUrl: imageUrl!,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
-              ],
-            ),
-          ),
-          DraggableScrollableSheet(
-            initialChildSize: 0.60,
-            minChildSize: 0.60,
-            maxChildSize: 0.9,
-            snap: true,
-            snapSizes: const [0.60, 0.9],
-            builder: (context, scrollController) => DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 32,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _CharacterDescriptionCard extends StatefulWidget {
   const _CharacterDescriptionCard({required this.description});

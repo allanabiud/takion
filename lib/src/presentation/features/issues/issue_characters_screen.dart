@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/components/person_list_tile.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 
 @RoutePage()
 class IssueCharactersScreen extends ConsumerWidget {

@@ -5,6 +5,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/presentation/components/entity_cover.dart';
+import 'package:takion/src/presentation/components/role_badge.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
@@ -92,7 +93,6 @@ class SeriesListTile extends ConsumerWidget {
         imageUrl: coverImage,
         isFavorite: false,
         isRead: false,
-        role: role,
         placeholderIcon: Icons.collections_bookmark_outlined,
         aspectRatio: iconWidth / iconHeight,
         cacheWidth: cacheWidth,
@@ -213,6 +213,10 @@ class SeriesListTile extends ConsumerWidget {
                                   size: 16,
                                   color: Colors.red,
                                 ),
+                              ],
+                              if (role != null) ...[
+                                const SizedBox(width: 8),
+                                RoleBadge(role: role!),
                               ],
                             ],
                           ),

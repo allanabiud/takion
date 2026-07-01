@@ -11,14 +11,14 @@ class CachePolicy {
 class MetronCachePolicies {
   const MetronCachePolicies._();
 
-  static const weeklyReleases = CachePolicy(ttl: Duration(hours: 3));
+  static const weeklyReleases = CachePolicy(ttl: Duration(hours: 24));
   static const focReleases = CachePolicy(ttl: Duration(hours: 3));
   static const searchResults = CachePolicy(ttl: Duration(hours: 3));
   static const issueDetails = CachePolicy(ttl: Duration(days: 1));
-  static const seriesDetails = CachePolicy(ttl: Duration(days: 7));
-  static const seriesIssueList = CachePolicy(ttl: Duration(hours: 3));
-  static const characterDetails = CachePolicy(ttl: Duration(days: 7));
-  static const characterIssueList = CachePolicy(ttl: Duration(hours: 3));
+  static const seriesDetails = CachePolicy(ttl: Duration(hours: 48));
+  static const seriesIssueList = CachePolicy(ttl: Duration(hours: 24));
+  static const characterDetails = CachePolicy(ttl: Duration(hours: 48));
+  static const characterIssueList = CachePolicy(ttl: Duration(hours: 24));
   static const creatorSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const creatorDetails = CachePolicy(ttl: Duration(days: 7));
   static const universeSearchResults = CachePolicy(ttl: Duration(hours: 3));

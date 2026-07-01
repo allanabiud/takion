@@ -48,25 +48,6 @@ final seriesSearchResultsProvider = FutureProvider.autoDispose
         limit: metronDefaultPageSize,
         cancelToken: cancelToken,
       );
-      if (results.previousPage != null) {
-        unawaited(
-          repository.searchSeries(
-            args.query,
-            page: results.previousPage!,
-            limit: metronDefaultPageSize,
-          ),
-        );
-      }
-      if (results.nextPage != null) {
-        unawaited(
-          repository.searchSeries(
-            args.query,
-            page: results.nextPage!,
-            limit: metronDefaultPageSize,
-          ),
-        );
-      }
-
       // Cache for 5 minutes
       timer = Timer(const Duration(minutes: 5), () {
         link.close();

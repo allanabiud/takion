@@ -57,7 +57,7 @@ class TakionBottomSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              if (actions != null) ...actions!,
+              ...?actions,
             ],
           ),
           const SizedBox(height: 24),

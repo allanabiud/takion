@@ -128,7 +128,7 @@ Future<SuggestionIssueTileData> _toSuggestionTileData(
 }
 
 final readingSuggestionProvider = FutureProvider<LibraryItem?>((ref) async {
-  final items = await ref.read(allLibraryItemsProvider.future);
+  final items = await ref.watch(allLibraryItemsProvider.future);
   try {
     return _pickStableUnreadSuggestion(items);
   } on StateError {
@@ -145,7 +145,7 @@ final readingSuggestionIssueProvider = FutureProvider<SuggestionIssueTileData?>(
 );
 
 final rateSuggestionProvider = FutureProvider<LibraryItem?>((ref) async {
-  final items = await ref.read(allLibraryItemsProvider.future);
+  final items = await ref.watch(allLibraryItemsProvider.future);
   try {
     return _randomLibraryItemByPredicate(items, (item) {
       final rating = item.rating;

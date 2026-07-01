@@ -1,12 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/components/list_header.dart';
 import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/releases/weekly_issue_list_scaffold.dart';
+import 'package:takion/src/presentation/components/paged_issue_list_scaffold.dart';
 
 @RoutePage()
 class WeeklyReleasesScreen extends ConsumerWidget {
@@ -20,7 +21,7 @@ class WeeklyReleasesScreen extends ConsumerWidget {
     );
     final issuesAsync = ref.watch(weeklyReleasesProvider(selectedDate));
 
-    return WeeklyIssueListScaffold(
+    return PagedIssueListScaffold(
       title: 'Weekly Releases',
       issuesAsync: issuesAsync,
       transformIssues: (issues) => sortIssues(issues, sortOption),

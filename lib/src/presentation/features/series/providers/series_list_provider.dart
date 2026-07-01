@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
@@ -26,35 +25,15 @@ class SelectedSeriesListPage extends Notifier<int> {
 }
 
 final seriesListProvider = FutureProvider.autoDispose
-    .family<SeriesListPage, int>((ref, page) {
+    .family<SeriesListPage, int>((ref, page) async {
       final repository = ref.watch(metronRepositoryProvider);
       final cancelToken = CancelToken();
       ref.onDispose(cancelToken.cancel);
-      return repository
-          .getSeriesList(
-            page: page,
-            limit: metronDefaultPageSize,
-            cancelToken: cancelToken,
-          )
-          .then((results) {
-            if (results.previousPage != null) {
-              unawaited(
-                repository.getSeriesList(
-                  page: results.previousPage!,
-                  limit: metronDefaultPageSize,
-                ),
-              );
-            }
-            if (results.nextPage != null) {
-              unawaited(
-                repository.getSeriesList(
-                  page: results.nextPage!,
-                  limit: metronDefaultPageSize,
-                ),
-              );
-            }
-            return results;
-          });
+      return repository.getSeriesList(
+        page: page,
+        limit: metronDefaultPageSize,
+        cancelToken: cancelToken,
+      );
     });
 
 final currentSeriesListProvider = FutureProvider.autoDispose<SeriesListPage>((

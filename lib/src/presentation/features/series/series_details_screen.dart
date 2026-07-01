@@ -8,12 +8,14 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
+import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
+import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -24,8 +26,7 @@ import 'package:takion/src/presentation/components/horizontal_preview_section.da
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-enum _SeriesDetailsMenuAction { share, openInBrowser }
+import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
@@ -143,19 +144,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     }
   }
 
-  Future<void> _handleMoreAction(
-    _SeriesDetailsMenuAction action,
-    SeriesDetails details,
-  ) async {
-    switch (action) {
-      case _SeriesDetailsMenuAction.share:
-        await _shareResourceUrl(details);
-        break;
-      case _SeriesDetailsMenuAction.openInBrowser:
-        await _openResourceUrlInBrowser(details);
-        break;
-    }
-  }
+
 
   Future<void> _toggleFavorite() async {
     try {
@@ -169,7 +158,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
       ref.invalidate(favoriteSeriesListProvider);
 
-      if (context.mounted) {
+      if (mounted) {
         TakionAlerts.success(
           context,
           !isFavorite
@@ -178,7 +167,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         TakionAlerts.error(context, 'Failed to update favorites: $e');
       }
     }
@@ -189,7 +178,14 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
 
     return detailsAsync.when(
-      loading: () => _SeriesDetailsSkeleton(imageUrl: widget.initialImageUrl),
+      loading: () => DetailScreenSkeleton(
+        header: widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: widget.initialImageUrl!,
+                fit: BoxFit.cover,
+              )
+            : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+      ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: AsyncStatePanel.error(
@@ -290,21 +286,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                         backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
-                          PopupMenuButton<_SeriesDetailsMenuAction>(
-                            tooltip: 'More options',
-                            onSelected: (action) {
-                              _handleMoreAction(action, details);
-                            },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                value: _SeriesDetailsMenuAction.share,
-                                child: Text('Share'),
-                              ),
-                              PopupMenuItem(
-                                value: _SeriesDetailsMenuAction.openInBrowser,
-                                child: Text('Open in Metron'),
-                              ),
-                            ],
+                          EntityDetailActions(
+                            onShare: () => _shareResourceUrl(details),
+                            onOpenInBrowser: () => _openResourceUrlInBrowser(details),
                           ),
                         ],
                       ),
@@ -639,84 +623,6 @@ class _SeriesDetailsSheet extends ConsumerWidget {
             ],
           ),
         ),
-    );
-  }
-}
-
-class _SeriesDetailsSkeleton extends StatelessWidget {
-  const _SeriesDetailsSkeleton({this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          SizedBox(
-            height: 350,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                imageUrl != null && imageUrl!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl!,
-                        fit: BoxFit.cover,
-                      )
-                    : ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
-              ],
-            ),
-          ),
-          DraggableScrollableSheet(
-            initialChildSize: 0.60,
-            minChildSize: 0.60,
-            maxChildSize: 0.9,
-            snap: true,
-            snapSizes: const [0.60, 0.9],
-            builder: (context, scrollController) => DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 32,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

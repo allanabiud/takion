@@ -30,9 +30,6 @@ class HiveService {
     'series_cover_cache_box',
     'library_items_cache_box',
     'subscriptions_cache_box',
-    'collection_stats_box',
-    'collection_items_box',
-    'collection_item_details_box',
   };
 
   Future<void> init() async {

@@ -6,10 +6,6 @@ import 'package:takion/src/data/dto/creator_details_dto.dart';
 import 'package:takion/src/data/dto/creator_list_response_dto.dart';
 import 'package:takion/src/data/dto/universe_details_dto.dart';
 import 'package:takion/src/data/dto/universe_list_response_dto.dart';
-import 'package:takion/src/data/dto/collection_item_details_dto.dart';
-import 'package:takion/src/data/dto/collection_stats_dto.dart';
-import 'package:takion/src/data/dto/collection_items_response_dto.dart';
-import 'package:takion/src/data/dto/collection_scrobble_response_dto.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/data/dto/issue_list_dto.dart';
 import 'package:takion/src/data/dto/issue_search_response_dto.dart';
@@ -21,14 +17,6 @@ import 'package:takion/src/data/dto/imprint_details_dto.dart';
 import 'package:takion/src/data/dto/imprint_list_response_dto.dart';
 
 abstract class MetronRemoteDataSource {
-  Future<CollectionStatsDto> getCollectionStats();
-  Future<CollectionScrobbleResponseDto> scrobbleIssueRead({
-    required int issueId,
-    DateTime? dateRead,
-    int? rating,
-  });
-  Future<CollectionItemsResponseDto> getCollectionItems({int page = 1});
-  Future<CollectionItemDetailsDto> getCollectionItemDetails(int collectionId);
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
   Future<List<IssueListDto>> getFocReleasesForDate(DateTime date);
   Future<IssueDetailsDto> getIssueDetails(int issueId);
@@ -141,55 +129,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     candidates.addAll(tokens);
 
     return candidates.toList(growable: false);
-  }
-
-  @override
-  Future<CollectionStatsDto> getCollectionStats() async {
-    final response = await _dio.get('collection/stats/');
-    return CollectionStatsDto.fromJson(response.data as Map<String, dynamic>);
-  }
-
-  @override
-  Future<CollectionScrobbleResponseDto> scrobbleIssueRead({
-    required int issueId,
-    DateTime? dateRead,
-    int? rating,
-  }) async {
-    final payload = <String, dynamic>{'issue_id': issueId};
-
-    if (dateRead != null) {
-      payload['date_read'] = dateRead.toUtc().toIso8601String();
-    }
-    if (rating != null) {
-      payload['rating'] = rating;
-    }
-
-    final response = await _dio.post('collection/scrobble/', data: payload);
-
-    return CollectionScrobbleResponseDto.fromJson(
-      response.data as Map<String, dynamic>,
-    );
-  }
-
-  @override
-  Future<CollectionItemsResponseDto> getCollectionItems({int page = 1}) async {
-    final response = await _dio.get(
-      'collection/',
-      queryParameters: {'page': page},
-    );
-    return CollectionItemsResponseDto.fromJson(
-      response.data as Map<String, dynamic>,
-    );
-  }
-
-  @override
-  Future<CollectionItemDetailsDto> getCollectionItemDetails(
-    int collectionId,
-  ) async {
-    final response = await _dio.get('collection/$collectionId/');
-    return CollectionItemDetailsDto.fromJson(
-      response.data as Map<String, dynamic>,
-    );
   }
 
   @override

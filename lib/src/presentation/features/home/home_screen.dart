@@ -10,7 +10,8 @@ import 'package:takion/src/presentation/features/home/main_screen.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 

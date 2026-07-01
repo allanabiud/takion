@@ -1,16 +1,18 @@
-import 'dart:io';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/profile/widgets/edit_profile_sheet.dart';
+import 'package:takion/src/presentation/features/profile/widgets/insight_row.dart';
 import 'package:takion/src/presentation/features/profile/widgets/profile_charts.dart';
+import 'package:takion/src/presentation/features/profile/widgets/profile_header.dart';
+import 'package:takion/src/presentation/features/profile/widgets/profile_loading_view.dart';
+import 'package:takion/src/presentation/features/profile/widgets/stat_card.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 
@@ -38,7 +40,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final didUpdate = await TakionBottomSheet.show<bool>(
       context: context,
       title: 'Edit Profile',
-      child: _EditProfileSheet(profile: profile),
+      child: EditProfileSheet(profile: profile),
     );
 
     if (!mounted) return;
@@ -54,7 +56,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     return Scaffold(
       body: profileAsync.when(
-        loading: () => const _ProfileLoadingView(),
+        loading: () => const ProfileLoadingView(),
         error: (error, _) => Center(child: Text(error.toString())),
         data: (profile) {
           if (profile == null) {
@@ -81,7 +83,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    _ProfileHeader(
+                    ProfileHeader(
                       displayName: displayName,
                       avatarUrl: avatarUrl,
                       backdropPath: backdropPath,
@@ -227,38 +229,38 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                         mainAxisSpacing: 12,
                                         childAspectRatio: 2.2,
                                         children: [
-                                          _StatCard(
+                                          StatCard(
                                             label: 'Total Owned',
                                             value: '${insights.totalOwned}',
                                             icon: Icons.inventory_2_outlined,
                                             color: Theme.of(context).colorScheme.primary,
                                           ),
-                                          _StatCard(
+                                          StatCard(
                                             label: 'Read %',
                                             value:
                                                 '${insights.readPercent.toStringAsFixed(1)}%',
                                             icon: Icons.menu_book_outlined,
                                             color: Theme.of(context).colorScheme.secondary,
                                           ),
-                                          _StatCard(
+                                          StatCard(
                                             label: 'Reads (${_filterLabel(_filter)})',
                                             value: '${insights.readsInPeriod}',
                                             icon: Icons.auto_stories_outlined,
                                             color: Colors.green,
                                           ),
-                                          _StatCard(
+                                          StatCard(
                                             label: 'Pulls (${_filterLabel(_filter)})',
                                             value: '${insights.pullsInPeriod}',
                                             icon: Icons.shopping_bag_outlined,
                                             color: Colors.orange,
                                           ),
-                                          _StatCard(
+                                          StatCard(
                                             label: 'Wishlist',
                                             value: '${insights.wishlistCount}',
                                             icon: Icons.turned_in_not,
                                             color: Theme.of(context).colorScheme.tertiary,
                                           ),
-                                          _StatCard(
+                                          StatCard(
                                             label: 'Subscriptions',
                                             value: '${insights.subscriptionsCount}',
                                             icon: Icons.notifications_outlined,
@@ -310,14 +312,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                           ),
                                           child: Column(
                                             children: [
-                                              _InsightRow(
+                                              InsightRow(
                                                 label: 'Current Streak',
                                                 value: '${insights.streakDays} Days',
                                                 icon: Icons.local_fire_department,
                                                 iconColor: Colors.orange,
                                               ),
                                               const Divider(height: 24),
-                                              _InsightRow(
+                                              InsightRow(
                                                 label: 'Avg Rating',
                                                 value: insights.averageRating == 0
                                                     ? '-'
@@ -456,560 +458,4 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
 
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InsightRow extends StatelessWidget {
-  const _InsightRow({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: iconColor, size: 24),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 3,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 4,
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EditProfileSheet extends ConsumerStatefulWidget {
-  const _EditProfileSheet({required this.profile});
-
-  final Map<String, dynamic> profile;
-
-  @override
-  ConsumerState<_EditProfileSheet> createState() => _EditProfileSheetState();
-}
-
-class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
-  late final TextEditingController _displayNameController;
-  late final String _avatarStoragePath;
-  String _selectedAvatarPath = '';
-  String _selectedBackdropPath = '';
-  bool _avatarChanged = false;
-  bool _isSaving = false;
-  final ImagePicker _imagePicker = ImagePicker();
-
-  String _stringField(String key, String fallback) {
-    final value = (widget.profile[key] as String?)?.trim();
-    return (value == null || value.isEmpty) ? fallback : value;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _displayNameController = TextEditingController(
-      text: _stringField('display_name', ''),
-    );
-    _selectedAvatarPath = _stringField('avatar_url', '');
-    _avatarStoragePath = _stringField('avatar_storage_path', '');
-    _selectedBackdropPath = _stringField('backdrop_image_path', '');
-  }
-
-  @override
-  void dispose() {
-    _displayNameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickAvatar() async {
-    final picked = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1200,
-    );
-    if (!mounted || picked == null) return;
-    setState(() {
-      _selectedAvatarPath = picked.path;
-      _avatarChanged = true;
-    });
-  }
-
-  Future<void> _pickBackdrop() async {
-    final picked = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1800,
-    );
-    if (!mounted || picked == null) return;
-    setState(() {
-      _selectedBackdropPath = picked.path;
-    });
-  }
-
-  Future<void> _save() async {
-    setState(() => _isSaving = true);
-    await ref
-        .read(userProfileProvider.notifier)
-        .saveProfile(
-          displayName: _displayNameController.text,
-          avatarUrl: _avatarChanged ? _selectedAvatarPath : _avatarStoragePath,
-          backdropImagePath: _selectedBackdropPath,
-          bio: '',
-          location: '',
-          notificationPreferences: const {'email_pulls': false},
-        );
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Stack(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickAvatar,
-                      child: CustomPaint(
-                        foregroundPainter: _DottedRoundedBorderPainter(
-                          color: Theme.of(context).colorScheme.outline,
-                          radius: 42,
-                        ),
-                        child: CircleAvatar(
-                          radius: 42,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          backgroundImage: _avatarImageProvider(
-                            _selectedAvatarPath,
-                          ),
-                          child:
-                              _avatarImageProvider(_selectedAvatarPath) == null
-                              ? Icon(
-                                  Icons.add_a_photo_outlined,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  size: 28,
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.edit,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 14),
-                Stack(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickBackdrop,
-                      child: CustomPaint(
-                        foregroundPainter: _DottedRoundedBorderPainter(
-                          color: Theme.of(context).colorScheme.outline,
-                          radius: 14,
-                        ),
-                        child: Container(
-                          width: 180,
-                          height: 84,
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _avatarImageProvider(_selectedBackdropPath) !=
-                                  null
-                              ? Image(
-                                  image: _avatarImageProvider(
-                                    _selectedBackdropPath,
-                                  )!,
-                                  fit: BoxFit.cover,
-                                )
-                              : Icon(
-                                  Icons.landscape_outlined,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  size: 28,
-                                ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.edit,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _displayNameController,
-            decoration: const InputDecoration(labelText: 'Display name'),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _isSaving ? null : _save,
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save'),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.displayName,
-    required this.avatarUrl,
-    required this.backdropPath,
-    required this.titleOpacity,
-  });
-
-  final String displayName;
-  final String avatarUrl;
-  final String backdropPath;
-  final double titleOpacity;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final avatarImage = _avatarImageProvider(avatarUrl);
-    final backdropImage = _avatarImageProvider(backdropPath);
-    final pageBackground = Theme.of(context).scaffoldBackgroundColor;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (backdropImage != null)
-          Image(image: backdropImage, fit: BoxFit.cover)
-        else
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  colorScheme.primaryContainer.withValues(alpha: 0.6),
-                  colorScheme.secondaryContainer.withValues(alpha: 0.6),
-                ],
-              ),
-            ),
-          ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.4),
-                Colors.transparent,
-                pageBackground,
-              ],
-              stops: const [0.0, 0.45, 1.0],
-            ),
-          ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Spacer(),
-                Opacity(
-                  opacity: 1 - titleOpacity,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text(
-                            displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  shadows: const [
-                                    Shadow(
-                                      color: Colors.black45,
-                                      blurRadius: 8,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      avatarImage != null
-                          ? CircleAvatar(
-                              radius: 52,
-                              backgroundImage: avatarImage,
-                            )
-                          : const Icon(Icons.account_circle, size: 104),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileLoadingView extends StatelessWidget {
-  const _ProfileLoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      body: Stack(
-        children: [
-          const SizedBox(
-            height: 350,
-            child: _ProfileHeader(
-              displayName: '',
-              avatarUrl: '',
-              backdropPath: '',
-              titleOpacity: 0,
-            ),
-          ),
-          DraggableScrollableSheet(
-            initialChildSize: 0.60,
-            minChildSize: 0.60,
-            maxChildSize: 0.9,
-            snap: true,
-            snapSizes: const [0.60, 0.9],
-            builder: (context, scrollController) => DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 8),
-                        Center(
-                          child: Container(
-                            width: 32,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-ImageProvider<Object>? _avatarImageProvider(String avatarUrl) {
-  final normalized = avatarUrl.trim();
-  if (normalized.isEmpty) return null;
-  if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
-    return NetworkImage(normalized);
-  }
-  final file = File(normalized);
-  if (file.existsSync()) {
-    return FileImage(file);
-  }
-  return null;
-}
-
-class _DottedRoundedBorderPainter extends CustomPainter {
-  const _DottedRoundedBorderPainter({
-    required this.color,
-    required this.radius,
-  });
-
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const strokeWidth = 1.5;
-    const dashWidth = 4.0;
-    const dashSpace = 4.0;
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      Radius.circular(radius),
-    );
-    final path = Path()..addRRect(rrect.deflate(strokeWidth / 2));
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = (distance + dashWidth).clamp(0, metric.length).toDouble();
-        canvas.drawPath(metric.extractPath(distance, next), paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DottedRoundedBorderPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.radius != radius;
-  }
-}

@@ -4,7 +4,7 @@ import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 
 Set<String> _seriesTokens(String name) {
@@ -41,7 +41,7 @@ double _scoreIssue(
 }
 
 Future<List<IssueList>> _computeBecauseYouPulledIssues(Ref ref) async {
-  final weeklyIssues = await ref.watch(currentWeeklyReleasesProvider.future);
+  final weeklyIssues = await ref.watch(weeklyReleasesProvider().future);
   final pulledIssues = await ref.watch(currentWeekPullsProvider.future);
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
 

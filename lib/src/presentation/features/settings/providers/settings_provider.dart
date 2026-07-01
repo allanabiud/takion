@@ -9,8 +9,11 @@ import 'package:takion/src/presentation/features/library/providers/collection_it
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issues_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
+import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_list_provider.dart';
@@ -203,7 +206,6 @@ class SettingsNotifier extends _$SettingsNotifier {
   }
 
   void _invalidateReleaseProviders() {
-    ref.invalidate(currentWeeklyReleasesProvider);
     ref.invalidate(weeklyReleasesProvider);
     ref.invalidate(focReleasesProvider);
   }
