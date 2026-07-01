@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/series_issue_list_page.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/list_header.dart';
-import 'package:takion/src/presentation/components/page_navigation_bar.dart';
 import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
@@ -58,6 +58,7 @@ class SeriesIssuesScreen extends ConsumerStatefulWidget {
 class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
   int _page = 1;
   SeriesIssueListPage? _lastPage;
+  int _totalPages = 1;
   final _overlapHandle = SliverOverlapAbsorberHandle();
 
   @override
@@ -79,11 +80,14 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
       page: _page,
     );
     final issuesAsync = ref.watch(seriesIssueListProvider(args));
+    final isLoading = issuesAsync.isLoading;
     final seriesName = detailsAsync.asData?.value.name ?? '';
     final yearBegan = detailsAsync.asData?.value.yearBegan;
 
     if (issuesAsync.hasValue) {
       _lastPage = issuesAsync.value;
+      _totalPages =
+          ((issuesAsync.value!.count - 1) ~/ metronDefaultPageSize) + 1;
     }
 
     final body = issuesAsync.when(
@@ -129,8 +133,44 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
         ],
       ),
       body: body,
+      bottomNavigationBar: _totalPages > 1
+          ? BottomAppBar(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: isLoading || !_pageHasPrevious
+                        ? null
+                        : () => setState(() => _page--),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Page $_page of $_totalPages',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: isLoading || !_pageHasNext
+                        ? null
+                        : () => setState(() => _page++),
+                  ),
+                ],
+              ),
+            )
+          : null,
     );
   }
+
+  bool get _pageHasPrevious =>
+      _lastPage?.hasPrevious ?? false;
+
+  bool get _pageHasNext =>
+      _lastPage?.hasNext ?? false;
 
   Widget _buildContent(
     BuildContext context,
@@ -140,132 +180,89 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     required bool isLoading,
   }) {
     final sortedIssues = sortIssues(issuePage.results, sortOption);
-    final totalPages =
-        ((issuePage.count / (sortedIssues.isEmpty ? 100 : sortedIssues.length))
-                .ceil())
-            .clamp(1, 9999);
-    final hasPagination = totalPages > 1;
     final issueCount = issuePage.count;
 
-    return Stack(
-      children: [
-        CustomScrollView(
-          slivers: [
-            SliverOverlapAbsorber(
-              handle: _overlapHandle,
-              sliver: SliverPersistentHeader(
-                pinned: true,
-                delegate: _PinnedHeaderDelegate(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ListHeader(
-                        count: issueCount,
-                        unit: 'issue',
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const VerticalDivider(
-                              width: 1,
-                              thickness: 1,
-                            ),
-                            TextButton.icon(
-                              onPressed: isLoading
-                                  ? null
-                                  : () {
-                                      showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        SortPreferenceContext
-                                            .seriesDetailsIssues,
-                                        issueSortLabel,
-                                      );
-                                    },
-                              icon: const Icon(Icons.swap_vert),
-                              label: Text(issueSortLabel(sortOption)),
-                            ),
-                          ],
+    return CustomScrollView(
+      slivers: [
+        SliverOverlapAbsorber(
+          handle: _overlapHandle,
+          sliver: SliverPersistentHeader(
+            pinned: true,
+            delegate: _PinnedHeaderDelegate(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ListHeader(
+                    count: issueCount,
+                    unit: 'issue',
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const VerticalDivider(
+                          width: 1,
+                          thickness: 1,
                         ),
-                      ),
-                      if (isLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: LinearProgressIndicator(minHeight: 2),
+                        TextButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  showSortBottomSheet(
+                                    context,
+                                    ref,
+                                    SortPreferenceContext
+                                        .seriesDetailsIssues,
+                                    issueSortLabel,
+                                  );
+                                },
+                          icon: const Icon(Icons.swap_vert),
+                          label: Text(issueSortLabel(sortOption)),
                         ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SliverOverlapInjector(handle: _overlapHandle),
-            sortedIssues.isEmpty && !isLoading
-                ? SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: SizedBox(
-                      height: 360,
-                      child: EmptyContentState(
-                        icon: Icons.menu_book_outlined,
-                        message: 'No issues available.',
-                      ),
-                    ),
-                  )
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final issue = sortedIssues[index];
-                        return Opacity(
-                          opacity: isLoading ? 0.6 : 1.0,
-                          child: IssueListTile(
-                            issue: issue,
-                            isFirst: index == 0,
-                            isLast: index == sortedIssues.length - 1,
-                          ),
-                        );
-                      },
-                      childCount: sortedIssues.length,
+                      ],
                     ),
                   ),
-            if (hasPagination)
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 80,
-                ),
-              ),
+                  if (isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
                 ],
-              ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: _page,
-                  totalPages: totalPages,
-                  hasPrevious: issuePage.hasPrevious,
-                  hasNext: issuePage.hasNext,
-                  onPrevious: () {
-                    if (_page <= 1) return;
-                    setState(() {
-                      _page = _page - 1;
-                    });
-                  },
-                  onNext: () {
-                    setState(() {
-                      _page = _page + 1;
-                    });
-                  },
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
               ),
             ),
           ),
+        ),
+        SliverOverlapInjector(handle: _overlapHandle),
+        sortedIssues.isEmpty && !isLoading
+            ? SliverFillRemaining(
+                hasScrollBody: false,
+                child: SizedBox(
+                  height: 360,
+                  child: EmptyContentState(
+                    icon: Icons.menu_book_outlined,
+                    message: 'No issues available.',
+                  ),
+                ),
+              )
+            : SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final issue = sortedIssues[index];
+                    return Opacity(
+                      opacity: isLoading ? 0.6 : 1.0,
+                      child: IssueListTile(
+                        issue: issue,
+                        isFirst: index == 0,
+                        isLast: index == sortedIssues.length - 1,
+                      ),
+                    );
+                  },
+                  childCount: sortedIssues.length,
+                ),
+              ),
       ],
     );
   }

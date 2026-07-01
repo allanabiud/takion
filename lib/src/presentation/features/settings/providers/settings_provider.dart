@@ -34,6 +34,8 @@ import 'package:takion/src/presentation/features/universes/providers/universe_de
 import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
+import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
+import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
 import 'package:takion/src/core/notifications/push_notification_service.dart';
@@ -268,6 +270,8 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(universeSearchResultsProvider);
     ref.invalidate(imprintDetailsProvider);
     ref.invalidate(imprintSearchResultsProvider);
+    ref.invalidate(teamDetailsProvider);
+    ref.invalidate(teamSearchResultsProvider);
   }
 
   ({String query, int page})? _parseSearchKey(Object? key) {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/components/list_header.dart';
-import 'package:takion/src/presentation/components/page_navigation_bar.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
 
@@ -52,119 +51,126 @@ class PagedSearchSection<T> extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hasPagination = totalPages > 1;
 
-    return Stack(
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: items.isEmpty && !isLoading
-                  ? RefreshIndicator(
-                      onRefresh: onRefresh,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          if (!isFiltering)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ListHeader(
-                                  count: totalCount,
-                                  unit: 'result',
-                                  pageCount: items.length,
-                                  sortLabel: sortLabelFn(sortOption),
-                                  onSortTap: () => showSortBottomSheet(
-                                    context,
-                                    ref,
-                                    sortContext,
-                                    sortLabelFn,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: hasPagination ? 96 : 12,
-                              ),
-                              child: EmptyContentState(
-                                icon: emptyIcon,
-                                message: emptyMessage,
+        Expanded(
+          child: items.isEmpty && !isLoading
+              ? RefreshIndicator(
+                  onRefresh: onRefresh,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      if (!isFiltering)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: ListHeader(
+                              count: totalCount,
+                              unit: 'result',
+                              pageCount: items.length,
+                              sortLabel: sortLabelFn(sortOption),
+                              onSortTap: () => showSortBottomSheet(
+                                context,
+                                ref,
+                                sortContext,
+                                sortLabelFn,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: onRefresh,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          0, 0, 0,
-                          hasPagination ? 96 : 12,
                         ),
-                        itemCount: items.length + (isFiltering ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (!isFiltering && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: totalCount,
-                                unit: 'result',
-                                pageCount: items.length,
-                                sortLabel: sortLabelFn(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                          context,
-                                          ref,
-                                          sortContext,
-                                          sortLabelFn,
-                                        ),
-                              ),
-                            );
-                          }
-                          final itemIndex = isFiltering ? index : index - 1;
-                          final item = items[itemIndex];
-                          onItemIndexed?.call(itemIndex, items.length);
-                          return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: itemBuilder(
-                              context,
-                              itemIndex,
-                              item,
-                              itemIndex == 0,
-                              itemIndex == items.length - 1,
-                            ),
-                          );
-                        },
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: EmptyContentState(
+                            icon: emptyIcon,
+                            message: emptyMessage,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: onRefresh,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                    itemCount: items.length + (isFiltering ? 0 : 1),
+                    itemBuilder: (context, index) {
+                      if (!isFiltering && index == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: ListHeader(
+                            count: totalCount,
+                            unit: 'result',
+                            pageCount: items.length,
+                            sortLabel: sortLabelFn(sortOption),
+                            onSortTap: isLoading
+                                ? null
+                                : () => showSortBottomSheet(
+                                      context,
+                                      ref,
+                                      sortContext,
+                                      sortLabelFn,
+                                    ),
+                          ),
+                        );
+                      }
+                      final itemIndex = isFiltering ? index : index - 1;
+                      final item = items[itemIndex];
+                      onItemIndexed?.call(itemIndex, items.length);
+                      return Opacity(
+                        opacity: isLoading ? 0.6 : 1.0,
+                        child: itemBuilder(
+                          context,
+                          itemIndex,
+                          item,
+                          itemIndex == 0,
+                          itemIndex == items.length - 1,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: body,
+      bottomNavigationBar: hasPagination
+          ? BottomAppBar(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: isLoading || !hasPrevious
+                        ? null
+                        : onPreviousPage,
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Page $currentPage of $totalPages',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-            ),
-          ],
-        ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: currentPage,
-                  totalPages: totalPages,
-                  hasPrevious: hasPrevious,
-                  hasNext: hasNext,
-                  onPrevious: onPreviousPage ?? () {},
-                  onNext: onNextPage ?? () {},
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: isLoading || !hasNext
+                        ? null
+                        : onNextPage,
+                  ),
+                ],
               ),
-            ),
-          ),
-      ],
+            )
+          : null,
     );
   }
 }

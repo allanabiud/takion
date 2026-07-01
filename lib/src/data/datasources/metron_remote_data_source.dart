@@ -15,6 +15,8 @@ import 'package:takion/src/data/dto/series_list_response_dto.dart';
 import 'package:takion/src/data/dto/series_search_response_dto.dart';
 import 'package:takion/src/data/dto/imprint_details_dto.dart';
 import 'package:takion/src/data/dto/imprint_list_response_dto.dart';
+import 'package:takion/src/data/dto/team_list_response_dto.dart';
+import 'package:takion/src/data/dto/team_details_dto.dart';
 
 abstract class MetronRemoteDataSource {
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
@@ -96,6 +98,15 @@ abstract class MetronRemoteDataSource {
   });
 
   Future<ImprintDetailsDto> getImprintDetails(int imprintId);
+
+  Future<TeamListResponseDto> searchTeams(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+
+  Future<TeamDetailsDto> getTeamDetails(int teamId);
 }
 
 class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
@@ -514,5 +525,44 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<ImprintDetailsDto> getImprintDetails(int imprintId) async {
     final response = await _dio.get('imprint/$imprintId/');
     return ImprintDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<TeamListResponseDto> searchTeams(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final candidates = _queryCandidates(query);
+    if (candidates.isEmpty) {
+      return const TeamListResponseDto(count: 0, results: []);
+    }
+
+    TeamListResponseDto? lastResponse;
+    for (final candidate in candidates) {
+      final response = await _dio.get(
+        'team/',
+        queryParameters: {'name': candidate, 'page': page},
+        cancelToken: cancelToken,
+      );
+
+      final parsed = TeamListResponseDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      lastResponse = parsed;
+
+      if (parsed.results.isNotEmpty) {
+        return parsed;
+      }
+    }
+
+    return lastResponse ?? const TeamListResponseDto(count: 0, results: []);
+  }
+
+  @override
+  Future<TeamDetailsDto> getTeamDetails(int teamId) async {
+    final response = await _dio.get('team/$teamId/');
+    return TeamDetailsDto.fromJson(response.data as Map<String, dynamic>);
   }
 }

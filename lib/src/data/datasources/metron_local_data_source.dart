@@ -12,6 +12,8 @@ import 'package:takion/src/data/dto/series_details_dto.dart';
 import 'package:takion/src/data/dto/series_list_dto.dart';
 import 'package:takion/src/data/dto/imprint_details_dto.dart';
 import 'package:takion/src/data/dto/imprint_list_dto.dart';
+import 'package:takion/src/data/dto/team_details_dto.dart';
+import 'package:takion/src/data/dto/team_list_dto.dart';
 
 class IssueSearchPageCacheMeta {
   const IssueSearchPageCacheMeta({
@@ -111,6 +113,18 @@ class ImprintSearchPageCacheMeta {
 
 class CharacterIssueListPageCacheMeta {
   const CharacterIssueListPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class TeamSearchPageCacheMeta {
+  const TeamSearchPageCacheMeta({
     required this.count,
     this.next,
     this.previous,
@@ -412,6 +426,40 @@ abstract class MetronLocalDataSource {
   Future<ImprintDetailsDto?> getImprintDetails(int imprintId);
 
   Future<DateTime?> getImprintDetailsCachedAt(int imprintId);
+
+  Future<void> cacheTeamSearchResults(
+    String query,
+    List<TeamListDto> teams, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+
+  Future<List<TeamListDto>?> getTeamSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<DateTime?> getTeamSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<TeamSearchPageCacheMeta?> getTeamSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<void> cacheTeamDetails(TeamDetailsDto details);
+
+  Future<TeamDetailsDto?> getTeamDetails(int teamId);
+
+  Future<DateTime?> getTeamDetailsCachedAt(int teamId);
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
@@ -445,6 +493,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _imprintSearchBox = 'imprint_search_box';
   static const String _imprintSearchMetaBox = 'imprint_search_meta_box';
   static const String _imprintDetailsBox = 'imprint_details_box';
+  static const String _teamSearchBox = 'team_search_box';
+  static const String _teamSearchMetaBox = 'team_search_meta_box';
+  static const String _teamDetailsBox = 'team_details_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   final Map<String, Box> _openedBoxes = {};
@@ -543,6 +594,11 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       'imprint_search:${_getImprintSearchKey(query, page, limit)}';
   String _getImprintDetailsMetaKey(int imprintId) =>
       'imprint_details:$imprintId';
+  String _getTeamSearchKey(String query, int page, int limit) =>
+      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+  String _getTeamSearchMetaKey(String query, int page, int limit) =>
+      'team_search:${_getTeamSearchKey(query, page, limit)}';
+  String _getTeamDetailsMetaKey(int teamId) => 'team_details:$teamId';
 
   @override
   Future<void> cacheWeeklyReleases(
@@ -1596,6 +1652,114 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   Future<DateTime?> getImprintDetailsCachedAt(int imprintId) async {
     final metaBox = await _getBox<int>(_cacheMetaBox);
     final epoch = metaBox.get(_getImprintDetailsMetaKey(imprintId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheTeamSearchResults(
+    String query,
+    List<TeamListDto> teams, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final searchKey = _getTeamSearchKey(query, page, limit);
+    final box = await _getBox<List>(_teamSearchBox);
+    await box.put(searchKey, teams.map((entry) => entry.toJson()).toList());
+
+    final searchMetaBox = await _getBox<Map>(_teamSearchMetaBox);
+    await searchMetaBox.put(searchKey, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getTeamSearchMetaKey(query, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<TeamListDto>?> getTeamSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getTeamSearchKey(query, page, limit);
+    final box = await _getBox<List>(_teamSearchBox);
+    final rawData = box.get(searchKey);
+    if (rawData != null) {
+      return rawData
+          .whereType<Map>()
+          .map((entry) => entry.cast<String, dynamic>())
+          .map(TeamListDto.fromJson)
+          .toList();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getTeamSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getTeamSearchMetaKey(query, page, limit));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<TeamSearchPageCacheMeta?> getTeamSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getTeamSearchKey(query, page, limit);
+    final box = await _getBox<Map>(_teamSearchMetaBox);
+    final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return TeamSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheTeamDetails(TeamDetailsDto details) async {
+    final box = await _getBox<Map>(_teamDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getTeamDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<TeamDetailsDto?> getTeamDetails(int teamId) async {
+    final box = await _getBox<Map>(_teamDetailsBox);
+    final data = box.get(teamId);
+    if (data == null) return null;
+    return TeamDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getTeamDetailsCachedAt(int teamId) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getTeamDetailsMetaKey(teamId));
     if (epoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(epoch);
   }

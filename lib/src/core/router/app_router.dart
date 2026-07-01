@@ -87,6 +87,11 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: TeamDetailsRoute.page,
+      path: '/team/:teamId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: ImagePreviewRoute.page,
       path: '/image-preview',
       guards: [authGuard],

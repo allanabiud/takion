@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/page_navigation_bar.dart';
 
 class PagedListScaffold extends StatelessWidget {
   const PagedListScaffold({
@@ -39,126 +38,134 @@ class PagedListScaffold extends StatelessWidget {
     final hasPagination = totalPages > 1;
     final showInlineLoading = isLoading && itemCount > 0;
 
-    return Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: onRefresh,
-          child: (itemCount == 0 && !isLoading)
-              ? CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    if (header != null)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: header,
-                        ),
-                      ),
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          bottom: hasPagination ? 96 : 12,
-                        ),
-                        child: EmptyContentState(
-                          icon: emptyIcon,
-                          message: emptyMessage,
-                        ),
-                      ),
+    final body = RefreshIndicator(
+      onRefresh: onRefresh,
+      child: (itemCount == 0 && !isLoading)
+          ? CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (header != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: header,
                     ),
-                  ],
-                )
-              : (isLoading && itemCount == 0)
-              ? CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    if (header != null)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: header,
-                        ),
-                      ),
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          bottom: hasPagination ? 96 : 12,
-                        ),
-                        child: const Center(
-                          child: SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: CircularProgressIndicator(strokeWidth: 3),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(
-                    0,
-                    header != null ? 0 : 12,
-                    0,
-                    hasPagination ? 96 : 12,
                   ),
-                  itemCount: itemCount + (header != null ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (header != null && index == 0) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: header,
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: EmptyContentState(
+                      icon: emptyIcon,
+                      message: emptyMessage,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : (isLoading && itemCount == 0)
+          ? CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (header != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: header,
+                    ),
+                  ),
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: Center(
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(strokeWidth: 3),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                0,
+                header != null ? 0 : 12,
+                0,
+                12,
+              ),
+              itemCount: itemCount + (header != null ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (header != null && index == 0) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: header,
+                      ),
+                      if (showInlineLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          if (showInlineLoading)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: LinearProgressIndicator(minHeight: 2),
-                            ),
-                        ],
-                      );
-                    }
+                          child: LinearProgressIndicator(minHeight: 2),
+                        ),
+                    ],
+                  );
+                }
 
-                    return itemBuilder(
-                      context,
-                      header != null ? index - 1 : index,
-                    );
-                  },
-                ),
-        ),
-        if (showInlineLoading)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: ColoredBox(color: Colors.black.withValues(alpha: 0.02)),
+                return itemBuilder(
+                  context,
+                  header != null ? index - 1 : index,
+                );
+              },
             ),
-          ),
-        if (hasPagination)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: PageNavigationBar(
-                  currentPage: currentPage,
-                  totalPages: totalPages,
-                  hasPrevious: hasPrevious,
-                  hasNext: hasNext,
-                  onPrevious: onPrevious,
-                  onNext: onNext,
-                  enabled: !isLoading,
-                  isLoading: isLoading,
-                ),
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          body,
+          if (showInlineLoading)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ColoredBox(color: Colors.black.withValues(alpha: 0.02)),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
+      bottomNavigationBar: hasPagination
+          ? BottomAppBar(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: isLoading || !hasPrevious ? null : onPrevious,
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Page $currentPage of $totalPages',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: isLoading || !hasNext ? null : onNext,
+                  ),
+                ],
+              ),
+            )
+          : null,
     );
   }
 }

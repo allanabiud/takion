@@ -57,11 +57,18 @@ class MainScreenState extends ConsumerState<MainScreen>
       SearchTarget.creators => 'Creators',
       SearchTarget.universes => 'Universes',
       SearchTarget.imprints => 'Imprints',
+      SearchTarget.teams => 'Teams',
     };
     _searchFocusNode.unfocus();
     context.pushRoute(
       SearchResultsRoute(query: query, searchChoice: choice),
     );
+  }
+
+  void _onSearchChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -80,10 +87,12 @@ class MainScreenState extends ConsumerState<MainScreen>
         _searchFocusNode.requestFocus();
       }
     });
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _animController.dispose();
     _anim.dispose();
     _searchController.dispose();
@@ -234,14 +243,16 @@ class MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildSearchFieldRow() {
+    final showClearButton = _searchController.text.isNotEmpty;
+
     return Row(
       children: [
-        const SizedBox(width: 16),
-        Icon(
-          Icons.search,
+        IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
           color: Theme.of(context).colorScheme.onSurfaceVariant,
+          onPressed: () => _dismissSearch(),
         ),
-        const SizedBox(width: 12),
         Expanded(
           child: TextField(
             controller: _searchController,
@@ -257,11 +268,16 @@ class MainScreenState extends ConsumerState<MainScreen>
             onSubmitted: (_) => _submitSearch(),
           ),
         ),
-        IconButton(
-          tooltip: 'Close',
-          icon: const Icon(Icons.close, size: 24),
-          onPressed: () => _dismissSearch(),
-        ),
+        if (showClearButton)
+          IconButton(
+            tooltip: 'Clear',
+            icon: const Icon(Icons.close, size: 24),
+            onPressed: () {
+              _searchController.clear();
+            },
+          )
+        else
+          const SizedBox(width: 48),
       ],
     );
   }
@@ -388,6 +404,21 @@ class MainScreenState extends ConsumerState<MainScreen>
                   ref
                       .read(searchStateProvider.notifier)
                       .setTarget(SearchTarget.imprints);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.teams] ??= GlobalKey(),
+                label: const Text(
+                  'Teams',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.teams,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.teams);
                 },
               ),
             ],

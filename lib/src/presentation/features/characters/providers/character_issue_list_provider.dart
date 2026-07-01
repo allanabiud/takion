@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/character_issue_list_page.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 
 class CharacterIssueListArgs {
   const CharacterIssueListArgs({
@@ -39,15 +41,55 @@ final characterIssueListProvider = FutureProvider.autoDispose
       final repository = ref.watch(catalogRepositoryProvider);
       final cancelToken = CancelToken();
       ref.onDispose(cancelToken.cancel);
-      final result = await repository.getCharacterIssueList(
+
+      final sortOption = ref.watch(
+        sortPreferenceForContextProvider(SortPreferenceContext.characterIssues),
+      );
+
+      final page1 = await repository.getCharacterIssueList(
         args.characterId,
-        page: args.page,
+        page: 1,
         limit: args.limit,
         cancelToken: cancelToken,
       );
 
+      final totalPages = ((page1.count - 1) ~/ args.limit) + 1;
+
+      CharacterIssueListPage resultPage;
+      if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
+        final targetPage = totalPages - args.page + 1;
+        if (targetPage == 1) {
+          resultPage = page1;
+        } else {
+          resultPage = await repository.getCharacterIssueList(
+            args.characterId,
+            page: targetPage,
+            limit: args.limit,
+            cancelToken: cancelToken,
+          );
+        }
+      } else {
+        if (args.page == 1) {
+          resultPage = page1;
+        } else {
+          resultPage = await repository.getCharacterIssueList(
+            args.characterId,
+            page: args.page,
+            limit: args.limit,
+            cancelToken: cancelToken,
+          );
+        }
+      }
+
       timer = Timer(const Duration(minutes: 5), () => link.close());
-      return result;
+
+      return CharacterIssueListPage(
+        count: page1.count,
+        results: resultPage.results,
+        currentPage: args.page,
+        next: args.page < totalPages ? 'placeholder?page=${args.page + 1}' : null,
+        previous: args.page > 1 ? 'placeholder?page=${args.page - 1}' : null,
+      );
     });
 
 final characterDetailsIssuesProvider = FutureProvider.autoDispose

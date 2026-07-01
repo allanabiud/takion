@@ -244,10 +244,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         final showAssociated = associated.isNotEmpty;
         final scaffoldBg = Theme.of(context).colorScheme.surface;
         final issuesPreviewAsync = ref.watch(
-          seriesIssueListProvider(SeriesIssueListArgs(
-            seriesId: widget.seriesId,
-            page: 1,
-          )),
+          seriesDetailsIssuesProvider(widget.seriesId),
         );
         final issuesPreview = issuesPreviewAsync.asData != null
             ? sortIssues(

@@ -11,6 +11,7 @@ import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:takion/src/presentation/components/universe_card.dart';
+import 'package:takion/src/presentation/components/team_card.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
@@ -657,9 +658,26 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _CharacterListSection(
-                    title: 'Teams',
-                    items: details.teams,
+                  child: Text('Teams', style: _sectionTitleStyle(context)),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 170,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: details.teams.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 4),
+                    itemBuilder: (context, index) {
+                      final team = details.teams[index];
+                      return TeamCard(
+                        teamId: team.id,
+                        name: team.name,
+                        width: 110,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -840,41 +858,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
   }
 }
 
-class _CharacterListSection extends StatelessWidget {
-  const _CharacterListSection({required this.title, required this.items});
 
-  final String title;
-  final List<CharacterDetailsNamedRef> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: items
-              .map(
-                (item) => Chip(
-                  label: Text(
-                    item.name.trim().isNotEmpty ? item.name.trim() : 'Unknown',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-              )
-              .toList(),
-        ),
-      ],
-    );
-  }
-}
 
 class _CharacterStatsCard extends StatelessWidget {
   const _CharacterStatsCard({

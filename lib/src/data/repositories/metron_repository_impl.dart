@@ -15,6 +15,8 @@ import 'package:takion/src/domain/entities/universe_details.dart';
 import 'package:takion/src/domain/entities/universe_list_page.dart';
 import 'package:takion/src/domain/entities/imprint_details.dart';
 import 'package:takion/src/domain/entities/imprint_list_page.dart';
+import 'package:takion/src/domain/entities/team_details.dart';
+import 'package:takion/src/domain/entities/team_list_page.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_search_page.dart';
@@ -52,6 +54,7 @@ class MetronRepositoryImpl implements MetronRepository {
   final _AsyncConcurrencyGate _creatorDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _universeDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _imprintDetailsGate = _AsyncConcurrencyGate(3);
+  final _AsyncConcurrencyGate _teamDetailsGate = _AsyncConcurrencyGate(3);
 
   MetronRepositoryImpl(
     this._remoteDataSource,
@@ -1155,6 +1158,119 @@ class MetronRepositoryImpl implements MetronRepository {
         return remoteDto.toEntity();
       } finally {
         _imprintDetailsGate.release();
+      }
+    } catch (_) {
+      if (cachedDto != null) {
+        return cachedDto.toEntity();
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<TeamListPage> searchTeams(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getTeamSearchResults(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedAt = await _localDataSource.getTeamSearchResultsCachedAt(
+      query,
+      page: page,
+      limit: limit,
+    );
+    final cachedMeta = await _localDataSource.getTeamSearchResultsMeta(
+      query,
+      page: page,
+      limit: limit,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.teamSearchResults.isFresh(cachedAt, _now());
+      if (isFresh && cachedMeta != null) {
+        return TeamListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final remotePage = await _remoteDataSource.searchTeams(
+        query,
+        page: page,
+        limit: limit,
+        cancelToken: cancelToken,
+      );
+      await _localDataSource.cacheTeamSearchResults(
+        query,
+        remotePage.results,
+        page: page,
+        limit: limit,
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+      );
+      return TeamListPage(
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: page,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return TeamListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<TeamDetails> getTeamDetails(
+    int teamId, {
+    bool forceRefresh = false,
+  }) async {
+    final cachedDto = await _localDataSource.getTeamDetails(teamId);
+    final cachedAt =
+        await _localDataSource.getTeamDetailsCachedAt(teamId);
+
+    if (!forceRefresh && cachedDto != null) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.teamDetails.isFresh(cachedAt, _now());
+      if (isFresh) {
+        return cachedDto.toEntity();
+      }
+    }
+
+    try {
+      await _teamDetailsGate.acquire();
+      try {
+        final remoteDto =
+            await _remoteDataSource.getTeamDetails(teamId);
+        await _localDataSource.cacheTeamDetails(remoteDto);
+        return remoteDto.toEntity();
+      } finally {
+        _teamDetailsGate.release();
       }
     } catch (_) {
       if (cachedDto != null) {

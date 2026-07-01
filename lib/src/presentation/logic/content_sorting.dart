@@ -5,6 +5,7 @@ import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/universe_list.dart';
 import 'package:takion/src/domain/entities/imprint_list.dart';
+import 'package:takion/src/domain/entities/team_list.dart';
 
 enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 
@@ -32,6 +33,7 @@ enum SortPreferenceContext {
   continueReading,
   subscriptions,
   searchImprints,
+  searchTeams,
 }
 
 extension SortPreferenceContextX on SortPreferenceContext {
@@ -83,6 +85,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'subscriptions';
       case SortPreferenceContext.searchImprints:
         return 'search_imprints';
+      case SortPreferenceContext.searchTeams:
+        return 'search_teams';
     }
   }
 
@@ -133,6 +137,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.subscriptions:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.searchImprints:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.searchTeams:
         return ContentSortOption.nameAsc;
     }
   }
@@ -204,6 +210,19 @@ String universeSortLabel(ContentSortOption option) {
 }
 
 String imprintSortLabel(ContentSortOption option) {
+  switch (option) {
+    case ContentSortOption.nameAsc:
+      return 'Alphabetical (A-Z)';
+    case ContentSortOption.nameDesc:
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
+  }
+}
+
+String teamSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
       return 'Alphabetical (A-Z)';
@@ -384,6 +403,33 @@ List<ImprintList> sortImprints(
   final sorted = [...imprints];
 
   int compareByName(ImprintList a, ImprintList b) =>
+      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  switch (sortOption) {
+    case ContentSortOption.nameAsc:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.nameDesc:
+      sorted.sort((a, b) => compareByName(b, a));
+      break;
+    case ContentSortOption.dateNewest:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByName);
+      break;
+  }
+
+  return sorted;
+}
+
+List<TeamList> sortTeams(
+  List<TeamList> teams,
+  ContentSortOption sortOption,
+) {
+  final sorted = [...teams];
+
+  int compareByName(TeamList a, TeamList b) =>
       a.name.toLowerCase().compareTo(b.name.toLowerCase());
 
   switch (sortOption) {

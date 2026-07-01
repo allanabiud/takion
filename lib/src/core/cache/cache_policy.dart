@@ -23,6 +23,8 @@ class MetronCachePolicies {
   static const creatorDetails = CachePolicy(ttl: Duration(days: 7));
   static const universeSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const universeDetails = CachePolicy(ttl: Duration(days: 7));
+  static const teamSearchResults = CachePolicy(ttl: Duration(hours: 3));
+  static const teamDetails = CachePolicy(ttl: Duration(days: 7));
 }
 
 class LocalDataCachePolicies {
