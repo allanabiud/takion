@@ -25,6 +25,15 @@ import 'package:takion/src/presentation/features/home/providers/home_trending_pr
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
+import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
+import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
+import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
+import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
+import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
+import 'package:takion/src/presentation/features/universes/providers/universe_details_provider.dart';
+import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
+import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
+import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
 import 'package:takion/src/core/notifications/push_notification_service.dart';
@@ -249,6 +258,16 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(currentWeekPullsCountProvider);
     ref.invalidate(userProfileProvider);
     ref.invalidate(profileInsightsProvider);
+    ref.invalidate(characterDetailsProvider);
+    ref.invalidate(characterSearchResultsProvider);
+    ref.invalidate(characterIssueListProvider);
+    ref.invalidate(characterDetailsIssuesProvider);
+    ref.invalidate(creatorDetailsProvider);
+    ref.invalidate(creatorSearchResultsProvider);
+    ref.invalidate(universeDetailsProvider);
+    ref.invalidate(universeSearchResultsProvider);
+    ref.invalidate(imprintDetailsProvider);
+    ref.invalidate(imprintSearchResultsProvider);
   }
 
   ({String query, int page})? _parseSearchKey(Object? key) {

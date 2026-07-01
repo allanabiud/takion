@@ -16,6 +16,8 @@ import 'package:takion/src/presentation/features/series/providers/series_details
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -185,6 +187,41 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 fit: BoxFit.cover,
               )
             : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+        body: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonBox(height: 22, width: 280, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 16, width: 200, borderRadius: 4),
+              const SizedBox(height: 20),
+              Row(
+                children: const [
+                  Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  SizedBox(width: 6),
+                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  SizedBox(width: 6),
+                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 170,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 5,
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (_, _) => const Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: SkeletonBox(width: 110, height: 170, borderRadius: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),

@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 
 class IssueDetailsSkeleton extends StatelessWidget {
   const IssueDetailsSkeleton({super.key, this.imageUrl});
@@ -13,6 +15,7 @@ class IssueDetailsSkeleton extends StatelessWidget {
     final theme = Theme.of(context);
     return DetailScreenSkeleton(
       headerRadius: 16,
+      body: _buildShimmerBody(),
       header: Stack(
         fit: StackFit.expand,
         children: [
@@ -58,6 +61,64 @@ class IssueDetailsSkeleton extends StatelessWidget {
                             const Icon(Icons.image, size: 48),
                       )
                     : const Icon(Icons.image, size: 48),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildShimmerBody() {
+    return ShimmerWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SkeletonBox(height: 22, width: 300, borderRadius: 4),
+          const SizedBox(height: 8),
+          const SkeletonBox(height: 16, width: 180, borderRadius: 4),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              ...List.generate(4, (_) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 22, height: 22, borderRadius: 4),
+              )),
+              const Spacer(),
+              ...List.generate(5, (_) => const Padding(
+                padding: EdgeInsets.only(left: 4),
+                child: SkeletonBox(width: 16, height: 16, borderRadius: 2),
+              )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: const [
+              Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
+              SizedBox(width: 6),
+              Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+              SizedBox(width: 6),
+              Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 14, borderRadius: 4),
+          const SizedBox(height: 8),
+          const SkeletonBox(height: 14, width: 280, borderRadius: 4),
+          const SizedBox(height: 8),
+          const SkeletonBox(height: 14, width: 220, borderRadius: 4),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 80, height: 120, borderRadius: 12),
               ),
             ),
           ),

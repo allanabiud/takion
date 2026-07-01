@@ -17,6 +17,7 @@ import 'package:takion/src/presentation/features/characters/providers/character_
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
@@ -145,6 +146,62 @@ class _CharacterDetailsScreenState
                     ],
                   )
                 : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+            body: ShimmerWidget(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBox(height: 22, width: 260, borderRadius: 4),
+                  const SizedBox(height: 8),
+                  const SkeletonBox(height: 16, width: 160, borderRadius: 4),
+                  const SizedBox(height: 16),
+                  const SkeletonBox(height: 14, borderRadius: 4),
+                  const SizedBox(height: 8),
+                  const SkeletonBox(height: 14, width: 240, borderRadius: 4),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: const [
+                      Expanded(flex: 2, child: SkeletonBox(height: 70, borderRadius: 12)),
+                      SizedBox(width: 6),
+                      Expanded(flex: 2, child: SkeletonBox(height: 70, borderRadius: 12)),
+                      SizedBox(width: 6),
+                      Expanded(flex: 4, child: SkeletonBox(height: 70, borderRadius: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const SkeletonBox(height: 90, borderRadius: 14),
+                  const SizedBox(height: 24),
+                  const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 140,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 4,
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (_, _) => const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: SkeletonBox(width: 100, height: 140, borderRadius: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 4,
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (_, _) => const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: SkeletonBox(width: 130, height: 200, borderRadius: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
@@ -478,23 +535,25 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: isIssuesLoading
-                      ? Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: SkeletonBox(borderRadius: 12, height: 70),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              flex: 2,
-                              child: SkeletonBox(borderRadius: 12, height: 70),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              flex: 4,
-                              child: SkeletonBox(borderRadius: 12, height: 70),
-                            ),
-                          ],
+                      ? const ShimmerWidget(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: SkeletonBox(borderRadius: 12, height: 70),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                flex: 2,
+                                child: SkeletonBox(borderRadius: 12, height: 70),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                flex: 4,
+                                child: SkeletonBox(borderRadius: 12, height: 70),
+                              ),
+                            ],
+                          ),
                         )
                       : _CharacterStatsCard(
                           issueCount: totalIssueCount,
@@ -510,7 +569,9 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: isIssuesLoading
-                      ? const SkeletonBox(borderRadius: 14, height: 90)
+                      ? const ShimmerWidget(
+                          child: SkeletonBox(borderRadius: 14, height: 90),
+                        )
                       : _CharacterFirstAppearanceCard(issue: firstAppearance!),
                 ),
               ),
@@ -530,32 +591,34 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: isIssuesLoading
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SkeletonBox(
-                              width: 100,
-                              height: 20,
-                              borderRadius: 4,
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              height: 250,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: 5,
-                                padding: EdgeInsets.zero,
-                                itemBuilder: (context, index) => Padding(
-                                  padding: const EdgeInsets.only(right: 12),
-                                  child: SkeletonBox(
-                                    width: 150,
-                                    height: 250,
-                                    borderRadius: 12,
+                      ? ShimmerWidget(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SkeletonBox(
+                                width: 100,
+                                height: 20,
+                                borderRadius: 4,
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 250,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: 5,
+                                  padding: EdgeInsets.zero,
+                                  itemBuilder: (context, index) => const Padding(
+                                    padding: EdgeInsets.only(right: 12),
+                                    child: SkeletonBox(
+                                      width: 150,
+                                      height: 250,
+                                      borderRadius: 12,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         )
                       : HorizontalPreviewSection(
                           title: 'Recently Appeared In',

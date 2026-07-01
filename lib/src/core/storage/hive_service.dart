@@ -26,6 +26,20 @@ class HiveService {
     'series_details_box',
     'series_issue_list_box',
     'series_issue_list_meta_box',
+    'character_search_box',
+    'character_search_meta_box',
+    'character_details_box',
+    'character_issue_list_box',
+    'character_issue_list_meta_box',
+    'creator_search_box',
+    'creator_search_meta_box',
+    'creator_details_box',
+    'universe_search_box',
+    'universe_search_meta_box',
+    'universe_details_box',
+    'imprint_search_box',
+    'imprint_search_meta_box',
+    'imprint_details_box',
     'home_content_box',
     'series_cover_cache_box',
     'library_items_cache_box',
@@ -79,9 +93,13 @@ class HiveService {
       if (Hive.isBoxOpen(boxName)) {
         await Hive.box(boxName).clear();
       } else {
-        // If it's not open, we just open it dynamic which is safe for clear()
-        final box = await Hive.openBox(boxName);
-        await box.clear();
+        // Delete the box file from disk to avoid opening it.
+        // This avoids "already open" errors from Hive.openBox.
+        try {
+          await Hive.deleteBoxFromDisk(boxName);
+        } on PathNotFoundException {
+          // Box file may not exist yet — safe to ignore.
+        }
       }
     }
   }

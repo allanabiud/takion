@@ -8,11 +8,13 @@ class DetailScreenSkeleton extends StatelessWidget {
     required this.header,
     this.initialChildSize = 0.60,
     this.headerRadius = 20,
+    this.body,
   });
 
   final Widget header;
   final double initialChildSize;
   final double headerRadius;
+  final Widget? body;
 
   @override
   Widget build(BuildContext context) {
@@ -63,17 +65,18 @@ class DetailScreenSkeleton extends StatelessWidget {
                     hasScrollBody: false,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                      child: ShimmerWidget(
-                        child: Column(
-                          children: [
-                            _buildSkeletonRow(),
-                            const SizedBox(height: 16),
-                            _buildSkeletonRow(),
-                            const SizedBox(height: 16),
-                            _buildSkeletonRow(),
-                          ],
-                        ),
-                      ),
+                      child: body ??
+                          ShimmerWidget(
+                            child: Column(
+                              children: [
+                                _buildSkeletonRow(),
+                                const SizedBox(height: 16),
+                                _buildSkeletonRow(),
+                                const SizedBox(height: 16),
+                                _buildSkeletonRow(),
+                              ],
+                            ),
+                          ),
                     ),
                   ),
                 ],
