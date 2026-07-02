@@ -10,6 +10,7 @@ final hiveServiceProvider = Provider<HiveService>((ref) {
 
 class HiveService {
   bool _initialized = false;
+  final _clearFns = <String, Future<void> Function()>{};
   static const Set<String> _recoverableCacheBoxes = {
     'weekly_releases_box',
     'foc_releases_box',
@@ -47,6 +48,7 @@ class HiveService {
     'series_cover_cache_box',
     'library_items_cache_box',
     'subscriptions_cache_box',
+    'series_name_index_box',
   };
 
   Future<void> init() async {
@@ -59,15 +61,21 @@ class HiveService {
 
   Future<Box<T>> openBox<T>(String boxName) async {
     if (Hive.isBoxOpen(boxName)) {
-      return Hive.box<T>(boxName);
+      final box = Hive.box<T>(boxName);
+      _clearFns[boxName] = box.clear;
+      return box;
     }
 
     try {
-      return await Hive.openBox<T>(boxName);
+      final box = await Hive.openBox<T>(boxName);
+      _clearFns[boxName] = box.clear;
+      return box;
     } on TypeError {
       if (!_recoverableCacheBoxes.contains(boxName)) rethrow;
       await _deleteCorruptedBoxFromDisk(boxName);
-      return await Hive.openBox<T>(boxName);
+      final box = await Hive.openBox<T>(boxName);
+      _clearFns[boxName] = box.clear;
+      return box;
     }
   }
 
@@ -90,14 +98,13 @@ class HiveService {
   }
 
   Future<void> clearLocalCache() async {
-    final boxes = _recoverableCacheBoxes;
-
-    for (final boxName in boxes) {
+    for (final boxName in _recoverableCacheBoxes) {
       if (Hive.isBoxOpen(boxName)) {
-        await Hive.box(boxName).clear();
+        final clearFn = _clearFns[boxName];
+        if (clearFn != null) {
+          await clearFn();
+        }
       } else {
-        // Delete the box file from disk to avoid opening it.
-        // This avoids "already open" errors from Hive.openBox.
         try {
           await Hive.deleteBoxFromDisk(boxName);
         } on PathNotFoundException {

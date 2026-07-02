@@ -115,31 +115,11 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   MetronRemoteDataSourceImpl(this._dio);
 
   String _normalizeQuery(String query) {
-    final collapsed = query.trim().replaceAll(RegExp(r'\s+'), ' ');
-    return collapsed;
-  }
-
-  List<String> _queryCandidates(String query) {
-    final normalized = _normalizeQuery(query);
-    if (normalized.isEmpty) return const [];
-
-    final cleaned = normalized
-        .replaceAll(RegExp(r'[^\w\s#-]'), ' ')
+    return query
+        .trim()
         .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r'[^\w\s#-]'), ' ')
         .trim();
-    final tokens = cleaned
-        .split(' ')
-        .map((token) => token.trim())
-        .where((token) => token.length >= 3)
-        .toList();
-
-    final candidates = <String>{normalized};
-    if (cleaned.isNotEmpty) {
-      candidates.add(cleaned);
-    }
-    candidates.addAll(tokens);
-
-    return candidates.toList(growable: false);
   }
 
   @override
@@ -205,33 +185,23 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const IssueSearchResponseDto(count: 0, results: []);
     }
 
-    IssueSearchResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'issue/',
-        queryParameters: {
-          'series_name': candidate,
-          'page': page,
-        },
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'issue/',
+      queryParameters: {
+        'series_name': normalized,
+        'page': page,
+      },
+      cancelToken: cancelToken,
+    );
 
-      final parsed = IssueSearchResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ?? const IssueSearchResponseDto(count: 0, results: []);
+    return IssueSearchResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -283,30 +253,20 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const SeriesSearchResponseDto(count: 0, results: []);
     }
 
-    SeriesSearchResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'series/',
-        queryParameters: {'name': candidate, 'page': page},
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'series/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
 
-      final parsed = SeriesSearchResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ?? const SeriesSearchResponseDto(count: 0, results: []);
+    return SeriesSearchResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -357,30 +317,20 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const CharacterListResponseDto(count: 0, results: []);
     }
 
-    CharacterListResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'character/',
-        queryParameters: {'name': candidate, 'page': page},
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'character/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
 
-      final parsed = CharacterListResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ?? const CharacterListResponseDto(count: 0, results: []);
+    return CharacterListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -414,31 +364,20 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const CreatorListResponseDto(count: 0, results: []);
     }
 
-    CreatorListResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'creator/',
-        queryParameters: {'name': candidate, 'page': page},
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'creator/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
 
-      final parsed = CreatorListResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ??
-        const CreatorListResponseDto(count: 0, results: []);
+    return CreatorListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -454,31 +393,20 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const UniverseListResponseDto(count: 0, results: []);
     }
 
-    UniverseListResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'universe/',
-        queryParameters: {'name': candidate, 'page': page},
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'universe/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
 
-      final parsed = UniverseListResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ??
-        const UniverseListResponseDto(count: 0, results: []);
+    return UniverseListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -494,31 +422,20 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const ImprintListResponseDto(count: 0, results: []);
     }
 
-    ImprintListResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'imprint/',
-        queryParameters: {'name': candidate, 'page': page},
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'imprint/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
 
-      final parsed = ImprintListResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ??
-        const ImprintListResponseDto(count: 0, results: []);
+    return ImprintListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -534,30 +451,20 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final candidates = _queryCandidates(query);
-    if (candidates.isEmpty) {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
       return const TeamListResponseDto(count: 0, results: []);
     }
 
-    TeamListResponseDto? lastResponse;
-    for (final candidate in candidates) {
-      final response = await _dio.get(
-        'team/',
-        queryParameters: {'name': candidate, 'page': page},
-        cancelToken: cancelToken,
-      );
+    final response = await _dio.get(
+      'team/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
 
-      final parsed = TeamListResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-      lastResponse = parsed;
-
-      if (parsed.results.isNotEmpty) {
-        return parsed;
-      }
-    }
-
-    return lastResponse ?? const TeamListResponseDto(count: 0, results: []);
+    return TeamListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override

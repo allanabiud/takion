@@ -11,7 +11,10 @@ import 'package:takion/src/presentation/features/universes/providers/universe_de
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 
 @RoutePage()
 class UniverseDetailsScreen extends ConsumerStatefulWidget {
@@ -67,9 +70,67 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
     final scaffoldBg = Theme.of(context).colorScheme.surface;
 
     return detailsAsync.when(
-      loading: () => Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+      loading: () => DetailScreenSkeleton(
+        initialChildSize: 0.55,
+        header: widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.initialImageUrl!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          scaffoldBg.withValues(alpha: 0.75),
+                          Colors.transparent,
+                          scaffoldBg.withValues(alpha: 0.75),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : ColoredBox(color: scaffoldBg),
+        body: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonBox(height: 22, width: 220, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 16, width: 140, borderRadius: 4),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+              const SizedBox(height: 12),
+              const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 240, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 180, borderRadius: 4),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+              const SizedBox(height: 12),
+              ...List.generate(4, (_) => const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
+                    SizedBox(width: 8),
+                    Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                  ],
+                ),
+              )),
+            ],
+          ),
+        ),
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),

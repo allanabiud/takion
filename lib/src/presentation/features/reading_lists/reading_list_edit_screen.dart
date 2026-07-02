@@ -485,7 +485,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
                       readingListDetailsProvider(widget.listId),
                     );
                     if (context.mounted) {
-                      TakionAlerts.success(context, 'Changes saved');
+                      TakionAlerts.success(context, 'Changes Saved');
                       context.router.maybePop();
                     }
                   },

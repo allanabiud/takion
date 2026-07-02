@@ -100,10 +100,26 @@ class ReleasesScreen extends ConsumerWidget {
                       const SizedBox(height: 24),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'Your Pulls This Week',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                        child: Text.rich(
+                          TextSpan(
+                            text: '$pullsCountAsync',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                              children: [
+                                TextSpan(
+                                  text: pullsCountAsync == 1
+                                      ? ' Pull This Week'
+                                      : ' Pulls This Week',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
                       const SizedBox(height: 10),

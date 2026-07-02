@@ -6,6 +6,9 @@ import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
+import 'package:takion/src/data/datasources/series_name_index.dart';
+import 'package:takion/src/data/dto/issue_details_dto.dart';
+import 'package:takion/src/data/dto/issue_list_dto.dart';
 import 'package:takion/src/domain/entities/character_details.dart';
 import 'package:takion/src/domain/entities/character_issue_list_page.dart';
 import 'package:takion/src/domain/entities/character_list_page.dart';
@@ -55,10 +58,13 @@ class MetronRepositoryImpl implements MetronRepository {
   final _AsyncConcurrencyGate _universeDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _imprintDetailsGate = _AsyncConcurrencyGate(3);
   final _AsyncConcurrencyGate _teamDetailsGate = _AsyncConcurrencyGate(3);
+  final Map<String, DateTime> _lastBackgroundRefresh = {};
+  final SeriesNameIndex _seriesNameIndex;
 
   MetronRepositoryImpl(
     this._remoteDataSource,
-    this._localDataSource, {
+    this._localDataSource,
+    this._seriesNameIndex, {
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -86,24 +92,88 @@ class MetronRepositoryImpl implements MetronRepository {
   bool _isCancelled(Object error) =>
       error is DioException && error.type == DioExceptionType.cancel;
 
+  void _refreshInBackground({
+    required Future<void> Function() task,
+    required String cacheKey,
+    required Duration cooldown,
+  }) {
+    final now = _now();
+    final lastRefresh = _lastBackgroundRefresh[cacheKey];
+    if (lastRefresh != null && now.difference(lastRefresh) < cooldown) {
+      return;
+    }
+    _lastBackgroundRefresh[cacheKey] = now;
+    unawaited(
+      runZoned(
+        () => task().catchError((_) {}),
+        zoneValues: {#opencode_background: true},
+      ),
+    );
+  }
+
+  void _indexSeriesName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    unawaited(_seriesNameIndex.add(trimmed));
+  }
+
+  void _indexSeriesNamesFromIssueList(Iterable<IssueListDto> issues) {
+    for (final issue in issues) {
+      final series = issue.series;
+      if (series != null && series.name.trim().isNotEmpty) {
+        _indexSeriesName(series.name);
+      }
+    }
+  }
+
+  void _indexSeriesNamesFromIssueDetails(IssueDetailsDto issue) {
+    final series = issue.series;
+    if (series != null && series.name.trim().isNotEmpty) {
+      _indexSeriesName(series.name);
+    }
+  }
+
+  Future<String> _correctSearchQuery(String query) async {
+    final stripped = query.replaceAll(RegExp(r'\d+$'), '').trim();
+    if (stripped.isNotEmpty) {
+      final corrected = await _seriesNameIndex.fuzzyMatch(stripped);
+      if (corrected != null) {
+        final suffix = query.substring(stripped.length);
+        return '$corrected$suffix';
+      }
+    }
+    final corrected = await _seriesNameIndex.fuzzyMatch(query);
+    if (corrected != null) return corrected;
+    return query;
+  }
+
   @override
   Future<List<IssueList>> getWeeklyReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,
   }) async {
-    final metrics = AppPerformanceMetrics.instance;
-    // Updated to IssueList
     final cachedDtos = await _localDataSource.getWeeklyReleases(date);
     final cachedAt = await _localDataSource.getWeeklyReleasesCachedAt(date);
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      if (cachedAt != null &&
-          MetronCachePolicies.weeklyReleases.isFresh(cachedAt, _now())) {
-        metrics.recordCacheHit('weekly_releases');
-        return cachedDtos.map((entry) => entry.toEntity()).toList();
+      final isFresh = cachedAt != null &&
+          MetronCachePolicies.weeklyReleases.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remoteDtos =
+                await _remoteDataSource.getWeeklyReleasesForDate(date);
+            await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
+            _indexSeriesNamesFromIssueList(remoteDtos);
+          },
+          cacheKey: 'weekly_releases:${date.year}-${date.month}-${date.day}',
+          cooldown: MetronCachePolicies.weeklyReleases.refreshCooldown,
+        );
       }
+      AppPerformanceMetrics.instance.recordCacheHit('weekly_releases');
+      return cachedDtos.map((entry) => entry.toEntity()).toList();
     }
-    metrics.recordCacheMiss('weekly_releases');
+    AppPerformanceMetrics.instance.recordCacheMiss('weekly_releases');
 
     try {
       final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
@@ -112,6 +182,7 @@ class MetronRepositoryImpl implements MetronRepository {
           date,
         );
         await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
+        _indexSeriesNamesFromIssueList(remoteDtos);
         return remoteDtos.map((entry) => entry.toEntity()).toList();
       }, timeout: const Duration(seconds: 30));
     } catch (_) {
@@ -131,10 +202,21 @@ class MetronRepositoryImpl implements MetronRepository {
     final cachedAt = await _localDataSource.getFocReleasesCachedAt(date);
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      if (cachedAt != null &&
-          MetronCachePolicies.focReleases.isFresh(cachedAt, _now())) {
-        return cachedDtos.map((entry) => entry.toEntity()).toList();
+      final isFresh = cachedAt != null &&
+          MetronCachePolicies.focReleases.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remoteDtos =
+                await _remoteDataSource.getFocReleasesForDate(date);
+            await _localDataSource.cacheFocReleases(date, remoteDtos);
+            _indexSeriesNamesFromIssueList(remoteDtos);
+          },
+          cacheKey: 'foc_releases:${date.year}-${date.month}-${date.day}',
+          cooldown: MetronCachePolicies.focReleases.refreshCooldown,
+        );
       }
+      return cachedDtos.map((entry) => entry.toEntity()).toList();
     }
 
     try {
@@ -143,6 +225,7 @@ class MetronRepositoryImpl implements MetronRepository {
         final remoteDtos =
             await _remoteDataSource.getFocReleasesForDate(date);
         await _localDataSource.cacheFocReleases(date, remoteDtos);
+        _indexSeriesNamesFromIssueList(remoteDtos);
         return remoteDtos.map((entry) => entry.toEntity()).toList();
       }, timeout: const Duration(seconds: 30));
     } catch (_) {
@@ -158,19 +241,33 @@ class MetronRepositoryImpl implements MetronRepository {
     int issueId, {
     bool forceRefresh = false,
   }) async {
-    final metrics = AppPerformanceMetrics.instance;
     final cachedDto = await _localDataSource.getIssueDetails(issueId);
     final cachedAt = await _localDataSource.getIssueDetailsCachedAt(issueId);
+
     if (!forceRefresh && cachedDto != null) {
-      final isFresh =
-          cachedAt != null &&
+      final isFresh = cachedAt != null &&
           MetronCachePolicies.issueDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        metrics.recordCacheHit('issue_details');
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            await _issueDetailsGate.acquire();
+            try {
+              final remoteDto =
+                  await _remoteDataSource.getIssueDetails(issueId);
+              await _localDataSource.cacheIssueDetails(remoteDto);
+              _indexSeriesNamesFromIssueDetails(remoteDto);
+            } finally {
+              _issueDetailsGate.release();
+            }
+          },
+          cacheKey: 'issue_details:$issueId',
+          cooldown: MetronCachePolicies.issueDetails.refreshCooldown,
+        );
       }
+      AppPerformanceMetrics.instance.recordCacheHit('issue_details');
+      return cachedDto.toEntity();
     }
-    metrics.recordCacheMiss('issue_details');
+    AppPerformanceMetrics.instance.recordCacheMiss('issue_details');
 
     try {
       final key = '$issueId|$forceRefresh';
@@ -179,6 +276,7 @@ class MetronRepositoryImpl implements MetronRepository {
         try {
           final remoteDto = await _remoteDataSource.getIssueDetails(issueId);
           await _localDataSource.cacheIssueDetails(remoteDto);
+          _indexSeriesNamesFromIssueDetails(remoteDto);
           return remoteDto.toEntity();
         } finally {
           _issueDetailsGate.release();
@@ -220,7 +318,32 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final corrected = await _correctSearchQuery(query);
+            final remotePage = await _remoteDataSource.searchIssues(
+              corrected,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheIssueSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+            _indexSeriesNamesFromIssueList(remotePage.results);
+          },
+          cacheKey: 'search:issue:$query:$page',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return IssueSearchPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -232,8 +355,9 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
+      final corrected = await _correctSearchQuery(query);
       final remotePage = await _remoteDataSource.searchIssues(
-        query,
+        corrected,
         page: page,
         limit: limit,
         cancelToken: cancelToken,
@@ -247,6 +371,7 @@ class MetronRepositoryImpl implements MetronRepository {
         next: remotePage.next,
         previous: remotePage.previous,
       );
+      _indexSeriesNamesFromIssueList(remotePage.results);
       return IssueSearchPage(
         count: remotePage.count,
         next: remotePage.next,
@@ -278,7 +403,6 @@ class MetronRepositoryImpl implements MetronRepository {
     int? limit,
     CancelToken? cancelToken,
   }) async {
-    final metrics = AppPerformanceMetrics.instance;
     final cachedDtos = await _localDataSource.getIssueListResults(
       page: page,
       ordering: ordering,
@@ -302,8 +426,35 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
-        metrics.recordCacheHit('issue_list');
+      if (!isFresh) {
+        final key =
+            '$page|${ordering ?? ''}|${modifiedGt?.toUtc().toIso8601String() ?? ''}|${limit ?? ''}';
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.getIssueList(
+              page: page,
+              ordering: ordering,
+              modifiedGt: modifiedGt,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheIssueListResults(
+              remotePage.results,
+              page: page,
+              ordering: ordering,
+              modifiedGt: modifiedGt,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'issue_list:$key',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        AppPerformanceMetrics.instance.recordCacheHit('issue_list');
         return IssueSearchPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -313,7 +464,7 @@ class MetronRepositoryImpl implements MetronRepository {
         );
       }
     }
-    metrics.recordCacheMiss('issue_list');
+    AppPerformanceMetrics.instance.recordCacheMiss('issue_list');
 
     final key =
         '$page|${ordering ?? ''}|${modifiedGt?.toUtc().toIso8601String() ?? ''}|${limit ?? ''}|$forceRefresh';
@@ -387,7 +538,34 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final corrected = await _correctSearchQuery(query);
+            final remotePage = await _remoteDataSource.searchSeries(
+              corrected,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheSeriesSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+            for (final dto in remotePage.results) {
+              if (dto.series.trim().isNotEmpty) _indexSeriesName(dto.series);
+            }
+          },
+          cacheKey: 'search:series:$query:$page',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return SeriesSearchPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -399,8 +577,9 @@ class MetronRepositoryImpl implements MetronRepository {
     }
 
     try {
+      final corrected = await _correctSearchQuery(query);
       final remotePage = await _remoteDataSource.searchSeries(
-        query,
+        corrected,
         page: page,
         limit: limit,
         cancelToken: cancelToken,
@@ -414,6 +593,9 @@ class MetronRepositoryImpl implements MetronRepository {
         next: remotePage.next,
         previous: remotePage.previous,
       );
+      for (final dto in remotePage.results) {
+        if (dto.series.trim().isNotEmpty) _indexSeriesName(dto.series);
+      }
       return SeriesSearchPage(
         count: remotePage.count,
         next: remotePage.next,
@@ -443,7 +625,6 @@ class MetronRepositoryImpl implements MetronRepository {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   }) async {
-    final metrics = AppPerformanceMetrics.instance;
     final cachedDtos = await _localDataSource.getSeriesListResults(
       page: page,
       limit: limit,
@@ -461,8 +642,29 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
-        metrics.recordCacheHit('series_list');
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.getSeriesList(
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheSeriesListResults(
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'series_list:$page',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        AppPerformanceMetrics.instance.recordCacheHit('series_list');
         return SeriesListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -472,7 +674,7 @@ class MetronRepositoryImpl implements MetronRepository {
         );
       }
     }
-    metrics.recordCacheMiss('series_list');
+    AppPerformanceMetrics.instance.recordCacheMiss('series_list');
 
     try {
       final key = '$page|$forceRefresh';
@@ -512,22 +714,32 @@ class MetronRepositoryImpl implements MetronRepository {
       rethrow;
     }
   }
-
   @override
   Future<SeriesDetails> getSeriesDetails(
     int seriesId, {
     bool forceRefresh = false,
   }) async {
     final cachedDto = await _localDataSource.getSeriesDetails(seriesId);
-    final cachedAt = await _localDataSource.getSeriesDetailsCachedAt(seriesId);
+    final cachedAt =
+        await _localDataSource.getSeriesDetailsCachedAt(seriesId);
 
     if (!forceRefresh && cachedDto != null) {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.seriesDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remoteDto =
+                await _remoteDataSource.getSeriesDetails(seriesId);
+            await _localDataSource.cacheSeriesDetails(remoteDto);
+            _indexSeriesName(remoteDto.name);
+          },
+          cacheKey: 'series_details:$seriesId',
+          cooldown: MetronCachePolicies.seriesDetails.refreshCooldown,
+        );
       }
+      return cachedDto.toEntity();
     }
 
     try {
@@ -535,6 +747,7 @@ class MetronRepositoryImpl implements MetronRepository {
       return _coalesce(_seriesDetailsInFlight, key, () async {
         final remoteDto = await _remoteDataSource.getSeriesDetails(seriesId);
         await _localDataSource.cacheSeriesDetails(remoteDto);
+        _indexSeriesName(remoteDto.name);
         return remoteDto.toEntity();
       }, timeout: const Duration(seconds: 30));
     } catch (_) {
@@ -544,7 +757,6 @@ class MetronRepositoryImpl implements MetronRepository {
       rethrow;
     }
   }
-
   @override
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
@@ -573,7 +785,31 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.seriesIssueList.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.getSeriesIssueList(
+              seriesId,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheSeriesIssueListResults(
+              seriesId,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+            _indexSeriesNamesFromIssueList(remotePage.results);
+          },
+          cacheKey: 'series_issue_list:$seriesId:$page',
+          cooldown: MetronCachePolicies.seriesIssueList.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return SeriesIssueListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -602,11 +838,13 @@ class MetronRepositoryImpl implements MetronRepository {
           next: remotePage.next,
           previous: remotePage.previous,
         );
+        _indexSeriesNamesFromIssueList(remotePage.results);
         return SeriesIssueListPage(
           count: remotePage.count,
           next: remotePage.next,
           previous: remotePage.previous,
-          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          results:
+              remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
         );
       }, timeout: const Duration(seconds: 30));
@@ -653,7 +891,30 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchCharacters(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheCharacterSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:character:$query:$page',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return CharacterListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -716,9 +977,23 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.characterDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            await _characterDetailsGate.acquire();
+            try {
+              final remoteDto =
+                  await _remoteDataSource.getCharacterDetails(characterId);
+              await _localDataSource.cacheCharacterDetails(remoteDto);
+            } finally {
+              _characterDetailsGate.release();
+            }
+          },
+          cacheKey: 'character_details:$characterId',
+          cooldown: MetronCachePolicies.characterDetails.refreshCooldown,
+        );
       }
+      return cachedDto.toEntity();
     }
 
     try {
@@ -772,7 +1047,31 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.characterIssueList.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.getCharacterIssueList(
+              characterId,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheCharacterIssueListResults(
+              characterId,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+            _indexSeriesNamesFromIssueList(remotePage.results);
+          },
+          cacheKey: 'character_issue_list:$characterId:$page',
+          cooldown: MetronCachePolicies.characterIssueList.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return CharacterIssueListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -801,6 +1100,7 @@ class MetronRepositoryImpl implements MetronRepository {
           next: remotePage.next,
           previous: remotePage.previous,
         );
+        _indexSeriesNamesFromIssueList(remotePage.results);
         return CharacterIssueListPage(
           count: remotePage.count,
           next: remotePage.next,
@@ -853,7 +1153,30 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.creatorSearchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchCreators(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheCreatorSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:creator:$query:$page',
+          cooldown: MetronCachePolicies.creatorSearchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return CreatorListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -916,9 +1239,23 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.creatorDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            await _creatorDetailsGate.acquire();
+            try {
+              final remoteDto =
+                  await _remoteDataSource.getCreatorDetails(creatorId);
+              await _localDataSource.cacheCreatorDetails(remoteDto);
+            } finally {
+              _creatorDetailsGate.release();
+            }
+          },
+          cacheKey: 'creator_details:$creatorId',
+          cooldown: MetronCachePolicies.creatorDetails.refreshCooldown,
+        );
       }
+      return cachedDto.toEntity();
     }
 
     try {
@@ -967,7 +1304,30 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.universeSearchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchUniverses(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheUniverseSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:universe:$query:$page',
+          cooldown: MetronCachePolicies.universeSearchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return UniverseListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -1030,9 +1390,23 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.universeDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            await _universeDetailsGate.acquire();
+            try {
+              final remoteDto =
+                  await _remoteDataSource.getUniverseDetails(universeId);
+              await _localDataSource.cacheUniverseDetails(remoteDto);
+            } finally {
+              _universeDetailsGate.release();
+            }
+          },
+          cacheKey: 'universe_details:$universeId',
+          cooldown: MetronCachePolicies.universeDetails.refreshCooldown,
+        );
       }
+      return cachedDto.toEntity();
     }
 
     try {
@@ -1081,7 +1455,30 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.universeSearchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchImprints(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheImprintSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:imprint:$query:$page',
+          cooldown: MetronCachePolicies.universeSearchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return ImprintListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -1144,9 +1541,23 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.universeDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            await _imprintDetailsGate.acquire();
+            try {
+              final remoteDto =
+                  await _remoteDataSource.getImprintDetails(imprintId);
+              await _localDataSource.cacheImprintDetails(remoteDto);
+            } finally {
+              _imprintDetailsGate.release();
+            }
+          },
+          cacheKey: 'imprint_details:$imprintId',
+          cooldown: MetronCachePolicies.universeDetails.refreshCooldown,
+        );
       }
+      return cachedDto.toEntity();
     }
 
     try {
@@ -1195,7 +1606,30 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.teamSearchResults.isFresh(cachedAt, _now());
-      if (isFresh && cachedMeta != null) {
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchTeams(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheTeamSearchResults(
+              query,
+              remotePage.results,
+              page: page,
+              limit: limit,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:team:$query:$page',
+          cooldown: MetronCachePolicies.teamSearchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
         return TeamListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -1257,9 +1691,23 @@ class MetronRepositoryImpl implements MetronRepository {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.teamDetails.isFresh(cachedAt, _now());
-      if (isFresh) {
-        return cachedDto.toEntity();
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            await _teamDetailsGate.acquire();
+            try {
+              final remoteDto =
+                  await _remoteDataSource.getTeamDetails(teamId);
+              await _localDataSource.cacheTeamDetails(remoteDto);
+            } finally {
+              _teamDetailsGate.release();
+            }
+          },
+          cacheKey: 'team_details:$teamId',
+          cooldown: MetronCachePolicies.teamDetails.refreshCooldown,
+        );
       }
+      return cachedDto.toEntity();
     }
 
     try {

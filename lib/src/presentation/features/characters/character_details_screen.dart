@@ -108,16 +108,22 @@ class _CharacterDetailsScreenState
       ref.invalidate(favoriteCharactersListProvider);
 
       if (mounted) {
-        TakionAlerts.success(
+        final added = !isFavorite;
+        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          !isFavorite
-              ? 'Character added to favorites'
-              : 'Character removed from favorites',
+          added ? 'Added to Favourites' : 'Removed from Favourites',
+          icon: Icons.favorite,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            await repository.toggleCharacterFavorite(widget.characterId);
+            ref.invalidate(isCharacterFavoriteProvider(widget.characterId));
+            ref.invalidate(favoriteCharactersListProvider);
+          },
         );
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favorites: $e');
+        TakionAlerts.error(context, 'Failed to update favourites');
       }
     }
   }

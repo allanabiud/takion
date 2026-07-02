@@ -67,7 +67,7 @@ class _CreateReadingListBottomSheetState
     );
 
     ref.read(readingListsProvider.notifier).addList(newList);
-    TakionAlerts.success(context, 'Reading list created successfully');
+    TakionAlerts.success(context, 'Reading List Created');
     Navigator.pop(context);
   }
 

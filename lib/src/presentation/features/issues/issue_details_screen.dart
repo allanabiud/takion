@@ -25,6 +25,9 @@ import 'package:takion/src/presentation/features/issues/issue_details/issue_my_d
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
+import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 
 @RoutePage()
@@ -490,12 +493,12 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                                   if (pullIssue && !hadPull) {
                                     TakionAlerts.success(
                                       context,
-                                      'Added to pull list.',
+                                      'Added to Pull List',
                                     );
                                   } else if (!pullIssue && hadPull) {
                                     TakionAlerts.info(
                                       context,
-                                      'Removed from pull list.',
+                                      'Removed from Pull List',
                                     );
                                   }
                                 }
@@ -534,16 +537,95 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
       ref.invalidate(favoriteIssuesListProvider);
 
       if (mounted) {
-        TakionAlerts.success(
+        final added = !isFavorite;
+        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          !isFavorite
-              ? 'Issue added to favorites'
-              : 'Issue removed from favorites',
+          added ? 'Added to Favourites' : 'Removed from Favourites',
+          icon: Icons.favorite,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            await repository.toggleIssueFavorite(_currentIssueId);
+            ref.invalidate(isIssueFavoriteProvider(_currentIssueId));
+            ref.invalidate(favoriteIssuesListProvider);
+          },
         );
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favorites: $e');
+        TakionAlerts.error(context, 'Failed to update favourites');
+      }
+    }
+  }
+
+  Future<void> _setSeriesSubscription(bool enabled, int seriesId) async {
+    try {
+      final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
+      if (enabled) {
+        await subscriptionRepository.subscribe(metronSeriesId: seriesId);
+      } else {
+        await subscriptionRepository.unsubscribe(seriesId);
+        await ref
+            .read(pullListRepositoryProvider)
+            .deleteEntriesBySeriesId(seriesId);
+      }
+      final now = DateTime.now();
+      final startOfWeek = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: now.weekday % 7));
+      await ref
+          .read(pullListRepositoryProvider)
+          .regenerateFromSubscriptions(fromDate: startOfWeek);
+      if (enabled) {
+        await ref
+            .read(subscriptionPullReconcilerProvider)
+            .reconcile(force: true, onlySeriesId: seriesId);
+      }
+      final selectedWeek = ref.read(selectedWeekProvider);
+      ref.invalidate(seriesSubscriptionProvider(seriesId));
+      ref.invalidate(issuePullListEntryProvider);
+      ref.invalidate(pullListEntriesForWeekProvider);
+      ref.invalidate(pullsIssuesForWeekProvider);
+      ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
+      ref.invalidate(currentWeekPullsProvider);
+      ref.invalidate(currentWeekPullsCountProvider);
+      await invalidateSubscriptionsLocalCacheWithHive(
+        ref.read(hiveServiceProvider),
+      );
+      ref.invalidate(activeSubscriptionsProvider);
+      ref.invalidate(activeSubscriptionsCountProvider);
+      ref.invalidate(subscribedSeriesListProvider);
+      ref.invalidate(subscribedSeriesPageProvider);
+      await ref.read(currentWeekPullsProvider.future);
+      if (mounted) {
+        (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
+          context,
+          enabled ? 'Subscribed' : 'Unsubscribed',
+          icon: Icons.notifications,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            if (enabled) {
+              await subscriptionRepository.unsubscribe(seriesId);
+              await ref
+                  .read(pullListRepositoryProvider)
+                  .deleteEntriesBySeriesId(seriesId);
+            } else {
+              await subscriptionRepository.subscribe(metronSeriesId: seriesId);
+            }
+            ref.invalidate(seriesSubscriptionProvider(seriesId));
+            ref.invalidate(issuePullListEntryProvider);
+            ref.invalidate(pullListEntriesForWeekProvider);
+            ref.invalidate(pullsIssuesForWeekProvider);
+            ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
+            ref.invalidate(currentWeekPullsProvider);
+            ref.invalidate(currentWeekPullsCountProvider);
+          },
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to update subscription');
       }
     }
   }
@@ -562,6 +644,11 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
 
     final issue = issueAsync.asData?.value;
     final seriesId = issue?.series?.id;
+
+    final subscriptionAsync = seriesId != null
+        ? ref.watch(seriesSubscriptionProvider(seriesId))
+        : const AsyncValue.data(null);
+    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
 
     final navAsync = seriesId == null
         ? const AsyncValue<IssueSeriesNavResult>.data(
@@ -823,6 +910,15 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                               _currentIssueId,
                             )
                         : () {},
+                    seriesId: isCurrentData ? seriesId : null,
+                    isSubscribed: isCurrentData ? isSubscribed : false,
+                    onToggleSeriesSubscription: (isCurrentData &&
+                            seriesId != null)
+                        ? () => _setSeriesSubscription(
+                              !isSubscribed,
+                              seriesId,
+                            )
+                        : null,
                   );
                 },
               ),

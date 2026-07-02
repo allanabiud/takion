@@ -72,7 +72,7 @@ class MyPullsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       TakionAlerts.success(
         context,
-        '$affected pulled issues added to collection.',
+        '$affected Added to Collection',
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -129,7 +129,7 @@ class MyPullsScreen extends ConsumerWidget {
       invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
-      TakionAlerts.success(context, '$affected pulled issues marked as read.');
+      TakionAlerts.success(context, '$affected Marked as Read');
     } catch (error) {
       if (!context.mounted) return;
       TakionAlerts.error(

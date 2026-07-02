@@ -14,6 +14,8 @@ import 'package:takion/src/presentation/features/reading_lists/add_reading_list_
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -67,14 +69,22 @@ class _ReadingListDetailsScreenState
       ref.invalidate(isReadingListFavoriteProvider(list.id));
       ref.invalidate(favoriteReadingListsListProvider);
       if (context.mounted) {
-        TakionAlerts.success(
+        final added = !isFavorite;
+        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          !isFavorite ? 'Added to favorites' : 'Removed from favorites',
+          added ? 'Added to Favourites' : 'Removed from Favourites',
+          icon: Icons.favorite,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            await repository.toggleReadingListFavorite(list.id);
+            ref.invalidate(isReadingListFavoriteProvider(list.id));
+            ref.invalidate(favoriteReadingListsListProvider);
+          },
         );
       }
     } catch (e) {
       if (context.mounted) {
-        TakionAlerts.error(context, 'Failed to update favorites: $e');
+        TakionAlerts.error(context, 'Failed to update favourites');
       }
     }
   }
@@ -106,7 +116,7 @@ class _ReadingListDetailsScreenState
     if (confirmed == true) {
       ref.read(readingListsProvider.notifier).deleteList(list.id);
       if (context.mounted) {
-        TakionAlerts.success(context, 'Reading list deleted');
+        TakionAlerts.success(context, 'Reading List Deleted');
         context.router.pop();
       }
     }
@@ -396,6 +406,46 @@ class _ReadingListDetailsScreenState
       loading: () => DetailScreenSkeleton(
         initialChildSize: 0.65,
         header: ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+        body: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonBox(height: 26, width: 280, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 100, borderRadius: 4),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                  const SizedBox(width: 8),
+                  const SkeletonBox(width: 40, height: 14, borderRadius: 4),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 8, width: double.infinity, borderRadius: 4),
+              const SizedBox(height: 20),
+              Row(
+                children: const [
+                  Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  SizedBox(width: 6),
+                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  SizedBox(width: 6),
+                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              GridView.count(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.45,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: List.generate(6, (_) => const SkeletonBox(borderRadius: 8)),
+              ),
+            ],
+          ),
+        ),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),

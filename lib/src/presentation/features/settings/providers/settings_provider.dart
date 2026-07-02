@@ -274,6 +274,12 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(teamSearchResultsProvider);
   }
 
+  static const _syncRequestDelay = Duration(milliseconds: 3500);
+
+  Future<void> _throttle() async {
+    await Future.delayed(_syncRequestDelay);
+  }
+
   ({String query, int page})? _parseSearchKey(Object? key) {
     if (key is! String) return null;
     final match = RegExp(r'^(.*)::p(\d+):l(\d+)$').firstMatch(key);
@@ -335,6 +341,7 @@ class SettingsNotifier extends _$SettingsNotifier {
         )) {
           await repository.getWeeklyReleasesForDate(week, forceRefresh: true);
           synced++;
+          await _throttle();
         }
         final focCachedAt = await localDataSource.getFocReleasesCachedAt(week);
         if (_isStaleOrMissing(
@@ -344,10 +351,13 @@ class SettingsNotifier extends _$SettingsNotifier {
         )) {
           await repository.getFocReleasesForDate(week, forceRefresh: true);
           synced++;
+          await _throttle();
         }
       } else {
         await repository.getWeeklyReleasesForDate(week, forceRefresh: true);
+        await _throttle();
         await repository.getFocReleasesForDate(week, forceRefresh: true);
+        await _throttle();
         synced += 2;
       }
     }
@@ -366,10 +376,12 @@ class SettingsNotifier extends _$SettingsNotifier {
         )) {
           await repository.getIssueDetails(key, forceRefresh: true);
           synced++;
+          await _throttle();
         }
       } else {
         await repository.getIssueDetails(key, forceRefresh: true);
         synced++;
+        await _throttle();
       }
     }
 
@@ -385,10 +397,12 @@ class SettingsNotifier extends _$SettingsNotifier {
         )) {
           await repository.getSeriesDetails(key, forceRefresh: true);
           synced++;
+          await _throttle();
         }
       } else {
         await repository.getSeriesDetails(key, forceRefresh: true);
         synced++;
+        await _throttle();
       }
     }
 
@@ -412,6 +426,7 @@ class SettingsNotifier extends _$SettingsNotifier {
             forceRefresh: true,
           );
           synced++;
+          await _throttle();
         }
       } else {
         await repository.getSeriesList(
@@ -420,6 +435,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           forceRefresh: true,
         );
         synced++;
+        await _throttle();
       }
     }
 
@@ -445,6 +461,7 @@ class SettingsNotifier extends _$SettingsNotifier {
             forceRefresh: true,
           );
           synced++;
+          await _throttle();
         }
       } else {
         await repository.searchIssues(
@@ -454,6 +471,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           forceRefresh: true,
         );
         synced++;
+        await _throttle();
       }
     }
 
@@ -479,6 +497,7 @@ class SettingsNotifier extends _$SettingsNotifier {
             forceRefresh: true,
           );
           synced++;
+          await _throttle();
         }
       } else {
         await repository.searchSeries(
@@ -488,6 +507,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           forceRefresh: true,
         );
         synced++;
+        await _throttle();
       }
     }
 
@@ -516,6 +536,7 @@ class SettingsNotifier extends _$SettingsNotifier {
             forceRefresh: true,
           );
           synced++;
+          await _throttle();
         }
       } else {
         await repository.getSeriesIssueList(
@@ -525,6 +546,7 @@ class SettingsNotifier extends _$SettingsNotifier {
           forceRefresh: true,
         );
         synced++;
+        await _throttle();
       }
     }
 

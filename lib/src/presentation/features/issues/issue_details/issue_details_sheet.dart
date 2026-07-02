@@ -21,6 +21,9 @@ class IssueDetailsSheet extends StatelessWidget {
     required this.onNavigateToSeries,
     required this.onMyDetails,
     required this.onReadingHistory,
+    this.seriesId,
+    this.isSubscribed,
+    this.onToggleSeriesSubscription,
   });
 
   final ScrollController scrollController;
@@ -37,6 +40,9 @@ class IssueDetailsSheet extends StatelessWidget {
   final VoidCallback onNavigateToSeries;
   final VoidCallback onMyDetails;
   final VoidCallback onReadingHistory;
+  final int? seriesId;
+  final bool? isSubscribed;
+  final VoidCallback? onToggleSeriesSubscription;
 
   @override
   Widget build(BuildContext context) {
@@ -264,10 +270,13 @@ class IssueDetailsSheet extends StatelessWidget {
                             ),
                             onPressed: () => showIssueMoreOptionsSheet(
                               context,
-                              onNavigateToSeries,
-                              onAddToReadingList,
-                              onMyDetails,
-                              onReadingHistory,
+                              onNavigateToSeries: onNavigateToSeries,
+                              onAddToReadingList: onAddToReadingList,
+                              onMyDetails: onMyDetails,
+                              onReadingHistory: onReadingHistory,
+                              seriesId: seriesId,
+                              isSubscribed: isSubscribed,
+                              onToggleSeriesSubscription: onToggleSeriesSubscription,
                             ),
                             child: const Icon(Icons.more_vert),
                           ),

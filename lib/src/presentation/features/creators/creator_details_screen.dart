@@ -13,6 +13,8 @@ import 'package:takion/src/presentation/features/library/providers/favorites_pro
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 
@@ -78,16 +80,22 @@ class _CreatorDetailsScreenState
       ref.invalidate(favoriteCreatorsListProvider);
 
       if (mounted) {
-        TakionAlerts.success(
+        final added = !isFavorite;
+        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          !isFavorite
-              ? 'Creator added to favorites'
-              : 'Creator removed from favorites',
+          added ? 'Added to Favourites' : 'Removed from Favourites',
+          icon: Icons.favorite,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            await repository.toggleCreatorFavorite(widget.creatorId);
+            ref.invalidate(isCreatorFavoriteProvider(widget.creatorId));
+            ref.invalidate(favoriteCreatorsListProvider);
+          },
         );
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favorites: $e');
+        TakionAlerts.error(context, 'Failed to update favourites');
       }
     }
   }
@@ -104,16 +112,76 @@ class _CreatorDetailsScreenState
                 fit: StackFit.expand,
                 children: [
                   ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: CachedNetworkImage(
                       imageUrl: widget.initialImageUrl!,
                       fit: BoxFit.cover,
                     ),
                   ),
-                  ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          scaffoldBg.withValues(alpha: 0.75),
+                          Colors.transparent,
+                          scaffoldBg.withValues(alpha: 0.75),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
                 ],
               )
-            : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+            : ColoredBox(color: scaffoldBg),
+        body: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonBox(height: 22, width: 260, borderRadius: 4),
+                        SizedBox(height: 8),
+                        SkeletonBox(height: 16, width: 160, borderRadius: 4),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const SkeletonBox(width: 44, height: 44, borderRadius: 22),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+              const SizedBox(height: 12),
+              const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 240, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 180, borderRadius: 4),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 140, borderRadius: 4),
+              const SizedBox(height: 12),
+              ...List.generate(5, (_) => const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
+                    SizedBox(width: 8),
+                    Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 12),
+              const SkeletonBox(height: 12, width: 160, borderRadius: 4),
+            ],
+          ),
+        ),
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),

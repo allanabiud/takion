@@ -9,7 +9,10 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/team_details.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/components/universe_card.dart';
 import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -66,9 +69,124 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
     final scaffoldBg = Theme.of(context).colorScheme.surface;
 
     return detailsAsync.when(
-      loading: () => Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+      loading: () => DetailScreenSkeleton(
+        initialChildSize: 0.55,
+        header:
+            widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.initialImageUrl!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          scaffoldBg.withValues(alpha: 0.75),
+                          Colors.transparent,
+                          scaffoldBg.withValues(alpha: 0.75),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : ColoredBox(color: scaffoldBg),
+        body: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonBox(height: 22, width: 200, borderRadius: 4),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+              const SizedBox(height: 12),
+              const SkeletonBox(
+                height: 14,
+                width: double.infinity,
+                borderRadius: 4,
+              ),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 240, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 180, borderRadius: 4),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 4,
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (_, _) => const Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: Row(
+                      children: [
+                        SkeletonBox(width: 44, height: 44, borderRadius: 22),
+                        SizedBox(width: 8),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SkeletonBox(height: 12, width: 80, borderRadius: 4),
+                            SizedBox(height: 4),
+                            SkeletonBox(height: 10, width: 60, borderRadius: 4),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 130,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 4,
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (_, _) => const Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: SkeletonBox(
+                      width: 140,
+                      height: 130,
+                      borderRadius: 12,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 100, borderRadius: 4),
+              const SizedBox(height: 12),
+              ...List.generate(
+                3,
+                (_) => const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: SkeletonBox(height: 14, borderRadius: 4),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
@@ -141,8 +259,8 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: SizedBox(
-                                    width: 200,
-                                    height: 200,
+                                    width: 250,
+                                    height: 250,
                                     child: CachedNetworkImage(
                                       imageUrl: details.image!,
                                       fit: BoxFit.cover,
@@ -165,8 +283,8 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: SizedBox(
-                                width: 200,
-                                height: 200,
+                                width: 250,
+                                height: 250,
                                 child: _bannerPlaceholder(
                                   context,
                                   details.name,
@@ -301,9 +419,7 @@ class _TeamDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _ExpandableTeamDescription(
-                    description: description,
-                  ),
+                  child: _ExpandableTeamDescription(description: description),
                 ),
               ),
             ],
@@ -312,16 +428,13 @@ class _TeamDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Creators',
-                    style: _sectionTitleStyle(context),
-                  ),
+                  child: Text('Creators', style: _sectionTitleStyle(context)),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 100,
+                  height: 130,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -332,6 +445,7 @@ class _TeamDetailsSheet extends ConsumerWidget {
                       return PersonCard(
                         creatorId: creator.id,
                         name: creator.name,
+                        width: 100,
                       );
                     },
                   ),
@@ -343,10 +457,7 @@ class _TeamDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Universes',
-                    style: _sectionTitleStyle(context),
-                  ),
+                  child: Text('Universes', style: _sectionTitleStyle(context)),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),

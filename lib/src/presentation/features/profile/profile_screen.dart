@@ -45,7 +45,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     if (!mounted) return;
     if (didUpdate == true) {
-      TakionAlerts.success(context, 'Profile updated.');
+      TakionAlerts.success(context, 'Profile Updated');
     }
   }
 

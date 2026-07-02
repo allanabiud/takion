@@ -100,7 +100,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
       }
 
       if (!mounted) return;
-      TakionAlerts.success(context, 'Image saved to gallery.');
+      TakionAlerts.success(context, 'Image Saved');
     } catch (e) {
       if (!mounted) return;
       TakionAlerts.error(context, 'Failed to save image: $e');

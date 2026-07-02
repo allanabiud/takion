@@ -1,7 +1,11 @@
 class CachePolicy {
-  const CachePolicy({required this.ttl});
+  const CachePolicy({
+    required this.ttl,
+    this.refreshCooldown = const Duration(seconds: 30),
+  });
 
   final Duration ttl;
+  final Duration refreshCooldown;
 
   bool isFresh(DateTime fetchedAt, DateTime now) {
     return now.difference(fetchedAt) < ttl;

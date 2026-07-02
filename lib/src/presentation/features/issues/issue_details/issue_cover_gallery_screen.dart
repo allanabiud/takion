@@ -122,7 +122,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
       }
 
       if (!mounted) return;
-      TakionAlerts.success(context, 'Cover saved to gallery.');
+      TakionAlerts.success(context, 'Cover Saved');
     } catch (e) {
       if (!mounted) return;
       TakionAlerts.error(context, 'Failed to save cover: $e');

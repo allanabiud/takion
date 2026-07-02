@@ -23,6 +23,10 @@ class MetronAccountService {
   static const String _boxName = 'metron_account_box';
   static const String _usernameKey = 'username';
   static const String _passwordKey = 'password';
+  static const Duration _cacheDuration = Duration(minutes: 5);
+
+  MetronConnectionStatus? _cachedStatus;
+  DateTime? _cachedAt;
 
   MetronAccountService(this._hiveService);
 
@@ -54,6 +58,7 @@ class MetronAccountService {
     final box = await _hiveService.openBox<String>(_boxName);
     await box.put(_usernameKey, trimmedUsername);
     await box.put(_passwordKey, trimmedPassword);
+    invalidateCachedStatus();
     return true;
   }
 
@@ -81,12 +86,21 @@ class MetronAccountService {
   Future<void> disconnect() async {
     final box = await _hiveService.openBox<String>(_boxName);
     await box.clear();
+    invalidateCachedStatus();
   }
 
   Future<MetronConnectionStatus> validateStoredConnection() async {
+    if (_cachedStatus != null &&
+        _cachedAt != null &&
+        DateTime.now().difference(_cachedAt!) < _cacheDuration) {
+      return _cachedStatus!;
+    }
+
     final creds = await getApiCredentials();
     if (creds == null) {
-      return MetronConnectionStatus.missing;
+      _cachedStatus = MetronConnectionStatus.missing;
+      _cachedAt = DateTime.now();
+      return _cachedStatus!;
     }
 
     try {
@@ -95,11 +109,19 @@ class MetronAccountService {
         creds['password']!,
       );
 
-      return isValid
-          ? MetronConnectionStatus.valid
-          : MetronConnectionStatus.invalid;
+      _cachedStatus =
+          isValid ? MetronConnectionStatus.valid : MetronConnectionStatus.invalid;
+      _cachedAt = DateTime.now();
+      return _cachedStatus!;
     } on DioException {
-      return MetronConnectionStatus.unreachable;
+      _cachedStatus = MetronConnectionStatus.unreachable;
+      _cachedAt = DateTime.now();
+      return _cachedStatus!;
     }
+  }
+
+  void invalidateCachedStatus() {
+    _cachedStatus = null;
+    _cachedAt = null;
   }
 }

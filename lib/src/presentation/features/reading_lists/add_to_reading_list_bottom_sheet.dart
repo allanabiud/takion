@@ -91,7 +91,7 @@ class _AddToReadingListBottomSheetState
         if (addedCount == 0 && skippedCount > 0) {
           TakionAlerts.info(
             context,
-            'Item already exists in all selected reading lists',
+            'Already in all selected lists',
           );
           Navigator.of(context).pop();
           return;
@@ -100,12 +100,12 @@ class _AddToReadingListBottomSheetState
         if (skippedCount > 0) {
           TakionAlerts.success(
             context,
-            'Added to $addedCount list(s), skipped $skippedCount already containing it',
+            'Added to $addedCount List(s)',
           );
         } else {
           TakionAlerts.success(
             context,
-            'Successfully added to reading list(s)',
+            'Added to Reading List(s)',
           );
         }
         Navigator.of(context).pop();
@@ -240,7 +240,7 @@ class _AddToReadingListBottomSheetState
                           if (alreadyExists) {
                             TakionAlerts.info(
                               context,
-                              'This item is already in "${list.title}"',
+                              'Already in this list',
                             );
                             return;
                           }

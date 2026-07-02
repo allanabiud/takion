@@ -11,7 +11,7 @@ Future<void> disconnectMetronAccount(BuildContext context, WidgetRef ref) async 
   await ref.read(metronAccountServiceProvider).disconnect();
   ref.invalidate(metronConnectionProvider);
   if (!context.mounted) return;
-  TakionAlerts.info(context, 'Metron account disconnected.');
+  TakionAlerts.info(context, 'Disconnected');
 }
 
 Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async {
@@ -75,7 +75,7 @@ Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async 
   if (shouldConnect != true) return;
   if (!context.mounted) return;
   if (username.isEmpty || password.isEmpty) {
-    TakionAlerts.info(context, 'Please enter Metron username and password.');
+    TakionAlerts.info(context, 'Enter credentials');
     return;
   }
 
@@ -85,9 +85,9 @@ Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async 
     if (!context.mounted) return;
 
     if (!connected) {
-      TakionAlerts.error(context, 'Invalid Metron username or password.');
+      TakionAlerts.error(context, 'Invalid credentials');
     } else {
-      TakionAlerts.success(context, 'Metron account connected.');
+      TakionAlerts.success(context, 'Connected');
       ref.invalidate(metronConnectionProvider);
     }
   } catch (error) {

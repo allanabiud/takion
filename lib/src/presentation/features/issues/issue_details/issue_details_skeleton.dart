@@ -102,13 +102,34 @@ class IssueDetailsSkeleton extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          const SkeletonBox(height: 14, borderRadius: 4),
+          const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+          const SizedBox(height: 12),
+          const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
           const SizedBox(height: 8),
           const SkeletonBox(height: 14, width: 280, borderRadius: 4),
           const SizedBox(height: 8),
           const SkeletonBox(height: 14, width: 220, borderRadius: 4),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              ...List.generate(4, (_) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(height: 14, width: 60, borderRadius: 4),
+              )),
+            ],
+          ),
           const SizedBox(height: 24),
-          const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+          const SkeletonBox(height: 18, width: 70, borderRadius: 4),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(5, (_) => const SkeletonBox(
+              height: 28, width: 80, borderRadius: 14,
+            )),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 80, borderRadius: 4),
           const SizedBox(height: 12),
           SizedBox(
             height: 120,
@@ -122,6 +143,58 @@ class IssueDetailsSkeleton extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 80, height: 120, borderRadius: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(3, (_) => const SkeletonBox(
+              height: 28, width: 120, borderRadius: 14,
+            )),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 100, width: double.infinity, borderRadius: 12),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 70, borderRadius: 4),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(4, (_) => const SkeletonBox(
+              height: 28, width: 70, borderRadius: 14,
+            )),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 140, borderRadius: 4),
+          const SizedBox(height: 12),
+          ...List.generate(6, (_) => const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
+                SizedBox(width: 8),
+                Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+              ],
+            ),
+          )),
+          const SizedBox(height: 12),
+          const SkeletonBox(height: 12, width: 160, borderRadius: 4),
         ],
       ),
     );

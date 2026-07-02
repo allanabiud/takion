@@ -155,7 +155,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                   ),
                   onTap: () => TakionAlerts.info(
                     context,
-                    'Local backup creation is coming soon.',
+                    'Local backup coming soon',
                   ),
                 ),
                 const Divider(),
@@ -174,7 +174,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                   ),
                   onTap: () => TakionAlerts.info(
                     context,
-                    'Backup restore is coming soon.',
+                    'Backup restore coming soon',
                   ),
                 ),
               ]),
@@ -227,7 +227,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                             if (context.mounted) {
                               TakionAlerts.success(
                                 context,
-                                'Local cache cleared.',
+                                'Cache Cleared',
                               );
                             }
                           }

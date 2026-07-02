@@ -147,6 +147,7 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
           sliver: SliverPersistentHeader(
             pinned: true,
             delegate: _PinnedHeaderDelegate(
+              isLoading: isLoading,
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -223,9 +224,10 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
 }
 
 class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({required this.child});
+  _PinnedHeaderDelegate({required this.child, this.isLoading = false});
 
   final Widget child;
+  final bool isLoading;
 
   @override
   Widget build(
@@ -239,12 +241,12 @@ class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
       );
 
   @override
-  double get maxExtent => 56;
+  double get maxExtent => isLoading ? 74.0 : 56.0;
 
   @override
-  double get minExtent => 56;
+  double get minExtent => isLoading ? 74.0 : 56.0;
 
   @override
   bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
+      child != oldDelegate.child || isLoading != oldDelegate.isLoading;
 }

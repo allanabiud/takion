@@ -189,6 +189,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
           sliver: SliverPersistentHeader(
             pinned: true,
             delegate: _PinnedHeaderDelegate(
+              isLoading: isLoading,
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -472,13 +473,13 @@ Future<void> applySeriesIssueBulkAction({
 
     if (context.mounted) {
       final actionText = switch (operation) {
-        SeriesIssueBulkOperation.addToCollection => 'added to collection',
+        SeriesIssueBulkOperation.addToCollection => 'Added to Collection',
         SeriesIssueBulkOperation.removeFromCollection =>
-          'removed from collection',
-        SeriesIssueBulkOperation.markAsRead => 'marked as read',
-        SeriesIssueBulkOperation.markAsUnread => 'marked as unread',
+          'Removed from Collection',
+        SeriesIssueBulkOperation.markAsRead => 'Marked as Read',
+        SeriesIssueBulkOperation.markAsUnread => 'Marked as Unread',
       };
-      TakionAlerts.success(context, '$affected issues $actionText.');
+      TakionAlerts.success(context, '$affected $actionText');
       Navigator.of(context).pop();
     }
   } catch (error) {
@@ -521,7 +522,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
               if (!context.mounted) return;
               if (fetched.isEmpty) {
                 Navigator.of(context).pop();
-                TakionAlerts.info(context, 'No issues found for this series yet.');
+                TakionAlerts.info(context, 'No issues found');
                 return;
               }
               setModalState(() {
@@ -825,9 +826,10 @@ Future<void> showSeriesIssueBulkActionsSheet({
 }
 
 class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({required this.child});
+  _PinnedHeaderDelegate({required this.child, this.isLoading = false});
 
   final Widget child;
+  final bool isLoading;
 
   @override
   Widget build(
@@ -841,12 +843,12 @@ class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
       );
 
   @override
-  double get maxExtent => 56;
+  double get maxExtent => isLoading ? 74.0 : 56.0;
 
   @override
-  double get minExtent => 56;
+  double get minExtent => isLoading ? 74.0 : 56.0;
 
   @override
   bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
+      child != oldDelegate.child || isLoading != oldDelegate.isLoading;
 }

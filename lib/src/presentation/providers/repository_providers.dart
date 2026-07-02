@@ -3,6 +3,7 @@ import 'package:takion/src/core/network/dio_client.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
+import 'package:takion/src/data/datasources/series_name_index.dart';
 import 'package:takion/src/data/repositories/local_favorites_repository.dart';
 import 'package:takion/src/data/repositories/local_library_repository.dart';
 import 'package:takion/src/data/repositories/local_pull_list_repository.dart';
@@ -25,10 +26,16 @@ final metronLocalDataSourceProvider = Provider<MetronLocalDataSource>((ref) {
   return MetronLocalDataSourceImpl(hiveService);
 });
 
+final seriesNameIndexProvider = Provider<SeriesNameIndex>((ref) {
+  final hiveService = ref.watch(hiveServiceProvider);
+  return SeriesNameIndex(hiveService);
+});
+
 final metronRepositoryProvider = Provider<MetronRepository>((ref) {
   final remoteDataSource = ref.watch(metronRemoteDataSourceProvider);
   final localDataSource = ref.watch(metronLocalDataSourceProvider);
-  return MetronRepositoryImpl(remoteDataSource, localDataSource);
+  final seriesNameIndex = ref.watch(seriesNameIndexProvider);
+  return MetronRepositoryImpl(remoteDataSource, localDataSource, seriesNameIndex);
 });
 
 final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {

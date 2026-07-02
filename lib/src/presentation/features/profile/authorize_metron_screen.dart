@@ -58,7 +58,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
     final password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      TakionAlerts.info(context, 'Please enter Metron username and password.');
+      TakionAlerts.info(context, 'Enter credentials');
       return;
     }
 
@@ -73,7 +73,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
       if (!mounted || !context.mounted) return;
 
       if (!connected) {
-        TakionAlerts.error(context, 'Invalid Metron username or password.');
+        TakionAlerts.error(context, 'Invalid credentials');
         return;
       }
 
@@ -221,7 +221,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                             if (isOffline) {
                               TakionAlerts.info(
                                 context,
-                                'No internet connection. Please reconnect and try again.',
+                                'No internet connection',
                               );
                               return;
                             }

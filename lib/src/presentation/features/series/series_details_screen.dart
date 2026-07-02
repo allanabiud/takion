@@ -95,16 +95,35 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       ref.invalidate(subscribedSeriesPageProvider);
       await ref.read(currentWeekPullsProvider.future);
       if (mounted) {
-        TakionAlerts.success(
+        (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          enabled
-              ? 'Subscribed and pull list updated.'
-              : 'Unsubscribed and pull list updated.',
+          enabled ? 'Subscribed' : 'Unsubscribed',
+          icon: Icons.notifications,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            if (enabled) {
+              await subscriptionRepository.unsubscribe(widget.seriesId);
+              await ref
+                  .read(pullListRepositoryProvider)
+                  .deleteEntriesBySeriesId(widget.seriesId);
+            } else {
+              await subscriptionRepository.subscribe(
+                metronSeriesId: widget.seriesId,
+              );
+            }
+            ref.invalidate(seriesSubscriptionProvider(widget.seriesId));
+            ref.invalidate(issuePullListEntryProvider);
+            ref.invalidate(pullListEntriesForWeekProvider);
+            ref.invalidate(pullsIssuesForWeekProvider);
+            ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
+            ref.invalidate(currentWeekPullsProvider);
+            ref.invalidate(currentWeekPullsCountProvider);
+          },
         );
       }
     } catch (error) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to update subscription: $error');
+        TakionAlerts.error(context, 'Failed to update subscription');
       }
     } finally {
       if (mounted) {
@@ -161,16 +180,22 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       ref.invalidate(favoriteSeriesListProvider);
 
       if (mounted) {
-        TakionAlerts.success(
+        final added = !isFavorite;
+        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          !isFavorite
-              ? 'Series added to favorites'
-              : 'Series removed from favorites',
+          added ? 'Added to Favourites' : 'Removed from Favourites',
+          icon: Icons.favorite,
+          actionLabel: 'Undo',
+          onUndo: () async {
+            await repository.toggleSeriesFavorite(widget.seriesId);
+            ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
+            ref.invalidate(favoriteSeriesListProvider);
+          },
         );
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favorites: $e');
+        TakionAlerts.error(context, 'Failed to update favourites');
       }
     }
   }
@@ -219,6 +244,47 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 100, borderRadius: 4),
+              const SizedBox(height: 12),
+              const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 240, borderRadius: 4),
+              const SizedBox(height: 8),
+              const SkeletonBox(height: 14, width: 180, borderRadius: 4),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 120, borderRadius: 4),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(4, (_) => const SkeletonBox(
+                  width: 100, height: 32, borderRadius: 16,
+                )),
+              ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 70, borderRadius: 4),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(4, (_) => const SkeletonBox(
+                  width: 80, height: 28, borderRadius: 14,
+                )),
+              ),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 18, width: 140, borderRadius: 4),
+              const SizedBox(height: 12),
+              ...List.generate(5, (_) => const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
+                    SizedBox(width: 8),
+                    Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                  ],
+                ),
+              )),
             ],
           ),
         ),

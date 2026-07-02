@@ -42,12 +42,12 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                         if (value) {
                           TakionAlerts.success(
                             context,
-                            'Pull list reminders enabled.',
+                            'Reminders Enabled',
                           );
                         } else {
                           TakionAlerts.info(
                             context,
-                            'Pull list reminders disabled.',
+                            'Reminders Disabled',
                           );
                         }
                       },

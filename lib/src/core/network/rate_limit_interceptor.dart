@@ -3,6 +3,8 @@ import 'package:synchronized/synchronized.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'dart:async';
 
+const _backgroundZoneKey = #opencode_background;
+
 class RateLimitInterceptor extends Interceptor {
   final int maxRequestsPerMinute;
   final int maxRequestsPerDay;
@@ -17,6 +19,9 @@ class RateLimitInterceptor extends Interceptor {
     this.maxRequestsPerMinute = 18, // Safer margin than 20
     this.maxRequestsPerDay = 4800, // Safer margin than 5,000
   });
+
+  bool get _isBackgroundRequest =>
+      Zone.current[_backgroundZoneKey] == true;
 
   Future<Box> _getStatsBox() async {
     return await Hive.openBox(_statsBoxName);
@@ -55,6 +60,7 @@ class RateLimitInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
+      final isBackground = _isBackgroundRequest;
       await _lock.synchronized(() async {
         await _checkDailyLimit();
 
@@ -69,6 +75,14 @@ class RateLimitInterceptor extends Interceptor {
             _recentRequests.add(now);
             await _incrementDailyCount();
             break;
+          }
+
+          if (isBackground) {
+            throw DioException(
+              requestOptions: options,
+              error: 'Background request skipped: rate limit budget exhausted',
+              type: DioExceptionType.cancel,
+            );
           }
 
           // Wait until the oldest request in the window is older than 1 minute

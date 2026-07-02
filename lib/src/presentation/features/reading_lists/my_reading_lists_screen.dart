@@ -157,7 +157,7 @@ class _MyReadingListsScreenState extends ConsumerState<MyReadingListsScreen> {
                 if (context.mounted) {
                   TakionAlerts.success(
                     context,
-                    'Imported reading list: ${list.title}',
+                    'Reading List Imported',
                   );
                 }
               } else {

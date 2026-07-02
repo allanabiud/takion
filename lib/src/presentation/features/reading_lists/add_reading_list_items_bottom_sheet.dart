@@ -141,7 +141,7 @@ class _AddReadingListItemsBottomSheetState
         if (mounted) {
           TakionAlerts.info(
             context,
-            'All selected items are already in this list',
+            'Already in this list',
           );
           Navigator.pop(context);
         }
@@ -159,10 +159,10 @@ class _AddReadingListItemsBottomSheetState
         if (skippedCount > 0) {
           TakionAlerts.success(
             context,
-            'Added ${newItems.length} items ($skippedCount already present skipped)',
+            'Added ${newItems.length} Items',
           );
         } else {
-          TakionAlerts.success(context, 'Successfully added to reading list');
+          TakionAlerts.success(context, 'Added to Reading List');
         }
         Navigator.pop(context);
       }

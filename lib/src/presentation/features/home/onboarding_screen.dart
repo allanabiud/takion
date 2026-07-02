@@ -122,7 +122,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      TakionAlerts.info(context, 'Please enter Metron username and password.');
+      TakionAlerts.info(context, 'Enter credentials');
       return;
     }
 
@@ -135,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       if (!mounted || !context.mounted) return;
 
       if (!connected) {
-        TakionAlerts.error(context, 'Invalid Metron username or password.');
+        TakionAlerts.error(context, 'Invalid credentials');
         return;
       }
 
@@ -462,7 +462,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               if (isOffline) {
                                 TakionAlerts.info(
                                   context,
-                                  'No internet connection. Please reconnect and try again.',
+                                  'No internet connection',
                                 );
                                 return;
                               }
