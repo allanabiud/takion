@@ -363,12 +363,7 @@ class _CreatorDetailsSheet extends ConsumerWidget {
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
 
-  TextStyle? _sectionTitleStyle(BuildContext context) {
-    return Theme.of(context).textTheme.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: Theme.of(context).colorScheme.primary,
-    );
-  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -445,13 +440,6 @@ class _CreatorDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Summary', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _CreatorDescriptionCard(description: description),
                 ),
               ),
@@ -491,6 +479,13 @@ class _CreatorDescriptionCardState extends State<_CreatorDescriptionCard> {
   static const _descriptionMaxLines = 4;
   bool _isExpanded = false;
 
+  TextStyle? _sectionTitleStyle(BuildContext context) {
+    return Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: Theme.of(context).colorScheme.primary,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -527,6 +522,8 @@ class _CreatorDescriptionCardState extends State<_CreatorDescriptionCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Summary', style: _sectionTitleStyle(context)),
+                const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
                     duration: const Duration(milliseconds: 500),

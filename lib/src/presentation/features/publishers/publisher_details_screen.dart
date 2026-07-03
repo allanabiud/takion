@@ -397,13 +397,6 @@ class _PublisherDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Summary', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _ExpandablePublisherDescription(
                     description: description,
                   ),
@@ -487,6 +480,8 @@ class _ExpandablePublisherDescriptionState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Summary', style: _sectionTitleStyle(context)),
+                const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
                     duration: const Duration(milliseconds: 500),
@@ -496,34 +491,28 @@ class _ExpandablePublisherDescriptionState
                     child: Text(description, style: textStyle),
                   ),
                 ),
-                if (isOverflowing)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: GestureDetector(
-                      onTap: () =>
-                          setState(() => _isExpanded = !_isExpanded),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 500),
-                        transitionBuilder: (child, animation) =>
-                            FadeTransition(
-                              opacity: animation,
-                              child: SizeTransition(
-                                sizeFactor: animation,
-                                alignment: Alignment.topLeft,
-                                child: child,
-                              ),
-                            ),
-                        child: Text(
-                          _isExpanded ? 'Show less' : 'Show more',
-                          key: ValueKey(_isExpanded),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                if (isOverflowing) ...[
+                  const SizedBox(height: 4),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        alignment: Alignment.topLeft,
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
+                      key: ValueKey(_isExpanded),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),

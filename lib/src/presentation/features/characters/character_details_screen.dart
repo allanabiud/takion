@@ -533,13 +533,6 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Summary', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _CharacterDescriptionCard(description: description),
                 ),
               ),
@@ -796,6 +789,8 @@ class _CharacterDescriptionCardState extends State<_CharacterDescriptionCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Summary', style: _sectionTitleStyle(context)),
+                const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
                     duration: const Duration(milliseconds: 500),

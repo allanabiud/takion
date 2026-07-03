@@ -661,13 +661,6 @@ class _SeriesDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Summary', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SeriesDescriptionCard(
                     description: description!,
                     seriesId: details.id,
@@ -822,31 +815,32 @@ class _SeriesDescriptionCardState extends State<_SeriesDescriptionCard> {
             ? collapsedHeight / fullPainter.height
             : 1.0;
 
-        return AnimatedSize(
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-          alignment: Alignment.topCenter,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRect(
-                child: AnimatedAlign(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  heightFactor: _isExpanded ? 1.0 : heightFactor,
-                  child: Text(widget.description, style: textStyle),
+        return InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: isOverflowing
+              ? () => setState(() => _isExpanded = !_isExpanded)
+              : null,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Summary', style: _sectionTitleStyle(context)),
+                const SizedBox(height: 8),
+                ClipRect(
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isExpanded ? 1.0 : heightFactor,
+                    child: Text(widget.description, style: textStyle),
+                  ),
                 ),
-              ),
-              if (isOverflowing) ...[
-                const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
-                  child: AnimatedSwitcher(
+                if (isOverflowing) ...[
+                  const SizedBox(height: 4),
+                  AnimatedSwitcher(
                     duration: const Duration(milliseconds: 500),
                     transitionBuilder: (child, animation) => FadeTransition(
                       opacity: animation,
@@ -857,9 +851,7 @@ class _SeriesDescriptionCardState extends State<_SeriesDescriptionCard> {
                       ),
                     ),
                     child: Text(
-                      _isExpanded
-                          ? 'Tap to read less'
-                          : 'Tap to read more',
+                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
                       key: ValueKey(_isExpanded),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
@@ -867,9 +859,9 @@ class _SeriesDescriptionCardState extends State<_SeriesDescriptionCard> {
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         );
       },

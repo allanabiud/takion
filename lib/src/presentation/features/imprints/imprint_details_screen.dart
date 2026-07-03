@@ -359,13 +359,6 @@ class _ImprintDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Summary', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _ExpandableImprintDescription(
                     description: description,
                   ),
@@ -433,70 +426,54 @@ class _ExpandableImprintDescriptionState
             ? collapsedHeight / fullPainter.height
             : 1.0;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Description',
-              style: _sectionTitleStyle(
-                context,
-              )?.copyWith(color: theme.colorScheme.primary),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: isOverflowing
-                  ? () => setState(() => _isExpanded = !_isExpanded)
-                  : null,
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRect(
-                      child: AnimatedAlign(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                        alignment: Alignment.topCenter,
-                        heightFactor: _isExpanded ? 1.0 : heightFactor,
-                        child: Text(description, style: textStyle),
+        return InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: isOverflowing
+              ? () => setState(() => _isExpanded = !_isExpanded)
+              : null,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Summary', style: _sectionTitleStyle(context)),
+                const SizedBox(height: 8),
+                ClipRect(
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isExpanded ? 1.0 : heightFactor,
+                    child: Text(description, style: textStyle),
+                  ),
+                ),
+                if (isOverflowing) ...[
+                  const SizedBox(height: 4),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        alignment: Alignment.topLeft,
+                        child: child,
                       ),
                     ),
-                    if (isOverflowing)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _isExpanded = !_isExpanded),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 500),
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                                  opacity: animation,
-                                  child: SizeTransition(
-                                    sizeFactor: animation,
-                                    alignment: Alignment.topLeft,
-                                    child: child,
-                                  ),
-                                ),
-                            child: Text(
-                              _isExpanded ? 'Show less' : 'Show more',
-                              key: ValueKey(_isExpanded),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
+                    child: Text(
+                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
+                      key: ValueKey(_isExpanded),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
                       ),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
         );
       },
     );
