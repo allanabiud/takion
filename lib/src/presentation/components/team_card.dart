@@ -2,8 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class TeamCard extends ConsumerWidget {
@@ -14,6 +14,7 @@ class TeamCard extends ConsumerWidget {
     this.subtitle,
     this.width,
     this.onTap,
+    this.imageUrl,
   });
 
   final int teamId;
@@ -21,12 +22,15 @@ class TeamCard extends ConsumerWidget {
   final String? subtitle;
   final double? width;
   final VoidCallback? onTap;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final details = ref.watch(teamDetailsProvider(teamId));
-    final imageUrl = details.whenOrNull(data: (d) => d.image);
+    ref.watch(entityImageVersionProvider);
+    final cache = ref.read(entityImageCacheProvider);
+    final cachedImage = cache.getCached('team', teamId);
+    final effectiveImageUrl = imageUrl ?? cachedImage;
 
     final effectiveOnTap =
         onTap ?? () => context.pushRoute(TeamDetailsRoute(teamId: teamId));
@@ -48,9 +52,9 @@ class TeamCard extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
                 ),
-                child: imageUrl != null
+                child: effectiveImageUrl != null
                     ? CachedNetworkImage(
-                        imageUrl: imageUrl,
+                        imageUrl: effectiveImageUrl,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Center(
                           child: Text(

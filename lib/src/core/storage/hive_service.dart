@@ -44,11 +44,17 @@ class HiveService {
     'team_search_box',
     'team_search_meta_box',
     'team_details_box',
+    'publisher_search_box',
+    'publisher_search_meta_box',
+    'publisher_details_box',
+    'publisher_series_list_box',
+    'publisher_series_list_meta_box',
     'home_content_box',
     'series_cover_cache_box',
     'library_items_cache_box',
     'subscriptions_cache_box',
     'series_name_index_box',
+    'entity_image_cache_box',
   };
 
   Future<void> init() async {

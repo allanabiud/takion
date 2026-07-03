@@ -2,9 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
-import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
@@ -38,16 +37,16 @@ class PersonListTile extends ConsumerWidget {
     final hasCreatorId = creatorId != null;
     final theme = Theme.of(context);
 
-    final detailsImage = hasCharacterId
-        ? ref.watch(characterDetailsProvider(characterId!)).whenOrNull(
-              data: (c) => c.image,
-            )
+    ref.watch(entityImageVersionProvider);
+    final cache = ref.read(entityImageCacheProvider);
+    final cachedCharImage = characterId != null
+        ? cache.getCached('character', characterId!)
         : null;
-    final creatorImage = hasCreatorId
-        ? ref.watch(creatorDetailsProvider(creatorId!)).whenOrNull(
-              data: (c) => c.image,
-            )
+    final cachedCreatorImage = creatorId != null
+        ? cache.getCached('creator', creatorId!)
         : null;
+    final effectiveImageUrl = imageUrl ?? cachedCharImage ?? cachedCreatorImage;
+
     final isFav = hasCharacterId
         ? ref.watch(isCharacterFavoriteProvider(characterId!)).asData?.value ??
             false
@@ -55,7 +54,6 @@ class PersonListTile extends ConsumerWidget {
             ? ref.watch(isCreatorFavoriteProvider(creatorId!)).asData?.value ??
                 false
             : false;
-    final effectiveImageUrl = imageUrl ?? detailsImage ?? creatorImage;
 
     final effectiveOnTap =
         onTap ??

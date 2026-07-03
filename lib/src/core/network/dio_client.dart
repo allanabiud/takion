@@ -1,9 +1,10 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
-import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -21,11 +22,16 @@ final dioProvider = Provider<Dio>((ref) {
     InterceptorsWrapper(
       onRequest: (options, handler) async {
         options.extra['start_time'] = DateTime.now().millisecondsSinceEpoch;
-        final metronAccountService = ref.read(metronAccountServiceProvider);
-        final creds = await metronAccountService.getApiCredentials();
-        if (creds != null) {
+        final hiveService = ref.read(hiveServiceProvider);
+        final box = await hiveService.openBox<String>('metron_account_box');
+        final username = box.get('username')?.trim();
+        final password = box.get('password')?.trim();
+        if (username != null &&
+            username.isNotEmpty &&
+            password != null &&
+            password.isNotEmpty) {
           final auth =
-              'Basic ${base64Encode(utf8.encode('${creds['username']}:${creds['password']}'))}';
+              'Basic ${base64Encode(utf8.encode('$username:$password'))}';
           options.headers['Authorization'] = auth;
         }
         return handler.next(options);

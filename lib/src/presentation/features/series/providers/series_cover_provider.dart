@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
@@ -57,6 +58,14 @@ final seriesCoverImageProvider = FutureProvider.autoDispose
       };
 
       if (hasCached && _isFresh(cachedAt)) {
+        if (cachedCover != null) {
+          final entityCache = ref.read(entityImageCacheProvider);
+          if (entityCache.getCached('series', seriesId) == null) {
+            entityCache.set('series', seriesId, cachedCover).then((_) {
+              ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
+            });
+          }
+        }
         return cachedCover;
       }
 
@@ -72,6 +81,9 @@ final seriesCoverImageProvider = FutureProvider.autoDispose
       if (localCover != null) {
         await coverBox.put(seriesId, localCover);
         await metaBox.put(_seriesCoverMetaKey(seriesId), nowEpoch);
+        final entityCache = ref.read(entityImageCacheProvider);
+        await entityCache.set('series', seriesId, localCover);
+        ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
         return localCover;
       }
 
@@ -88,6 +100,9 @@ final seriesCoverImageProvider = FutureProvider.autoDispose
 
       if (remoteCover != null) {
         await coverBox.put(seriesId, remoteCover);
+        final entityCache = ref.read(entityImageCacheProvider);
+        await entityCache.set('series', seriesId, remoteCover);
+        ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
       } else if (!hasCached) {
         await coverBox.put(seriesId, _seriesCoverEmptySentinel);
       }

@@ -8,7 +8,8 @@ import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/components/role_badge.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
+import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class SeriesListTile extends ConsumerWidget {
   final SeriesList series;
@@ -28,7 +29,7 @@ class SeriesListTile extends ConsumerWidget {
     this.isFirst = false,
     this.isLast = false,
     this.heroTag,
-    this.allowRemoteCoverFetch = true,
+    this.allowRemoteCoverFetch = false,
     this.isRead,
     this.horizontalPadding = 12,
     this.role,
@@ -67,13 +68,10 @@ class SeriesListTile extends ConsumerWidget {
     final isFavorite =
         ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
     final issueCount = series.issueCount ?? 0;
-    final coverImageAsync = ref.watch(
-      seriesCoverImageProvider((
-        seriesId: series.id,
-        allowRemoteFetch: allowRemoteCoverFetch,
-      )),
-    );
-    final coverImage = coverImageAsync.asData?.value;
+    ref.watch(entityImageVersionProvider);
+    final cache = ref.read(entityImageCacheProvider);
+    final cachedImage = cache.getCached('series', series.id);
+    final coverImage = cachedImage;
     final effectiveOnTap =
         onTap ??
         () {
@@ -91,6 +89,7 @@ class SeriesListTile extends ConsumerWidget {
       height: iconHeight,
       child: EntityCover(
         imageUrl: coverImage,
+        placeholderLabel: initials(series.name),
         isFavorite: false,
         isRead: false,
         placeholderIcon: Icons.collections_bookmark_outlined,

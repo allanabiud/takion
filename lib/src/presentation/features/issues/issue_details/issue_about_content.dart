@@ -7,25 +7,7 @@ import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:takion/src/presentation/components/imprint_card.dart';
-
-String _currencySymbol(String? code) {
-  switch (code?.toUpperCase()) {
-    case 'USD':
-      return r'$';
-    case 'GBP':
-      return '£';
-    case 'EUR':
-      return '€';
-    case 'JPY':
-      return '¥';
-    case 'CAD':
-      return r'CA$';
-    case 'AUD':
-      return r'A$';
-    default:
-      return r'$';
-  }
-}
+import 'package:takion/src/presentation/components/info_grid.dart';
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
@@ -127,6 +109,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Summary', style: _sectionTitleStyle(context)),
+              const SizedBox(height: 8),
               ClipRect(
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 500),
@@ -367,7 +351,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   }
 
   Widget _buildAdditionalInformationSection(BuildContext context) {
-    final theme = Theme.of(context);
+    final pages = widget.issue.page;
+    final priceValue = widget.issue.price?.trim();
+    final currency = widget.issue.priceCurrency?.trim();
+    final rating = widget.issue.rating?.name.trim();
     final seriesType = widget.issue.series?.seriesType?.name;
     final distributorSku = widget.issue.sku?.trim();
     final upc = widget.issue.upc?.trim();
@@ -380,97 +367,48 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         : (isbn != null && isbn.isNotEmpty)
         ? isbn
         : null;
-    final hasSku = distributorSku != null && distributorSku.isNotEmpty;
+
+    String? currencySymbol(String? code) {
+      switch (code?.toUpperCase()) {
+        case 'USD': return r'$';
+        case 'GBP': return '£';
+        case 'EUR': return '€';
+        case 'JPY': return '¥';
+        case 'CAD': return r'CA$';
+        case 'AUD': return r'A$';
+        default: return r'$';
+      }
+    }
 
     String? formatDate(DateTime? date) =>
         date == null ? null : DateFormat.yMMMd().format(date.toLocal());
 
-    final focDate = formatDate(widget.issue.focDate);
-    final coverDate = formatDate(widget.issue.coverDate);
-    final storeDate = formatDate(widget.issue.storeDate);
+    final price = priceValue != null && priceValue.isNotEmpty
+        ? '${currencySymbol(currency)}$priceValue'
+        : null;
 
-    final infoItems = <({String label, String value})>{
-      if (seriesType != null) (label: 'Format', value: seriesType),
-      if (hasSku) (label: 'Distributor SKU', value: distributorSku),
-      if (upcIsbn != null) (label: 'UPC / ISBN', value: upcIsbn),
-      if (focDate != null) (label: 'FOC Date', value: focDate),
-      if (coverDate != null) (label: 'Cover Date', value: coverDate),
-      if (storeDate != null) (label: 'Store Date', value: storeDate),
-      (label: 'Metron ID', value: '${widget.issue.id}'),
+    final items = <InfoGridItem>[
+      if (seriesType != null) InfoGridItem(label: 'Format', value: seriesType),
+      if (pages != null) InfoGridItem(label: 'Pages', value: '$pages'),
+      if (price != null) InfoGridItem(label: 'Price', value: price),
+      if (rating != null && rating.isNotEmpty) InfoGridItem(label: 'Rating', value: rating),
+      if (distributorSku != null && distributorSku.isNotEmpty)
+        InfoGridItem(label: 'Distributor SKU', value: distributorSku),
+      if (upcIsbn != null) InfoGridItem(label: 'UPC / ISBN', value: upcIsbn),
+      if (widget.issue.focDate != null)
+        InfoGridItem(label: 'FOC Date', value: formatDate(widget.issue.focDate)!),
+      if (widget.issue.coverDate != null)
+        InfoGridItem(label: 'Cover Date', value: formatDate(widget.issue.coverDate)!),
+      if (widget.issue.storeDate != null)
+        InfoGridItem(label: 'Store Date', value: formatDate(widget.issue.storeDate)!),
+      InfoGridItem(label: 'Metron ID', value: '${widget.issue.id}'),
       if (widget.issue.cvId != null)
-        (label: 'CV ID', value: '${widget.issue.cvId}'),
+        InfoGridItem(label: 'CV ID', value: '${widget.issue.cvId}'),
       if (widget.issue.gcdId != null)
-        (label: 'GCD ID', value: '${widget.issue.gcdId}'),
-    };
+        InfoGridItem(label: 'GCD ID', value: '${widget.issue.gcdId}'),
+    ];
 
-    if (infoItems.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Additional Information', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 16),
-        ...infoItems.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    item.label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(item.value, style: theme.textTheme.bodyMedium),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIssueMetadataSection(BuildContext context) {
-    final pages = widget.issue.page;
-    final priceValue = widget.issue.price?.trim();
-    final currency = widget.issue.priceCurrency?.trim();
-    final rating = widget.issue.rating?.name.trim();
-    final seriesType = widget.issue.series?.seriesType?.name;
-
-    final parts = <String>[];
-    if (seriesType != null) {
-      parts.add(seriesType);
-    }
-    if (pages != null) {
-      parts.add('$pages pages');
-    }
-    if (priceValue != null && priceValue.isNotEmpty) {
-      final symbol = _currencySymbol(currency);
-      parts.add('$symbol$priceValue');
-    }
-    if (rating != null && rating.isNotEmpty) {
-      parts.add(rating);
-    }
-
-    if (parts.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    return Text(
-      parts.join(' • '),
-      style: theme.textTheme.titleSmall?.copyWith(
-        fontStyle: FontStyle.italic,
-        fontWeight: FontWeight.w600,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-    );
+    return InfoGrid(items: items);
   }
 
   Widget _buildImprintSection(BuildContext context) {
@@ -529,17 +467,14 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final hasImprint = widget.issue.imprint?.name.trim().isNotEmpty ?? false;
     final hasGenres = widget.issue.series?.genres.isNotEmpty ?? false;
 
-    final seriesType = widget.issue.series?.seriesType?.name;
-    final hasMetadata =
-        seriesType != null ||
-        widget.issue.page != null ||
-        (widget.issue.price?.trim().isNotEmpty ?? false) ||
-        (widget.issue.rating?.name.trim().isNotEmpty ?? false);
-
     final sku = widget.issue.sku?.trim();
     final upc = widget.issue.upc?.trim();
     final isbn = widget.issue.isbn?.trim();
     final hasAdditionalInfo =
+        widget.issue.series?.seriesType?.name != null ||
+        widget.issue.page != null ||
+        (widget.issue.price?.trim().isNotEmpty ?? false) ||
+        (widget.issue.rating?.name.trim().isNotEmpty ?? false) ||
         (sku != null && sku.isNotEmpty) ||
         (upc != null && upc.isNotEmpty) ||
         (isbn != null && isbn.isNotEmpty) ||
@@ -564,8 +499,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           ),
           const SizedBox(height: 16),
         ],
-        if (hasMetadata) ...[
-          _buildIssueMetadataSection(context),
+        if (hasAdditionalInfo) ...[
+          _buildAdditionalInformationSection(context),
           const SizedBox(height: 16),
         ],
         if (hasStories) ...[
@@ -590,13 +525,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         ],
         if (hasGenres) ...[
           _buildSectionCard(context, _buildGenresSection(context)),
-          const SizedBox(height: 16),
-        ],
-        if (hasAdditionalInfo) ...[
-          _buildSectionCard(
-            context,
-            _buildAdditionalInformationSection(context),
-          ),
           const SizedBox(height: 16),
         ],
         Text(

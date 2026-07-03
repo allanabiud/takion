@@ -2,8 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class TeamListTile extends ConsumerWidget {
@@ -31,9 +31,10 @@ class TeamListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final details = ref.watch(teamDetailsProvider(teamId));
-    final detailsImage = details.whenOrNull(data: (d) => d.image);
-    final effectiveImageUrl = imageUrl ?? detailsImage;
+    ref.watch(entityImageVersionProvider);
+    final cache = ref.read(entityImageCacheProvider);
+    final cachedImage = cache.getCached('team', teamId);
+    final effectiveImageUrl = imageUrl ?? cachedImage;
 
     final effectiveOnTap =
         onTap ??

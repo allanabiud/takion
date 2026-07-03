@@ -16,6 +16,10 @@ import 'package:takion/src/domain/entities/imprint_list.dart';
 import 'package:takion/src/domain/entities/imprint_list_page.dart';
 import 'package:takion/src/domain/entities/team_list.dart';
 import 'package:takion/src/domain/entities/team_list_page.dart';
+import 'package:takion/src/domain/entities/publisher_list.dart';
+import 'package:takion/src/domain/entities/publisher_list_page.dart';
+import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
+import 'package:takion/src/presentation/components/publisher_list_tile.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
@@ -65,6 +69,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   UniverseListPage? _lastUniversePage;
   ImprintListPage? _lastImprintPage;
   TeamListPage? _lastTeamPage;
+  PublisherListPage? _lastPublisherPage;
   bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
   bool get _isCharacterSearch =>
       widget.searchChoice.toLowerCase() == 'characters';
@@ -76,6 +81,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       widget.searchChoice.toLowerCase() == 'imprints';
   bool get _isTeamSearch =>
       widget.searchChoice.toLowerCase() == 'teams';
+  bool get _isPublisherSearch =>
+      widget.searchChoice.toLowerCase() == 'publishers';
 
   IssueSearchArgs get _currentIssueArgs =>
       IssueSearchArgs(query: widget.query, page: _page);
@@ -91,6 +98,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       ImprintSearchArgs(query: widget.query, page: _page);
   TeamSearchArgs get _currentTeamArgs =>
       TeamSearchArgs(query: widget.query, page: _page);
+  PublisherSearchArgs get _currentPublisherArgs =>
+      PublisherSearchArgs(query: widget.query, page: _page);
 
   Future<void> _forceRefreshResults() async {
     if (_isCharacterSearch) {
@@ -128,6 +137,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       ref.invalidate(teamSearchResultsProvider(_currentTeamArgs));
       await ref
           .read(teamSearchResultsProvider(_currentTeamArgs).future);
+    } else if (_isPublisherSearch) {
+      await ref
+          .read(metronRepositoryProvider)
+          .searchPublishers(widget.query, page: _page, forceRefresh: true);
+      ref.invalidate(publisherSearchResultsProvider(_currentPublisherArgs));
+      await ref
+          .read(publisherSearchResultsProvider(_currentPublisherArgs).future);
     } else if (_isSeriesSearch) {
       await ref
           .read(metronRepositoryProvider)
@@ -282,6 +298,69 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       final name = entry.name.toLowerCase();
       return name.contains(filter);
     }).toList();
+  }
+
+  int _estimatedPublisherTotalPages(PublisherListPage pageData) {
+    return (pageData.count / metronDefaultPageSize).ceil().clamp(1, 99999);
+  }
+
+  List<PublisherList> _applyPublisherFilter(List<PublisherList> publishers) {
+    final filter = _filterController.text.trim().toLowerCase();
+    if (filter.isEmpty) return publishers;
+
+    return publishers.where((entry) {
+      final name = entry.name.toLowerCase();
+      return name.contains(filter);
+    }).toList();
+  }
+
+  Widget _buildPublisherBody(
+    AsyncValue<PublisherListPage> async,
+    ContentSortOption sortOption,
+    SortPreferenceContext sortContext,
+  ) {
+    if (async.hasError) {
+      return AsyncStatePanel.error(
+        errorMessage: 'Search failed: ${async.error}',
+      );
+    }
+    final pageData = async.asData?.value ?? _lastPublisherPage;
+    if (pageData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final sortedItems = sortPublishers(
+      _applyPublisherFilter(pageData.results),
+      sortOption,
+    );
+    return PagedSearchSection<PublisherList>(
+      items: sortedItems,
+      totalCount: pageData.count,
+      currentPage: _page,
+      totalPages: _estimatedPublisherTotalPages(pageData),
+      hasPrevious: pageData.hasPrevious,
+      hasNext: pageData.hasNext,
+      onPreviousPage: pageData.hasPrevious && pageData.previousPage != null
+          ? () => setState(() => _page = pageData.previousPage!)
+          : null,
+      onNextPage: pageData.hasNext && pageData.nextPage != null
+          ? () => setState(() => _page = pageData.nextPage!)
+          : null,
+      sortOption: sortOption,
+      sortContext: sortContext,
+      sortLabelFn: publisherSortLabel,
+      onRefresh: _forceRefreshResults,
+      isFiltering: _isFiltering,
+      isLoading: async.isLoading,
+      emptyIcon: Icons.business,
+      emptyMessage: 'No publishers found.',
+      itemBuilder: (context, index, item, isFirst, isLast) =>
+          PublisherListTile(
+            publisherId: item.id,
+            name: item.name,
+            isFirst: isFirst,
+            isLast: isLast,
+          ),
+    );
   }
 
   Widget _buildUniverseBody(
@@ -647,9 +726,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     ? SortPreferenceContext.searchImprints
                     : _isTeamSearch
                         ? SortPreferenceContext.searchTeams
-                        : _isSeriesSearch
-                            ? SortPreferenceContext.searchSeries
-                            : SortPreferenceContext.searchIssues;
+                        : _isPublisherSearch
+                            ? SortPreferenceContext.searchPublishers
+                            : _isSeriesSearch
+                                ? SortPreferenceContext.searchSeries
+                                : SortPreferenceContext.searchIssues;
     final sortOption = ref.watch(sortPreferenceForContextProvider(sortContext));
     final universeResultsAsync = _isUniverseSearch
         ? ref.watch(universeSearchResultsProvider(_currentUniverseArgs))
@@ -659,6 +740,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         : null;
     final teamResultsAsync = _isTeamSearch
         ? ref.watch(teamSearchResultsProvider(_currentTeamArgs))
+        : null;
+    final publisherResultsAsync = _isPublisherSearch
+        ? ref.watch(publisherSearchResultsProvider(_currentPublisherArgs))
         : null;
     final creatorResultsAsync = _isCreatorSearch
         ? ref.watch(creatorSearchResultsProvider(_currentCreatorArgs))
@@ -671,7 +755,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             _isCreatorSearch ||
             _isUniverseSearch ||
             _isImprintSearch ||
-            _isTeamSearch
+            _isTeamSearch ||
+            _isPublisherSearch
         ? null
         : ref.watch(issueSearchResultsProvider(_currentIssueArgs));
     final seriesResultsAsync = _isSeriesSearch
@@ -687,9 +772,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     ? imprintResultsAsync?.isLoading == true
                     : _isTeamSearch
                         ? teamResultsAsync?.isLoading == true
-                        : _isSeriesSearch
-                            ? seriesResultsAsync?.isLoading == true
-                            : issueResultsAsync?.isLoading == true;
+                        : _isPublisherSearch
+                            ? publisherResultsAsync?.isLoading == true
+                            : _isSeriesSearch
+                                ? seriesResultsAsync?.isLoading == true
+                                : issueResultsAsync?.isLoading == true;
 
     if (_isCreatorSearch) {
       if (creatorResultsAsync?.hasValue == true) {
@@ -710,6 +797,10 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     } else if (_isTeamSearch) {
       if (teamResultsAsync?.hasValue == true) {
         _lastTeamPage = teamResultsAsync!.value;
+      }
+    } else if (_isPublisherSearch) {
+      if (publisherResultsAsync?.hasValue == true) {
+        _lastPublisherPage = publisherResultsAsync!.value;
       }
     } else if (_isSeriesSearch) {
       if (seriesResultsAsync?.hasValue == true) {
@@ -784,7 +875,10 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                       : _isTeamSearch
                           ? _buildTeamBody(
                               teamResultsAsync!, sortOption, sortContext)
-                          : _isSeriesSearch
+                          : _isPublisherSearch
+                              ? _buildPublisherBody(
+                                  publisherResultsAsync!, sortOption, sortContext)
+                              : _isSeriesSearch
                               ? _buildSeriesBody(
                                   seriesResultsAsync!, sortOption, sortContext)
                               : _buildIssueBody(

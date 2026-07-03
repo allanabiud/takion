@@ -36,6 +36,8 @@ import 'package:takion/src/presentation/features/imprints/providers/imprint_deta
 import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
+import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
+import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
 import 'package:takion/src/core/notifications/push_notification_service.dart';
@@ -272,6 +274,8 @@ class SettingsNotifier extends _$SettingsNotifier {
     ref.invalidate(imprintSearchResultsProvider);
     ref.invalidate(teamDetailsProvider);
     ref.invalidate(teamSearchResultsProvider);
+    ref.invalidate(publisherDetailsProvider);
+    ref.invalidate(publisherSearchResultsProvider);
   }
 
   static const _syncRequestDelay = Duration(milliseconds: 3500);

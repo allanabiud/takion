@@ -3,8 +3,6 @@ import 'package:synchronized/synchronized.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'dart:async';
 
-const _backgroundZoneKey = #opencode_background;
-
 class RateLimitInterceptor extends Interceptor {
   final int maxRequestsPerMinute;
   final int maxRequestsPerDay;
@@ -16,12 +14,9 @@ class RateLimitInterceptor extends Interceptor {
   static const String _lastResetKey = 'last_reset_date';
 
   RateLimitInterceptor({
-    this.maxRequestsPerMinute = 18, // Safer margin than 20
-    this.maxRequestsPerDay = 4800, // Safer margin than 5,000
+    this.maxRequestsPerMinute = 18,
+    this.maxRequestsPerDay = 4800,
   });
-
-  bool get _isBackgroundRequest =>
-      Zone.current[_backgroundZoneKey] == true;
 
   Future<Box> _getStatsBox() async {
     return await Hive.openBox(_statsBoxName);
@@ -54,46 +49,44 @@ class RateLimitInterceptor extends Interceptor {
     await box.put(_dailyCountKey, count + 1);
   }
 
+  // Returns null if budget was consumed and the request may proceed,
+  // or a Duration to wait before retrying (caller waits outside the lock).
+  Future<Duration?> _tryConsumeBudget() {
+    return _lock.synchronized<Duration?>(() async {
+      await _checkDailyLimit();
+
+      final now = DateTime.now();
+      _recentRequests.removeWhere(
+        (time) => now.difference(time) > const Duration(minutes: 1),
+      );
+
+      if (_recentRequests.length < maxRequestsPerMinute) {
+        _recentRequests.add(now);
+        await _incrementDailyCount();
+        return null;
+      }
+
+      final sleepTime =
+          const Duration(minutes: 1) - now.difference(_recentRequests.first);
+      return sleepTime > Duration.zero
+          ? sleepTime + const Duration(milliseconds: 100)
+          : const Duration(milliseconds: 100);
+    });
+  }
+
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
     try {
-      final isBackground = _isBackgroundRequest;
-      await _lock.synchronized(() async {
-        await _checkDailyLimit();
+      while (true) {
+        final wait = await _tryConsumeBudget();
+        if (wait == null) break;
+        // Wait outside the lock so other requests aren't blocked
+        await Future.delayed(wait);
+      }
 
-        while (true) {
-          final now = DateTime.now();
-          // Clear requests older than 1 minute
-          _recentRequests.removeWhere(
-            (time) => now.difference(time) > const Duration(minutes: 1),
-          );
-
-          if (_recentRequests.length < maxRequestsPerMinute) {
-            _recentRequests.add(now);
-            await _incrementDailyCount();
-            break;
-          }
-
-          if (isBackground) {
-            throw DioException(
-              requestOptions: options,
-              error: 'Background request skipped: rate limit budget exhausted',
-              type: DioExceptionType.cancel,
-            );
-          }
-
-          // Wait until the oldest request in the window is older than 1 minute
-          final sleepTime =
-              const Duration(minutes: 1) -
-              now.difference(_recentRequests.first);
-          if (sleepTime > Duration.zero) {
-            await Future.delayed(sleepTime + const Duration(milliseconds: 100));
-          }
-        }
-      });
       handler.next(options);
     } catch (e) {
       if (e is DioException) {

@@ -1,9 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 final seriesDetailsProvider = FutureProvider.autoDispose
-    .family<SeriesDetails, int>((ref, seriesId) {
+    .family<SeriesDetails, int>((ref, seriesId) async {
       final repository = ref.watch(metronRepositoryProvider);
-      return repository.getSeriesDetails(seriesId);
+      final result = await repository.getSeriesDetails(seriesId);
+      if (result.image != null && result.image!.trim().isNotEmpty) {
+        ref.read(entityImageCacheProvider).set('series', seriesId, result.image!);
+        ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
+      }
+      return result;
     });

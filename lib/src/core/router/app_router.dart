@@ -92,6 +92,16 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: PublisherDetailsRoute.page,
+      path: '/publisher/:publisherId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: PublisherSeriesRoute.page,
+      path: '/publisher/:publisherId/series',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: ImagePreviewRoute.page,
       path: '/image-preview',
       guards: [authGuard],

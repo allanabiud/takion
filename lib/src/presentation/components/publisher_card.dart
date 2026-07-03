@@ -6,21 +6,19 @@ import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
-class ImprintCard extends ConsumerWidget {
-  const ImprintCard({
+class PublisherCard extends ConsumerWidget {
+  const PublisherCard({
     super.key,
-    required this.imprintId,
+    required this.publisherId,
     required this.name,
     this.imageUrl,
-    this.publisherName,
     this.width = 240,
     this.height = 80,
   });
 
-  final int imprintId;
+  final int publisherId;
   final String name;
   final String? imageUrl;
-  final String? publisherName;
   final double width;
   final double height;
 
@@ -29,7 +27,7 @@ class ImprintCard extends ConsumerWidget {
     final theme = Theme.of(context);
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached('imprint', imprintId);
+    final cachedImage = cache.getCached('publisher', publisherId);
     final effectiveImageUrl = imageUrl ?? cachedImage;
 
     return SizedBox(
@@ -39,7 +37,7 @@ class ImprintCard extends ConsumerWidget {
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.pushRoute(ImprintDetailsRoute(imprintId: imprintId)),
+          onTap: () => context.pushRoute(PublisherDetailsRoute(publisherId: publisherId)),
           child: Row(
             children: [
               Container(
@@ -76,17 +74,6 @@ class ImprintCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (publisherName != null && publisherName!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          publisherName!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
                     ],
                   ),
                 ),

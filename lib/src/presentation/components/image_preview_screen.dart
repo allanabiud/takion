@@ -151,14 +151,10 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
           ),
         ],
       ),
-      body: InteractiveViewer(
-        minScale: 1.0,
-        maxScale: 4.0,
-        child: Center(
-          child: widget.heroTag != null
-              ? Hero(tag: widget.heroTag!, child: image)
-              : image,
-        ),
+      body: Center(
+        child: widget.heroTag != null
+            ? Hero(tag: widget.heroTag!, child: image)
+            : image,
       ),
     );
   }

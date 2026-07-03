@@ -17,6 +17,7 @@ import 'package:takion/src/presentation/components/shimmer_widget.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/info_grid.dart';
 
 @RoutePage()
 class CreatorDetailsScreen extends ConsumerStatefulWidget {
@@ -349,13 +350,6 @@ class _CreatorDetailsScreenState
   }
 }
 
-TextStyle? _sectionTitleStyle(BuildContext context) {
-  return Theme.of(context).textTheme.titleSmall?.copyWith(
-    fontWeight: FontWeight.w700,
-    color: Theme.of(context).colorScheme.primary,
-  );
-}
-
 class _CreatorDetailsSheet extends ConsumerWidget {
   const _CreatorDetailsSheet({
     required this.scrollController,
@@ -368,6 +362,13 @@ class _CreatorDetailsSheet extends ConsumerWidget {
   final CreatorDetails details;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+
+  TextStyle? _sectionTitleStyle(BuildContext context) {
+    return Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: Theme.of(context).colorScheme.primary,
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -441,6 +442,13 @@ class _CreatorDetailsSheet extends ConsumerWidget {
             ),
             if (hasDescription) ...[
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Summary', style: _sectionTitleStyle(context)),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -584,55 +592,28 @@ class _CreatorInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final modifiedValue = _modifiedValue();
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
     final birthValue = _dateValue(details.birth);
     final deathValue = _dateValue(details.death);
 
-    final infoItems = <({String label, String value})>[
-      (label: 'Metron ID', value: '${details.id}'),
-      if (details.cvId != null) (label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) (label: 'GCD ID', value: '${details.gcdId}'),
-      if (birthValue != null) (label: 'Birth', value: birthValue),
-      if (deathValue != null) (label: 'Death', value: deathValue),
+    final items = <InfoGridItem>[
+      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
+      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
+      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
+      if (birthValue != null) InfoGridItem(label: 'Birth', value: birthValue),
+      if (deathValue != null) InfoGridItem(label: 'Death', value: deathValue),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Additional Information', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
-        if (infoItems.isNotEmpty)
-          ...infoItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      item.label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(item.value, style: theme.textTheme.bodyMedium),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        InfoGrid(items: items),
         if (hasModified) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             'Last modified: $modifiedValue',
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
             ),
           ),

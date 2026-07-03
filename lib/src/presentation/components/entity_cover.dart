@@ -5,6 +5,7 @@ import 'package:takion/src/presentation/components/role_badge.dart';
 
 class EntityCover extends StatelessWidget {
   final String? imageUrl;
+  final String? placeholderLabel;
   final bool isFavorite;
   final bool isRead;
   final ItemRole? role;
@@ -18,6 +19,7 @@ class EntityCover extends StatelessWidget {
   const EntityCover({
     super.key,
     this.imageUrl,
+    this.placeholderLabel,
     this.isFavorite = false,
     this.isRead = false,
     this.role,
@@ -53,13 +55,47 @@ class EntityCover extends StatelessWidget {
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        child: Icon(Icons.broken_image, size: iconSize),
+                        color: placeholderLabel != null && placeholderLabel!.isNotEmpty
+                            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.8)
+                            : theme.colorScheme.surfaceContainerHighest,
+                        child: placeholderLabel != null && placeholderLabel!.isNotEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Text(
+                                    placeholderLabel!,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.primary,
+                                      fontSize: iconSize,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              )
+                            : Icon(Icons.broken_image, size: iconSize),
                       ),
                     )
                   : Container(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: Icon(placeholderIcon, size: iconSize),
+                      color: placeholderLabel != null && placeholderLabel!.isNotEmpty
+                          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.8)
+                          : theme.colorScheme.surfaceContainerHighest,
+                      child: placeholderLabel != null && placeholderLabel!.isNotEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Text(
+                                  placeholderLabel!,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontSize: iconSize,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            )
+                          : Icon(placeholderIcon, size: iconSize),
                     ),
               if (role != null)
                 Positioned(top: 4, left: 4, child: RoleBadge(role: role!)),

@@ -6,6 +6,7 @@ import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/universe_list.dart';
 import 'package:takion/src/domain/entities/imprint_list.dart';
 import 'package:takion/src/domain/entities/team_list.dart';
+import 'package:takion/src/domain/entities/publisher_list.dart';
 
 enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 
@@ -34,6 +35,8 @@ enum SortPreferenceContext {
   subscriptions,
   searchImprints,
   searchTeams,
+  searchPublishers,
+  publisherSeries,
 }
 
 extension SortPreferenceContextX on SortPreferenceContext {
@@ -87,6 +90,10 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'search_imprints';
       case SortPreferenceContext.searchTeams:
         return 'search_teams';
+      case SortPreferenceContext.searchPublishers:
+        return 'search_publishers';
+      case SortPreferenceContext.publisherSeries:
+        return 'publisher_series';
     }
   }
 
@@ -139,6 +146,10 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.searchImprints:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.searchTeams:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.searchPublishers:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.publisherSeries:
         return ContentSortOption.nameAsc;
     }
   }
@@ -223,6 +234,19 @@ String imprintSortLabel(ContentSortOption option) {
 }
 
 String teamSortLabel(ContentSortOption option) {
+  switch (option) {
+    case ContentSortOption.nameAsc:
+      return 'Alphabetical (A-Z)';
+    case ContentSortOption.nameDesc:
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
+  }
+}
+
+String publisherSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
       return 'Alphabetical (A-Z)';
@@ -430,6 +454,33 @@ List<TeamList> sortTeams(
   final sorted = [...teams];
 
   int compareByName(TeamList a, TeamList b) =>
+      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  switch (sortOption) {
+    case ContentSortOption.nameAsc:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.nameDesc:
+      sorted.sort((a, b) => compareByName(b, a));
+      break;
+    case ContentSortOption.dateNewest:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByName);
+      break;
+  }
+
+  return sorted;
+}
+
+List<PublisherList> sortPublishers(
+  List<PublisherList> publishers,
+  ContentSortOption sortOption,
+) {
+  final sorted = [...publishers];
+
+  int compareByName(PublisherList a, PublisherList b) =>
       a.name.toLowerCase().compareTo(b.name.toLowerCase());
 
   switch (sortOption) {

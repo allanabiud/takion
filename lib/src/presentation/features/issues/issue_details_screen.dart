@@ -4,7 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
@@ -74,22 +74,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     }
 
     return baseName;
-  }
-
-  String _subtitle(IssueDetails issue) {
-    final publisher = issue.publisher?.name.trim();
-    final storeDate = issue.storeDate;
-    final dateStr = storeDate != null
-        ? DateFormat.yMMMd().format(storeDate.toLocal())
-        : null;
-
-    final parts = <String>[
-      ?publisher,
-      ?dateStr,
-    ];
-
-    if (parts.isNotEmpty) return parts.join(' • ');
-    return '';
   }
 
   List<String> _coverImages(IssueDetails issue) {
@@ -872,8 +856,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                     displayTitle: isCurrentData
                         ? _displayTitle(issue)
                         : '',
-                    subtitle:
-                        isCurrentData ? _subtitle(issue) : '',
                     onShowScrobbleSheet: isCurrentData
                         ? () => showScrobbleSheet(
                               issue,

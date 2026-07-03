@@ -15,6 +15,7 @@ import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 import 'package:takion/src/presentation/components/shimmer_widget.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/info_grid.dart';
 
 @RoutePage()
 class ImprintDetailsScreen extends ConsumerStatefulWidget {
@@ -358,6 +359,13 @@ class _ImprintDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Summary', style: _sectionTitleStyle(context)),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _ExpandableImprintDescription(
                     description: description,
                   ),
@@ -502,53 +510,17 @@ class _ImprintInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final infoItems = <({String label, String value})>{
-      (label: 'Name', value: details.name),
+    final items = <InfoGridItem>[
+      InfoGridItem(label: 'Name', value: details.name),
       if (details.founded != null)
-        (label: 'Founded', value: '${details.founded}'),
+        InfoGridItem(label: 'Founded', value: '${details.founded}'),
       if (details.publisher != null)
-        (label: 'Publisher', value: details.publisher!.name),
-      if (details.cvId != null) (label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) (label: 'GCD ID', value: '${details.gcdId}'),
-      (label: 'Metron ID', value: '${details.id}'),
-    };
+        InfoGridItem(label: 'Publisher', value: details.publisher!.name),
+      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
+      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
+      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
+    ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Information',
-          style: _sectionTitleStyle(
-            context,
-          )?.copyWith(color: theme.colorScheme.primary),
-        ),
-        const SizedBox(height: 12),
-        ...infoItems.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    item.label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(item.value, style: theme.textTheme.bodyMedium),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
+    return InfoGrid(items: items);
   }
 }

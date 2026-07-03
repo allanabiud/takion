@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/network/dio_client.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
 final metronAccountServiceProvider = Provider<MetronAccountService>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
-  return MetronAccountService(hiveService);
+  final dio = ref.watch(dioProvider);
+  return MetronAccountService(hiveService, dio);
 });
 
 class MetronAccountConnection {
@@ -19,6 +21,7 @@ enum MetronConnectionStatus { valid, missing, invalid, unreachable }
 
 class MetronAccountService {
   final HiveService _hiveService;
+  final Dio _dio;
 
   static const String _boxName = 'metron_account_box';
   static const String _usernameKey = 'username';
@@ -28,14 +31,13 @@ class MetronAccountService {
   MetronConnectionStatus? _cachedStatus;
   DateTime? _cachedAt;
 
-  MetronAccountService(this._hiveService);
+  MetronAccountService(this._hiveService, this._dio);
 
   Future<bool> verifyCredentials(String username, String password) async {
-    final dio = Dio(BaseOptions(baseUrl: 'https://metron.cloud/api/'));
     final auth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';
 
     try {
-      await dio.get(
+      await _dio.get(
         'issue/',
         queryParameters: {'limit': 1},
         options: Options(headers: {'Authorization': auth}),

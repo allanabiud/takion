@@ -17,6 +17,8 @@ import 'package:takion/src/domain/entities/imprint_details.dart';
 import 'package:takion/src/domain/entities/imprint_list_page.dart';
 import 'package:takion/src/domain/entities/team_details.dart';
 import 'package:takion/src/domain/entities/team_list_page.dart';
+import 'package:takion/src/domain/entities/publisher_details.dart';
+import 'package:takion/src/domain/entities/publisher_list_page.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 
 abstract class CatalogRepository {
@@ -147,6 +149,26 @@ abstract class CatalogRepository {
 
   Future<TeamDetails> getTeamDetails(
     int teamId, {
+    bool forceRefresh = false,
+  });
+
+  Future<PublisherListPage> searchPublishers(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<PublisherDetails> getPublisherDetails(
+    int publisherId, {
+    bool forceRefresh = false,
+  });
+
+  Future<SeriesListPage> getPublisherSeriesList(
+    int publisherId, {
+    int page = 1,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 }

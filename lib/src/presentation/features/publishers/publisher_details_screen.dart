@@ -6,45 +6,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/team_details.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
+import 'package:takion/src/domain/entities/publisher_details.dart';
+import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
+import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 import 'package:takion/src/presentation/components/shimmer_widget.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
-import 'package:takion/src/presentation/components/universe_card.dart';
-import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
+import 'package:takion/src/presentation/features/series/series_card.dart';
 
 @RoutePage()
-class TeamDetailsScreen extends ConsumerStatefulWidget {
-  const TeamDetailsScreen({
+class PublisherDetailsScreen extends ConsumerStatefulWidget {
+  const PublisherDetailsScreen({
     super.key,
-    @pathParam required this.teamId,
+    @pathParam required this.publisherId,
     this.initialImageUrl,
   });
 
-  final int teamId;
+  final int publisherId;
   final String? initialImageUrl;
 
   @override
-  ConsumerState<TeamDetailsScreen> createState() => _TeamDetailsScreenState();
+  ConsumerState<PublisherDetailsScreen> createState() =>
+      _PublisherDetailsScreenState();
 }
 
-class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
-  Uri? _resourceUri(TeamDetails details) {
+class _PublisherDetailsScreenState
+    extends ConsumerState<PublisherDetailsScreen> {
+  Uri? _resourceUri(PublisherDetails details) {
     final resourceUrl = details.resourceUrl?.trim();
     if (resourceUrl == null || resourceUrl.isEmpty) return null;
     return Uri.tryParse(resourceUrl);
   }
 
-  Future<void> _shareResourceUrl(TeamDetails details) async {
+  Future<void> _shareResourceUrl(PublisherDetails details) async {
     final uri = _resourceUri(details);
     if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'team');
+      TakionAlerts.noShareUrl(context, 'publisher');
       return;
     }
     await SharePlus.instance.share(
@@ -52,21 +55,23 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
     );
   }
 
-  Future<void> _openResourceUrlInBrowser(TeamDetails details) async {
+  Future<void> _openResourceUrlInBrowser(PublisherDetails details) async {
     final uri = _resourceUri(details);
     if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'team');
+      TakionAlerts.noBrowserUrl(context, 'publisher');
       return;
     }
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'team');
+      TakionAlerts.couldNotOpenInBrowser(context, 'publisher');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final detailsAsync = ref.watch(teamDetailsProvider(widget.teamId));
+    final detailsAsync = ref.watch(
+      publisherDetailsProvider(widget.publisherId),
+    );
     final scaffoldBg = Theme.of(context).colorScheme.surface;
 
     return detailsAsync.when(
@@ -119,39 +124,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
               const SizedBox(height: 8),
               const SkeletonBox(height: 14, width: 180, borderRadius: 4),
               const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+              const SkeletonBox(height: 18, width: 60, borderRadius: 4),
               const SizedBox(height: 12),
               SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 4,
-                  padding: EdgeInsets.zero,
-                  itemBuilder: (_, _) => const Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: Row(
-                      children: [
-                        SkeletonBox(width: 44, height: 44, borderRadius: 22),
-                        SizedBox(width: 8),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SkeletonBox(height: 12, width: 80, borderRadius: 4),
-                            SizedBox(height: 4),
-                            SkeletonBox(height: 10, width: 60, borderRadius: 4),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 80, borderRadius: 4),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 130,
+                height: 160,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: 4,
@@ -160,8 +136,8 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                     padding: EdgeInsets.only(right: 12),
                     child: SkeletonBox(
                       width: 140,
-                      height: 130,
-                      borderRadius: 12,
+                      height: 160,
+                      borderRadius: 8,
                     ),
                   ),
                 ),
@@ -191,7 +167,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text('Failed to load team details: $error')),
+        body: Center(child: Text('Failed to load publisher details: $error')),
       ),
       data: (details) {
         return Scaffold(
@@ -248,20 +224,20 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                           if (details.image != null &&
                               details.image!.isNotEmpty)
                             Hero(
-                              tag: 'team-image-${details.id}',
+                              tag: 'publisher-image-${details.id}',
                               child: GestureDetector(
                                 onTap: () => context.pushRoute(
                                   ImagePreviewRoute(
                                     imageUrl: details.image!,
                                     title: details.name,
-                                    heroTag: 'team-image-${details.id}',
+                                    heroTag: 'publisher-image-${details.id}',
                                   ),
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: SizedBox(
-                                    width: 250,
-                                    height: 250,
+                                    width: 260,
+                                    height: 260,
                                     child: CachedNetworkImage(
                                       imageUrl: details.image!,
                                       fit: BoxFit.cover,
@@ -284,8 +260,8 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: SizedBox(
-                                width: 250,
-                                height: 250,
+                                width: 260,
+                                height: 260,
                                 child: _bannerPlaceholder(
                                   context,
                                   details.name,
@@ -322,9 +298,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                 snap: true,
                 snapSizes: const [0.55, 0.9],
                 builder: (context, scrollController) {
-                  return _TeamDetailsSheet(
+                  return _PublisherDetailsSheet(
                     scrollController: scrollController,
                     details: details,
+                    publisherId: widget.publisherId,
                   );
                 },
               ),
@@ -361,22 +338,22 @@ TextStyle? _sectionTitleStyle(BuildContext context) {
   );
 }
 
-class _TeamDetailsSheet extends ConsumerWidget {
-  const _TeamDetailsSheet({
+class _PublisherDetailsSheet extends ConsumerWidget {
+  const _PublisherDetailsSheet({
     required this.scrollController,
     required this.details,
+    required this.publisherId,
   });
 
   final ScrollController scrollController;
-  final TeamDetails details;
+  final PublisherDetails details;
+  final int publisherId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final description = details.desc?.trim();
     final hasDescription = description != null && description.isNotEmpty;
-    final hasCreators = details.creators.isNotEmpty;
-    final hasUniverses = details.universes.isNotEmpty;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -427,73 +404,21 @@ class _TeamDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _ExpandableTeamDescription(description: description),
-                ),
-              ),
-            ],
-            if (hasCreators) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Creators', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 130,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: details.creators.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 4),
-                    itemBuilder: (context, index) {
-                      final creator = details.creators[index];
-                      return PersonCard(
-                        creatorId: creator.id,
-                        name: creator.name,
-                        width: 100,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-            if (hasUniverses) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Universes', style: _sectionTitleStyle(context)),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 130,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: details.universes.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 4),
-                    itemBuilder: (context, index) {
-                      final universe = details.universes[index];
-                      return UniverseCard(
-                        universeId: universe.id,
-                        name: universe.name,
-                        width: 140,
-                      );
-                    },
+                  child: _ExpandablePublisherDescription(
+                    description: description,
                   ),
                 ),
               ),
             ],
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
+              child: _PublisherSeriesSection(publisherId: publisherId),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _TeamInfoSection(details: details),
+                child: _PublisherInfoSection(details: details),
               ),
             ),
             SliverToBoxAdapter(
@@ -508,18 +433,18 @@ class _TeamDetailsSheet extends ConsumerWidget {
   }
 }
 
-class _ExpandableTeamDescription extends StatefulWidget {
-  const _ExpandableTeamDescription({required this.description});
+class _ExpandablePublisherDescription extends StatefulWidget {
+  const _ExpandablePublisherDescription({required this.description});
 
   final String description;
 
   @override
-  State<_ExpandableTeamDescription> createState() =>
-      _ExpandableTeamDescriptionState();
+  State<_ExpandablePublisherDescription> createState() =>
+      _ExpandablePublisherDescriptionState();
 }
 
-class _ExpandableTeamDescriptionState
-    extends State<_ExpandableTeamDescription> {
+class _ExpandablePublisherDescriptionState
+    extends State<_ExpandablePublisherDescription> {
   static const _descriptionMaxLines = 4;
   bool _isExpanded = false;
 
@@ -550,87 +475,125 @@ class _ExpandableTeamDescriptionState
             ? collapsedHeight / fullPainter.height
             : 1.0;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Description',
-              style: _sectionTitleStyle(
-                context,
-              )?.copyWith(color: theme.colorScheme.primary),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: isOverflowing
-                  ? () => setState(() => _isExpanded = !_isExpanded)
-                  : null,
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRect(
-                      child: AnimatedAlign(
+        return InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: isOverflowing
+              ? () => setState(() => _isExpanded = !_isExpanded)
+              : null,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRect(
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isExpanded ? 1.0 : heightFactor,
+                    child: Text(description, style: textStyle),
+                  ),
+                ),
+                if (isOverflowing)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: GestureDetector(
+                      onTap: () =>
+                          setState(() => _isExpanded = !_isExpanded),
+                      child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                        alignment: Alignment.topCenter,
-                        heightFactor: _isExpanded ? 1.0 : heightFactor,
-                        child: Text(description, style: textStyle),
-                      ),
-                    ),
-                    if (isOverflowing)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _isExpanded = !_isExpanded),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 500),
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                                  opacity: animation,
-                                  child: SizeTransition(
-                                    sizeFactor: animation,
-                                    alignment: Alignment.topLeft,
-                                    child: child,
-                                  ),
-                                ),
-                            child: Text(
-                              _isExpanded ? 'Show less' : 'Show more',
-                              key: ValueKey(_isExpanded),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(
+                              opacity: animation,
+                              child: SizeTransition(
+                                sizeFactor: animation,
+                                alignment: Alignment.topLeft,
+                                child: child,
                               ),
                             ),
+                        child: Text(
+                          _isExpanded ? 'Show less' : 'Show more',
+                          key: ValueKey(_isExpanded),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
   }
 }
 
-class _TeamInfoSection extends StatelessWidget {
-  const _TeamInfoSection({required this.details});
+class _PublisherSeriesSection extends ConsumerWidget {
+  const _PublisherSeriesSection({required this.publisherId});
 
-  final TeamDetails details;
+  final int publisherId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final seriesAsync = ref.watch(publisherSeriesListProvider(publisherId));
+
+    return seriesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, _) => const SizedBox.shrink(),
+      data: (seriesPage) {
+        if (seriesPage.results.isEmpty) return const SizedBox.shrink();
+
+        final previewCount = seriesPage.results.length.clamp(0, 5);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: HorizontalPreviewSection(
+            title: '${seriesPage.count} Series',
+            onViewAll: () => context.pushRoute(
+              PublisherSeriesRoute(publisherId: publisherId),
+            ),
+            itemCount: previewCount,
+            height: 250,
+            emptyText: 'No series available.',
+            itemBuilder: (context, index) {
+              final series = seriesPage.results[index];
+              return SeriesCard(
+                series: series,
+                width: 120,
+                onTap: () => context.pushRoute(
+                  SeriesDetailsRoute(seriesId: series.id),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PublisherInfoSection extends StatelessWidget {
+  const _PublisherInfoSection({required this.details});
+
+  final PublisherDetails details;
 
   @override
   Widget build(BuildContext context) {
     final items = <InfoGridItem>[
       InfoGridItem(label: 'Name', value: details.name),
-      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
+      if (details.founded != null)
+        InfoGridItem(label: 'Founded', value: '${details.founded}'),
+      if (details.country != null)
+        InfoGridItem(label: 'Country', value: details.country!),
+      if (details.cvId != null)
+        InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
+      if (details.gcdId != null)
+        InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
       InfoGridItem(label: 'Metron ID', value: '${details.id}'),
     ];
 

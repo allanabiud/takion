@@ -25,6 +25,7 @@ import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/info_grid.dart';
 
 String _monthYear(DateTime date) {
   const months = [
@@ -532,6 +533,13 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Summary', style: _sectionTitleStyle(context)),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _CharacterDescriptionCard(description: description),
                 ),
               ),
@@ -841,7 +849,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
         Text('Creators', style: _sectionTitleStyle(context)),
         const SizedBox(height: 12),
         SizedBox(
-          height: 120,
+          height: 130,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
@@ -1077,51 +1085,24 @@ class _CharacterInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final modifiedValue = _modifiedValue();
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
-    final infoItems = <({String label, String value})>[
-      (label: 'Metron ID', value: '${details.id}'),
-      if (details.cvId != null) (label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) (label: 'GCD ID', value: '${details.gcdId}'),
+    final items = <InfoGridItem>[
+      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
+      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
+      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Additional Information', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
-        if (infoItems.isNotEmpty)
-          ...infoItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      item.label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(item.value, style: theme.textTheme.bodyMedium),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        InfoGrid(items: items),
         if (hasModified) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             'Last modified: $modifiedValue',
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
             ),
           ),

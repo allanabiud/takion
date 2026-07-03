@@ -6,8 +6,8 @@ import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
-class ImprintListTile extends ConsumerWidget {
-  final int imprintId;
+class PublisherListTile extends ConsumerWidget {
+  final int publisherId;
   final String name;
   final String? subtitle;
   final String? imageUrl;
@@ -16,9 +16,9 @@ class ImprintListTile extends ConsumerWidget {
   final bool isLast;
   final double horizontalPadding;
 
-  const ImprintListTile({
+  const PublisherListTile({
     super.key,
-    required this.imprintId,
+    required this.publisherId,
     required this.name,
     this.subtitle,
     this.imageUrl,
@@ -33,12 +33,12 @@ class ImprintListTile extends ConsumerWidget {
     final theme = Theme.of(context);
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached('imprint', imprintId);
+    final cachedImage = cache.getCached('publisher', publisherId);
     final effectiveImageUrl = imageUrl ?? cachedImage;
 
     final effectiveOnTap =
         onTap ??
-        () => context.pushRoute(ImprintDetailsRoute(imprintId: imprintId));
+        () => context.pushRoute(PublisherDetailsRoute(publisherId: publisherId));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -50,17 +50,17 @@ class ImprintListTile extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           onTap: effectiveOnTap,
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     width: 80,
-                    height: 56,
+                    height: 80,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
                     ),
@@ -84,8 +84,7 @@ class ImprintListTile extends ConsumerWidget {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 2,
@@ -115,20 +114,13 @@ class ImprintListTile extends ConsumerWidget {
   }
 
   Widget _initialsAvatar(ThemeData theme) {
-    return Container(
-      width: 80,
-      height: 56,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-      ),
-      child: Center(
-        child: Text(
-          initials(name),
-          style: TextStyle(
-            color: theme.colorScheme.primary,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+    return Center(
+      child: Text(
+        initials(name),
+        style: TextStyle(
+          color: theme.colorScheme.primary,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

@@ -1,4 +1,7 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart';
@@ -14,7 +17,6 @@ class IssueDetailsSheet extends StatelessWidget {
     required this.isInPullList,
     required this.isFavorite,
     required this.displayTitle,
-    required this.subtitle,
     required this.onShowScrobbleSheet,
     required this.onToggleFavorite,
     required this.onAddToReadingList,
@@ -33,7 +35,6 @@ class IssueDetailsSheet extends StatelessWidget {
   final bool isInPullList;
   final bool isFavorite;
   final String displayTitle;
-  final String subtitle;
   final VoidCallback onShowScrobbleSheet;
   final VoidCallback onToggleFavorite;
   final VoidCallback onAddToReadingList;
@@ -43,6 +44,53 @@ class IssueDetailsSheet extends StatelessWidget {
   final int? seriesId;
   final bool? isSubscribed;
   final VoidCallback? onToggleSeriesSubscription;
+
+  Widget _buildTitleSubtitle(BuildContext context) {
+    final theme = Theme.of(context);
+    final publisher = issue.publisher;
+    final storeDate = issue.storeDate;
+
+    String? formattedDate;
+    if (storeDate != null) {
+      formattedDate = DateFormat.yMMMd().format(storeDate.toLocal());
+    }
+
+    return Row(
+      children: [
+        if (publisher != null)
+          GestureDetector(
+            onTap: () => context.pushRoute(
+              PublisherDetailsRoute(publisherId: publisher.id),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  publisher.name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+              ],
+            ),
+          ),
+        const Spacer(),
+        if (formattedDate != null)
+          Text(
+            formattedDate,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,12 +137,7 @@ class IssueDetailsSheet extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    _buildTitleSubtitle(context),
                     const SizedBox(height: 16),
                     Row(
                       children: [

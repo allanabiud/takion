@@ -17,6 +17,8 @@ import 'package:takion/src/data/dto/imprint_details_dto.dart';
 import 'package:takion/src/data/dto/imprint_list_response_dto.dart';
 import 'package:takion/src/data/dto/team_list_response_dto.dart';
 import 'package:takion/src/data/dto/team_details_dto.dart';
+import 'package:takion/src/data/dto/publisher_list_response_dto.dart';
+import 'package:takion/src/data/dto/publisher_details_dto.dart';
 
 abstract class MetronRemoteDataSource {
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
@@ -107,6 +109,21 @@ abstract class MetronRemoteDataSource {
   });
 
   Future<TeamDetailsDto> getTeamDetails(int teamId);
+
+  Future<PublisherListResponseDto> searchPublishers(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+
+  Future<PublisherDetailsDto> getPublisherDetails(int publisherId);
+
+  Future<SeriesListResponseDto> getPublisherSeriesList(
+    int publisherId, {
+    int page = 1,
+    CancelToken? cancelToken,
+  });
 }
 
 class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
@@ -471,5 +488,51 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<TeamDetailsDto> getTeamDetails(int teamId) async {
     final response = await _dio.get('team/$teamId/');
     return TeamDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<PublisherListResponseDto> searchPublishers(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
+      return const PublisherListResponseDto(count: 0, results: []);
+    }
+
+    final response = await _dio.get(
+      'publisher/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
+
+    return PublisherListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<PublisherDetailsDto> getPublisherDetails(int publisherId) async {
+    final response = await _dio.get('publisher/$publisherId/');
+    return PublisherDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<SeriesListResponseDto> getPublisherSeriesList(
+    int publisherId, {
+    int page = 1,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'publisher/$publisherId/series_list/',
+      queryParameters: {'page': page},
+      cancelToken: cancelToken,
+    );
+
+    return SeriesListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 }

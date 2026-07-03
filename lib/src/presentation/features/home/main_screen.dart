@@ -29,7 +29,6 @@ class MainScreenState extends ConsumerState<MainScreen>
 
   void openSearch() {
     if (_overlayVisible) return;
-    ref.read(searchStateProvider.notifier).setTarget(SearchTarget.series);
     setState(() => _overlayVisible = true);
     _animController.forward();
   }
@@ -58,6 +57,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       SearchTarget.universes => 'Universes',
       SearchTarget.imprints => 'Imprints',
       SearchTarget.teams => 'Teams',
+      SearchTarget.publishers => 'Publishers',
     };
     _searchFocusNode.unfocus();
     context.pushRoute(
@@ -85,6 +85,7 @@ class MainScreenState extends ConsumerState<MainScreen>
     _animController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _searchFocusNode.requestFocus();
+        _scrollToSelectedChip(animate: true);
       }
     });
     _searchController.addListener(_onSearchChanged);
@@ -419,6 +420,21 @@ class MainScreenState extends ConsumerState<MainScreen>
                   ref
                       .read(searchStateProvider.notifier)
                       .setTarget(SearchTarget.teams);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.publishers] ??= GlobalKey(),
+                label: const Text(
+                  'Publishers',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.publishers,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.publishers);
                 },
               ),
             ],

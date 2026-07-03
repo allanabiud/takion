@@ -18,6 +18,8 @@ import 'package:takion/src/domain/entities/imprint_list_page.dart';
 import 'package:takion/src/domain/entities/team_details.dart';
 import 'package:takion/src/domain/entities/team_list_page.dart';
 import 'package:takion/src/domain/repositories/catalog_repository.dart';
+import 'package:takion/src/domain/entities/publisher_details.dart';
+import 'package:takion/src/domain/entities/publisher_list_page.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 
 abstract class MetronRepository implements CatalogRepository {
@@ -171,6 +173,29 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<TeamDetails> getTeamDetails(
     int teamId, {
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<PublisherListPage> searchPublishers(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<PublisherDetails> getPublisherDetails(
+    int publisherId, {
+    bool forceRefresh = false,
+  });
+
+  @override
+  Future<SeriesListPage> getPublisherSeriesList(
+    int publisherId, {
+    int page = 1,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 }

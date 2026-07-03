@@ -5,7 +5,8 @@ import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
+import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class SeriesCard extends ConsumerWidget {
   final SeriesList series;
@@ -22,7 +23,7 @@ class SeriesCard extends ConsumerWidget {
     this.imageUrl,
     this.onTap,
     this.width = 120,
-    this.allowRemoteCoverFetch = true,
+    this.allowRemoteCoverFetch = false,
     this.isRead,
     this.role,
   });
@@ -35,13 +36,10 @@ class SeriesCard extends ConsumerWidget {
     final isFavorite =
         ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
 
-    final coverImageAsync = ref.watch(
-      seriesCoverImageProvider((
-        seriesId: series.id,
-        allowRemoteFetch: allowRemoteCoverFetch,
-      )),
-    );
-    final coverImage = imageUrl ?? coverImageAsync.asData?.value;
+    ref.watch(entityImageVersionProvider);
+    final cache = ref.read(entityImageCacheProvider);
+    final cachedImage = cache.getCached('series', series.id);
+    final coverImage = imageUrl ?? cachedImage;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth =
@@ -62,6 +60,7 @@ class SeriesCard extends ConsumerWidget {
                 children: [
                   EntityCover(
                     imageUrl: coverImage,
+                    placeholderLabel: initials(series.name),
                     isFavorite: isFavorite,
                     isRead: isRead ?? false,
                     role: role,

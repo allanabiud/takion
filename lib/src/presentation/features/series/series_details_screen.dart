@@ -29,6 +29,7 @@ import 'package:takion/src/presentation/features/series/series_issues_screen.dar
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/info_grid.dart';
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
@@ -465,8 +466,6 @@ class _SeriesDetailsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final publisher = details.publisher?.name.trim();
-    final hasPublisher = publisher != null && publisher.isNotEmpty;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -500,17 +499,34 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      [
-                        if (hasPublisher) publisher,
-                        if (details.status != null) details.status,
-                        if (details.seriesType?.name != null) details.seriesType!.name,
-                      ].join(' • '),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    if (details.publisher != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: GestureDetector(
+                          onTap: () => context.pushRoute(
+                            PublisherDetailsRoute(
+                              publisherId: details.publisher!.id,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                details.publisher!.name,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 18,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -645,6 +661,13 @@ class _SeriesDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Summary', style: _sectionTitleStyle(context)),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SeriesDescriptionCard(
                     description: description!,
                     seriesId: details.id,
@@ -656,9 +679,16 @@ class _SeriesDetailsSheet extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SeriesInfoCard(details: details),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: HorizontalPreviewSection(
-                  title: 'Issues',
-                  count: totalIssueCount,
+                  title:
+                      '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
                   onViewAll: () => context.pushRoute(
                     SeriesIssuesRoute(seriesId: seriesId),
                   ),
@@ -708,13 +738,20 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ],
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SeriesInfoCard(details: details),
+            if (_modifiedValue(details.modified) != null) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Last modified: ${_modifiedValue(details.modified)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
             SliverToBoxAdapter(
               child: SizedBox(
                 height: MediaQuery.of(context).padding.bottom + 24,
@@ -724,6 +761,16 @@ class _SeriesDetailsSheet extends ConsumerWidget {
           ),
         ),
     );
+  }
+
+  String? _modifiedValue(DateTime? modified) {
+    if (modified == null) return null;
+    final year = modified.year.toString().padLeft(4, '0');
+    final month = modified.month.toString().padLeft(2, '0');
+    final day = modified.day.toString().padLeft(2, '0');
+    final hour = modified.hour.toString().padLeft(2, '0');
+    final minute = modified.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
   }
 }
 
@@ -941,21 +988,8 @@ class _SeriesInfoCard extends StatelessWidget {
 
   final SeriesDetails details;
 
-  String? _modifiedValue() {
-    final modified = details.modified;
-    if (modified == null) return null;
-
-    final year = modified.year.toString().padLeft(4, '0');
-    final month = modified.month.toString().padLeft(2, '0');
-    final day = modified.day.toString().padLeft(2, '0');
-    final hour = modified.hour.toString().padLeft(2, '0');
-    final minute = modified.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final start = details.yearBegan;
     final end = details.yearEnd;
     final years = (start == null && end == null)
@@ -966,69 +1000,25 @@ class _SeriesInfoCard extends StatelessWidget {
         ? '$start - Present'
         : 'Until $end';
 
-    final modifiedValue = _modifiedValue();
-    final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
-
-    final infoItems = <({String label, String value})>[
+    final items = <InfoGridItem>[
+      if (details.seriesType?.name != null)
+        InfoGridItem(label: 'Type', value: details.seriesType!.name),
+      if (details.status != null)
+        InfoGridItem(label: 'Status', value: details.status!),
       if (details.volume != null)
-        (label: 'Volume', value: '${details.volume}'),
+        InfoGridItem(label: 'Volume', value: '${details.volume}'),
       if (years != null)
-        (label: 'Years', value: years),
+        InfoGridItem(label: 'Years', value: years),
       if (details.issueCount != null)
-        (label: 'Issues', value: '${details.issueCount}'),
+        InfoGridItem(label: 'Issues', value: '${details.issueCount}'),
       if (details.imprint?.name != null && details.imprint!.name.trim().isNotEmpty)
-        (label: 'Imprint', value: details.imprint!.name.trim()),
-      (label: 'Metron ID', value: '${details.id}'),
-      if (details.cvId != null) (label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) (label: 'GCD ID', value: '${details.gcdId}'),
+        InfoGridItem(label: 'Imprint', value: details.imprint!.name.trim()),
+      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
+      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
+      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
     ];
 
-    final hasAnyContent = infoItems.isNotEmpty || hasModified;
-
-    if (!hasAnyContent && !hasModified) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Additional Information', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 12),
-        if (infoItems.isNotEmpty)
-          ...infoItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      item.label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item.value,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        if (hasModified) ...[
-          const SizedBox(height: 12),
-          Text(
-            'Last modified: $modifiedValue',
-            style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-          ),
-        ],
-      ],
-    );
+    return InfoGrid(items: items);
   }
 }
 

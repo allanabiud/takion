@@ -42,7 +42,8 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
   @override
   void initState() {
     super.initState();
-    final maxIndex = widget.imageUrls.isEmpty ? 0 : widget.imageUrls.length - 1;
+    final maxIndex =
+        widget.imageUrls.isEmpty ? 0 : widget.imageUrls.length - 1;
     _currentIndex = widget.initialIndex.clamp(0, maxIndex);
     _pageController = PageController(initialPage: _currentIndex);
   }
@@ -52,6 +53,12 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
     _dio.close(force: true);
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   String _safeFileComponent(String value) {
@@ -75,7 +82,8 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
     final title = widget.title ?? 'issue_cover';
     final titlePart = _safeFileComponent(title);
     final labelPart = _safeFileComponent(label);
-    final extension = _fileExtensionFromUrl(widget.imageUrls[_currentIndex]);
+    final extension =
+        _fileExtensionFromUrl(widget.imageUrls[_currentIndex]);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final base = [
       if (titlePart.isNotEmpty) titlePart,
@@ -200,34 +208,23 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
             child: PageView.builder(
               controller: _pageController,
               itemCount: widget.imageUrls.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
+              onPageChanged: _onPageChanged,
               itemBuilder: (context, index) {
                 final image = CachedNetworkImage(
                   imageUrl: widget.imageUrls[index],
                   fit: BoxFit.contain,
                 );
 
-                final zoomable = InteractiveViewer(
-                  minScale: 1.0,
-                  maxScale: 4.0,
+                final padded = Padding(
+                  padding: const EdgeInsets.all(16),
                   child: image,
                 );
 
                 if (index == 0 && widget.heroTag != null) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Hero(tag: widget.heroTag!, child: zoomable),
-                  );
+                  return Hero(tag: widget.heroTag!, child: padded);
                 }
 
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: zoomable,
-                );
+                return padded;
               },
             ),
           ),
@@ -278,7 +275,8 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
                     alignment: WrapAlignment.center,
                     spacing: 6,
                     runSpacing: 6,
-                    children: List.generate(widget.imageUrls.length, (index) {
+                    children: List.generate(
+                        widget.imageUrls.length, (index) {
                       final isSelected = _currentIndex == index;
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
