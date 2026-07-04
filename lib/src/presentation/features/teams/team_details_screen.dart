@@ -18,6 +18,7 @@ import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/section_header.dart';
 
 @RoutePage()
 class TeamDetailsScreen extends ConsumerStatefulWidget {
@@ -354,13 +355,6 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
   }
 }
 
-TextStyle? _sectionTitleStyle(BuildContext context) {
-  return Theme.of(context).textTheme.titleSmall?.copyWith(
-    fontWeight: FontWeight.w700,
-    color: Theme.of(context).colorScheme.primary,
-  );
-}
-
 class _TeamDetailsSheet extends ConsumerWidget {
   const _TeamDetailsSheet({
     required this.scrollController,
@@ -429,7 +423,7 @@ class _TeamDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Creators', style: _sectionTitleStyle(context)),
+                  child: const SectionHeader(title: 'CREATORS'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -458,7 +452,7 @@ class _TeamDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Universes', style: _sectionTitleStyle(context)),
+                  child: const SectionHeader(title: 'UNIVERSES'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -555,7 +549,7 @@ class _ExpandableTeamDescriptionState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Summary', style: _sectionTitleStyle(context)),
+                const SectionHeader(title: 'SUMMARY'),
                 const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
@@ -604,13 +598,84 @@ class _TeamInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = <InfoGridItem>[
+    final modifiedValue = _modifiedValue();
+    final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
+
+    final contentItems = <InfoGridItem>[
       InfoGridItem(label: 'Name', value: details.name),
-      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
-      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
     ];
 
-    return InfoGrid(items: items);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DETAILS'),
+        const SizedBox(height: 12),
+        InfoGrid(items: contentItems),
+        const SizedBox(height: 16),
+        _buildDatabaseIdsSection(context),
+        if (hasModified) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Last modified: $modifiedValue',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String? _modifiedValue() {
+    final modified = details.modified;
+    if (modified == null) return null;
+    final year = modified.year.toString().padLeft(4, '0');
+    final month = modified.month.toString().padLeft(2, '0');
+    final day = modified.day.toString().padLeft(2, '0');
+    final hour = modified.hour.toString().padLeft(2, '0');
+    final minute = modified.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
+  }
+
+  Widget _buildDatabaseIdsSection(BuildContext context) {
+    final entries = <Widget>[];
+    void addEntry(String label, String value) {
+      entries.add(
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            '$label $value',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontFamily: 'monospace',
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
+    addEntry('Metron', '${details.id}');
+    if (details.cvId != null) addEntry('CV', '${details.cvId}');
+    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DATABASE IDS'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: entries,
+        ),
+      ],
+    );
   }
 }

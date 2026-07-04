@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/presentation/components/arc_card.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
-import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:takion/src/presentation/components/imprint_card.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
+import 'package:takion/src/presentation/components/person_card.dart';
+import 'package:takion/src/presentation/components/section_header.dart';
+import 'package:takion/src/presentation/components/team_card.dart';
+import 'package:takion/src/presentation/components/universe_card.dart';
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
@@ -47,13 +51,6 @@ class IssueAboutContent extends ConsumerStatefulWidget {
 class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   static const _descriptionMaxLines = 4;
   bool _isDescriptionExpanded = false;
-
-  TextStyle? _sectionTitleStyle(BuildContext context) {
-    return Theme.of(context).textTheme.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: Theme.of(context).colorScheme.primary,
-    );
-  }
 
   Widget _buildSectionCard(
     BuildContext context,
@@ -109,7 +106,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Summary', style: _sectionTitleStyle(context)),
+              const SectionHeader(title: 'SUMMARY'),
               const SizedBox(height: 8),
               ClipRect(
                 child: AnimatedAlign(
@@ -177,11 +174,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          stories.length == 1 ? 'Story' : 'Stories',
-          style: _sectionTitleStyle(context),
-        ),
-        const SizedBox(height: 8),
+        const SectionHeader(title: 'STORIES'),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 4,
@@ -216,8 +210,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Reprints', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 16),
+        const SectionHeader(title: 'REPRINTED IN'),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -297,30 +291,35 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       return const SizedBox.shrink();
     }
 
-    return HorizontalPreviewSection(
-      title: 'Creators',
-      onViewAll: () =>
-          context.pushRoute(IssueCreatorsRoute(issueId: widget.issueId)),
-      itemCount: credits.length,
-      height: 150,
-      separatorWidth: 0,
-      itemBuilder: (context, index) {
-        final credit = credits[index];
-        final creator = credit.creator?.trim();
-        final roles = credit.roles
-            .map((r) => r.name.trim())
-            .where((n) => n.isNotEmpty)
-            .toSet()
-            .toList();
-        return PersonCard(
-          creatorId: credit.id,
-          name: creator != null && creator.isNotEmpty
-              ? creator
-              : 'Unknown Creator',
-          subtitle: roles.isNotEmpty ? roles.first : null,
-          width: 95,
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'CREATORS'),
+        const SizedBox(height: 12),
+        HorizontalPreviewSection(
+          title: 'Creators',
+          itemCount: credits.length,
+          height: 150,
+          separatorWidth: 0,
+          itemBuilder: (context, index) {
+            final credit = credits[index];
+            final creator = credit.creator?.trim();
+            final roles = credit.roles
+                .map((r) => r.name.trim())
+                .where((n) => n.isNotEmpty)
+                .toSet()
+                .toList();
+            return PersonCard(
+              creatorId: credit.id,
+              name: creator != null && creator.isNotEmpty
+                  ? creator
+                  : 'Unknown Creator',
+              subtitle: roles.isNotEmpty ? roles.first : null,
+              width: 95,
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -330,23 +329,115 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       return const SizedBox.shrink();
     }
 
-    return HorizontalPreviewSection(
-      title: 'Characters',
-      onViewAll: () =>
-          context.pushRoute(IssueCharactersRoute(issueId: widget.issueId)),
-      itemCount: characters.length,
-      height: 130,
-      separatorWidth: 0,
-      itemBuilder: (context, index) {
-        final character = characters[index];
-        return PersonCard(
-          characterId: character.id,
-          name: character.name.trim().isNotEmpty
-              ? character.name.trim()
-              : 'Unknown Character',
-          width: 95,
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'CHARACTERS'),
+        const SizedBox(height: 12),
+        HorizontalPreviewSection(
+          title: 'Characters',
+          itemCount: characters.length,
+          height: 130,
+          separatorWidth: 0,
+          itemBuilder: (context, index) {
+            final character = characters[index];
+            return PersonCard(
+              characterId: character.id,
+              name: character.name.trim().isNotEmpty
+                  ? character.name.trim()
+                  : 'Unknown Character',
+              width: 95,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTeamsSection(BuildContext context) {
+    final teams = widget.issue.teams;
+    if (teams.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'TEAMS'),
+        const SizedBox(height: 12),
+        HorizontalPreviewSection(
+          title: 'Teams',
+          itemCount: teams.length,
+          height: 155,
+          separatorWidth: 0,
+          itemBuilder: (context, index) {
+            final team = teams[index];
+            return TeamCard(
+              teamId: team.id,
+              name: team.name.trim().isNotEmpty
+                  ? team.name.trim()
+                  : 'Unknown Team',
+              width: 100,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArcsSection(BuildContext context) {
+    final arcs = widget.issue.arcs;
+    if (arcs.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'ARCS'),
+        const SizedBox(height: 12),
+        HorizontalPreviewSection(
+          title: 'Arcs',
+          itemCount: arcs.length,
+          height: 140,
+          separatorWidth: 0,
+          itemBuilder: (context, index) {
+            final arc = arcs[index];
+            return ArcCard(
+              arcId: arc.id,
+              name: arc.name.trim().isNotEmpty
+                  ? arc.name.trim()
+                  : 'Unknown Arc',
+              width: 100,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUniversesSection(BuildContext context) {
+    final universes = widget.issue.universes;
+    if (universes.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'UNIVERSES'),
+        const SizedBox(height: 12),
+        HorizontalPreviewSection(
+          title: 'Universes',
+          itemCount: universes.length,
+          height: 140,
+          separatorWidth: 0,
+          itemBuilder: (context, index) {
+            final universe = universes[index];
+            return UniverseCard(
+              universeId: universe.id,
+              name: universe.name.trim().isNotEmpty
+                  ? universe.name.trim()
+                  : 'Unknown Universe',
+              width: 100,
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -370,13 +461,20 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     String? currencySymbol(String? code) {
       switch (code?.toUpperCase()) {
-        case 'USD': return r'$';
-        case 'GBP': return '£';
-        case 'EUR': return '€';
-        case 'JPY': return '¥';
-        case 'CAD': return r'CA$';
-        case 'AUD': return r'A$';
-        default: return r'$';
+        case 'USD':
+          return r'$';
+        case 'GBP':
+          return '£';
+        case 'EUR':
+          return '€';
+        case 'JPY':
+          return '¥';
+        case 'CAD':
+          return r'CA$';
+        case 'AUD':
+          return r'A$';
+        default:
+          return r'$';
       }
     }
 
@@ -387,42 +485,204 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         ? '${currencySymbol(currency)}$priceValue'
         : null;
 
-    final items = <InfoGridItem>[
-      if (seriesType != null) InfoGridItem(label: 'Format', value: seriesType),
-      if (pages != null) InfoGridItem(label: 'Pages', value: '$pages'),
-      if (price != null) InfoGridItem(label: 'Price', value: price),
-      if (rating != null && rating.isNotEmpty) InfoGridItem(label: 'Rating', value: rating),
-      if (distributorSku != null && distributorSku.isNotEmpty)
-        InfoGridItem(label: 'Distributor SKU', value: distributorSku),
-      if (upcIsbn != null) InfoGridItem(label: 'UPC / ISBN', value: upcIsbn),
+    final allItems = <InfoGridItem>[
+      // Physical / Content details
+      if (seriesType != null)
+        InfoGridItem(
+          label: 'Format',
+          value: seriesType,
+          icon: Icons.auto_stories,
+        ),
+      if (widget.issue.altNumber != null &&
+          widget.issue.altNumber!.trim().isNotEmpty)
+        InfoGridItem(
+          label: 'Alt Number',
+          value: widget.issue.altNumber!,
+          icon: Icons.numbers,
+        ),
+      if (widget.issue.series?.volume != null)
+        InfoGridItem(
+          label: 'Volume',
+          value: '${widget.issue.series!.volume}',
+          icon: Icons.layers,
+        ),
+      if (pages != null)
+        InfoGridItem(label: 'Pages', value: '$pages', icon: Icons.article),
+      if (price != null)
+        InfoGridItem(label: 'Price', value: price, icon: Icons.attach_money),
+      if (rating != null && rating.isNotEmpty)
+        InfoGridItem(label: 'Rating', value: rating, icon: Icons.star),
+      // Key dates
       if (widget.issue.focDate != null)
-        InfoGridItem(label: 'FOC Date', value: formatDate(widget.issue.focDate)!),
+        InfoGridItem(
+          label: 'FOC Date',
+          value: formatDate(widget.issue.focDate)!,
+          icon: Icons.calendar_today,
+        ),
       if (widget.issue.coverDate != null)
-        InfoGridItem(label: 'Cover Date', value: formatDate(widget.issue.coverDate)!),
+        InfoGridItem(
+          label: 'Cover Date',
+          value: formatDate(widget.issue.coverDate)!,
+          icon: Icons.event,
+        ),
       if (widget.issue.storeDate != null)
-        InfoGridItem(label: 'Store Date', value: formatDate(widget.issue.storeDate)!),
-      InfoGridItem(label: 'Metron ID', value: '${widget.issue.id}'),
-      if (widget.issue.cvId != null)
-        InfoGridItem(label: 'CV ID', value: '${widget.issue.cvId}'),
-      if (widget.issue.gcdId != null)
-        InfoGridItem(label: 'GCD ID', value: '${widget.issue.gcdId}'),
+        InfoGridItem(
+          label: 'Store Date',
+          value: formatDate(widget.issue.storeDate)!,
+          icon: Icons.store,
+          spanFull:
+              widget.issue.focDate != null && widget.issue.coverDate != null,
+        ),
+      // Product codes
+      if (distributorSku != null && distributorSku.isNotEmpty)
+        InfoGridItem(
+          label: 'Distributor SKU',
+          value: distributorSku,
+          icon: Icons.qr_code,
+          spanFull: true,
+        ),
+      if (upcIsbn != null)
+        InfoGridItem(
+          label: 'UPC / ISBN',
+          value: upcIsbn,
+          icon: Icons.label,
+          spanFull: true,
+        ),
     ];
 
-    return InfoGrid(items: items);
+    if (allItems.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+
+    Widget gridCell(InfoGridItem item) {
+      final label = Text(
+        item.label.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+        ),
+      );
+      final value = Text(
+        item.value,
+        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      );
+      if (item.icon != null) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              item.icon,
+              size: 20,
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [label, const SizedBox(height: 2), value],
+              ),
+            ),
+          ],
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [label, const SizedBox(height: 2), value],
+      );
+    }
+
+    Widget buildItems(List<InfoGridItem> items) {
+      final rows = <Widget>[];
+      var i = 0;
+      while (i < items.length) {
+        final item = items[i];
+        if (item.spanFull) {
+          rows.add(gridCell(item));
+          i++;
+        } else {
+          final row = <Widget>[Expanded(child: gridCell(item))];
+          if (i + 1 < items.length && !items[i + 1].spanFull) {
+            row.add(const SizedBox(width: 8));
+            row.add(Expanded(child: gridCell(items[i + 1])));
+            i += 2;
+          } else {
+            row.add(const Spacer(flex: 2));
+            i++;
+          }
+          rows.add(Row(children: row));
+        }
+        if (i < items.length) {
+          rows.add(const SizedBox(height: 10));
+        }
+      }
+      return Column(children: rows);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DETAILS'),
+        const SizedBox(height: 12),
+        buildItems(allItems),
+      ],
+    );
+  }
+
+  Widget _buildIdsSection(BuildContext context) {
+    final entries = <Widget>[];
+    void addEntry(String label, String value) {
+      entries.add(
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            '$label $value',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontFamily: 'monospace',
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
+    addEntry('Metron', '${widget.issue.id}');
+    if (widget.issue.cvId != null) addEntry('CV', '${widget.issue.cvId}');
+    if (widget.issue.gcdId != null) addEntry('GCD', '${widget.issue.gcdId}');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DATABASE IDS'),
+        const SizedBox(height: 12),
+        Wrap(spacing: 6, runSpacing: 6, children: entries),
+      ],
+    );
   }
 
   Widget _buildImprintSection(BuildContext context) {
     final imprint = widget.issue.imprint;
-    if (imprint == null || imprint.name.trim().isEmpty) return const SizedBox.shrink();
+    if (imprint == null || imprint.name.trim().isEmpty)
+      return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Imprint', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 16),
-        ImprintCard(
-          imprintId: imprint.id,
-          name: imprint.name,
-        ),
+        const SectionHeader(title: 'IMPRINT'),
+        const SizedBox(height: 12),
+        ImprintCard(imprintId: imprint.id, name: imprint.name),
       ],
     );
   }
@@ -433,8 +693,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Genres', style: _sectionTitleStyle(context)),
-        const SizedBox(height: 16),
+        const SectionHeader(title: 'GENRES'),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 4,
@@ -464,6 +724,9 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final hasReprints = widget.issue.reprints.any((reprint) => reprint.id > 0);
     final hasCreators = widget.issue.credits.isNotEmpty;
     final hasCharacters = widget.issue.characters.isNotEmpty;
+    final hasTeams = widget.issue.teams.isNotEmpty;
+    final hasArcs = widget.issue.arcs.isNotEmpty;
+    final hasUniverses = widget.issue.universes.isNotEmpty;
     final hasImprint = widget.issue.imprint?.name.trim().isNotEmpty ?? false;
     final hasGenres = widget.issue.series?.genres.isNotEmpty ?? false;
 
@@ -472,6 +735,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final isbn = widget.issue.isbn?.trim();
     final hasAdditionalInfo =
         widget.issue.series?.seriesType?.name != null ||
+        (widget.issue.altNumber?.trim().isNotEmpty ?? false) ||
+        widget.issue.series?.volume != null ||
         widget.issue.page != null ||
         (widget.issue.price?.trim().isNotEmpty ?? false) ||
         (widget.issue.rating?.name.trim().isNotEmpty ?? false) ||
@@ -480,9 +745,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         (isbn != null && isbn.isNotEmpty) ||
         widget.issue.focDate != null ||
         widget.issue.coverDate != null ||
-        widget.issue.storeDate != null ||
-        widget.issue.cvId != null ||
-        widget.issue.gcdId != null;
+        widget.issue.storeDate != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,20 +762,32 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           ),
           const SizedBox(height: 16),
         ],
-        if (hasAdditionalInfo) ...[
-          _buildAdditionalInformationSection(context),
-          const SizedBox(height: 16),
-        ],
-        if (hasStories) ...[
-          _buildSectionCard(context, _buildStoriesSection(context)),
-          const SizedBox(height: 16),
-        ],
         if (hasCreators) ...[
           _buildSectionCard(context, _buildCreatorsSection(context)),
           const SizedBox(height: 16),
         ],
         if (hasCharacters) ...[
           _buildSectionCard(context, _buildCharactersSection(context)),
+          const SizedBox(height: 16),
+        ],
+        if (hasTeams) ...[
+          _buildSectionCard(context, _buildTeamsSection(context)),
+          const SizedBox(height: 16),
+        ],
+        if (hasUniverses) ...[
+          _buildSectionCard(context, _buildUniversesSection(context)),
+          const SizedBox(height: 16),
+        ],
+        if (hasStories) ...[
+          _buildSectionCard(context, _buildStoriesSection(context)),
+          const SizedBox(height: 16),
+        ],
+        if (hasArcs) ...[
+          _buildSectionCard(context, _buildArcsSection(context)),
+          const SizedBox(height: 16),
+        ],
+        if (hasAdditionalInfo) ...[
+          _buildAdditionalInformationSection(context),
           const SizedBox(height: 16),
         ],
         if (hasReprints) ...[
@@ -527,6 +802,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           _buildSectionCard(context, _buildGenresSection(context)),
           const SizedBox(height: 16),
         ],
+        _buildIdsSection(context),
+        const SizedBox(height: 16),
         Text(
           'Last modified: ${_formatModified(widget.issue.modified)}',
           style: Theme.of(

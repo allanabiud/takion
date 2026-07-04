@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:takion/src/domain/entities/arc_details.dart';
+import 'package:takion/src/domain/entities/arc_issue_list_page.dart';
+import 'package:takion/src/domain/entities/arc_list_page.dart';
 import 'package:takion/src/domain/entities/character_details.dart';
 import 'package:takion/src/domain/entities/character_issue_list_page.dart';
 import 'package:takion/src/domain/entities/character_list_page.dart';
@@ -149,6 +152,27 @@ abstract class CatalogRepository {
 
   Future<TeamDetails> getTeamDetails(
     int teamId, {
+    bool forceRefresh = false,
+  });
+
+  Future<ArcListPage> searchArcs(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<ArcDetails> getArcDetails(
+    int arcId, {
+    bool forceRefresh = false,
+  });
+
+  Future<ArcIssueListPage> getArcIssueList(
+    int arcId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 

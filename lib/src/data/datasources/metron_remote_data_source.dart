@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:takion/src/core/constants/pagination.dart';
+import 'package:takion/src/data/dto/arc_details_dto.dart';
+import 'package:takion/src/data/dto/arc_list_response_dto.dart';
 import 'package:takion/src/data/dto/character_details_dto.dart';
 import 'package:takion/src/data/dto/character_list_response_dto.dart';
 import 'package:takion/src/data/dto/creator_details_dto.dart';
@@ -109,6 +111,19 @@ abstract class MetronRemoteDataSource {
   });
 
   Future<TeamDetailsDto> getTeamDetails(int teamId);
+  Future<ArcListResponseDto> searchArcs(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
+  Future<ArcDetailsDto> getArcDetails(int arcId);
+  Future<SeriesIssueListResponseDto> getArcIssueList(
+    int arcId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  });
 
   Future<PublisherListResponseDto> searchPublishers(
     String query, {
@@ -488,6 +503,53 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   Future<TeamDetailsDto> getTeamDetails(int teamId) async {
     final response = await _dio.get('team/$teamId/');
     return TeamDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ArcListResponseDto> searchArcs(
+    String query, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final normalized = _normalizeQuery(query);
+    if (normalized.isEmpty) {
+      return const ArcListResponseDto(count: 0, results: []);
+    }
+
+    final response = await _dio.get(
+      'arc/',
+      queryParameters: {'name': normalized, 'page': page},
+      cancelToken: cancelToken,
+    );
+
+    return ArcListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<ArcDetailsDto> getArcDetails(int arcId) async {
+    final response = await _dio.get('arc/$arcId/');
+    return ArcDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<SeriesIssueListResponseDto> getArcIssueList(
+    int arcId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'arc/$arcId/issue_list/',
+      queryParameters: {'page': page},
+      cancelToken: cancelToken,
+    );
+
+    return SeriesIssueListResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override

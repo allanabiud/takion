@@ -25,7 +25,7 @@ import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
-import 'package:takion/src/presentation/components/info_grid.dart';
+import 'package:takion/src/presentation/components/section_header.dart';
 
 String _monthYear(DateTime date) {
   const months = [
@@ -298,12 +298,17 @@ class _CharacterDetailsScreenState
                                   ),
                                 ),
                                 child: ClipOval(
-                                  child: SizedBox(
+                                  child: Container(
                                     width: 260,
                                     height: 260,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+                                    ),
                                     child: CachedNetworkImage(
                                       imageUrl: details.image!,
                                       fit: BoxFit.cover,
+                                      alignment: Alignment.topCenter,
+                                      filterQuality: FilterQuality.high,
                                       placeholder: (context, url) =>
                                           _initialsAvatar(
                                             context,
@@ -391,13 +396,6 @@ class _CharacterDetailsScreenState
       ),
     );
   }
-}
-
-TextStyle? _sectionTitleStyle(BuildContext context) {
-  return Theme.of(context).textTheme.titleSmall?.copyWith(
-    fontWeight: FontWeight.w700,
-    color: Theme.of(context).colorScheme.primary,
-  );
 }
 
 class _CharacterDetailsSheet extends ConsumerWidget {
@@ -628,34 +626,44 @@ class _CharacterDetailsSheet extends ConsumerWidget {
                             ],
                           ),
                         )
-                      : HorizontalPreviewSection(
-                          title: 'Recently Appeared In',
-                          onViewAll: () => context.pushRoute(
-                            CharacterIssuesRoute(characterId: details.id),
-                          ),
-                          itemCount: previewIssues.length,
-                          height: 250,
-                          emptyText: 'No issues available.',
-                          itemBuilder: (context, index) {
-                            final issue = previewIssues[index];
-                            final issueId = issue.id;
-                            return IssueCard(
-                              issueId: issueId,
-                              imageUrl: issue.image,
-                              title:
-                                  '${issue.series?.name ?? issue.name} #${issue.number}',
-                              onTap: issueId == null
-                                  ? null
-                                  : () {
-                                      context.pushRoute(
-                                        IssueDetailsRoute(
-                                          issueId: issueId,
-                                          initialImageUrl: issue.image,
-                                        ),
-                                      );
-                                    },
-                            );
-                          },
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SectionHeader(
+                              title: 'Recently Appeared In',
+                              onViewAll: () => context.pushRoute(
+                                CharacterIssuesRoute(characterId: details.id),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            HorizontalPreviewSection(
+                              title: '',
+                              onViewAll: null,
+                              itemCount: previewIssues.length,
+                              height: 250,
+                              emptyText: 'No issues available.',
+                              itemBuilder: (context, index) {
+                                final issue = previewIssues[index];
+                                final issueId = issue.id;
+                                return IssueCard(
+                                  issueId: issueId,
+                                  imageUrl: issue.image,
+                                  title:
+                                      '${issue.series?.name ?? issue.name} #${issue.number}',
+                                  onTap: issueId == null
+                                      ? null
+                                      : () {
+                                          context.pushRoute(
+                                            IssueDetailsRoute(
+                                              issueId: issueId,
+                                              initialImageUrl: issue.image,
+                                            ),
+                                          );
+                                        },
+                                );
+                              },
+                            ),
+                          ],
                         ),
                 ),
               ),
@@ -665,13 +673,13 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Teams', style: _sectionTitleStyle(context)),
+                  child: const SectionHeader(title: 'TEAMS'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 170,
+                  child: SizedBox(
+                    height: 150,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -694,7 +702,7 @@ class _CharacterDetailsSheet extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Universes', style: _sectionTitleStyle(context)),
+                  child: const SectionHeader(title: 'UNIVERSES'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -789,7 +797,7 @@ class _CharacterDescriptionCardState extends State<_CharacterDescriptionCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Summary', style: _sectionTitleStyle(context)),
+                const SectionHeader(title: 'SUMMARY'),
                 const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
@@ -841,7 +849,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Creators', style: _sectionTitleStyle(context)),
+        const SectionHeader(title: 'CREATORS'),
         const SizedBox(height: 12),
         SizedBox(
           height: 130,
@@ -1026,11 +1034,25 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('First Appearance', style: _sectionTitleStyle(context)),
-                  const SizedBox(height: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'FIRST APPEARANCE',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                   Text(
                     label,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -1083,16 +1105,10 @@ class _CharacterInfoCard extends StatelessWidget {
     final modifiedValue = _modifiedValue();
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
-    final items = <InfoGridItem>[
-      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
-      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InfoGrid(items: items),
+        _buildIdsSection(context),
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
@@ -1102,6 +1118,47 @@ class _CharacterInfoCard extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildIdsSection(BuildContext context) {
+    final entries = <Widget>[];
+    void addEntry(String label, String value) {
+      entries.add(
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            '$label $value',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontFamily: 'monospace',
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    addEntry('Metron', '${details.id}');
+    if (details.cvId != null) addEntry('CV', '${details.cvId}');
+    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DATABASE IDS'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: entries,
+        ),
       ],
     );
   }

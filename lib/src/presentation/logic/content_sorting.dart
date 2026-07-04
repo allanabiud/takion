@@ -7,6 +7,7 @@ import 'package:takion/src/domain/entities/universe_list.dart';
 import 'package:takion/src/domain/entities/imprint_list.dart';
 import 'package:takion/src/domain/entities/team_list.dart';
 import 'package:takion/src/domain/entities/publisher_list.dart';
+import 'package:takion/src/domain/entities/arc_list.dart';
 
 enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 
@@ -37,6 +38,7 @@ enum SortPreferenceContext {
   searchTeams,
   searchPublishers,
   publisherSeries,
+  arcIssues,
 }
 
 extension SortPreferenceContextX on SortPreferenceContext {
@@ -94,6 +96,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'search_publishers';
       case SortPreferenceContext.publisherSeries:
         return 'publisher_series';
+      case SortPreferenceContext.arcIssues:
+        return 'arc_issues_sort';
     }
   }
 
@@ -151,6 +155,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.publisherSeries:
         return ContentSortOption.nameAsc;
+      case SortPreferenceContext.arcIssues:
+        return ContentSortOption.dateOldest;
     }
   }
 }
@@ -247,6 +253,19 @@ String teamSortLabel(ContentSortOption option) {
 }
 
 String publisherSortLabel(ContentSortOption option) {
+  switch (option) {
+    case ContentSortOption.nameAsc:
+      return 'Alphabetical (A-Z)';
+    case ContentSortOption.nameDesc:
+      return 'Alphabetical (Z-A)';
+    case ContentSortOption.dateNewest:
+      return 'Release Date (Newest)';
+    case ContentSortOption.dateOldest:
+      return 'Release Date (Oldest)';
+  }
+}
+
+String arcSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
       return 'Alphabetical (A-Z)';
@@ -454,6 +473,33 @@ List<TeamList> sortTeams(
   final sorted = [...teams];
 
   int compareByName(TeamList a, TeamList b) =>
+      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  switch (sortOption) {
+    case ContentSortOption.nameAsc:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.nameDesc:
+      sorted.sort((a, b) => compareByName(b, a));
+      break;
+    case ContentSortOption.dateNewest:
+      sorted.sort(compareByName);
+      break;
+    case ContentSortOption.dateOldest:
+      sorted.sort(compareByName);
+      break;
+  }
+
+  return sorted;
+}
+
+List<ArcList> sortArcs(
+  List<ArcList> arcs,
+  ContentSortOption sortOption,
+) {
+  final sorted = [...arcs];
+
+  int compareByName(ArcList a, ArcList b) =>
       a.name.toLowerCase().compareTo(b.name.toLowerCase());
 
   switch (sortOption) {

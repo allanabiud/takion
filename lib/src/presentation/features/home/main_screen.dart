@@ -58,6 +58,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       SearchTarget.imprints => 'Imprints',
       SearchTarget.teams => 'Teams',
       SearchTarget.publishers => 'Publishers',
+      SearchTarget.arcs => 'Arcs',
     };
     _searchFocusNode.unfocus();
     context.pushRoute(
@@ -435,6 +436,21 @@ class MainScreenState extends ConsumerState<MainScreen>
                   ref
                       .read(searchStateProvider.notifier)
                       .setTarget(SearchTarget.publishers);
+                },
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: _chipKeys[SearchTarget.arcs] ??= GlobalKey(),
+                label: const Text(
+                  'Arcs',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                selected: state.target == SearchTarget.arcs,
+                shape: const StadiumBorder(),
+                onSelected: (_) {
+                  ref
+                      .read(searchStateProvider.notifier)
+                      .setTarget(SearchTarget.arcs);
                 },
               ),
             ],

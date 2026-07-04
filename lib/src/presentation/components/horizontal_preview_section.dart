@@ -4,7 +4,7 @@ class HorizontalPreviewSection extends StatelessWidget {
   const HorizontalPreviewSection({
     super.key,
     required this.title,
-    required this.onViewAll,
+    this.onViewAll,
     required this.itemCount,
     required this.itemBuilder,
     this.count,
@@ -15,7 +15,7 @@ class HorizontalPreviewSection extends StatelessWidget {
 
   final String title;
   final int? count;
-  final VoidCallback onViewAll;
+  final VoidCallback? onViewAll;
   final double height;
   final int itemCount;
   final Widget Function(BuildContext, int) itemBuilder;
@@ -28,31 +28,32 @@ class HorizontalPreviewSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: onViewAll,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                count != null ? '$title ($count)' : title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
+        if (onViewAll != null)
+          InkWell(
+            onTap: onViewAll,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  count != null ? '$title ($count)' : title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Icon(
-                  Icons.chevron_right,
-                  size: 28,
-                  color: theme.colorScheme.primary,
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Icon(
+                    Icons.chevron_right,
+                    size: 28,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
+        if (onViewAll != null) const SizedBox(height: 12),
         if (itemCount == 0)
           Padding(
             padding: const EdgeInsets.only(top: 4),

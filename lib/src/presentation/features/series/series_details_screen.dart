@@ -30,6 +30,7 @@ import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
+import 'package:takion/src/presentation/components/section_header.dart';
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
@@ -679,35 +680,44 @@ class _SeriesDetailsSheet extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: HorizontalPreviewSection(
-                  title:
-                      '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
-                  onViewAll: () => context.pushRoute(
-                    SeriesIssuesRoute(seriesId: seriesId),
-                  ),
-                  itemCount: issuesPreview.length,
-                  height: 250,
-                  emptyText: 'No issues available.',
-                  itemBuilder: (context, index) {
-                    final issue = issuesPreview[index];
-                    final issueId = issue.id;
-                    return IssueCard(
-                      issueId: issueId,
-                      imageUrl: issue.image,
-                      title:
-                          '${issue.series?.name ?? issue.name} #${issue.number}',
-                      onTap: issueId == null
-                          ? null
-                          : () {
-                              context.pushRoute(
-                                IssueDetailsRoute(
-                                  issueId: issueId,
-                                  initialImageUrl: issue.image,
-                                ),
-                              );
-                            },
-                    );
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionHeader(
+                      title: '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
+                      onViewAll: () => context.pushRoute(
+                        SeriesIssuesRoute(seriesId: seriesId),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    HorizontalPreviewSection(
+                      title: '',
+                      onViewAll: null,
+                      itemCount: issuesPreview.length,
+                      height: 250,
+                      emptyText: 'No issues available.',
+                      itemBuilder: (context, index) {
+                        final issue = issuesPreview[index];
+                        final issueId = issue.id;
+                        return IssueCard(
+                          issueId: issueId,
+                          imageUrl: issue.image,
+                          title:
+                              '${issue.series?.name ?? issue.name} #${issue.number}',
+                          onTap: issueId == null
+                              ? null
+                              : () {
+                                  context.pushRoute(
+                                    IssueDetailsRoute(
+                                      issueId: issueId,
+                                      initialImageUrl: issue.image,
+                                    ),
+                                  );
+                                },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -728,6 +738,15 @@ class _SeriesDetailsSheet extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SeriesGenresCard(genres: details.genres),
+                ),
+              ),
+            ],
+            if (_idsSection()) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildIdsSection(context),
                 ),
               ),
             ],
@@ -756,6 +775,51 @@ class _SeriesDetailsSheet extends ConsumerWidget {
     );
   }
 
+  bool _idsSection() {
+    return true;
+  }
+
+  Widget _buildIdsSection(BuildContext context) {
+    final entries = <Widget>[];
+    void addEntry(String label, String value) {
+      entries.add(
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            '$label $value',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontFamily: 'monospace',
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    addEntry('Metron', '${details.id}');
+    if (details.cvId != null) addEntry('CV', '${details.cvId}');
+    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DATABASE IDS'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: entries,
+        ),
+      ],
+    );
+  }
+
   String? _modifiedValue(DateTime? modified) {
     if (modified == null) return null;
     final year = modified.year.toString().padLeft(4, '0');
@@ -765,13 +829,6 @@ class _SeriesDetailsSheet extends ConsumerWidget {
     final minute = modified.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
-}
-
-TextStyle? _sectionTitleStyle(BuildContext context) {
-  return Theme.of(context).textTheme.titleSmall?.copyWith(
-    fontWeight: FontWeight.w700,
-    color: Theme.of(context).colorScheme.primary,
-  );
 }
 
 class _SeriesDescriptionCard extends StatefulWidget {
@@ -827,7 +884,7 @@ class _SeriesDescriptionCardState extends State<_SeriesDescriptionCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Summary', style: _sectionTitleStyle(context)),
+                const SectionHeader(title: 'SUMMARY'),
                 const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
@@ -882,7 +939,7 @@ class _SeriesAssociatedCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Associated Series', style: _sectionTitleStyle(context)),
+        const SectionHeader(title: 'ASSOCIATED SERIES'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -955,7 +1012,7 @@ class _SeriesGenresCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Genres', style: _sectionTitleStyle(context)),
+        const SectionHeader(title: 'GENRES'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -992,7 +1049,7 @@ class _SeriesInfoCard extends StatelessWidget {
         ? '$start - Present'
         : 'Until $end';
 
-    final items = <InfoGridItem>[
+    final contentItems = <InfoGridItem>[
       if (details.seriesType?.name != null)
         InfoGridItem(label: 'Type', value: details.seriesType!.name),
       if (details.status != null)
@@ -1005,12 +1062,16 @@ class _SeriesInfoCard extends StatelessWidget {
         InfoGridItem(label: 'Issues', value: '${details.issueCount}'),
       if (details.imprint?.name != null && details.imprint!.name.trim().isNotEmpty)
         InfoGridItem(label: 'Imprint', value: details.imprint!.name.trim()),
-      InfoGridItem(label: 'Metron ID', value: '${details.id}'),
-      if (details.cvId != null) InfoGridItem(label: 'CV ID', value: '${details.cvId}'),
-      if (details.gcdId != null) InfoGridItem(label: 'GCD ID', value: '${details.gcdId}'),
     ];
 
-    return InfoGrid(items: items);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DETAILS'),
+        const SizedBox(height: 12),
+        InfoGrid(items: contentItems),
+      ],
+    );
   }
 }
 

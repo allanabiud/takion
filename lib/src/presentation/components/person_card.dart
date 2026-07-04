@@ -83,6 +83,8 @@ class PersonCard extends ConsumerWidget {
                         ? CachedNetworkImage(
                             imageUrl: effectiveImageUrl,
                             fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
+                            filterQuality: FilterQuality.high,
                             placeholder: (context, url) => Center(
                               child: Text(
                                 initials(name),

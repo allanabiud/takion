@@ -51,16 +51,7 @@ class AppRouter extends RootStackRouter {
       path: '/issue-cover-gallery',
       guards: [authGuard],
     ),
-    AutoRoute(
-      page: IssueCreatorsRoute.page,
-      path: '/issue/:issueId/creators',
-      guards: [authGuard],
-    ),
-    AutoRoute(
-      page: IssueCharactersRoute.page,
-      path: '/issue/:issueId/characters',
-      guards: [authGuard],
-    ),
+
     AutoRoute(
       page: CharacterDetailsRoute.page,
       path: '/character/:characterId',
@@ -89,6 +80,16 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: TeamDetailsRoute.page,
       path: '/team/:teamId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: ArcDetailsRoute.page,
+      path: '/arc/:arcId',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: ArcIssuesRoute.page,
+      path: '/arc/:arcId/issues',
       guards: [authGuard],
     ),
     AutoRoute(

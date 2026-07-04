@@ -16,6 +16,8 @@ import 'package:takion/src/data/dto/team_details_dto.dart';
 import 'package:takion/src/data/dto/team_list_dto.dart';
 import 'package:takion/src/data/dto/publisher_details_dto.dart';
 import 'package:takion/src/data/dto/publisher_list_dto.dart';
+import 'package:takion/src/data/dto/arc_details_dto.dart';
+import 'package:takion/src/data/dto/arc_list_dto.dart';
 
 class IssueSearchPageCacheMeta {
   const IssueSearchPageCacheMeta({
@@ -127,6 +129,18 @@ class CharacterIssueListPageCacheMeta {
 
 class TeamSearchPageCacheMeta {
   const TeamSearchPageCacheMeta({
+    required this.count,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class ArcSearchPageCacheMeta {
+  const ArcSearchPageCacheMeta({
     required this.count,
     this.next,
     this.previous,
@@ -475,6 +489,68 @@ abstract class MetronLocalDataSource {
 
   Future<DateTime?> getTeamDetailsCachedAt(int teamId);
 
+  Future<void> cacheArcSearchResults(
+    String query,
+    List<ArcListDto> arcs, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+
+  Future<List<ArcListDto>?> getArcSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<DateTime?> getArcSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<ArcSearchPageCacheMeta?> getArcSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  });
+
+  Future<void> cacheArcDetails(ArcDetailsDto details);
+
+  Future<ArcDetailsDto?> getArcDetails(int arcId);
+
+  Future<DateTime?> getArcDetailsCachedAt(int arcId);
+
+  Future<void> cacheArcIssueListResults(
+    int arcId,
+    List<IssueListDto> issues, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  });
+
+  Future<List<IssueListDto>?> getArcIssueListResults(
+    int arcId, {
+    required int page,
+    required int limit,
+  });
+
+  Future<DateTime?> getArcIssueListResultsCachedAt(
+    int arcId, {
+    required int page,
+    required int limit,
+  });
+
+  Future<SeriesIssueListPageCacheMeta?> getArcIssueListResultsMeta(
+    int arcId, {
+    required int page,
+    required int limit,
+  });
+
   Future<void> cachePublisherSearchResults(
     String query,
     List<PublisherListDto> publishers, {
@@ -577,6 +653,11 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   static const String _publisherDetailsBox = 'publisher_details_box';
   static const String _publisherSeriesListBox = 'publisher_series_list_box';
   static const String _publisherSeriesListMetaBox = 'publisher_series_list_meta_box';
+  static const String _arcSearchBox = 'arc_search_box';
+  static const String _arcSearchMetaBox = 'arc_search_meta_box';
+  static const String _arcDetailsBox = 'arc_details_box';
+  static const String _arcIssueListBox = 'arc_issue_list_box';
+  static const String _arcIssueListMetaBox = 'arc_issue_list_meta_box';
   static const String _cacheMetaBox = 'cache_meta_box';
 
   final Map<String, Box> _openedBoxes = {};
@@ -691,6 +772,16 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   String _getPublisherSeriesListMetaKey(
           int publisherId, int page, int limit) =>
       'publisher_series_list:${_getPublisherSeriesListKey(publisherId, page, limit)}';
+
+  String _getArcSearchKey(String query, int page, int limit) =>
+      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+  String _getArcSearchMetaKey(String query, int page, int limit) =>
+      'arc_search:${_getArcSearchKey(query, page, limit)}';
+  String _getArcDetailsMetaKey(int arcId) => 'arc_details:$arcId';
+  String _getArcIssueListKey(int arcId, int page, int limit) =>
+      'arc_issue_list:$arcId:p$page:l${_normalizeLimit(limit)}';
+  String _getArcIssueListMetaKey(int arcId, int page, int limit) =>
+      'arc_issue_list:${_getArcIssueListKey(arcId, page, limit)}';
 
   @override
   Future<void> cacheWeeklyReleases(
@@ -2032,6 +2123,192 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     final searchKey = _getPublisherSeriesListKey(publisherId, page, limit);
     final box = await _getBox<Map>(_publisherSeriesListMetaBox);
     final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return SeriesIssueListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheArcSearchResults(
+    String query,
+    List<ArcListDto> arcs, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final searchKey = _getArcSearchKey(query, page, limit);
+    final box = await _getBox<List>(_arcSearchBox);
+    await box.put(searchKey, arcs.map((entry) => entry.toJson()).toList());
+
+    final searchMetaBox = await _getBox<Map>(_arcSearchMetaBox);
+    await searchMetaBox.put(searchKey, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getArcSearchMetaKey(query, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<ArcListDto>?> getArcSearchResults(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getArcSearchKey(query, page, limit);
+    final box = await _getBox<List>(_arcSearchBox);
+    final rawData = box.get(searchKey);
+    if (rawData != null) {
+      return rawData
+          .whereType<Map>()
+          .map((entry) => entry.cast<String, dynamic>())
+          .map(ArcListDto.fromJson)
+          .toList();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getArcSearchResultsCachedAt(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getArcSearchMetaKey(query, page, limit));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<ArcSearchPageCacheMeta?> getArcSearchResultsMeta(
+    String query, {
+    required int page,
+    required int limit,
+  }) async {
+    final searchKey = _getArcSearchKey(query, page, limit);
+    final box = await _getBox<Map>(_arcSearchMetaBox);
+    final data = box.get(searchKey);
+    if (data == null) return null;
+
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+
+    return ArcSearchPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  @override
+  Future<void> cacheArcDetails(ArcDetailsDto details) async {
+    final box = await _getBox<Map>(_arcDetailsBox);
+    await box.put(details.id, details.toJson());
+
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    await metaBox.put(
+      _getArcDetailsMetaKey(details.id),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<ArcDetailsDto?> getArcDetails(int arcId) async {
+    final box = await _getBox<Map>(_arcDetailsBox);
+    final data = box.get(arcId);
+    if (data == null) return null;
+    return ArcDetailsDto.fromJson(data.cast<String, dynamic>());
+  }
+
+  @override
+  Future<DateTime?> getArcDetailsCachedAt(int arcId) async {
+    final metaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = metaBox.get(_getArcDetailsMetaKey(arcId));
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<void> cacheArcIssueListResults(
+    int arcId,
+    List<IssueListDto> issues, {
+    required int page,
+    required int limit,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getArcIssueListKey(arcId, page, limit);
+    final box = await _getBox<List>(_arcIssueListBox);
+    await box.put(key, issues);
+
+    final metaBox = await _getBox<Map>(_arcIssueListMetaBox);
+    await metaBox.put(key, {
+      'count': count,
+      'next': next,
+      'previous': previous,
+    });
+
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
+    await cacheMetaBox.put(
+      _getArcIssueListMetaKey(arcId, page, limit),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Future<List<IssueListDto>?> getArcIssueListResults(
+    int arcId, {
+    required int page,
+    required int limit,
+  }) async {
+    final key = _getArcIssueListKey(arcId, page, limit);
+    final box = await _getBox<List>(_arcIssueListBox);
+    final data = box.get(key);
+    if (data != null) {
+      return data.cast<IssueListDto>();
+    }
+    return null;
+  }
+
+  @override
+  Future<DateTime?> getArcIssueListResultsCachedAt(
+    int arcId, {
+    required int page,
+    required int limit,
+  }) async {
+    final cacheMetaBox = await _getBox<int>(_cacheMetaBox);
+    final epoch = cacheMetaBox.get(
+      _getArcIssueListMetaKey(arcId, page, limit),
+    );
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  @override
+  Future<SeriesIssueListPageCacheMeta?> getArcIssueListResultsMeta(
+    int arcId, {
+    required int page,
+    required int limit,
+  }) async {
+    final key = _getArcIssueListKey(arcId, page, limit);
+    final box = await _getBox<Map>(_arcIssueListMetaBox);
+    final data = box.get(key);
     if (data == null) return null;
 
     final count = (data['count'] as num?)?.toInt();

@@ -1,0 +1,15 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
+import 'package:takion/src/domain/entities/arc_details.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
+
+final arcDetailsProvider =
+    FutureProvider.family<ArcDetails, int>((ref, id) async {
+  final repository = ref.watch(catalogRepositoryProvider);
+  final result = await repository.getArcDetails(id);
+  if (result.image != null && result.image!.trim().isNotEmpty) {
+    ref.read(entityImageCacheProvider).set('arc', id, result.image!);
+    ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
+  }
+  return result;
+});

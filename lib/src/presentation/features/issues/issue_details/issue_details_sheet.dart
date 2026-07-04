@@ -49,11 +49,9 @@ class IssueDetailsSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final publisher = issue.publisher;
     final storeDate = issue.storeDate;
-
-    String? formattedDate;
-    if (storeDate != null) {
-      formattedDate = DateFormat.yMMMd().format(storeDate.toLocal());
-    }
+    final formattedDate = storeDate != null
+        ? DateFormat.yMMMd().format(storeDate.toLocal())
+        : null;
 
     return Row(
       children: [
@@ -84,7 +82,7 @@ class IssueDetailsSheet extends StatelessWidget {
         if (formattedDate != null)
           Text(
             formattedDate,
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
