@@ -74,22 +74,38 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
     final pageAsync = widget.pageAsync;
     final data = pageAsync.value ?? _lastData;
 
+    final childContent = pageAsync.when(
+      loading: () {
+        if (data != null) {
+          return _buildScaffold(data, isLoading: true);
+        }
+        return const AsyncStatePanel.loading();
+      },
+      error: (error, _) =>
+          AsyncStatePanel.error(errorMessage: '${widget.errorPrefix}: $error'),
+      data: (pageData) {
+        return _buildScaffold(pageData, isLoading: false);
+      },
+    );
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), actions: widget.appBarActions),
-      body: pageAsync.when(
-        loading: () {
-          if (data != null) {
-            return _buildScaffold(data, isLoading: true);
-          }
-          return const AsyncStatePanel.loading();
-        },
-        error: (error, _) => AsyncStatePanel.error(
-          errorMessage: '${widget.errorPrefix}: $error',
+      appBar: AppBar(
+        title: Text(
+          widget.title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
-        data: (pageData) {
-          return _buildScaffold(pageData, isLoading: false);
-        },
+        actions: widget.appBarActions,
       ),
+      body: widget.header != null
+          ? Column(
+              children: [
+                widget.header!,
+                Expanded(child: childContent),
+              ],
+            )
+          : childContent,
     );
   }
 
@@ -109,7 +125,7 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
       onPrevious: widget.onPrevious,
       onNext: widget.onNext,
       itemCount: pageData.results.length,
-      header: widget.header,
+      header: null,
       isLoading: isLoading,
       itemBuilder: (context, index) {
         final item = pageData.results[index];

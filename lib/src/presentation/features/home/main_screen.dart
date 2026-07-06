@@ -134,7 +134,14 @@ class MainScreenState extends ConsumerState<MainScreen>
               : const Icon(Icons.account_circle_outlined),
           onPressed: () => context.pushRoute(const UserProfileRoute()),
         ),
-        title: Text(titles[tabsRouter.activeIndex]),
+        title: Text(
+          titles[tabsRouter.activeIndex],
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Rubik',
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -244,8 +251,23 @@ class MainScreenState extends ConsumerState<MainScreen>
     );
   }
 
+  String _searchHintForTarget(SearchTarget target) {
+    return switch (target) {
+      SearchTarget.series => 'Search series...',
+      SearchTarget.issues => 'Search issues...',
+      SearchTarget.characters => 'Search characters...',
+      SearchTarget.creators => 'Search creators...',
+      SearchTarget.universes => 'Search universes...',
+      SearchTarget.imprints => 'Search imprints...',
+      SearchTarget.teams => 'Search teams...',
+      SearchTarget.publishers => 'Search publishers...',
+      SearchTarget.arcs => 'Search arcs...',
+    };
+  }
+
   Widget _buildSearchFieldRow() {
     final showClearButton = _searchController.text.isNotEmpty;
+    final target = ref.watch(searchStateProvider).target;
 
     return Row(
       children: [
@@ -261,7 +283,7 @@ class MainScreenState extends ConsumerState<MainScreen>
             focusNode: _searchFocusNode,
             textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(
-              hintText: 'Search comics...',
+              hintText: _searchHintForTarget(target),
               border: InputBorder.none,
               filled: false,
               isDense: true,
@@ -314,146 +336,49 @@ class MainScreenState extends ConsumerState<MainScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Search in:',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            children: [
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.series] ??= GlobalKey(),
-                label: const Text(
-                  'Series',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+            children: List.generate(SearchTarget.values.length, (i) {
+              final t = SearchTarget.values[i];
+              final label = switch (t) {
+                SearchTarget.series => 'Series',
+                SearchTarget.issues => 'Issues',
+                SearchTarget.characters => 'Characters',
+                SearchTarget.creators => 'Creators',
+                SearchTarget.universes => 'Universes',
+                SearchTarget.imprints => 'Imprints',
+                SearchTarget.teams => 'Teams',
+                SearchTarget.publishers => 'Publishers',
+                SearchTarget.arcs => 'Arcs',
+              };
+              return Padding(
+                padding: EdgeInsets.only(right: i < SearchTarget.values.length - 1 ? 8 : 0),
+                child: ChoiceChip(
+                  key: _chipKeys[t] ??= GlobalKey(),
+                  label: Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  selected: state.target == t,
+                  shape: const StadiumBorder(),
+                  onSelected: (_) {
+                    ref.read(searchStateProvider.notifier).setTarget(t);
+                  },
                 ),
-                selected: state.target == SearchTarget.series,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.series);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.issues] ??= GlobalKey(),
-                label: const Text(
-                  'Issues',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.issues,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.issues);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.characters] ??= GlobalKey(),
-                label: const Text(
-                  'Characters',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.characters,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.characters);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.creators] ??= GlobalKey(),
-                label: const Text(
-                  'Creators',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.creators,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.creators);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.universes] ??= GlobalKey(),
-                label: const Text(
-                  'Universes',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.universes,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.universes);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.imprints] ??= GlobalKey(),
-                label: const Text(
-                  'Imprints',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.imprints,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.imprints);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.teams] ??= GlobalKey(),
-                label: const Text(
-                  'Teams',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.teams,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.teams);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.publishers] ??= GlobalKey(),
-                label: const Text(
-                  'Publishers',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.publishers,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.publishers);
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: _chipKeys[SearchTarget.arcs] ??= GlobalKey(),
-                label: const Text(
-                  'Arcs',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                selected: state.target == SearchTarget.arcs,
-                shape: const StadiumBorder(),
-                onSelected: (_) {
-                  ref
-                      .read(searchStateProvider.notifier)
-                      .setTarget(SearchTarget.arcs);
-                },
-              ),
-            ],
+              );
+            }),
           ),
         ),
         Expanded(
@@ -469,40 +394,24 @@ class MainScreenState extends ConsumerState<MainScreen>
                     return ListTile(
                       leading: const Icon(Icons.history),
                       title: Text(item),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: 'Use query',
-                            icon: const Icon(Icons.north_west),
-                            onPressed: () {
-                              _searchController.text = item;
-                              _searchController.selection =
-                                  TextSelection.fromPosition(
-                                    TextPosition(
-                                      offset: _searchController.text.length,
-                                    ),
-                                  );
-                            },
-                          ),
-                          IconButton(
-                            tooltip: 'Delete from history',
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () {
-                              ref
-                                  .read(searchStateProvider.notifier)
-                                  .removeHistory(item);
-                            },
-                          ),
-                        ],
+                      trailing: IconButton(
+                        tooltip: 'Delete from history',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () {
+                          ref
+                              .read(searchStateProvider.notifier)
+                              .removeHistory(item);
+                        },
                       ),
                       onTap: () {
                         _searchController.text = item;
-                        _searchController
-                            .selection = TextSelection.fromPosition(
-                          TextPosition(offset: _searchController.text.length),
-                        );
-                        _submitSearch();
+                        _searchController.selection =
+                            TextSelection.fromPosition(
+                              TextPosition(
+                                offset: _searchController.text.length,
+                              ),
+                            );
+                        _searchFocusNode.requestFocus();
                       },
                     );
                   },

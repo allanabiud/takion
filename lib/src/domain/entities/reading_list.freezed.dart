@@ -287,7 +287,7 @@ as bool,
 /// @nodoc
 mixin _$ReadingList {
 
-@HiveField(0) String get id;@HiveField(1) String get title;@HiveField(2) String get description;@HiveField(3) bool get isOrdered;@HiveField(4) ListContentType get contentType;@HiveField(5) DateTime get createdAt;@HiveField(6) DateTime get updatedAt;@HiveField(7) List<ReadingListItem> get items;
+@HiveField(0) String get id;@HiveField(1) String get title;@HiveField(2) String get description;@HiveField(3) bool get isOrdered;@HiveField(4) ListContentType get contentType;@HiveField(5) DateTime get createdAt;@HiveField(6) DateTime get updatedAt;@HiveField(7) List<ReadingListItem> get items;@HiveField(8) int? get metronSourceId;@HiveField(9) String? get metronAttributionSource;@HiveField(10) String? get metronAttributionUrl;@HiveField(11) String? get metronImageUrl;@HiveField(12) String? get metronListType;@HiveField(13) DateTime? get lastSyncedAt;
 /// Create a copy of ReadingList
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -300,16 +300,16 @@ $ReadingListCopyWith<ReadingList> get copyWith => _$ReadingListCopyWithImpl<Read
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(items));
+int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(items),metronSourceId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt);
 
 @override
 String toString() {
-  return 'ReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
+  return 'ReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
 }
 
 
@@ -320,7 +320,7 @@ abstract mixin class $ReadingListCopyWith<$Res>  {
   factory $ReadingListCopyWith(ReadingList value, $Res Function(ReadingList) _then) = _$ReadingListCopyWithImpl;
 @useResult
 $Res call({
-@HiveField(0) String id,@HiveField(1) String title,@HiveField(2) String description,@HiveField(3) bool isOrdered,@HiveField(4) ListContentType contentType,@HiveField(5) DateTime createdAt,@HiveField(6) DateTime updatedAt,@HiveField(7) List<ReadingListItem> items
+@HiveField(0) String id,@HiveField(1) String title,@HiveField(2) String description,@HiveField(3) bool isOrdered,@HiveField(4) ListContentType contentType,@HiveField(5) DateTime createdAt,@HiveField(6) DateTime updatedAt,@HiveField(7) List<ReadingListItem> items,@HiveField(8) int? metronSourceId,@HiveField(9) String? metronAttributionSource,@HiveField(10) String? metronAttributionUrl,@HiveField(11) String? metronImageUrl,@HiveField(12) String? metronListType,@HiveField(13) DateTime? lastSyncedAt
 });
 
 
@@ -337,7 +337,7 @@ class _$ReadingListCopyWithImpl<$Res>
 
 /// Create a copy of ReadingList
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -347,7 +347,13 @@ as bool,contentType: null == contentType ? _self.contentType : contentType // ig
 as ListContentType,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<ReadingListItem>,
+as List<ReadingListItem>,metronSourceId: freezed == metronSourceId ? _self.metronSourceId : metronSourceId // ignore: cast_nullable_to_non_nullable
+as int?,metronAttributionSource: freezed == metronAttributionSource ? _self.metronAttributionSource : metronAttributionSource // ignore: cast_nullable_to_non_nullable
+as String?,metronAttributionUrl: freezed == metronAttributionUrl ? _self.metronAttributionUrl : metronAttributionUrl // ignore: cast_nullable_to_non_nullable
+as String?,metronImageUrl: freezed == metronImageUrl ? _self.metronImageUrl : metronImageUrl // ignore: cast_nullable_to_non_nullable
+as String?,metronListType: freezed == metronListType ? _self.metronListType : metronListType // ignore: cast_nullable_to_non_nullable
+as String?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -432,10 +438,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String id, @HiveField(1)  String title, @HiveField(2)  String description, @HiveField(3)  bool isOrdered, @HiveField(4)  ListContentType contentType, @HiveField(5)  DateTime createdAt, @HiveField(6)  DateTime updatedAt, @HiveField(7)  List<ReadingListItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String id, @HiveField(1)  String title, @HiveField(2)  String description, @HiveField(3)  bool isOrdered, @HiveField(4)  ListContentType contentType, @HiveField(5)  DateTime createdAt, @HiveField(6)  DateTime updatedAt, @HiveField(7)  List<ReadingListItem> items, @HiveField(8)  int? metronSourceId, @HiveField(9)  String? metronAttributionSource, @HiveField(10)  String? metronAttributionUrl, @HiveField(11)  String? metronImageUrl, @HiveField(12)  String? metronListType, @HiveField(13)  DateTime? lastSyncedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReadingList() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items);case _:
+return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
   return orElse();
 
 }
@@ -453,10 +459,10 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String id, @HiveField(1)  String title, @HiveField(2)  String description, @HiveField(3)  bool isOrdered, @HiveField(4)  ListContentType contentType, @HiveField(5)  DateTime createdAt, @HiveField(6)  DateTime updatedAt, @HiveField(7)  List<ReadingListItem> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String id, @HiveField(1)  String title, @HiveField(2)  String description, @HiveField(3)  bool isOrdered, @HiveField(4)  ListContentType contentType, @HiveField(5)  DateTime createdAt, @HiveField(6)  DateTime updatedAt, @HiveField(7)  List<ReadingListItem> items, @HiveField(8)  int? metronSourceId, @HiveField(9)  String? metronAttributionSource, @HiveField(10)  String? metronAttributionUrl, @HiveField(11)  String? metronImageUrl, @HiveField(12)  String? metronListType, @HiveField(13)  DateTime? lastSyncedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ReadingList():
-return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items);case _:
+return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -473,10 +479,10 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String id, @HiveField(1)  String title, @HiveField(2)  String description, @HiveField(3)  bool isOrdered, @HiveField(4)  ListContentType contentType, @HiveField(5)  DateTime createdAt, @HiveField(6)  DateTime updatedAt, @HiveField(7)  List<ReadingListItem> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String id, @HiveField(1)  String title, @HiveField(2)  String description, @HiveField(3)  bool isOrdered, @HiveField(4)  ListContentType contentType, @HiveField(5)  DateTime createdAt, @HiveField(6)  DateTime updatedAt, @HiveField(7)  List<ReadingListItem> items, @HiveField(8)  int? metronSourceId, @HiveField(9)  String? metronAttributionSource, @HiveField(10)  String? metronAttributionUrl, @HiveField(11)  String? metronImageUrl, @HiveField(12)  String? metronListType, @HiveField(13)  DateTime? lastSyncedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ReadingList() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items);case _:
+return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
   return null;
 
 }
@@ -488,7 +494,7 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 @JsonSerializable()
 
 class _ReadingList implements ReadingList {
-  const _ReadingList({@HiveField(0) required this.id, @HiveField(1) required this.title, @HiveField(2) required this.description, @HiveField(3) required this.isOrdered, @HiveField(4) required this.contentType, @HiveField(5) required this.createdAt, @HiveField(6) required this.updatedAt, @HiveField(7) required final  List<ReadingListItem> items}): _items = items;
+  const _ReadingList({@HiveField(0) required this.id, @HiveField(1) required this.title, @HiveField(2) required this.description, @HiveField(3) required this.isOrdered, @HiveField(4) required this.contentType, @HiveField(5) required this.createdAt, @HiveField(6) required this.updatedAt, @HiveField(7) required final  List<ReadingListItem> items, @HiveField(8) this.metronSourceId, @HiveField(9) this.metronAttributionSource, @HiveField(10) this.metronAttributionUrl, @HiveField(11) this.metronImageUrl, @HiveField(12) this.metronListType, @HiveField(13) this.lastSyncedAt}): _items = items;
   factory _ReadingList.fromJson(Map<String, dynamic> json) => _$ReadingListFromJson(json);
 
 @override@HiveField(0) final  String id;
@@ -505,6 +511,12 @@ class _ReadingList implements ReadingList {
   return EqualUnmodifiableListView(_items);
 }
 
+@override@HiveField(8) final  int? metronSourceId;
+@override@HiveField(9) final  String? metronAttributionSource;
+@override@HiveField(10) final  String? metronAttributionUrl;
+@override@HiveField(11) final  String? metronImageUrl;
+@override@HiveField(12) final  String? metronListType;
+@override@HiveField(13) final  DateTime? lastSyncedAt;
 
 /// Create a copy of ReadingList
 /// with the given fields replaced by the non-null parameter values.
@@ -519,16 +531,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(_items));
+int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(_items),metronSourceId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt);
 
 @override
 String toString() {
-  return 'ReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items)';
+  return 'ReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
 }
 
 
@@ -539,7 +551,7 @@ abstract mixin class _$ReadingListCopyWith<$Res> implements $ReadingListCopyWith
   factory _$ReadingListCopyWith(_ReadingList value, $Res Function(_ReadingList) _then) = __$ReadingListCopyWithImpl;
 @override @useResult
 $Res call({
-@HiveField(0) String id,@HiveField(1) String title,@HiveField(2) String description,@HiveField(3) bool isOrdered,@HiveField(4) ListContentType contentType,@HiveField(5) DateTime createdAt,@HiveField(6) DateTime updatedAt,@HiveField(7) List<ReadingListItem> items
+@HiveField(0) String id,@HiveField(1) String title,@HiveField(2) String description,@HiveField(3) bool isOrdered,@HiveField(4) ListContentType contentType,@HiveField(5) DateTime createdAt,@HiveField(6) DateTime updatedAt,@HiveField(7) List<ReadingListItem> items,@HiveField(8) int? metronSourceId,@HiveField(9) String? metronAttributionSource,@HiveField(10) String? metronAttributionUrl,@HiveField(11) String? metronImageUrl,@HiveField(12) String? metronListType,@HiveField(13) DateTime? lastSyncedAt
 });
 
 
@@ -556,7 +568,7 @@ class __$ReadingListCopyWithImpl<$Res>
 
 /// Create a copy of ReadingList
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,}) {
   return _then(_ReadingList(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -566,7 +578,13 @@ as bool,contentType: null == contentType ? _self.contentType : contentType // ig
 as ListContentType,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
-as List<ReadingListItem>,
+as List<ReadingListItem>,metronSourceId: freezed == metronSourceId ? _self.metronSourceId : metronSourceId // ignore: cast_nullable_to_non_nullable
+as int?,metronAttributionSource: freezed == metronAttributionSource ? _self.metronAttributionSource : metronAttributionSource // ignore: cast_nullable_to_non_nullable
+as String?,metronAttributionUrl: freezed == metronAttributionUrl ? _self.metronAttributionUrl : metronAttributionUrl // ignore: cast_nullable_to_non_nullable
+as String?,metronImageUrl: freezed == metronImageUrl ? _self.metronImageUrl : metronImageUrl // ignore: cast_nullable_to_non_nullable
+as String?,metronListType: freezed == metronListType ? _self.metronListType : metronListType // ignore: cast_nullable_to_non_nullable
+as String?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

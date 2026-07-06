@@ -486,67 +486,52 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         : null;
 
     final allItems = <InfoGridItem>[
-      // Physical / Content details
+      // Format / Pages / Price / Volume / Rating
       if (seriesType != null)
+        InfoGridItem(label: 'Format', value: seriesType),
+      if (pages != null)
+        InfoGridItem(label: 'Pages', value: '$pages'),
+      if (price != null)
+        InfoGridItem(label: 'Price', value: price),
+      if (widget.issue.series?.volume != null)
         InfoGridItem(
-          label: 'Format',
-          value: seriesType,
-          icon: Icons.auto_stories,
+          label: 'Volume',
+          value: '${widget.issue.series!.volume}',
         ),
+      if (rating != null && rating.isNotEmpty)
+        InfoGridItem(label: 'Rating', value: rating),
       if (widget.issue.altNumber != null &&
           widget.issue.altNumber!.trim().isNotEmpty)
         InfoGridItem(
           label: 'Alt Number',
           value: widget.issue.altNumber!,
-          icon: Icons.numbers,
         ),
-      if (widget.issue.series?.volume != null)
-        InfoGridItem(
-          label: 'Volume',
-          value: '${widget.issue.series!.volume}',
-          icon: Icons.layers,
-        ),
-      if (pages != null)
-        InfoGridItem(label: 'Pages', value: '$pages', icon: Icons.article),
-      if (price != null)
-        InfoGridItem(label: 'Price', value: price, icon: Icons.attach_money),
-      if (rating != null && rating.isNotEmpty)
-        InfoGridItem(label: 'Rating', value: rating, icon: Icons.star),
-      // Key dates
+      // Dates
       if (widget.issue.focDate != null)
         InfoGridItem(
           label: 'FOC Date',
           value: formatDate(widget.issue.focDate)!,
-          icon: Icons.calendar_today,
         ),
       if (widget.issue.coverDate != null)
         InfoGridItem(
           label: 'Cover Date',
           value: formatDate(widget.issue.coverDate)!,
-          icon: Icons.event,
         ),
       if (widget.issue.storeDate != null)
         InfoGridItem(
           label: 'Store Date',
           value: formatDate(widget.issue.storeDate)!,
-          icon: Icons.store,
-          spanFull:
-              widget.issue.focDate != null && widget.issue.coverDate != null,
         ),
       // Product codes
       if (distributorSku != null && distributorSku.isNotEmpty)
         InfoGridItem(
           label: 'Distributor SKU',
           value: distributorSku,
-          icon: Icons.qr_code,
-          spanFull: true,
         ),
       if (upcIsbn != null)
         InfoGridItem(
           label: 'UPC / ISBN',
           value: upcIsbn,
-          icon: Icons.label,
-          spanFull: true,
         ),
     ];
 
@@ -675,8 +660,9 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
   Widget _buildImprintSection(BuildContext context) {
     final imprint = widget.issue.imprint;
-    if (imprint == null || imprint.name.trim().isEmpty)
+    if (imprint == null || imprint.name.trim().isEmpty) {
       return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

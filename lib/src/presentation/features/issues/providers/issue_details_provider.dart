@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/perf/performance_metrics.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
@@ -8,14 +9,23 @@ part 'issue_details_provider.g.dart';
 
 @riverpod
 class IssueDetailsNotifier extends _$IssueDetailsNotifier {
+  Future<void> _cacheIssueImage(IssueDetails details) async {
+    final image = details.image?.trim();
+    if (image == null || image.isEmpty) return;
+    await ref.read(entityImageCacheProvider).set('issue', details.id, image);
+    ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
+  }
+
   @override
   Future<IssueDetails> build(int issueId) async {
     ref.keepAlive();
     final repository = ref.watch(catalogRepositoryProvider);
-    return AppPerformanceMetrics.instance.trackProvider(
+    final details = await AppPerformanceMetrics.instance.trackProvider(
       'issueDetailsProvider',
       () => repository.getIssueDetails(issueId),
     );
+    await _cacheIssueImage(details);
+    return details;
   }
 
   Future<void> refresh() async {
@@ -24,7 +34,12 @@ class IssueDetailsNotifier extends _$IssueDetailsNotifier {
 
     final newState = await AsyncValue.guard(() async {
       final repository = ref.read(catalogRepositoryProvider);
-      return repository.getIssueDetails(issueId, forceRefresh: true);
+      final details = await repository.getIssueDetails(
+        issueId,
+        forceRefresh: true,
+      );
+      await _cacheIssueImage(details);
+      return details;
     });
     state = newState;
   }

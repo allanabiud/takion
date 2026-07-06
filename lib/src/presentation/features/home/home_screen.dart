@@ -15,6 +15,7 @@ import 'package:takion/src/presentation/features/releases/providers/weekly_relea
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 
+
 @RoutePage()
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -247,22 +248,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 44,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 5,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  return _buildActionPill(
-                    context: context,
-                    index: index,
-                  );
-                },
               ),
             ),
             const SizedBox(height: 20),
@@ -544,6 +529,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
             ),
             const SizedBox(height: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Browse Metron',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: 9,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      return _buildBrowsePill(
+                        context: context,
+                        index: index,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             continueReadingAsync.when(
               data: (items) {
                 if (items.isEmpty) return const SizedBox.shrink();
@@ -698,6 +713,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               error: (_, _) => const SizedBox.shrink(),
             ),
+
             _buildWeeklyReleaseSection(
               context: context,
               ref: ref,
@@ -722,17 +738,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildActionPill({
+  Widget _buildBrowsePill({
     required BuildContext context,
     required int index,
   }) {
     final theme = Theme.of(context);
     final actions = [
-      (Icons.inventory_2_outlined, 'My Comics', () => context.pushRoute(const MyComicsRoute())),
-      (Icons.shopping_bag_outlined, 'Pulls', () => context.pushRoute(const MyPullsRoute())),
-      (Icons.turned_in_not, 'Wishlist', () => context.pushRoute(const WishlistRoute())),
-      (Icons.notifications_outlined, 'Subscriptions', () => context.pushRoute(const SubscriptionsRoute())),
-      (Icons.list_alt_outlined, 'Reading Lists', () => context.pushRoute(const MyReadingListsRoute())),
+      (Icons.list_alt, 'Reading Lists', () => context.pushRoute(const MetronReadingListBrowserRoute())),
+      (Icons.business, 'Publishers', () => context.pushRoute(const PublisherBrowseRoute())),
+      (Icons.link, 'Story Arcs', () => context.pushRoute(const ArcBrowseRoute())),
+      (Icons.groups, 'Teams', () => context.pushRoute(const TeamBrowseRoute())),
+      (Icons.person, 'Characters', () => context.pushRoute(const CharacterBrowseRoute())),
+      (Icons.tv, 'Series', () => context.pushRoute(const SeriesBrowseRoute())),
+      (Icons.language, 'Universes', () => context.pushRoute(const UniverseBrowseRoute())),
+      (Icons.copyright, 'Imprints', () => context.pushRoute(const ImprintBrowseRoute())),
+      (Icons.brush, 'Creators', () => context.pushRoute(const CreatorBrowseRoute())),
     ];
     final action = actions[index];
     return Material(

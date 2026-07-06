@@ -74,7 +74,7 @@ class AppThemes {
       appBarTheme: base.appBarTheme.copyWith(
         iconTheme: const IconThemeData(size: 28),
         titleTextStyle: TextStyle(
-          fontSize: 26,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           fontFamily: 'Rubik',
           color: scheme.onSurface,
@@ -177,7 +177,7 @@ class AppThemes {
       appBarTheme: base.appBarTheme.copyWith(
         iconTheme: const IconThemeData(size: 28),
         titleTextStyle: TextStyle(
-          fontSize: 26,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           fontFamily: 'Rubik',
           color: scheme.onSurface,

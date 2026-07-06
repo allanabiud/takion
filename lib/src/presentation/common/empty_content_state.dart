@@ -5,10 +5,14 @@ class EmptyContentState extends StatelessWidget {
     super.key,
     required this.icon,
     required this.message,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +35,13 @@ class EmptyContentState extends StatelessWidget {
                 context,
               ).textTheme.bodyMedium?.copyWith(color: color),
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: onAction,
+                child: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),

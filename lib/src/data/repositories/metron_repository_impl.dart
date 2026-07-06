@@ -9,6 +9,9 @@ import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
 import 'package:takion/src/data/datasources/series_name_index.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/data/dto/issue_list_dto.dart';
+import 'package:takion/src/domain/entities/metron_reading_list_detail.dart';
+import 'package:takion/src/domain/entities/metron_reading_list_item.dart';
+import 'package:takion/src/domain/entities/metron_reading_list_page.dart';
 import 'package:takion/src/domain/entities/arc_details.dart';
 import 'package:takion/src/domain/entities/arc_issue_list_page.dart';
 import 'package:takion/src/domain/entities/arc_list_page.dart';
@@ -885,6 +888,27 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
+  Future<CharacterListPage> getCharacterList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getCharacterList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return CharacterListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
+  }
+
+  @override
   Future<CharacterListPage> searchCharacters(
     String query, {
     int page = 1,
@@ -1147,6 +1171,27 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
+  Future<CreatorListPage> getCreatorList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getCreatorList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return CreatorListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
+  }
+
+  @override
   Future<CreatorListPage> searchCreators(
     String query, {
     int page = 1,
@@ -1295,6 +1340,27 @@ class MetronRepositoryImpl implements MetronRepository {
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<UniverseListPage> getUniverseList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getUniverseList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return UniverseListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
   }
 
   @override
@@ -1449,6 +1515,27 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
+  Future<ImprintListPage> getImprintList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getImprintList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return ImprintListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
+  }
+
+  @override
   Future<ImprintListPage> searchImprints(
     String query, {
     int page = 1,
@@ -1600,6 +1687,27 @@ class MetronRepositoryImpl implements MetronRepository {
   }
 
   @override
+  Future<TeamListPage> getTeamList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getTeamList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return TeamListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
+  }
+
+  @override
   Future<TeamListPage> searchTeams(
     String query, {
     int page = 1,
@@ -1747,6 +1855,27 @@ class MetronRepositoryImpl implements MetronRepository {
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<PublisherListPage> getPublisherList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getPublisherList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return PublisherListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
   }
 
   @override
@@ -1998,6 +2127,27 @@ class MetronRepositoryImpl implements MetronRepository {
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<ArcListPage> getArcList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getArcList(
+      page: page,
+      limit: limit,
+      cancelToken: cancelToken,
+    );
+    return ArcListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+      currentPage: page,
+    );
   }
 
   @override
@@ -2259,6 +2409,57 @@ class MetronRepositoryImpl implements MetronRepository {
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<MetronReadingListPage> searchReadingLists({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getReadingLists(
+      page: page,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
+      cancelToken: cancelToken,
+    );
+    return MetronReadingListPage(
+      count: dto.count,
+      next: dto.next,
+      previous: dto.previous,
+      results: dto.results.map((e) => e.toEntity()).toList(),
+    );
+  }
+
+  @override
+  Future<MetronReadingListDetail> getReadingListDetail(
+    int id, {
+    bool forceRefresh = false,
+  }) async {
+    final dto = await _remoteDataSource.getReadingListDetail(id);
+    return dto.toEntity();
+  }
+
+  @override
+  Future<List<MetronReadingListItem>> getReadingListItems(int id) async {
+    var page = 1;
+    final allItems = <MetronReadingListItem>[];
+
+    while (true) {
+      final dto = await _remoteDataSource.getReadingListItems(id, page: page);
+      allItems.addAll(dto.results.map((e) => e.toEntity()));
+      if (dto.next == null) break;
+      page++;
+    }
+
+    return allItems;
   }
 }
 

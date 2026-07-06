@@ -68,13 +68,19 @@ class ReadingListAdapter extends TypeAdapter<ReadingList> {
       createdAt: fields[5] as DateTime,
       updatedAt: fields[6] as DateTime,
       items: (fields[7] as List).cast<ReadingListItem>(),
+      metronSourceId: (fields[8] as num?)?.toInt(),
+      metronAttributionSource: fields[9] as String?,
+      metronAttributionUrl: fields[10] as String?,
+      metronImageUrl: fields[11] as String?,
+      metronListType: fields[12] as String?,
+      lastSyncedAt: fields[13] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ReadingList obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -90,7 +96,19 @@ class ReadingListAdapter extends TypeAdapter<ReadingList> {
       ..writeByte(6)
       ..write(obj.updatedAt)
       ..writeByte(7)
-      ..write(obj.items);
+      ..write(obj.items)
+      ..writeByte(8)
+      ..write(obj.metronSourceId)
+      ..writeByte(9)
+      ..write(obj.metronAttributionSource)
+      ..writeByte(10)
+      ..write(obj.metronAttributionUrl)
+      ..writeByte(11)
+      ..write(obj.metronImageUrl)
+      ..writeByte(12)
+      ..write(obj.metronListType)
+      ..writeByte(13)
+      ..write(obj.lastSyncedAt);
   }
 
   @override
@@ -229,6 +247,14 @@ _ReadingList _$ReadingListFromJson(Map<String, dynamic> json) => _ReadingList(
   items: (json['items'] as List<dynamic>)
       .map((e) => ReadingListItem.fromJson(e as Map<String, dynamic>))
       .toList(),
+  metronSourceId: (json['metronSourceId'] as num?)?.toInt(),
+  metronAttributionSource: json['metronAttributionSource'] as String?,
+  metronAttributionUrl: json['metronAttributionUrl'] as String?,
+  metronImageUrl: json['metronImageUrl'] as String?,
+  metronListType: json['metronListType'] as String?,
+  lastSyncedAt: json['lastSyncedAt'] == null
+      ? null
+      : DateTime.parse(json['lastSyncedAt'] as String),
 );
 
 Map<String, dynamic> _$ReadingListToJson(_ReadingList instance) =>
@@ -241,6 +267,12 @@ Map<String, dynamic> _$ReadingListToJson(_ReadingList instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'items': instance.items,
+      'metronSourceId': instance.metronSourceId,
+      'metronAttributionSource': instance.metronAttributionSource,
+      'metronAttributionUrl': instance.metronAttributionUrl,
+      'metronImageUrl': instance.metronImageUrl,
+      'metronListType': instance.metronListType,
+      'lastSyncedAt': instance.lastSyncedAt?.toIso8601String(),
     };
 
 const _$ListContentTypeEnumMap = {

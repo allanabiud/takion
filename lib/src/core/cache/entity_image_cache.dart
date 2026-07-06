@@ -5,7 +5,9 @@ import 'package:takion/src/core/storage/hive_service.dart';
 
 final entityImageCacheProvider = Provider<EntityImageCache>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
-  return EntityImageCache(hiveService: hiveService);
+  final cache = EntityImageCache(hiveService: hiveService);
+  cache.ensureInit();
+  return cache;
 });
 
 class EntityImageVersionNotifier extends Notifier<int> {
@@ -37,9 +39,17 @@ class EntityImageCache {
     return box.get('$entityType:$id');
   }
 
+  void ensureInit() {
+    if (_box != null) return;
+    getBox();
+  }
+
   String? getCached(String entityType, int id) {
-    if (_box == null || !_box!.isOpen) return null;
-    return _box!.get('$entityType:$id');
+    if (_box != null && _box!.isOpen) {
+      return _box!.get('$entityType:$id');
+    }
+    getBox();
+    return null;
   }
 
   Future<void> set(String entityType, int id, String imageUrl) async {

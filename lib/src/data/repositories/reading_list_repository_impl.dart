@@ -163,4 +163,16 @@ class ReadingListRepositoryImpl implements ReadingListRepository {
       list,
     ).items.any((item) => item.targetId == normalizedTargetId);
   }
+
+  @override
+  Future<ReadingList?> findByMetronSourceId(int metronSourceId) async {
+    final all = await _dataSource.getAllLists();
+    try {
+      return all.firstWhere(
+        (list) => list.metronSourceId == metronSourceId,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 }

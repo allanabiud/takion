@@ -212,7 +212,7 @@ class LibraryScreen extends ConsumerWidget {
                 ),
                 CompactListSectionItem(
                   icon: Icons.list_alt_outlined,
-                  label: 'My Reading Lists',
+                  label: 'Reading Lists',
                   value: ref
                       .watch(readingListsProvider)
                       .when(
@@ -221,7 +221,7 @@ class LibraryScreen extends ConsumerWidget {
                         error: (_, _) => '!',
                       ),
                   onTap: () {
-                    context.pushRoute(const MyReadingListsRoute());
+                    context.pushRoute(const ReadingListsRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -332,9 +332,15 @@ class LibraryScreen extends ConsumerWidget {
                       list: suggestion,
                       flat: true,
                       onTap: () {
-                        context.pushRoute(
-                          ReadingListDetailsRoute(listId: suggestion.id),
-                        );
+                        if (suggestion.metronSourceId != null) {
+                          context.pushRoute(
+                            MetronReadingListDetailRoute(id: suggestion.metronSourceId!),
+                          );
+                        } else {
+                          context.pushRoute(
+                            ReadingListDetailsRoute(listId: suggestion.id),
+                          );
+                        }
                       },
                     ),
                   ],

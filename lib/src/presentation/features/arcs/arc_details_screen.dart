@@ -8,11 +8,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/arc_details.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart';
+import 'package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/shimmer_widget.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/components/section_header.dart';
@@ -359,13 +362,25 @@ class _ArcDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ],
+            SliverToBoxAdapter(
+              child: _ArcIssuesSection(arcId: details.id),
+            ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _ArcInfoSection(details: details),
+                child: _ArcDatabaseIdsSection(details: details),
               ),
             ),
+            if (details.modified != null) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _ArcModifiedSection(modified: details.modified!),
+                ),
+              ),
+            ],
             SliverToBoxAdapter(
               child: SizedBox(
                 height: MediaQuery.of(context).padding.bottom + 24,
@@ -374,6 +389,85 @@ class _ArcDetailsSheet extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ArcIssuesSection extends ConsumerWidget {
+  const _ArcIssuesSection({required this.arcId});
+
+  final int arcId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final issuesAsync = ref.watch(arcDetailsIssuesProvider(arcId));
+    return issuesAsync.when(
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SectionHeader(title: 'Issues'),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 250,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 4,
+                itemBuilder: (context, index) => const Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: SkeletonBox(width: 140, height: 250, borderRadius: 8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      error: (error, _) => const SizedBox.shrink(),
+      data: (page) {
+        if (page.results.isEmpty) return const SizedBox.shrink();
+        final totalIssueCount = page.count;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(
+                title: '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
+                onViewAll: () => context.pushRoute(
+                  ArcIssuesRoute(arcId: arcId),
+                ),
+              ),
+              const SizedBox(height: 12),
+              HorizontalPreviewSection(
+                title: '',
+                onViewAll: null,
+                itemCount: page.results.length,
+                height: 250,
+                emptyText: 'No issues available.',
+                itemBuilder: (context, index) {
+                  final issue = page.results[index];
+                  final issueId = issue.id;
+                  return IssueCard(
+                    issueId: issueId,
+                    imageUrl: issue.image,
+                    title: '${issue.series?.name ?? issue.name} #${issue.number}',
+                    compact: true,
+                    onTap: issueId == null
+                        ? null
+                        : () => context.pushRoute(
+                          IssueDetailsRoute(
+                            issueId: issueId,
+                            initialImageUrl: issue.image,
+                          ),
+                        ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -474,26 +568,13 @@ class _ExpandableArcDescriptionState
   }
 }
 
-class _ArcInfoSection extends StatelessWidget {
-  const _ArcInfoSection({required this.details});
+class _ArcDatabaseIdsSection extends StatelessWidget {
+  const _ArcDatabaseIdsSection({required this.details});
 
   final ArcDetails details;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildDatabaseIdsSection(context),
-        if (details.modified != null) ...[
-          const SizedBox(height: 16),
-          _buildModifiedSection(context),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildDatabaseIdsSection(BuildContext context) {
     final entries = <Widget>[];
     void addEntry(String label, String value) {
       entries.add(
@@ -534,9 +615,15 @@ class _ArcInfoSection extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _buildModifiedSection(BuildContext context) {
-    final modified = details.modified!;
+class _ArcModifiedSection extends StatelessWidget {
+  const _ArcModifiedSection({required this.modified});
+
+  final DateTime modified;
+
+  @override
+  Widget build(BuildContext context) {
     final formatted = '${modified.day.toString().padLeft(2, '0')}/${modified.month.toString().padLeft(2, '0')}/${modified.year}';
 
     return Column(
@@ -547,6 +634,7 @@ class _ArcInfoSection extends StatelessWidget {
         Text(
           formatted,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontStyle: FontStyle.italic,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),

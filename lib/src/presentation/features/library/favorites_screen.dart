@@ -147,7 +147,13 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
             return ReadingListCard(
               list: list,
               onTap: () {
-                context.pushRoute(ReadingListDetailsRoute(listId: list.id));
+                if (list.metronSourceId != null) {
+                  context.pushRoute(
+                    MetronReadingListDetailRoute(id: list.metronSourceId!),
+                  );
+                } else {
+                  context.pushRoute(ReadingListDetailsRoute(listId: list.id));
+                }
               },
             );
           },

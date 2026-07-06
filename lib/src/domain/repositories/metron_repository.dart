@@ -23,6 +23,9 @@ import 'package:takion/src/domain/entities/team_list_page.dart';
 import 'package:takion/src/domain/repositories/catalog_repository.dart';
 import 'package:takion/src/domain/entities/publisher_details.dart';
 import 'package:takion/src/domain/entities/publisher_list_page.dart';
+import 'package:takion/src/domain/entities/metron_reading_list_detail.dart';
+import 'package:takion/src/domain/entities/metron_reading_list_item.dart';
+import 'package:takion/src/domain/entities/metron_reading_list_page.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 
 abstract class MetronRepository implements CatalogRepository {
@@ -104,6 +107,13 @@ abstract class MetronRepository implements CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<CharacterListPage> getCharacterList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
   @override
   Future<CharacterDetails> getCharacterDetails(
     int characterId, {
@@ -113,6 +123,13 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<CharacterIssueListPage> getCharacterIssueList(
     int characterId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<CreatorListPage> getCreatorList({
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -134,6 +151,13 @@ abstract class MetronRepository implements CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<UniverseListPage> getUniverseList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
   @override
   Future<UniverseListPage> searchUniverses(
     String query, {
@@ -146,6 +170,13 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<UniverseDetails> getUniverseDetails(
     int universeId, {
+    bool forceRefresh = false,
+  });
+
+  Future<ImprintListPage> getImprintList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 
@@ -164,6 +195,13 @@ abstract class MetronRepository implements CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<TeamListPage> getTeamList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
   @override
   Future<TeamListPage> searchTeams(
     String query, {
@@ -176,6 +214,13 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<TeamDetails> getTeamDetails(
     int teamId, {
+    bool forceRefresh = false,
+  });
+
+  Future<ArcListPage> getArcList({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 
@@ -197,6 +242,13 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<ArcIssueListPage> getArcIssueList(
     int arcId, {
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<PublisherListPage> getPublisherList({
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -225,4 +277,19 @@ abstract class MetronRepository implements CatalogRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<MetronReadingListPage> searchReadingLists({
+    int page = 1,
+    int limit = metronDefaultPageSize,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  Future<MetronReadingListDetail> getReadingListDetail(int id, {bool forceRefresh = false});
+
+  Future<List<MetronReadingListItem>> getReadingListItems(int id);
 }

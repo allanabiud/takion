@@ -4,7 +4,9 @@ import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
 
@@ -18,6 +20,7 @@ class ReadingListGridItem extends ConsumerWidget {
   final VoidCallback onTap;
   final bool isEditing;
   final bool isSelected;
+  final bool allowRemoteHydration;
   final VoidCallback? onRemove;
 
   const ReadingListGridItem({
@@ -26,18 +29,26 @@ class ReadingListGridItem extends ConsumerWidget {
     required this.onTap,
     this.isEditing = false,
     this.isSelected = false,
+    this.allowRemoteHydration = false,
     this.onRemove,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final metadataAsync = ref.watch(
-      readingListItemMetadataProvider((
-        targetId: item.targetId,
-        isSeries: item.isSeries,
-      )),
-    );
+    final metadataAsync = allowRemoteHydration
+        ? ref.watch(
+            readingListItemMetadataProvider((
+              targetId: item.targetId,
+              isSeries: item.isSeries,
+            )),
+          ) as AsyncValue<Object?>
+        : ref.watch(
+            readingListItemCachedMetadataProvider((
+              targetId: item.targetId,
+              isSeries: item.isSeries,
+            )),
+          );
     final isReadAsync = ref.watch(
       readingListItemEffectiveReadStatusProvider(item),
     );
@@ -69,36 +80,62 @@ class ReadingListGridItem extends ConsumerWidget {
                 children: [
                   metadataAsync.when(
                     data: (metadata) {
-                      if (metadata is SeriesDetails) {
-                        final series = SeriesList(
-                          id: metadata.id,
-                          name: metadata.name,
-                          yearBegan: metadata.yearBegan,
-                          volume: metadata.volume,
-                          issueCount: metadata.issueCount,
-                          seriesType: metadata.seriesType?.name,
-                        );
+                      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+                      if (item.isSeries) {
+                        SeriesList series;
+                        String? imageUrl;
+                        if (metadata is SeriesDetails) {
+                          series = SeriesList(
+                            id: metadata.id,
+                            name: metadata.name,
+                            yearBegan: metadata.yearBegan,
+                            volume: metadata.volume,
+                            issueCount: metadata.issueCount,
+                            seriesType: metadata.seriesType?.name,
+                          );
+                          imageUrl = metadata.image;
+                        } else {
+                          series = SeriesList(
+                            id: id,
+                            name: id > 0 ? 'Series #$id' : 'Series',
+                            yearBegan: null,
+                            volume: null,
+                          );
+                        }
                         return SeriesCard(
                           series: series,
-                          imageUrl: metadata.image,
+                          imageUrl: imageUrl,
                           onTap: onTap,
                           width: double.infinity,
                           isRead: effectiveIsRead,
                           role: item.role,
                         );
-                      } else if (metadata is IssueDetails) {
+                      } else {
                         final status = ref.watch(
-                          issueCollectionStatusProvider(metadata.id),
+                          issueCollectionStatusProvider(id),
                         );
                         final pullEntryAsync = ref.watch(
-                          issuePullListEntryProvider(metadata.id),
+                          issuePullListEntryProvider(id),
                         );
 
+                        String title = id > 0 ? 'Issue #$id' : 'Issue';
+                        String? imageUrl;
+
+                        if (metadata is IssueDetails) {
+                          final seriesName = metadata.series?.name ?? '';
+                          title = seriesName.isNotEmpty ? '$seriesName #${metadata.number}' : 'Issue #${metadata.number}';
+                          imageUrl = metadata.image;
+                        } else {
+                          ref.watch(entityImageVersionProvider);
+                          final cache = ref.read(entityImageCacheProvider);
+                          final cachedImage = cache.getCached('issue', id);
+                          imageUrl = cachedImage;
+                        }
+
                         return IssueCard(
-                          issueId: metadata.id,
-                          imageUrl: metadata.image,
-                          title:
-                              '${metadata.series?.name ?? ''} #${metadata.number}',
+                          issueId: id > 0 ? id : null,
+                          imageUrl: imageUrl,
+                          title: title,
                           onTap: onTap,
                           width: double.infinity,
                           isRead: effectiveIsRead,
@@ -109,13 +146,63 @@ class ReadingListGridItem extends ConsumerWidget {
                           compact: true,
                         );
                       }
-                      return const Center(child: Icon(Icons.error));
                     },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    error: (error, stack) =>
-                        const Center(child: Icon(Icons.error, size: 20)),
+                    loading: () {
+                      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+                      if (item.isSeries) {
+                        return SeriesCard(
+                          series: SeriesList(
+                            id: id,
+                            name: id > 0 ? 'Series #$id' : 'Series',
+                            yearBegan: null,
+                            volume: null,
+                          ),
+                          imageUrl: null,
+                          onTap: onTap,
+                          width: double.infinity,
+                          isRead: effectiveIsRead,
+                          role: item.role,
+                        );
+                      } else {
+                        return IssueCard(
+                          issueId: id > 0 ? id : null,
+                          imageUrl: null,
+                          title: id > 0 ? 'Issue #$id' : 'Issue',
+                          onTap: onTap,
+                          width: double.infinity,
+                          isRead: effectiveIsRead,
+                          compact: true,
+                        );
+                      }
+                    },
+                    error: (error, stack) {
+                      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+                      if (item.isSeries) {
+                        return SeriesCard(
+                          series: SeriesList(
+                            id: id,
+                            name: id > 0 ? 'Series #$id' : 'Series',
+                            yearBegan: null,
+                            volume: null,
+                          ),
+                          imageUrl: null,
+                          onTap: onTap,
+                          width: double.infinity,
+                          isRead: effectiveIsRead,
+                          role: item.role,
+                        );
+                      } else {
+                        return IssueCard(
+                          issueId: id > 0 ? id : null,
+                          imageUrl: null,
+                          title: id > 0 ? 'Issue #$id' : 'Issue',
+                          onTap: onTap,
+                          width: double.infinity,
+                          isRead: effectiveIsRead,
+                          compact: true,
+                        );
+                      }
+                    },
                   ),
                   if (isSelected)
                     Positioned(

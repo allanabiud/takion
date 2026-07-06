@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/reading_lists/create_reading_list_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -168,7 +168,7 @@ class _AddToReadingListBottomSheetState
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: () {
-                          CreateReadingListBottomSheet.show(
+                          CreateOrImportReadingListSheet.showCreateOnly(
                             context,
                             initialContentType: contentType,
                           );

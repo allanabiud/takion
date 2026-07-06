@@ -905,6 +905,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: !_isFiltering,
         titleSpacing: _isFiltering ? 0 : null,
         title: _isFiltering
             ? TextField(
@@ -930,7 +931,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                   ),
                 ),
               )
-            : null,
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Search Results'),
+                  Text(
+                    '${widget.query} - ${widget.searchChoice}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
         actions: _isFiltering
             ? null
             : [

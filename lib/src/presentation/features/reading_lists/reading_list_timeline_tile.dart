@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/domain/entities/series.dart';
+import 'package:takion/src/domain/entities/series_details.dart';
+import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
-import 'package:takion/src/presentation/components/timeline_item_tile.dart';
+import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
+import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:timelines_plus/timelines_plus.dart';
 
 class ReadingListTimelineTile extends ConsumerWidget {
@@ -13,6 +21,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
   final bool isEditing;
   final bool isSelected;
   final bool isRemoving;
+  final bool allowRemoteHydration;
   final VoidCallback? onSelected;
   final VoidCallback? onRemove;
 
@@ -25,6 +34,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
     this.isEditing = false,
     this.isSelected = false,
     this.isRemoving = false,
+    this.allowRemoteHydration = false,
     this.onSelected,
     this.onRemove,
   });
@@ -36,6 +46,21 @@ class ReadingListTimelineTile extends ConsumerWidget {
       readingListItemEffectiveReadStatusProvider(item),
     );
     final isRead = isReadAsync.value ?? item.isRead;
+    final id = int.tryParse(item.targetId.replaceAll(RegExp(r'^.*-'), '')) ?? 0;
+
+    final metadataAsync = allowRemoteHydration
+        ? ref.watch(
+            readingListItemMetadataProvider((
+              targetId: item.targetId,
+              isSeries: item.isSeries,
+            )),
+          ) as AsyncValue<Object?>
+        : ref.watch(
+            readingListItemCachedMetadataProvider((
+              targetId: item.targetId,
+              isSeries: item.isSeries,
+            )),
+          );
 
     bool prevIsRead = false;
     if (index - 1 > 0 && index - 2 < list.items.length) {
@@ -46,9 +71,135 @@ class ReadingListTimelineTile extends ConsumerWidget {
       prevIsRead = prevReadAsync.value ?? prevItem.isRead;
     }
 
-    final contents = item.isSeries
-        ? TimelineSeriesTile(item: item, horizontalPadding: 0, role: item.role)
-        : TimelineIssueTile(item: item, horizontalPadding: 0, role: item.role);
+    final contents = metadataAsync.when(
+      data: (cachedMetadata) {
+        if (item.isSeries) {
+          SeriesList series;
+          if (cachedMetadata is SeriesDetails) {
+            series = SeriesList(
+              id: cachedMetadata.id,
+              name: cachedMetadata.name,
+              yearBegan: cachedMetadata.yearBegan,
+              volume: cachedMetadata.volume,
+              issueCount: cachedMetadata.issueCount,
+              modified: cachedMetadata.modified,
+              seriesType: cachedMetadata.seriesType?.name,
+            );
+          } else {
+            series = SeriesList(
+              id: id,
+              name: id > 0 ? 'Series #$id' : 'Series',
+              yearBegan: null,
+              volume: null,
+            );
+          }
+
+          return SeriesListTile(
+            series: series,
+            horizontalPadding: 0,
+            role: item.role,
+            isRead: isRead,
+          );
+        }
+
+        IssueList issue;
+        if (cachedMetadata is IssueDetails) {
+          final issueSeries = cachedMetadata.series;
+          final series = issueSeries == null
+              ? null
+              : Series(
+                  id: issueSeries.id,
+                  name: issueSeries.name,
+                  volume: issueSeries.volume,
+                  yearBegan: issueSeries.yearBegan,
+                );
+          issue = IssueList(
+            id: cachedMetadata.id,
+            name: issueSeries?.name.trim().isNotEmpty == true
+                ? issueSeries!.name
+                : (id > 0 ? 'Issue #$id' : 'Issue'),
+            number: cachedMetadata.number,
+            series: series,
+            image: cachedMetadata.image,
+            coverDate: cachedMetadata.coverDate,
+            storeDate: cachedMetadata.storeDate,
+            modified: cachedMetadata.modified,
+          );
+        } else {
+          issue = IssueList(
+            id: id > 0 ? id : null,
+            name: id > 0 ? 'Issue #$id' : 'Issue',
+            number: '',
+            series: null,
+            image: null,
+            coverDate: null,
+            storeDate: null,
+            modified: null,
+          );
+        }
+
+        return IssueListTile(
+          issue: issue,
+          horizontalPadding: 0,
+          role: item.role,
+          allowRemoteHydration: false,
+        );
+      },
+      loading: () => item.isSeries
+          ? SeriesListTile(
+              series: SeriesList(
+                id: id,
+                name: id > 0 ? 'Series #$id' : 'Series',
+                yearBegan: null,
+                volume: null,
+              ),
+              horizontalPadding: 0,
+              role: item.role,
+              isRead: isRead,
+            )
+          : IssueListTile(
+              issue: IssueList(
+                id: id > 0 ? id : null,
+                name: id > 0 ? 'Issue #$id' : 'Issue',
+                number: '',
+                series: null,
+                coverDate: null,
+                storeDate: null,
+                image: null,
+                modified: null,
+              ),
+              horizontalPadding: 0,
+              role: item.role,
+              allowRemoteHydration: false,
+            ),
+      error: (_, _) => item.isSeries
+          ? SeriesListTile(
+              series: SeriesList(
+                id: id,
+                name: id > 0 ? 'Series #$id' : 'Series',
+                yearBegan: null,
+                volume: null,
+              ),
+              horizontalPadding: 0,
+              role: item.role,
+              isRead: isRead,
+            )
+          : IssueListTile(
+              issue: IssueList(
+                id: id > 0 ? id : null,
+                name: id > 0 ? 'Issue #$id' : 'Issue',
+                number: '',
+                series: null,
+                coverDate: null,
+                storeDate: null,
+                image: null,
+                modified: null,
+              ),
+              horizontalPadding: 0,
+              role: item.role,
+              allowRemoteHydration: false,
+            ),
+    );
 
     final unreadConnectorColor = theme.colorScheme.outline;
 
@@ -70,13 +221,17 @@ class ReadingListTimelineTile extends ConsumerWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                          ? theme.colorScheme.primaryContainer.withValues(
+                              alpha: 0.3,
+                            )
                           : theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                            : theme.colorScheme.outlineVariant.withValues(
+                                alpha: 0.5,
+                              ),
                         width: isSelected ? 1.5 : 1,
                       ),
                     ),
@@ -118,7 +273,9 @@ class ReadingListTimelineTile extends ConsumerWidget {
                               child: Container(
                                 width: 36,
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerHighest
+                                  color: theme
+                                      .colorScheme
+                                      .surfaceContainerHighest
                                       .withValues(alpha: 0.5),
                                   borderRadius: const BorderRadius.horizontal(
                                     right: Radius.circular(12),
@@ -150,7 +307,8 @@ class ReadingListTimelineTile extends ConsumerWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5),
                           ),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                     ),

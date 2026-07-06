@@ -10,4 +10,5 @@ abstract class ReadingListRepository {
   Future<void> addItemsToList(String listId, List<ReadingListItem> items);
   Future<void> removeItemFromList(String listId, String targetId);
   Future<bool> isItemInList(String listId, String targetId);
+  Future<ReadingList?> findByMetronSourceId(int metronSourceId);
 }

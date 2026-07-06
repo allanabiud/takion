@@ -526,7 +526,29 @@ class _PublisherSeriesSection extends ConsumerWidget {
     final seriesAsync = ref.watch(publisherSeriesListProvider(publisherId));
 
     return seriesAsync.when(
-      loading: () => const SizedBox.shrink(),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionHeader(title: 'Series'),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 250,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 4,
+                  itemBuilder: (context, index) => const Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: SkeletonBox(width: 120, height: 250, borderRadius: 8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       error: (error, _) => const SizedBox.shrink(),
       data: (seriesPage) {
         if (seriesPage.results.isEmpty) return const SizedBox.shrink();

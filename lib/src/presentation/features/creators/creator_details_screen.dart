@@ -597,10 +597,12 @@ class _CreatorInfoCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DETAILS'),
-        const SizedBox(height: 12),
-        InfoGrid(items: contentItems),
-        if (contentItems.isNotEmpty) const SizedBox(height: 16),
+        if (contentItems.isNotEmpty) ...[
+          const SectionHeader(title: 'DETAILS'),
+          const SizedBox(height: 12),
+          InfoGrid(items: contentItems),
+          const SizedBox(height: 16),
+        ],
         _buildIdsSection(context),
         if (hasModified) ...[
           const SizedBox(height: 8),

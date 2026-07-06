@@ -14,6 +14,9 @@ class ReadingListCard extends ConsumerWidget {
   final ValueChanged<bool?>? onSelected;
   final bool compact;
   final bool flat;
+  final double? averageRating;
+  final int? ratingCount;
+  final bool isMetronBrowse;
 
   const ReadingListCard({
     super.key,
@@ -24,6 +27,9 @@ class ReadingListCard extends ConsumerWidget {
     this.onSelected,
     this.compact = false,
     this.flat = false,
+    this.averageRating,
+    this.ratingCount,
+    this.isMetronBrowse = false,
   });
 
   @override
@@ -54,17 +60,21 @@ class ReadingListCard extends ConsumerWidget {
 
     final cardChild = Stack(
       children: [
-        InkWell(
-          onTap: onTap,
-          child: Opacity(
-            opacity: alreadyExists ? 0.6 : 1.0,
+          InkWell(
+            onTap: onTap,
+            child: Opacity(
+              opacity: alreadyExists && !isMetronBrowse ? 0.6 : 1.0,
             child: Padding(
               padding: compact
                   ? const EdgeInsets.all(8)
                   : const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  ReadingListCover(list: list, peekOffset: 6),
+                  ReadingListCover(
+                    list: list,
+                    peekOffset: 6,
+                    allowRemoteCoverFetch: false,
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -123,12 +133,73 @@ class ReadingListCard extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '$itemCount $unitLabel • $contentTypeLabel',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        Row(
+                          children: [
+                            Text(
+                              isMetronBrowse && !alreadyExists
+                                  ? [
+                                      if (list.metronListType != null) list.metronListType,
+                                      if (list.metronAttributionSource != null) list.metronAttributionSource,
+                                    ].join(' • ')
+                                  : '$itemCount $unitLabel • $contentTypeLabel',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
+                        if (list.metronAttributionSource != null && (!isMetronBrowse || alreadyExists)) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .tertiaryContainer,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  list.metronAttributionSource!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onTertiaryContainer,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 12),
-                        if (isCompleted)
+                        if (isMetronBrowse && !alreadyExists)
+                          if (averageRating != null && averageRating! > 0)
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${averageRating!.toStringAsFixed(1)}'
+                                  '${ratingCount != null && ratingCount! > 0 ? " ($ratingCount)" : ""}',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                              ],
+                            )
+                          else
+                            const SizedBox.shrink()
+                        else if (isCompleted)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -183,7 +254,7 @@ class ReadingListCard extends ConsumerWidget {
             ),
           ),
         ),
-        if (isSelected == true || alreadyExists)
+        if (isSelected == true || (alreadyExists && !isMetronBrowse))
           Positioned(
             left: 4,
             top: 4,

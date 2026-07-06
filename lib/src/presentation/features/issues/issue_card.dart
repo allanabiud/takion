@@ -4,6 +4,8 @@ import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/components/status_indicator_icons.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
+import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
@@ -13,6 +15,7 @@ class IssueCard extends ConsumerWidget {
   final String? imageUrl;
   final String title;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final double width;
   final bool? isCollected;
   final bool? isWishlisted;
@@ -27,6 +30,7 @@ class IssueCard extends ConsumerWidget {
     this.imageUrl,
     required this.title,
     this.onTap,
+    this.onLongPress,
     this.width = 120,
     this.isCollected,
     this.isWishlisted,
@@ -64,10 +68,21 @@ class IssueCard extends ConsumerWidget {
     final cacheWidth =
         width.isInfinite ? null : (width * devicePixelRatio).round();
 
+    final effectiveOnLongPress = onLongPress ??
+        (issueId != null
+            ? () => showScrobbleSheet(
+                  context: context,
+                  ref: ref,
+                  issueId: issueId!,
+                  sheetTitle: title,
+                )
+            : null);
+
     return SizedBox(
       width: width,
       child: InkWell(
         onTap: onTap,
+        onLongPress: effectiveOnLongPress,
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -79,6 +94,7 @@ class IssueCard extends ConsumerWidget {
                 children: [
                     EntityCover(
                     imageUrl: imageUrl,
+                    placeholderLabel: initials(title),
                     isFavorite: isFavorite,
                     isRead: effectiveIsRead && showReadTickOverlay,
                     role: role,

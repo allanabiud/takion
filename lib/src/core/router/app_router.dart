@@ -143,7 +143,7 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
-      page: MyReadingListsRoute.page,
+      page: ReadingListsRoute.page,
       path: '/my-comics/reading-lists',
       guards: [authGuard],
     ),
@@ -155,6 +155,56 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: ReadingListEditRoute.page,
       path: '/my-comics/reading-lists/:listId/edit',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: MetronReadingListBrowserRoute.page,
+      path: '/my-comics/reading-lists/browse-metron',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: MetronReadingListDetailRoute.page,
+      path: '/my-comics/reading-lists/browse-metron/:id',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: CharacterBrowseRoute.page,
+      path: '/browse/characters',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: SeriesBrowseRoute.page,
+      path: '/browse/series',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: PublisherBrowseRoute.page,
+      path: '/browse/publishers',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: TeamBrowseRoute.page,
+      path: '/browse/teams',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: ArcBrowseRoute.page,
+      path: '/browse/arcs',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: UniverseBrowseRoute.page,
+      path: '/browse/universes',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: ImprintBrowseRoute.page,
+      path: '/browse/imprints',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: CreatorBrowseRoute.page,
+      path: '/browse/creators',
       guards: [authGuard],
     ),
     AutoRoute(

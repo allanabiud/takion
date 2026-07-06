@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/presentation/components/role_badge.dart';
 import 'package:takion/src/presentation/components/status_indicator_icons.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
+import 'package:takion/src/presentation/logic/string_extensions.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
@@ -17,6 +20,7 @@ import 'package:takion/src/presentation/features/issues/providers/issue_details_
 class IssueListTile extends ConsumerWidget {
   final IssueList issue;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final bool isFirst;
   final bool isLast;
   final bool? isCollected;
@@ -25,11 +29,13 @@ class IssueListTile extends ConsumerWidget {
   final bool useCardBackground;
   final double horizontalPadding;
   final ItemRole? role;
+  final bool allowRemoteHydration;
 
   const IssueListTile({
     super.key,
     required this.issue,
     this.onTap,
+    this.onLongPress,
     this.isFirst = false,
     this.isLast = false,
     this.isCollected,
@@ -38,6 +44,7 @@ class IssueListTile extends ConsumerWidget {
     this.useCardBackground = false,
     this.horizontalPadding = 12,
     this.role,
+    this.allowRemoteHydration = true,
   });
 
   @override
@@ -47,10 +54,17 @@ class IssueListTile extends ConsumerWidget {
 
     // Hydrate if data is incomplete
     final isHydrationNeeded =
+        allowRemoteHydration &&
         issue.id != null &&
         (issue.image == null || issue.name.isEmpty || issue.name == 'Unknown');
     final hydratedIssueAsync = isHydrationNeeded
         ? ref.watch(issueDetailsProvider(issue.id!))
+        : null;
+
+    ref.watch(entityImageVersionProvider);
+    final cache = ref.read(entityImageCacheProvider);
+    final cachedImage = issue.id != null
+        ? cache.getCached('issue', issue.id!)
         : null;
 
     final bool isHydrating = hydratedIssueAsync?.isLoading == true;
@@ -69,10 +83,10 @@ class IssueListTile extends ConsumerWidget {
             series: null,
             coverDate: hydratedIssue.coverDate,
             storeDate: hydratedIssue.storeDate,
-            image: hydratedIssue.image ?? issue.image,
+            image: hydratedIssue.image ?? issue.image ?? cachedImage,
             modified: hydratedIssue.modified,
           )
-        : issue;
+        : issue.copyWith(image: issue.image ?? cachedImage);
 
     final effectiveOnTap =
         onTap ??
@@ -86,6 +100,22 @@ class IssueListTile extends ConsumerWidget {
                   ),
                 );
               });
+
+    final issueTitle =
+        effectiveIssue.name.contains('#${effectiveIssue.number}') ||
+            effectiveIssue.number.isEmpty
+        ? effectiveIssue.name
+        : '${effectiveIssue.name} #${effectiveIssue.number}';
+    final effectiveOnLongPress =
+        onLongPress ??
+        (effectiveIssue.id != null
+            ? () => showScrobbleSheet(
+                context: context,
+                ref: ref,
+                issueId: effectiveIssue.id!,
+                sheetTitle: issueTitle,
+              )
+            : null);
 
     final providerStatus = ref.watch(
       issueCollectionStatusProvider(effectiveIssue.id ?? 0),
@@ -150,19 +180,33 @@ class IssueListTile extends ConsumerWidget {
                       errorWidget: (context, url, error) => Container(
                         width: imageWidth,
                         height: imageHeight,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.broken_image, size: 40),
+                        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+                        child: Center(
+                          child: Text(
+                            initials(issueTitle),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
                     )
                   : Container(
                       width: imageWidth,
                       height: imageHeight,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      child: const Icon(Icons.image, size: 40),
+                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+                      child: Center(
+                        child: Text(
+                          initials(issueTitle),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
             ),
           );
@@ -270,11 +314,7 @@ class IssueListTile extends ConsumerWidget {
                       if (role != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              RoleBadge(role: role!),
-                            ],
-                          ),
+                          child: Row(children: [RoleBadge(role: role!)]),
                         ),
                     ],
                   ),
@@ -298,7 +338,11 @@ class IssueListTile extends ConsumerWidget {
           ),
         ),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(onTap: effectiveOnTap, child: tileContent),
+        child: InkWell(
+          onTap: effectiveOnTap,
+          onLongPress: effectiveOnLongPress,
+          child: tileContent,
+        ),
       );
     }
 
@@ -316,6 +360,7 @@ class IssueListTile extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
               onTap: effectiveOnTap,
+              onLongPress: effectiveOnLongPress,
               child: tileContent,
             ),
           ),

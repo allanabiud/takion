@@ -4,25 +4,28 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/domain/entities/series_details.dart';
 import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_reading_list_items_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
+import 'package:takion/src/presentation/features/reading_lists/reading_list_details_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
+import 'package:takion/src/presentation/components/section_header.dart';
 import 'package:takion/src/presentation/components/shimmer_widget.dart';
 import 'package:takion/src/presentation/components/skeleton.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart';
-import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 @RoutePage()
@@ -43,7 +46,6 @@ enum _ReadingListDetailsMenuAction { edit, share, delete }
 
 class _ReadingListDetailsScreenState
     extends ConsumerState<ReadingListDetailsScreen> {
-  bool _isDescriptionExpanded = false;
 
   void _openReadingListItemDetails(ReadingListItem item) {
     final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
@@ -90,11 +92,21 @@ class _ReadingListDetailsScreenState
   }
 
   Future<void> _confirmDelete(BuildContext context, ReadingList list) async {
+    final isMetron = list.metronSourceId != null;
+    final titleText = isMetron ? 'Remove from Library' : 'Delete Reading List';
+    final contentText = isMetron
+        ? 'Are you sure you want to remove "${list.title}" from your library?'
+        : 'Are you sure you want to delete "${list.title}"?';
+    final actionText = isMetron ? 'Remove' : 'Delete';
+    final successText = isMetron
+        ? 'Removed from Library'
+        : 'Reading List Deleted';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Reading List'),
-        content: Text('Are you sure you want to delete "${list.title}"?'),
+        title: Text(titleText),
+        content: Text(contentText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -107,7 +119,7 @@ class _ReadingListDetailsScreenState
             ),
             onPressed: () => Navigator.pop(context, true),
             icon: const Icon(Icons.delete_outline, size: 22),
-            label: const Text('Delete'),
+            label: Text(actionText),
           ),
         ],
       ),
@@ -116,162 +128,95 @@ class _ReadingListDetailsScreenState
     if (confirmed == true) {
       ref.read(readingListsProvider.notifier).deleteList(list.id);
       if (context.mounted) {
-        TakionAlerts.success(context, 'Reading List Deleted');
+        TakionAlerts.success(context, successText);
         context.router.pop();
       }
     }
   }
 
-  Widget _buildSheetHeader(
-    ReadingList list,
-    double progress,
-    int readCount,
-    int totalCount,
-  ) {
+  Widget _buildActionRow(ReadingList list) {
     final theme = Theme.of(context);
-    final hasDescription = list.description.trim().isNotEmpty;
+    final isMetron = list.metronSourceId != null;
+
+    if (isMetron) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: theme.textTheme.titleMedium,
+                backgroundColor: theme.colorScheme.errorContainer,
+                foregroundColor: theme.colorScheme.onErrorContainer,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => _confirmDelete(context, list),
+              icon: const Icon(Icons.delete_outline, size: 22),
+              label: const Text('Remove'),
+            ),
+          ),
+        ],
+      );
+    }
+
     final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
     final isFavorite = isFavoriteAsync.value ?? false;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: [
-        _buildDragHandle(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                list.title,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+        Expanded(
+          flex: 3,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              textStyle: theme.textTheme.titleMedium,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              if (hasDescription) ...[
-                const SizedBox(height: 6),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_isDescriptionExpanded)
-                        Text(
-                          list.description,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      GestureDetector(
-                        onTap: () => setState(() {
-                          _isDescriptionExpanded = !_isDescriptionExpanded;
-                        }),
-                        child: Text(
-                          _isDescriptionExpanded
-                              ? 'Hide description'
-                              : 'Show description',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '$readCount / $totalCount ${list.contentType == ListContentType.series ? 'Series' : 'Issues'} Read',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    '${(progress * 100).toInt()}%',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            ),
+            onPressed: () => AddReadingListItemsBottomSheet.show(
+              context,
+              list,
+            ),
+            icon: const Icon(Icons.add, size: 22),
+            label: const Text('Add Items'),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          flex: 1,
+          child: FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              iconSize: 28,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progress == 1.0 ? Colors.green : theme.colorScheme.primary,
-                  ),
-                ),
+            ),
+            onPressed: () => _toggleFavorite(context, ref, list),
+            child: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : null,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          flex: 1,
+          child: FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              iconSize: 28,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: Theme.of(context).textTheme.titleMedium,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () =>
-                          AddReadingListItemsBottomSheet.show(context, list),
-                      icon: const Icon(Icons.add, size: 22),
-                      label: const Text('Add Items'),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    flex: 1,
-                    child: FilledButton.tonal(
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        iconSize: 28,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () => _toggleFavorite(context, ref, list),
-                      child: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Colors.red : null,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    flex: 1,
-                    child: FilledButton.tonal(
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        iconSize: 28,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () => ref
-                          .read(readingListSharingServiceProvider)
-                          .shareReadingList(list),
-                      child: const Icon(Icons.share),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-            ],
+            ),
+            onPressed: () =>
+                ref.read(readingListSharingServiceProvider).shareReadingList(list),
+            child: const Icon(Icons.share),
           ),
         ),
       ],
@@ -281,25 +226,31 @@ class _ReadingListDetailsScreenState
   Widget _buildHeader(ReadingList list) {
     final theme = Theme.of(context);
 
-    String? firstCoverUrl;
-    if (list.items.isNotEmpty) {
+    String? firstCoverUrl = list.metronImageUrl;
+    if ((firstCoverUrl == null || firstCoverUrl.isEmpty) &&
+        list.items.isNotEmpty) {
+      ref.watch(entityImageVersionProvider);
+      final cache = ref.read(entityImageCacheProvider);
       final firstItem = list.items.first;
-      if (firstItem.isSeries) {
-        final id = int.tryParse(firstItem.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
-        final coverAsync = ref.watch(
-          seriesCoverImageProvider((seriesId: id, allowRemoteFetch: true)),
-        );
-        firstCoverUrl = coverAsync.value;
-      } else {
-        final metadataAsync = ref.watch(
-          readingListItemMetadataProvider((
+      final id =
+          int.tryParse(firstItem.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+      firstCoverUrl = cache.getCached(
+        firstItem.isSeries ? 'series' : 'issue',
+        id,
+      );
+
+      if (firstCoverUrl == null || firstCoverUrl.isEmpty) {
+        final cachedMetadata = ref.watch(
+          readingListItemCachedMetadataProvider((
             targetId: firstItem.targetId,
             isSeries: firstItem.isSeries,
           )),
         );
-        final metadata = metadataAsync.value;
-        if (metadata is IssueDetails) {
-          firstCoverUrl = metadata.image;
+        final cached = cachedMetadata.asData?.value;
+        if (cached is IssueDetails) {
+          firstCoverUrl = cached.image?.trim();
+        } else if (cached is SeriesDetails) {
+          firstCoverUrl = cached.image?.trim();
         }
       }
     }
@@ -357,18 +308,23 @@ class _ReadingListDetailsScreenState
                         _confirmDelete(context, list);
                     }
                   },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: _ReadingListDetailsMenuAction.edit,
-                      child: Text('Edit'),
-                    ),
-                    PopupMenuItem(
+                  itemBuilder: (context) => [
+                    if (list.metronSourceId == null)
+                      const PopupMenuItem(
+                        value: _ReadingListDetailsMenuAction.edit,
+                        child: Text('Edit'),
+                      ),
+                    const PopupMenuItem(
                       value: _ReadingListDetailsMenuAction.share,
                       child: Text('Share'),
                     ),
                     PopupMenuItem(
                       value: _ReadingListDetailsMenuAction.delete,
-                      child: Text('Delete'),
+                      child: Text(
+                        list.metronSourceId != null
+                            ? 'Remove from Library'
+                            : 'Delete',
+                      ),
                     ),
                   ],
                 ),
@@ -383,12 +339,18 @@ class _ReadingListDetailsScreenState
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: ReadingListCover(list: list, width: 140, height: 210, peekOffset: 35),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: ReadingListCover(
+                      list: list,
+                      width: 140,
+                      height: 210,
+                      peekOffset: 35,
+                      allowRemoteCoverFetch: false,
                     ),
-                  ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -405,7 +367,9 @@ class _ReadingListDetailsScreenState
     return listValue.when(
       loading: () => DetailScreenSkeleton(
         initialChildSize: 0.65,
-        header: ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+        header: ColoredBox(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
         body: ShimmerWidget(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,21 +380,36 @@ class _ReadingListDetailsScreenState
               const SizedBox(height: 20),
               Row(
                 children: [
-                  const Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                  const Expanded(
+                    child: SkeletonBox(height: 14, borderRadius: 4),
+                  ),
                   const SizedBox(width: 8),
                   const SkeletonBox(width: 40, height: 14, borderRadius: 4),
                 ],
               ),
               const SizedBox(height: 8),
-              const SkeletonBox(height: 8, width: double.infinity, borderRadius: 4),
+              const SkeletonBox(
+                height: 8,
+                width: double.infinity,
+                borderRadius: 4,
+              ),
               const SizedBox(height: 20),
               Row(
                 children: const [
-                  Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  Expanded(
+                    flex: 3,
+                    child: SkeletonBox(height: 48, borderRadius: 12),
+                  ),
                   SizedBox(width: 6),
-                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  Expanded(
+                    flex: 1,
+                    child: SkeletonBox(height: 48, borderRadius: 12),
+                  ),
                   SizedBox(width: 6),
-                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  Expanded(
+                    flex: 1,
+                    child: SkeletonBox(height: 48, borderRadius: 12),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -441,7 +420,10 @@ class _ReadingListDetailsScreenState
                 childAspectRatio: 0.45,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                children: List.generate(6, (_) => const SkeletonBox(borderRadius: 8)),
+                children: List.generate(
+                  6,
+                  (_) => const SkeletonBox(borderRadius: 8),
+                ),
               ),
             ],
           ),
@@ -457,19 +439,15 @@ class _ReadingListDetailsScreenState
         }
 
         final displayItems = list.items;
-        final statusAsync = ref.watch(
-          readingListEffectiveStatusProvider(list),
-        );
-        final status = statusAsync.value ?? (
-          readCount: 0,
-          totalCount: displayItems.length,
-          progress: 0.0,
-        );
+        final statusAsync = ref.watch(readingListEffectiveStatusProvider(list));
+        final status =
+            statusAsync.value ??
+            (readCount: 0, totalCount: displayItems.length, progress: 0.0);
 
         return Scaffold(
           body: Stack(
             children: [
-               _buildHeader(list),
+              _buildHeader(list),
               DraggableScrollableSheet(
                 initialChildSize: 0.65,
                 minChildSize: 0.65,
@@ -526,7 +504,15 @@ class _ReadingListDetailsScreenState
       return CustomScrollView(
         controller: scrollController,
         slivers: [
-          SliverToBoxAdapter(child: _buildSheetHeader(list, progress, readCount, totalCount)),
+          SliverToBoxAdapter(
+            child: ReadingListDetailsSheetHeader(
+              list: list,
+              progress: progress,
+              readCount: readCount,
+              totalCount: totalCount,
+              actions: _buildActionRow(list),
+            ),
+          ),
           const SliverFillRemaining(
             hasScrollBody: false,
             child: EmptyContentState(
@@ -542,27 +528,37 @@ class _ReadingListDetailsScreenState
       controller: scrollController,
       slivers: [
         SliverToBoxAdapter(
-          child: _buildSheetHeader(list, progress, readCount, totalCount),
+          child: ReadingListDetailsSheetHeader(
+            list: list,
+            progress: progress,
+            readCount: readCount,
+            totalCount: totalCount,
+            actions: _buildActionRow(list),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: SectionHeader(
+              title: list.contentType == ListContentType.series ? 'SERIES' : 'ISSUES',
+              count: items.length,
+            ),
+          ),
         ),
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final item = items[index];
-              final roleColor = _getRoleColor(context, item.role);
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final item = items[index];
+            final roleColor = _getRoleColor(context, item.role);
 
-              return GestureDetector(
-                onTap: () => _openReadingListItemDetails(item),
-                child: ReadingListTimelineTile(
-                  list: list.copyWith(items: items),
-                  index: index + 1,
-                  item: item,
-                  roleColor: roleColor,
-                  isEditing: false,
-                ),
-              );
-            },
-            childCount: items.length,
-          ),
+            return ReadingListTimelineTile(
+              list: list.copyWith(items: items),
+              index: index + 1,
+              item: item,
+              roleColor: roleColor,
+              isEditing: false,
+              allowRemoteHydration: true,
+            );
+          }, childCount: items.length),
         ),
       ],
     );
@@ -582,7 +578,13 @@ class _ReadingListDetailsScreenState
         controller: scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: _buildSheetHeader(list, progress, readCount, totalCount),
+            child: ReadingListDetailsSheetHeader(
+              list: list,
+              progress: progress,
+              readCount: readCount,
+              totalCount: totalCount,
+              actions: _buildActionRow(list),
+            ),
           ),
           const SliverFillRemaining(
             hasScrollBody: false,
@@ -599,7 +601,13 @@ class _ReadingListDetailsScreenState
       controller: scrollController,
       slivers: [
         SliverToBoxAdapter(
-          child: _buildSheetHeader(list, progress, readCount, totalCount),
+          child: ReadingListDetailsSheetHeader(
+            list: list,
+            progress: progress,
+            readCount: readCount,
+            totalCount: totalCount,
+            actions: _buildActionRow(list),
+          ),
         ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
@@ -617,29 +625,13 @@ class _ReadingListDetailsScreenState
                 onTap: () => _openReadingListItemDetails(item),
                 isEditing: false,
                 isSelected: false,
+                allowRemoteHydration: true,
                 onRemove: null,
               );
             }, childCount: items.length),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDragHandle() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 8),
-        child: Container(
-          width: 32,
-          height: 4,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurfaceVariant
-                .withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ),
     );
   }
 
@@ -658,6 +650,5 @@ class _ReadingListDetailsScreenState
         return theme.colorScheme.primary;
     }
   }
+
 }
-
-

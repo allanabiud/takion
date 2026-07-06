@@ -52,6 +52,12 @@ abstract class ReadingList with _$ReadingList {
     @HiveField(5) required DateTime createdAt,
     @HiveField(6) required DateTime updatedAt,
     @HiveField(7) required List<ReadingListItem> items,
+    @HiveField(8) int? metronSourceId,
+    @HiveField(9) String? metronAttributionSource,
+    @HiveField(10) String? metronAttributionUrl,
+    @HiveField(11) String? metronImageUrl,
+    @HiveField(12) String? metronListType,
+    @HiveField(13) DateTime? lastSyncedAt,
   }) = _ReadingList;
 
   factory ReadingList.fromJson(Map<String, dynamic> json) =>
