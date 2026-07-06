@@ -17,6 +17,7 @@ class PagedListScaffold extends StatelessWidget {
     this.emptyIcon = Icons.inbox_outlined,
     this.header,
     this.isLoading = false,
+    this.skeleton,
   });
 
   final Future<void> Function() onRefresh;
@@ -32,15 +33,18 @@ class PagedListScaffold extends StatelessWidget {
   final IconData emptyIcon;
   final Widget? header;
   final bool isLoading;
+  final Widget? skeleton;
 
   @override
   Widget build(BuildContext context) {
     final hasPagination = totalPages > 1;
-    final showInlineLoading = isLoading && itemCount > 0;
+    final showInlineLoading = isLoading && itemCount > 0 && skeleton == null;
 
     final body = RefreshIndicator(
       onRefresh: onRefresh,
-      child: (itemCount == 0 && !isLoading)
+      child: (isLoading && skeleton != null)
+          ? skeleton!
+          : (itemCount == 0 && !isLoading)
           ? CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [

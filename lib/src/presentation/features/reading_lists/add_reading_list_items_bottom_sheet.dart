@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
+import 'package:takion/src/presentation/providers/search_utils.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 
@@ -176,7 +177,7 @@ class _AddReadingListItemsBottomSheetState
   }
 
   Widget _buildSeriesSelectionStep(WidgetRef ref) {
-    final searchArgs = SeriesSearchArgs(query: _query, page: 1);
+    final searchArgs = SearchArgs(query: _query, page: 1);
     final searchResults = _query.trim().isEmpty
         ? null
         : ref.watch(seriesSearchResultsProvider(searchArgs));

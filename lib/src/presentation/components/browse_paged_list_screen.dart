@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/components/paged_list_scaffold.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 
 class BrowsePagedData<T> {
   const BrowsePagedData({
@@ -79,7 +81,7 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
         if (data != null) {
           return _buildScaffold(data, isLoading: true);
         }
-        return const AsyncStatePanel.loading();
+        return _buildSkeletonList();
       },
       error: (error, _) =>
           AsyncStatePanel.error(errorMessage: '${widget.errorPrefix}: $error'),
@@ -127,6 +129,7 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
       itemCount: pageData.results.length,
       header: null,
       isLoading: isLoading,
+      skeleton: _buildSkeletonList(),
       itemBuilder: (context, index) {
         final item = pageData.results[index];
         return widget.itemBuilder(
@@ -138,6 +141,46 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
       },
       emptyMessage: widget.emptyMessage,
       emptyIcon: widget.emptyIcon,
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return ShimmerWidget(
+      child: ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 8,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(
+              top: index == 0 ? 0 : 2,
+              bottom: index == 7 ? 0 : 2,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    const SkeletonBox(width: 80, height: 56, borderRadius: 8),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkeletonBox(height: 16, width: double.infinity),
+                          SizedBox(height: 8),
+                          SkeletonBox(height: 14, width: 180),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

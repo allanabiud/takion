@@ -24,7 +24,11 @@ class MetronReadingListPage {
     if (previous == null || previous!.isEmpty) return null;
     final uri = Uri.tryParse(previous!);
     if (uri == null) return null;
-    return int.tryParse(uri.queryParameters['page'] ?? '');
+    final pageStr = uri.queryParameters['page'];
+    if (pageStr == null || pageStr.isEmpty) {
+      return 1;
+    }
+    return int.tryParse(pageStr);
   }
 
   bool get hasNext => nextPage != null;

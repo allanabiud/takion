@@ -1,6 +1,7 @@
 import 'package:takion/src/domain/entities/arc_list.dart';
+import 'package:takion/src/presentation/providers/search_utils.dart';
 
-class ArcListPage {
+class ArcListPage with SearchPageMixin {
   const ArcListPage({
     required this.count,
     required this.results,
@@ -10,22 +11,10 @@ class ArcListPage {
   });
 
   final int count;
+  @override
   final String? next;
+  @override
   final String? previous;
   final List<ArcList> results;
   final int currentPage;
-
-  int? _extractPage(String? url, {required bool defaultToFirstPage}) {
-    if (url == null || url.isEmpty) return null;
-    final uri = Uri.tryParse(url);
-    if (uri == null) return null;
-    final parsedPage = int.tryParse(uri.queryParameters['page'] ?? '');
-    if (parsedPage != null) return parsedPage;
-    return defaultToFirstPage ? 1 : null;
-  }
-
-  int? get nextPage => _extractPage(next, defaultToFirstPage: false);
-  int? get previousPage => _extractPage(previous, defaultToFirstPage: true);
-  bool get hasNext => nextPage != null;
-  bool get hasPrevious => previousPage != null;
 }
