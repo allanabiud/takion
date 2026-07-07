@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:takion/hive_registrar.g.dart';
 import 'package:workmanager/workmanager.dart';
 
 const String _taskName = 'weeklyPullReminder';
@@ -12,6 +13,7 @@ void pullReminderBackgroundCallback() {
     if (task != _taskName) return Future.value(false);
 
     await Hive.initFlutter();
+    Hive.registerAdapters();
 
     final box = await Hive.openBox<Map>('local_pull_list_box');
 
@@ -52,6 +54,7 @@ void pullReminderBackgroundCallback() {
           'takion_notifications',
           'Takion Notifications',
           channelDescription: 'General notifications from Takion',
+          icon: 'ic_notification',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
           playSound: true,

@@ -21,7 +21,7 @@ class PushNotificationService {
   }) async {
     if (_initialized) return;
 
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('ic_notification');
     final ios = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -49,18 +49,15 @@ class PushNotificationService {
 
   Future<void> syncRegistration({
     required bool enabled,
-    int? initialPullCount,
-    int? weekday,
-    int? hour,
-    int? minute,
   }) async {
     await _ensureWorkmanager();
 
     if (enabled) {
+      const w = DateTime.tuesday;
+      const h = 20;
+      const m = 0;
+
       final now = DateTime.now();
-      final w = weekday ?? DateTime.tuesday;
-      final h = hour ?? 20;
-      final m = minute ?? 0;
 
       int days = (w - now.weekday + 7) % 7;
       var scheduledDate = DateTime(now.year, now.month, now.day, h, m)

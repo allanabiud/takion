@@ -59,16 +59,10 @@ class _TakionAppState extends ConsumerState<TakionApp> {
 
     final enabledAsync = ref.read(pushPullNotificationsEnabledProvider);
     final enabled = enabledAsync.value ?? false;
-    final scheduleAsync = ref.read(pullReminderScheduleProvider);
-    final schedule = scheduleAsync.value ??
-        const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
 
     try {
       await ref.read(pushNotificationServiceProvider).syncRegistration(
         enabled: enabled,
-        weekday: schedule.weekday,
-        hour: schedule.hour,
-        minute: schedule.minute,
       );
     } catch (error) {
       debugPrint('_syncPushRegistration failed: $error');

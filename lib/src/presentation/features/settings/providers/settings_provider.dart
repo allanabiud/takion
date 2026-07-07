@@ -99,78 +99,7 @@ class PushPullNotificationsEnabledNotifier extends AsyncNotifier<bool> {
 
     // Inform push service to (un)register as needed
     try {
-      final initialCount = ref.read(currentWeekPullsCountProvider);
-      final scheduleAsync = ref.read(pullReminderScheduleProvider);
-      final schedule = scheduleAsync.value ?? const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
-      await service.syncRegistration(
-        enabled: value,
-        initialPullCount: initialCount,
-        weekday: schedule.weekday,
-        hour: schedule.hour,
-        minute: schedule.minute,
-      );
-    } catch (_) {}
-  }
-}
-
-
-class PullReminderSchedule {
-  final int weekday; // 1=Mon .. 7=Sun
-  final int hour;
-  final int minute;
-
-  const PullReminderSchedule({required this.weekday, required this.hour, required this.minute});
-
-  @override
-  String toString() => '$weekday:$hour:$minute';
-
-  static PullReminderSchedule fromString(String raw) {
-    final parts = raw.split(':');
-    if (parts.length != 3) return const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
-    final w = int.tryParse(parts[0]) ?? 2;
-    final h = int.tryParse(parts[1]) ?? 20;
-    final m = int.tryParse(parts[2]) ?? 0;
-    return PullReminderSchedule(weekday: w, hour: h, minute: m);
-  }
-}
-
-final pullReminderScheduleProvider = AsyncNotifierProvider<PullReminderScheduleNotifier, PullReminderSchedule>(
-  PullReminderScheduleNotifier.new,
-);
-
-class PullReminderScheduleNotifier extends AsyncNotifier<PullReminderSchedule> {
-  static const _boxName = 'settings_box';
-  static const _key = 'pull_reminder_schedule';
-
-  @override
-  Future<PullReminderSchedule> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final raw = (box.get(_key, defaultValue: '2:20:0') as String?) ?? '2:20:0';
-    return PullReminderSchedule.fromString(raw);
-  }
-
-  Future<void> setSchedule(PullReminderSchedule schedule) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, schedule.toString());
-    state = AsyncValue.data(schedule);
-
-    // If notifications are enabled, re-sync the registration to reschedule
-    try {
-      final enabledAsync = ref.read(pushPullNotificationsEnabledProvider);
-      final enabled = enabledAsync.value ?? false;
-      if (enabled) {
-        final service = ref.read(pushNotificationServiceProvider);
-        final initialCount = ref.read(currentWeekPullsCountProvider);
-        await service.syncRegistration(
-          enabled: true,
-          initialPullCount: initialCount,
-          weekday: schedule.weekday,
-          hour: schedule.hour,
-          minute: schedule.minute,
-        );
-      }
+      await service.syncRegistration(enabled: value);
     } catch (_) {}
   }
 }

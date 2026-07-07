@@ -355,8 +355,6 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
       switch (boxName) {
         case 'settings_box':
           widget.ref.invalidate(settingsProvider);
-          widget.ref.invalidate(pushPullNotificationsEnabledProvider);
-          widget.ref.invalidate(pullReminderScheduleProvider);
           break;
         case 'local_pull_list_box':
           widget.ref.invalidate(currentWeekPullsProvider);
