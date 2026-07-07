@@ -332,15 +332,9 @@ class LibraryScreen extends ConsumerWidget {
                       list: suggestion,
                       flat: true,
                       onTap: () {
-                        if (suggestion.metronSourceId != null) {
-                          context.pushRoute(
-                            MetronReadingListDetailRoute(id: suggestion.metronSourceId!),
-                          );
-                        } else {
-                          context.pushRoute(
-                            ReadingListDetailsRoute(listId: suggestion.id),
-                          );
-                        }
+                        context.pushRoute(
+                          ReadingListDetailsRoute(listId: suggestion.id),
+                        );
                       },
                     ),
                   ],

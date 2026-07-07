@@ -144,18 +144,12 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
           itemCount: readingLists.length,
           itemBuilder: (context, index) {
             final list = readingLists[index];
-            return ReadingListCard(
-              list: list,
-              onTap: () {
-                if (list.metronSourceId != null) {
-                  context.pushRoute(
-                    MetronReadingListDetailRoute(id: list.metronSourceId!),
-                  );
-                } else {
+              return ReadingListCard(
+                list: list,
+                onTap: () {
                   context.pushRoute(ReadingListDetailsRoute(listId: list.id));
-                }
-              },
-            );
+                },
+              );
           },
         );
       },

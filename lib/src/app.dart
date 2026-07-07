@@ -10,7 +10,6 @@ import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
@@ -46,7 +45,6 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         .initialize(
           onNotificationTap: (payload) async {
             if (payload == 'my-pulls') {
-              // Navigate to My Pulls when the notification is tapped
               if (!mounted) return;
               _appRouter.push(const MyPullsRoute());
             }
@@ -55,33 +53,25 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     await _syncPushRegistration();
   }
 
-  Future<void> _syncPushRegistration({bool includeDisable = false}) async {
+  Future<void> _syncPushRegistration() async {
     final authState = ref.read(authStateProvider).value;
     if (authState != AuthStatus.authenticated) return;
 
     final enabledAsync = ref.read(pushPullNotificationsEnabledProvider);
     final enabled = enabledAsync.value ?? false;
-    if (!enabled && !includeDisable) return;
+    final scheduleAsync = ref.read(pullReminderScheduleProvider);
+    final schedule = scheduleAsync.value ??
+        const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
 
     try {
-      final service = ref.read(pushNotificationServiceProvider);
-      final initialCount = ref.read(currentWeekPullsCountProvider);
-      final scheduleAsync = ref.read(pullReminderScheduleProvider);
-      final schedule = scheduleAsync.value ?? const PullReminderSchedule(weekday: 2, hour: 20, minute: 0);
-
-      await service.syncRegistration(
+      await ref.read(pushNotificationServiceProvider).syncRegistration(
         enabled: enabled,
-        initialPullCount: initialCount,
         weekday: schedule.weekday,
         hour: schedule.hour,
         minute: schedule.minute,
       );
     } catch (error) {
-      if (!mounted) return;
-      TakionAlerts.error(
-        context,
-        error.toString().replaceFirst('Bad state: ', ''),
-      );
+      debugPrint('_syncPushRegistration failed: $error');
     }
   }
 
@@ -156,11 +146,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     });
     ref.listen(pushPullNotificationsEnabledProvider, (previous, next) {
       if (!next.isLoading && previous?.value != next.value) {
-        final wasEnabled = previous?.value ?? false;
-        final isEnabled = next.value ?? false;
-        Future<void>(
-          () => _syncPushRegistration(includeDisable: wasEnabled && !isEnabled),
-        );
+        _syncPushRegistration();
       }
     });
 

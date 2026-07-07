@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/hive_registrar.g.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
   return HiveService();
@@ -87,6 +88,55 @@ class HiveService {
       final box = await Hive.openBox<T>(boxName);
       _clearFns[boxName] = box.clear;
       return box;
+    }
+  }
+
+  Future<Box> _openBoxForBackup(String boxName) async {
+    if (boxName == 'reading_lists_box') {
+      return Hive.isBoxOpen(boxName)
+          ? Hive.box<ReadingList>(boxName)
+          : await Hive.openBox<ReadingList>(boxName);
+    }
+    if (boxName == 'settings_box') {
+      return Hive.isBoxOpen(boxName)
+          ? Hive.box<dynamic>(boxName)
+          : await Hive.openBox<dynamic>(boxName);
+    }
+    if (boxName == 'metron_account_box' ||
+        boxName == 'local_auth_box' ||
+        boxName == 'profile_ui_box') {
+      return Hive.isBoxOpen(boxName)
+          ? Hive.box<String>(boxName)
+          : await Hive.openBox<String>(boxName);
+    }
+    return Hive.isBoxOpen(boxName)
+        ? Hive.box<Map>(boxName)
+        : await Hive.openBox<Map>(boxName);
+  }
+
+  Future<List<Map<String, dynamic>>> readAllEntries(String boxName) async {
+    final box = await _openBoxForBackup(boxName);
+    final entries = <Map<String, dynamic>>[];
+    for (final key in box.keys) {
+      final value = box.get(key);
+      if (value != null) {
+        entries.add({
+          'k': key,
+          'v': boxName == 'reading_lists_box'
+              ? (value as ReadingList).toJson()
+              : value,
+        });
+      }
+    }
+    return entries;
+  }
+
+  Future<void> putEntry(String boxName, String key, dynamic value) async {
+    final box = await _openBoxForBackup(boxName);
+    if (boxName == 'reading_lists_box') {
+      await box.put(key, ReadingList.fromJson(value as Map<String, dynamic>));
+    } else {
+      await box.put(key, value);
     }
   }
 

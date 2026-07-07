@@ -61,9 +61,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       SearchTarget.arcs => 'Arcs',
     };
     _searchFocusNode.unfocus();
-    context.pushRoute(
-      SearchResultsRoute(query: query, searchChoice: choice),
-    );
+    context.pushRoute(SearchResultsRoute(query: query, searchChoice: choice));
   }
 
   void _onSearchChanged() {
@@ -157,11 +155,21 @@ class MainScreenState extends ConsumerState<MainScreen>
               tabsRouter.setActiveIndex(0);
             }
           },
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(25),
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: NavigationBar(
               selectedIndex: tabsRouter.activeIndex,
               onDestinationSelected: tabsRouter.setActiveIndex,
+              elevation: 0,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+              surfaceTintColor: Colors.transparent,
+              shadowColor: Colors.transparent,
               destinations: const [
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined),
@@ -364,7 +372,9 @@ class MainScreenState extends ConsumerState<MainScreen>
                 SearchTarget.arcs => 'Arcs',
               };
               return Padding(
-                padding: EdgeInsets.only(right: i < SearchTarget.values.length - 1 ? 8 : 0),
+                padding: EdgeInsets.only(
+                  right: i < SearchTarget.values.length - 1 ? 8 : 0,
+                ),
                 child: ChoiceChip(
                   key: _chipKeys[t] ??= GlobalKey(),
                   label: Text(
@@ -405,12 +415,10 @@ class MainScreenState extends ConsumerState<MainScreen>
                       ),
                       onTap: () {
                         _searchController.text = item;
-                        _searchController.selection =
-                            TextSelection.fromPosition(
-                              TextPosition(
-                                offset: _searchController.text.length,
-                              ),
-                            );
+                        _searchController
+                            .selection = TextSelection.fromPosition(
+                          TextPosition(offset: _searchController.text.length),
+                        );
                         _searchFocusNode.requestFocus();
                       },
                     );

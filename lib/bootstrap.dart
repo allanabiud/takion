@@ -4,8 +4,10 @@ import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/notifications/notification_background_task.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
+import 'package:workmanager/workmanager.dart';
 
 /// Bootstraps the application by initializing core services and state management.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
@@ -17,6 +19,9 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
   // Enable edge-to-edge mode for transparent system bars
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  // Initialize Workmanager for background notification tasks
+  await Workmanager().initialize(pullReminderBackgroundCallback);
 
   final hiveService = HiveService();
   await hiveService.init();

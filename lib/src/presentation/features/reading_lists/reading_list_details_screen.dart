@@ -137,31 +137,6 @@ class _ReadingListDetailsScreenState
   Widget _buildActionRow(ReadingList list) {
     final theme = Theme.of(context);
     final isMetron = list.metronSourceId != null;
-
-    if (isMetron) {
-      return Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                textStyle: theme.textTheme.titleMedium,
-                backgroundColor: theme.colorScheme.errorContainer,
-                foregroundColor: theme.colorScheme.onErrorContainer,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () => _confirmDelete(context, list),
-              icon: const Icon(Icons.delete_outline, size: 22),
-              label: const Text('Remove'),
-            ),
-          ),
-        ],
-      );
-    }
-
     final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
     final isFavorite = isFavoriteAsync.value ?? false;
 
@@ -173,16 +148,24 @@ class _ReadingListDetailsScreenState
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
               textStyle: theme.textTheme.titleMedium,
+              backgroundColor: isMetron
+                  ? theme.colorScheme.errorContainer
+                  : null,
+              foregroundColor: isMetron
+                  ? theme.colorScheme.onErrorContainer
+                  : null,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () => AddReadingListItemsBottomSheet.show(
-              context,
-              list,
+            onPressed: isMetron
+                ? () => _confirmDelete(context, list)
+                : () => AddReadingListItemsBottomSheet.show(context, list),
+            icon: Icon(
+              isMetron ? Icons.delete_outline : Icons.add,
+              size: 22,
             ),
-            icon: const Icon(Icons.add, size: 22),
-            label: const Text('Add Items'),
+            label: Text(isMetron ? 'Remove' : 'Add Items'),
           ),
         ),
         const SizedBox(width: 6),

@@ -50,6 +50,17 @@
 - **Wishlist Support**: Keep a separate, organized list of wanted issues.
 - **Detailed Insights**: View collector-focused stats about your reading habits.
 
+### 💾 Backup & Restore
+
+- **Encrypted Backups**: Create AES-256-GCM encrypted backups (.tkbk) of your data with password protection.
+- **Selective Restore**: Choose which data categories to restore from a backup file.
+- **Reading List Export/Import**: Export individual reading lists as .tk files for sharing or archival.
+
+### 🔔 Notifications
+
+- **Pull Reminders**: Receive daily notifications about upcoming pull list issues.
+- **Schedule Configuration**: Configure notification times and enable/disable from Settings.
+
 ---
 
 ## 🛠️ Tech Stack

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/settings/widgets/backup_sheet.dart';
+import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -30,12 +32,9 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: const Text(
-                    'Save your local app data to a backup file (coming soon)',
+                    'Save your local app data to an encrypted backup file',
                   ),
-                  onTap: () => TakionAlerts.info(
-                    context,
-                    'Local backup coming soon',
-                  ),
+                  onTap: () => showCreateBackupSheet(context, ref),
                 ),
                 const Divider(),
                 ListTile(
@@ -49,12 +48,9 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: const Text(
-                    'Restore local app data from a backup file (coming soon)',
+                    'Restore local app data from an encrypted backup file',
                   ),
-                  onTap: () => TakionAlerts.info(
-                    context,
-                    'Backup restore coming soon',
-                  ),
+                  onTap: () => showRestoreBackupSheet(context, ref),
                 ),
               ]),
               const SizedBox(height: 16),

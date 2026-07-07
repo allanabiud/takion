@@ -142,15 +142,9 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                   list: list,
                   flat: true,
                   onTap: () {
-                    if (list.metronSourceId != null) {
-                      context.pushRoute(
-                        MetronReadingListDetailRoute(id: list.metronSourceId!),
-                      );
-                    } else {
-                      context.pushRoute(
-                        ReadingListDetailsRoute(listId: list.id),
-                      );
-                    }
+                    context.pushRoute(
+                      ReadingListDetailsRoute(listId: list.id),
+                    );
                   },
                 );
               },

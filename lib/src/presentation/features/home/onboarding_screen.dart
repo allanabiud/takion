@@ -10,6 +10,7 @@ import 'package:takion/src/presentation/common/floating_icons_background.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
+import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
@@ -44,6 +45,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isConnecting = false;
+  bool _restoreCompleted = false;
 
   @override
   void initState() {
@@ -212,6 +214,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   _buildWelcomePage(theme),
                   _buildMetronInfoPage(theme),
                   _buildAuthorizePage(theme),
+                  _buildRestoreBackupPage(theme),
                   _buildAllDonePage(theme),
                 ],
               ),
@@ -493,6 +496,90 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRestoreBackupPage(ThemeData theme) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _restoreCompleted ? LucideIcons.badgeCheck : LucideIcons.rotateCcw,
+                      size: 64,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _restoreCompleted ? 'Backup Restored' : 'Restore from Backup',
+                      style: theme.textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _restoreCompleted
+                          ? 'Your data has been restored successfully.'
+                          : 'If you have a previous Takion backup, you can restore your data now.',
+                      style: theme.textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    if (!_restoreCompleted) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'You can also do this later from Settings.',
+                        style: theme.textTheme.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            if (_restoreCompleted)
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  onPressed: () => _goToPage(4),
+                  child: const Text('Continue'),
+                ),
+              )
+            else ...[
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    final restored = await showRestoreBackupSheet(context, ref);
+                    if (restored == true && mounted) {
+                      setState(() => _restoreCompleted = true);
+                    }
+                  },
+                  icon: const Icon(Icons.restore_page_outlined),
+                  label: const Text('Restore from Backup'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton(
+                  onPressed: () => _goToPage(4),
+                  child: const Text('Skip'),
+                ),
+              ),
+            ],
           ],
         ),
       ),

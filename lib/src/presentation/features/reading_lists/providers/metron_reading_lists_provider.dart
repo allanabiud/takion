@@ -101,7 +101,7 @@ class MetronReadingListFilter {
 }
 
 final metronReadingListDetailProvider =
-    FutureProvider.autoDispose.family<MetronReadingListDetailData, int>(
+    FutureProvider.family<MetronReadingListDetailData, int>(
       (ref, id) async {
         final repository = ref.read(metronRepositoryProvider);
         final detail = await repository.getReadingListDetail(id);
