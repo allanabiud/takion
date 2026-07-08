@@ -109,14 +109,67 @@ class IssueDetailsSkeleton extends StatelessWidget {
           const SkeletonBox(height: 14, width: 280, borderRadius: 4),
           const SizedBox(height: 8),
           const SkeletonBox(height: 14, width: 220, borderRadius: 4),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              ...List.generate(4, (_) => const Padding(
+          const SizedBox(height: 8),
+          const SkeletonBox(height: 14, width: 120, borderRadius: 4),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 150,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
                 padding: EdgeInsets.only(right: 12),
-                child: SkeletonBox(height: 14, width: 60, borderRadius: 4),
-              )),
-            ],
+                child: SkeletonBox(width: 95, height: 150, borderRadius: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 100, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 130,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 95, height: 130, borderRadius: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 70, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 155,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 100, height: 155, borderRadius: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 90, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 140,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 100, height: 140, borderRadius: 12),
+              ),
+            ),
           ),
           const SizedBox(height: 24),
           const SkeletonBox(height: 18, width: 70, borderRadius: 4),
@@ -129,59 +182,22 @@ class IssueDetailsSkeleton extends StatelessWidget {
             )),
           ),
           const SizedBox(height: 24),
-          const SkeletonBox(height: 18, width: 80, borderRadius: 4),
+          const SkeletonBox(height: 18, width: 60, borderRadius: 4),
           const SizedBox(height: 12),
           SizedBox(
-            height: 120,
+            height: 140,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: 4,
               padding: EdgeInsets.zero,
               itemBuilder: (_, _) => const Padding(
                 padding: EdgeInsets.only(right: 12),
-                child: SkeletonBox(width: 80, height: 120, borderRadius: 12),
+                child: SkeletonBox(width: 100, height: 140, borderRadius: 12),
               ),
             ),
           ),
           const SizedBox(height: 24),
           const SkeletonBox(height: 18, width: 80, borderRadius: 4),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 4,
-              padding: EdgeInsets.zero,
-              itemBuilder: (_, _) => const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: SkeletonBox(width: 80, height: 120, borderRadius: 12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const SkeletonBox(height: 18, width: 80, borderRadius: 4),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(3, (_) => const SkeletonBox(
-              height: 28, width: 120, borderRadius: 14,
-            )),
-          ),
-          const SizedBox(height: 24),
-          const SkeletonBox(height: 100, width: double.infinity, borderRadius: 12),
-          const SizedBox(height: 24),
-          const SkeletonBox(height: 18, width: 70, borderRadius: 4),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(4, (_) => const SkeletonBox(
-              height: 28, width: 70, borderRadius: 14,
-            )),
-          ),
-          const SizedBox(height: 24),
-          const SkeletonBox(height: 18, width: 140, borderRadius: 4),
           const SizedBox(height: 12),
           ...List.generate(6, (_) => const Padding(
             padding: EdgeInsets.only(bottom: 8),

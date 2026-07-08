@@ -4,14 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/presentation/components/arc_card.dart';
+import 'package:takion/src/presentation/components/entity_card.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/imprint_card.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
 import 'package:takion/src/presentation/components/person_card.dart';
 import 'package:takion/src/presentation/components/section_header.dart';
-import 'package:takion/src/presentation/components/team_card.dart';
-import 'package:takion/src/presentation/components/universe_card.dart';
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
@@ -370,12 +368,14 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final team = teams[index];
-            return TeamCard(
-              teamId: team.id,
+            return EntityCard(
+              entityType: 'team',
+              entityId: team.id,
               name: team.name.trim().isNotEmpty
                   ? team.name.trim()
                   : 'Unknown Team',
               width: 100,
+              onTap: () => context.pushRoute(TeamDetailsRoute(teamId: team.id)),
             );
           },
         ),
@@ -399,12 +399,14 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final arc = arcs[index];
-            return ArcCard(
-              arcId: arc.id,
+            return EntityCard(
+              entityType: 'arc',
+              entityId: arc.id,
               name: arc.name.trim().isNotEmpty
                   ? arc.name.trim()
                   : 'Unknown Arc',
               width: 100,
+              onTap: () => context.pushRoute(ArcDetailsRoute(arcId: arc.id)),
             );
           },
         ),
@@ -428,12 +430,17 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final universe = universes[index];
-            return UniverseCard(
-              universeId: universe.id,
+            return EntityCard(
+              entityType: 'universe',
+              entityId: universe.id,
               name: universe.name.trim().isNotEmpty
                   ? universe.name.trim()
                   : 'Unknown Universe',
               width: 100,
+              imageHeight: 80,
+              onTap: () => context.pushRoute(
+                UniverseDetailsRoute(universeId: universe.id),
+              ),
             );
           },
         ),

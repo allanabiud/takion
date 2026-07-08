@@ -414,8 +414,41 @@ class _MetronReadingListDetailScreenState
     return dataAsync.when(
       loading: () => DetailScreenSkeleton(
         initialChildSize: 0.65,
-        header: ColoredBox(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        header: Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+            Positioned(
+              top: 56,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: SizedBox(
+                  width: 140,
+                  height: 210,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      children: List.generate(
+                        3,
+                        (i) => Positioned(
+                          top: i * 20.0,
+                          left: i * 10.0,
+                          child: SkeletonBox(
+                            width: 120,
+                            height: 180,
+                            borderRadius: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         body: ShimmerWidget(
           child: Column(
@@ -423,7 +456,13 @@ class _MetronReadingListDetailScreenState
             children: [
               const SkeletonBox(height: 26, width: 280, borderRadius: 4),
               const SizedBox(height: 8),
-              const SkeletonBox(height: 14, width: 100, borderRadius: 4),
+              Row(
+                children: [
+                  const SkeletonBox(width: 80, height: 24, borderRadius: 12),
+                  const SizedBox(width: 8),
+                  const SkeletonBox(width: 100, height: 24, borderRadius: 12),
+                ],
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
@@ -455,16 +494,46 @@ class _MetronReadingListDetailScreenState
                 ],
               ),
               const SizedBox(height: 24),
-              GridView.count(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.45,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: List.generate(
-                  6,
-                  (_) => const SkeletonBox(borderRadius: 8),
+              const SkeletonBox(width: 60, height: 18, borderRadius: 4),
+              const SizedBox(height: 16),
+              ...List.generate(
+                4,
+                (_) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    children: [
+                      const SkeletonBox(
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                      ),
+                      const SizedBox(width: 12),
+                      const SkeletonBox(
+                        width: 60,
+                        height: 85,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SkeletonBox(
+                              height: 14,
+                              width: 200,
+                              borderRadius: 4,
+                            ),
+                            const SizedBox(height: 6),
+                            const SkeletonBox(
+                              height: 12,
+                              width: 140,
+                              borderRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

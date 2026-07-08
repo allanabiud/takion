@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_new_releases_short">New Releases</string>
+    <string name="shortcut_new_releases_long">This Week\'s Releases</string>
+    <string name="shortcut_my_pulls_short">My Pulls</string>
+    <string name="shortcut_my_pulls_long">My Pull List</string>
+    <string name="shortcut_library_short">Library</string>
+    <string name="shortcut_library_long">My Comic Library</string>
+</resources>

@@ -1,43 +1,49 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
-class ArcCard extends ConsumerWidget {
-  const ArcCard({
+class EntityCard extends ConsumerWidget {
+  const EntityCard({
     super.key,
-    required this.arcId,
+    required this.entityType,
+    required this.entityId,
     required this.name,
     this.subtitle,
     this.width,
     this.onTap,
     this.imageUrl,
+    this.imageWidth,
+    this.imageHeight,
+    this.borderRadius = 10,
   });
 
-  final int arcId;
+  final String entityType;
+  final int entityId;
   final String name;
   final String? subtitle;
   final double? width;
   final VoidCallback? onTap;
   final String? imageUrl;
+  final double? imageWidth;
+  final double? imageHeight;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached('arc', arcId);
+    final cachedImage = cache.getCached(entityType, entityId);
     final effectiveImageUrl = imageUrl ?? cachedImage;
 
-    final effectiveOnTap =
-        onTap ?? () => context.pushRoute(ArcDetailsRoute(arcId: arcId));
+    final effectiveImageWidth = imageWidth ?? (width ?? 100);
+    final effectiveImageHeight = imageHeight ?? effectiveImageWidth;
 
     Widget card = InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: effectiveOnTap,
+      borderRadius: BorderRadius.circular(borderRadius),
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(6),
         child: Column(
@@ -45,10 +51,10 @@ class ArcCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(borderRadius),
               child: Container(
-                width: width ?? 100,
-                height: 100,
+                width: effectiveImageWidth,
+                height: effectiveImageHeight,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
                 ),

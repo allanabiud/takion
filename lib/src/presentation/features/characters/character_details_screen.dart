@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -10,42 +8,29 @@ import 'package:takion/src/domain/entities/character_details.dart';
 import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/components/person_card.dart';
-import 'package:takion/src/presentation/components/universe_card.dart';
-import 'package:takion/src/presentation/components/team_card.dart';
+import 'package:takion/src/presentation/components/entity_card.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
-import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/detail_screen_shell.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/expandable_description.dart';
 import 'package:takion/src/presentation/components/section_header.dart';
+import 'package:takion/src/presentation/components/shimmer_widget.dart';
+import 'package:takion/src/presentation/components/skeleton.dart';
 
 String _monthYear(DateTime date) {
   const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
   return '${months[date.month - 1]} ${date.year}';
 }
-
-
 
 @RoutePage()
 class CharacterDetailsScreen extends ConsumerStatefulWidget {
@@ -94,8 +79,6 @@ class _CharacterDetailsScreenState
     }
   }
 
-
-
   Future<void> _toggleFavorite() async {
     try {
       final repository = ref.read(favoritesRepositoryProvider);
@@ -134,706 +117,320 @@ class _CharacterDetailsScreenState
     final detailsAsync = ref.watch(
       characterDetailsProvider(widget.characterId),
     );
-    final scaffoldBg = Theme.of(context).colorScheme.surface;
-
-    return detailsAsync.when(
-      loading: () =>
-          DetailScreenSkeleton(
-            header: widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.initialImageUrl!,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
-                    ],
-                  )
-                : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
-            body: ShimmerWidget(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SkeletonBox(height: 22, width: 260, borderRadius: 4),
-                  const SizedBox(height: 8),
-                  const SkeletonBox(height: 16, width: 160, borderRadius: 4),
-                  const SizedBox(height: 16),
-                  const SkeletonBox(height: 14, borderRadius: 4),
-                  const SizedBox(height: 8),
-                  const SkeletonBox(height: 14, width: 240, borderRadius: 4),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: const [
-                      Expanded(flex: 2, child: SkeletonBox(height: 70, borderRadius: 12)),
-                      SizedBox(width: 6),
-                      Expanded(flex: 2, child: SkeletonBox(height: 70, borderRadius: 12)),
-                      SizedBox(width: 6),
-                      Expanded(flex: 4, child: SkeletonBox(height: 70, borderRadius: 12)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const SkeletonBox(height: 90, borderRadius: 14),
-                  const SizedBox(height: 24),
-                  const SkeletonBox(height: 18, width: 90, borderRadius: 4),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 140,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 4,
-                      padding: EdgeInsets.zero,
-                      itemBuilder: (_, _) => const Padding(
-                        padding: EdgeInsets.only(right: 12),
-                        child: SkeletonBox(width: 100, height: 140, borderRadius: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const SkeletonBox(height: 18, width: 80, borderRadius: 4),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 4,
-                      padding: EdgeInsets.zero,
-                      itemBuilder: (_, _) => const Padding(
-                        padding: EdgeInsets.only(right: 12),
-                        child: SkeletonBox(width: 130, height: 200, borderRadius: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      error: (error, _) => Scaffold(
-        appBar: AppBar(),
-        body: Center(child: Text('Failed to load character details: $error')),
-      ),
-      data: (details) {
-        final isFavoriteAsync = ref.watch(
-          isCharacterFavoriteProvider(widget.characterId),
-        );
-        final isFavorite = isFavoriteAsync.asData?.value ?? false;
-        final issueListAsync = ref.watch(
-          characterDetailsIssuesProvider(widget.characterId),
-        );
-        final allIssues = issueListAsync.asData?.value.results ?? [];
-        final totalIssueCount = issueListAsync.asData?.value.count ?? 0;
-        final isIssuesLoading = issueListAsync.isLoading;
-
-        final previewIssues = allIssues.isNotEmpty
-            ? sortIssues(
-                allIssues,
-                ContentSortOption.dateNewest,
-              ).take(5).toList()
-            : <IssueList>[];
-
-        return Scaffold(
-          body: Stack(
-            children: [
-              SizedBox(
-                height: 350,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (details.image != null && details.image!.isNotEmpty)
-                      ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: CachedNetworkImage(
-                          imageUrl: details.image!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => ColoredBox(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                          ),
-                          errorWidget: (context, url, error) => ColoredBox(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                          ),
-                        ),
-                      )
-                    else
-                      ColoredBox(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                      ),
-                    Container(color: Colors.black.withValues(alpha: 0.55)),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scaffoldBg.withValues(alpha: 0.75),
-                            Colors.transparent,
-                            scaffoldBg.withValues(alpha: 0.75),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (details.image != null &&
-                              details.image!.isNotEmpty)
-                            Hero(
-                              tag: 'character-image-${details.id}',
-                              child: GestureDetector(
-                                onTap: () => context.pushRoute(
-                                  ImagePreviewRoute(
-                                    imageUrl: details.image!,
-                                    title: details.name,
-                                    heroTag: 'character-image-${details.id}',
-                                  ),
-                                ),
-                                child: ClipOval(
-                                  child: Container(
-                                    width: 260,
-                                    height: 260,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
-                                    ),
-                                    child: CachedNetworkImage(
-                                      imageUrl: details.image!,
-                                      fit: BoxFit.cover,
-                                      alignment: Alignment.topCenter,
-                                      filterQuality: FilterQuality.high,
-                                      placeholder: (context, url) =>
-                                          _initialsAvatar(
-                                            context,
-                                            details.name,
-                                          ),
-                                      errorWidget: (context, url, error) =>
-                                          _initialsAvatar(
-                                            context,
-                                            details.name,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            ClipOval(
-                              child: SizedBox(
-                                width: 260,
-                                height: 260,
-                                child: _initialsAvatar(context, details.name),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        actions: [
-                          EntityDetailActions(
-                            onShare: () => _shareResourceUrl(details),
-                            onOpenInBrowser: () => _openResourceUrlInBrowser(details),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              DraggableScrollableSheet(
-                initialChildSize: 0.60,
-                minChildSize: 0.60,
-                maxChildSize: 0.9,
-                snap: true,
-                snapSizes: const [0.60, 0.9],
-                builder: (context, scrollController) {
-                  return _CharacterDetailsSheet(
-                    scrollController: scrollController,
-                    details: details,
-                    allIssues: allIssues,
-                    previewIssues: previewIssues,
-                    totalIssueCount: totalIssueCount,
-                    isIssuesLoading: isIssuesLoading,
-                    isFavorite: isFavorite,
-                    onToggleFavorite: _toggleFavorite,
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
+    final isFavoriteAsync = ref.watch(
+      isCharacterFavoriteProvider(widget.characterId),
     );
-  }
+    final isFavorite = isFavoriteAsync.asData?.value ?? false;
+    final issueListAsync = ref.watch(
+      characterDetailsIssuesProvider(widget.characterId),
+    );
+    final allIssues = issueListAsync.asData?.value.results ?? [];
+    final totalIssueCount = issueListAsync.asData?.value.count ?? 0;
+    final isIssuesLoading = issueListAsync.isLoading;
 
-  Widget _initialsAvatar(BuildContext context, String name) {
-    return Container(
-      color: Theme.of(
-        context,
-      ).colorScheme.primaryContainer.withValues(alpha: 0.8),
-      child: Center(
-        child: Text(
-          initials(name),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontSize: 64,
-            fontWeight: FontWeight.w700,
-          ),
+    final previewIssues = allIssues.isNotEmpty
+        ? sortIssues(
+            allIssues,
+            ContentSortOption.dateNewest,
+          ).take(5).toList()
+        : <IssueList>[];
+
+    return DetailScreenShell<CharacterDetails>(
+      asyncValue: detailsAsync,
+      loadingImageUrl: widget.initialImageUrl,
+      entityType: 'character',
+      initialChildSize: 0.60,
+      headerHeight: 350,
+      toImageUrl: (d) => d.image,
+      toHeroTag: (d) => 'character-image-${d.id}',
+      toTitle: (d) => d.name,
+      toSubtitle: (d) => d.alias,
+      onShare: (d) => _shareResourceUrl(d),
+      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      circular: true,
+      heroWidth: 260,
+      heroHeight: 260,
+      toHeaderExtra: (d) => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: FavoriteToggleButton(
+          isFavorite: isFavorite,
+          onToggleFavorite: _toggleFavorite,
+          compact: true,
         ),
       ),
-    );
-  }
-}
+      sheetContentBuilder: (context, data, ref) {
+        final description = data.desc?.trim();
+        final hasDescription = description != null && description.isNotEmpty;
+        final hasIssues = allIssues.isNotEmpty;
+        final hasCreators = data.creators.isNotEmpty;
+        final hasTeams = data.teams.isNotEmpty;
+        final hasUniverses = data.universes.isNotEmpty;
 
-class _CharacterDetailsSheet extends ConsumerWidget {
-  const _CharacterDetailsSheet({
-    required this.scrollController,
-    required this.details,
-    required this.allIssues,
-    required this.previewIssues,
-    required this.totalIssueCount,
-    required this.isIssuesLoading,
-    required this.isFavorite,
-    required this.onToggleFavorite,
-  });
+        DateTime? issueDate(IssueList issue) =>
+            issue.storeDate ?? issue.coverDate;
 
-  final ScrollController scrollController;
-  final CharacterDetails details;
-  final List<IssueList> allIssues;
-  final List<IssueList> previewIssues;
-  final int totalIssueCount;
-  final bool isIssuesLoading;
-  final bool isFavorite;
-  final VoidCallback onToggleFavorite;
+        final dates = allIssues
+            .map((i) => issueDate(i))
+            .where((d) => d != null)
+            .toList();
+        dates.sort();
+        final dateRange = dates.isNotEmpty
+            ? '${dates.first!.year} – ${dates.last!.year}'
+            : null;
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final alias = details.alias?.trim();
-    final hasAlias = alias != null && alias.isNotEmpty;
-    final description = details.desc?.trim();
-    final hasDescription = description != null && description.isNotEmpty;
-    final hasIssues = allIssues.isNotEmpty;
-    final hasCreators = details.creators.isNotEmpty;
-    final hasTeams = details.teams.isNotEmpty;
-    final hasUniverses = details.universes.isNotEmpty;
+        final distinctSeries = allIssues
+            .map((i) => i.series?.name)
+            .where((n) => n != null)
+            .toSet()
+            .length;
 
-    DateTime? issueDate(IssueList issue) => issue.storeDate ?? issue.coverDate;
+        IssueList? firstAppearance;
+        if (dates.isNotEmpty) {
+          final earliest = dates.first;
+          firstAppearance = allIssues.firstWhere(
+            (i) => issueDate(i) == earliest,
+            orElse: () => allIssues.first,
+          );
+        }
 
-    final dates = allIssues
-        .map((i) => issueDate(i))
-        .where((d) => d != null)
-        .toList();
-    dates.sort();
-    final dateRange = dates.isNotEmpty
-        ? '${dates.first!.year} – ${dates.last!.year}'
-        : null;
+        final showStats = hasIssues || isIssuesLoading;
+        final showFirstAppearance =
+            (firstAppearance != null && firstAppearance.id != null) ||
+            isIssuesLoading;
 
-    final distinctSeries = allIssues
-        .map((i) => i.series?.name)
-        .where((n) => n != null)
-        .toSet()
-        .length;
-
-    IssueList? firstAppearance;
-    if (dates.isNotEmpty) {
-      final earliest = dates.first;
-      firstAppearance = allIssues.firstWhere(
-        (i) => issueDate(i) == earliest,
-        orElse: () => allIssues.first,
-      );
-    }
-
-    final showStats = hasIssues || isIssuesLoading;
-    final showFirstAppearance =
-        (firstAppearance != null && firstAppearance.id != null) ||
-        isIssuesLoading;
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      child: Container(
-        color: theme.colorScheme.surface,
-        child: CustomScrollView(
-          controller: scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Container(
-                        width: 32,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.4,
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                details.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (hasAlias) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  '@$alias',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        FavoriteToggleButton(
-                          isFavorite: isFavorite,
-                          onToggleFavorite: onToggleFavorite,
-                          compact: true,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (hasDescription) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _CharacterDescriptionCard(description: description),
-                ),
-              ),
-            ],
-            if (showStats) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: isIssuesLoading
-                      ? const ShimmerWidget(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: SkeletonBox(borderRadius: 12, height: 70),
-                              ),
-                              SizedBox(width: 6),
-                              Expanded(
-                                flex: 2,
-                                child: SkeletonBox(borderRadius: 12, height: 70),
-                              ),
-                              SizedBox(width: 6),
-                              Expanded(
-                                flex: 4,
-                                child: SkeletonBox(borderRadius: 12, height: 70),
-                              ),
-                            ],
-                          ),
-                        )
-                      : _CharacterStatsCard(
-                          issueCount: totalIssueCount,
-                          seriesCount: distinctSeries,
-                          dateRange: dateRange,
-                        ),
-                ),
-              ),
-            ],
-            if (showFirstAppearance) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: isIssuesLoading
-                      ? const ShimmerWidget(
-                          child: SkeletonBox(borderRadius: 14, height: 90),
-                        )
-                      : _CharacterFirstAppearanceCard(issue: firstAppearance!),
-                ),
-              ),
-            ],
-            if (hasCreators) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _CharacterCreatorsCard(creators: details.creators),
-                ),
-              ),
-            ],
-            if (hasIssues || isIssuesLoading) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: isIssuesLoading
-                      ? ShimmerWidget(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SkeletonBox(
-                                width: 100,
-                                height: 20,
-                                borderRadius: 4,
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 250,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: 5,
-                                  padding: EdgeInsets.zero,
-                                  itemBuilder: (context, index) => const Padding(
-                                    padding: EdgeInsets.only(right: 12),
-                                    child: SkeletonBox(
-                                      width: 150,
-                                      height: 250,
-                                      borderRadius: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SectionHeader(
-                              title: 'Recently Appeared In',
-                              onViewAll: () => context.pushRoute(
-                                CharacterIssuesRoute(characterId: details.id),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            HorizontalPreviewSection(
-                              title: '',
-                              onViewAll: null,
-                              itemCount: previewIssues.length,
-                              height: 250,
-                              emptyText: 'No issues available.',
-                              itemBuilder: (context, index) {
-                                final issue = previewIssues[index];
-                                final issueId = issue.id;
-                                return IssueCard(
-                                  issueId: issueId,
-                                  imageUrl: issue.image,
-                                  title:
-                                      '${issue.series?.name ?? issue.name} #${issue.number}',
-                                  onTap: issueId == null
-                                      ? null
-                                      : () {
-                                          context.pushRoute(
-                                            IssueDetailsRoute(
-                                              issueId: issueId,
-                                              initialImageUrl: issue.image,
-                                            ),
-                                          );
-                                        },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-            ],
-            if (hasTeams) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: const SectionHeader(title: 'TEAMS'),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 150,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: details.teams.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 4),
-                    itemBuilder: (context, index) {
-                      final team = details.teams[index];
-                      return TeamCard(
-                        teamId: team.id,
-                        name: team.name,
-                        width: 110,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-            if (hasUniverses) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: const SectionHeader(title: 'UNIVERSES'),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 130,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: details.universes.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 4),
-                    itemBuilder: (context, index) {
-                      final universe = details.universes[index];
-                      return UniverseCard(
-                        universeId: universe.id,
-                        name: universe.name,
-                        width: 140,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+        return [
+          if (hasDescription) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _CharacterInfoCard(details: details),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).padding.bottom + 24,
+                child: ExpandableDescription(description: description),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-
-
-class _CharacterDescriptionCard extends StatefulWidget {
-  const _CharacterDescriptionCard({required this.description});
-
-  final String description;
-
-  @override
-  State<_CharacterDescriptionCard> createState() =>
-      _CharacterDescriptionCardState();
-}
-
-class _CharacterDescriptionCardState extends State<_CharacterDescriptionCard> {
-  static const _descriptionMaxLines = 4;
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final textStyle = Theme.of(context).textTheme.bodyMedium;
-        final fullPainter = TextPainter(
-          text: TextSpan(text: widget.description, style: textStyle),
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final collapsedPainter = TextPainter(
-          text: TextSpan(text: widget.description, style: textStyle),
-          maxLines: _descriptionMaxLines,
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final isOverflowing = collapsedPainter.didExceedMaxLines;
-        final collapsedHeight = isOverflowing
-            ? collapsedPainter.height
-            : fullPainter.height;
-        final heightFactor = fullPainter.height > 0
-            ? collapsedHeight / fullPainter.height
-            : 1.0;
-
-        return InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: isOverflowing
-              ? () => setState(() => _isExpanded = !_isExpanded)
-              : null,
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(title: 'SUMMARY'),
-                const SizedBox(height: 8),
-                ClipRect(
-                  child: AnimatedAlign(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                    alignment: Alignment.topCenter,
-                    heightFactor: _isExpanded ? 1.0 : heightFactor,
-                    child: Text(widget.description, style: textStyle),
-                  ),
+          if (showStats) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: isIssuesLoading
+                    ? const ShimmerWidget(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: SkeletonBox(
+                                borderRadius: 12,
+                                height: 70,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Expanded(
+                              flex: 2,
+                              child: SkeletonBox(
+                                borderRadius: 12,
+                                height: 70,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Expanded(
+                              flex: 4,
+                              child: SkeletonBox(
+                                borderRadius: 12,
+                                height: 70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _CharacterStatsCard(
+                        issueCount: totalIssueCount,
+                        seriesCount: distinctSeries,
+                        dateRange: dateRange,
+                      ),
+              ),
+            ),
+          ],
+          if (showFirstAppearance) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: isIssuesLoading
+                    ? const ShimmerWidget(
+                        child: SkeletonBox(
+                          borderRadius: 14,
+                          height: 90,
+                        ),
+                      )
+                    : _CharacterFirstAppearanceCard(issue: firstAppearance!),
+              ),
+            ),
+          ],
+          if (hasCreators) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _CharacterCreatorsCard(creators: data.creators),
+              ),
+            ),
+          ],
+          if (hasIssues || isIssuesLoading) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: isIssuesLoading
+                    ? ShimmerWidget(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SkeletonBox(
+                              width: 100,
+                              height: 20,
+                              borderRadius: 4,
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 250,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: 5,
+                                padding: EdgeInsets.zero,
+                                itemBuilder: (context, index) =>
+                                    const Padding(
+                                  padding: EdgeInsets.only(right: 12),
+                                  child: SkeletonBox(
+                                    width: 150,
+                                    height: 250,
+                                    borderRadius: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeader(
+                            title: 'Recently Appeared In',
+                            onViewAll: () => context.pushRoute(
+                              CharacterIssuesRoute(
+                                characterId: data.id,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          HorizontalPreviewSection(
+                            title: '',
+                            onViewAll: null,
+                            itemCount: previewIssues.length,
+                            height: 250,
+                            emptyText: 'No issues available.',
+                            itemBuilder: (context, index) {
+                              final issue = previewIssues[index];
+                              final issueId = issue.id;
+                              return IssueCard(
+                                issueId: issueId,
+                                imageUrl: issue.image,
+                                title:
+                                    '${issue.series?.name ?? issue.name} #${issue.number}',
+                                onTap: issueId == null
+                                    ? null
+                                    : () {
+                                        context.pushRoute(
+                                          IssueDetailsRoute(
+                                            issueId: issueId,
+                                            initialImageUrl: issue.image,
+                                          ),
+                                        );
+                                      },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
+          if (hasTeams) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: const SectionHeader(title: 'TEAMS'),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 150,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: data.teams.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 4),
+                  itemBuilder: (context, index) {
+                    final team = data.teams[index];
+                    return EntityCard(
+                      entityType: 'team',
+                      entityId: team.id,
+                      name: team.name,
+                      width: 110,
+                      onTap: () => context.pushRoute(
+                        TeamDetailsRoute(teamId: team.id),
+                      ),
+                    );
+                  },
                 ),
-                if (isOverflowing) ...[
-                  const SizedBox(height: 4),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        alignment: Alignment.topLeft,
-                        child: child,
+              ),
+            ),
+          ],
+          if (hasUniverses) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: const SectionHeader(title: 'UNIVERSES'),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 130,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: data.universes.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 4),
+                  itemBuilder: (context, index) {
+                    final universe = data.universes[index];
+                    return EntityCard(
+                      entityType: 'universe',
+                      entityId: universe.id,
+                      name: universe.name,
+                      width: 140,
+                      imageHeight: 80,
+                      onTap: () => context.pushRoute(
+                        UniverseDetailsRoute(universeId: universe.id),
                       ),
-                    ),
-                    child: Text(
-                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
-                      key: ValueKey(_isExpanded),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _CharacterInfoCard(details: data),
             ),
           ),
-        );
+        ];
       },
     );
   }
@@ -874,8 +471,6 @@ class _CharacterCreatorsCard extends StatelessWidget {
     );
   }
 }
-
-
 
 class _CharacterStatsCard extends StatelessWidget {
   const _CharacterStatsCard({
@@ -1034,25 +629,28 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'FIRST APPEARANCE',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'FIRST APPEARANCE',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                  ),
+                  const SizedBox(height: 6),
                   Text(
                     label,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -1128,10 +726,14 @@ class _CharacterInfoCard extends StatelessWidget {
       entries.add(
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.3),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

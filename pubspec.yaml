@@ -37,6 +37,7 @@ dependencies:
   connectivity_plus: ^7.1.1
   image_picker: ^1.2.0
   lucide_icons_flutter: ^3.1.13
+  lottie: ^3.3.0
   gal: ^2.3.2
   permission_handler: ^12.0.1
   timelines_plus: ^2.0.0
@@ -66,6 +67,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/animations/
 
   fonts:
     - family: Rubik

@@ -149,11 +149,13 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
       child: ListView.builder(
         physics: const NeverScrollableScrollPhysics(),
         itemCount: 8,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.only(bottom: 8),
         itemBuilder: (context, index) {
           return Padding(
             padding: EdgeInsets.only(
-              top: index == 0 ? 0 : 2,
+              left: 12,
+              right: 12,
+              top: index == 0 ? 12 : 2,
               bottom: index == 7 ? 0 : 2,
             ),
             child: Material(
@@ -162,7 +164,7 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
                 padding: const EdgeInsets.all(8),
                 child: Row(
                   children: [
-                    const SkeletonBox(width: 80, height: 56, borderRadius: 8),
+                    const SkeletonBox(width: 56, height: 80, borderRadius: 8),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(

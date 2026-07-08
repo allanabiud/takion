@@ -1,13 +1,12 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
-class ImprintListTile extends ConsumerWidget {
-  final int imprintId;
+class EntityListTile extends ConsumerWidget {
+  final String entityType;
+  final int entityId;
   final String name;
   final String? subtitle;
   final String? imageUrl;
@@ -15,10 +14,14 @@ class ImprintListTile extends ConsumerWidget {
   final bool isFirst;
   final bool isLast;
   final double horizontalPadding;
+  final double imageWidth;
+  final double imageHeight;
+  final double imageBorderRadius;
 
-  const ImprintListTile({
+  const EntityListTile({
     super.key,
-    required this.imprintId,
+    required this.entityType,
+    required this.entityId,
     required this.name,
     this.subtitle,
     this.imageUrl,
@@ -26,6 +29,9 @@ class ImprintListTile extends ConsumerWidget {
     this.isFirst = false,
     this.isLast = false,
     this.horizontalPadding = 12,
+    this.imageWidth = 80,
+    this.imageHeight = 56,
+    this.imageBorderRadius = 8,
   });
 
   @override
@@ -33,12 +39,8 @@ class ImprintListTile extends ConsumerWidget {
     final theme = Theme.of(context);
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached('imprint', imprintId);
+    final cachedImage = cache.getCached(entityType, entityId);
     final effectiveImageUrl = imageUrl ?? cachedImage;
-
-    final effectiveOnTap =
-        onTap ??
-        () => context.pushRoute(ImprintDetailsRoute(imprintId: imprintId));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -50,17 +52,17 @@ class ImprintListTile extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: effectiveOnTap,
+          borderRadius: BorderRadius.circular(imageBorderRadius),
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(imageBorderRadius),
                   child: Container(
-                    width: 80,
-                    height: 56,
+                    width: imageWidth,
+                    height: imageHeight,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
                     ),
@@ -70,11 +72,11 @@ class ImprintListTile extends ConsumerWidget {
                             imageUrl: effectiveImageUrl,
                             fit: BoxFit.cover,
                             placeholder: (context, url) =>
-                                _initialsAvatar(theme),
+                                _buildInitials(theme),
                             errorWidget: (context, url, error) =>
-                                _initialsAvatar(theme),
+                                _buildInitials(theme),
                           )
-                        : _initialsAvatar(theme),
+                        : _buildInitials(theme),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -114,21 +116,14 @@ class ImprintListTile extends ConsumerWidget {
     );
   }
 
-  Widget _initialsAvatar(ThemeData theme) {
-    return Container(
-      width: 80,
-      height: 56,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-      ),
-      child: Center(
-        child: Text(
-          initials(name),
-          style: TextStyle(
-            color: theme.colorScheme.primary,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+  Widget _buildInitials(ThemeData theme) {
+    return Center(
+      child: Text(
+        initials(name),
+        style: TextStyle(
+          color: theme.colorScheme.primary,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

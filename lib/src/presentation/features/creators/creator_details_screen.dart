@@ -1,23 +1,17 @@
-import 'dart:ui';
-
 import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/creator_details.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/presentation/components/detail_screen_shell.dart';
 import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/expandable_description.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
 import 'package:takion/src/presentation/components/section_header.dart';
 
@@ -68,8 +62,6 @@ class _CreatorDetailsScreenState
     }
   }
 
-
-
   Future<void> _toggleFavorite() async {
     try {
       final repository = ref.read(favoritesRepositoryProvider);
@@ -106,456 +98,56 @@ class _CreatorDetailsScreenState
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(creatorDetailsProvider(widget.creatorId));
-    final scaffoldBg = Theme.of(context).colorScheme.surface;
+    final isFavoriteAsync = ref.watch(
+      isCreatorFavoriteProvider(widget.creatorId),
+    );
+    final isFavorite = isFavoriteAsync.asData?.value ?? false;
 
-    return detailsAsync.when(
-      loading: () => DetailScreenSkeleton(
-        header: widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                    child: CachedNetworkImage(
-                      imageUrl: widget.initialImageUrl!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          scaffoldBg.withValues(alpha: 0.75),
-                          Colors.transparent,
-                          scaffoldBg.withValues(alpha: 0.75),
-                        ],
-                        stops: const [0.0, 0.5, 1.0],
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : ColoredBox(color: scaffoldBg),
-        body: ShimmerWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SkeletonBox(height: 22, width: 260, borderRadius: 4),
-                        SizedBox(height: 8),
-                        SkeletonBox(height: 16, width: 160, borderRadius: 4),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const SkeletonBox(width: 44, height: 44, borderRadius: 22),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 90, borderRadius: 4),
-              const SizedBox(height: 12),
-              const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
-              const SizedBox(height: 8),
-              const SkeletonBox(height: 14, width: 240, borderRadius: 4),
-              const SizedBox(height: 8),
-              const SkeletonBox(height: 14, width: 180, borderRadius: 4),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 140, borderRadius: 4),
-              const SizedBox(height: 12),
-              ...List.generate(5, (_) => const Padding(
-                padding: EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
-                    SizedBox(width: 8),
-                    Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
-                  ],
-                ),
-              )),
-              const SizedBox(height: 12),
-              const SkeletonBox(height: 12, width: 160, borderRadius: 4),
-            ],
-          ),
+    return DetailScreenShell<CreatorDetails>(
+      asyncValue: detailsAsync,
+      loadingImageUrl: widget.initialImageUrl,
+      entityType: 'creator',
+      initialChildSize: 0.60,
+      toImageUrl: (d) => d.image,
+      toHeroTag: (d) => 'creator-image-${d.id}',
+      toTitle: (d) => d.name,
+      toSubtitle: (d) =>
+          d.alias.isNotEmpty ? d.alias.map((a) => '@$a').join(', ') : null,
+      onShare: (d) => _shareResourceUrl(d),
+      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      circular: true,
+      heroWidth: 260,
+      heroHeight: 260,
+      toHeaderExtra: (d) => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: FavoriteToggleButton(
+          isFavorite: isFavorite,
+          onToggleFavorite: _toggleFavorite,
+          compact: true,
         ),
       ),
-      error: (error, _) => Scaffold(
-        appBar: AppBar(),
-        body: Center(child: Text('Failed to load creator details: $error')),
-      ),
-      data: (details) {
-        final isFavoriteAsync = ref.watch(
-          isCreatorFavoriteProvider(widget.creatorId),
-        );
-        final isFavorite = isFavoriteAsync.asData?.value ?? false;
+      sheetContentBuilder: (context, data, ref) {
+        final description = data.desc?.trim();
+        final hasDescription = description != null && description.isNotEmpty;
 
-        return Scaffold(
-          body: Stack(
-            children: [
-              SizedBox(
-                height: 350,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (details.image != null &&
-                        details.image!.isNotEmpty)
-                      ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                          sigmaX: 20,
-                          sigmaY: 20,
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: details.image!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => ColoredBox(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
-                          ),
-                          errorWidget: (context, url, error) => ColoredBox(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
-                          ),
-                        ),
-                      )
-                    else
-                      ColoredBox(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
-                      ),
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.55),
-                    ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scaffoldBg.withValues(alpha: 0.75),
-                            Colors.transparent,
-                            scaffoldBg.withValues(alpha: 0.75),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (details.image != null &&
-                              details.image!.isNotEmpty)
-                            Hero(
-                              tag: 'creator-image-${details.id}',
-                              child: GestureDetector(
-                                onTap: () => context.pushRoute(
-                                  ImagePreviewRoute(
-                                    imageUrl: details.image!,
-                                    title: details.name,
-                                    heroTag:
-                                        'creator-image-${details.id}',
-                                  ),
-                                ),
-                                child: ClipOval(
-                                  child: SizedBox(
-                                    width: 260,
-                                    height: 260,
-                                    child: CachedNetworkImage(
-                                      imageUrl: details.image!,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          _initialsAvatar(
-                                              context, details.name),
-                                      errorWidget: (context, url, error) =>
-                                          _initialsAvatar(
-                                              context, details.name),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            ClipOval(
-                              child: SizedBox(
-                                width: 260,
-                                height: 260,
-                                child: _initialsAvatar(context, details.name),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        actions: [
-                          EntityDetailActions(
-                            onShare: () => _shareResourceUrl(details),
-                            onOpenInBrowser: () => _openResourceUrlInBrowser(details),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              DraggableScrollableSheet(
-                initialChildSize: 0.60,
-                minChildSize: 0.60,
-                maxChildSize: 0.9,
-                snap: true,
-                snapSizes: const [0.60, 0.9],
-                builder: (context, scrollController) {
-                  return _CreatorDetailsSheet(
-                    scrollController: scrollController,
-                    details: details,
-                    isFavorite: isFavorite,
-                    onToggleFavorite: _toggleFavorite,
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _initialsAvatar(BuildContext context, String name) {
-    return Container(
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
-      child: Center(
-        child: Text(
-          initials(name),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontSize: 64,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CreatorDetailsSheet extends ConsumerWidget {
-  const _CreatorDetailsSheet({
-    required this.scrollController,
-    required this.details,
-    required this.isFavorite,
-    required this.onToggleFavorite,
-  });
-
-  final ScrollController scrollController;
-  final CreatorDetails details;
-  final bool isFavorite;
-  final VoidCallback onToggleFavorite;
-
-
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final hasAlias = details.alias.isNotEmpty;
-    final description = details.desc?.trim();
-    final hasDescription = description != null && description.isNotEmpty;
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      child: Container(
-        color: theme.colorScheme.surface,
-        child: CustomScrollView(
-          controller: scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Container(
-                        width: 32,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                details.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (hasAlias) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  details.alias.map((a) => '@$a').join(', '),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        FavoriteToggleButton(
-                          isFavorite: isFavorite,
-                          onToggleFavorite: onToggleFavorite,
-                          compact: true,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (hasDescription) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _CreatorDescriptionCard(description: description),
-                ),
-              ),
-            ],
+        return [
+          if (hasDescription) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _CreatorInfoCard(details: details),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).padding.bottom + 24,
+                child: ExpandableDescription(description: description),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-
-
-class _CreatorDescriptionCard extends StatefulWidget {
-  const _CreatorDescriptionCard({required this.description});
-
-  final String description;
-
-  @override
-  State<_CreatorDescriptionCard> createState() =>
-      _CreatorDescriptionCardState();
-}
-
-class _CreatorDescriptionCardState extends State<_CreatorDescriptionCard> {
-  static const _descriptionMaxLines = 4;
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final textStyle = Theme.of(context).textTheme.bodyMedium;
-        final fullPainter = TextPainter(
-          text: TextSpan(text: widget.description, style: textStyle),
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final collapsedPainter = TextPainter(
-          text: TextSpan(text: widget.description, style: textStyle),
-          maxLines: _descriptionMaxLines,
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final isOverflowing = collapsedPainter.didExceedMaxLines;
-        final collapsedHeight = isOverflowing
-            ? collapsedPainter.height
-            : fullPainter.height;
-        final heightFactor = fullPainter.height > 0
-            ? collapsedHeight / fullPainter.height
-            : 1.0;
-
-        return InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: isOverflowing
-              ? () => setState(() => _isExpanded = !_isExpanded)
-              : null,
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(title: 'SUMMARY'),
-                const SizedBox(height: 8),
-                ClipRect(
-                  child: AnimatedAlign(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                    alignment: Alignment.topCenter,
-                    heightFactor: _isExpanded ? 1.0 : heightFactor,
-                    child: Text(widget.description, style: textStyle),
-                  ),
-                ),
-                if (isOverflowing) ...[
-                  const SizedBox(height: 4),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        alignment: Alignment.topLeft,
-                        child: child,
-                      ),
-                    ),
-                    child: Text(
-                      _isExpanded
-                          ? 'Tap to read less'
-                          : 'Tap to read more',
-                      key: ValueKey(_isExpanded),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _CreatorInfoCard(details: data),
             ),
           ),
-        );
+        ];
       },
     );
   }

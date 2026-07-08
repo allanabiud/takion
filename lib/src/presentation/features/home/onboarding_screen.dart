@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lottie/lottie.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -39,8 +40,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   late Animation<double> _descFade;
   late Animation<double> _buttonFade;
 
-  late AnimationController _pulseController;
-  late Animation<double> _pulseScale;
+  late AnimationController _lottieController;
 
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -75,12 +75,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
     );
 
-    _pulseController = AnimationController(
+    _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _pulseScale = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+      duration: const Duration(seconds: 4),
     );
   }
 
@@ -147,7 +144,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           .saveProfile(displayName: username);
       if (!mounted) return;
       _passwordController.clear();
-      _goToPage(3);
     } catch (error) {
       if (!mounted || !context.mounted) return;
       TakionAlerts.error(context, error.toString());
@@ -178,7 +174,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   void dispose() {
     _pageController.dispose();
     _fadeController.dispose();
-    _pulseController.dispose();
+    _lottieController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -402,100 +398,152 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  if (isOffline)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
+                  if (isConnected)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 32,
+                        horizontal: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer
+                            .withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: theme.colorScheme.primary
+                              .withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Column(
                         children: [
                           Icon(
-                            Icons.wifi_off_outlined,
-                            size: 18,
-                            color: theme.colorScheme.error,
+                            LucideIcons.badgeCheck,
+                            size: 64,
+                            color: theme.colorScheme.primary,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'You are offline. Internet is required to verify and authorize your Metron account.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.error,
-                              ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Connected as ${_usernameController.text}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your Metron account is linked.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  const SizedBox(height: 16),
-                  AutofillGroup(
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _usernameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Metron Username',
-                            prefixIcon: Icon(Icons.person_outline),
-                          ),
-                          autofillHints: const [AutofillHints.username],
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(
-                            labelText: 'Metron Password',
-                            prefixIcon: Icon(Icons.lock_outline),
-                          ),
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
-                          textInputAction: TextInputAction.done,
-                          onEditingComplete: () =>
-                              TextInput.finishAutofillContext(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: _isConnecting || isOffline || isConnected
-                          ? null
-                          : () async {
-                              if (isOffline) {
-                                TakionAlerts.info(
-                                  context,
-                                  'No internet connection',
-                                );
-                                return;
-                              }
-                              await _connectMetronAccount();
-                              TextInput.finishAutofillContext();
-                            },
-                      child: _isConnecting
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                color: Colors.white,
+                    )
+                  else ...[
+                    if (isOffline)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.wifi_off_outlined,
+                              size: 18,
+                              color: theme.colorScheme.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'You are offline. Internet is required to verify and authorize your Metron account.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.error,
+                                ),
                               ),
-                            )
-                          : const Text('Connect Metron'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    AutofillGroup(
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _usernameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Metron Username',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            autofillHints: const [AutofillHints.username],
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _passwordController,
+                            decoration: const InputDecoration(
+                              labelText: 'Metron Password',
+                              prefixIcon: Icon(Icons.lock_outline),
+                            ),
+                            obscureText: true,
+                            autofillHints: const [AutofillHints.password],
+                            textInputAction: TextInputAction.done,
+                            onEditingComplete: () =>
+                                TextInput.finishAutofillContext(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.center,
-                    child: TextButton(
-                      onPressed: isOffline ? null : _launchMetronSignup,
-                      child:
-                          const Text('Don\'t have an account? Create one'),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: _isConnecting || isOffline
+                            ? null
+                            : () async {
+                                if (isOffline) {
+                                  TakionAlerts.info(
+                                    context,
+                                    'No internet connection',
+                                  );
+                                  return;
+                                }
+                                await _connectMetronAccount();
+                                TextInput.finishAutofillContext();
+                              },
+                        child: _isConnecting
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Connect Metron'),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.center,
+                      child: TextButton(
+                        onPressed: isOffline ? null : _launchMetronSignup,
+                        child: const Text(
+                            'Don\'t have an account? Create one'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
+            if (isConnected) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  onPressed: () => _goToPage(3),
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -599,12 +647,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ScaleTransition(
-                        scale: _pulseScale,
-                        child: Icon(
-                          LucideIcons.badgeCheck,
-                          size: 120,
-                          color: theme.colorScheme.primary,
+                      Lottie.asset(
+                        'assets/animations/all_done.json',
+                        width: 160,
+                        height: 160,
+                        controller: _lottieController,
+                          onLoaded: (composition) {
+                            _lottieController.duration =
+                                composition.duration * 2;
+                            _lottieController.repeat();
+                          },
+                        delegates: LottieDelegates(
+                          values: [
+                            ValueDelegate.color(
+                              ['Layer 1 Outlines', '**'],
+                              value: theme.colorScheme.primary,
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 32),

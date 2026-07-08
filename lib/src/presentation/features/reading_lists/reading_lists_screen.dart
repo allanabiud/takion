@@ -199,6 +199,11 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
   }
 
   Widget _buildSkeletonList() {
+    const double coverWidth = 60;
+    const double coverHeight = 85;
+    const double peekOffset = 14;
+    const double stackedWidth = coverWidth + peekOffset * 2;
+
     return Column(
       children: [
         Padding(
@@ -240,18 +245,65 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                     bottom: index == 4 ? 12 : 0,
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SkeletonBox(width: 60, height: 85, borderRadius: 8),
-                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: stackedWidth,
+                        height: coverHeight,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 0,
+                              child: SkeletonBox(
+                                width: coverWidth * 0.85,
+                                height: coverHeight * 0.9,
+                                borderRadius: 6,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: SkeletonBox(
+                                width: coverWidth * 0.85,
+                                height: coverHeight * 0.9,
+                                borderRadius: 6,
+                              ),
+                            ),
+                            Positioned(
+                              child: Container(
+                                width: coverWidth,
+                                height: coverHeight,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
                       const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SkeletonBox(height: 16, width: 200),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SkeletonBox(height: 16, width: double.infinity),
+                                ),
+                                SizedBox(width: 8),
+                                SkeletonBox(width: 16, height: 16, borderRadius: 3),
+                              ],
+                            ),
                             SizedBox(height: 6),
                             SkeletonBox(height: 14, width: 120),
-                            SizedBox(height: 10),
-                            SkeletonBox(height: 8, width: double.infinity, borderRadius: 4),
+                            SizedBox(height: 12),
+                            SkeletonBox(height: 6, width: double.infinity, borderRadius: 3),
+                            SizedBox(height: 4),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: SkeletonBox(height: 12, width: 60, borderRadius: 2),
+                            ),
                           ],
                         ),
                       ),

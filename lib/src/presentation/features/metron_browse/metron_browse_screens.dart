@@ -13,12 +13,8 @@ import 'package:takion/src/domain/entities/series_list.dart';
 import 'package:takion/src/domain/entities/team_list.dart';
 import 'package:takion/src/domain/entities/universe_list.dart';
 import 'package:takion/src/presentation/components/browse_paged_list_screen.dart';
+import 'package:takion/src/presentation/components/entity_list_tile.dart';
 import 'package:takion/src/presentation/components/person_list_tile.dart';
-import 'package:takion/src/presentation/components/publisher_list_tile.dart';
-import 'package:takion/src/presentation/components/team_list_tile.dart';
-import 'package:takion/src/presentation/components/arc_list_tile.dart';
-import 'package:takion/src/presentation/components/universe_list_tile.dart';
-import 'package:takion/src/presentation/components/imprint_list_tile.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/features/metron_browse/providers/browse_providers.dart';
 
@@ -269,11 +265,15 @@ class _PublisherBrowseScreenState extends ConsumerState<PublisherBrowseScreen> {
           if (_searchQuery!.isEmpty) _searchQuery = null;
         }),
       ),
-      itemBuilder: (context, item, index, total) => PublisherListTile(
-        publisherId: item.id,
+      itemBuilder: (context, item, index, total) => EntityListTile(
+        entityType: 'publisher',
+        entityId: item.id,
         name: item.name,
         isFirst: index == 0,
         isLast: index == total - 1,
+        imageWidth: 80,
+        imageHeight: 80,
+        imageBorderRadius: 10,
         onTap: () => context.pushRoute(
           PublisherDetailsRoute(publisherId: item.id),
         ),
@@ -326,8 +326,9 @@ class _TeamBrowseScreenState extends ConsumerState<TeamBrowseScreen> {
           if (_searchQuery!.isEmpty) _searchQuery = null;
         }),
       ),
-      itemBuilder: (context, item, index, total) => TeamListTile(
-        teamId: item.id,
+      itemBuilder: (context, item, index, total) => EntityListTile(
+        entityType: 'team',
+        entityId: item.id,
         name: item.name,
         isFirst: index == 0,
         isLast: index == total - 1,
@@ -383,8 +384,9 @@ class _ArcBrowseScreenState extends ConsumerState<ArcBrowseScreen> {
           if (_searchQuery!.isEmpty) _searchQuery = null;
         }),
       ),
-      itemBuilder: (context, item, index, total) => ArcListTile(
-        arcId: item.id,
+      itemBuilder: (context, item, index, total) => EntityListTile(
+        entityType: 'arc',
+        entityId: item.id,
         name: item.name,
         isFirst: index == 0,
         isLast: index == total - 1,
@@ -440,8 +442,9 @@ class _UniverseBrowseScreenState extends ConsumerState<UniverseBrowseScreen> {
           if (_searchQuery!.isEmpty) _searchQuery = null;
         }),
       ),
-      itemBuilder: (context, item, index, total) => UniverseListTile(
-        universeId: item.id,
+      itemBuilder: (context, item, index, total) => EntityListTile(
+        entityType: 'universe',
+        entityId: item.id,
         name: item.name,
         isFirst: index == 0,
         isLast: index == total - 1,
@@ -497,8 +500,9 @@ class _ImprintBrowseScreenState extends ConsumerState<ImprintBrowseScreen> {
           if (_searchQuery!.isEmpty) _searchQuery = null;
         }),
       ),
-      itemBuilder: (context, item, index, total) => ImprintListTile(
-        imprintId: item.id,
+      itemBuilder: (context, item, index, total) => EntityListTile(
+        entityType: 'imprint',
+        entityId: item.id,
         name: item.name,
         isFirst: index == 0,
         isLast: index == total - 1,

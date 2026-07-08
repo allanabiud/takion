@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_releases"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_new_releases"
+        android:shortcutShortLabel="@string/shortcut_new_releases_short"
+        android:shortcutLongLabel="@string/shortcut_new_releases_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="takion://shortcut/new-releases" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="my_pulls"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_inventory"
+        android:shortcutShortLabel="@string/shortcut_my_pulls_short"
+        android:shortcutLongLabel="@string/shortcut_my_pulls_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="takion://shortcut/my-pulls" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="library"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_collections_bookmark"
+        android:shortcutShortLabel="@string/shortcut_library_short"
+        android:shortcutLongLabel="@string/shortcut_library_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="takion://shortcut/library" />
+    </shortcut>
+</shortcuts>

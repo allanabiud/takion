@@ -15,11 +15,9 @@ import 'package:takion/src/presentation/features/series/providers/series_cover_p
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
+import 'package:takion/src/presentation/components/detail_screen_shell.dart';
+import 'package:takion/src/presentation/components/expandable_description.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
@@ -28,7 +26,6 @@ import 'package:takion/src/presentation/components/horizontal_preview_section.da
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/entity_detail_actions.dart';
 import 'package:takion/src/presentation/components/info_grid.dart';
 import 'package:takion/src/presentation/components/section_header.dart';
 
@@ -205,722 +202,368 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
+    final coverImageAsync = ref.watch(
+      seriesCoverImageProvider((
+        seriesId: widget.seriesId,
+        allowRemoteFetch: true,
+      )),
+    );
+    final issuesPreviewAsync = ref.watch(seriesDetailsIssuesProvider(widget.seriesId));
+    final subscriptionAsync = ref.watch(seriesSubscriptionProvider(widget.seriesId));
+    final isFavoriteAsync = ref.watch(isSeriesFavoriteProvider(widget.seriesId));
 
-    return detailsAsync.when(
-      loading: () => DetailScreenSkeleton(
-        header: widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: widget.initialImageUrl!,
-                fit: BoxFit.cover,
-              )
-            : ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest),
-        body: ShimmerWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SkeletonBox(height: 22, width: 280, borderRadius: 4),
-              const SizedBox(height: 8),
-              const SkeletonBox(height: 16, width: 200, borderRadius: 4),
-              const SizedBox(height: 20),
-              Row(
-                children: const [
-                  Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
-                  SizedBox(width: 6),
-                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
-                  SizedBox(width: 6),
-                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 80, borderRadius: 4),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 170,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5,
-                  padding: EdgeInsets.zero,
-                  itemBuilder: (_, _) => const Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: SkeletonBox(width: 110, height: 170, borderRadius: 12),
+    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
+    final isSubscriptionLoading = subscriptionAsync.isLoading || _isUpdatingSubscription;
+    final isFavorite = isFavoriteAsync.asData?.value ?? false;
+    final issuesPreview = issuesPreviewAsync.asData != null
+        ? sortIssues(
+            issuesPreviewAsync.asData!.value.results,
+            ContentSortOption.dateNewest,
+          ).take(5).toList()
+        : <IssueList>[];
+    final totalIssueCount = issuesPreviewAsync.asData?.value.count ?? 0;
+
+    return DetailScreenShell<SeriesDetails>(
+      asyncValue: detailsAsync,
+      loadingImageUrl: widget.initialImageUrl,
+      entityType: 'series',
+      initialChildSize: 0.60,
+      headerHeight: 350,
+      showHero: false,
+      toImageUrl: (d) => null,
+      toHeroTag: (d) => 'series-${d.id}',
+      toTitle: (d) => '${d.name.toUpperCase()} (${d.yearBegan ?? ''})',
+      toHeaderExtra: (d) {
+        final theme = Theme.of(context);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (d.publisher != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: GestureDetector(
+                  onTap: () => context.pushRoute(
+                    PublisherDetailsRoute(publisherId: d.publisher!.id),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        d.publisher!.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 100, borderRadius: 4),
-              const SizedBox(height: 12),
-              const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
-              const SizedBox(height: 8),
-              const SkeletonBox(height: 14, width: 240, borderRadius: 4),
-              const SizedBox(height: 8),
-              const SkeletonBox(height: 14, width: 180, borderRadius: 4),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 120, borderRadius: 4),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(4, (_) => const SkeletonBox(
-                  width: 100, height: 32, borderRadius: 16,
-                )),
-              ),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 70, borderRadius: 4),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(4, (_) => const SkeletonBox(
-                  width: 80, height: 28, borderRadius: 14,
-                )),
-              ),
-              const SizedBox(height: 24),
-              const SkeletonBox(height: 18, width: 140, borderRadius: 4),
-              const SizedBox(height: 12),
-              ...List.generate(5, (_) => const Padding(
-                padding: EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
-                    SizedBox(width: 8),
-                    Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
-                  ],
-                ),
-              )),
-            ],
-          ),
-        ),
-      ),
-      error: (error, _) => Scaffold(
-        appBar: AppBar(),
-        body: AsyncStatePanel.error(
-          errorMessage: 'Failed to load series details: $error',
-        ),
-      ),
-      data: (details) {
-        final coverImageAsync = ref.watch(
-          seriesCoverImageProvider((
-            seriesId: widget.seriesId,
-            allowRemoteFetch: true,
-          )),
-        );
-        final description = details.description?.trim();
-        final associated = details.associated
-            .where((entry) => entry.series.trim().isNotEmpty)
-            .toList();
-        final showDescription = description != null && description.isNotEmpty;
-        final showAssociated = associated.isNotEmpty;
-        final scaffoldBg = Theme.of(context).colorScheme.surface;
-        final issuesPreviewAsync = ref.watch(
-          seriesDetailsIssuesProvider(widget.seriesId),
-        );
-        final issuesPreview = issuesPreviewAsync.asData != null
-            ? sortIssues(
-                issuesPreviewAsync.asData!.value.results,
-                ContentSortOption.dateNewest,
-              ).take(5).toList()
-            : <IssueList>[];
-        final totalIssueCount =
-            issuesPreviewAsync.asData?.value.count ?? 0;
-
-        final subscriptionAsync = ref.watch(seriesSubscriptionProvider(widget.seriesId));
-        final isSubscribed =
-            subscriptionAsync.asData?.value?.isActive ?? false;
-        final isSubscriptionLoading =
-            subscriptionAsync.isLoading || _isUpdatingSubscription;
-
-        final isFavoriteAsync = ref.watch(isSeriesFavoriteProvider(widget.seriesId));
-        final isFavorite = isFavoriteAsync.asData?.value ?? false;
-
-        return Scaffold(
-          body: Stack(
-            children: [
-              SizedBox(
-                height: 350,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    coverImageAsync.when(
-                      data: (imageUrl) => imageUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                color: scaffoldBg,
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  Container(
-                                color: scaffoldBg,
-                                child:
-                                    const Icon(Icons.broken_image_outlined),
-                              ),
-                            )
-                          : Container(
-                              color: scaffoldBg,
-                              child:
-                                  const Icon(Icons.image_outlined, size: 40),
-                            ),
-                      loading: () => Container(color: scaffoldBg),
-                      error: (_, _) => Container(
-                        color: scaffoldBg,
-                        child: const Icon(Icons.error_outline),
-                      ),
-                    ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scaffoldBg.withValues(alpha: 0.75),
-                            Colors.transparent,
-                            scaffoldBg.withValues(alpha: 0.75),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(
+                flex: 3,
+                child: FilledButton(
+                  style: isSubscribed
+                      ? FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.errorContainer,
+                          foregroundColor: theme.colorScheme.onErrorContainer,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: theme.textTheme.titleMedium,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        )
+                      : FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: theme.textTheme.titleMedium,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        actions: [
-                          EntityDetailActions(
-                            onShare: () => _shareResourceUrl(details),
-                            onOpenInBrowser: () => _openResourceUrlInBrowser(details),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  onPressed: isSubscriptionLoading
+                      ? null
+                      : () => _setSeriesSubscription(!isSubscribed),
+                  child: isSubscriptionLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isSubscribed ? Icons.notifications_active : Icons.notifications_outlined,
+                              size: 26,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                isSubscribed ? 'Unsubscribe' : 'Subscribe',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
-              DraggableScrollableSheet(
-                initialChildSize: 0.60,
-                minChildSize: 0.60,
-                maxChildSize: 0.9,
-                snap: true,
-                snapSizes: [0.60, 0.9],
-                builder: (context, scrollController) {
-                  return _SeriesDetailsSheet(
-                    scrollController: scrollController,
-                    details: details,
-                    showDescription: showDescription,
-                    description: description,
-                    showAssociated: showAssociated,
-                    associated: associated,
-                    seriesId: widget.seriesId,
-                    issuesPreview: issuesPreview,
-                    totalIssueCount: totalIssueCount,
-                    isSubscribed: isSubscribed,
-                    isSubscriptionLoading: isSubscriptionLoading,
-                    isFavorite: isFavorite,
-                    onToggleSubscription: _setSeriesSubscription,
-                    onToggleFavorite: _toggleFavorite,
-                  );
-                },
+              const SizedBox(width: 6),
+              Expanded(
+                flex: 1,
+                child: isFavorite
+                    ? FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          foregroundColor: theme.colorScheme.onPrimaryContainer,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          iconSize: 28,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _toggleFavorite,
+                        child: const Icon(Icons.favorite),
+                      )
+                    : FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          iconSize: 28,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _toggleFavorite,
+                        child: const Icon(Icons.favorite_border),
+                      ),
               ),
-            ],
-          ),
+              const SizedBox(width: 6),
+              Expanded(
+                flex: 1,
+                child: FilledButton.tonal(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    iconSize: 28,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => _showSeriesMoreOptionsSheet(
+                    context,
+                    ref,
+                    widget.seriesId,
+                    seriesName: d.name,
+                    seriesYear: d.yearBegan,
+                  ),
+                  child: const Icon(Icons.more_vert),
+                ),
+              ),
+            ]),
+          ],
         );
       },
-    );
-  }
-}
-
-class _SeriesDetailsSheet extends ConsumerWidget {
-  const _SeriesDetailsSheet({
-    required this.scrollController,
-    required this.details,
-    required this.showDescription,
-    required this.description,
-    required this.showAssociated,
-    required this.associated,
-    required this.seriesId,
-    required this.issuesPreview,
-    required this.totalIssueCount,
-    required this.isSubscribed,
-    required this.isSubscriptionLoading,
-    required this.isFavorite,
-    required this.onToggleSubscription,
-    required this.onToggleFavorite,
-  });
-
-  final ScrollController scrollController;
-  final SeriesDetails details;
-  final bool showDescription;
-  final String? description;
-  final bool showAssociated;
-  final List<SeriesDetailsAssociated> associated;
-  final int seriesId;
-  final List<IssueList> issuesPreview;
-  final int totalIssueCount;
-  final bool isSubscribed;
-  final bool isSubscriptionLoading;
-  final bool isFavorite;
-  final Future<void> Function(bool enabled) onToggleSubscription;
-  final VoidCallback onToggleFavorite;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      child: Container(
-        color: theme.colorScheme.surface,
-        child: CustomScrollView(
-          controller: scrollController,
-      slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Container(
-                        width: 32,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
+      onShare: (d) => _shareResourceUrl(d),
+      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      headerBackground: (context, d) => [
+        coverImageAsync.when(
+          data: (imageUrl) => imageUrl != null
+              ? Positioned.fill(
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Theme.of(context).colorScheme.surface,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '${details.name.toUpperCase()} (${details.yearBegan ?? ''})',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (details.publisher != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: GestureDetector(
-                          onTap: () => context.pushRoute(
-                            PublisherDetailsRoute(
-                              publisherId: details.publisher!.id,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                details.publisher!.name,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.chevron_right,
-                                size: 18,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: FilledButton(
-                            style: isSubscribed
-                                ? FilledButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.errorContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onErrorContainer,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  )
-                                : FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                            onPressed: isSubscriptionLoading
-                                ? null
-                                : () => onToggleSubscription(!isSubscribed),
-                            child: isSubscriptionLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isSubscribed
-                                            ? Icons.notifications_active
-                                            : Icons.notifications_outlined,
-                                        size: 26,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: Text(
-                                          isSubscribed ? 'Unsubscribe' : 'Subscribe',
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: isFavorite
-                              ? FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primaryContainer,
-                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite),
-                                )
-                              : FilledButton.tonal(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite_border),
-                                ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: theme.colorScheme.surfaceContainerHigh,
-                              foregroundColor: theme.colorScheme.onSurfaceVariant,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => _showSeriesMoreOptionsSheet(
-                              context,
-                              ref,
-                              seriesId,
-                              seriesName: details.name,
-                              seriesYear: details.yearBegan,
-                            ),
-                            child: const Icon(Icons.more_vert),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  ],
-                ),
-              ),
-            ),
-            if (showDescription) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _SeriesDescriptionCard(
-                    description: description!,
-                    seriesId: details.id,
-                  ),
-                ),
-              ),
-            ],
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SeriesInfoCard(details: details),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SectionHeader(
-                      title: '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
-                      onViewAll: () => context.pushRoute(
-                        SeriesIssuesRoute(seriesId: seriesId),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    HorizontalPreviewSection(
-                      title: '',
-                      onViewAll: null,
-                      itemCount: issuesPreview.length,
-                      height: 250,
-                      emptyText: 'No issues available.',
-                      itemBuilder: (context, index) {
-                        final issue = issuesPreview[index];
-                        final issueId = issue.id;
-                        return IssueCard(
-                          issueId: issueId,
-                          imageUrl: issue.image,
-                          title:
-                              '${issue.series?.name ?? issue.name} #${issue.number}',
-                          onTap: issueId == null
-                              ? null
-                              : () {
-                                  context.pushRoute(
-                                    IssueDetailsRoute(
-                                      issueId: issueId,
-                                      initialImageUrl: issue.image,
-                                    ),
-                                  );
-                                },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (showAssociated) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _SeriesAssociatedCard(
-                    associated: associated,
-                  ),
-                ),
-              ),
-            ],
-            if (details.genres.isNotEmpty) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _SeriesGenresCard(genres: details.genres),
-                ),
-              ),
-            ],
-            if (_idsSection()) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildIdsSection(context),
-                ),
-              ),
-            ],
-            if (_modifiedValue(details.modified) != null) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Last modified: ${_modifiedValue(details.modified)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontStyle: FontStyle.italic,
+                    errorWidget: (context, url, error) => Container(
+                      color: Theme.of(context).colorScheme.surface,
+                      child: const Icon(Icons.broken_image_outlined),
                     ),
                   ),
+                )
+              : Container(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: const Icon(Icons.image_outlined, size: 40),
                 ),
-              ),
-            ],
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).padding.bottom + 24,
-              ),
-            ),
-            ],
+          loading: () => Container(
+            color: Theme.of(context).colorScheme.surface,
+          ),
+          error: (_, _) => Container(
+            color: Theme.of(context).colorScheme.surface,
+            child: const Icon(Icons.error_outline),
           ),
         ),
-    );
-  }
-
-  bool _idsSection() {
-    return true;
-  }
-
-  Widget _buildIdsSection(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.75),
+                  Colors.transparent,
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.75),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
             ),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-    addEntry('Metron', '${details.id}');
-    if (details.cvId != null) addEntry('CV', '${details.cvId}');
-    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: entries,
         ),
       ],
-    );
-  }
+      sheetContentBuilder: (context, d, ref) {
+        final description = d.description?.trim();
+        final showDescription = description != null && description.isNotEmpty;
+        final associated = d.associated
+            .where((entry) => entry.series.trim().isNotEmpty)
+            .toList();
+        final showAssociated = associated.isNotEmpty;
 
-  String? _modifiedValue(DateTime? modified) {
-    if (modified == null) return null;
-    final year = modified.year.toString().padLeft(4, '0');
-    final month = modified.month.toString().padLeft(2, '0');
-    final day = modified.day.toString().padLeft(2, '0');
-    final hour = modified.hour.toString().padLeft(2, '0');
-    final minute = modified.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
-}
-
-class _SeriesDescriptionCard extends StatefulWidget {
-  const _SeriesDescriptionCard({
-    required this.description,
-    required this.seriesId,
-  });
-
-  final String description;
-  final int seriesId;
-
-  @override
-  State<_SeriesDescriptionCard> createState() => _SeriesDescriptionCardState();
-}
-
-class _SeriesDescriptionCardState extends State<_SeriesDescriptionCard> {
-  static const _descriptionMaxLines = 4;
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final textStyle = Theme.of(context).textTheme.bodyMedium;
-        final fullPainter = TextPainter(
-          text: TextSpan(text: widget.description, style: textStyle),
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final collapsedPainter = TextPainter(
-          text: TextSpan(text: widget.description, style: textStyle),
-          maxLines: _descriptionMaxLines,
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final isOverflowing = collapsedPainter.didExceedMaxLines;
-        final collapsedHeight = isOverflowing
-            ? collapsedPainter.height
-            : fullPainter.height;
-        final heightFactor = fullPainter.height > 0
-            ? collapsedHeight / fullPainter.height
-            : 1.0;
-
-        return InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: isOverflowing
-              ? () => setState(() => _isExpanded = !_isExpanded)
-              : null,
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(title: 'SUMMARY'),
-                const SizedBox(height: 8),
-                ClipRect(
-                  child: AnimatedAlign(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                    alignment: Alignment.topCenter,
-                    heightFactor: _isExpanded ? 1.0 : heightFactor,
-                    child: Text(widget.description, style: textStyle),
+        Widget buildIdsSection(BuildContext context) {
+          final theme = Theme.of(context);
+          final entries = <Widget>[];
+          void addEntry(String label, String value) {
+            entries.add(
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                   ),
                 ),
-                if (isOverflowing) ...[
-                  const SizedBox(height: 4),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        alignment: Alignment.topLeft,
-                        child: child,
-                      ),
-                    ),
-                    child: Text(
-                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
-                      key: ValueKey(_isExpanded),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  '$label $value',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontFamily: 'monospace',
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ],
-              ],
+                ),
+              ),
+            );
+          }
+          addEntry('Metron', '${d.id}');
+          if (d.cvId != null) addEntry('CV', '${d.cvId}');
+          if (d.gcdId != null) addEntry('GCD', '${d.gcdId}');
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionHeader(title: 'DATABASE IDS'),
+              const SizedBox(height: 12),
+              Wrap(spacing: 6, runSpacing: 6, children: entries),
+            ],
+          );
+        }
+
+        String? modifiedValue(DateTime? modified) {
+          if (modified == null) return null;
+          final year = modified.year.toString().padLeft(4, '0');
+          final month = modified.month.toString().padLeft(2, '0');
+          final day = modified.day.toString().padLeft(2, '0');
+          final hour = modified.hour.toString().padLeft(2, '0');
+          final minute = modified.minute.toString().padLeft(2, '0');
+          return '$year-$month-$day $hour:$minute';
+        }
+
+        return [
+          if (showDescription) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ExpandableDescription(description: description),
+              ),
+            ),
+          ],
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _SeriesInfoCard(details: d),
             ),
           ),
-        );
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionHeader(
+                    title: '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
+                    onViewAll: () => context.pushRoute(
+                      SeriesIssuesRoute(seriesId: widget.seriesId),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  HorizontalPreviewSection(
+                    title: '',
+                    onViewAll: null,
+                    itemCount: issuesPreview.length,
+                    height: 250,
+                    emptyText: 'No issues available.',
+                    itemBuilder: (context, index) {
+                      final issue = issuesPreview[index];
+                      final issueId = issue.id;
+                      return IssueCard(
+                        issueId: issueId,
+                        imageUrl: issue.image,
+                        title: '${issue.series?.name ?? issue.name} #${issue.number}',
+                        onTap: issueId == null
+                            ? null
+                            : () {
+                                context.pushRoute(
+                                  IssueDetailsRoute(
+                                    issueId: issueId,
+                                    initialImageUrl: issue.image,
+                                  ),
+                                );
+                              },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (showAssociated) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SeriesAssociatedCard(associated: associated),
+              ),
+            ),
+          ],
+          if (d.genres.isNotEmpty) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SeriesGenresCard(genres: d.genres),
+              ),
+            ),
+          ],
+          ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: buildIdsSection(context),
+              ),
+            ),
+          ],
+          if (modifiedValue(d.modified) != null) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Last modified: ${modifiedValue(d.modified)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ];
       },
     );
   }

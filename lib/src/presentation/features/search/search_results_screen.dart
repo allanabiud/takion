@@ -21,9 +21,9 @@ import 'package:takion/src/domain/entities/publisher_list_page.dart';
 import 'package:takion/src/domain/entities/arc_list.dart';
 import 'package:takion/src/domain/entities/arc_list_page.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
-import 'package:takion/src/presentation/components/publisher_list_tile.dart';
+import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/presentation/components/entity_list_tile.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_search_provider.dart';
-import 'package:takion/src/presentation/components/arc_list_tile.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
 import 'package:takion/src/presentation/providers/search_utils.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
@@ -34,13 +34,10 @@ import 'package:takion/src/presentation/features/series/providers/series_search_
 import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
-import 'package:takion/src/presentation/components/team_list_tile.dart';
 import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/components/person_list_tile.dart';
-import 'package:takion/src/presentation/components/universe_list_tile.dart';
-import 'package:takion/src/presentation/components/imprint_list_tile.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/components/paged_search_section.dart';
@@ -369,11 +366,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       emptyIcon: Icons.business,
       emptyMessage: 'No publishers found.',
       itemBuilder: (context, index, item, isFirst, isLast) =>
-          PublisherListTile(
-            publisherId: item.id,
+          EntityListTile(
+            entityType: 'publisher',
+            entityId: item.id,
             name: item.name,
             isFirst: isFirst,
             isLast: isLast,
+            imageWidth: 80,
+            imageHeight: 80,
+            imageBorderRadius: 10,
+            onTap: () => context.pushRoute(
+              PublisherDetailsRoute(publisherId: item.id),
+            ),
           ),
     );
   }
@@ -418,11 +422,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       emptyIcon: Icons.auto_stories_outlined,
       emptyMessage: 'No arcs found.',
       itemBuilder: (context, index, item, isFirst, isLast) =>
-          ArcListTile(
-            arcId: item.id,
+          EntityListTile(
+            entityType: 'arc',
+            entityId: item.id,
             name: item.name,
             isFirst: isFirst,
             isLast: isLast,
+            onTap: () => context.pushRoute(
+              ArcDetailsRoute(arcId: item.id),
+            ),
           ),
     );
   }
@@ -467,11 +475,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       emptyIcon: Icons.language_outlined,
       emptyMessage: 'No universes found.',
       itemBuilder: (context, index, item, isFirst, isLast) =>
-          UniverseListTile(
-            universeId: item.id,
+          EntityListTile(
+            entityType: 'universe',
+            entityId: item.id,
             name: item.name,
             isFirst: isFirst,
             isLast: isLast,
+            onTap: () => context.pushRoute(
+              UniverseDetailsRoute(universeId: item.id),
+            ),
           ),
     );
   }
@@ -516,11 +528,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       emptyIcon: Icons.business_outlined,
       emptyMessage: 'No imprints found.',
       itemBuilder: (context, index, item, isFirst, isLast) =>
-          ImprintListTile(
-            imprintId: item.id,
+          EntityListTile(
+            entityType: 'imprint',
+            entityId: item.id,
             name: item.name,
             isFirst: isFirst,
             isLast: isLast,
+            onTap: () => context.pushRoute(
+              ImprintDetailsRoute(imprintId: item.id),
+            ),
           ),
     );
   }
@@ -565,11 +581,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       emptyIcon: Icons.groups_outlined,
       emptyMessage: 'No teams found.',
       itemBuilder: (context, index, item, isFirst, isLast) =>
-          TeamListTile(
-            teamId: item.id,
+          EntityListTile(
+            entityType: 'team',
+            entityId: item.id,
             name: item.name,
             isFirst: isFirst,
             isLast: isLast,
+            onTap: () => context.pushRoute(
+              TeamDetailsRoute(teamId: item.id),
+            ),
           ),
     );
   }

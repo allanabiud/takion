@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/library/providers/subscription_
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/logic/shortcut_handler.dart';
 
 class TakionApp extends ConsumerStatefulWidget {
   const TakionApp({super.key});
@@ -24,15 +25,19 @@ class TakionApp extends ConsumerStatefulWidget {
 
 class _TakionAppState extends ConsumerState<TakionApp> {
   late final AppRouter _appRouter;
+  final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _metronCheckedForSession = false;
 
   @override
   void initState() {
     super.initState();
     _appRouter = AppRouter(AuthGuard(ref));
+    _shortcutHandler.init();
+    _shortcutHandler.navigateNamed = (route) => _appRouter.push(route);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _shortcutHandler.checkPending();
       _runMetronConnectionCheckIfNeeded();
       _initializePushNotifications();
       _reconcileSubscriptionPullsOnSessionStart();
