@@ -23,7 +23,7 @@ void pullReminderBackgroundCallback() {
 
     int count = 0;
     for (final raw in box.values) {
-      final map = raw as Map<String, dynamic>;
+      final map = raw.cast<String, dynamic>();
       final releaseDate =
           DateTime.tryParse(map['release_date'] as String? ?? '');
       if (releaseDate != null && map['entry_status'] == 'upcoming') {
@@ -41,7 +41,7 @@ void pullReminderBackgroundCallback() {
     final plugin = FlutterLocalNotificationsPlugin();
     await plugin.initialize(
       const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_notification'),
       ),
     );
 

@@ -150,13 +150,10 @@ class _CharacterDetailsScreenState
       circular: true,
       heroWidth: 260,
       heroHeight: 260,
-      toHeaderExtra: (d) => Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: FavoriteToggleButton(
-          isFavorite: isFavorite,
-          onToggleFavorite: _toggleFavorite,
-          compact: true,
-        ),
+      toTrailingHeaderAction: (d) => FavoriteToggleButton(
+        isFavorite: isFavorite,
+        onToggleFavorite: _toggleFavorite,
+        compact: true,
       ),
       sheetContentBuilder: (context, data, ref) {
         final description = data.desc?.trim();

@@ -171,20 +171,31 @@ class _ReadingListDetailsScreenState
         const SizedBox(width: 6),
         Expanded(
           flex: 1,
-          child: FilledButton.tonal(
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              iconSize: 28,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onPressed: () => _toggleFavorite(context, ref, list),
-            child: Icon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? Colors.red : null,
-            ),
-          ),
+          child: isFavorite
+              ? FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    foregroundColor: theme.colorScheme.onPrimaryContainer,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    iconSize: 28,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _toggleFavorite(context, ref, list),
+                  child: const Icon(Icons.favorite),
+                )
+              : FilledButton.tonal(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    iconSize: 28,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _toggleFavorite(context, ref, list),
+                  child: const Icon(Icons.favorite_border),
+                ),
         ),
         const SizedBox(width: 6),
         Expanded(

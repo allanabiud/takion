@@ -23,7 +23,8 @@ final dioProvider = Provider<Dio>((ref) {
       onRequest: (options, handler) async {
         options.extra['start_time'] = DateTime.now().millisecondsSinceEpoch;
         final hiveService = ref.read(hiveServiceProvider);
-        final box = await hiveService.openBox<String>('metron_account_box');
+        final box = hiveService.getBoxIfOpen<String>('metron_account_box') ??
+            await hiveService.openBox<String>('metron_account_box');
         final username = box.get('username')?.trim();
         final password = box.get('password')?.trim();
         if (username != null &&

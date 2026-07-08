@@ -22,6 +22,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     required this.toTitle,
     this.toSubtitle,
     this.toHeaderExtra,
+    this.toTrailingHeaderAction,
     this.onShare,
     this.onOpenInBrowser,
     required this.sheetContentBuilder,
@@ -43,6 +44,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final String Function(T data) toTitle;
   final String? Function(T data)? toSubtitle;
   final Widget? Function(T data)? toHeaderExtra;
+  final Widget? Function(T data)? toTrailingHeaderAction;
   final void Function(T data)? onShare;
   final void Function(T data)? onOpenInBrowser;
   final Iterable<Widget> Function(BuildContext context, T data, WidgetRef ref)
@@ -210,6 +212,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     final title = toTitle(data);
     final subtitle = toSubtitle?.call(data);
     final headerExtra = toHeaderExtra?.call(data);
+    final trailingHeaderAction = toTrailingHeaderAction?.call(data);
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
     return Scaffold(
@@ -340,22 +343,37 @@ class DetailScreenShell<T> extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Text(
-                                title,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (subtitle != null) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  subtitle,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color:
-                                        theme.colorScheme.onSurfaceVariant,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title,
+                                          style: theme.textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        if (subtitle != null) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            subtitle,
+                                            style: theme.textTheme.bodyMedium?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  if (trailingHeaderAction != null) ...[
+                                    const SizedBox(width: 16),
+                                    trailingHeaderAction,
+                                  ],
+                                ],
+                              ),
                               if (headerExtra != null) ...[
                                 const SizedBox(height: 12),
                                 headerExtra,

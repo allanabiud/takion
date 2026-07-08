@@ -108,6 +108,7 @@ class _CreatorDetailsScreenState
       loadingImageUrl: widget.initialImageUrl,
       entityType: 'creator',
       initialChildSize: 0.60,
+      headerHeight: 350,
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'creator-image-${d.id}',
       toTitle: (d) => d.name,
@@ -118,13 +119,10 @@ class _CreatorDetailsScreenState
       circular: true,
       heroWidth: 260,
       heroHeight: 260,
-      toHeaderExtra: (d) => Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: FavoriteToggleButton(
-          isFavorite: isFavorite,
-          onToggleFavorite: _toggleFavorite,
-          compact: true,
-        ),
+      toTrailingHeaderAction: (d) => FavoriteToggleButton(
+        isFavorite: isFavorite,
+        onToggleFavorite: _toggleFavorite,
+        compact: true,
       ),
       sheetContentBuilder: (context, data, ref) {
         final description = data.desc?.trim();

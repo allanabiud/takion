@@ -13,13 +13,15 @@ class RateLimitInterceptor extends Interceptor {
   static const String _lastResetKey = 'last_reset_date';
   static const String _recentRequestsKey = 'recent_requests';
 
+  Box? _statsBox;
+
   RateLimitInterceptor({
     this.maxRequestsPerMinute = 18,
     this.maxRequestsPerDay = 4800,
   });
 
   Future<Box> _getStatsBox() async {
-    return await Hive.openBox(_statsBoxName);
+    return _statsBox ??= await Hive.openBox(_statsBoxName);
   }
 
   Future<void> _checkDailyLimit() async {
