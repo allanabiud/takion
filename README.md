@@ -52,14 +52,20 @@
 
 ### 💾 Backup & Restore
 
-- **Encrypted Backups**: Create AES-256-GCM encrypted backups (.tkbk) of your data with password protection.
+- **Encrypted Local Backups**: Create AES-256-GCM encrypted backups (.tkbk) of your data with password protection.
+- **Google Drive Cloud Backup**: Upload encrypted backups to your Google Drive and restore from any device.
+- **Auto Backup**: Optionally automatically backup to Google Drive on every app open (configurable in Settings).
 - **Selective Restore**: Choose which data categories to restore from a backup file.
 - **Reading List Export/Import**: Export individual reading lists as .tk files for sharing or archival.
 
 ### 🔔 Notifications
 
-- **Pull Reminders**: Receive daily notifications about upcoming pull list issues.
+- **Pull Reminders**: Receive daily notifications (every Tuesday) about upcoming pull list issues.
 - **Schedule Configuration**: Configure notification times and enable/disable from Settings.
+
+### 📱 App Shortcuts
+
+- **Dynamic Home Screen Shortcuts**: Long-press the app icon for quick access to My Pulls and Subscriptions (appears after onboarding).
 
 ---
 
@@ -72,6 +78,7 @@
 | **State Management** | [Riverpod](https://riverpod.dev/)     |
 | **Networking**       | [Dio](https://pub.dev/packages/dio)   |
 | **Database**         | [Hive](https://pub.dev/packages/hive) |
+| **Cloud Storage**    | [Google Drive API](https://pub.dev/packages/googleapis) |
 | **Architecture**     | Domain-Driven-Design                  |
 
 ---

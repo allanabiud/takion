@@ -28,6 +28,7 @@ dependencies:
   url_launcher: ^6.3.2
   cached_network_image: ^3.4.1
   auto_route: ^11.1.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.2
   flash: ^3.1.1
   fl_chart: ^0.70.2
   intl: ^0.20.2
@@ -39,6 +40,8 @@ dependencies:
   lucide_icons_flutter: ^3.1.13
   lottie: ^3.3.0
   gal: ^2.3.2
+  google_sign_in: ^6.2.2
+  googleapis: ^13.1.0
   permission_handler: ^12.0.1
   timelines_plus: ^2.0.0
   uuid: ^4.5.3

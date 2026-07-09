@@ -4,10 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/notifications/push_notification_service.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
+import 'package:takion/src/core/backup/cloud_backup_providers.dart';
+import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
@@ -33,15 +36,34 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     super.initState();
     _appRouter = AppRouter(AuthGuard(ref));
     _shortcutHandler.init();
-    _shortcutHandler.navigateNamed = (route) => _appRouter.push(route);
+    _shortcutHandler.navigateNamed = (route) {
+      final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
+      final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
+      if (!hasSeen) return;
+      _appRouter.push(route);
+    };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _shortcutHandler.checkPending();
       _runMetronConnectionCheckIfNeeded();
       _initializePushNotifications();
       _reconcileSubscriptionPullsOnSessionStart();
+      _runCloudAutoBackup();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _shortcutHandler.checkPending();
+        _maybeEnableShortcuts();
+      });
     });
+  }
+
+  void _maybeEnableShortcuts() {
+    final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
+    final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
+    if (hasSeen) {
+      ShortcutHandler.enableShortcuts();
+    }
   }
 
   Future<void> _initializePushNotifications() async {
@@ -86,6 +108,36 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         context,
         'Background pull reconciliation failed: $error',
       );
+    }
+  }
+
+  Future<void> _runCloudAutoBackup() async {
+    final enabled = ref.read(cloudAutoBackupProvider).value ?? false;
+    if (!enabled) return;
+
+    final service = ref.read(cloudBackupServiceProvider);
+    if (!service.isSignedIn) {
+      final account = await service.signInSilently();
+      if (account == null) return;
+    }
+
+    ref.read(cloudBackupRunningProvider.notifier).start();
+
+    try {
+      final password = await ref.read(cloudAutoBackupPasswordProvider.future);
+      final allBoxNames = BackupService.allBoxNames();
+
+      await service.uploadBackup(
+        boxNames: allBoxNames,
+        password: password,
+      );
+
+      await ref.read(cloudLastBackupProvider.notifier).setLastBackup(
+        DateTime.now(),
+      );
+    } catch (_) {
+    } finally {
+      if (mounted) ref.read(cloudBackupRunningProvider.notifier).stop();
     }
   }
 

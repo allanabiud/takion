@@ -8,11 +8,13 @@ import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/common/floating_icons_background.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/logic/shortcut_handler.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
+import 'package:takion/src/presentation/features/settings/widgets/cloud_backup_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 
@@ -166,6 +168,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final hiveService = ref.read(hiveServiceProvider);
     final settingsBox = await hiveService.openBox(_settingsBoxName);
     await settingsBox.put(_seenOnboardingKey, true);
+    ShortcutHandler.enableShortcuts();
     if (!mounted || !context.mounted) return;
     context.router.replaceAll([const MainRoute()]);
   }
@@ -622,6 +625,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               SizedBox(
                 width: double.infinity,
                 height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final restored = await showCloudRestoreSheet(context, ref);
+                    if (restored == true && mounted) {
+                      setState(() => _restoreCompleted = true);
+                    }
+                  },
+                  icon: const Icon(LucideIcons.cloud),
+                  label: const Text('Restore from Google Drive'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
                 child: OutlinedButton(
                   onPressed: () => _goToPage(4),
                   child: const Text('Skip'),
@@ -654,7 +672,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         controller: _lottieController,
                           onLoaded: (composition) {
                             _lottieController.duration =
-                                composition.duration * 2;
+                                composition.duration;
                             _lottieController.repeat();
                           },
                         delegates: LottieDelegates(

@@ -53,24 +53,20 @@ class PushNotificationService {
     await _ensureWorkmanager();
 
     if (enabled) {
-      const w = DateTime.tuesday;
       const h = 20;
       const m = 0;
 
       final now = DateTime.now();
-
-      int days = (w - now.weekday + 7) % 7;
-      var scheduledDate = DateTime(now.year, now.month, now.day, h, m)
-          .add(Duration(days: days));
+      var scheduledDate = DateTime(now.year, now.month, now.day, h, m);
       if (!scheduledDate.isAfter(now)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 7));
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
 
       await Workmanager().registerPeriodicTask(
         _taskName,
         _taskName,
         existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-        frequency: const Duration(days: 7),
+        frequency: const Duration(days: 1),
         initialDelay: scheduledDate.difference(now),
         backoffPolicy: BackoffPolicy.linear,
         backoffPolicyDelay: const Duration(minutes: 10),

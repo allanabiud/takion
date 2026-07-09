@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="default_web_client_id" translatable="false">336395975598-ms7mqotea231023gev1nhqplvg3gvj2f.apps.googleusercontent.com</string>
     <string name="shortcut_new_releases_short">New Releases</string>
     <string name="shortcut_new_releases_long">This Week\'s Releases</string>
     <string name="shortcut_my_pulls_short">My Pulls</string>

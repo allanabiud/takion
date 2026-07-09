@@ -38,6 +38,12 @@ void pullReminderBackgroundCallback() {
       }
     }
 
+    if (now.weekday != DateTime.tuesday) return Future.value(true);
+
+    final weekStr = '${weekStart.year}-${weekStart.month.toString().padLeft(2, '0')}-${weekStart.day.toString().padLeft(2, '0')}';
+    final notified = box.get('__last_notified');
+    if (notified is Map && notified['w'] == weekStr) return Future.value(true);
+
     final plugin = FlutterLocalNotificationsPlugin();
     await plugin.initialize(
       const InitializationSettings(
@@ -63,6 +69,8 @@ void pullReminderBackgroundCallback() {
       ),
       payload: _notificationPayload,
     );
+
+    await box.put('__last_notified', {'w': weekStr});
 
     return Future.value(true);
   });

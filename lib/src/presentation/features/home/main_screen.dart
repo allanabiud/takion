@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/backup/cloud_backup_providers.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
@@ -201,6 +202,45 @@ class MainScreenState extends ConsumerState<MainScreen>
       child: Stack(
         children: [
           IgnorePointer(ignoring: _overlayVisible, child: mainContent),
+          if (ref.watch(cloudBackupRunningProvider))
+            Positioned(
+              top: kToolbarHeight + MediaQuery.of(context).padding.top + 4,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(10),
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Backing up to Google Drive...',
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (_overlayVisible)
             GestureDetector(
               onTap: () => _dismissSearch(),
@@ -295,7 +335,7 @@ class MainScreenState extends ConsumerState<MainScreen>
               border: InputBorder.none,
               filled: false,
               isDense: true,
-              contentPadding: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.only(left: 12),
             ),
             onSubmitted: (_) => _submitSearch(),
           ),

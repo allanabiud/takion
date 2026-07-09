@@ -25,6 +25,10 @@ class ShortcutHandler {
     });
   }
 
+  static Future<void> enableShortcuts() async {
+    await _channel.invokeMethod('enableShortcuts');
+  }
+
   void _handleRoute(String? route) {
     if (route == null || navigateNamed == null) return;
     final pageRoute = _resolve(route);
