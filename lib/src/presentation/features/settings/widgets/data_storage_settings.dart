@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:takion/src/core/backup/cloud_backup_providers.dart';
+import 'package:takion/src/core/export/collection_csv_export.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/settings/widgets/backup_sheet.dart';
-import 'package:takion/src/presentation/features/settings/widgets/cloud_backup_sheet.dart';
-import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 
 void showDataStorageSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
@@ -17,122 +14,119 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
     child: Consumer(
       builder: (context, ref, _) {
         final appSettings = ref.watch(settingsProvider);
+        final cacheSizeAsync = ref.watch(cacheSizeProvider);
+        final imageCacheSizeAsync = ref.watch(imageCacheSizeProvider);
 
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              buildSettingsGroup(context, 'Backup and Restore', [
+              buildSettingsGroup(context, 'Cache', [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
-                    Icons.backup_outlined,
+                    Icons.storage_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Metadata Cache'),
+                  trailing: Text(
+                    cacheSizeAsync.when(
+                      data: (bytes) => _formatBytes(bytes),
+                      loading: () => '...',
+                      error: (_, _) => 'Unknown',
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.image_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Image Cache'),
+                  trailing: Text(
+                    imageCacheSizeAsync.when(
+                      data: (bytes) => _formatBytes(bytes),
+                      loading: () => '...',
+                      error: (_, _) => 'Unknown',
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.sd_card_outlined,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text(
-                    'Create Local Backup',
+                    'Total',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'Save your local app data to an encrypted backup file',
+                  trailing: Text(
+                    () {
+                      final metadata = cacheSizeAsync.value;
+                      final images = imageCacheSizeAsync.value;
+                      if (metadata == null || images == null) return '...';
+                      return _formatBytes(metadata + images);
+                    }(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                  onTap: () => showCreateBackupSheet(context, ref),
                 ),
                 const Divider(),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
-                    Icons.restore_page_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    Icons.image_outlined,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                   title: const Text(
-                    'Restore from Backup',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    'Clear Image Cache',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.red,
+                    ),
                   ),
-                  subtitle: const Text(
-                    'Restore local app data from an encrypted backup file',
-                  ),
-                  onTap: () => showRestoreBackupSheet(context, ref),
-                ),
-              ]),
-              const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Cloud Backup', [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: Icon(
-                    Icons.cloud_sync_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Auto Backup to Drive',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    ref.watch(cloudAutoBackupProvider).value == true
-                        ? 'Backup on every app open'
-                        : 'Off',
-                  ),
-                  value: ref.watch(cloudAutoBackupProvider).value ?? false,
-                  onChanged: (v) {
-                    ref.read(cloudAutoBackupProvider.notifier).setEnabled(v);
+                  subtitle: const Text('Remove cached cover images only'),
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Clear Image Cache?'),
+                        content: const Text(
+                          'This will remove all cached cover images. They will be re-downloaded when needed.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.of(context).pop(true),
+                            child: const Text('Clear'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      final hive = ref.read(hiveServiceProvider);
+                      await hive.clearImageCache();
+                      ref.invalidate(cacheSizeProvider);
+                      ref.invalidate(imageCacheSizeProvider);
+                      if (context.mounted) {
+                        TakionAlerts.success(context, 'Image Cache Cleared');
+                      }
+                    }
                   },
                 ),
                 const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Icon(
-                      Icons.schedule_outlined,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    'Last backup',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  subtitle: Text(
-                    _formatLastBackup(ref.watch(cloudLastBackupProvider).value),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.cloud_upload_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Backup to Google Drive',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text(
-                    'Upload your data to Google Drive',
-                  ),
-                  onTap: () => showCloudBackupSheet(context, ref),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.cloud_download_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Restore from Google Drive',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text(
-                    'Download and restore from Google Drive',
-                  ),
-                  onTap: () => showCloudRestoreSheet(context, ref),
-                ),
-              ]),
-              const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Local Cache', [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
@@ -140,24 +134,22 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     color: Theme.of(context).colorScheme.error,
                   ),
                   title: const Text(
-                    'Clear Local Cache',
+                    'Clear All Cache',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.red,
                     ),
                   ),
-                  subtitle: const Text(
-                    'Remove all cached metadata and images',
-                  ),
+                  subtitle: const Text('Remove all cached metadata and images'),
                   onTap: appSettings.isSyncing
                       ? null
                       : () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Clear Cache?'),
+                              title: const Text('Clear All Cache?'),
                               content: const Text(
-                                'This will remove fetched cached local data. Your account and preferences remain.',
+                                'This will remove all fetched cached data and images. Your account and preferences remain.',
                               ),
                               actions: [
                                 TextButton(
@@ -177,14 +169,26 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                             await ref
                                 .read(settingsProvider.notifier)
                                 .clearCache();
+                            ref.invalidate(cacheSizeProvider);
+                            ref.invalidate(imageCacheSizeProvider);
                             if (context.mounted) {
-                              TakionAlerts.success(
-                                context,
-                                'Cache Cleared',
-                              );
+                              TakionAlerts.success(context, 'All Cache Cleared');
                             }
                           }
                         },
+                ),
+              ]),
+              const SizedBox(height: 8),
+              buildSettingsGroup(context, 'Export', [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.file_download_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Export Collection'),
+                  subtitle: const Text('Save collection as CSV file'),
+                  onTap: () => exportCollectionToCsv(ref),
                 ),
               ]),
             ],
@@ -195,7 +199,11 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
   );
 }
 
-String _formatLastBackup(DateTime? dateTime) {
-  if (dateTime == null) return 'Never';
-  return DateFormat.yMd().add_jm().format(dateTime.toLocal());
+String _formatBytes(int bytes) {
+  if (bytes < 1024) return '$bytes B';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+  if (bytes < 1024 * 1024 * 1024) {
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
 }

@@ -224,16 +224,21 @@ class MainScreenState extends ConsumerState<MainScreen>
                         height: 14,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Theme.of(context).colorScheme.onSecondaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSecondaryContainer,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Backing up to Google Drive...',
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSecondaryContainer,
-                          ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSecondaryContainer,
+                              ),
                         ),
                       ),
                     ],
@@ -319,6 +324,7 @@ class MainScreenState extends ConsumerState<MainScreen>
 
     return Row(
       children: [
+        const SizedBox(width: 8),
         IconButton(
           tooltip: 'Back',
           icon: const Icon(Icons.arrow_back),

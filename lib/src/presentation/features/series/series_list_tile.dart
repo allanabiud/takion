@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/components/entity_cover.dart';
 import 'package:takion/src/presentation/components/role_badge.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
@@ -161,6 +162,8 @@ class SeriesListTile extends ConsumerWidget {
                               ),
                             ],
                           ),
+                          if (issueCount > 0)
+                            _SeriesProgressBar(seriesId: series.id, total: issueCount),
                           const SizedBox(height: 8),
                           Row(
                             children: [
@@ -229,6 +232,53 @@ class SeriesListTile extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SeriesProgressBar extends ConsumerWidget {
+  final int seriesId;
+  final int total;
+
+  const _SeriesProgressBar({required this.seriesId, required this.total});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownedAsync = ref.watch(seriesOwnedCountProvider(seriesId));
+
+    return ownedAsync.when(
+      loading: () => const SizedBox(height: 4),
+      error: (_, _) => const SizedBox(height: 4),
+      data: (owned) {
+        if (owned == 0) return const SizedBox(height: 4);
+        final percent = (owned / total).clamp(0.0, 1.0);
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: percent,
+                    minHeight: 6,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$owned/$total',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

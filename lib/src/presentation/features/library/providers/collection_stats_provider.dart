@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:takion/src/domain/entities/collection_stats.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
@@ -19,13 +20,19 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
       )
       .length;
 
+  final totalValue = collectedItems.fold<double>(
+    0,
+    (sum, item) => sum + (item.pricePaid ?? 0) * item.quantityOwned,
+  );
+  final currencyFormat = NumberFormat('#,##0.00');
+
   return CollectionStats(
     totalItems: collectedItems.length,
     totalQuantity: collectedItems.fold<int>(
       0,
       (sum, item) => sum + item.quantityOwned,
     ),
-    totalValue: '--',
+    totalValue: '\$${currencyFormat.format(totalValue)}',
     readCount: readCount,
     unreadCount: unreadCount,
     unratedCount: unratedCount,

@@ -51,7 +51,7 @@ final class IssueDetailsNotifierProvider
 }
 
 String _$issueDetailsNotifierHash() =>
-    r'7fbc7de52eede72bb5073d410318ee23e6ace5eb';
+    r'7ea93da4cf07ffb27be5fe855888c168d6ff6adb';
 
 final class IssueDetailsNotifierFamily extends $Family
     with

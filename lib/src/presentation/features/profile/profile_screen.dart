@@ -12,7 +12,9 @@ import 'package:takion/src/presentation/features/profile/widgets/insight_row.dar
 import 'package:takion/src/presentation/features/profile/widgets/profile_charts.dart';
 import 'package:takion/src/presentation/features/profile/widgets/profile_header.dart';
 import 'package:takion/src/presentation/features/profile/widgets/profile_loading_view.dart';
+import 'package:takion/src/presentation/features/profile/widgets/reading_goal_card.dart';
 import 'package:takion/src/presentation/features/profile/widgets/stat_card.dart';
+import 'package:takion/src/presentation/features/profile/widgets/streak_calendar_widget.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 
@@ -287,6 +289,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                           data: insights.readingTrends,
                                         ),
                                       ),
+                                      const SizedBox(height: 32),
+                                      const StreakCalendarWidget(),
+                                      const SizedBox(height: 32),
+                                      const ReadingGoalCard(),
                                       const SizedBox(height: 32),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16),

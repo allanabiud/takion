@@ -30,6 +30,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _metronCheckedForSession = false;
+  bool _pendingAutoBackup = false;
 
   @override
   void initState() {
@@ -112,19 +113,33 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   }
 
   Future<void> _runCloudAutoBackup() async {
-    final enabled = ref.read(cloudAutoBackupProvider).value ?? false;
-    if (!enabled) return;
-
     final service = ref.read(cloudBackupServiceProvider);
     if (!service.isSignedIn) {
-      final account = await service.signInSilently();
-      if (account == null) return;
+      var account = await service.signInSilently();
+      if (account == null) {
+        debugPrint('_runCloudAutoBackup: initial silent sign-in null, retrying after delay');
+        await Future.delayed(const Duration(seconds: 2));
+        account = await service.signInSilently();
+      }
+      if (account == null) {
+        debugPrint('_runCloudAutoBackup: retry also failed, waiting for manual sign-in');
+        _pendingAutoBackup = true;
+        return;
+      }
+      debugPrint('_runCloudAutoBackup: silent sign-in succeeded on retry');
+    }
+
+    _pendingAutoBackup = false;
+
+    final password = await ref.read(cloudAutoBackupPasswordProvider.future);
+    if (password == null || password.isEmpty) {
+      debugPrint('_runCloudAutoBackup: auto backup password not configured. Skipping auto backup.');
+      return;
     }
 
     ref.read(cloudBackupRunningProvider.notifier).start();
 
     try {
-      final password = await ref.read(cloudAutoBackupPasswordProvider.future);
       final allBoxNames = BackupService.allBoxNames();
 
       await service.uploadBackup(
@@ -135,7 +150,8 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       await ref.read(cloudLastBackupProvider.notifier).setLastBackup(
         DateTime.now(),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('_runCloudAutoBackup: backup failed: $e');
     } finally {
       if (mounted) ref.read(cloudBackupRunningProvider.notifier).stop();
     }
@@ -195,6 +211,18 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         }
       }
     });
+    ref.listen(googleSignInAccountProvider, (previous, next) {
+      if (next.value != null) {
+        debugPrint('_runCloudAutoBackup: google sign-in state changed, signed in');
+        if (_pendingAutoBackup) {
+          debugPrint('_runCloudAutoBackup: pending backup detected, running now');
+          _pendingAutoBackup = false;
+          _runCloudAutoBackup();
+        }
+      } else {
+        debugPrint('_runCloudAutoBackup: google sign-in state changed, signed out');
+      }
+    });
     ref.listen(pushPullNotificationsEnabledProvider, (previous, next) {
       if (!next.isLoading && previous?.value != next.value) {
         _syncPushRegistration();
@@ -207,11 +235,13 @@ class _TakionAppState extends ConsumerState<TakionApp> {
           themeMode: ThemeMode.system,
           darkIsTrueBlack: false,
         );
+    final accentScheme = ref.watch(accentSchemeProvider).value ?? FlexScheme.bigStone;
     return MaterialApp.router(
       title: 'Takion',
-      theme: AppThemes.light(),
+      theme: AppThemes.light(accentScheme: accentScheme),
       darkTheme: AppThemes.dark(
         darkIsTrueBlack: themeSettings.darkIsTrueBlack,
+        accentScheme: accentScheme,
       ),
       themeMode: themeSettings.themeMode,
       debugShowCheckedModeBanner: false,

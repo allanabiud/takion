@@ -158,6 +158,11 @@ class HiveService {
     return null;
   }
 
+  static const Set<String> _imageCacheBoxes = {
+    'entity_image_cache_box',
+    'series_cover_cache_box',
+  };
+
   Future<void> clearLocalCache() async {
     for (final boxName in _recoverableCacheBoxes) {
       if (Hive.isBoxOpen(boxName)) {
@@ -173,5 +178,51 @@ class HiveService {
         }
       }
     }
+  }
+
+  Future<void> clearImageCache() async {
+    for (final boxName in _imageCacheBoxes) {
+      if (Hive.isBoxOpen(boxName)) {
+        final clearFn = _clearFns[boxName];
+        if (clearFn != null) {
+          await clearFn();
+        }
+      } else {
+        try {
+          await Hive.deleteBoxFromDisk(boxName);
+        } on PathNotFoundException {
+          // Box file may not exist yet — safe to ignore.
+        }
+      }
+    }
+  }
+
+  Future<int> cacheSize() async {
+    final dir = Directory(Hive.box('settings_box').path!).parent;
+    int total = 0;
+    await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      if (entity is File) {
+        total += await entity.length();
+      }
+    }
+    return total;
+  }
+
+  Future<int> imageCacheSize() async {
+    final dir = Directory(Hive.box('settings_box').path!).parent;
+    int total = 0;
+    await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      if (entity is File && _isImageCacheFile(entity.path)) {
+        total += await entity.length();
+      }
+    }
+    return total;
+  }
+
+  bool _isImageCacheFile(String path) {
+    for (final boxName in _imageCacheBoxes) {
+      if (path.contains(boxName)) return true;
+    }
+    return false;
   }
 }

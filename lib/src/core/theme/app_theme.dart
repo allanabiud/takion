@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 
 /// This class defines light theme and dark theme
 class AppThemes {
-  static ThemeData light() {
+  static ThemeData light({FlexScheme accentScheme = FlexScheme.bigStone}) {
     final ThemeData base = FlexThemeData.light(
-      scheme: FlexScheme.bigStone,
+      scheme: accentScheme,
       fontFamily: 'Rubik',
       appBarOpacity: 0.0,
       subThemesData: const FlexSubThemesData(
@@ -55,7 +55,7 @@ class AppThemes {
         useTertiary: true,
         useError: true,
       ),
-      variant: FlexSchemeVariant.expressive,
+      variant: FlexSchemeVariant.fidelity,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
     );
 
@@ -63,10 +63,6 @@ class AppThemes {
 
     return base.copyWith(
       colorScheme: scheme,
-      splashFactory: NoSplash.splashFactory,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      hoverColor: Colors.transparent,
       expansionTileTheme: const ExpansionTileThemeData(
         shape: Border(),
         collapsedShape: Border(),
@@ -101,9 +97,10 @@ class AppThemes {
 
   static ThemeData dark({
     bool darkIsTrueBlack = false,
+    FlexScheme accentScheme = FlexScheme.bigStone,
   }) {
     final ThemeData base = FlexThemeData.dark(
-      scheme: FlexScheme.bigStone,
+      scheme: accentScheme,
       fontFamily: 'Rubik',
       appBarOpacity: 0.0,
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
@@ -158,7 +155,7 @@ class AppThemes {
         useTertiary: true,
         useError: true,
       ),
-      variant: FlexSchemeVariant.expressive,
+      variant: FlexSchemeVariant.fidelity,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
     );
 
@@ -166,10 +163,6 @@ class AppThemes {
 
     return base.copyWith(
       colorScheme: scheme,
-      splashFactory: NoSplash.splashFactory,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      hoverColor: Colors.transparent,
       expansionTileTheme: const ExpansionTileThemeData(
         shape: Border(),
         collapsedShape: Border(),

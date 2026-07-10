@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -12,9 +11,9 @@ final cloudBackupServiceProvider = Provider<CloudBackupService>((ref) {
   return CloudBackupService(backupService);
 });
 
-final googleSignInAccountProvider = Provider<GoogleSignInAccount?>((ref) {
+final googleSignInAccountProvider = StreamProvider<GoogleSignInAccount?>((ref) {
   final service = ref.watch(cloudBackupServiceProvider);
-  return service.currentUser;
+  return service.onCurrentUserChanged;
 });
 
 final cloudBackupListProvider = FutureProvider<List<BackupFileInfo>>((ref) {
@@ -23,29 +22,8 @@ final cloudBackupListProvider = FutureProvider<List<BackupFileInfo>>((ref) {
 });
 
 const _settingsBox = 'settings_box';
-const _autoBackupKey = 'auto_cloud_backup';
 const _lastBackupKey = 'last_cloud_backup';
 const _autoBackupPasswordKey = 'auto_cloud_backup_password';
-
-final cloudAutoBackupProvider = AsyncNotifierProvider<CloudAutoBackupNotifier, bool>(
-  CloudAutoBackupNotifier.new,
-);
-
-class CloudAutoBackupNotifier extends AsyncNotifier<bool> {
-  @override
-  Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_settingsBox);
-    return box.get(_autoBackupKey, defaultValue: false) as bool;
-  }
-
-  Future<void> setEnabled(bool value) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_settingsBox);
-    await box.put(_autoBackupKey, value);
-    state = AsyncValue.data(value);
-  }
-}
 
 final cloudLastBackupProvider =
     AsyncNotifierProvider<CloudLastBackupNotifier, DateTime?>(
@@ -71,26 +49,30 @@ class CloudLastBackupNotifier extends AsyncNotifier<DateTime?> {
 }
 
 final cloudAutoBackupPasswordProvider =
-    AsyncNotifierProvider<CloudAutoBackupPasswordNotifier, String>(
+    AsyncNotifierProvider<CloudAutoBackupPasswordNotifier, String?>(
   CloudAutoBackupPasswordNotifier.new,
 );
 
-class CloudAutoBackupPasswordNotifier extends AsyncNotifier<String> {
+class CloudAutoBackupPasswordNotifier extends AsyncNotifier<String?> {
   @override
-  Future<String> build() async {
+  Future<String?> build() async {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_settingsBox);
-    final stored = box.get(_autoBackupPasswordKey) as String?;
-    if (stored != null && stored.isNotEmpty) return stored;
-    final generated = _generatePassword();
-    await box.put(_autoBackupPasswordKey, generated);
-    return generated;
+    return box.get(_autoBackupPasswordKey) as String?;
   }
 
-  String _generatePassword() {
-    final random = Random.secure();
-    final chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%^&*()-_=+';
-    return List.generate(32, (_) => chars[random.nextInt(chars.length)]).join();
+  Future<void> setPassword(String password) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_settingsBox);
+    await box.put(_autoBackupPasswordKey, password);
+    state = AsyncValue.data(password);
+  }
+
+  Future<void> clearPassword() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_settingsBox);
+    await box.delete(_autoBackupPasswordKey);
+    state = const AsyncValue.data(null);
   }
 }
 

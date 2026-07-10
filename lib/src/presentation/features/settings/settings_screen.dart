@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/features/settings/widgets/metron_connect
 import 'package:takion/src/presentation/features/settings/widgets/notification_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/appearance_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/collection_settings.dart';
+import 'package:takion/src/presentation/features/settings/widgets/backup_restore_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/data_storage_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/about_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/performance_metrics_settings.dart';
@@ -34,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
           SettingsNavTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
-            subtitle: 'Themes and colors',
+            subtitle: 'App Theme and colors',
             onTap: () => showAppearanceSettings(context, ref),
           ),
           SettingsNavTile(
@@ -58,9 +59,15 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => showMetronConnectionSettings(context, ref),
           ),
           SettingsNavTile(
+            icon: Icons.backup_outlined,
+            title: 'Backup & Restore',
+            subtitle: 'Local and cloud backup',
+            onTap: () => showBackupRestoreSettings(context, ref),
+          ),
+          SettingsNavTile(
             icon: Icons.storage_outlined,
-            title: 'Data and Storage',
-            subtitle: 'Database management',
+            title: 'Data & Storage',
+            subtitle: 'Cache and data management',
             onTap: () => showDataStorageSettings(context, ref),
           ),
           const SizedBox(height: 16),
@@ -83,5 +90,4 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-
 }

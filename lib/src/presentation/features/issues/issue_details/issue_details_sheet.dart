@@ -311,6 +311,7 @@ class IssueDetailsSheet extends StatelessWidget {
                             ),
                             onPressed: () => showIssueMoreOptionsSheet(
                               context,
+                              issueId: issueId,
                               onNavigateToSeries: onNavigateToSeries,
                               onAddToReadingList: onAddToReadingList,
                               onMyDetails: onMyDetails,

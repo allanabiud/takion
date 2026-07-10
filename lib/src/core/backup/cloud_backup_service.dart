@@ -1,5 +1,6 @@
 import 'dart:io' as io;
 
+import 'package:flutter/foundation.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart';
@@ -34,22 +35,36 @@ class CloudBackupService {
 
   bool get isSignedIn => _googleSignIn.currentUser != null;
 
+  Stream<GoogleSignInAccount?> get onCurrentUserChanged =>
+      _googleSignIn.onCurrentUserChanged;
+
   Future<GoogleSignInAccount?> signIn() async {
-    final account = await _googleSignIn.signIn();
-    if (account != null) {
-      final client = await _googleSignIn.authenticatedClient();
-      if (client != null) _driveApi = DriveApi(client);
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account != null) {
+        final client = await _googleSignIn.authenticatedClient();
+        if (client != null) _driveApi = DriveApi(client);
+      }
+      return account;
+    } catch (e) {
+      throw Exception('Google sign in failed: $e');
     }
-    return account;
   }
 
   Future<GoogleSignInAccount?> signInSilently() async {
-    final account = await _googleSignIn.signInSilently();
-    if (account != null) {
-      final client = await _googleSignIn.authenticatedClient();
-      if (client != null) _driveApi = DriveApi(client);
+    try {
+      final account = await _googleSignIn.signInSilently();
+      if (account != null) {
+        final client = await _googleSignIn.authenticatedClient();
+        if (client != null) _driveApi = DriveApi(client);
+      } else {
+        debugPrint('CloudBackupService: signInSilently returned null');
+      }
+      return account;
+    } catch (e) {
+      debugPrint('CloudBackupService: signInSilently failed: $e');
+      return null;
     }
-    return account;
   }
 
   Future<void> signOut() async {
@@ -88,7 +103,6 @@ class CloudBackupService {
     _appFolderId = folder.id;
     return _appFolderId!;
   }
-
   Future<void> uploadBackup({
     required Set<String> boxNames,
     required String password,
@@ -103,7 +117,7 @@ class CloudBackupService {
 
     final now = DateTime.now();
     final fileName =
-        'takion_backup_${now.year}-${_pad(now.month)}-${_pad(now.day)}.tkbk';
+        'Backup-${now.year}-${_pad(now.month)}-${_pad(now.day)}-${_pad(now.hour)}${_pad(now.minute)}.tkbk';
 
     final stream = Stream.fromIterable([data]);
     final driveFile = File(name: fileName, parents: [folderId]);
@@ -112,8 +126,14 @@ class CloudBackupService {
       driveFile,
       uploadMedia: Media(stream, data.length),
     );
-  }
 
+    final existing = await listBackups();
+    for (final backup in existing) {
+      if (backup.name != fileName) {
+        await deleteBackup(backup.id);
+      }
+    }
+  }
   Future<List<BackupFileInfo>> listBackups() async {
     await _ensureApi();
     final folderId = await _ensureAppFolder();
@@ -123,6 +143,7 @@ class CloudBackupService {
       spaces: 'drive',
       orderBy: 'createdTime desc',
       pageSize: 20,
+      $fields: 'files(id, name, createdTime, size)',
     );
 
     final files = result.files ?? [];

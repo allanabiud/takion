@@ -1,3 +1,4 @@
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -718,6 +719,46 @@ class AutoPullToCollectionNotifier extends AsyncNotifier<bool> {
   }
 }
 
+enum DefaultSortOrder { dateAdded, title, series }
+
+final defaultSortOrderProvider =
+    AsyncNotifierProvider<DefaultSortOrderNotifier, DefaultSortOrder>(
+      DefaultSortOrderNotifier.new,
+    );
+
+class DefaultSortOrderNotifier extends AsyncNotifier<DefaultSortOrder> {
+  static const _boxName = 'settings_box';
+  static const _key = 'default_sort_order';
+
+  @override
+  Future<DefaultSortOrder> build() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    final raw =
+        (box.get(_key, defaultValue: 'date_added') as String?) ?? 'date_added';
+    switch (raw) {
+      case 'title':
+        return DefaultSortOrder.title;
+      case 'series':
+        return DefaultSortOrder.series;
+      default:
+        return DefaultSortOrder.dateAdded;
+    }
+  }
+
+  Future<void> setSortOrder(DefaultSortOrder order) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    final value = switch (order) {
+      DefaultSortOrder.dateAdded => 'date_added',
+      DefaultSortOrder.title => 'title',
+      DefaultSortOrder.series => 'series',
+    };
+    await box.put(_key, value);
+    state = AsyncValue.data(order);
+  }
+}
+
 final showReadIssueTickOverlayProvider =
     AsyncNotifierProvider<ShowReadIssueTickOverlayNotifier, bool>(
       ShowReadIssueTickOverlayNotifier.new,
@@ -741,3 +782,38 @@ class ShowReadIssueTickOverlayNotifier extends AsyncNotifier<bool> {
     state = AsyncValue.data(enabled);
   }
 }
+
+final accentSchemeProvider =
+    AsyncNotifierProvider<AccentSchemeNotifier, FlexScheme>(
+      AccentSchemeNotifier.new,
+    );
+
+class AccentSchemeNotifier extends AsyncNotifier<FlexScheme> {
+  static const _boxName = 'settings_box';
+  static const _key = 'accent_scheme';
+
+  @override
+  Future<FlexScheme> build() async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    final raw = box.get(_key, defaultValue: FlexScheme.bigStone.index) as int;
+    return FlexScheme.values.length > raw ? FlexScheme.values[raw] : FlexScheme.bigStone;
+  }
+
+  Future<void> setScheme(FlexScheme scheme) async {
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox(_boxName);
+    await box.put(_key, scheme.index);
+    state = AsyncValue.data(scheme);
+  }
+}
+
+final cacheSizeProvider = FutureProvider<int>((ref) async {
+  final hive = ref.read(hiveServiceProvider);
+  return hive.cacheSize();
+});
+
+final imageCacheSizeProvider = FutureProvider<int>((ref) async {
+  final hive = ref.read(hiveServiceProvider);
+  return hive.imageCacheSize();
+});

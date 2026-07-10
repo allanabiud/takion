@@ -28,7 +28,7 @@ class TakionBottomSheet extends StatelessWidget {
         left: horizontalPadding,
         right: horizontalPadding,
         top: 12,
-        bottom: viewInsets.bottom + (viewInsets.bottom > 0 ? 12 : safeAreaBottom + 24),
+        bottom: viewInsets.bottom + (viewInsets.bottom > 0 ? 8 : safeAreaBottom + 16),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

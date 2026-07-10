@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum PasswordDialogMode { create, restore }
+enum PasswordDialogMode { create, restore, master }
 
 Future<String?> showPasswordDialog({
   required BuildContext context,
@@ -17,11 +17,16 @@ Future<String?> showPasswordDialog({
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
-          final isCreate = mode == PasswordDialogMode.create;
+          final isCreate = mode == PasswordDialogMode.create || mode == PasswordDialogMode.master;
 
           return AlertDialog(
-            title:
-                Text(isCreate ? 'Set Backup Password' : 'Enter Backup Password'),
+            title: Text(
+              mode == PasswordDialogMode.create
+                  ? 'Set Backup Password'
+                  : mode == PasswordDialogMode.master
+                      ? 'Set Master Backup Password'
+                      : 'Enter Backup Password',
+            ),
             content: Form(
               key: formKey,
               child: SingleChildScrollView(
@@ -29,10 +34,13 @@ Future<String?> showPasswordDialog({
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isCreate
+                      mode == PasswordDialogMode.create
                           ? 'This password will be used to encrypt your backup. '
                               'You will need it to restore.'
-                          : 'Enter the password used when this backup was created.',
+                          : mode == PasswordDialogMode.master
+                              ? 'This password will be used to encrypt automatic cloud backups. '
+                                  'You will need it to restore your backups on other devices.'
+                              : 'Enter the password used when this backup was created.',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 16),
@@ -90,7 +98,13 @@ Future<String?> showPasswordDialog({
                     Navigator.of(context).pop(controller.text);
                   }
                 },
-                child: Text(isCreate ? 'Create Backup' : 'Decrypt'),
+                child: Text(
+                  mode == PasswordDialogMode.create
+                      ? 'Create Backup'
+                      : mode == PasswordDialogMode.master
+                          ? 'Set Password'
+                          : 'Decrypt',
+                ),
               ),
             ],
           );

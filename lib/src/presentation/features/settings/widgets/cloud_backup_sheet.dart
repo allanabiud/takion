@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/backup/cloud_backup_service.dart';
 import 'package:takion/src/core/backup/cloud_backup_providers.dart';
@@ -65,8 +66,12 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
 
   Future<void> _signIn() async {
     final service = widget.ref.read(cloudBackupServiceProvider);
-    final account = await service.signIn();
-    if (mounted) setState(() => _signedIn = account != null);
+    try {
+      final account = await service.signIn();
+      if (mounted) setState(() => _signedIn = account != null);
+    } catch (e) {
+      if (mounted) TakionAlerts.error(context, e.toString());
+    }
   }
 
   @override
@@ -122,6 +127,26 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
+        if (ref.watch(cloudLastBackupProvider).value case final lastBackup?)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.schedule_outlined,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Last backup: ${DateFormat.yMd().add_jm().format(lastBackup.toLocal())}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ..._sortedEntries.map(
           (entry) {
             final group = entry.key;
@@ -188,7 +213,7 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
               child: FilledButton.icon(
                 onPressed: _loading ? null : _uploadBackup,
                 icon: const Icon(Icons.cloud_upload_outlined),
-                label: const Text('Backup to Drive'),
+                label: const Text('Backup'),
               ),
             ),
           ],
@@ -250,8 +275,15 @@ Future<bool?> showCloudRestoreSheet(BuildContext context, WidgetRef ref) async {
   final service = ref.read(cloudBackupServiceProvider);
 
   if (!service.isSignedIn) {
-    final account = await service.signIn();
-    if (account == null || !context.mounted) return null;
+    try {
+      final account = await service.signIn();
+      if (account == null || !context.mounted) return null;
+    } catch (e) {
+      if (context.mounted) {
+        TakionAlerts.error(context, e.toString());
+      }
+      return null;
+    }
   }
 
   if (!context.mounted) return null;
@@ -308,10 +340,11 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 48),
+      return const SizedBox(
+        height: 120,
+        child: Center(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
@@ -400,17 +433,22 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
         children: [
           ...List.generate(_files!.length, (i) {
             final file = _files![i];
-            final date = file.createdTime != null
-                ? '${file.createdTime!.year}-${_pad(file.createdTime!.month)}-${_pad(file.createdTime!.day)}'
-                : 'Unknown date';
+            final displayName = file.name.replaceAll('.tkbk', '');
             final size = file.size != null
                 ? _formatSize(file.size!)
                 : '';
+            final date = file.createdTime != null
+                ? DateFormat.yMMMd().format(file.createdTime!)
+                : null;
+
+            final subtitleParts = [date, size]
+                .where((s) => s != null && s.isNotEmpty)
+                .join(' · ');
 
             return ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(date),
-              subtitle: size.isNotEmpty ? Text(size) : null,
+              title: Text(displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: subtitleParts.isNotEmpty ? Text(subtitleParts) : null,
               trailing: IconButton(
                 icon: const Icon(Icons.download_outlined),
                 onPressed: _downloading
@@ -468,14 +506,10 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
       }
 
       if (!mounted) return;
-      final navigator = Navigator.of(context);
-      navigator.pop();
-
-      if (!context.mounted) return;
 
       final restored = await _showRestoreSheet(context, data, availableGroups, password);
-      if (restored == true && context.mounted) {
-        navigator.pop(true);
+      if (restored == true && mounted && context.mounted) {
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -513,8 +547,7 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  String _pad(int n) => n.toString().padLeft(2, '0');
-}
+ }
 
 class _CloudRestoreSelectSheet extends ConsumerStatefulWidget {
   final WidgetRef ref;

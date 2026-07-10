@@ -12,6 +12,7 @@ import 'package:takion/src/presentation/features/library/providers/subscription_
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
+import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
@@ -264,6 +265,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   ),
                 ),
               ),
+            if (d.issueCount != null && d.issueCount! > 0) ...[
+              const SizedBox(height: 12),
+              _SeriesCompletionCompact(
+                seriesId: d.id,
+                total: d.issueCount!,
+              ),
+            ],
             const SizedBox(height: 16),
             Row(children: [
               Expanded(
@@ -760,4 +768,68 @@ void _showSeriesMoreOptionsSheet(
       ],
     ),
   );
+}
+
+class _SeriesCompletionCompact extends ConsumerWidget {
+  final int seriesId;
+  final int total;
+
+  const _SeriesCompletionCompact({
+    required this.seriesId,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownedAsync = ref.watch(seriesOwnedCountProvider(seriesId));
+    final theme = Theme.of(context);
+
+    return ownedAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (owned) {
+        final percent = (owned / total).clamp(0.0, 1.0);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: percent,
+                    minHeight: 8,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$owned/$total',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${(percent * 100).toStringAsFixed(0)}%',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }

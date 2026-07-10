@@ -673,7 +673,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           onLoaded: (composition) {
                             _lottieController.duration =
                                 composition.duration;
-                            _lottieController.repeat();
+                            _lottieController.forward();
                           },
                         delegates: LottieDelegates(
                           values: [
