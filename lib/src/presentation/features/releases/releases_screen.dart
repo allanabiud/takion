@@ -85,6 +85,32 @@ class ReleasesScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            CompactListSection(
+              title: 'Browse',
+              items: [
+                CompactListSectionItem(
+                  icon: Icons.new_releases_outlined,
+                  label: 'New #1s',
+                  onTap: () {
+                    ref
+                        .read(selectedWeekProvider.notifier)
+                        .setDate(DateTime.now());
+                    context.pushRoute(const NewFirstIssuesRoute());
+                  },
+                ),
+                CompactListSectionItem(
+                  icon: Icons.calendar_month_outlined,
+                  label: 'FOC Calendar',
+                  onTap: () {
+                    ref
+                        .read(selectedWeekProvider.notifier)
+                        .setDate(DateTime.now());
+                    context.pushRoute(const FocReleasesRoute());
+                  },
+                ),
+              ],
+            ),
             if (pullsCountAsync > 0)
               pullsAsync.when(
                 data: (issues) {
@@ -187,32 +213,6 @@ class ReleasesScreen extends ConsumerWidget {
                   child: Text('Could not load pulls preview.'),
                 ),
               ),
-            const SizedBox(height: 24),
-            CompactListSection(
-              title: 'Browse',
-              items: [
-                CompactListSectionItem(
-                  icon: Icons.new_releases_outlined,
-                  label: 'New #1s',
-                  onTap: () {
-                    ref
-                        .read(selectedWeekProvider.notifier)
-                        .setDate(DateTime.now());
-                    context.pushRoute(const NewFirstIssuesRoute());
-                  },
-                ),
-                CompactListSectionItem(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'FOC Calendar',
-                  onTap: () {
-                    ref
-                        .read(selectedWeekProvider.notifier)
-                        .setDate(DateTime.now());
-                    context.pushRoute(const FocReleasesRoute());
-                  },
-                ),
-              ],
-            ),
           ],
         ),
       ),

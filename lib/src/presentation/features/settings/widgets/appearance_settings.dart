@@ -6,7 +6,7 @@ import 'package:takion/src/presentation/features/settings/widgets/settings_helpe
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 
-const _accentSchemes = [
+const accentSchemes = [
   FlexScheme.green,
   FlexScheme.blackWhite,
   FlexScheme.bigStone,
@@ -108,7 +108,7 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                 Wrap(
                   spacing: 12,
                   runSpacing: 12,
-                  children: _accentSchemes.map((scheme) {
+                  children: accentSchemes.map((scheme) {
                     final schemeData = FlexColor.schemes[scheme];
                     final primary = schemeData?.light.primary ?? Colors.blue;
                     final selected = currentScheme == scheme;

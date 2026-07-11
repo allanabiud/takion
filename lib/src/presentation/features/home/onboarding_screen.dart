@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:lottie/lottie.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -17,6 +16,10 @@ import 'package:takion/src/presentation/features/settings/widgets/cloud_backup_s
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:takion/src/presentation/features/settings/widgets/appearance_settings.dart';
+import 'package:takion/src/presentation/providers/theme_provider.dart';
+import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 @RoutePage()
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -42,7 +45,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   late Animation<double> _descFade;
   late Animation<double> _buttonFade;
 
-  late AnimationController _lottieController;
+  late AnimationController _rotationController;
 
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -77,10 +80,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
     );
 
-    _lottieController = AnimationController(
+    _rotationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
-    );
+      duration: const Duration(seconds: 10),
+    )..repeat();
   }
 
   Future<void> _checkFirstLaunch() async {
@@ -177,7 +180,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   void dispose() {
     _pageController.dispose();
     _fadeController.dispose();
-    _lottieController.dispose();
+    _rotationController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -211,6 +214,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 onPageChanged: (page) => setState(() => _currentPage = page),
                 children: [
                   _buildWelcomePage(theme),
+                  _buildAppearancePage(theme),
                   _buildMetronInfoPage(theme),
                   _buildAuthorizePage(theme),
                   _buildRestoreBackupPage(theme),
@@ -308,6 +312,206 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
+  Widget _buildAppearancePage(ThemeData theme) {
+    final themeAsync = ref.watch(themeProvider);
+    final themeSettings =
+        themeAsync.value ??
+        const ThemeSettings(
+          themeMode: ThemeMode.system,
+          darkIsTrueBlack: false,
+        );
+    final currentScheme =
+        ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                children: [
+                  Center(
+                    child: Icon(
+                      Icons.palette_outlined,
+                      size: 64,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Customize Your Experience',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Choose your preferred theme and accent color.',
+                    style: theme.textTheme.bodyLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'THEME MODE',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: RadioGroup<ThemeMode>(
+                      groupValue: themeSettings.themeMode,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        ref.read(themeProvider.notifier).setThemeMode(value);
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<ThemeMode>(
+                            value: ThemeMode.system,
+                            title: const Text('System'),
+                            secondary: const Icon(Icons.brightness_auto_outlined),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          RadioListTile<ThemeMode>(
+                            value: ThemeMode.light,
+                            title: const Text('Light'),
+                            secondary: const Icon(Icons.light_mode_outlined),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          RadioListTile<ThemeMode>(
+                            value: ThemeMode.dark,
+                            title: const Text('Dark'),
+                            secondary: const Icon(Icons.dark_mode_outlined),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'ACCENT COLOR',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: accentSchemes.map((scheme) {
+                        final schemeData = FlexColor.schemes[scheme];
+                        final primary = schemeData?.light.primary ?? Colors.blue;
+                        final selected = currentScheme == scheme;
+                        final luminance = primary.computeLuminance();
+                        final tickColor = luminance > 0.5
+                            ? Colors.black87
+                            : Colors.white;
+                        return GestureDetector(
+                          onTap: () => ref
+                              .read(accentSchemeProvider.notifier)
+                              .setScheme(scheme),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primary,
+                              borderRadius: BorderRadius.circular(12),
+                              border: selected
+                                  ? Border.all(
+                                      color: theme.colorScheme.onSurface,
+                                      width: 3,
+                                    )
+                                  : null,
+                              boxShadow: selected
+                                  ? [
+                                      BoxShadow(
+                                        color: primary.withAlpha(100),
+                                        blurRadius: 8,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: selected
+                                ? Icon(Icons.check, color: tickColor, size: 22)
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'DARK MODE',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Pure Black',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: const Text(
+                        'Use a true black background in dark mode',
+                      ),
+                      value: themeSettings.darkIsTrueBlack,
+                      onChanged: (bool value) {
+                        ref
+                            .read(themeProvider.notifier)
+                            .setDarkIsTrueBlack(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton(
+                onPressed: () => _goToPage(2),
+                child: const Text('Continue'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMetronInfoPage(ThemeData theme) {
     return SafeArea(
       child: Padding(
@@ -345,14 +549,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 ),
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: FilledButton(
-                onPressed: () => _goToPage(2),
-                child: const Text('Connect Metron'),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  onPressed: () => _goToPage(3),
+                  child: const Text('Connect Metron'),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -542,7 +746,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: () => _goToPage(3),
+                  onPressed: () => _goToPage(4),
                   child: const Text('Continue'),
                 ),
               ),
@@ -602,7 +806,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: () => _goToPage(4),
+                  onPressed: () => _goToPage(5),
                   child: const Text('Continue'),
                 ),
               )
@@ -625,7 +829,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: OutlinedButton.icon(
+                child: FilledButton.tonalIcon(
                   onPressed: () async {
                     final restored = await showCloudRestoreSheet(context, ref);
                     if (restored == true && mounted) {
@@ -641,7 +845,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 width: double.infinity,
                 height: 56,
                 child: OutlinedButton(
-                  onPressed: () => _goToPage(4),
+                  onPressed: () => _goToPage(5),
                   child: const Text('Skip'),
                 ),
               ),
@@ -665,21 +869,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Lottie.asset(
-                        'assets/animations/all_done.json',
-                        width: 160,
-                        height: 160,
-                        controller: _lottieController,
-                          onLoaded: (composition) {
-                            _lottieController.duration =
-                                composition.duration;
-                            _lottieController.forward();
-                          },
-                        delegates: LottieDelegates(
-                          values: [
-                            ValueDelegate.color(
-                              ['Layer 1 Outlines', '**'],
-                              value: theme.colorScheme.primary,
+                      SizedBox(
+                        width: 140,
+                        height: 140,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            RotationTransition(
+                              turns: _rotationController,
+                              child: CustomPaint(
+                                size: const Size(140, 140),
+                                painter: _CheckShapePainter(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.check,
+                              size: 80,
+                              color: Colors.white,
                             ),
                           ],
                         ),
@@ -714,5 +922,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       ),
     );
   }
+}
+
+class _CheckShapePainter extends CustomPainter {
+  final Color color;
+
+  _CheckShapePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final s = size.width;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, s, s),
+        Radius.circular(s * 0.3),
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CheckShapePainter oldDelegate) => oldDelegate.color != color;
 }
 
