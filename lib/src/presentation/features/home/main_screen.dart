@@ -115,40 +115,11 @@ class MainScreenState extends ConsumerState<MainScreen>
     final topPadding = MediaQuery.of(context).padding.top;
     final searchBarTop = topPadding + kToolbarHeight;
 
-    final mainContent = AutoTabsScaffold(
+    final mainContent = AutoTabsRouter(
       routes: const [HomeRoute(), ReleasesRoute(), LibraryRoute()],
-      appBarBuilder: (context, tabsRouter) => AppBar(
-        leading: IconButton(
-          icon: hasAvatar
-              ? ClipOval(
-                  child: Image.network(
-                    avatarUrl,
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) =>
-                        const Icon(Icons.account_circle_outlined),
-                  ),
-                )
-              : const Icon(Icons.account_circle_outlined),
-          onPressed: () => context.pushRoute(const UserProfileRoute()),
-        ),
-        title: Text(
-          titles[tabsRouter.activeIndex],
-          style: const TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Rubik',
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.pushRoute(const SettingsRoute()),
-          ),
-        ],
-      ),
-      bottomNavigationBuilder: (_, tabsRouter) {
+      builder: (context, child) {
+        final tabsRouter = context.tabsRouter;
+
         return PopScope(
           canPop: tabsRouter.activeIndex == 0,
           onPopInvokedWithResult: (didPop, _) {
@@ -156,21 +127,42 @@ class MainScreenState extends ConsumerState<MainScreen>
               tabsRouter.setActiveIndex(0);
             }
           },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(25),
+          child: Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: hasAvatar
+                    ? ClipOval(
+                        child: Image.network(
+                          avatarUrl,
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              const Icon(Icons.account_circle_outlined),
+                        ),
+                      )
+                    : const Icon(Icons.account_circle_outlined),
+                onPressed: () => context.pushRoute(const UserProfileRoute()),
               ),
+              title: Text(
+                titles[tabsRouter.activeIndex],
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Rubik',
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () => context.pushRoute(const SettingsRoute()),
+                ),
+              ],
             ),
-            clipBehavior: Clip.antiAlias,
-            child: NavigationBar(
+            body: child,
+            bottomNavigationBar: NavigationBar(
               selectedIndex: tabsRouter.activeIndex,
               onDestinationSelected: tabsRouter.setActiveIndex,
-              elevation: 0,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-              surfaceTintColor: Colors.transparent,
-              shadowColor: Colors.transparent,
               destinations: const [
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined),
@@ -475,3 +467,5 @@ class MainScreenState extends ConsumerState<MainScreen>
     );
   }
 }
+
+

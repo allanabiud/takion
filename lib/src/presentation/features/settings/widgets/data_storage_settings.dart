@@ -10,7 +10,7 @@ import 'package:takion/src/core/storage/hive_service.dart';
 void showDataStorageSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Data and Storage',
+    title: 'Data & Storage',
     child: Consumer(
       builder: (context, ref, _) {
         final appSettings = ref.watch(settingsProvider);
@@ -103,13 +103,11 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                         ),
                         actions: [
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(false),
+                            onPressed: () => Navigator.of(context).pop(false),
                             child: const Text('Cancel'),
                           ),
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(true),
+                            onPressed: () => Navigator.of(context).pop(true),
                             child: const Text('Clear'),
                           ),
                         ],
@@ -172,7 +170,10 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                             ref.invalidate(cacheSizeProvider);
                             ref.invalidate(imageCacheSizeProvider);
                             if (context.mounted) {
-                              TakionAlerts.success(context, 'All Cache Cleared');
+                              TakionAlerts.success(
+                                context,
+                                'All Cache Cleared',
+                              );
                             }
                           }
                         },

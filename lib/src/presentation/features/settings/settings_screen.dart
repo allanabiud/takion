@@ -35,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
           SettingsNavTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
-            subtitle: 'App Theme and colors',
+            subtitle: 'App theme and colors',
             onTap: () => showAppearanceSettings(context, ref),
           ),
           SettingsNavTile(
@@ -86,6 +86,7 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'Takion version and info',
             onTap: () => showAboutSettings(context),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );

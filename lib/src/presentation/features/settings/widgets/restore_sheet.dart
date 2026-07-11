@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/presentation/common/password_dialog.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
@@ -23,14 +22,6 @@ Future<bool?> showRestoreBackupSheet(BuildContext context, WidgetRef ref) async 
 
   if (!context.mounted) return null;
 
-  final password = await showPasswordDialog(
-    context: context,
-    mode: PasswordDialogMode.restore,
-  );
-  if (password == null) return null;
-
-  if (!context.mounted) return null;
-
   final hiveService = ref.read(hiveServiceProvider);
   final service = BackupService(hiveService);
 
@@ -41,7 +32,6 @@ Future<bool?> showRestoreBackupSheet(BuildContext context, WidgetRef ref) async 
       ref: ref,
       service: service,
       filePath: filePath,
-      password: password,
     ),
   );
 }
@@ -50,13 +40,11 @@ class _RestoreSheet extends ConsumerStatefulWidget {
   final WidgetRef ref;
   final BackupService service;
   final String filePath;
-  final String password;
 
   const _RestoreSheet({
     required this.ref,
     required this.service,
     required this.filePath,
-    required this.password,
   });
 
   @override
@@ -64,10 +52,8 @@ class _RestoreSheet extends ConsumerStatefulWidget {
 }
 
 class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
-  static const _sensitiveGroups = {'User Profile'};
-
-  _RestorePhase _phase = _RestorePhase.decrypting;
-  String _decryptError = '';
+  _RestorePhase _phase = _RestorePhase.loading;
+  String _loadError = '';
   BackupManifest? _manifest;
   Map<String, List<Map<String, dynamic>>>? _data;
   late Map<String, bool> _selections;
@@ -78,7 +64,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
   @override
   void initState() {
     super.initState();
-    _decrypt();
+    _load();
   }
 
   List<MapEntry<String, List<String>>> get _sortedEntries {
@@ -91,24 +77,18 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
         .where((e) => availableGroups.contains(e.key))
         .toList()
       ..sort((a, b) {
-        final aSensitive = _sensitiveGroups.contains(a.key);
-        final bSensitive = _sensitiveGroups.contains(b.key);
-        if (aSensitive && !bSensitive) return 1;
-        if (!aSensitive && bSensitive) return -1;
         return 0;
       });
     return entries;
   }
 
-  Future<void> _decrypt() async {
+  Future<void> _load() async {
     try {
       final manifest = await widget.service.loadManifest(
         filePath: widget.filePath,
-        password: widget.password,
       );
       final data = await widget.service.readBackupData(
         filePath: widget.filePath,
-        password: widget.password,
       );
 
       if (!mounted) return;
@@ -128,11 +108,9 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
       if (!mounted) return;
       final message = e is FormatException
           ? 'Invalid backup file'
-          : e.toString().contains('SecretBoxAuthenticationError')
-              ? 'Incorrect password'
-              : 'Failed to read backup: $e';
+          : 'Failed to read backup: $e';
       setState(() {
-        _decryptError = message;
+        _loadError = message;
         _phase = _RestorePhase.error;
       });
     }
@@ -141,8 +119,8 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
   @override
   Widget build(BuildContext context) {
     switch (_phase) {
-      case _RestorePhase.decrypting:
-        return _buildDecrypting();
+      case _RestorePhase.loading:
+        return _buildLoading();
       case _RestorePhase.error:
         return _buildError();
       case _RestorePhase.selecting:
@@ -150,7 +128,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
     }
   }
 
-  Widget _buildDecrypting() {
+  Widget _buildLoading() {
     return const Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 48),
@@ -159,7 +137,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Decrypting backup...'),
+            Text('Reading backup...'),
           ],
         ),
       ),
@@ -178,7 +156,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
                   size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
               Text(
-                _decryptError,
+                _loadError,
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -223,7 +201,6 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
           ..._sortedEntries.map(
             (entry) {
               final group = entry.key;
-              final isSensitive = _sensitiveGroups.contains(group);
 
               return SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -231,24 +208,9 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
                 onChanged: _restoring
                     ? null
                     : (v) => setState(() => _selections[group] = v),
-                title: Row(
-                  children: [
-                    Text(
-                      group,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    if (isSensitive) ...[
-                      const SizedBox(width: 6),
-                      Tooltip(
-                        message: 'Contains sensitive data',
-                        child: Icon(
-                          Icons.lock_outline,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ],
+                title: Text(
+                  group,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               );
             },
@@ -377,4 +339,4 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
   String _pad(int n) => n.toString().padLeft(2, '0');
 }
 
-enum _RestorePhase { decrypting, error, selecting }
+enum _RestorePhase { loading, error, selecting }

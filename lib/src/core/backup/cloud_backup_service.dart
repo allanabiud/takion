@@ -103,21 +103,30 @@ class CloudBackupService {
     _appFolderId = folder.id;
     return _appFolderId!;
   }
+
   Future<void> uploadBackup({
     required Set<String> boxNames,
-    required String password,
+    bool isAuto = false,
   }) async {
     await _ensureApi();
     final folderId = await _ensureAppFolder();
 
     final data = await _backupService.createBackupData(
       boxNames: boxNames,
-      password: password,
     );
 
     final now = DateTime.now();
+    final prefix = isAuto ? 'AutoBackup' : 'Backup';
     final fileName =
-        'Backup-${now.year}-${_pad(now.month)}-${_pad(now.day)}-${_pad(now.hour)}${_pad(now.minute)}.tkbk';
+        '$prefix-${now.year}-${_pad(now.month)}-${_pad(now.day)}-${_pad(now.hour)}${_pad(now.minute)}.tkbk';
+
+    final existing = await listBackups();
+    final sameTypePrefix = isAuto ? 'AutoBackup' : 'Backup';
+    for (final backup in existing) {
+      if (backup.name.startsWith(sameTypePrefix)) {
+        await deleteBackup(backup.id);
+      }
+    }
 
     final stream = Stream.fromIterable([data]);
     final driveFile = File(name: fileName, parents: [folderId]);
@@ -126,14 +135,8 @@ class CloudBackupService {
       driveFile,
       uploadMedia: Media(stream, data.length),
     );
-
-    final existing = await listBackups();
-    for (final backup in existing) {
-      if (backup.name != fileName) {
-        await deleteBackup(backup.id);
-      }
-    }
   }
+
   Future<List<BackupFileInfo>> listBackups() async {
     await _ensureApi();
     final folderId = await _ensureAppFolder();
@@ -159,7 +162,6 @@ class CloudBackupService {
 
   Future<Map<String, List<Map<String, dynamic>>>> downloadBackup({
     required String fileId,
-    required String password,
   }) async {
     await _ensureApi();
 
@@ -179,7 +181,6 @@ class CloudBackupService {
 
     final result = await _backupService.readBackupData(
       filePath: tempPath,
-      password: password,
     );
 
     await tempFile.delete();
@@ -188,7 +189,6 @@ class CloudBackupService {
 
   Future<BackupFileInfo> loadManifest({
     required String fileId,
-    required String password,
   }) async {
     await _ensureApi();
 
@@ -208,7 +208,6 @@ class CloudBackupService {
 
     final manifest = await _backupService.loadManifest(
       filePath: tempPath,
-      password: password,
     );
 
     await tempFile.delete();

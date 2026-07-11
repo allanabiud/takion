@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/presentation/common/password_dialog.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 
@@ -25,7 +24,6 @@ class _CreateBackupSheet extends ConsumerStatefulWidget {
 }
 
 class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
-  static const _sensitiveGroups = {'User Profile'};
   late Map<String, bool> _selections;
   bool _loading = false;
   double _progress = 0;
@@ -41,6 +39,8 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
       });
     return entries;
   }
+
+  static const _sensitiveGroups = {'User Profile'};
 
   @override
   void initState() {
@@ -67,7 +67,6 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
           ..._sortedEntries.map(
             (entry) {
               final group = entry.key;
-              final isSensitive = _sensitiveGroups.contains(group);
 
               return SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -75,24 +74,9 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
                 onChanged: _loading
                     ? null
                     : (v) => setState(() => _selections[group] = v),
-                title: Row(
-                  children: [
-                    Text(
-                      group,
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    if (isSensitive) ...[
-                      const SizedBox(width: 6),
-                      Tooltip(
-                        message: 'Contains sensitive data',
-                        child: Icon(
-                          Icons.lock_outline,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ],
+                title: Text(
+                  group,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               );
             },
@@ -109,7 +93,7 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
                   Text(
                     _progress > 0
                         ? '${(_progress * 100).toInt()}%'
-                        : 'Encrypting...',
+                        : 'Saving...',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -151,12 +135,6 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
       return;
     }
 
-    final password = await showPasswordDialog(
-      context: context,
-      mode: PasswordDialogMode.create,
-    );
-    if (password == null) return;
-
     if (!mounted) return;
     setState(() => _loading = true);
 
@@ -170,7 +148,6 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
 
       final data = await service.createBackupData(
         boxNames: boxNames,
-        password: password,
       );
 
       if (!mounted) return;
@@ -180,13 +157,13 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
       final fileName =
           'takion_backup_${date.year}-${_pad(date.month)}-${_pad(date.day)}.tkbk';
 
-      final result = await FilePicker.saveFile(
+      final savedPath = await FilePicker.saveFile(
         fileName: fileName,
         bytes: data,
       );
 
-      if (result != null && mounted) {
-        TakionAlerts.success(context, 'Backup saved');
+      if (savedPath != null && mounted) {
+        TakionAlerts.success(context, 'Backup saved to $savedPath');
         Navigator.of(context).pop();
       }
     } catch (e) {

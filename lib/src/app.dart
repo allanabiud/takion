@@ -131,12 +131,6 @@ class _TakionAppState extends ConsumerState<TakionApp> {
 
     _pendingAutoBackup = false;
 
-    final password = await ref.read(cloudAutoBackupPasswordProvider.future);
-    if (password == null || password.isEmpty) {
-      debugPrint('_runCloudAutoBackup: auto backup password not configured. Skipping auto backup.');
-      return;
-    }
-
     ref.read(cloudBackupRunningProvider.notifier).start();
 
     try {
@@ -144,7 +138,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
 
       await service.uploadBackup(
         boxNames: allBoxNames,
-        password: password,
+        isAuto: true,
       );
 
       await ref.read(cloudLastBackupProvider.notifier).setLastBackup(
@@ -235,7 +229,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
           themeMode: ThemeMode.system,
           darkIsTrueBlack: false,
         );
-    final accentScheme = ref.watch(accentSchemeProvider).value ?? FlexScheme.bigStone;
+    final accentScheme = ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
     return MaterialApp.router(
       title: 'Takion',
       theme: AppThemes.light(accentScheme: accentScheme),

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/features/settings/widgets/licenses_viewer.dart';
 
 Future<void> launchGitHubRepo(BuildContext context) async {
   final url = Uri.parse('https://github.com/allanabiud/takion');
@@ -150,6 +151,21 @@ void showAboutSettings(BuildContext context) {
                   icon: const Icon(Icons.open_in_new),
                 ),
               ],
+            ),
+          ]),
+          const SizedBox(height: 24),
+          buildSettingsGroup(context, 'Legal', [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.description_outlined),
+              title: const Text(
+                'Open Source Licenses',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                'View licenses for third-party libraries',
+              ),
+              onTap: () => showLicensesSheet(context),
             ),
           ]),
         ],

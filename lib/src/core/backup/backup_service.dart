@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
@@ -27,11 +25,7 @@ class BackupService {
   BackupService(this._hiveService);
 
   static const _magic = <int>[0x54, 0x4B, 0x42, 0x46];
-  static const _version = <int>[0x01];
-  static const _pbkdf2Iterations = 100000;
-  static const _saltLength = 16;
-  static const _nonceLength = 12;
-  static const _tagLength = 16;
+  static const _version = <int>[0x02];
 
   static const Map<String, List<String>> backupGroups = {
     'App Settings': ['settings_box'],
@@ -68,7 +62,6 @@ class BackupService {
 
   Future<Uint8List> createBackupData({
     required Set<String> boxNames,
-    required String password,
   }) async {
     final boxes = <String, List<Map<String, dynamic>>>{};
     for (final boxName in boxNames) {
@@ -85,44 +78,9 @@ class BackupService {
     };
 
     final jsonString = jsonEncode(payload);
-    final plaintext = utf8.encode(jsonString);
+    final jsonBytes = utf8.encode(jsonString);
 
-    final random = Random.secure();
-    final salt = Uint8List.fromList(
-      List<int>.generate(_saltLength, (_) => random.nextInt(256)),
-    );
-    final nonce = Uint8List.fromList(
-      List<int>.generate(_nonceLength, (_) => random.nextInt(256)),
-    );
-
-    final pbkdf2 = Pbkdf2(
-      macAlgorithm: Hmac.sha256(),
-      iterations: _pbkdf2Iterations,
-      bits: 256,
-    );
-    final key = await pbkdf2.deriveKeyFromPassword(
-      password: password,
-      nonce: salt,
-    );
-
-    final aesGcm = AesGcm.with256bits();
-    final secretBox = await aesGcm.encrypt(
-      plaintext,
-      secretKey: key,
-      nonce: nonce,
-    );
-
-    final ciphertext = secretBox.cipherText;
-    final tag = secretBox.mac.bytes;
-
-    final totalLen = _magic.length +
-        _version.length +
-        salt.length +
-        nonce.length +
-        4 +
-        ciphertext.length +
-        tag.length;
-
+    final totalLen = _magic.length + _version.length + 4 + jsonBytes.length;
     final header = Uint8List(totalLen);
 
     var offset = 0;
@@ -130,30 +88,23 @@ class BackupService {
     offset += _magic.length;
     header.setAll(offset, _version);
     offset += _version.length;
-    header.setAll(offset, salt);
-    offset += salt.length;
-    header.setAll(offset, nonce);
-    offset += nonce.length;
 
-    final ctLen = ciphertext.length;
-    header[offset] = ctLen & 0xFF;
-    header[offset + 1] = (ctLen >> 8) & 0xFF;
-    header[offset + 2] = (ctLen >> 16) & 0xFF;
-    header[offset + 3] = (ctLen >> 24) & 0xFF;
+    final jsonLen = jsonBytes.length;
+    header[offset] = jsonLen & 0xFF;
+    header[offset + 1] = (jsonLen >> 8) & 0xFF;
+    header[offset + 2] = (jsonLen >> 16) & 0xFF;
+    header[offset + 3] = (jsonLen >> 24) & 0xFF;
     offset += 4;
 
-    header.setAll(offset, ciphertext);
-    offset += ciphertext.length;
-    header.setAll(offset, tag);
+    header.setAll(offset, jsonBytes);
 
     return header;
   }
 
   Future<BackupManifest> loadManifest({
     required String filePath,
-    required String password,
   }) async {
-    final payload = await _decryptFile(filePath, password);
+    final payload = await _readFile(filePath);
     final boxes = payload['b'] as Map<String, dynamic>;
     final counts = <String, int>{};
     for (final entry in boxes.entries) {
@@ -169,9 +120,8 @@ class BackupService {
 
   Future<Map<String, List<Map<String, dynamic>>>> readBackupData({
     required String filePath,
-    required String password,
   }) async {
-    final payload = await _decryptFile(filePath, password);
+    final payload = await _readFile(filePath);
     final boxes = payload['b'] as Map<String, dynamic>;
     return boxes.map(
       (key, value) => MapEntry(
@@ -203,10 +153,7 @@ class BackupService {
     }
   }
 
-  Future<Map<String, dynamic>> _decryptFile(
-    String filePath,
-    String password,
-  ) async {
+  Future<Map<String, dynamic>> _readFile(String filePath) async {
     final file = File(filePath);
     final bytes = await file.readAsBytes();
     final data = Uint8List.fromList(bytes);
@@ -221,46 +168,15 @@ class BackupService {
 
     offset += _version.length;
 
-    final salt = data.sublist(offset, offset + _saltLength);
-    offset += _saltLength;
-
-    final nonce = data.sublist(offset, offset + _nonceLength);
-    offset += _nonceLength;
-
-    final ctLen = data[offset] |
+    final jsonLen = data[offset] |
         (data[offset + 1] << 8) |
         (data[offset + 2] << 16) |
         (data[offset + 3] << 24);
     offset += 4;
 
-    final ciphertext = data.sublist(offset, offset + ctLen);
-    offset += ctLen;
+    final jsonBytes = data.sublist(offset, offset + jsonLen);
 
-    final tag = data.sublist(offset, offset + _tagLength);
-
-    final pbkdf2 = Pbkdf2(
-      macAlgorithm: Hmac.sha256(),
-      iterations: _pbkdf2Iterations,
-      bits: 256,
-    );
-    final key = await pbkdf2.deriveKeyFromPassword(
-      password: password,
-      nonce: salt,
-    );
-
-    final aesGcm = AesGcm.with256bits();
-    final secretBox = SecretBox(
-      ciphertext,
-      nonce: nonce,
-      mac: Mac(tag),
-    );
-
-    final plaintext = await aesGcm.decrypt(
-      secretBox,
-      secretKey: key,
-    );
-
-    final jsonString = utf8.decode(plaintext);
+    final jsonString = utf8.decode(jsonBytes);
     final payload = jsonDecode(jsonString) as Map<String, dynamic>;
     return payload;
   }

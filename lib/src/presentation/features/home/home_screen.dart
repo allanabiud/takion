@@ -15,7 +15,6 @@ import 'package:takion/src/presentation/features/releases/providers/weekly_relea
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 
-
 @RoutePage()
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -160,8 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: InkWell(
-            onTap: () =>
-                _openWeeklyReleasesForWeek(context, ref, weekDate),
+            onTap: () => _openWeeklyReleasesForWeek(context, ref, weekDate),
             borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -170,9 +168,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Text(
                     title,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const Icon(Icons.chevron_right),
                 ],
@@ -216,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child:               InkWell(
+              child: InkWell(
                 onTap: () {
                   context
                       .findAncestorStateOfType<MainScreenState>()
@@ -240,9 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Text(
                         'Search comics...',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -536,8 +532,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'Browse Metron',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -549,10 +546,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     itemCount: 9,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
-                      return _buildBrowsePill(
-                        context: context,
-                        index: index,
-                      );
+                      return _buildBrowsePill(context: context, index: index);
                     },
                   ),
                 ),
@@ -731,28 +725,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               weekDate: nextWeekStart,
               issuesAsync: nextWeekReleasesAsync,
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBrowsePill({
-    required BuildContext context,
-    required int index,
-  }) {
+  Widget _buildBrowsePill({required BuildContext context, required int index}) {
     final theme = Theme.of(context);
     final actions = [
-      (Icons.list_alt, 'Reading Lists', () => context.pushRoute(const MetronReadingListBrowserRoute())),
-      (Icons.business, 'Publishers', () => context.pushRoute(const PublisherBrowseRoute())),
-      (Icons.link, 'Story Arcs', () => context.pushRoute(const ArcBrowseRoute())),
+      (
+        Icons.list_alt,
+        'Reading Lists',
+        () => context.pushRoute(const MetronReadingListBrowserRoute()),
+      ),
+      (
+        Icons.business,
+        'Publishers',
+        () => context.pushRoute(const PublisherBrowseRoute()),
+      ),
+      (
+        Icons.link,
+        'Story Arcs',
+        () => context.pushRoute(const ArcBrowseRoute()),
+      ),
       (Icons.groups, 'Teams', () => context.pushRoute(const TeamBrowseRoute())),
-      (Icons.person, 'Characters', () => context.pushRoute(const CharacterBrowseRoute())),
+      (
+        Icons.person,
+        'Characters',
+        () => context.pushRoute(const CharacterBrowseRoute()),
+      ),
       (Icons.tv, 'Series', () => context.pushRoute(const SeriesBrowseRoute())),
-      (Icons.language, 'Universes', () => context.pushRoute(const UniverseBrowseRoute())),
-      (Icons.copyright, 'Imprints', () => context.pushRoute(const ImprintBrowseRoute())),
-      (Icons.brush, 'Creators', () => context.pushRoute(const CreatorBrowseRoute())),
+      (
+        Icons.language,
+        'Universes',
+        () => context.pushRoute(const UniverseBrowseRoute()),
+      ),
+      (
+        Icons.copyright,
+        'Imprints',
+        () => context.pushRoute(const ImprintBrowseRoute()),
+      ),
+      (
+        Icons.brush,
+        'Creators',
+        () => context.pushRoute(const CreatorBrowseRoute()),
+      ),
     ];
     final action = actions[index];
     return Material(

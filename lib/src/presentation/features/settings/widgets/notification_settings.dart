@@ -13,7 +13,7 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        buildSettingsGroup(context, 'Pull List Notifications', [
+        buildSettingsGroup(context, 'Pull List', [
           Consumer(
             builder: (context, ref, _) {
               final enabledAsync = ref.watch(
@@ -23,11 +23,11 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
               return SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text(
-                  'Weekly Pull List Reminder',
+                  'Weekly Reminder',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 subtitle: const Text(
-                  'Every Tuesday at 8:00 PM',
+                  'Receive notifications about your pull list releases',
                 ),
                 value: enabled,
                 onChanged: enabledAsync.isLoading
@@ -54,7 +54,9 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
               );
             },
           ),
-          const Divider(),
+        ]),
+        const SizedBox(height: 16),
+        buildSettingsGroup(context, 'Scheduling', [
           Consumer(
             builder: (context, ref, _) {
               final timingAsync = ref.watch(pullNotificationTimingProvider);
@@ -64,13 +66,6 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
-                    child: Text(
-                      'Notification Timing',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
                   Text(
                     'When to notify you before release day',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

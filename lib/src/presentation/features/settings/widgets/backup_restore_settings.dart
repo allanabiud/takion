@@ -6,231 +6,223 @@ import 'package:takion/src/presentation/features/settings/widgets/backup_sheet.d
 import 'package:takion/src/presentation/features/settings/widgets/cloud_backup_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:intl/intl.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/common/password_dialog.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+
+enum _BackupMode { local, cloud }
 
 void showBackupRestoreSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Backup and Restore',
+    title: 'Backup & Restore',
     child: Consumer(
       builder: (context, ref, _) {
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              buildSettingsGroup(context, 'LOCAL', [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.backup_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Create Local Backup',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text(
-                    'Save your local app data to an encrypted backup file',
-                  ),
-                  onTap: () => showCreateBackupSheet(context, ref),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.restore_page_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Restore from Backup',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text(
-                    'Restore local app data from an encrypted backup file',
-                  ),
-                  onTap: () => showRestoreBackupSheet(context, ref),
-                ),
-              ]),
-              buildSettingsGroup(context, 'CLOUD', [
-                _googleStatusRow(context, ref),
-                const Divider(),
-                _backupToDriveTile(context, ref),
-                const Divider(),
-                _masterPasswordTile(context, ref),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.cloud_download_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text(
-                    'Restore from Google Drive',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text('Download and restore from Google Drive'),
-                  onTap: () => showCloudRestoreSheet(context, ref),
-                ),
-              ]),
-            ],
-          ),
-        );
+        return _BackupRestoreContent(ref: ref);
       },
     ),
   );
 }
 
-Widget _googleStatusRow(BuildContext context, WidgetRef ref) {
-  final account = ref.watch(googleSignInAccountProvider).value;
-  if (account != null) {
+class _BackupRestoreContent extends ConsumerStatefulWidget {
+  final WidgetRef ref;
+
+  const _BackupRestoreContent({required this.ref});
+
+  @override
+  ConsumerState<_BackupRestoreContent> createState() =>
+      _BackupRestoreContentState();
+}
+
+class _BackupRestoreContentState extends ConsumerState<_BackupRestoreContent> {
+  _BackupMode _mode = _BackupMode.local;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<_BackupMode>(
+              segments: const [
+                ButtonSegment(
+                  value: _BackupMode.local,
+                  icon: Icon(Icons.phone_android_outlined),
+                  label: Text('LOCAL'),
+                ),
+                ButtonSegment(
+                  value: _BackupMode.cloud,
+                  icon: Icon(Icons.cloud_outlined),
+                  label: Text('CLOUD'),
+                ),
+              ],
+              selected: {_mode},
+              onSelectionChanged: (selected) =>
+                  setState(() => _mode = selected.first),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_mode == _BackupMode.local) _buildLocalSection(),
+          if (_mode == _BackupMode.cloud) _buildCloudSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocalSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            Icons.file_upload_outlined,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text(
+            'Create Local Backup',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: const Text(
+            'Save your local app data to a backup file',
+          ),
+          onTap: () => showCreateBackupSheet(context, widget.ref),
+        ),
+        const Divider(),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            Icons.file_download_outlined,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text(
+            'Restore from Backup',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: const Text('Restore local app data from a backup file'),
+          onTap: () => showRestoreBackupSheet(context, widget.ref),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCloudSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _googleStatusRow(context, widget.ref),
+        const Divider(),
+        _backupToDriveTile(context, widget.ref),
+        const Divider(),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            Icons.cloud_download_outlined,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text(
+            'Restore from Google Drive',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: const Text('Download and restore from Google Drive'),
+          onTap: () => showCloudRestoreSheet(context, widget.ref),
+        ),
+      ],
+    );
+  }
+
+  Widget _googleStatusRow(BuildContext context, WidgetRef ref) {
+    final account = ref.watch(googleSignInAccountProvider).value;
+    if (account != null) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              size: 18,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  text: 'Signed in as ',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  children: [
+                    TextSpan(
+                      text: account.email,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 32,
+              width: 32,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: Icon(
+                  Icons.logout,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                onPressed: () => ref.read(cloudBackupServiceProvider).signOut(),
+                tooltip: 'Sign out',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
       child: Row(
         children: [
-          Icon(Icons.check_circle, size: 18, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                text: 'Signed in as ',
-                style: Theme.of(context).textTheme.bodySmall,
-                children: [
-                  TextSpan(
-                    text: account.email,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
+          Icon(
+            Icons.info_outline,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          SizedBox(
-            height: 32,
-            width: 32,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: Icon(Icons.logout, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
-              onPressed: () => ref.read(cloudBackupServiceProvider).signOut(),
-              tooltip: 'Sign out',
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => showCloudBackupSheet(context, ref),
+            child: Text(
+              'Not signed in to Google',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ],
       ),
     );
   }
-  return Padding(
-    padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
-    child: Row(
-      children: [
-        Icon(Icons.info_outline, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => showCloudBackupSheet(context, ref),
-          child: Text(
-            'Not signed in to Google',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              decoration: TextDecoration.underline,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
+
+  Widget _backupToDriveTile(BuildContext context, WidgetRef ref) {
+    final lastBackupAsync = ref.watch(cloudLastBackupProvider);
+    final lastBackup = lastBackupAsync.value;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        Icons.cloud_upload_outlined,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      title: const Text(
+        'Backup to Google Drive',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        lastBackup != null
+            ? 'Last Backup: ${DateFormat.yMMMd().add_jm().format(lastBackup.toLocal())}'
+            : 'No backup yet',
+      ),
+      onTap: () => showCloudBackupSheet(context, widget.ref),
+    );
+  }
 }
 
-Widget _backupToDriveTile(BuildContext context, WidgetRef ref) {
-  final lastBackupAsync = ref.watch(cloudLastBackupProvider);
-  final lastBackup = lastBackupAsync.value;
-  return ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(
-      Icons.cloud_upload_outlined,
-      color: Theme.of(context).colorScheme.primary,
-    ),
-    title: const Text(
-      'Backup to Google Drive',
-      style: TextStyle(fontWeight: FontWeight.w600),
-    ),
-    subtitle: Text(
-      lastBackup != null
-          ? 'Last Backup: ${DateFormat.yMMMd().add_jm().format(lastBackup.toLocal())}'
-          : 'No backup yet',
-    ),
-    onTap: () => showCloudBackupSheet(context, ref),
-  );
-}
 
-Widget _masterPasswordTile(BuildContext context, WidgetRef ref) {
-  final passwordAsync = ref.watch(cloudAutoBackupPasswordProvider);
-  final password = passwordAsync.value;
-  final isSet = password != null && password.isNotEmpty;
-
-  return ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(
-      isSet ? Icons.lock_outline : Icons.lock_open_outlined,
-      color: Theme.of(context).colorScheme.primary,
-    ),
-    title: const Text(
-      'Master Backup Password',
-      style: TextStyle(fontWeight: FontWeight.w600),
-    ),
-    subtitle: Text(
-      isSet
-          ? 'Configured (Required for automatic cloud backups)'
-          : 'Not configured (Required for automatic cloud backups)',
-    ),
-    trailing: isSet
-        ? IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: 'Remove Password',
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Remove Master Password'),
-                  content: const Text(
-                    'This will disable automatic cloud backups. Are you sure?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Remove'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true) {
-                await ref
-                    .read(cloudAutoBackupPasswordProvider.notifier)
-                    .clearPassword();
-                if (context.mounted) {
-                  TakionAlerts.success(context, 'Master password removed');
-                }
-              }
-            },
-          )
-        : const Icon(Icons.chevron_right),
-    onTap: () async {
-      final newPassword = await showPasswordDialog(
-        context: context,
-        mode: PasswordDialogMode.master,
-      );
-      if (newPassword != null && newPassword.isNotEmpty) {
-        await ref
-            .read(cloudAutoBackupPasswordProvider.notifier)
-            .setPassword(newPassword);
-        if (context.mounted) {
-          TakionAlerts.success(context, 'Master password updated');
-        }
-      }
-    },
-  );
-}

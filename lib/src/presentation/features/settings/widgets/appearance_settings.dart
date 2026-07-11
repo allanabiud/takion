@@ -7,14 +7,21 @@ import 'package:takion/src/presentation/features/settings/providers/settings_pro
 import 'package:takion/src/presentation/providers/theme_provider.dart';
 
 const _accentSchemes = [
+  FlexScheme.green,
+  FlexScheme.blackWhite,
   FlexScheme.bigStone,
   FlexScheme.blueM3,
-  FlexScheme.deepPurple,
   FlexScheme.indigo,
-  FlexScheme.verdunHemlock,
+  FlexScheme.deepPurple,
+  FlexScheme.sakura,
+  FlexScheme.mandyRed,
+  FlexScheme.money,
+  FlexScheme.aquaBlue,
+  FlexScheme.gold,
+  FlexScheme.amber,
+  FlexScheme.vesuviusBurn,
   FlexScheme.espresso,
   FlexScheme.outerSpace,
-  FlexScheme.rosewood,
 ];
 
 void showAppearanceSettings(BuildContext context, WidgetRef ref) {
@@ -30,7 +37,8 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
               themeMode: ThemeMode.system,
               darkIsTrueBlack: false,
             );
-        final currentScheme = ref.watch(accentSchemeProvider).value ?? FlexScheme.bigStone;
+        final currentScheme =
+            ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
 
         return SingleChildScrollView(
           child: Column(
@@ -97,76 +105,51 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
               ]),
               const SizedBox(height: 16),
               buildSettingsGroup(context, 'Accent Color', [
-                Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _accentSchemes.take(4).map((scheme) {
-                        final schemeData = FlexColor.schemes[scheme];
-                        final primary = schemeData?.light.primary ?? Colors.blue;
-                        final selected = currentScheme == scheme;
-                        final luminance = primary.computeLuminance();
-                        final tickColor = luminance > 0.5 ? Colors.black87 : Colors.white;
-                        return GestureDetector(
-                          onTap: () => ref.read(accentSchemeProvider.notifier).setScheme(scheme),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: primary,
-                              borderRadius: BorderRadius.circular(10),
-                              border: selected
-                                  ? Border.all(
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                      width: 3,
-                                    )
-                                  : null,
-                              boxShadow: selected
-                                  ? [BoxShadow(color: primary.withAlpha(100), blurRadius: 8, spreadRadius: 1)]
-                                  : null,
-                            ),
-                            child: selected
-                                ? Icon(Icons.check, color: tickColor, size: 20)
-                                : null,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _accentSchemes.skip(4).map((scheme) {
-                        final schemeData = FlexColor.schemes[scheme];
-                        final primary = schemeData?.light.primary ?? Colors.blue;
-                        final selected = currentScheme == scheme;
-                        final luminance = primary.computeLuminance();
-                        final tickColor = luminance > 0.5 ? Colors.black87 : Colors.white;
-                        return GestureDetector(
-                          onTap: () => ref.read(accentSchemeProvider.notifier).setScheme(scheme),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: primary,
-                              borderRadius: BorderRadius.circular(10),
-                              border: selected
-                                  ? Border.all(
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                      width: 3,
-                                    )
-                                  : null,
-                              boxShadow: selected
-                                  ? [BoxShadow(color: primary.withAlpha(100), blurRadius: 8, spreadRadius: 1)]
-                                  : null,
-                            ),
-                            child: selected
-                                ? Icon(Icons.check, color: tickColor, size: 20)
-                                : null,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: _accentSchemes.map((scheme) {
+                    final schemeData = FlexColor.schemes[scheme];
+                    final primary = schemeData?.light.primary ?? Colors.blue;
+                    final selected = currentScheme == scheme;
+                    final luminance = primary.computeLuminance();
+                    final tickColor = luminance > 0.5
+                        ? Colors.black87
+                        : Colors.white;
+                    return GestureDetector(
+                      onTap: () => ref
+                          .read(accentSchemeProvider.notifier)
+                          .setScheme(scheme),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: primary,
+                          borderRadius: BorderRadius.circular(12),
+                          border: selected
+                              ? Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                  width: 3,
+                                )
+                              : null,
+                          boxShadow: selected
+                              ? [
+                                  BoxShadow(
+                                    color: primary.withAlpha(100),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: selected
+                            ? Icon(Icons.check, color: tickColor, size: 22)
+                            : null,
+                      ),
+                    );
+                  }).toList(),
                 ),
               ]),
               const SizedBox(height: 16),
@@ -186,7 +169,6 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                   },
                 ),
               ]),
-
             ],
           ),
         );

@@ -23,7 +23,6 @@ final cloudBackupListProvider = FutureProvider<List<BackupFileInfo>>((ref) {
 
 const _settingsBox = 'settings_box';
 const _lastBackupKey = 'last_cloud_backup';
-const _autoBackupPasswordKey = 'auto_cloud_backup_password';
 
 final cloudLastBackupProvider =
     AsyncNotifierProvider<CloudLastBackupNotifier, DateTime?>(
@@ -45,34 +44,6 @@ class CloudLastBackupNotifier extends AsyncNotifier<DateTime?> {
     final box = await hive.openBox(_settingsBox);
     await box.put(_lastBackupKey, dateTime.toUtc().toIso8601String());
     state = AsyncValue.data(dateTime);
-  }
-}
-
-final cloudAutoBackupPasswordProvider =
-    AsyncNotifierProvider<CloudAutoBackupPasswordNotifier, String?>(
-  CloudAutoBackupPasswordNotifier.new,
-);
-
-class CloudAutoBackupPasswordNotifier extends AsyncNotifier<String?> {
-  @override
-  Future<String?> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_settingsBox);
-    return box.get(_autoBackupPasswordKey) as String?;
-  }
-
-  Future<void> setPassword(String password) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_settingsBox);
-    await box.put(_autoBackupPasswordKey, password);
-    state = AsyncValue.data(password);
-  }
-
-  Future<void> clearPassword() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_settingsBox);
-    await box.delete(_autoBackupPasswordKey);
-    state = const AsyncValue.data(null);
   }
 }
 

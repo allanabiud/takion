@@ -796,8 +796,8 @@ class AccentSchemeNotifier extends AsyncNotifier<FlexScheme> {
   Future<FlexScheme> build() async {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
-    final raw = box.get(_key, defaultValue: FlexScheme.bigStone.index) as int;
-    return FlexScheme.values.length > raw ? FlexScheme.values[raw] : FlexScheme.bigStone;
+    final raw = box.get(_key, defaultValue: FlexScheme.green.index) as int;
+    return FlexScheme.values.length > raw ? FlexScheme.values[raw] : FlexScheme.green;
   }
 
   Future<void> setScheme(FlexScheme scheme) async {

@@ -5,7 +5,6 @@ import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/backup/cloud_backup_service.dart';
 import 'package:takion/src/core/backup/cloud_backup_providers.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/presentation/common/password_dialog.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
@@ -150,7 +149,6 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
         ..._sortedEntries.map(
           (entry) {
             final group = entry.key;
-            final isSensitive = _sensitiveGroups.contains(group);
 
             return SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -158,24 +156,9 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
               onChanged: _loading
                   ? null
                   : (v) => setState(() => _selections[group] = v),
-              title: Row(
-                children: [
-                  Text(
-                    group,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  if (isSensitive) ...[
-                    const SizedBox(width: 6),
-                    Tooltip(
-                      message: 'Contains sensitive data',
-                      child: Icon(
-                        Icons.lock_outline,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ],
+              title: Text(
+                group,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             );
           },
@@ -192,7 +175,7 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
                 Text(
                   _progress > 0
                       ? '${(_progress * 100).toInt()}%'
-                      : 'Encrypting...',
+                      : 'Uploading...',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -233,12 +216,6 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
       return;
     }
 
-    final password = await showPasswordDialog(
-      context: context,
-      mode: PasswordDialogMode.create,
-    );
-    if (password == null) return;
-
     if (!mounted) return;
     setState(() => _loading = true);
 
@@ -250,7 +227,6 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
       final service = widget.ref.read(cloudBackupServiceProvider);
       await service.uploadBackup(
         boxNames: boxNames,
-        password: password,
       );
 
       if (!mounted) return;
@@ -272,25 +248,9 @@ class _CloudBackupSheetState extends ConsumerState<_CloudBackupSheet> {
 }
 
 Future<bool?> showCloudRestoreSheet(BuildContext context, WidgetRef ref) async {
-  final service = ref.read(cloudBackupServiceProvider);
-
-  if (!service.isSignedIn) {
-    try {
-      final account = await service.signIn();
-      if (account == null || !context.mounted) return null;
-    } catch (e) {
-      if (context.mounted) {
-        TakionAlerts.error(context, e.toString());
-      }
-      return null;
-    }
-  }
-
-  if (!context.mounted) return null;
-
   return TakionBottomSheet.show<bool>(
     context: context,
-    title: 'Restore from Drive',
+    title: 'Restore from Google Drive',
     child: _CloudRestoreSheet(ref: ref),
   );
 }
@@ -305,6 +265,7 @@ class _CloudRestoreSheet extends ConsumerStatefulWidget {
 }
 
 class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
+  bool _signedIn = false;
   List<BackupFileInfo>? _files;
   bool _loading = true;
   String? _error;
@@ -314,7 +275,34 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
   @override
   void initState() {
     super.initState();
-    _loadFiles();
+    _checkSignIn();
+  }
+
+  Future<void> _checkSignIn() async {
+    final service = widget.ref.read(cloudBackupServiceProvider);
+    final signedIn = service.isSignedIn;
+    if (mounted) {
+      setState(() => _signedIn = signedIn);
+      if (signedIn) _loadFiles();
+    }
+  }
+
+  Future<void> _signIn() async {
+    final service = widget.ref.read(cloudBackupServiceProvider);
+    try {
+      final account = await service.signIn();
+      if (mounted) {
+        setState(() {
+          _signedIn = account != null;
+          if (account != null) {
+            _loading = true;
+            _loadFiles();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) TakionAlerts.error(context, e.toString());
+    }
   }
 
   Future<void> _loadFiles() async {
@@ -339,6 +327,7 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_signedIn) return _buildSignInPrompt();
     if (_loading) {
       return const SizedBox(
         height: 120,
@@ -364,6 +353,34 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
     }
 
     return _buildFileList();
+  }
+
+  Widget _buildSignInPrompt() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.cloud_outlined,
+            size: 48,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Sign in with Google to restore your backup from Google Drive.',
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: _signIn,
+            icon: const Icon(Icons.login),
+            label: const Text('Sign in with Google'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildError() {
@@ -477,12 +494,6 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
   }
 
   Future<void> _startRestore(BackupFileInfo file) async {
-    final password = await showPasswordDialog(
-      context: context,
-      mode: PasswordDialogMode.restore,
-    );
-    if (password == null) return;
-
     if (!mounted) return;
     setState(() => _downloading = true);
 
@@ -492,11 +503,10 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
       setState(() => _downloadStatus = 'Downloading...');
       final data = await service.downloadBackup(
         fileId: file.id,
-        password: password,
       );
 
       if (!mounted) return;
-      setState(() => _downloadStatus = 'Decrypting...');
+      setState(() => _downloadStatus = 'Processing...');
 
       if (!mounted) return;
 
@@ -507,16 +517,13 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
 
       if (!mounted) return;
 
-      final restored = await _showRestoreSheet(context, data, availableGroups, password);
+      final restored = await _showRestoreSheet(context, data, availableGroups);
       if (restored == true && mounted && context.mounted) {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
-        final message = e.toString().contains('SecretBoxAuthenticationError')
-            ? 'Incorrect password'
-            : 'Restore failed: $e';
-        TakionAlerts.error(context, message);
+        TakionAlerts.error(context, 'Restore failed: $e');
         setState(() => _downloading = false);
       }
     }
@@ -526,7 +533,6 @@ class _CloudRestoreSheetState extends ConsumerState<_CloudRestoreSheet> {
     BuildContext context,
     Map<String, List<Map<String, dynamic>>> data,
     Set<String> availableGroups,
-    String password,
   ) async {
     if (!context.mounted) return null;
 
@@ -610,7 +616,6 @@ class _CloudRestoreSelectSheetState
           ..._sortedEntries.map(
             (entry) {
               final group = entry.key;
-              final isSensitive = _sensitiveGroups.contains(group);
 
               return SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -618,24 +623,9 @@ class _CloudRestoreSelectSheetState
                 onChanged: _restoring
                     ? null
                     : (v) => setState(() => _selections[group] = v),
-                title: Row(
-                  children: [
-                    Text(
-                      group,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    if (isSensitive) ...[
-                      const SizedBox(width: 6),
-                      Tooltip(
-                        message: 'Contains sensitive data',
-                        child: Icon(
-                          Icons.lock_outline,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ],
+                title: Text(
+                  group,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               );
             },

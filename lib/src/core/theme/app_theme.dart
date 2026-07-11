@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 /// This class defines light theme and dark theme
 class AppThemes {
-  static ThemeData light({FlexScheme accentScheme = FlexScheme.bigStone}) {
+  static ThemeData light({FlexScheme accentScheme = FlexScheme.green}) {
     final ThemeData base = FlexThemeData.light(
       scheme: accentScheme,
       fontFamily: 'Rubik',
@@ -97,7 +97,7 @@ class AppThemes {
 
   static ThemeData dark({
     bool darkIsTrueBlack = false,
-    FlexScheme accentScheme = FlexScheme.bigStone,
+    FlexScheme accentScheme = FlexScheme.green,
   }) {
     final ThemeData base = FlexThemeData.dark(
       scheme: accentScheme,
