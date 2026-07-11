@@ -27,7 +27,7 @@ class TakionAlerts {
       context: context,
       message: message,
       icon: icon ?? Icons.check_circle,
-      color: Colors.greenAccent,
+      color: Theme.of(context).colorScheme.primary,
       actionLabel: actionLabel,
       onAction: onUndo,
     );

@@ -76,7 +76,7 @@ class TakionFlash {
       context: context,
       message: message,
       icon: Icons.check_circle,
-      color: Colors.greenAccent,
+      color: Theme.of(context).colorScheme.primary,
     );
   }
 
