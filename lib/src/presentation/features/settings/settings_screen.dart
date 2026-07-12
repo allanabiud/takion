@@ -8,7 +8,7 @@ import 'package:takion/src/presentation/features/settings/widgets/metron_connect
 import 'package:takion/src/presentation/features/settings/widgets/notification_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/appearance_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/collection_settings.dart';
-import 'package:takion/src/presentation/features/settings/widgets/backup_restore_settings.dart';
+import 'package:takion/src/presentation/features/settings/widgets/backup_and_sync_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/data_storage_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/about_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/performance_metrics_settings.dart';
@@ -60,9 +60,9 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SettingsNavTile(
             icon: Icons.backup_outlined,
-            title: 'Backup & Restore',
-            subtitle: 'Local and cloud backup',
-            onTap: () => showBackupRestoreSettings(context, ref),
+            title: 'Backup & Sync',
+            subtitle: 'Local and cloud backup & sync',
+            onTap: () => showBackupAndSyncSettings(context, ref),
           ),
           SettingsNavTile(
             icon: Icons.storage_outlined,

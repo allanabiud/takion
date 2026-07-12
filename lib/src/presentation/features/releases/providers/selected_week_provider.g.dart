@@ -20,7 +20,7 @@ final class SelectedWeekProvider
         argument: null,
         retry: null,
         name: r'selectedWeekProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -41,7 +41,7 @@ final class SelectedWeekProvider
   }
 }
 
-String _$selectedWeekHash() => r'def5ec7a38efeba0f48d3b31a8338c1704663ecb';
+String _$selectedWeekHash() => r'cd33ca196ddfad766f172908bb53c5e670fd8299';
 
 abstract class _$SelectedWeek extends $Notifier<DateTime> {
   DateTime build();

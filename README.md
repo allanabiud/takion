@@ -50,11 +50,11 @@
 - **Wishlist Support**: Keep a separate, organized list of wanted issues.
 - **Detailed Insights**: View collector-focused stats about your reading habits.
 
-### 💾 Backup & Restore
+### 💾 Backup & Sync
 
 - **Encrypted Local Backups**: Create AES-256-GCM encrypted backups (.tkbk) of your data with password protection.
-- **Google Drive Cloud Backup**: Upload encrypted backups to your Google Drive and restore from any device.
-- **Auto Backup**: Optionally automatically backup to Google Drive on every app open (configurable in Settings).
+- **Cloud Sync**: Seamlessly sync your pull list, library, reading logs, favorites, and reading lists across devices via Google Drive.
+- **Real-time Sync**: Changes are automatically synced when the app starts.
 - **Selective Restore**: Choose which data categories to restore from a backup file.
 - **Reading List Export/Import**: Export individual reading lists as .tk files for sharing or archival.
 

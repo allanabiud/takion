@@ -138,7 +138,7 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                           boxShadow: selected
                               ? [
                                   BoxShadow(
-                                    color: primary.withAlpha(100),
+                                    color: primary.withValues(alpha: 0.39),
                                     blurRadius: 8,
                                     spreadRadius: 1,
                                   ),

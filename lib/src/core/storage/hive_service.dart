@@ -140,6 +140,11 @@ class HiveService {
     }
   }
 
+  Future<void> deleteEntry(String boxName, String key) async {
+    final box = await _openBoxForBackup(boxName);
+    await box.delete(key);
+  }
+
   Future<void> _deleteCorruptedBoxFromDisk(String boxName) async {
     try {
       await Hive.deleteBoxFromDisk(boxName);

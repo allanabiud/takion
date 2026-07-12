@@ -212,6 +212,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final issuesPreviewAsync = ref.watch(seriesDetailsIssuesProvider(widget.seriesId));
     final subscriptionAsync = ref.watch(seriesSubscriptionProvider(widget.seriesId));
     final isFavoriteAsync = ref.watch(isSeriesFavoriteProvider(widget.seriesId));
+    final ownedCountAsync = ref.watch(seriesOwnedCountProvider(widget.seriesId));
 
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final isSubscriptionLoading = subscriptionAsync.isLoading || _isUpdatingSubscription;
@@ -359,7 +360,12 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             ]),
             if (d.issueCount != null && d.issueCount! > 0) ...[
               const SizedBox(height: 12),
-              const SectionHeader(title: 'COLLECTION PROGRESS'),
+              SectionHeader(
+                title: 'COLLECTION PROGRESS',
+                badge: ownedCountAsync.asData?.value != null
+                    ? '(${((ownedCountAsync.asData!.value / d.issueCount!) * 100).clamp(0, 100).toStringAsFixed(0)}%)'
+                    : null,
+              ),
               const SizedBox(height: 8),
               _SeriesCompletionCompact(
                 seriesId: d.id,
@@ -818,14 +824,6 @@ class _SeriesCompletionCompact extends ConsumerWidget {
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${(percent * 100).toStringAsFixed(0)}%',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

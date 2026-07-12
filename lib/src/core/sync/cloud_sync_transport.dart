@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io' as io;
 
 import 'package:flutter/foundation.dart';
@@ -21,20 +22,18 @@ class BackupFileInfo {
   });
 }
 
-class CloudBackupService {
+class CloudSyncTransport {
   final BackupService _backupService;
   final GoogleSignIn _googleSignIn;
-
   DriveApi? _driveApi;
-  String? _appFolderId;
+  String? _syncFolderId;
+  String? _backupFolderId;
 
-  CloudBackupService(this._backupService)
-    : _googleSignIn = GoogleSignIn(scopes: [DriveApi.driveFileScope]);
+  CloudSyncTransport(this._backupService)
+      : _googleSignIn = GoogleSignIn(scopes: [DriveApi.driveFileScope]);
 
   GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
-
   bool get isSignedIn => _googleSignIn.currentUser != null;
-
   Stream<GoogleSignInAccount?> get onCurrentUserChanged =>
       _googleSignIn.onCurrentUserChanged;
 
@@ -58,18 +57,19 @@ class CloudBackupService {
         final client = await _googleSignIn.authenticatedClient();
         if (client != null) _driveApi = DriveApi(client);
       } else {
-        debugPrint('CloudBackupService: signInSilently returned null');
+        debugPrint('CloudSyncTransport: signInSilently returned null');
       }
       return account;
     } catch (e) {
-      debugPrint('CloudBackupService: signInSilently failed: $e');
+      debugPrint('CloudSyncTransport: signInSilently failed: $e');
       return null;
     }
   }
 
   Future<void> signOut() async {
     _driveApi = null;
-    _appFolderId = null;
+    _syncFolderId = null;
+    _backupFolderId = null;
     await _googleSignIn.signOut();
   }
 
@@ -80,66 +80,131 @@ class CloudBackupService {
     _driveApi = DriveApi(client);
   }
 
-  Future<String> _ensureAppFolder() async {
-    if (_appFolderId != null) return _appFolderId!;
+  Future<String> _ensureFolder(String folderName, {required bool isSync}) async {
+    if (isSync && _syncFolderId != null) return _syncFolderId!;
+    if (!isSync && _backupFolderId != null) return _backupFolderId!;
+    
     await _ensureApi();
 
     final existing = await _driveApi!.files.list(
-      q: "name='Takion Backups' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+      q: "name='$folderName' and mimeType='application/vnd.google-apps.folder' and trashed=false",
       spaces: 'drive',
     );
 
     if (existing.files != null && existing.files!.isNotEmpty) {
-      _appFolderId = existing.files!.first.id;
-      return _appFolderId!;
+      final folderId = existing.files!.first.id!;
+      if (isSync) {
+        _syncFolderId = folderId;
+      } else {
+        _backupFolderId = folderId;
+      }
+      return folderId;
     }
 
     final folder = await _driveApi!.files.create(
       File(
-        name: 'Takion Backups',
+        name: folderName,
         mimeType: 'application/vnd.google-apps.folder',
       ),
     );
-    _appFolderId = folder.id;
-    return _appFolderId!;
+    final folderId = folder.id!;
+    if (isSync) {
+      _syncFolderId = folderId;
+    } else {
+      _backupFolderId = folderId;
+    }
+    return folderId;
   }
 
-  Future<void> uploadBackup({
-    required Set<String> boxNames,
-    bool isAuto = false,
-  }) async {
+  Future<String> _ensureSyncFolder() => _ensureFolder('Takion Sync', isSync: true);
+  Future<String> _ensureBackupFolder() => _ensureFolder('Takion Backups', isSync: false);
+
+  Future<String?> _findSyncFile(String folderId) async {
     await _ensureApi();
-    final folderId = await _ensureAppFolder();
-
-    final data = await _backupService.createBackupData(
-      boxNames: boxNames,
+    final existing = await _driveApi!.files.list(
+      q: "'$folderId' in parents and name='sync_data.json' and trashed=false",
+      spaces: 'drive',
     );
+    if (existing.files != null && existing.files!.isNotEmpty) {
+      return existing.files!.first.id;
+    }
+    return null;
+  }
 
-    final now = DateTime.now();
-    final prefix = isAuto ? 'AutoBackup' : 'Backup';
-    final fileName =
-        '$prefix-${now.year}-${_pad(now.month)}-${_pad(now.day)}-${_pad(now.hour)}${_pad(now.minute)}.tkbk';
+  Future<String?> downloadSyncData() async {
+    await _ensureApi();
+    final folderId = await _ensureSyncFolder();
+    final fileId = await _findSyncFile(folderId);
 
-    final existing = await listBackups();
-    final sameTypePrefix = isAuto ? 'AutoBackup' : 'Backup';
-    for (final backup in existing) {
-      if (backup.name.startsWith(sameTypePrefix)) {
-        await deleteBackup(backup.id);
-      }
+    if (fileId == null) {
+      debugPrint('CloudSyncTransport: sync_data.json not found on Drive');
+      return null;
     }
 
-    final stream = Stream.fromIterable([data]);
-    final driveFile = File(name: fileName, parents: [folderId]);
-
-    await _driveApi!.files.create(
-      driveFile,
-      uploadMedia: Media(stream, data.length),
-    );
+    try {
+      final response = await _driveApi!.files.get(
+        fileId,
+        downloadOptions: DownloadOptions.fullMedia,
+      );
+      
+      final media = response as Media;
+      final bytes = await media.stream.toList().then(
+        (chunks) => chunks.expand((c) => c).toList(),
+      );
+      
+      return utf8.decode(bytes);
+    } catch (e) {
+      debugPrint('CloudSyncTransport: Failed to download sync data: $e');
+      return null;
+    }
   }
+
+  Future<void> uploadSyncData(String jsonString) async {
+    await _ensureApi();
+    final folderId = await _ensureSyncFolder();
+    final fileId = await _findSyncFile(folderId);
+
+    final bytes = utf8.encode(jsonString);
+    final mediaStream = Stream.fromIterable([bytes]);
+    final uploadMedia = Media(mediaStream, bytes.length);
+
+    if (fileId != null) {
+      // Overwrite existing file
+      await _driveApi!.files.update(
+        File(),
+        fileId,
+        uploadMedia: uploadMedia,
+      );
+      debugPrint('CloudSyncTransport: Overwrote sync_data.json on Drive');
+    } else {
+      // Create new file
+      final driveFile = File(
+        name: 'sync_data.json',
+        parents: [folderId],
+      );
+      await _driveApi!.files.create(
+        driveFile,
+        uploadMedia: uploadMedia,
+      );
+      debugPrint('CloudSyncTransport: Created sync_data.json on Drive');
+    }
+  }
+
+  Future<void> deleteSyncData() async {
+    await _ensureApi();
+    final folderId = await _ensureSyncFolder();
+    final fileId = await _findSyncFile(folderId);
+    if (fileId != null) {
+      await _driveApi!.files.delete(fileId);
+      debugPrint('CloudSyncTransport: Deleted sync_data.json from Drive');
+    }
+  }
+
+  // --- Legacy Cloud Backup Methods (for Migration/Restore support) ---
 
   Future<List<BackupFileInfo>> listBackups() async {
     await _ensureApi();
-    final folderId = await _ensureAppFolder();
+    final folderId = await _ensureBackupFolder();
 
     final result = await _driveApi!.files.list(
       q: "'$folderId' in parents and trashed=false",
@@ -187,43 +252,8 @@ class CloudBackupService {
     return result;
   }
 
-  Future<BackupFileInfo> loadManifest({
-    required String fileId,
-  }) async {
-    await _ensureApi();
-
-    final tempDir = await getTemporaryDirectory();
-    final tempPath = '${tempDir.path}/takion_manifest_temp.tkbk';
-    final tempFile = io.File(tempPath);
-
-    final response = await _driveApi!.files.get(
-      fileId,
-      downloadOptions: DownloadOptions.fullMedia,
-    );
-    final media = response as Media;
-    final bytes = await media.stream.toList().then(
-      (chunks) => chunks.expand((c) => c).toList(),
-    );
-    await tempFile.writeAsBytes(bytes);
-
-    final manifest = await _backupService.loadManifest(
-      filePath: tempPath,
-    );
-
-    await tempFile.delete();
-
-    return BackupFileInfo(
-      id: fileId,
-      name: '',
-      createdTime: manifest.createdAt,
-      size: null,
-    );
-  }
-
   Future<void> deleteBackup(String fileId) async {
     await _ensureApi();
     await _driveApi!.files.delete(fileId);
   }
-
-  String _pad(int n) => n.toString().padLeft(2, '0');
 }

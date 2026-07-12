@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'selected_week_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SelectedWeek extends _$SelectedWeek {
   @override
   DateTime build() => DateTime.now();

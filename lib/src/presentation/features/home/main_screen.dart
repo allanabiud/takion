@@ -1,8 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/backup/cloud_backup_providers.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/sync/sync_providers.dart';
+import 'package:takion/src/core/sync/sync_service.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
@@ -194,7 +195,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       child: Stack(
         children: [
           IgnorePointer(ignoring: _overlayVisible, child: mainContent),
-          if (ref.watch(cloudBackupRunningProvider))
+          if (ref.watch(syncStatusProvider).state == SyncState.syncing)
             Positioned(
               top: kToolbarHeight + MediaQuery.of(context).padding.top + 4,
               left: 16,
@@ -224,7 +225,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Backing up to Google Drive...',
+                          'Syncing with Google Drive...',
                           style: Theme.of(context).textTheme.labelLarge
                               ?.copyWith(
                                 color: Theme.of(

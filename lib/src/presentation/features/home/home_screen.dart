@@ -720,7 +720,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _buildWeeklyReleaseSection(
               context: context,
               ref: ref,
-              title: 'Upcoming Realeases',
+              title: 'Upcoming Releases',
               emptyMessage: 'No upcoming releases for next week.',
               weekDate: nextWeekStart,
               issuesAsync: nextWeekReleasesAsync,

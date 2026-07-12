@@ -9,8 +9,7 @@ import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
-import 'package:takion/src/core/backup/cloud_backup_providers.dart';
-import 'package:takion/src/core/backup/backup_service.dart';
+import 'package:takion/src/core/sync/sync_providers.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
@@ -30,7 +29,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _metronCheckedForSession = false;
-  bool _pendingAutoBackup = false;
+  bool _pendingAutoSync = false;
 
   @override
   void initState() {
@@ -44,12 +43,14 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       _appRouter.push(route);
     };
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await ref.read(syncWatcherProvider).init();
       if (!mounted) return;
       _runMetronConnectionCheckIfNeeded();
       _initializePushNotifications();
       _reconcileSubscriptionPullsOnSessionStart();
-      _runCloudAutoBackup();
+      _runAutoSync();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -112,42 +113,36 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     }
   }
 
-  Future<void> _runCloudAutoBackup() async {
-    final service = ref.read(cloudBackupServiceProvider);
-    if (!service.isSignedIn) {
-      var account = await service.signInSilently();
-      if (account == null) {
-        debugPrint('_runCloudAutoBackup: initial silent sign-in null, retrying after delay');
-        await Future.delayed(const Duration(seconds: 2));
-        account = await service.signInSilently();
-      }
-      if (account == null) {
-        debugPrint('_runCloudAutoBackup: retry also failed, waiting for manual sign-in');
-        _pendingAutoBackup = true;
-        return;
-      }
-      debugPrint('_runCloudAutoBackup: silent sign-in succeeded on retry');
+  Future<void> _runAutoSync() async {
+    final autoSyncEnabled = ref.read(autoSyncEnabledProvider);
+    if (!autoSyncEnabled) {
+      debugPrint('_runAutoSync: auto-sync is disabled by settings');
+      return;
     }
 
-    _pendingAutoBackup = false;
+    final transport = ref.read(syncTransportProvider);
+    if (!transport.isSignedIn) {
+      var account = await transport.signInSilently();
+      if (account == null) {
+        debugPrint('_runAutoSync: initial silent sign-in null, retrying after delay');
+        await Future.delayed(const Duration(seconds: 2));
+        account = await transport.signInSilently();
+      }
+      if (account == null) {
+        debugPrint('_runAutoSync: retry also failed, waiting for manual sign-in');
+        _pendingAutoSync = true;
+        return;
+      }
+      debugPrint('_runAutoSync: silent sign-in succeeded on retry');
+    }
 
-    ref.read(cloudBackupRunningProvider.notifier).start();
+    _pendingAutoSync = false;
 
     try {
-      final allBoxNames = BackupService.allBoxNames();
-
-      await service.uploadBackup(
-        boxNames: allBoxNames,
-        isAuto: true,
-      );
-
-      await ref.read(cloudLastBackupProvider.notifier).setLastBackup(
-        DateTime.now(),
-      );
+      final engine = ref.read(syncServiceProvider);
+      await engine.syncAll();
     } catch (e) {
-      debugPrint('_runCloudAutoBackup: backup failed: $e');
-    } finally {
-      if (mounted) ref.read(cloudBackupRunningProvider.notifier).stop();
+      debugPrint('_runAutoSync: auto-sync failed: $e');
     }
   }
 
@@ -207,14 +202,14 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     });
     ref.listen(googleSignInAccountProvider, (previous, next) {
       if (next.value != null) {
-        debugPrint('_runCloudAutoBackup: google sign-in state changed, signed in');
-        if (_pendingAutoBackup) {
-          debugPrint('_runCloudAutoBackup: pending backup detected, running now');
-          _pendingAutoBackup = false;
-          _runCloudAutoBackup();
+        debugPrint('_runAutoSync: google sign-in state changed, signed in');
+        if (_pendingAutoSync) {
+          debugPrint('_runAutoSync: pending sync detected, running now');
+          _pendingAutoSync = false;
+          _runAutoSync();
         }
       } else {
-        debugPrint('_runCloudAutoBackup: google sign-in state changed, signed out');
+        debugPrint('_runAutoSync: google sign-in state changed, signed out');
       }
     });
     ref.listen(pushPullNotificationsEnabledProvider, (previous, next) {

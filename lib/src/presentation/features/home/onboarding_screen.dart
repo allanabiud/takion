@@ -12,7 +12,6 @@ import 'package:takion/src/presentation/logic/shortcut_handler.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
-import 'package:takion/src/presentation/features/settings/widgets/cloud_backup_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
@@ -447,7 +446,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               boxShadow: selected
                                   ? [
                                       BoxShadow(
-                                        color: primary.withAlpha(100),
+                                        color: primary.withValues(alpha: 0.39),
                                         blurRadius: 8,
                                         spreadRadius: 1,
                                       ),
@@ -824,21 +823,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   },
                   icon: const Icon(Icons.restore_page_outlined),
                   label: const Text('Restore from Backup'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.tonalIcon(
-                  onPressed: () async {
-                    final restored = await showCloudRestoreSheet(context, ref);
-                    if (restored == true && mounted) {
-                      setState(() => _restoreCompleted = true);
-                    }
-                  },
-                  icon: const Icon(LucideIcons.cloud),
-                  label: const Text('Restore from Google Drive'),
                 ),
               ),
               const SizedBox(height: 12),
