@@ -89,10 +89,6 @@ Future<void> showScrobbleSheet({
   var selectedRating = (issueStatus?.rating ?? 0).clamp(0, 5);
   ref.read(scrobbleIssueProvider(issueId).notifier).reset();
 
-  final hadCollection = issueStatus?.isCollected ?? false;
-  final hadRead = issueStatus?.isRead ?? false;
-  final hadPull = isInPullList;
-
   if (!context.mounted) return;
 
   TakionBottomSheet.show<void>(
@@ -128,12 +124,31 @@ Future<void> showScrobbleSheet({
                       onPressed: isSubmitting
                           ? null
                           : () {
+                              final newValue = !addToCollection;
+                              final previousWishlist = addToWishlist;
                               setModalState(() {
-                                addToCollection = !addToCollection;
-                                if (addToCollection) {
-                                  addToWishlist = false;
-                                }
+                                addToCollection = newValue;
+                                if (newValue) addToWishlist = false;
                               });
+                              ref
+                                  .read(scrobbleIssueProvider(issueId).notifier)
+                                  .scrobble(
+                                    addToCollection: newValue,
+                                    addToWishlist: newValue ? false : null,
+                                    refreshReadingSuggestion: true,
+                                    refreshRateSuggestion: true,
+                                  )
+                                  .then((_) {
+                                    if (!context.mounted) return;
+                                    if (ref.read(scrobbleIssueProvider(issueId)).hasError) {
+                                      setModalState(() {
+                                        addToCollection = !newValue;
+                                        if (newValue) addToWishlist = previousWishlist;
+                                      });
+                                    } else if (newValue) {
+                                      TakionAlerts.libraryAddedToCollection(context);
+                                    }
+                                  });
                             },
                     ),
                     const SizedBox(width: 24),
@@ -146,12 +161,32 @@ Future<void> showScrobbleSheet({
                       onPressed: isSubmitting
                           ? null
                           : () {
+                              final newValue = !markAsRead;
+                              final previousRating = selectedRating;
                               setModalState(() {
-                                markAsRead = !markAsRead;
-                                if (!markAsRead) {
-                                  selectedRating = 0;
-                                }
+                                markAsRead = newValue;
+                                if (!newValue) selectedRating = 0;
                               });
+                              ref
+                                  .read(scrobbleIssueProvider(issueId).notifier)
+                                  .scrobble(
+                                    markAsRead: newValue,
+                                    dateRead: newValue ? DateTime.now().toUtc() : null,
+                                    rating: newValue && selectedRating > 0 ? selectedRating : null,
+                                    refreshReadingSuggestion: true,
+                                    refreshRateSuggestion: true,
+                                  )
+                                  .then((_) {
+                                    if (!context.mounted) return;
+                                    if (ref.read(scrobbleIssueProvider(issueId)).hasError) {
+                                      setModalState(() {
+                                        markAsRead = !newValue;
+                                        selectedRating = previousRating;
+                                      });
+                                    } else if (newValue) {
+                                      TakionAlerts.libraryMarkedAsRead(context);
+                                    }
+                                  });
                             },
                     ),
                     const SizedBox(width: 24),
@@ -163,10 +198,49 @@ Future<void> showScrobbleSheet({
                       color: toggleColor(pullIssue),
                       onPressed: isSubmitting
                           ? null
-                          : () {
+                          : () async {
+                              final newValue = !pullIssue;
+                              final series = issueDetails?.series;
+
+                              if (newValue && series == null) {
+                                TakionAlerts.noLinkedSeriesForIssue(context);
+                                return;
+                              }
+
                               setModalState(() {
-                                pullIssue = !pullIssue;
+                                pullIssue = newValue;
                               });
+
+                              try {
+                                if (!newValue) {
+                                  await ref.read(pullListRepositoryProvider).deleteEntryByIssueId(issueId);
+                                } else {
+                                  await ref.read(pullListRepositoryProvider).upsertManualEntry(
+                                    metronSeriesId: series!.id,
+                                    metronIssueId: issueId,
+                                    releaseDate: issueDetails?.storeDate ?? issueDetails?.coverDate,
+                                  );
+                                }
+
+                                ref.invalidate(issuePullListEntryProvider(issueId));
+                                ref.invalidate(pullsIssuesForWeekProvider(ref.read(selectedWeekProvider)));
+                                ref.invalidate(currentWeekPullsProvider);
+
+                                if (context.mounted) {
+                                  if (newValue) {
+                                    TakionAlerts.success(context, 'Added to Pull List');
+                                  } else {
+                                    TakionAlerts.info(context, 'Removed from Pull List');
+                                  }
+                                }
+                              } catch (_) {
+                                if (context.mounted) {
+                                  setModalState(() {
+                                    pullIssue = !newValue;
+                                  });
+                                  TakionAlerts.error(context, 'Failed to update pull list');
+                                }
+                              }
                             },
                     ),
                     const SizedBox(width: 24),
@@ -179,12 +253,31 @@ Future<void> showScrobbleSheet({
                       onPressed: isSubmitting
                           ? null
                           : () {
+                              final newValue = !addToWishlist;
+                              final previousCollection = addToCollection;
                               setModalState(() {
-                                addToWishlist = !addToWishlist;
-                                if (addToWishlist) {
-                                  addToCollection = false;
-                                }
+                                addToWishlist = newValue;
+                                if (newValue) addToCollection = false;
                               });
+                              ref
+                                  .read(scrobbleIssueProvider(issueId).notifier)
+                                  .scrobble(
+                                    addToWishlist: newValue,
+                                    addToCollection: newValue ? false : null,
+                                    refreshReadingSuggestion: true,
+                                    refreshRateSuggestion: true,
+                                  )
+                                  .then((_) {
+                                    if (!context.mounted) return;
+                                    if (ref.read(scrobbleIssueProvider(issueId)).hasError) {
+                                      setModalState(() {
+                                        addToWishlist = !newValue;
+                                        if (newValue) addToCollection = previousCollection;
+                                      });
+                                    } else if (newValue) {
+                                      TakionAlerts.libraryUpdated(context);
+                                    }
+                                  });
                             },
                     ),
                   ],
@@ -201,15 +294,51 @@ Future<void> showScrobbleSheet({
                   selectedRating: selectedRating,
                   enabled: !isSubmitting,
                   onChanged: (value) {
+                    final previousRead = markAsRead;
+                    final previousRating = selectedRating;
                     setModalState(() {
                       selectedRating = value;
                       markAsRead = true;
                     });
+                    ref
+                        .read(scrobbleIssueProvider(issueId).notifier)
+                        .scrobble(
+                          markAsRead: true,
+                          rating: value,
+                          dateRead: DateTime.now().toUtc(),
+                          refreshReadingSuggestion: true,
+                          refreshRateSuggestion: true,
+                        )
+                        .then((_) {
+                          if (!context.mounted) return;
+                          if (ref.read(scrobbleIssueProvider(issueId)).hasError) {
+                            setModalState(() {
+                              selectedRating = previousRating;
+                              markAsRead = previousRead;
+                            });
+                          }
+                        });
                   },
                   onReset: () {
+                    final previousRating = selectedRating;
                     setModalState(() {
                       selectedRating = 0;
                     });
+                    ref
+                        .read(scrobbleIssueProvider(issueId).notifier)
+                        .scrobble(
+                          rating: null,
+                          refreshReadingSuggestion: true,
+                          refreshRateSuggestion: true,
+                        )
+                        .then((_) {
+                          if (!context.mounted) return;
+                          if (ref.read(scrobbleIssueProvider(issueId)).hasError) {
+                            setModalState(() {
+                              selectedRating = previousRating;
+                            });
+                          }
+                        });
                   },
                 ),
                 if (submitError != null) ...[
@@ -221,120 +350,6 @@ Future<void> showScrobbleSheet({
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    const Spacer(),
-                    FilledButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : () async {
-                              await ref
-                                  .read(scrobbleIssueProvider(issueId).notifier)
-                                  .scrobble(
-                                    markAsRead:
-                                        markAsRead || selectedRating > 0,
-                                    addToCollection: addToCollection,
-                                    addToWishlist: addToWishlist,
-                                    dateRead: markAsRead
-                                        ? DateTime.now().toUtc()
-                                        : null,
-                                    rating: markAsRead && selectedRating > 0
-                                        ? selectedRating
-                                        : null,
-                                    refreshReadingSuggestion: true,
-                                    refreshRateSuggestion: true,
-                                  );
-
-                              final latestState = ref.read(
-                                scrobbleIssueProvider(issueId),
-                              );
-                              if (latestState.hasError) return;
-
-                              if (pullIssue != hadPull) {
-                                final series = issueDetails?.series;
-                                if (!pullIssue) {
-                                  await ref
-                                      .read(pullListRepositoryProvider)
-                                      .deleteEntryByIssueId(issueId);
-                                } else {
-                                  if (series == null) {
-                                    if (context.mounted) {
-                                      TakionAlerts
-                                          .noLinkedSeriesForIssue(context);
-                                    }
-                                    return;
-                                  }
-                                  await ref
-                                      .read(pullListRepositoryProvider)
-                                      .upsertManualEntry(
-                                        metronSeriesId: series.id,
-                                        metronIssueId: issueId,
-                                        releaseDate:
-                                            issueDetails?.storeDate ??
-                                            issueDetails?.coverDate,
-                                      );
-                                }
-                              }
-
-                              ref.invalidate(
-                                issuePullListEntryProvider(issueId),
-                              );
-                              ref.invalidate(
-                                pullsIssuesForWeekProvider(
-                                  ref.read(selectedWeekProvider),
-                                ),
-                              );
-                              ref.invalidate(currentWeekPullsProvider);
-
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-
-                                final addedNow =
-                                    !hadCollection && addToCollection;
-                                final markedReadNow =
-                                    !hadRead && markAsRead;
-
-                                if (addedNow) {
-                                  TakionAlerts.libraryAddedToCollection(
-                                    context,
-                                  );
-                                }
-                                if (markedReadNow) {
-                                  TakionAlerts.libraryMarkedAsRead(context);
-                                }
-                                if (!addedNow && !markedReadNow) {
-                                  TakionAlerts.libraryUpdated(context);
-                                }
-                                if (pullIssue && !hadPull) {
-                                  TakionAlerts.success(
-                                    context,
-                                    'Added to Pull List',
-                                  );
-                                } else if (!pullIssue && hadPull) {
-                                  TakionAlerts.info(
-                                    context,
-                                    'Removed from Pull List',
-                                  );
-                                }
-                              }
-                            },
-                      child: isSubmitting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Update Status'),
-                    ),
-                  ],
-                ),
               ],
             );
           },

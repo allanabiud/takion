@@ -417,6 +417,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Wrap(
+                      alignment: WrapAlignment.center,
                       spacing: 12,
                       runSpacing: 12,
                       children: accentSchemes.map((scheme) {

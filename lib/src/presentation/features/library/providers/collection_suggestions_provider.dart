@@ -54,12 +54,23 @@ LibraryItem _pickStableUnreadSuggestion(List<LibraryItem> items) {
       'No collected and unread issues found in your collection.',
     );
   }
-  unread.sort((a, b) {
+
+  // Keep only the first unread issue per series (by lowest metronIssueId)
+  final earliestBySeries = <int, LibraryItem>{};
+  for (final item in unread) {
+    final existing = earliestBySeries[item.metronSeriesId];
+    if (existing == null || item.metronIssueId < existing.metronIssueId) {
+      earliestBySeries[item.metronSeriesId] = item;
+    }
+  }
+
+  final candidates = earliestBySeries.values.toList();
+  candidates.sort((a, b) {
     final byUpdated = b.updatedAt.compareTo(a.updatedAt);
     if (byUpdated != 0) return byUpdated;
     return a.metronIssueId.compareTo(b.metronIssueId);
   });
-  return unread.first;
+  return candidates.first;
 }
 
 Future<IssueList> _toSuggestionIssueList(Ref ref, LibraryItem item) async {

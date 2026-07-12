@@ -265,13 +265,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   ),
                 ),
               ),
-            if (d.issueCount != null && d.issueCount! > 0) ...[
-              const SizedBox(height: 12),
-              _SeriesCompletionCompact(
-                seriesId: d.id,
-                total: d.issueCount!,
-              ),
-            ],
             const SizedBox(height: 16),
             Row(children: [
               Expanded(
@@ -364,6 +357,15 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 ),
               ),
             ]),
+            if (d.issueCount != null && d.issueCount! > 0) ...[
+              const SizedBox(height: 12),
+              const SectionHeader(title: 'COLLECTION PROGRESS'),
+              const SizedBox(height: 8),
+              _SeriesCompletionCompact(
+                seriesId: d.id,
+                total: d.issueCount!,
+              ),
+            ],
           ],
         );
       },

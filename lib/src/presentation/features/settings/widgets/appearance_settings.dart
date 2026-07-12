@@ -106,6 +106,7 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
               const SizedBox(height: 16),
               buildSettingsGroup(context, 'Accent Color', [
                 Wrap(
+                  alignment: WrapAlignment.center,
                   spacing: 12,
                   runSpacing: 12,
                   children: accentSchemes.map((scheme) {

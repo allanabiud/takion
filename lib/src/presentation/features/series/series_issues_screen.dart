@@ -507,6 +507,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
   var selectedMode = SeriesIssueSelectionMode.predefined;
   var selectedSubset = SeriesIssueSubset.uncollected;
   var selectedRange = const RangeValues(1, 1);
+  var useManualRange = false;
   var isApplying = false;
 
   TakionBottomSheet.show<void>(
@@ -720,36 +721,103 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Issue range: #$startIssueNumber - #$endIssueNumber',
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Issue range: #$startIssueNumber - #$endIssueNumber',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          TextButton(
+                            onPressed: isApplying
+                                ? null
+                                : () {
+                                    setModalState(() {
+                                      useManualRange = !useManualRange;
+                                    });
+                                  },
+                            child: Text(useManualRange ? 'Use Slider' : 'Use Inputs'),
+                          ),
+                        ],
                       ),
-                      RangeSlider(
-                        min: 1,
-                        max: totalIssues.toDouble(),
-                        divisions: totalIssues > 1 ? totalIssues - 1 : null,
-                        labels: RangeLabels('$selectedStart', '$selectedEnd'),
-                        values: selectedRange,
-                        onChanged: isApplying
-                            ? null
-                            : (value) {
-                                setModalState(() {
-                                  selectedRange = RangeValues(
-                                    value.start.roundToDouble(),
-                                    value.end.roundToDouble(),
-                                  );
-                                });
-                              },
-                      ),
+                      if (useManualRange)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                initialValue: selectedStart.toString(),
+                                decoration: const InputDecoration(
+                                  labelText: 'From',
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.number,
+                                enabled: !isApplying,
+                                onChanged: (v) {
+                                  final value = int.tryParse(v);
+                                  if (value != null && value >= 1 && value <= selectedEnd) {
+                                    setModalState(() {
+                                      selectedRange = RangeValues(
+                                        value.toDouble(),
+                                        selectedRange.end,
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                initialValue: selectedEnd.toString(),
+                                decoration: const InputDecoration(
+                                  labelText: 'To',
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.number,
+                                enabled: !isApplying,
+                                onChanged: (v) {
+                                  final value = int.tryParse(v);
+                                  if (value != null && value >= selectedStart && value <= totalIssues) {
+                                    setModalState(() {
+                                      selectedRange = RangeValues(
+                                        selectedRange.start,
+                                        value.toDouble(),
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        RangeSlider(
+                          min: 1,
+                          max: totalIssues.toDouble(),
+                          divisions: totalIssues > 1
+                              ? (totalIssues - 1).clamp(1, 100)
+                              : null,
+                          labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                          values: selectedRange,
+                          onChanged: isApplying
+                              ? null
+                              : (value) {
+                                  setModalState(() {
+                                    selectedRange = RangeValues(
+                                      value.start.roundToDouble(),
+                                      value.end.roundToDouble(),
+                                    );
+                                  });
+                                },
+                        ),
+                      const SizedBox(height: 4),
                       Text(
                         'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
                         style: Theme.of(context).textTheme.bodySmall,
