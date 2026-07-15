@@ -1,4 +1,4 @@
-package com.akasha.takion
+package com.allanabiud.takion
 
 import android.content.Intent
 import android.content.pm.ShortcutInfo

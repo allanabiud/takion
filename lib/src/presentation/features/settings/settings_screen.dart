@@ -5,7 +5,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_nav_tile.dart';
 import 'package:takion/src/presentation/features/settings/widgets/metron_connection_settings.dart';
-import 'package:takion/src/presentation/features/settings/widgets/notification_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/appearance_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/collection_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/backup_and_sync_settings.dart';
@@ -43,12 +42,6 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Library',
             subtitle: 'Defaults and content preferences',
             onTap: () => showCollectionSettings(context, ref),
-          ),
-          SettingsNavTile(
-            icon: Icons.notifications_outlined,
-            title: 'Notifications',
-            subtitle: 'Notification preferences',
-            onTap: () => showNotificationSettings(context, ref),
           ),
           const SizedBox(height: 16),
           buildSettingsSectionHeader(context, 'ACCOUNT & DATA'),

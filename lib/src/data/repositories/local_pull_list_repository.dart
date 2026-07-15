@@ -6,7 +6,8 @@ class LocalPullListRepository implements PullListRepository {
   LocalPullListRepository(this._hiveService);
 
   static const _localUserId = 'local-user';
-  static const _boxName = 'local_pull_list_box';
+  static const boxName = 'local_pull_list_box';
+  static const _boxName = boxName;
 
   final HiveService _hiveService;
 
@@ -171,6 +172,7 @@ class LocalPullListRepository implements PullListRepository {
       updatedAt: now,
     );
     await box.put(metronIssueId.toString(), _toMap(entry));
+    await _hiveService.recordTimestamp(boxName, metronIssueId.toString());
     return entry;
   }
 
@@ -199,6 +201,7 @@ class LocalPullListRepository implements PullListRepository {
     );
     final box = await _hiveService.openBox<Map>(_boxName);
     await box.put(metronIssueId.toString(), _toMap(updated));
+    await _hiveService.recordTimestamp(boxName, metronIssueId.toString());
     return updated;
   }
 
@@ -206,6 +209,7 @@ class LocalPullListRepository implements PullListRepository {
   Future<void> deleteEntryByIssueId(int metronIssueId) async {
     final box = await _hiveService.openBox<Map>(_boxName);
     await box.delete(metronIssueId.toString());
+    await _hiveService.deleteTimestamp(boxName, metronIssueId.toString());
   }
 
   @override
@@ -224,6 +228,7 @@ class LocalPullListRepository implements PullListRepository {
         .toList();
     for (final key in keysToDelete) {
       await box.delete(key);
+      await _hiveService.deleteTimestamp(boxName, key);
     }
   }
 
@@ -253,6 +258,7 @@ class LocalPullListRepository implements PullListRepository {
         updatedAt: now,
       );
       await box.put(item.metronIssueId.toString(), _toMap(entry));
+      await _hiveService.recordTimestamp(boxName, item.metronIssueId.toString());
     }
   }
 

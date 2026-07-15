@@ -3,6 +3,7 @@ import 'package:takion/src/core/network/dio_client.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
+import 'package:takion/src/data/datasources/reading_list_local_data_source.dart';
 import 'package:takion/src/data/datasources/series_name_index.dart';
 import 'package:takion/src/data/repositories/local_favorites_repository.dart';
 import 'package:takion/src/data/repositories/local_library_repository.dart';
@@ -14,6 +15,7 @@ import 'package:takion/src/domain/repositories/favorites_repository.dart';
 import 'package:takion/src/domain/repositories/library_repository.dart';
 import 'package:takion/src/domain/repositories/metron_repository.dart';
 import 'package:takion/src/domain/repositories/pull_list_repository.dart';
+import 'package:takion/src/domain/repositories/reading_list_repository.dart';
 import 'package:takion/src/domain/repositories/subscription_repository.dart';
 
 final metronRemoteDataSourceProvider = Provider<MetronRemoteDataSource>((ref) {
@@ -60,4 +62,8 @@ final pullListRepositoryProvider = Provider<PullListRepository>((ref) {
 final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
   return LocalFavoritesRepository(hiveService);
+});
+
+final readingListRepositoryProvider = Provider<ReadingListRepository>((ref) {
+  return ref.watch(readingListLocalDataSourceProvider);
 });

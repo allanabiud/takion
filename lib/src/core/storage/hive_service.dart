@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/hive_registrar.g.dart';
+import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
@@ -57,7 +58,6 @@ class HiveService {
     'arc_issue_list_meta_box',
     'home_content_box',
     'series_cover_cache_box',
-    'library_items_cache_box',
     'subscriptions_cache_box',
     'series_name_index_box',
     'entity_image_cache_box',
@@ -97,18 +97,6 @@ class HiveService {
           ? Hive.box<ReadingList>(boxName)
           : await Hive.openBox<ReadingList>(boxName);
     }
-    if (boxName == 'settings_box') {
-      return Hive.isBoxOpen(boxName)
-          ? Hive.box<dynamic>(boxName)
-          : await Hive.openBox<dynamic>(boxName);
-    }
-    if (boxName == 'metron_account_box' ||
-        boxName == 'local_auth_box' ||
-        boxName == 'profile_ui_box') {
-      return Hive.isBoxOpen(boxName)
-          ? Hive.box<String>(boxName)
-          : await Hive.openBox<String>(boxName);
-    }
     return Hive.isBoxOpen(boxName)
         ? Hive.box<Map>(boxName)
         : await Hive.openBox<Map>(boxName);
@@ -116,19 +104,34 @@ class HiveService {
 
   Future<List<Map<String, dynamic>>> readAllEntries(String boxName) async {
     final box = await _openBoxForBackup(boxName);
+    final tsBox = await _timestampsBox();
     final entries = <Map<String, dynamic>>[];
     for (final key in box.keys) {
       final value = box.get(key);
       if (value != null) {
-        entries.add({
+        final serialized = boxName == 'reading_lists_box'
+            ? (value as ReadingList).toJson()
+            : value;
+        final entry = <String, dynamic>{
           'k': key,
-          'v': boxName == 'reading_lists_box'
-              ? (value as ReadingList).toJson()
-              : value,
-        });
+          'v': serialized,
+        };
+        final ts = tsBox.get('$boxName:$key');
+        if (ts != null) entry['t'] = ts;
+        entries.add(entry);
       }
     }
     return entries;
+  }
+
+  Future<dynamic> readEntry(String boxName, String key) async {
+    final box = await _openBoxForBackup(boxName);
+    final value = box.get(key);
+    if (value == null) return null;
+    if (boxName == 'reading_lists_box') {
+      return (value as ReadingList).toJson();
+    }
+    return value;
   }
 
   Future<void> putEntry(String boxName, String key, dynamic value) async {
@@ -138,11 +141,131 @@ class HiveService {
     } else {
       await box.put(key, value);
     }
+    await recordTimestamp(boxName, key);
   }
 
   Future<void> deleteEntry(String boxName, String key) async {
     final box = await _openBoxForBackup(boxName);
     await box.delete(key);
+    await deleteTimestamp(boxName, key);
+    await recordDeleteTimestamp(boxName, key);
+  }
+
+  static const _timestampsBoxName = 'sync_timestamps_box';
+  static const _deletionsBoxName = 'sync_deletions_box';
+
+  Future<Box> _timestampsBox() async {
+    if (Hive.isBoxOpen(_timestampsBoxName)) {
+      return Hive.box(_timestampsBoxName);
+    }
+    return Hive.openBox(_timestampsBoxName);
+  }
+
+  Future<Box> _deletionsBox() async {
+    if (Hive.isBoxOpen(_deletionsBoxName)) {
+      return Hive.box(_deletionsBoxName);
+    }
+    return Hive.openBox(_deletionsBoxName);
+  }
+
+  Future<void> recordTimestamp(String boxName, String key) async {
+    final box = await _timestampsBox();
+    await box.put('$boxName:$key', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<void> deleteTimestamp(String boxName, String key) async {
+    final box = await _timestampsBox();
+    await box.delete('$boxName:$key');
+  }
+
+  Future<Map<String, int>> getChangedKeysSince(DateTime since) async {
+    final box = await _timestampsBox();
+    final cutoff = since.millisecondsSinceEpoch;
+    final result = <String, int>{};
+    for (final entry in box.toMap().entries) {
+      final timestamp = entry.value as int;
+      if (timestamp > cutoff) {
+        result[entry.key] = timestamp;
+      }
+    }
+    return result;
+  }
+
+  Future<int> syncTimestampsCount() async {
+    final box = await _timestampsBox();
+    return box.length;
+  }
+
+  Future<void> resetSyncTimestamps() async {
+    final box = await _timestampsBox();
+    await box.clear();
+    final delBox = await _deletionsBox();
+    await delBox.clear();
+  }
+
+  Future<Map<String, int>> getAllTimestamps() async {
+    final box = await _timestampsBox();
+    return box.toMap().map((k, v) => MapEntry(k as String, v as int));
+  }
+
+  Future<void> clearBoxData(String boxName) async {
+    final box = await _openBoxForBackup(boxName);
+    await box.clear();
+  }
+
+  Future<double?> getIssuePrice(int metronIssueId) async {
+    const boxName = 'issue_details_box';
+    if (!Hive.isBoxOpen(boxName)) return null;
+    final box = Hive.box<IssueDetailsDto>(boxName);
+    final details = box.get(metronIssueId.toString());
+    if (details == null) return null;
+    final priceStr = details.price;
+    if (priceStr == null) return null;
+    return double.tryParse(priceStr);
+  }
+
+  Future<bool> hasBackupData() async {
+    const backupBoxNames = [
+      'local_profile_box',
+      'local_library_items_box',
+      'local_library_read_logs_box',
+      'local_pull_list_box',
+      'local_subscriptions_box',
+      'local_favorite_series_box',
+      'local_favorite_issues_box',
+      'local_favorite_reading_lists_box',
+      'local_favorite_characters_box',
+      'local_favorite_creators_box',
+      'reading_lists_box',
+    ];
+    for (final boxName in backupBoxNames) {
+      final box = await _openBoxForBackup(boxName);
+      if (box.isNotEmpty) return true;
+    }
+    return false;
+  }
+
+  Future<void> recordDeleteTimestamp(String boxName, String key) async {
+    final box = await _deletionsBox();
+    await box.put('$boxName:$key', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<Map<String, int>> getDeletedKeysSince(DateTime since) async {
+    final box = await _deletionsBox();
+    final cutoff = since.millisecondsSinceEpoch;
+    final result = <String, int>{};
+    for (final entry in box.toMap().entries) {
+      final timestamp = entry.value as int;
+      if (timestamp > cutoff) {
+        result[entry.key] = timestamp;
+      }
+    }
+    return result;
+  }
+
+  Future<void> clearDeleteTimestamps() async {
+    final box = await _deletionsBox();
+    await box.clear();
   }
 
   Future<void> _deleteCorruptedBoxFromDisk(String boxName) async {

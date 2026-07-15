@@ -7,8 +7,10 @@ class LocalLibraryRepository implements LibraryRepository {
   LocalLibraryRepository(this._hiveService);
 
   static const _localUserId = 'local-user';
-  static const _itemsBox = 'local_library_items_box';
-  static const _readLogsBox = 'local_library_read_logs_box';
+  static const itemsBoxName = 'local_library_items_box';
+  static const readLogsBoxName = 'local_library_read_logs_box';
+  static const _itemsBox = itemsBoxName;
+  static const _readLogsBox = readLogsBoxName;
 
   final HiveService _hiveService;
 
@@ -178,6 +180,16 @@ class LocalLibraryRepository implements LibraryRepository {
     final existing = existingRaw == null
         ? null
         : _itemFromMap(existingRaw.cast<String, dynamic>());
+
+    double? resolvedPricePaid;
+    if (pricePaid != null) {
+      resolvedPricePaid = pricePaid;
+    } else if (existing != null) {
+      resolvedPricePaid = existing.pricePaid;
+    } else {
+      resolvedPricePaid = await _hiveService.getIssuePrice(metronIssueId);
+    }
+
     final now = DateTime.now().toUtc();
     final item = LibraryItem(
       id: existing?.id ?? _idForIssue(metronIssueId),
@@ -188,7 +200,7 @@ class LocalLibraryRepository implements LibraryRepository {
       isRead: isRead,
       rating: rating,
       purchaseDate: purchaseDate,
-      pricePaid: pricePaid,
+      pricePaid: resolvedPricePaid,
       quantityOwned: quantityOwned,
       format: format,
       firstReadAt: firstReadAt,
@@ -199,6 +211,7 @@ class LocalLibraryRepository implements LibraryRepository {
       updatedAt: now,
     );
     await box.put(metronIssueId.toString(), _itemToMap(item));
+    await _hiveService.recordTimestamp(itemsBoxName, metronIssueId.toString());
     return item;
   }
 
@@ -237,6 +250,7 @@ class LocalLibraryRepository implements LibraryRepository {
     );
     final box = await _hiveService.openBox<Map>(_readLogsBox);
     await box.put(log.id, _readLogToMap(log));
+    await _hiveService.recordTimestamp(readLogsBoxName, log.id);
     return log;
   }
 
@@ -244,6 +258,7 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> deleteReadLogById(String readLogId) async {
     final box = await _hiveService.openBox<Map>(_readLogsBox);
     await box.delete(readLogId);
+    await _hiveService.deleteTimestamp(readLogsBoxName, readLogId);
   }
 
   @override
@@ -251,6 +266,7 @@ class LocalLibraryRepository implements LibraryRepository {
     final item = await getItemByIssueId(metronIssueId);
     final itemsBox = await _hiveService.openBox<Map>(_itemsBox);
     await itemsBox.delete(metronIssueId.toString());
+    await _hiveService.deleteTimestamp(itemsBoxName, metronIssueId.toString());
 
     if (item == null) return;
     final logsBox = await _hiveService.openBox<Map>(_readLogsBox);
@@ -263,6 +279,7 @@ class LocalLibraryRepository implements LibraryRepository {
         .toList(growable: false);
     for (final key in keysToDelete) {
       await logsBox.delete(key);
+      await _hiveService.deleteTimestamp(readLogsBoxName, key);
     }
   }
 

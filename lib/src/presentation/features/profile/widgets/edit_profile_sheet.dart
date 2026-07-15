@@ -16,10 +16,8 @@ class EditProfileSheet extends ConsumerStatefulWidget {
 
 class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   late final TextEditingController _displayNameController;
-  late final String _avatarStoragePath;
   String _selectedAvatarPath = '';
   String _selectedBackdropPath = '';
-  bool _avatarChanged = false;
   bool _isSaving = false;
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -35,7 +33,6 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
       text: _stringField('display_name', ''),
     );
     _selectedAvatarPath = _stringField('avatar_url', '');
-    _avatarStoragePath = _stringField('avatar_storage_path', '');
     _selectedBackdropPath = _stringField('backdrop_image_path', '');
   }
 
@@ -54,7 +51,6 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
     if (!mounted || picked == null) return;
     setState(() {
       _selectedAvatarPath = picked.path;
-      _avatarChanged = true;
     });
   }
 
@@ -76,11 +72,8 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
         .read(userProfileProvider.notifier)
         .saveProfile(
           displayName: _displayNameController.text,
-          avatarUrl: _avatarChanged ? _selectedAvatarPath : _avatarStoragePath,
+          avatarUrl: _selectedAvatarPath,
           backdropImagePath: _selectedBackdropPath,
-          bio: '',
-          location: '',
-          notificationPreferences: const {'email_pulls': false},
         );
     if (!mounted) return;
     Navigator.of(context).pop(true);

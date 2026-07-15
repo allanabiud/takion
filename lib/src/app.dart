@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
-import 'package:takion/src/core/notifications/push_notification_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/data/services/drive_backup_service.dart';
+import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
 import 'package:takion/src/core/router/app_router.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/core/router/app_router.gr.dart'
+    show
+        AuthorizeMetronRoute;
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
-import 'package:takion/src/core/sync/sync_providers.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
@@ -29,7 +31,6 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _metronCheckedForSession = false;
-  bool _pendingAutoSync = false;
 
   @override
   void initState() {
@@ -45,12 +46,9 @@ class _TakionAppState extends ConsumerState<TakionApp> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await ref.read(syncWatcherProvider).init();
-      if (!mounted) return;
       _runMetronConnectionCheckIfNeeded();
-      _initializePushNotifications();
       _reconcileSubscriptionPullsOnSessionStart();
-      _runAutoSync();
+      _runDriveAutoSyncIfEnabled();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -65,36 +63,6 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
     if (hasSeen) {
       ShortcutHandler.enableShortcuts();
-    }
-  }
-
-  Future<void> _initializePushNotifications() async {
-    await ref
-        .read(pushNotificationServiceProvider)
-        .initialize(
-          onNotificationTap: (payload) async {
-            if (payload == 'my-pulls') {
-              if (!mounted) return;
-              _appRouter.push(const MyPullsRoute());
-            }
-          },
-        );
-    await _syncPushRegistration();
-  }
-
-  Future<void> _syncPushRegistration() async {
-    final authState = ref.read(authStateProvider).value;
-    if (authState != AuthStatus.authenticated) return;
-
-    final enabledAsync = ref.read(pushPullNotificationsEnabledProvider);
-    final enabled = enabledAsync.value ?? false;
-
-    try {
-      await ref.read(pushNotificationServiceProvider).syncRegistration(
-        enabled: enabled,
-      );
-    } catch (error) {
-      debugPrint('_syncPushRegistration failed: $error');
     }
   }
 
@@ -113,37 +81,31 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     }
   }
 
-  Future<void> _runAutoSync() async {
-    final autoSyncEnabled = ref.read(autoSyncEnabledProvider);
-    if (!autoSyncEnabled) {
-      debugPrint('_runAutoSync: auto-sync is disabled by settings');
-      return;
-    }
-
-    final transport = ref.read(syncTransportProvider);
-    if (!transport.isSignedIn) {
-      var account = await transport.signInSilently();
-      if (account == null) {
-        debugPrint('_runAutoSync: initial silent sign-in null, retrying after delay');
-        await Future.delayed(const Duration(seconds: 2));
-        account = await transport.signInSilently();
-      }
-      if (account == null) {
-        debugPrint('_runAutoSync: retry also failed, waiting for manual sign-in');
-        _pendingAutoSync = true;
-        return;
-      }
-      debugPrint('_runAutoSync: silent sign-in succeeded on retry');
-    }
-
-    _pendingAutoSync = false;
-
+  Future<void> _runDriveAutoSyncIfEnabled() async {
+    final syncState = ref.read(driveSyncProvider);
+    if (!syncState.enabled) return;
+    final driveService = ref.read(driveBackupServiceProvider);
+    final hiveService = ref.read(hiveServiceProvider);
+    final account = await driveService.signInSilently();
+    if (account == null) return;
+    ref.read(driveSyncProvider.notifier).setSyncing(true);
     try {
-      final engine = ref.read(syncServiceProvider);
-      await engine.syncAll();
+      final hasDriveBackup = await driveService.getLastBackupTime() != null;
+      final isEmpty = !await hiveService.hasBackupData();
+      if (hasDriveBackup && isEmpty) {
+        await driveService.restoreFromDrive();
+        await hiveService.resetSyncTimestamps();
+      } else {
+        await driveService.uploadBackup(
+          lastSyncTime: hasDriveBackup ? syncState.lastSync : null,
+        );
+      }
+      await ref.read(driveSyncProvider.notifier).updateLastSync();
+      invalidateCacheBackedProviders((p) => ref.invalidate(p));
     } catch (e) {
-      debugPrint('_runAutoSync: auto-sync failed: $e');
+      debugPrint('Auto-sync failed: $e');
     }
+    ref.read(driveSyncProvider.notifier).setSyncing(false);
   }
 
   Future<void> _runMetronConnectionCheckIfNeeded() async {
@@ -184,7 +146,6 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     final isOffline =
         connectivityState.asData?.value == AppConnectivityStatus.offline;
 
-    // Re-evaluate guards when auth state changes (e.g. on logout/login)
     ref.listen(authStateProvider, (previous, next) {
       if (!next.isLoading && previous?.value != next.value) {
         _appRouter.reevaluateGuards();
@@ -193,31 +154,12 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         if (current == AuthStatus.authenticated) {
           _metronCheckedForSession = false;
           _runMetronConnectionCheckIfNeeded();
-          _syncPushRegistration();
           _reconcileSubscriptionPullsOnSessionStart();
         } else if (current == AuthStatus.unauthenticated) {
           _metronCheckedForSession = false;
         }
       }
     });
-    ref.listen(googleSignInAccountProvider, (previous, next) {
-      if (next.value != null) {
-        debugPrint('_runAutoSync: google sign-in state changed, signed in');
-        if (_pendingAutoSync) {
-          debugPrint('_runAutoSync: pending sync detected, running now');
-          _pendingAutoSync = false;
-          _runAutoSync();
-        }
-      } else {
-        debugPrint('_runAutoSync: google sign-in state changed, signed out');
-      }
-    });
-    ref.listen(pushPullNotificationsEnabledProvider, (previous, next) {
-      if (!next.isLoading && previous?.value != next.value) {
-        _syncPushRegistration();
-      }
-    });
-
     final themeSettings =
         themeAsync.value ??
         const ThemeSettings(

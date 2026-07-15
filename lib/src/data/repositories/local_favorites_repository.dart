@@ -5,11 +5,16 @@ import 'package:takion/src/domain/repositories/favorites_repository.dart';
 class LocalFavoritesRepository implements FavoritesRepository {
   LocalFavoritesRepository(this._hiveService);
 
-  static const _seriesBox = 'local_favorite_series_box';
-  static const _issuesBox = 'local_favorite_issues_box';
-  static const _readingListsBox = 'local_favorite_reading_lists_box';
-  static const _charactersBox = 'local_favorite_characters_box';
-  static const _creatorsBox = 'local_favorite_creators_box';
+  static const seriesBoxName = 'local_favorite_series_box';
+  static const issuesBoxName = 'local_favorite_issues_box';
+  static const readingListsBoxName = 'local_favorite_reading_lists_box';
+  static const charactersBoxName = 'local_favorite_characters_box';
+  static const creatorsBoxName = 'local_favorite_creators_box';
+  static const _seriesBox = seriesBoxName;
+  static const _issuesBox = issuesBoxName;
+  static const _readingListsBox = readingListsBoxName;
+  static const _charactersBox = charactersBoxName;
+  static const _creatorsBox = creatorsBoxName;
 
   final HiveService _hiveService;
 
@@ -77,12 +82,14 @@ class LocalFavoritesRepository implements FavoritesRepository {
     final key = metronSeriesId.toString();
     if (box.containsKey(key)) {
       await box.delete(key);
+      await _hiveService.recordDeleteTimestamp(seriesBoxName, key);
     } else {
       final favorite = FavoriteSeries(
         metronSeriesId: metronSeriesId,
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _seriesToMap(favorite));
+      await _hiveService.recordTimestamp(seriesBoxName, key);
     }
   }
 
@@ -108,12 +115,14 @@ class LocalFavoritesRepository implements FavoritesRepository {
     final key = metronIssueId.toString();
     if (box.containsKey(key)) {
       await box.delete(key);
+      await _hiveService.recordDeleteTimestamp(issuesBoxName, key);
     } else {
       final favorite = FavoriteIssue(
         metronIssueId: metronIssueId,
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _issueToMap(favorite));
+      await _hiveService.recordTimestamp(issuesBoxName, key);
     }
   }
 
@@ -139,12 +148,14 @@ class LocalFavoritesRepository implements FavoritesRepository {
     final key = readingListId;
     if (box.containsKey(key)) {
       await box.delete(key);
+      await _hiveService.recordDeleteTimestamp(readingListsBoxName, key);
     } else {
       final favorite = FavoriteReadingList(
         readingListId: readingListId,
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _readingListToMap(favorite));
+      await _hiveService.recordTimestamp(readingListsBoxName, key);
     }
   }
 
@@ -184,12 +195,14 @@ class LocalFavoritesRepository implements FavoritesRepository {
     final key = metronCharacterId.toString();
     if (box.containsKey(key)) {
       await box.delete(key);
+      await _hiveService.recordDeleteTimestamp(charactersBoxName, key);
     } else {
       final favorite = FavoriteCharacter(
         metronCharacterId: metronCharacterId,
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _characterToMap(favorite));
+      await _hiveService.recordTimestamp(charactersBoxName, key);
     }
   }
 
@@ -229,12 +242,14 @@ class LocalFavoritesRepository implements FavoritesRepository {
     final key = metronCreatorId.toString();
     if (box.containsKey(key)) {
       await box.delete(key);
+      await _hiveService.recordDeleteTimestamp(creatorsBoxName, key);
     } else {
       final favorite = FavoriteCreator(
         metronCreatorId: metronCreatorId,
         createdAt: DateTime.now().toUtc(),
       );
       await box.put(key, _creatorToMap(favorite));
+      await _hiveService.recordTimestamp(creatorsBoxName, key);
     }
   }
 }

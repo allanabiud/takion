@@ -735,7 +735,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = Theme.of(context);
     final actions = [
       (
-        Icons.list_alt,
+        Icons.list_alt_rounded,
         'Reading Lists',
         () => context.pushRoute(const MetronReadingListBrowserRoute()),
       ),
@@ -745,29 +745,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         () => context.pushRoute(const PublisherBrowseRoute()),
       ),
       (
-        Icons.link,
+        Icons.auto_stories,
         'Story Arcs',
         () => context.pushRoute(const ArcBrowseRoute()),
       ),
       (Icons.groups, 'Teams', () => context.pushRoute(const TeamBrowseRoute())),
       (
-        Icons.person,
+        Icons.people,
         'Characters',
         () => context.pushRoute(const CharacterBrowseRoute()),
       ),
-      (Icons.tv, 'Series', () => context.pushRoute(const SeriesBrowseRoute())),
+      (
+        Icons.collections_bookmark,
+        'Series',
+        () => context.pushRoute(const SeriesBrowseRoute()),
+      ),
       (
         Icons.language,
         'Universes',
         () => context.pushRoute(const UniverseBrowseRoute()),
       ),
       (
-        Icons.copyright,
+        Icons.business,
         'Imprints',
         () => context.pushRoute(const ImprintBrowseRoute()),
       ),
       (
-        Icons.brush,
+        Icons.person,
         'Creators',
         () => context.pushRoute(const CreatorBrowseRoute()),
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';

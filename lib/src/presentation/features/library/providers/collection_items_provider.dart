@@ -1,14 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/perf/performance_metrics.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/collection_item.dart';
 import 'package:takion/src/domain/entities/collection_items_page.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 const _collectionPageSize = metronDefaultPageSize;
 
@@ -94,76 +90,28 @@ final currentCollectionItemsProvider = FutureProvider<CollectionItemsPage>((
 });
 
 Future<List<LibraryItem>> _loadAllLibraryItems(Ref ref) async {
-  final metrics = AppPerformanceMetrics.instance;
-  final hiveService = ref.read(hiveServiceProvider);
   final repository = ref.read(libraryRepositoryProvider);
-  final cacheBox = await hiveService.openBox<dynamic>(libraryCacheBoxName);
-  final metaBox = await hiveService.openBox<int>('cache_meta_box');
-  final cachedAtEpoch = metaBox.get(libraryAllItemsMetaKey);
-  final cachedAt = cachedAtEpoch == null
-      ? null
-      : DateTime.fromMillisecondsSinceEpoch(cachedAtEpoch);
-  final cachedRaw = cacheBox.get(libraryAllItemsKey);
-  final cachedItems = (cachedRaw is List
-      ? cachedRaw
-            .whereType<Map>()
-            .map((entry) => libraryItemFromJson(entry.cast<String, dynamic>()))
-            .whereType<LibraryItem>()
-            .toList()
-      : <LibraryItem>[]);
-  final isFresh =
-      cachedAt != null &&
-      LocalDataCachePolicies.collectionItems.isFresh(cachedAt, DateTime.now());
-  if (isFresh) {
-    metrics.recordCacheHit(libraryAllItemsMetaKey);
-    return cachedItems;
-  }
-  metrics.recordCacheMiss(libraryAllItemsMetaKey);
+  final totalCount = await repository.getItemCount();
+  if (totalCount <= 0) return <LibraryItem>[];
 
-  try {
-    final totalCount = await repository.getItemCount();
-    if (totalCount <= 0) {
-      await cacheBox.put(libraryAllItemsKey, const <Map<String, dynamic>>[]);
-      await metaBox.put(
-        libraryAllItemsMetaKey,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-      return <LibraryItem>[];
-    }
+  final items = <LibraryItem>[];
+  var offset = 0;
 
-    final items = <LibraryItem>[];
-    var offset = 0;
-
-    while (items.length < totalCount) {
-      final libraryItems = await repository.listItems(
-        limit: _collectionPageSize,
-        offset: offset,
-      );
-      if (libraryItems.isEmpty) break;
-      items.addAll(libraryItems);
-      offset += libraryItems.length;
-    }
-
-    await cacheBox.put(
-      libraryAllItemsKey,
-      items.map(libraryItemToJson).toList(),
+  while (items.length < totalCount) {
+    final batch = await repository.listItems(
+      limit: _collectionPageSize,
+      offset: offset,
     );
-    await metaBox.put(
-      libraryAllItemsMetaKey,
-      DateTime.now().millisecondsSinceEpoch,
-    );
-    return items;
-  } catch (_) {
-    if (cachedItems.isNotEmpty) return cachedItems;
-    rethrow;
+    if (batch.isEmpty) break;
+    items.addAll(batch);
+    offset += batch.length;
   }
+
+  return items;
 }
 
 final allLibraryItemsProvider = FutureProvider<List<LibraryItem>>((ref) async {
-  return AppPerformanceMetrics.instance.trackProvider(
-    'allLibraryItemsProvider',
-    () => _loadAllLibraryItems(ref),
-  );
+  return _loadAllLibraryItems(ref);
 });
 
 final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((

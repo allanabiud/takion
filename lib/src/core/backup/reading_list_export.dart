@@ -66,6 +66,7 @@ class ReadingListExportService {
 
     final box = await _hiveService.openBox<ReadingList>(_boxName);
     await box.put(newList.id, newList);
+    await _hiveService.recordTimestamp(_boxName, newList.id);
 
     return newList;
   }

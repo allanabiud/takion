@@ -4,10 +4,9 @@ import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/notifications/notification_background_task.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
 
 /// Bootstraps the application by initializing core services and state management.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
@@ -17,11 +16,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Enable edge-to-edge mode for transparent system bars
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-  // Initialize Workmanager for background notification tasks
-  await Workmanager().initialize(pullReminderBackgroundCallback);
 
   final hiveService = HiveService();
   await hiveService.init();
@@ -40,10 +35,20 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     hiveService.openBox<List>('series_issue_list_box'),
     hiveService.openBox<Map>('series_issue_list_meta_box'),
     hiveService.openBox<Map>('home_content_box'),
-    hiveService.openBox<dynamic>('library_items_cache_box'),
     hiveService.openBox<int>('cache_meta_box'),
     hiveService.openBox<IssueDetailsDto>('issue_details_box'),
     hiveService.openBox<Map>('series_details_box'),
+    hiveService.openBox<Map>('local_library_items_box'),
+    hiveService.openBox<Map>('local_library_read_logs_box'),
+    hiveService.openBox<Map>('local_pull_list_box'),
+    hiveService.openBox<Map>('local_subscriptions_box'),
+    hiveService.openBox<Map>('local_favorite_series_box'),
+    hiveService.openBox<Map>('local_favorite_issues_box'),
+    hiveService.openBox<Map>('local_favorite_reading_lists_box'),
+    hiveService.openBox<Map>('local_favorite_characters_box'),
+    hiveService.openBox<Map>('local_favorite_creators_box'),
+    hiveService.openBox<ReadingList>('reading_lists_box'),
+    hiveService.openBox<String>('series_name_index_box'),
   ]);
 
   runApp(

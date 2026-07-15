@@ -39,9 +39,10 @@ import 'package:takion/src/presentation/features/teams/providers/team_details_pr
 import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
-import 'package:takion/src/core/notifications/push_notification_service.dart';
+
 
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';
@@ -56,53 +57,74 @@ abstract class AppSettings with _$AppSettings {
   }) = _AppSettings;
 }
 
-final pushPullNotificationsEnabledProvider =
-    AsyncNotifierProvider<PushPullNotificationsEnabledNotifier, bool>(
-      PushPullNotificationsEnabledNotifier.new,
-    );
+void invalidateReleaseProviders(void Function(dynamic provider) invalidate) {
+  invalidate(weeklyReleasesProvider);
+  invalidate(focReleasesProvider);
+}
 
-class PushPullNotificationsEnabledNotifier extends AsyncNotifier<bool> {
-  static const _boxName = 'settings_box';
-  static const _key = 'push_pull_notifications_enabled';
-
-  @override
-  Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    return box.get(_key, defaultValue: false) as bool;
-  }
-
-  Future<void> setEnabled(bool value) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-
-    // Request permission via the push notification service if enabling
-    final service = ref.read(pushNotificationServiceProvider);
-    if (value) {
-      try {
-        final granted = await service.requestPermission();
-        if (!granted) {
-          // Do not enable if permission not granted
-          state = AsyncValue.data(false);
-          await box.put(_key, false);
-          return;
-        }
-      } catch (_) {
-        // Permission request failed; stop enabling
-        state = AsyncValue.data(false);
-        await box.put(_key, false);
-        return;
-      }
-    }
-
-    await box.put(_key, value);
-    state = AsyncValue.data(value);
-
-    // Inform push service to (un)register as needed
-    try {
-      await service.syncRegistration(enabled: value);
-    } catch (_) {}
-  }
+void invalidateCacheBackedProviders(void Function(dynamic provider) invalidate) {
+  invalidateReleaseProviders(invalidate);
+  invalidate(issueDetailsProvider);
+  invalidate(issueSearchResultsProvider);
+  invalidate(collectionIssueStatusMapProvider);
+  invalidate(allLibraryItemsProvider);
+  invalidate(allCollectionItemsProvider);
+  invalidate(collectionItemsByOwnershipStatusProvider);
+  invalidate(collectionItemsByReadStatusProvider);
+  invalidate(unratedCollectionItemsProvider);
+  invalidate(wishlistCollectionItemsProvider);
+  invalidate(collectionSeriesKeysProvider);
+  invalidate(collectionItemsProvider);
+  invalidate(currentCollectionItemsProvider);
+  invalidate(collectionStatsProvider);
+  invalidate(seriesDetailsProvider);
+  invalidate(seriesIssueListProvider);
+  invalidate(seriesListProvider);
+  invalidate(currentSeriesListProvider);
+  invalidate(seriesSearchResultsProvider);
+  invalidate(readingSuggestionProvider);
+  invalidate(readingSuggestionIssueProvider);
+  invalidate(rateSuggestionProvider);
+  invalidate(rateSuggestionIssueProvider);
+  invalidate(homeTrendingProvider);
+  invalidate(continueReadingSuggestionsProvider);
+  invalidate(becauseYouPulledIssuesProvider);
+  invalidate(activeSubscriptionsProvider);
+  invalidate(activeSubscriptionsCountProvider);
+  invalidate(subscribedSeriesListProvider);
+  invalidate(subscribedSeriesPageProvider);
+  invalidate(seriesSubscriptionProvider);
+  invalidate(issuePullListEntryProvider);
+  invalidate(pullListEntriesForWeekProvider);
+  invalidate(pullsIssuesForWeekProvider);
+  invalidate(currentWeekPullsProvider);
+  invalidate(currentWeekPullsCountProvider);
+  invalidate(userProfileProvider);
+  invalidate(profileInsightsProvider);
+  invalidate(characterDetailsProvider);
+  invalidate(characterSearchResultsProvider);
+  invalidate(characterIssueListProvider);
+  invalidate(characterDetailsIssuesProvider);
+  invalidate(creatorDetailsProvider);
+  invalidate(creatorSearchResultsProvider);
+  invalidate(universeDetailsProvider);
+  invalidate(universeSearchResultsProvider);
+  invalidate(imprintDetailsProvider);
+  invalidate(imprintSearchResultsProvider);
+  invalidate(teamDetailsProvider);
+  invalidate(teamSearchResultsProvider);
+  invalidate(publisherDetailsProvider);
+  invalidate(publisherSearchResultsProvider);
+  invalidate(favoriteSeriesListProvider);
+  invalidate(favoriteSeriesFullListProvider);
+  invalidate(favoriteIssuesListProvider);
+  invalidate(favoriteIssuesFullListProvider);
+  invalidate(favoriteReadingListsListProvider);
+  invalidate(favoriteReadingListsFullListProvider);
+  invalidate(favoriteCharactersListProvider);
+  invalidate(favoriteCharactersFullListProvider);
+  invalidate(favoriteCreatorsListProvider);
+  invalidate(favoriteCreatorsFullListProvider);
 }
 
 @riverpod
@@ -148,64 +170,8 @@ class SettingsNotifier extends _$SettingsNotifier {
     return {...cachedWeeks, nowWeek, selectedWeekStart};
   }
 
-  void _invalidateReleaseProviders() {
-    ref.invalidate(weeklyReleasesProvider);
-    ref.invalidate(focReleasesProvider);
-  }
-
   void _invalidateCacheBackedProviders() {
-    _invalidateReleaseProviders();
-    ref.invalidate(issueDetailsProvider);
-    ref.invalidate(issueSearchResultsProvider);
-    ref.invalidate(collectionIssueStatusMapProvider);
-    ref.invalidate(allLibraryItemsProvider);
-    ref.invalidate(allCollectionItemsProvider);
-    ref.invalidate(collectionItemsByOwnershipStatusProvider);
-    ref.invalidate(collectionItemsByReadStatusProvider);
-    ref.invalidate(unratedCollectionItemsProvider);
-    ref.invalidate(wishlistCollectionItemsProvider);
-    ref.invalidate(collectionSeriesKeysProvider);
-    ref.invalidate(collectionItemsProvider);
-    ref.invalidate(currentCollectionItemsProvider);
-    ref.invalidate(collectionStatsProvider);
-    ref.invalidate(seriesDetailsProvider);
-    ref.invalidate(seriesIssueListProvider);
-    ref.invalidate(seriesListProvider);
-    ref.invalidate(currentSeriesListProvider);
-    ref.invalidate(seriesSearchResultsProvider);
-    ref.invalidate(readingSuggestionProvider);
-    ref.invalidate(readingSuggestionIssueProvider);
-    ref.invalidate(rateSuggestionProvider);
-    ref.invalidate(rateSuggestionIssueProvider);
-    ref.invalidate(homeTrendingProvider);
-    ref.invalidate(continueReadingSuggestionsProvider);
-    ref.invalidate(becauseYouPulledIssuesProvider);
-    ref.invalidate(activeSubscriptionsProvider);
-    ref.invalidate(activeSubscriptionsCountProvider);
-    ref.invalidate(subscribedSeriesListProvider);
-    ref.invalidate(subscribedSeriesPageProvider);
-    ref.invalidate(seriesSubscriptionProvider);
-    ref.invalidate(issuePullListEntryProvider);
-    ref.invalidate(pullListEntriesForWeekProvider);
-    ref.invalidate(pullsIssuesForWeekProvider);
-    ref.invalidate(currentWeekPullsProvider);
-    ref.invalidate(currentWeekPullsCountProvider);
-    ref.invalidate(userProfileProvider);
-    ref.invalidate(profileInsightsProvider);
-    ref.invalidate(characterDetailsProvider);
-    ref.invalidate(characterSearchResultsProvider);
-    ref.invalidate(characterIssueListProvider);
-    ref.invalidate(characterDetailsIssuesProvider);
-    ref.invalidate(creatorDetailsProvider);
-    ref.invalidate(creatorSearchResultsProvider);
-    ref.invalidate(universeDetailsProvider);
-    ref.invalidate(universeSearchResultsProvider);
-    ref.invalidate(imprintDetailsProvider);
-    ref.invalidate(imprintSearchResultsProvider);
-    ref.invalidate(teamDetailsProvider);
-    ref.invalidate(teamSearchResultsProvider);
-    ref.invalidate(publisherDetailsProvider);
-    ref.invalidate(publisherSearchResultsProvider);
+    invalidateCacheBackedProviders((p) => ref.invalidate(p));
   }
 
   static const _syncRequestDelay = Duration(milliseconds: 3500);
@@ -622,52 +588,6 @@ class CollectionDefaultFormatNotifier
     };
     await box.put(_key, value);
     state = AsyncValue.data(format);
-  }
-}
-
-enum PullNotificationTiming { dayBefore, releaseDay, dayAfter }
-
-final pullNotificationTimingProvider =
-    AsyncNotifierProvider<
-      PullNotificationTimingNotifier,
-      PullNotificationTiming
-    >(PullNotificationTimingNotifier.new);
-
-class PullNotificationTimingNotifier
-    extends AsyncNotifier<PullNotificationTiming> {
-  static const _boxName = 'settings_box';
-  static const _key = 'push_pull_notification_timing';
-
-  @override
-  Future<PullNotificationTiming> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final raw =
-        (box.get(_key, defaultValue: 'release_day') as String?) ??
-        'release_day';
-
-    switch (raw) {
-      case 'day_before':
-        return PullNotificationTiming.dayBefore;
-      case 'day_after':
-        return PullNotificationTiming.dayAfter;
-      case 'release_day':
-        return PullNotificationTiming.releaseDay;
-      default:
-        return PullNotificationTiming.releaseDay;
-    }
-  }
-
-  Future<void> setTiming(PullNotificationTiming timing) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final value = switch (timing) {
-      PullNotificationTiming.dayBefore => 'day_before',
-      PullNotificationTiming.releaseDay => 'release_day',
-      PullNotificationTiming.dayAfter => 'day_after',
-    };
-    await box.put(_key, value);
-    state = AsyncValue.data(timing);
   }
 }
 

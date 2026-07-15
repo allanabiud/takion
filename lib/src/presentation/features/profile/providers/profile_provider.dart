@@ -10,8 +10,7 @@ class UserProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   @override
   Future<Map<String, dynamic>?> build() async {
     final service = ref.watch(localProfileServiceProvider);
-    final profile = await service.getCurrentProfile();
-    return _withBackdrop(profile, await service.getLocalBackdropPath());
+    return service.getCurrentProfile();
   }
 
   Future<void> refresh() async {
@@ -19,7 +18,7 @@ class UserProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
     // ignore: invalid_use_of_internal_member
     state = const AsyncLoading<Map<String, dynamic>?>().copyWithPrevious(state);
     state = await AsyncValue.guard(() {
-      return _loadWithBackdrop(service, forceRefresh: true);
+      return service.getCurrentProfile(forceRefresh: true);
     });
   }
 
@@ -27,48 +26,16 @@ class UserProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
     String? displayName,
     String? avatarUrl,
     String? backdropImagePath,
-    String? bio,
-    String? location,
-    DateTime? collectingSince,
-    Map<String, dynamic>? notificationPreferences,
   }) async {
     final service = ref.read(localProfileServiceProvider);
     // ignore: invalid_use_of_internal_member
     state = const AsyncLoading<Map<String, dynamic>?>().copyWithPrevious(state);
     state = await AsyncValue.guard(() async {
-      final updated = await service.updateCurrentProfile(
+      return service.updateCurrentProfile(
         displayName: displayName,
         avatarUrl: avatarUrl,
-        bio: bio,
-        location: location,
-        collectingSince: collectingSince,
-        notificationPreferences: notificationPreferences,
+        backdropImagePath: backdropImagePath,
       );
-      if (backdropImagePath != null) {
-        await service.storeLocalBackdropPath(backdropImagePath);
-      }
-      final backdropPath = await service.getLocalBackdropPath();
-      final resolved =
-          updated ?? await service.getCurrentProfile(forceRefresh: true);
-      return _withBackdrop(resolved, backdropPath);
     });
-  }
-
-  Future<Map<String, dynamic>?> _loadWithBackdrop(
-    LocalProfileService service, {
-    required bool forceRefresh,
-  }) async {
-    final profile = await service.getCurrentProfile(forceRefresh: forceRefresh);
-    return _withBackdrop(profile, await service.getLocalBackdropPath());
-  }
-
-  Map<String, dynamic>? _withBackdrop(
-    Map<String, dynamic>? profile,
-    String backdropPath,
-  ) {
-    if (profile == null) return null;
-    final merged = Map<String, dynamic>.from(profile);
-    merged['backdrop_image_path'] = backdropPath;
-    return merged;
   }
 }

@@ -1,86 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/sync/sync_providers.dart';
-import 'package:takion/src/core/sync/sync_service.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/data/services/drive_backup_service.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/backup_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
+import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
+import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
 
-enum _BackupSyncMode { local, sync }
+enum _BackupSyncMode { backup, sync }
 
 void showBackupAndSyncSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
     title: 'Backup & Sync',
-    child: Consumer(
-      builder: (context, ref, _) {
-        return _BackupAndSyncContent(ref: ref);
-      },
-    ),
+    child: const _BackupAndSyncContent(),
   );
 }
 
 class _BackupAndSyncContent extends ConsumerStatefulWidget {
-  final WidgetRef ref;
-
-  const _BackupAndSyncContent({required this.ref});
+  const _BackupAndSyncContent();
 
   @override
   ConsumerState<_BackupAndSyncContent> createState() =>
       _BackupAndSyncContentState();
 }
 
-class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent> {
-  _BackupSyncMode _mode = _BackupSyncMode.local;
+class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
+    with SingleTickerProviderStateMixin {
+  _BackupSyncMode _mode = _BackupSyncMode.backup;
+  late final AnimationController _syncAnimController;
+  late final Animation<double> _syncRotation;
 
   @override
   void initState() {
     super.initState();
+    _syncAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _syncRotation = Tween<double>(begin: 0, end: -1).animate(
+      CurvedAnimation(parent: _syncAnimController, curve: Curves.linear),
+    );
   }
 
-  void _showSyncedCategoriesDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Synced Data'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'The following data is synced across your devices:',
-              style: TextStyle(fontSize: 14),
-            ),
-            SizedBox(height: 16),
-            _SyncCategoryRow(icon: Icons.shopping_bag_outlined, label: 'Pull List'),
-            SizedBox(height: 10),
-            _SyncCategoryRow(icon: Icons.notifications_outlined, label: 'Subscriptions'),
-            SizedBox(height: 10),
-            _SyncCategoryRow(icon: Icons.inventory_2_outlined, label: 'Comic Library'),
-            SizedBox(height: 10),
-            _SyncCategoryRow(icon: Icons.bookmark_added_outlined, label: 'Reading Logs'),
-            SizedBox(height: 10),
-            _SyncCategoryRow(icon: Icons.favorite_outline, label: 'Favorites (Series, Issues, Characters, Creators, Reading Lists)'),
-            SizedBox(height: 10),
-            _SyncCategoryRow(icon: Icons.list_alt_outlined, label: 'Reading Lists'),
-            SizedBox(height: 10),
-            _SyncCategoryRow(icon: Icons.person_outline, label: 'User Profile'),
-            SizedBox(height: 16),
-            Text(
-              'App settings are per-device and not synced.',
-              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
-    );
+  @override
+  void dispose() {
+    _syncAnimController.dispose();
+    super.dispose();
   }
 
   @override
@@ -95,14 +64,14 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent> {
             child: SegmentedButton<_BackupSyncMode>(
               segments: const [
                 ButtonSegment(
-                  value: _BackupSyncMode.local,
+                  value: _BackupSyncMode.backup,
                   icon: Icon(Icons.phone_android_outlined),
-                  label: Text('LOCAL'),
+                  label: Text('BACKUP'),
                 ),
                 ButtonSegment(
                   value: _BackupSyncMode.sync,
                   icon: Icon(Icons.sync_outlined),
-                  label: Text('CLOUD SYNC'),
+                  label: Text('SYNC'),
                 ),
               ],
               selected: {_mode},
@@ -111,271 +80,209 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent> {
             ),
           ),
           const SizedBox(height: 16),
-          if (_mode == _BackupSyncMode.local) _buildLocalSection(),
+          if (_mode == _BackupSyncMode.backup) _buildBackupSection(),
           if (_mode == _BackupSyncMode.sync) _buildSyncSection(),
         ],
       ),
     );
   }
 
-  Widget _buildLocalSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            Icons.file_upload_outlined,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: const Text(
-            'Create Local Backup',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: const Text(
-            'Save your local app data to a backup file (.tkbk)',
-          ),
-          onTap: () => showCreateBackupSheet(context, widget.ref),
+  Widget _buildBackupSection() {
+    return buildSettingsGroup(context, 'Local Backup', [
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(
+          Icons.file_upload_outlined,
+          color: Theme.of(context).colorScheme.primary,
         ),
-        const Divider(),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            Icons.file_download_outlined,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: const Text(
-            'Restore from Backup',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: const Text('Restore local app data from a backup file (.tkbk)'),
-          onTap: () => showRestoreBackupSheet(context, widget.ref),
+        title: const Text(
+          'Create Local Backup',
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
-      ],
-    );
+        subtitle: const Text(
+          'Save your local app data to a backup file (.tkbk)',
+        ),
+        onTap: () => showCreateBackupSheet(context, ref),
+      ),
+      const Divider(height: 1),
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(
+          Icons.file_download_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: const Text(
+          'Restore from Backup',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: const Text(
+          'Restore local app data from a backup file (.tkbk)',
+        ),
+        onTap: () => showRestoreBackupSheet(context, ref),
+      ),
+    ]);
   }
 
   Widget _buildSyncSection() {
-    final account = ref.watch(googleSignInAccountProvider).value;
-    final syncStatus = ref.watch(syncStatusProvider);
-    final autoSyncEnabled = ref.watch(autoSyncEnabledProvider);
-
-    if (account == null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 16),
-          Icon(
-            Icons.sync_disabled_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Cloud Sync is Disabled',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Sign in with Google to securely sync your comic library, reading logs, pull list, and favorites across all your devices.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.tonalIcon(
-            icon: const Icon(Icons.login),
-            label: const Text('Sign in with Google'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            onPressed: () async {
-              try {
-                await ref.read(syncTransportProvider).signIn();
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Sign in failed: $e')),
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      );
-    }
-
-    final isSyncing = syncStatus.state == SyncState.syncing;
-    final lastSyncText = syncStatus.lastSyncAt != null
-        ? DateFormat.yMMMd().add_jm().format(syncStatus.lastSyncAt!.toLocal())
-        : 'Never';
+    final syncState = ref.watch(driveSyncProvider);
+    final driveService = ref.read(driveBackupServiceProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Connection Info
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
+        buildSettingsGroup(context, 'Google Drive Sync', [
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text(
+              'Google Drive Sync',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              syncState.enabled
+                  ? (syncState.email ?? 'Syncing to Google Drive')
+                  : 'Off',
+            ),
+            value: syncState.enabled,
+            onChanged: (value) async {
+              if (value) {
+                final account = await driveService.signIn();
+                if (account != null) {
+                  ref.read(driveSyncProvider.notifier).enable(
+                    email: account.email,
+                  );
+                  _syncNow();
+                }
+              } else {
+                await driveService.signOut();
+                ref.read(driveSyncProvider.notifier).disable();
+              }
+            },
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.check_circle,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Connected',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        ]),
+        if (syncState.enabled) ...[
+          const SizedBox(height: 16),
+          buildSettingsGroup(context, 'Synchronization Settings', [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: syncState.isSyncing
+                  ? RotationTransition(
+                      turns: _syncRotation,
+                      child: Icon(
+                        Icons.sync,
                         color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                    Text(
-                      account.email,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                onPressed: () => ref.read(syncTransportProvider).signOut(),
-                child: Text(
-                  'Sign out',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Auto Sync Toggle
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Auto Sync', style: TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: const Text('Sync automatically when the app starts'),
-          value: autoSyncEnabled,
-          onChanged: (val) {
-            ref.read(autoSyncEnabledProvider.notifier).setEnabled(val);
-          },
-        ),
-        const Divider(),
-
-        // Sync Status
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Sync Status',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                GestureDetector(
-                  onTap: () => _showSyncedCategoriesDialog(),
-                  child: Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Last synced: $lastSyncText',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (syncStatus.message != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                syncStatus.message!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: syncStatus.state == SyncState.error
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: isSyncing
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                     )
-                  : FilledButton.tonalIcon(
-                      icon: const Icon(Icons.sync, size: 16),
-                      label: const Text('Sync Now'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-                        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: () {
-                        ref.read(syncServiceProvider).syncAll();
-                      },
+                  : Icon(
+                      Icons.sync,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
+              title: Text(
+                syncState.isSyncing ? 'Syncing...' : 'Sync Now',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                syncState.isSyncing
+                    ? 'Please wait'
+                    : syncState.lastSync != null
+                        ? 'Last sync: ${_formatTime(syncState.lastSync!)}'
+                        : 'Never synced',
+              ),
+              onTap: syncState.isSyncing ? null : () => _syncNow(),
             ),
-          ],
-        ),
+            const Divider(height: 1),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: const Text(
+                'Delete Backup from Drive',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                'Remove backup file from Google Drive',
+              ),
+              onTap: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Backup'),
+                    content: const Text(
+                      'Are you sure you want to delete the backup file '
+                      'from Google Drive? This cannot be undone.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm != true) return;
+                try {
+                  await driveService.deleteBackup();
+                  if (!mounted) return;
+                  TakionAlerts.success(context, 'Backup deleted from Drive');
+                } catch (e) {
+                  if (!mounted) return;
+                  TakionAlerts.error(context, 'Failed to delete: $e');
+                }
+              },
+            ),
+          ]),
 
-        const SizedBox(height: 16),
+        ],
       ],
     );
   }
-}
 
-class _SyncCategoryRow extends StatelessWidget {
-  const _SyncCategoryRow({required this.icon, required this.label});
+  Future<void> _syncNow() async {
+    final driveService = ref.read(driveBackupServiceProvider);
+    final hiveService = ref.read(hiveServiceProvider);
+    final syncState = ref.read(driveSyncProvider);
 
-  final IconData icon;
-  final String label;
+    ref.read(driveSyncProvider.notifier).setSyncing(true);
+    _syncAnimController.repeat();
+    try {
+      final hasDriveBackup = await driveService.getLastBackupTime() != null;
+      final isEmpty = !await hiveService.hasBackupData();
+      if (hasDriveBackup && isEmpty) {
+        await driveService.restoreFromDrive();
+        await hiveService.resetSyncTimestamps();
+        if (mounted) TakionAlerts.success(context, 'Restored from Drive');
+      } else {
+        await driveService.uploadBackup(
+          lastSyncTime: hasDriveBackup ? syncState.lastSync : null,
+        );
+        if (mounted) TakionAlerts.success(context, 'Synced to Drive');
+      }
+      await ref.read(driveSyncProvider.notifier).updateLastSync();
+      invalidateCacheBackedProviders((p) => ref.invalidate(p));
+    } catch (e) {
+      if (mounted) TakionAlerts.error(context, 'Sync failed: $e');
+    } finally {
+      _syncAnimController.reset();
+      ref.read(driveSyncProvider.notifier).setSyncing(false);
+    }
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      ],
-    );
+  String _formatTime(DateTime dt) {
+    final now = DateTime.now().toUtc();
+    final diff = now.difference(dt);
+
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 2) return 'Yesterday';
+    if (diff.inDays < 30) return '${diff.inDays}d ago';
+    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo ago';
+    return '${(diff.inDays / 365).floor()}y ago';
   }
 }

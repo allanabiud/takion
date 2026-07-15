@@ -9,19 +9,14 @@ import 'package:takion/src/presentation/providers/theme_provider.dart';
 const accentSchemes = [
   FlexScheme.green,
   FlexScheme.blackWhite,
-  FlexScheme.bigStone,
+  FlexScheme.aquaBlue,
   FlexScheme.blueM3,
   FlexScheme.indigo,
   FlexScheme.deepPurple,
   FlexScheme.sakura,
   FlexScheme.mandyRed,
-  FlexScheme.money,
-  FlexScheme.aquaBlue,
-  FlexScheme.gold,
-  FlexScheme.amber,
   FlexScheme.vesuviusBurn,
-  FlexScheme.espresso,
-  FlexScheme.outerSpace,
+  FlexScheme.gold,
 ];
 
 void showAppearanceSettings(BuildContext context, WidgetRef ref) {

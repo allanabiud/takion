@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/library_item.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/series_issue_list_page.dart';
@@ -12,7 +11,6 @@ import 'package:takion/src/presentation/components/list_header.dart';
 import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
@@ -458,9 +456,6 @@ Future<void> applySeriesIssueBulkAction({
       }
     }
 
-    await invalidateLibraryItemsLocalCacheWithHive(
-      ref.read(hiveServiceProvider),
-    );
     ref.invalidate(allLibraryItemsProvider);
     await ref.read(allLibraryItemsProvider.future);
     ref.invalidate(collectionIssueStatusMapProvider);
@@ -490,6 +485,28 @@ Future<void> applySeriesIssueBulkAction({
       );
     }
   }
+}
+
+int? _findClosestIssueIndex(List<SeriesIssueBulkCandidate> issues, String input, {int? startAfter}) {
+  final query = input.trim();
+  if (query.isEmpty) return null;
+
+  final parsedQuery = int.tryParse(query);
+
+  var startIndex = startAfter ?? 0;
+  if (startIndex < 0) startIndex = 0;
+
+  for (var i = startIndex; i < issues.length; i++) {
+    final candidate = issues[i].issueNumber.trim();
+    if (candidate == query) return i;
+
+    if (parsedQuery != null) {
+      final parsedCandidate = int.tryParse(candidate);
+      if (parsedCandidate == parsedQuery) return i;
+    }
+  }
+
+  return null;
 }
 
 Future<void> showSeriesIssueBulkActionsSheet({
@@ -752,19 +769,20 @@ Future<void> showSeriesIssueBulkActionsSheet({
                           children: [
                             Expanded(
                               child: TextFormField(
-                                initialValue: selectedStart.toString(),
+                                initialValue: startIssueNumber,
                                 decoration: const InputDecoration(
-                                  labelText: 'From',
+                                  labelText: 'From issue #',
                                   isDense: true,
                                 ),
                                 keyboardType: TextInputType.number,
                                 enabled: !isApplying,
                                 onChanged: (v) {
-                                  final value = int.tryParse(v);
-                                  if (value != null && value >= 1 && value <= selectedEnd) {
+                                  if (v.isEmpty) return;
+                                  final idx = _findClosestIssueIndex(issues, v, startAfter: null);
+                                  if (idx != null && idx + 1 <= selectedEnd) {
                                     setModalState(() {
                                       selectedRange = RangeValues(
-                                        value.toDouble(),
+                                        (idx + 1).toDouble(),
                                         selectedRange.end,
                                       );
                                     });
@@ -775,20 +793,21 @@ Future<void> showSeriesIssueBulkActionsSheet({
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextFormField(
-                                initialValue: selectedEnd.toString(),
+                                initialValue: endIssueNumber,
                                 decoration: const InputDecoration(
-                                  labelText: 'To',
+                                  labelText: 'To issue #',
                                   isDense: true,
                                 ),
                                 keyboardType: TextInputType.number,
                                 enabled: !isApplying,
                                 onChanged: (v) {
-                                  final value = int.tryParse(v);
-                                  if (value != null && value >= selectedStart && value <= totalIssues) {
+                                  if (v.isEmpty) return;
+                                  final idx = _findClosestIssueIndex(issues, v, startAfter: selectedStart - 1);
+                                  if (idx != null && idx + 1 <= totalIssues) {
                                     setModalState(() {
                                       selectedRange = RangeValues(
                                         selectedRange.start,
-                                        value.toDouble(),
+                                        (idx + 1).toDouble(),
                                       );
                                     });
                                   }
@@ -819,7 +838,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                         ),
                       const SizedBox(height: 4),
                       Text(
-                        'Selected positions: $selectedStart to $selectedEnd of $totalIssues',
+                        'Selected: #$startIssueNumber - #$endIssueNumber ($selectedStart to $selectedEnd of $totalIssues)',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

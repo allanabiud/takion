@@ -28,14 +28,13 @@ class BackupService {
   static const _version = <int>[0x02];
 
   static const Map<String, List<String>> backupGroups = {
-    'App Settings': ['settings_box'],
-    'Pull List': ['local_pull_list_box'],
-    'Subscriptions': ['local_subscriptions_box'],
-    'Collection': [
+    'User Profile': ['local_profile_box'],
+    'My Library': [
       'local_library_items_box',
       'local_library_read_logs_box',
     ],
-    'Reading Lists': ['reading_lists_box'],
+    'Pull List': ['local_pull_list_box'],
+    'Subscriptions': ['local_subscriptions_box'],
     'Favorites': [
       'local_favorite_series_box',
       'local_favorite_issues_box',
@@ -43,11 +42,7 @@ class BackupService {
       'local_favorite_characters_box',
       'local_favorite_creators_box',
     ],
-    'User Profile': [
-      'local_profile_box',
-      'local_auth_box',
-      'profile_ui_box',
-    ],
+    'Reading Lists': ['reading_lists_box'],
   };
 
   static Set<String> allBoxNames() =>
@@ -62,16 +57,18 @@ class BackupService {
 
   Future<Uint8List> createBackupData({
     required Set<String> boxNames,
+    Map<String, List<Map<String, dynamic>>>? boxes,
   }) async {
-    final boxes = <String, List<Map<String, dynamic>>>{};
+    boxes ??= <String, List<Map<String, dynamic>>>{};
     for (final boxName in boxNames) {
+      if (boxes.containsKey(boxName)) continue;
       final entries = await _readBox(boxName);
       boxes[boxName] = entries;
     }
 
     final info = await PackageInfo.fromPlatform();
     final payload = {
-      'v': 1,
+      'v': 2,
       't': DateTime.now().toUtc().toIso8601String(),
       'a': '${info.version}+${info.buildNumber}',
       'b': boxes,
@@ -137,6 +134,7 @@ class BackupService {
     void Function(String boxName, int current, int total)? onProgress,
   }) async {
     for (final boxName in boxNames) {
+      await _hiveService.clearBoxData(boxName);
       final entries = data[boxName];
       if (entries == null || entries.isEmpty) continue;
 
@@ -147,7 +145,11 @@ class BackupService {
         final entry = entries[i];
         final key = entry['k'] as String;
         final value = entry['v'];
-        await _hiveService.putEntry(boxName, key, value);
+        if (value == null) {
+          await _hiveService.deleteEntry(boxName, key);
+        } else {
+          await _hiveService.putEntry(boxName, key, value);
+        }
         onProgress?.call(boxName, i + 1, total);
       }
     }

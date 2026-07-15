@@ -5,9 +5,6 @@ import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 Future<bool?> showRestoreBackupSheet(BuildContext context, WidgetRef ref) async {
@@ -313,23 +310,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
   }
 
   void _invalidateProviders(Set<String> boxNames) {
-    for (final boxName in boxNames) {
-      switch (boxName) {
-        case 'settings_box':
-          widget.ref.invalidate(settingsProvider);
-          break;
-        case 'local_pull_list_box':
-          widget.ref.invalidate(currentWeekPullsProvider);
-          break;
-        case 'local_subscriptions_box':
-          widget.ref.invalidate(activeSubscriptionsProvider);
-          break;
-        case 'local_library_items_box':
-        case 'local_library_read_logs_box':
-          widget.ref.invalidate(collectionStatsProvider);
-          break;
-      }
-    }
+    invalidateCacheBackedProviders((p) => widget.ref.invalidate(p));
   }
 
   String _formatDate(DateTime date) {

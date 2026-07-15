@@ -33,8 +33,6 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
   }
 
   void _initializeIcons() {
-    // We use a grid to ensure even coverage, but add jitter and tilt
-    // to make it look less like a "perfect grid".
     const int columns = 5;
     const int rows = 8;
     const double cellWidth = 1.0 / columns;
@@ -44,8 +42,6 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
     for (int i = 0; i < columns; i++) {
       for (int j = 0; j < rows; j++) {
-        // Center of the cell + random jitter (offset)
-        // Jitter is limited to +/- 25% of the cell size to prevent overlaps
         final double jitterX = (_random.nextDouble() - 0.5) * 0.5 * cellWidth;
         final double jitterY = (_random.nextDouble() - 0.5) * 0.5 * cellHeight;
 
@@ -56,12 +52,10 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
           _FloatingIcon(
             icon: _getAppSpecificIcon(),
             centerPosition: Offset(centerX, centerY),
-            // Back and forth movement
             floatDirection: Offset(
-              (_random.nextDouble() - 0.5) * 0.04,
-              (_random.nextDouble() - 0.5) * 0.04,
+              (_random.nextDouble() - 0.5) * 0.08,
+              (_random.nextDouble() - 0.5) * 0.08,
             ),
-            // Random tilt between -20 and +20 degrees
             rotation: (_random.nextDouble() - 0.5) * 0.7,
             size: iconSize,
             depth: _random.nextDouble(),
@@ -73,17 +67,17 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
   IconData _getAppSpecificIcon() {
     const icons = [
-      Icons.collections_bookmark_outlined, // Library
-      Icons.new_releases_outlined, // New Releases
-      Icons.shopping_bag_outlined, // Pull List
-      Icons.turned_in_not, // Wishlist
-      Icons.inventory_2_outlined, // Collect/Inventory
-      Icons.menu_book_outlined, // Read/Reading
-      Icons.bookmark_added_outlined, // Read status
-      Icons.favorite_border, // Favourites
-      Icons.list_alt_outlined, // Reading Lists
-      Icons.face_outlined, // Characters
-      Icons.business_outlined, // Publishers
+      Icons.collections_bookmark_outlined,
+      Icons.new_releases_outlined,
+      Icons.shopping_bag_outlined,
+      Icons.turned_in_not,
+      Icons.inventory_2_outlined,
+      Icons.menu_book_outlined,
+      Icons.bookmark_added_outlined,
+      Icons.favorite_border,
+      Icons.list_alt_outlined,
+      Icons.face_outlined,
+      Icons.business_outlined,
     ];
     return icons[_random.nextInt(icons.length)];
   }
@@ -172,7 +166,6 @@ class _FloatingIconsPainter extends CustomPainter {
 
       canvas.save();
       canvas.translate(offset.dx, offset.dy);
-      // Apply the random tilt
       canvas.rotate(icon.rotation);
       textPainter.paint(
         canvas,

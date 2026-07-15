@@ -1,5 +1,4 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/notifications/push_notification_service.dart';
 
 part 'auth_provider.g.dart';
 
@@ -12,7 +11,6 @@ class AuthState extends _$AuthState {
 
   Future<void> logout() async {
     state = const AsyncValue.loading();
-    await ref.read(pushNotificationServiceProvider).markCurrentDeviceDisabled();
     state = const AsyncValue.data(AuthStatus.authenticated);
   }
 }

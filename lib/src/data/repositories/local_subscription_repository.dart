@@ -6,7 +6,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   LocalSubscriptionRepository(this._hiveService);
 
   static const _localUserId = 'local-user';
-  static const _boxName = 'local_subscriptions_box';
+  static const boxName = 'local_subscriptions_box';
+  static const _boxName = boxName;
 
   final HiveService _hiveService;
 
@@ -94,6 +95,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       updatedAt: now,
     );
     await box.put(metronSeriesId.toString(), _toMap(value));
+    await _hiveService.recordTimestamp(boxName, metronSeriesId.toString());
     return value;
   }
 
@@ -113,6 +115,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     );
     final box = await _hiveService.openBox<Map>(_boxName);
     await box.put(metronSeriesId.toString(), _toMap(updated));
+    await _hiveService.recordTimestamp(boxName, metronSeriesId.toString());
   }
 
   @override
@@ -139,6 +142,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     );
     final box = await _hiveService.openBox<Map>(_boxName);
     await box.put(metronSeriesId.toString(), _toMap(updated));
+    await _hiveService.recordTimestamp(boxName, metronSeriesId.toString());
     return updated;
   }
 }

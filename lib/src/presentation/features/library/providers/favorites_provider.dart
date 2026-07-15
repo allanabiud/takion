@@ -6,7 +6,6 @@ import 'package:takion/src/domain/entities/issue_list.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
 import 'package:takion/src/domain/entities/series.dart';
 import 'package:takion/src/domain/entities/series_list.dart';
-import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
 import 'package:takion/src/presentation/providers/repository_providers.dart';
 
 final favoriteSeriesListProvider = FutureProvider<List<FavoriteSeries>>((

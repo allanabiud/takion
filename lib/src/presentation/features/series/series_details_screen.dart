@@ -221,7 +221,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         ? sortIssues(
             issuesPreviewAsync.asData!.value.results,
             ContentSortOption.dateNewest,
-          ).take(5).toList()
+          ).take(10).toList()
         : <IssueList>[];
     final totalIssueCount = issuesPreviewAsync.asData?.value.count ?? 0;
 

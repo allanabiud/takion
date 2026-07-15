@@ -22,7 +22,7 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_details_sheet.dart';
-import 'package:takion/src/data/repositories/reading_list_repository_impl.dart';
+import 'package:takion/src/presentation/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
