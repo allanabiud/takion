@@ -4,9 +4,13 @@ import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/issue_details_dto.dart';
 import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 /// Bootstraps the application by initializing core services and state management.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
@@ -20,6 +24,15 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
   final hiveService = HiveService();
   await hiveService.init();
+
+  tz.initializeTimeZones();
+  try {
+    final timezoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timezoneName));
+  } catch (_) {
+    tz.setLocalLocation(tz.getLocation('UTC'));
+  }
+  await NotificationService.instance.init();
 
   // Pre-open essential boxes in parallel to avoid blocking the main thread
   await Future.wait([

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -19,56 +19,89 @@ class DriveBackupService {
   static const _appFolderName = 'Takion';
   static const _backupFileName = 'takion_backup.tkbk';
 
+  static bool _googleInitialized = false;
+
   final HiveService _hiveService;
-  final GoogleSignIn _googleSignIn;
+  final Dio _dio;
+  GoogleSignInAccount? _currentUser;
 
   DriveBackupService(this._hiveService)
-      : _googleSignIn = GoogleSignIn(scopes: [_driveScope]);
+      : _dio = Dio(
+          BaseOptions(
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
+          ),
+        );
 
-  GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
+  Future<void> _ensureInitialized() async {
+    if (!_googleInitialized) {
+      await GoogleSignIn.instance.initialize();
+      _googleInitialized = true;
+    }
+  }
 
-  bool get isSignedIn => _googleSignIn.currentUser != null;
+  GoogleSignInAccount? get currentUser => _currentUser;
+
+  bool get isSignedIn => _currentUser != null;
 
   Future<GoogleSignInAccount?> signIn() async {
-    return _googleSignIn.signIn();
+    await _ensureInitialized();
+    final account = await GoogleSignIn.instance.authenticate(scopeHint: [_driveScope]);
+    _currentUser = account;
+    return account;
   }
 
   Future<GoogleSignInAccount?> signInSilently() async {
-    return _googleSignIn.signInSilently();
+    await _ensureInitialized();
+    final account = await GoogleSignIn.instance.attemptLightweightAuthentication();
+    if (account != null) {
+      _currentUser = account;
+    }
+    return account;
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    await _ensureInitialized();
+    await GoogleSignIn.instance.signOut();
+    _currentUser = null;
   }
 
   Future<String> _getAccessToken() async {
-    final user = _googleSignIn.currentUser;
+    final user = _currentUser;
     if (user == null) throw StateError('Not signed in to Google Drive');
-    final auth = await user.authentication;
-    final token = auth.accessToken;
-    if (token == null || token.isEmpty) {
+    final authz = await user.authorizationClient.authorizeScopes([_driveScope]);
+    final token = authz.accessToken;
+    if (token.isEmpty) {
       throw StateError('Google Drive access token is empty, please re-authenticate');
     }
     return token;
   }
 
-  Future<String?> _getAppFolderId() async {
+  Future<Response> _driveGet(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     final token = await _getAccessToken();
-    final query = Uri.encodeComponent(
-      "name='$_appFolderName' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+    return _dio.get(
+      path,
+      queryParameters: queryParameters,
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+        validateStatus: (status) => status == 200 || status == 404,
+      ),
     );
-    final url = Uri.parse(
-      'https://www.googleapis.com/drive/v3/files?q=$query&fields=files(id,name)',
-    );
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
+  }
+
+  Future<String?> _getAppFolderId() async {
+    final response = await _driveGet(
+      'https://www.googleapis.com/drive/v3/files',
+      queryParameters: {
+        'q': "name='$_appFolderName' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        'fields': 'files(id,name)',
+      },
     );
     if (response.statusCode == 404) return null;
-    if (response.statusCode != 200) {
-      throw StateError('Failed to find Drive folder (HTTP ${response.statusCode}): ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = response.data as Map<String, dynamic>;
     final files = data['files'] as List<dynamic>? ?? [];
     if (files.isEmpty) return null;
     return (files.first as Map<String, dynamic>)['id'] as String;
@@ -79,44 +112,29 @@ class DriveBackupService {
     if (existingId != null) return existingId;
 
     final token = await _getAccessToken();
-    final url = Uri.parse('https://www.googleapis.com/drive/v3/files');
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
+    final response = await _dio.post(
+      'https://www.googleapis.com/drive/v3/files',
+      data: {
         'name': _appFolderName,
         'mimeType': 'application/vnd.google-apps.folder',
-      }),
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
-    if (response.statusCode != 200) {
-      throw StateError('Failed to create Drive folder (HTTP ${response.statusCode}): ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = response.data as Map<String, dynamic>;
     return data['id'] as String;
   }
 
   Future<String?> _findBackupFileId() async {
-    final token = await _getAccessToken();
     final folderId = await _ensureAppFolderId();
-    final query = Uri.encodeComponent(
-      "'$folderId' in parents and name='$_backupFileName' and trashed=false",
-    );
-    final url = Uri.parse(
-      'https://www.googleapis.com/drive/v3/files?q=$query'
-      '&fields=files(id,name)',
-    );
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
+    final response = await _driveGet(
+      'https://www.googleapis.com/drive/v3/files',
+      queryParameters: {
+        'q': "'$folderId' in parents and name='$_backupFileName' and trashed=false",
+        'fields': 'files(id,name)',
+      },
     );
     if (response.statusCode == 404) return null;
-    if (response.statusCode != 200) {
-      throw StateError('Failed to find backup file (HTTP ${response.statusCode}): ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = response.data as Map<String, dynamic>;
     final files = data['files'] as List<dynamic>? ?? [];
     if (files.isEmpty) return null;
     return (files.first as Map<String, dynamic>)['id'] as String;
@@ -126,16 +144,12 @@ class DriveBackupService {
     try {
       final fileId = await _findBackupFileId();
       if (fileId == null) return null;
-      final token = await _getAccessToken();
-      final url = Uri.parse(
-        'https://www.googleapis.com/drive/v3/files/$fileId?fields=createdTime',
-      );
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
+      final response = await _driveGet(
+        'https://www.googleapis.com/drive/v3/files/$fileId',
+        queryParameters: {'fields': 'createdTime'},
       );
       if (response.statusCode != 200) return null;
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = response.data as Map<String, dynamic>;
       final timeStr = data['createdTime'] as String?;
       if (timeStr == null) return null;
       return DateTime.parse(timeStr).toLocal();
@@ -147,16 +161,12 @@ class DriveBackupService {
   Future<DateTime?> _getBackupModificationTime() async {
     final fileId = await _findBackupFileId();
     if (fileId == null) return null;
-    final token = await _getAccessToken();
-    final url = Uri.parse(
-      'https://www.googleapis.com/drive/v3/files/$fileId?fields=modifiedTime',
-    );
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
+    final response = await _driveGet(
+      'https://www.googleapis.com/drive/v3/files/$fileId',
+      queryParameters: {'fields': 'modifiedTime'},
     );
     if (response.statusCode != 200) return null;
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = response.data as Map<String, dynamic>;
     final timeStr = data['modifiedTime'] as String?;
     if (timeStr == null) return null;
     return DateTime.parse(timeStr).toLocal();
@@ -166,18 +176,17 @@ class DriveBackupService {
     final fileId = await _findBackupFileId();
     if (fileId == null) return null;
     final token = await _getAccessToken();
-    final url = Uri.parse(
-      'https://www.googleapis.com/drive/v3/files/$fileId?alt=media',
-    );
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
+    final response = await _dio.get(
+      'https://www.googleapis.com/drive/v3/files/$fileId',
+      queryParameters: {'alt': 'media'},
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+        responseType: ResponseType.bytes,
+        validateStatus: (status) => status == 200 || status == 404,
+      ),
     );
     if (response.statusCode == 404) return null;
-    if (response.statusCode != 200) {
-      throw StateError('Download failed (HTTP ${response.statusCode}): ${response.body}');
-    }
-    return response.bodyBytes;
+    return response.data as Uint8List;
   }
 
   Future<void> restoreFromDrive() async {
@@ -226,7 +235,6 @@ class DriveBackupService {
         .expand((boxes) => boxes)
         .toSet();
 
-    // Determine changed keys and deleted keys since last sync
     Map<String, int> changedKeys = {};
     Map<String, int> deletedKeys = {};
     if (lastSyncTime != null) {
@@ -260,8 +268,6 @@ class DriveBackupService {
       data = await backupService.createBackupData(boxNames: allBoxNames);
     }
 
-    // Check for concurrent modification — if another device modified the backup
-    // while we were merging, re-download and re-merge (up to 3 retries)
     if (retryCount < 3) {
       final remoteModified = await _getBackupModificationTime();
       if (remoteModified != null && remoteModified.isAfter(downloadTime)) {
@@ -272,61 +278,48 @@ class DriveBackupService {
       }
     }
 
-    // Atomic upload: update in place if file exists, create otherwise
     final existingId = await _findBackupFileId();
     final metadata = jsonEncode({
       'name': _backupFileName,
       if (existingId == null) 'parents': [folderId],
     });
 
-    final boundary = 'boundary_${DateTime.now().millisecondsSinceEpoch}';
-    final bodyBytes = _multipartBody(metadata, data, boundary);
+    final formData = FormData.fromMap({
+      'metadata': MultipartFile.fromString(
+        metadata,
+        contentType: DioMediaType('application', 'json'),
+      ),
+      'file': MultipartFile.fromBytes(
+        data,
+        filename: _backupFileName,
+        contentType: DioMediaType('application', 'octet-stream'),
+      ),
+    });
+
     final url = existingId != null
-        ? Uri.parse(
-            'https://www.googleapis.com/upload/drive/v3/files/$existingId?uploadType=multipart')
-        : Uri.parse(
-            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+        ? 'https://www.googleapis.com/upload/drive/v3/files/$existingId'
+        : 'https://www.googleapis.com/upload/drive/v3/files';
 
-    final request = http.Request(
-      existingId != null ? 'PATCH' : 'POST',
-      url,
-    );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Content-Type'] = 'multipart/related; boundary=$boundary';
-    request.bodyBytes = bodyBytes;
-
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
-
-    if (response.statusCode != 200) {
-      throw StateError('Upload failed: ${response.body}');
+    final Response response;
+    if (existingId != null) {
+      response = await _dio.patch(
+        url,
+        queryParameters: {'uploadType': 'multipart'},
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+    } else {
+      response = await _dio.post(
+        url,
+        queryParameters: {'uploadType': 'multipart'},
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
     }
 
-    final result = jsonDecode(response.body) as Map<String, dynamic>;
+    final result = response.data as Map<String, dynamic>;
     await _hiveService.clearDeleteTimestamps();
     return result['id'] as String;
-  }
-
-  List<int> _multipartBody(String metadata, Uint8List data, String boundary) {
-    final bytes = <int>[];
-    bytes.addAll(utf8.encode('--$boundary\r\n'));
-    bytes.addAll(
-      utf8.encode(
-        'Content-Disposition: form-data; name="metadata"\r\n'
-        'Content-Type: application/json; charset=UTF-8\r\n\r\n'
-        '$metadata\r\n',
-      ),
-    );
-    bytes.addAll(utf8.encode('--$boundary\r\n'));
-    bytes.addAll(
-      utf8.encode(
-        'Content-Disposition: form-data; name="file"; filename="$_backupFileName"\r\n'
-        'Content-Type: application/octet-stream\r\n\r\n',
-      ),
-    );
-    bytes.addAll(data);
-    bytes.addAll(utf8.encode('\r\n--$boundary--\r\n'));
-    return bytes;
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _mergeAndResolve(
@@ -343,7 +336,6 @@ class DriveBackupService {
       final backupService = BackupService(_hiveService);
       final driveData = await backupService.readBackupData(filePath: tempPath);
 
-      // Pass 1: Process local changes (added/updated keys)
       for (final entry in changedKeys.entries) {
         final compositeKey = entry.key;
         final colonIdx = compositeKey.indexOf(':');
@@ -364,7 +356,6 @@ class DriveBackupService {
             : null;
 
         if (driveTs != null && driveTs > localTs) {
-          // Drive is newer — keep Drive's value and write it back locally
           final driveEntry = entries[driveIdx];
           await _hiveService.putEntry(
             boxName,
@@ -375,7 +366,6 @@ class DriveBackupService {
           continue;
         }
 
-        // Local is newer or Drive has no entry — use local value
         final currentValue = await _hiveService.readEntry(boxName, key);
         if (currentValue != null) {
           if (driveIdx >= 0) {
@@ -390,7 +380,6 @@ class DriveBackupService {
         }
       }
 
-      // Pass 2: Process Drive entries not in changedKeys — apply newer Drive entries to local
       final allLocalTimestamps = await _hiveService.getAllTimestamps();
       for (final boxName in driveData.keys) {
         if (!allBoxNames.contains(boxName)) continue;
@@ -413,7 +402,6 @@ class DriveBackupService {
         }
       }
 
-      // Pass 3: Process local deletions
       for (final entry in deletedKeys.entries) {
         final compositeKey = entry.key;
         final colonIdx = compositeKey.indexOf(':');
@@ -432,11 +420,9 @@ class DriveBackupService {
           final driveEntry = entries[driveIdx];
           final driveTs = driveEntry['t'] as int?;
           if (driveTs != null && driveTs > localDeleteTs) {
-            // Drive has a newer version — restore it locally
             await _hiveService.putEntry(boxName, key, driveEntry['v']);
             await _hiveService.recordTimestamp(boxName, key);
           } else {
-            // Local deletion is newer — mark as deleted in Drive data
             entries[driveIdx] = {'k': key, 'v': null, 't': localDeleteTs};
           }
         }
@@ -454,9 +440,9 @@ class DriveBackupService {
     final token = await _getAccessToken();
     final fileId = await _findBackupFileId();
     if (fileId == null) return;
-    await http.delete(
-      Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId'),
-      headers: {'Authorization': 'Bearer $token'},
+    await _dio.delete(
+      'https://www.googleapis.com/drive/v3/files/$fileId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
 

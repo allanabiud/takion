@@ -3,17 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
+import 'package:takion/src/core/notifications/notification_service.dart';
+import 'package:takion/src/core/notifications/notification_settings_provider.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
 import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart'
     show
-        AuthorizeMetronRoute;
+        AuthorizeMetronRoute,
+        MyPullsRoute;
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/presentation/providers/connectivity_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/theme_provider.dart';
@@ -37,11 +41,18 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     super.initState();
     _appRouter = AppRouter(AuthGuard(ref));
     _shortcutHandler.init();
+    final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
+    final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
+    final navigator = _appRouter;
+
     _shortcutHandler.navigateNamed = (route) {
-      final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
-      final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
       if (!hasSeen) return;
-      _appRouter.push(route);
+      navigator.push(route);
+    };
+
+    NotificationService.instance.onNavigateToMyPulls = () {
+      if (!hasSeen) return;
+      navigator.push(const MyPullsRoute());
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -49,6 +60,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       _runMetronConnectionCheckIfNeeded();
       _reconcileSubscriptionPullsOnSessionStart();
       _runDriveAutoSyncIfEnabled();
+      _scheduleWeeklyPullNotification();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -106,6 +118,21 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       debugPrint('Auto-sync failed: $e');
     }
     ref.read(driveSyncProvider.notifier).setSyncing(false);
+  }
+
+  Future<void> _scheduleWeeklyPullNotification() async {
+    final enabled = ref.read(notificationsEnabledProvider).value ?? false;
+    if (!enabled) {
+      await NotificationService.instance.cancel();
+      return;
+    }
+    final day = ref.read(notificationDayProvider).value ?? NotificationDay.wednesday;
+    final count = ref.read(currentWeekPullsCountProvider);
+    if (count > 0) {
+      await NotificationService.instance.scheduleWeekly(count, day);
+    } else {
+      await NotificationService.instance.cancel();
+    }
   }
 
   Future<void> _runMetronConnectionCheckIfNeeded() async {

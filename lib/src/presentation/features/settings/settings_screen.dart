@@ -10,6 +10,7 @@ import 'package:takion/src/presentation/features/settings/widgets/collection_set
 import 'package:takion/src/presentation/features/settings/widgets/backup_and_sync_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/data_storage_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/about_settings.dart';
+import 'package:takion/src/presentation/features/settings/widgets/notification_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/performance_metrics_settings.dart';
 
 @RoutePage()
@@ -42,6 +43,14 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Library',
             subtitle: 'Defaults and content preferences',
             onTap: () => showCollectionSettings(context, ref),
+          ),
+          const SizedBox(height: 16),
+          buildSettingsSectionHeader(context, 'NOTIFICATIONS'),
+          SettingsNavTile(
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            subtitle: 'Weekly pull summary reminders',
+            onTap: () => showNotificationSettings(context, ref),
           ),
           const SizedBox(height: 16),
           buildSettingsSectionHeader(context, 'ACCOUNT & DATA'),
