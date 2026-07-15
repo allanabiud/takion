@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/perf/performance_metrics.dart';
+import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
 import 'package:takion/src/data/datasources/series_name_index.dart';

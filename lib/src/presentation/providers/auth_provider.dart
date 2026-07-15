@@ -11,6 +11,6 @@ class AuthState extends _$AuthState {
 
   Future<void> logout() async {
     state = const AsyncValue.loading();
-    state = const AsyncValue.data(AuthStatus.authenticated);
+    state = const AsyncValue.data(AuthStatus.unauthenticated);
   }
 }

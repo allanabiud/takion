@@ -1,5 +1,5 @@
 import 'package:takion/src/domain/entities/series_list.dart';
-import 'package:takion/src/presentation/providers/search_utils.dart';
+import 'package:takion/src/domain/search/search_utils.dart';
 
 class SeriesSearchPage with SearchPageMixin {
   const SeriesSearchPage({

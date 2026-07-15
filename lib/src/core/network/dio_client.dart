@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
-import 'package:takion/src/core/perf/performance_metrics.dart';
+import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
 final dioProvider = Provider<Dio>((ref) {

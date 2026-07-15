@@ -7,18 +7,16 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:takion/src/app.dart';
-import 'package:hive_ce/hive_ce.dart'; // Import Hive
-import 'package:takion/hive_registrar.g.dart'; // Import generated adapters
-import 'dart:io'; // For Directory
+import 'package:hive_ce/hive_ce.dart';
+import 'package:takion/hive_registrar.g.dart';
+import 'dart:io';
 
 void main() {
   late Directory tempDir;
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    SharedPreferences.setMockInitialValues({});
     tempDir = await Directory.systemTemp.createTemp('hive_test');
     Hive.init(tempDir.path);
     Hive.registerAdapters();

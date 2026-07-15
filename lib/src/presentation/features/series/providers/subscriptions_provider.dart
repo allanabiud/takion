@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/perf/performance_metrics.dart';
+import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/series_list.dart';

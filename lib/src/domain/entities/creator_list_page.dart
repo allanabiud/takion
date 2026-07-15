@@ -1,5 +1,5 @@
 import 'package:takion/src/domain/entities/creator_list.dart';
-import 'package:takion/src/presentation/providers/search_utils.dart';
+import 'package:takion/src/domain/search/search_utils.dart';
 
 class CreatorListPage with SearchPageMixin {
   const CreatorListPage({
