@@ -49,4 +49,4 @@ app.*.map.json
 /android/app/google-services.json
 
 # Plan files
-plan.md
+plans/
