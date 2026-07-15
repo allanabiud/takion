@@ -3,9 +3,14 @@ import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/data/dto/dto.dart';
 
 abstract class MetronRemoteDataSource {
-  Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);
-  Future<List<IssueListDto>> getFocReleasesForDate(DateTime date);
-  Future<IssueDetailsDto> getIssueDetails(int issueId);
+  Future<Response> rawGet(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    CancelToken? cancelToken,
+  });
+  Future<Response> getWeeklyReleasesForDate(DateTime date);
+  Future<Response> getFocReleasesForDate(DateTime date);
+  Future<Response> getIssueDetails(int issueId);
   Future<IssueSearchResponseDto> searchIssues(
     String query, {
     int page = 1,
@@ -30,7 +35,7 @@ abstract class MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   });
-  Future<SeriesDetailsDto> getSeriesDetails(int seriesId);
+  Future<Response> getSeriesDetails(int seriesId);
   Future<SeriesIssueListResponseDto> getSeriesIssueList(
     int seriesId, {
     int page = 1,
@@ -179,6 +184,19 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
 
   MetronRemoteDataSourceImpl(this._dio);
 
+  @override
+  Future<Response> rawGet(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    CancelToken? cancelToken,
+  }) {
+    return _dio.get(
+      path,
+      queryParameters: queryParameters,
+      cancelToken: cancelToken,
+    );
+  }
+
   String _normalizeQuery(String query) {
     return query
         .trim()
@@ -188,7 +206,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date) async {
+  Future<Response> getWeeklyReleasesForDate(DateTime date) async {
     final offset = date.weekday % 7;
     final startOfWeek = DateTime(
       date.year,
@@ -200,20 +218,17 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     String formatDate(DateTime d) =>
         "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
-    final response = await _dio.get(
+    return _dio.get(
       'issue/',
       queryParameters: {
         'store_date_range_after': formatDate(startOfWeek),
         'store_date_range_before': formatDate(endOfWeek),
       },
     );
-
-    final List results = response.data['results'];
-    return results.map((e) => IssueListDto.fromJson(e)).toList();
   }
 
   @override
-  Future<List<IssueListDto>> getFocReleasesForDate(DateTime date) async {
+  Future<Response> getFocReleasesForDate(DateTime date) async {
     final offset = date.weekday % 7;
     final startOfWeek = DateTime(
       date.year,
@@ -225,22 +240,18 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     String formatDate(DateTime d) =>
         "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
-    final response = await _dio.get(
+    return _dio.get(
       'issue/',
       queryParameters: {
         'foc_date_range_after': formatDate(startOfWeek),
         'foc_date_range_before': formatDate(endOfWeek),
       },
     );
-
-    final List results = response.data['results'];
-    return results.map((e) => IssueListDto.fromJson(e)).toList();
   }
 
   @override
-  Future<IssueDetailsDto> getIssueDetails(int issueId) async {
-    final response = await _dio.get('issue/$issueId/');
-    return IssueDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getIssueDetails(int issueId) async {
+    return _dio.get('issue/$issueId/');
   }
 
   @override
@@ -335,9 +346,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<SeriesDetailsDto> getSeriesDetails(int seriesId) async {
-    final response = await _dio.get('series/$seriesId/');
-    return SeriesDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getSeriesDetails(int seriesId) async {
+    return _dio.get('series/$seriesId/');
   }
 
   @override

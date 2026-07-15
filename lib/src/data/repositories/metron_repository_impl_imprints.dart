@@ -133,7 +133,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     if (!forceRefresh && cachedDto != null) {
       final isFresh =
           cachedAt != null &&
-          MetronCachePolicies.universeDetails.isFresh(cachedAt, _now());
+          MetronCachePolicies.imprintDetails.isFresh(cachedAt, _now());
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
@@ -147,7 +147,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
             }
           },
           cacheKey: 'imprint_details:$imprintId',
-          cooldown: MetronCachePolicies.universeDetails.refreshCooldown,
+          cooldown: MetronCachePolicies.imprintDetails.refreshCooldown,
         );
       }
       return cachedDto.toEntity();

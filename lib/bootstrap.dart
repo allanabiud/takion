@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:takion/src/core/cache/cache_header_store.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/dto.dart';
 import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/core/network/dio_client.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -62,11 +64,18 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     hiveService.openBox<Map>('local_favorite_creators_box'),
     hiveService.openBox<ReadingList>('reading_lists_box'),
     hiveService.openBox<String>('series_name_index_box'),
+    hiveService.openBox<String>('cache_headers_box'),
   ]);
+
+  final cacheHeaderStore = CacheHeaderStore();
+  await cacheHeaderStore.init(hiveService);
 
   runApp(
     ProviderScope(
-      overrides: [hiveServiceProvider.overrideWithValue(hiveService)],
+      overrides: [
+        hiveServiceProvider.overrideWithValue(hiveService),
+        cacheHeaderStoreProvider.overrideWithValue(cacheHeaderStore),
+      ],
       child: await builder(),
     ),
   );

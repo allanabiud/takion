@@ -89,6 +89,17 @@ class SubscriptionPullReconciler {
       return 0;
     }
 
+    final hive = ref.read(hiveServiceProvider);
+    final box = await hive.openBox<dynamic>(_settingsBoxName);
+    final lastRunEpoch = box.get(_lastRunEpochKey) as int?;
+    final lastRun = lastRunEpoch != null
+        ? DateTime.fromMillisecondsSinceEpoch(lastRunEpoch)
+        : null;
+
+    final useDelta = lastRun != null &&
+        DateTime.now().difference(lastRun).inDays <= 30 &&
+        onlySeriesId == null;
+
     final uniqueIssueIds = <int>{};
     final batch =
         <({int metronSeriesId, int metronIssueId, DateTime? releaseDate})>[];
@@ -105,16 +116,20 @@ class SubscriptionPullReconciler {
       batch.clear();
     }
 
-    for (final seriesId in seriesIds) {
+    if (useDelta) {
       var page = 1;
+      final subscriptionSeriesIds = seriesIds.toSet();
       while (true) {
-        final issuePage = await metronRepository.getSeriesIssueList(
-          seriesId,
+        final issuePage = await metronRepository.getIssueList(
           page: page,
+          modifiedGt: lastRun,
         );
         for (final issue in issuePage.results) {
           final issueId = issue.id;
-          if (issueId == null || uniqueIssueIds.contains(issueId)) continue;
+          final seriesId = issue.series?.id;
+          if (issueId == null || seriesId == null) continue;
+          if (!subscriptionSeriesIds.contains(seriesId)) continue;
+          if (uniqueIssueIds.contains(issueId)) continue;
           final releaseDate = issue.storeDate ?? issue.coverDate;
           if (releaseDate == null) continue;
           final releaseDay = _dateOnly(releaseDate);
@@ -134,6 +149,38 @@ class SubscriptionPullReconciler {
         final nextPage = issuePage.nextPage;
         if (nextPage == null) break;
         page = nextPage;
+      }
+    } else {
+      for (final seriesId in seriesIds) {
+        var page = 1;
+        while (true) {
+          final issuePage = await metronRepository.getSeriesIssueList(
+            seriesId,
+            page: page,
+          );
+          for (final issue in issuePage.results) {
+            final issueId = issue.id;
+            if (issueId == null || uniqueIssueIds.contains(issueId)) continue;
+            final releaseDate = issue.storeDate ?? issue.coverDate;
+            if (releaseDate == null) continue;
+            final releaseDay = _dateOnly(releaseDate);
+            if (releaseDay.isBefore(fromDate) || releaseDay.isAfter(toDate)) {
+              continue;
+            }
+            uniqueIssueIds.add(issueId);
+            batch.add((
+              metronSeriesId: seriesId,
+              metronIssueId: issueId,
+              releaseDate: releaseDay,
+            ));
+            if (batch.length >= _upsertBatchSize) {
+              await flushBatch();
+            }
+          }
+          final nextPage = issuePage.nextPage;
+          if (nextPage == null) break;
+          page = nextPage;
+        }
       }
     }
 

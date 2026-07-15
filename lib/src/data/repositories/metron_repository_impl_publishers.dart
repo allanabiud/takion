@@ -133,7 +133,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
     if (!forceRefresh && cachedDto != null) {
       final isFresh =
           cachedAt != null &&
-          MetronCachePolicies.universeDetails.isFresh(cachedAt, _now());
+          MetronCachePolicies.publisherDetails.isFresh(cachedAt, _now());
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
@@ -147,7 +147,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
             }
           },
           cacheKey: 'publisher_details:$publisherId',
-          cooldown: MetronCachePolicies.universeDetails.refreshCooldown,
+          cooldown: MetronCachePolicies.publisherDetails.refreshCooldown,
         );
       }
       return cachedDto.toEntity();

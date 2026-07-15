@@ -21,17 +21,32 @@ class MetronCachePolicies {
   static const issueDetails = CachePolicy(ttl: Duration(days: 1));
   static const seriesDetails = CachePolicy(ttl: Duration(hours: 48));
   static const seriesIssueList = CachePolicy(ttl: Duration(hours: 24));
-  static const characterDetails = CachePolicy(ttl: Duration(hours: 48));
+  static const characterDetails = CachePolicy(ttl: Duration(days: 7));
   static const characterIssueList = CachePolicy(ttl: Duration(hours: 24));
   static const creatorSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const creatorDetails = CachePolicy(ttl: Duration(days: 7));
   static const universeSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const universeDetails = CachePolicy(ttl: Duration(days: 7));
+  static const imprintDetails = CachePolicy(ttl: Duration(days: 7));
+  static const publisherDetails = CachePolicy(ttl: Duration(days: 7));
   static const teamSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const teamDetails = CachePolicy(ttl: Duration(days: 7));
   static const arcSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const arcDetails = CachePolicy(ttl: Duration(days: 7));
   static const arcIssueList = CachePolicy(ttl: Duration(hours: 24));
+
+  static DateTime _weekStart(DateTime date) {
+    final offset = date.weekday % 7;
+    return DateTime(date.year, date.month, date.day).subtract(Duration(days: offset));
+  }
+
+  static CachePolicy weeklyReleasesForDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = _weekStart(date).difference(_weekStart(now)).inDays;
+    if (diff < 0) return const CachePolicy(ttl: Duration(days: 7));
+    if (diff == 0) return const CachePolicy(ttl: Duration(hours: 6));
+    return const CachePolicy(ttl: Duration(hours: 24));
+  }
 }
 
 class LocalDataCachePolicies {

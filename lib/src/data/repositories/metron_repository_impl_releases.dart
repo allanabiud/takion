@@ -9,19 +9,33 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
     final cachedDtos = await _localDataSource.getWeeklyReleases(date);
     final cachedAt = await _localDataSource.getWeeklyReleasesCachedAt(date);
 
+    final policy = MetronCachePolicies.weeklyReleasesForDate(date);
+
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh = cachedAt != null &&
-          MetronCachePolicies.weeklyReleases.isFresh(cachedAt, _now());
+      final isFresh = cachedAt != null && policy.isFresh(cachedAt, _now());
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remoteDtos =
-                await _remoteDataSource.getWeeklyReleasesForDate(date);
-            await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
-            _indexSeriesNamesFromIssueList(remoteDtos);
+            await _fetchWithConditional<List<IssueList>>(
+              fetch: _remoteDataSource.getWeeklyReleasesForDate(date),
+              cached: () async {
+                final dtos = await _localDataSource.getWeeklyReleases(date);
+                return dtos!.map((e) => e.toEntity()).toList();
+              },
+              cache: (response) async {
+                final List results = response.data['results'];
+                final remoteDtos =
+                    results.map((e) => IssueListDto.fromJson(e)).toList();
+                await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
+                _indexSeriesNamesFromIssueList(remoteDtos);
+              },
+              updateTtl: () async {
+                await _localDataSource.cacheWeeklyReleases(date, cachedDtos);
+              },
+            );
           },
           cacheKey: 'weekly_releases:${date.year}-${date.month}-${date.day}',
-          cooldown: MetronCachePolicies.weeklyReleases.refreshCooldown,
+          cooldown: policy.refreshCooldown,
         );
       }
       AppPerformanceMetrics.instance.recordCacheHit('weekly_releases');
@@ -32,12 +46,25 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
     try {
       final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
       return _coalesce(_weeklyInFlight, key, () async {
-        final remoteDtos = await _remoteDataSource.getWeeklyReleasesForDate(
-          date,
+        return _fetchWithConditional<List<IssueList>>(
+          fetch: _remoteDataSource.getWeeklyReleasesForDate(date),
+          cached: () async {
+            final dtos = await _localDataSource.getWeeklyReleases(date) ?? [];
+            return dtos.map((e) => e.toEntity()).toList();
+          },
+          cache: (response) async {
+            final List results = response.data['results'];
+            final remoteDtos =
+                results.map((e) => IssueListDto.fromJson(e)).toList();
+            await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
+            _indexSeriesNamesFromIssueList(remoteDtos);
+          },
+          updateTtl: () async {
+            if (cachedDtos != null) {
+              await _localDataSource.cacheWeeklyReleases(date, cachedDtos);
+            }
+          },
         );
-        await _localDataSource.cacheWeeklyReleases(date, remoteDtos);
-        _indexSeriesNamesFromIssueList(remoteDtos);
-        return remoteDtos.map((entry) => entry.toEntity()).toList();
       }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
@@ -54,19 +81,33 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
     final cachedDtos = await _localDataSource.getFocReleases(date);
     final cachedAt = await _localDataSource.getFocReleasesCachedAt(date);
 
+    final policy = MetronCachePolicies.weeklyReleasesForDate(date);
+
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh = cachedAt != null &&
-          MetronCachePolicies.focReleases.isFresh(cachedAt, _now());
+      final isFresh = cachedAt != null && policy.isFresh(cachedAt, _now());
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remoteDtos =
-                await _remoteDataSource.getFocReleasesForDate(date);
-            await _localDataSource.cacheFocReleases(date, remoteDtos);
-            _indexSeriesNamesFromIssueList(remoteDtos);
+            await _fetchWithConditional<List<IssueList>>(
+              fetch: _remoteDataSource.getFocReleasesForDate(date),
+              cached: () async {
+                final dtos = await _localDataSource.getFocReleases(date);
+                return dtos!.map((e) => e.toEntity()).toList();
+              },
+              cache: (response) async {
+                final List results = response.data['results'];
+                final remoteDtos =
+                    results.map((e) => IssueListDto.fromJson(e)).toList();
+                await _localDataSource.cacheFocReleases(date, remoteDtos);
+                _indexSeriesNamesFromIssueList(remoteDtos);
+              },
+              updateTtl: () async {
+                await _localDataSource.cacheFocReleases(date, cachedDtos);
+              },
+            );
           },
           cacheKey: 'foc_releases:${date.year}-${date.month}-${date.day}',
-          cooldown: MetronCachePolicies.focReleases.refreshCooldown,
+          cooldown: policy.refreshCooldown,
         );
       }
       return cachedDtos.map((entry) => entry.toEntity()).toList();
@@ -75,11 +116,25 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
     try {
       final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
       return _coalesce(_focReleasesInFlight, key, () async {
-        final remoteDtos =
-            await _remoteDataSource.getFocReleasesForDate(date);
-        await _localDataSource.cacheFocReleases(date, remoteDtos);
-        _indexSeriesNamesFromIssueList(remoteDtos);
-        return remoteDtos.map((entry) => entry.toEntity()).toList();
+        return _fetchWithConditional<List<IssueList>>(
+          fetch: _remoteDataSource.getFocReleasesForDate(date),
+          cached: () async {
+            final dtos = await _localDataSource.getFocReleases(date) ?? [];
+            return dtos.map((e) => e.toEntity()).toList();
+          },
+          cache: (response) async {
+            final List results = response.data['results'];
+            final remoteDtos =
+                results.map((e) => IssueListDto.fromJson(e)).toList();
+            await _localDataSource.cacheFocReleases(date, remoteDtos);
+            _indexSeriesNamesFromIssueList(remoteDtos);
+          },
+          updateTtl: () async {
+            if (cachedDtos != null) {
+              await _localDataSource.cacheFocReleases(date, cachedDtos);
+            }
+          },
+        );
       }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDtos != null && cachedDtos.isNotEmpty) {

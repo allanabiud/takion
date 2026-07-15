@@ -69,6 +69,12 @@ mixin _RepositoryState {
   void _indexSeriesNamesFromIssueList(Iterable<IssueListDto> issues);
   void _indexSeriesNamesFromIssueDetails(IssueDetailsDto issue);
   Future<String> _correctSearchQuery(String query);
+  Future<T> _fetchWithConditional<T>({
+    required Future<Response> fetch,
+    required Future<T> Function() cached,
+    required Future<void> Function(Response response) cache,
+    required Future<void> Function() updateTtl,
+  });
 }
 
 class MetronRepositoryImpl with
@@ -248,6 +254,30 @@ class MetronRepositoryImpl with
     final corrected = await _seriesNameIndex.fuzzyMatch(query);
     if (corrected != null) return corrected;
     return query;
+  }
+
+  @override
+  Future<T> _fetchWithConditional<T>({
+    required Future<Response> fetch,
+    required Future<T> Function() cached,
+    required Future<void> Function(Response response) cache,
+    required Future<void> Function() updateTtl,
+  }) async {
+    try {
+      final response = await fetch;
+      if (response.statusCode == 304) {
+        await updateTtl();
+        return cached();
+      }
+      await cache(response);
+      return cached();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 304) {
+        await updateTtl();
+        return cached();
+      }
+      rethrow;
+    }
   }
 }
 

@@ -17,10 +17,22 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           task: () async {
             await _issueDetailsGate.acquire();
             try {
-              final remoteDto =
-                  await _remoteDataSource.getIssueDetails(issueId);
-              await _localDataSource.cacheIssueDetails(remoteDto);
-              _indexSeriesNamesFromIssueDetails(remoteDto);
+              await _fetchWithConditional<IssueDetails>(
+                fetch: _remoteDataSource.getIssueDetails(issueId),
+                cached: () async {
+                  final dto = await _localDataSource.getIssueDetails(issueId);
+                  return dto!.toEntity();
+                },
+                cache: (response) async {
+                  final remoteDto = IssueDetailsDto.fromJson(
+                      response.data as Map<String, dynamic>);
+                  await _localDataSource.cacheIssueDetails(remoteDto);
+                  _indexSeriesNamesFromIssueDetails(remoteDto);
+                },
+                updateTtl: () async {
+                  await _localDataSource.cacheIssueDetails(cachedDto);
+                },
+              );
             } finally {
               _issueDetailsGate.release();
             }
@@ -39,10 +51,24 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       return _coalesce(_issueDetailsInFlight, key, () async {
         await _issueDetailsGate.acquire();
         try {
-          final remoteDto = await _remoteDataSource.getIssueDetails(issueId);
-          await _localDataSource.cacheIssueDetails(remoteDto);
-          _indexSeriesNamesFromIssueDetails(remoteDto);
-          return remoteDto.toEntity();
+          return await _fetchWithConditional<IssueDetails>(
+            fetch: _remoteDataSource.getIssueDetails(issueId),
+            cached: () async {
+              final dto = await _localDataSource.getIssueDetails(issueId);
+              return dto!.toEntity();
+            },
+            cache: (response) async {
+              final remoteDto = IssueDetailsDto.fromJson(
+                  response.data as Map<String, dynamic>);
+              await _localDataSource.cacheIssueDetails(remoteDto);
+              _indexSeriesNamesFromIssueDetails(remoteDto);
+            },
+            updateTtl: () async {
+              if (cachedDto != null) {
+                await _localDataSource.cacheIssueDetails(cachedDto);
+              }
+            },
+          );
         } finally {
           _issueDetailsGate.release();
         }
