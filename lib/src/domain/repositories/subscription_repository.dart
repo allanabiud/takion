@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/series_subscription.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 abstract class SubscriptionRepository {
   Future<List<SeriesSubscription>> listSubscriptions({

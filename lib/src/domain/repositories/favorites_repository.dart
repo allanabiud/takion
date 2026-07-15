@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/favorite_item.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 abstract class FavoritesRepository {
   Future<List<FavoriteSeries>> listFavoriteSeries();

@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
-import 'package:takion/src/data/dto/issue_list_series_dto.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/data/dto/dto.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 part 'issue_list_dto.freezed.dart';
 part 'issue_list_dto.g.dart';

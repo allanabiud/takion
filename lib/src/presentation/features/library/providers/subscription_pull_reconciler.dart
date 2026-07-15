@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/series_subscription.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 DateTime _weekStart(DateTime date) {
   final normalized = DateTime(date.year, date.month, date.day);

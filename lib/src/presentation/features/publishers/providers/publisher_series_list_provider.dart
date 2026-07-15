@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/series_list_page.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 class PublisherSeriesListArgs {
   const PublisherSeriesListArgs({required this.publisherId, required this.page});

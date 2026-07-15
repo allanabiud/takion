@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/components/list_header.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
 
 class PagedSearchSection<T> extends ConsumerWidget {
   const PagedSearchSection({

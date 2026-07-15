@@ -10,19 +10,17 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/common/floating_icons_background.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/logic/shortcut_handler.dart';
-import 'package:takion/src/presentation/providers/connectivity_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
-import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:takion/src/presentation/features/settings/widgets/appearance_settings.dart';
-import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 @RoutePage()

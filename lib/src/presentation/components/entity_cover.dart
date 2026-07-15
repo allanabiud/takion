@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/presentation/components/role_badge.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class EntityCover extends StatelessWidget {
   final String? imageUrl;

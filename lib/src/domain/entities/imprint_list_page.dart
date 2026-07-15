@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/imprint_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/domain/search/search_utils.dart';
 
 class ImprintListPage with SearchPageMixin {

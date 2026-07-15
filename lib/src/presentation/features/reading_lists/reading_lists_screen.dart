@@ -2,12 +2,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 
 enum _ReadingListFilter { all, local, metron }

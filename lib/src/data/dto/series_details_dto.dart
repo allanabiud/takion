@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/series_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class SeriesDetailsNamedRefDto {
   const SeriesDetailsNamedRefDto({required this.id, required this.name});

@@ -3,9 +3,8 @@ import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/series_list.dart';
-import 'package:takion/src/domain/entities/series_list_page.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 const _subscriptionsPageSize = metronDefaultPageSize;
 const _subscriptionsCacheBoxName = 'subscriptions_cache_box';

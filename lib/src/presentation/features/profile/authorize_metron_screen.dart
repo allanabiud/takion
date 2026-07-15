@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/providers/connectivity_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/common/floating_icons_background.dart';

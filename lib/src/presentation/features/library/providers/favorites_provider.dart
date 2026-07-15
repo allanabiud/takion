@@ -1,12 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/character_list.dart';
-import 'package:takion/src/domain/entities/creator_list.dart';
-import 'package:takion/src/domain/entities/favorite_item.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/domain/entities/series.dart';
-import 'package:takion/src/domain/entities/series_list.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 final favoriteSeriesListProvider = FutureProvider<List<FavoriteSeries>>((
   ref,

@@ -1,5 +1,5 @@
-import 'package:takion/src/domain/entities/creator_list_page.dart';
-import 'package:takion/src/presentation/providers/search_utils.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 final creatorSearchResultsProvider = createSearchProvider<CreatorListPage>(
   (repository, query, {required page, required limit, cancelToken}) =>

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/providers/performance_metrics_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(

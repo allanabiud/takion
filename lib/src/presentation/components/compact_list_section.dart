@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/components/compact_list_tile.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class CompactListSectionItem {
   const CompactListSectionItem({

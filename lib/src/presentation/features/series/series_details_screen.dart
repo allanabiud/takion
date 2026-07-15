@@ -5,30 +5,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/series_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/components/detail_screen_shell.dart';
-import 'package:takion/src/presentation/components/expandable_description.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/info_grid.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
@@ -164,8 +158,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
       TakionAlerts.couldNotOpenInBrowser(context, 'series');
     }
   }
-
-
 
   Future<void> _toggleFavorite() async {
     try {

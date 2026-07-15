@@ -1,10 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities/collection_item.dart';
-import 'package:takion/src/domain/entities/collection_items_page.dart';
-import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 const _collectionPageSize = metronDefaultPageSize;
 

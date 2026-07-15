@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

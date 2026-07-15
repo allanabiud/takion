@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/creator_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class CreatorListDto {
   const CreatorListDto({

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/tags/providers/tag_provider.dart';
 import 'package:takion/src/presentation/features/tags/widgets/tag_manager_sheet.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 void showTagSelectorSheet(BuildContext context, WidgetRef ref, int issueId) {
   TakionBottomSheet.show<void>(

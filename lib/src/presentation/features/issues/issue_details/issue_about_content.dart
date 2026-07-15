@@ -3,13 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/presentation/components/entity_card.dart';
-import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
-import 'package:takion/src/presentation/components/imprint_card.dart';
-import 'package:takion/src/presentation/components/info_grid.dart';
-import 'package:takion/src/presentation/components/person_card.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 part 'issue_details_provider.g.dart';
 

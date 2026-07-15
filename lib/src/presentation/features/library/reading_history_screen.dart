@@ -6,7 +6,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/reading_history_provider.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 
 enum HistoryFilter { day, week, month, year }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/metron_reading_list_detail.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class ReadingListDetailsSheetHeader extends StatefulWidget {
   final ReadingList list;

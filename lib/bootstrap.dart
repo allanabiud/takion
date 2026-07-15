@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/data/dto/issue_details_dto.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/data/dto/dto.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 

@@ -1,11 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/library_item.dart';
-import 'package:takion/src/domain/entities/series.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 class SuggestionIssueTileData {
   const SuggestionIssueTileData({

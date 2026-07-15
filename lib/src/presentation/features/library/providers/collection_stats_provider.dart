@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:takion/src/domain/entities/collection_stats.dart';
-import 'package:takion/src/domain/entities/library_item.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
 final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {

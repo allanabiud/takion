@@ -4,25 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/character_details.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
-import 'package:takion/src/presentation/components/person_card.dart';
-import 'package:takion/src/presentation/components/entity_card.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/detail_screen_shell.dart';
-import 'package:takion/src/presentation/components/entity_detail_actions.dart';
-import 'package:takion/src/presentation/components/expandable_description.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
 
 String _monthYear(DateTime date) {
   const months = [

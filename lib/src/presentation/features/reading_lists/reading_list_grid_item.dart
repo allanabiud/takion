@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/domain/entities/series_details.dart';
-import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';

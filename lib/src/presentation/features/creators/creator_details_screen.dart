@@ -3,17 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/domain/entities/creator_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/detail_screen_shell.dart';
-import 'package:takion/src/presentation/components/entity_detail_actions.dart';
-import 'package:takion/src/presentation/components/expandable_description.dart';
-import 'package:takion/src/presentation/components/info_grid.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 @RoutePage()
 class CreatorDetailsScreen extends ConsumerStatefulWidget {

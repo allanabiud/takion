@@ -10,13 +10,7 @@ import 'package:takion/src/data/repositories/local_library_repository.dart';
 import 'package:takion/src/data/repositories/local_pull_list_repository.dart';
 import 'package:takion/src/data/repositories/local_subscription_repository.dart';
 import 'package:takion/src/data/repositories/metron_repository_impl.dart';
-import 'package:takion/src/domain/repositories/catalog_repository.dart';
-import 'package:takion/src/domain/repositories/favorites_repository.dart';
-import 'package:takion/src/domain/repositories/library_repository.dart';
-import 'package:takion/src/domain/repositories/metron_repository.dart';
-import 'package:takion/src/domain/repositories/pull_list_repository.dart';
-import 'package:takion/src/domain/repositories/reading_list_repository.dart';
-import 'package:takion/src/domain/repositories/subscription_repository.dart';
+import 'package:takion/src/domain/repositories/repositories.dart';
 
 final metronRemoteDataSourceProvider = Provider<MetronRemoteDataSource>((ref) {
   final dio = ref.watch(dioProvider);

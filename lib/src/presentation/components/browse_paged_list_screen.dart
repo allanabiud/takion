@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/components/paged_list_scaffold.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class BrowsePagedData<T> {
   const BrowsePagedData({

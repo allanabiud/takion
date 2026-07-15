@@ -3,9 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/search/search_utils.dart';
 export 'package:takion/src/domain/search/search_utils.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 dynamic createSearchProvider<TPage>(
   SearchApiCall<TPage> searchApi, {

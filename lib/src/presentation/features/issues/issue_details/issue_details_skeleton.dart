@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class IssueDetailsSkeleton extends StatelessWidget {
   const IssueDetailsSkeleton({super.key, this.imageUrl});

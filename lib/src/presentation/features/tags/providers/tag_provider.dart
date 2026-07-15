@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/tag.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 const _tagsBoxName = 'tags_box';
 const _tagsKey = 'all_tags';

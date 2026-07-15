@@ -3,18 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/publisher_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/detail_screen_shell.dart';
-import 'package:takion/src/presentation/components/expandable_description.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
-import 'package:takion/src/presentation/components/info_grid.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
-import 'package:takion/src/presentation/components/horizontal_preview_section.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
 
 @RoutePage()

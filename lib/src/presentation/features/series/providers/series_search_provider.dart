@@ -1,5 +1,5 @@
-import 'package:takion/src/domain/entities/series_search_page.dart';
-import 'package:takion/src/presentation/providers/search_utils.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 final seriesSearchResultsProvider = createSearchProvider<SeriesSearchPage>(
   (repository, query, {required page, required limit, cancelToken}) =>

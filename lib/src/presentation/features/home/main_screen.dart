@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
-import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 
 @RoutePage()
@@ -458,5 +458,4 @@ class MainScreenState extends ConsumerState<MainScreen>
     );
   }
 }
-
 

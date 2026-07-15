@@ -7,7 +7,7 @@ import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
-import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart'
     show
@@ -15,12 +15,9 @@ import 'package:takion/src/core/router/app_router.gr.dart'
         MyPullsRoute;
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
-import 'package:takion/src/presentation/providers/auth_provider.dart';
-import 'package:takion/src/presentation/providers/connectivity_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/providers/theme_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/logic/shortcut_handler.dart';
 

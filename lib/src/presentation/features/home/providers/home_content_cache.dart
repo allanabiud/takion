@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/series.dart';
-import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 const String homeTrendingCacheKey = 'home:series_suggestions';
 const String homeTrendingMetaKey = 'home:series_suggestions';

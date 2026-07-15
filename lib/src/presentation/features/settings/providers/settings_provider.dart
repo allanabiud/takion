@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/data/dto/issue_details_dto.dart';
+import 'package:takion/src/data/dto/dto.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
@@ -40,9 +40,8 @@ import 'package:takion/src/presentation/features/teams/providers/team_search_pro
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
-
 
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';

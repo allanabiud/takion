@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/backup_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/providers/drive_sync_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 enum _BackupSyncMode { backup, sync }
 

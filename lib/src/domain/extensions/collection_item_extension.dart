@@ -1,5 +1,4 @@
-import 'package:takion/src/domain/entities/collection_item.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 extension CollectionItemToIssueList on CollectionItem {
   IssueList toIssueList() {

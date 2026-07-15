@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class ExpandableDescription extends StatefulWidget {
   const ExpandableDescription({super.key, required this.description});

@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/issue_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
@@ -17,7 +17,7 @@ import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
@@ -26,7 +26,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/components/entity_detail_actions.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 @RoutePage()
 class IssueDetailsScreen extends ConsumerStatefulWidget {
@@ -212,8 +212,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
 
     context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
   }
-
-
 
   void scrobbleCurrentIssue() {
     showScrobbleSheet(

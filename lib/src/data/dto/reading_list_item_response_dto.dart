@@ -1,4 +1,4 @@
-import 'package:takion/src/data/dto/reading_list_item_dto.dart';
+import 'package:takion/src/data/dto/dto.dart';
 
 class ReadingListItemResponseDto {
   const ReadingListItemResponseDto({

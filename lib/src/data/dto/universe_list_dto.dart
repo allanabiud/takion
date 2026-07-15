@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/universe_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class UniverseListDto {
   const UniverseListDto({

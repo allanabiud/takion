@@ -5,9 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/components/entity_detail_actions.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class DetailScreenShell<T> extends ConsumerWidget {

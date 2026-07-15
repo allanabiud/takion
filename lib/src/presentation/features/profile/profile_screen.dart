@@ -6,7 +6,7 @@ import 'package:takion/src/presentation/features/profile/providers/profile_insig
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/profile/widgets/edit_profile_sheet.dart';
 import 'package:takion/src/presentation/features/profile/widgets/insight_row.dart';
 import 'package:takion/src/presentation/features/profile/widgets/profile_charts.dart';
@@ -463,5 +463,4 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 }
-
 

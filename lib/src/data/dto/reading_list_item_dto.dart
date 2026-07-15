@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/metron_reading_list_item.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class ReadingListItemDto {
   const ReadingListItemDto({

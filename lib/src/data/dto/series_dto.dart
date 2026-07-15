@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
-import 'package:takion/src/domain/entities/series.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 part 'series_dto.freezed.dart';
 part 'series_dto.g.dart';

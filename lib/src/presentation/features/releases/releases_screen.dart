@@ -6,8 +6,7 @@ import 'package:takion/src/presentation/features/releases/providers/selected_wee
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/components/action_card.dart';
-import 'package:takion/src/presentation/components/compact_list_section.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 

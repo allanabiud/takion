@@ -1,29 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/data/dto/arc_details_dto.dart';
-import 'package:takion/src/data/dto/arc_list_response_dto.dart';
-import 'package:takion/src/data/dto/character_details_dto.dart';
-import 'package:takion/src/data/dto/character_list_response_dto.dart';
-import 'package:takion/src/data/dto/creator_details_dto.dart';
-import 'package:takion/src/data/dto/creator_list_response_dto.dart';
-import 'package:takion/src/data/dto/universe_details_dto.dart';
-import 'package:takion/src/data/dto/universe_list_response_dto.dart';
-import 'package:takion/src/data/dto/issue_details_dto.dart';
-import 'package:takion/src/data/dto/issue_list_dto.dart';
-import 'package:takion/src/data/dto/issue_search_response_dto.dart';
-import 'package:takion/src/data/dto/series_details_dto.dart';
-import 'package:takion/src/data/dto/series_issue_list_response_dto.dart';
-import 'package:takion/src/data/dto/series_list_response_dto.dart';
-import 'package:takion/src/data/dto/series_search_response_dto.dart';
-import 'package:takion/src/data/dto/imprint_details_dto.dart';
-import 'package:takion/src/data/dto/imprint_list_response_dto.dart';
-import 'package:takion/src/data/dto/team_list_response_dto.dart';
-import 'package:takion/src/data/dto/team_details_dto.dart';
-import 'package:takion/src/data/dto/publisher_list_response_dto.dart';
-import 'package:takion/src/data/dto/publisher_details_dto.dart';
-import 'package:takion/src/data/dto/reading_list_response_dto.dart';
-import 'package:takion/src/data/dto/reading_list_detail_dto.dart';
-import 'package:takion/src/data/dto/reading_list_item_response_dto.dart';
+import 'package:takion/src/data/dto/dto.dart';
 
 abstract class MetronRemoteDataSource {
   Future<List<IssueListDto>> getWeeklyReleasesForDate(DateTime date);

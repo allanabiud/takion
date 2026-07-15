@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:takion/src/domain/repositories/metron_repository.dart';
+import 'package:takion/src/domain/repositories/repositories.dart';
 
 class SearchArgs {
   const SearchArgs({required this.query, required this.page});

@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/providers/search_utils.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 
 class AddReadingListItemsBottomSheet extends ConsumerStatefulWidget {

@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/pull_list_entry.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 abstract class PullListRepository {
   Future<List<PullListEntry>> listEntries({

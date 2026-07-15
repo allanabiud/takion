@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class RoleBadge extends StatelessWidget {
   final ItemRole role;

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:takion/src/domain/entities/series.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 part 'issue_list.freezed.dart';
 

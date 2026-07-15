@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/series_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class SeriesListDto {
   const SeriesListDto({

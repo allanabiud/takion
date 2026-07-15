@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/collection_item.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class CollectionItemsPage {
   const CollectionItemsPage({

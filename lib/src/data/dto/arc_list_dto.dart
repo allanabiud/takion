@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/arc_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class ArcListDto {
   const ArcListDto({

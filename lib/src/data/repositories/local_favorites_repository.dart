@@ -1,6 +1,6 @@
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/favorite_item.dart';
-import 'package:takion/src/domain/repositories/favorites_repository.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/repositories/repositories.dart';
 
 class LocalFavoritesRepository implements FavoritesRepository {
   LocalFavoritesRepository(this._hiveService);

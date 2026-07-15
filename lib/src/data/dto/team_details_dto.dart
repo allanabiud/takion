@@ -1,5 +1,4 @@
-import 'package:takion/src/domain/entities/team_details.dart';
-import 'package:takion/src/domain/entities/universe_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 String? _parseString(dynamic raw) {
   if (raw is String && raw.isNotEmpty) return raw;

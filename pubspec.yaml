@@ -29,11 +29,11 @@ dependencies:
   cached_network_image: ^3.4.1
   auto_route: ^11.1.0
   flash: ^3.1.1
-  fl_chart: ^0.70.2
+  fl_chart: ^1.2.0
   intl: ^0.20.2
   flutter_svg: ^2.2.3
-  package_info_plus: ^9.0.1
-  share_plus: ^12.0.2
+  package_info_plus: ^10.2.1
+  share_plus: ^13.2.1
   connectivity_plus: ^7.1.1
   image_picker: ^1.2.0
   lucide_icons_flutter: ^3.1.13
@@ -43,7 +43,7 @@ dependencies:
   permission_handler: ^12.0.1
   timelines_plus: ^2.0.0
   uuid: ^4.5.3
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-0
 
 
 dev_dependencies:

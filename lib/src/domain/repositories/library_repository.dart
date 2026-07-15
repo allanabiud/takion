@@ -1,5 +1,4 @@
-import 'package:takion/src/domain/entities/library_item.dart';
-import 'package:takion/src/domain/entities/library_read_log.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 abstract class LibraryRepository {
   Future<int> getItemCount();

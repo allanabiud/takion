@@ -1,27 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities/arc_details.dart';
-import 'package:takion/src/domain/entities/arc_issue_list_page.dart';
-import 'package:takion/src/domain/entities/arc_list_page.dart';
-import 'package:takion/src/domain/entities/character_details.dart';
-import 'package:takion/src/domain/entities/character_issue_list_page.dart';
-import 'package:takion/src/domain/entities/character_list_page.dart';
-import 'package:takion/src/domain/entities/creator_details.dart';
-import 'package:takion/src/domain/entities/creator_list_page.dart';
-import 'package:takion/src/domain/entities/universe_details.dart';
-import 'package:takion/src/domain/entities/universe_list_page.dart';
-import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/issue_search_page.dart';
-import 'package:takion/src/domain/entities/series_details.dart';
-import 'package:takion/src/domain/entities/series_issue_list_page.dart';
-import 'package:takion/src/domain/entities/series_list_page.dart';
-import 'package:takion/src/domain/entities/series_search_page.dart';
-import 'package:takion/src/domain/entities/imprint_details.dart';
-import 'package:takion/src/domain/entities/imprint_list_page.dart';
-import 'package:takion/src/domain/entities/team_details.dart';
-import 'package:takion/src/domain/entities/team_list_page.dart';
-import 'package:takion/src/domain/entities/publisher_details.dart';
-import 'package:takion/src/domain/entities/publisher_list_page.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 
 abstract class CatalogRepository {

@@ -1,7 +1,6 @@
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/library_item.dart';
-import 'package:takion/src/domain/entities/library_read_log.dart';
-import 'package:takion/src/domain/repositories/library_repository.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/repositories/repositories.dart';
 
 class LocalLibraryRepository implements LibraryRepository {
   LocalLibraryRepository(this._hiveService);

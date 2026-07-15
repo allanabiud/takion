@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/issue_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class SeriesIssueListPage {
   const SeriesIssueListPage({

@@ -1,13 +1,4 @@
-import 'package:takion/src/domain/entities/character_list.dart';
-import 'package:takion/src/domain/entities/creator_list.dart';
-import 'package:takion/src/domain/entities/collection_item.dart';
-import 'package:takion/src/domain/entities/issue_list.dart';
-import 'package:takion/src/domain/entities/series_list.dart';
-import 'package:takion/src/domain/entities/universe_list.dart';
-import 'package:takion/src/domain/entities/imprint_list.dart';
-import 'package:takion/src/domain/entities/team_list.dart';
-import 'package:takion/src/domain/entities/publisher_list.dart';
-import 'package:takion/src/domain/entities/arc_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 

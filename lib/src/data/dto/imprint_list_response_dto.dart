@@ -1,4 +1,4 @@
-import 'package:takion/src/data/dto/imprint_list_dto.dart';
+import 'package:takion/src/data/dto/dto.dart';
 
 class ImprintListResponseDto {
   const ImprintListResponseDto({

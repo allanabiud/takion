@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/publisher_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class PublisherListDto {
   const PublisherListDto({

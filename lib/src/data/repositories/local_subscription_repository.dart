@@ -1,6 +1,6 @@
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/series_subscription.dart';
-import 'package:takion/src/domain/repositories/subscription_repository.dart';
+import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/repositories/repositories.dart';
 
 class LocalSubscriptionRepository implements SubscriptionRepository {
   LocalSubscriptionRepository(this._hiveService);

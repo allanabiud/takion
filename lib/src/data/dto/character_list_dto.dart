@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities/character_list.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class CharacterListDto {
   const CharacterListDto({

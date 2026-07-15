@@ -2,19 +2,17 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities/collection_items_page.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/tags/providers/tag_provider.dart';
 import 'package:takion/src/presentation/features/tags/widgets/tag_manager_sheet.dart';
-import 'package:takion/src/presentation/providers/sort_preferences_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/domain/extensions/collection_item_extension.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/components/list_header.dart';
-import 'package:takion/src/presentation/components/sort_bottom_sheet.dart';
-import 'package:takion/src/presentation/components/paged_list_scaffold.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class _SelectedTagFilter extends Notifier<String?> {
   @override

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 const _seriesCoverCacheBoxName = 'series_cover_cache_box';
 const _seriesCoverCacheMetaPrefix = 'series_cover:';

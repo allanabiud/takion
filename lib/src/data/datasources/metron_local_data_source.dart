@@ -1,23 +1,6 @@
 import 'package:hive_ce/hive_ce.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/data/dto/character_details_dto.dart';
-import 'package:takion/src/data/dto/character_list_dto.dart';
-import 'package:takion/src/data/dto/creator_details_dto.dart';
-import 'package:takion/src/data/dto/creator_list_dto.dart';
-import 'package:takion/src/data/dto/universe_details_dto.dart';
-import 'package:takion/src/data/dto/universe_list_dto.dart';
-import 'package:takion/src/data/dto/issue_details_dto.dart';
-import 'package:takion/src/data/dto/issue_list_dto.dart';
-import 'package:takion/src/data/dto/series_details_dto.dart';
-import 'package:takion/src/data/dto/series_list_dto.dart';
-import 'package:takion/src/data/dto/imprint_details_dto.dart';
-import 'package:takion/src/data/dto/imprint_list_dto.dart';
-import 'package:takion/src/data/dto/team_details_dto.dart';
-import 'package:takion/src/data/dto/team_list_dto.dart';
-import 'package:takion/src/data/dto/publisher_details_dto.dart';
-import 'package:takion/src/data/dto/publisher_list_dto.dart';
-import 'package:takion/src/data/dto/arc_details_dto.dart';
-import 'package:takion/src/data/dto/arc_list_dto.dart';
+import 'package:takion/src/data/dto/dto.dart';
 
 part 'metron_local_data_source_releases.dart';
 part 'metron_local_data_source_issues.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/components.dart';
 
 class DetailScreenSkeleton extends StatelessWidget {
   const DetailScreenSkeleton({

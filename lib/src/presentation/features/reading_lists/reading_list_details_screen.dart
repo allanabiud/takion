@@ -6,9 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/issue_details.dart';
-import 'package:takion/src/domain/entities/reading_list.dart';
-import 'package:takion/src/domain/entities/series_details.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
@@ -17,16 +15,13 @@ import 'package:takion/src/presentation/features/reading_lists/add_reading_list_
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_details_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
-import 'package:takion/src/presentation/components/detail_screen_skeleton.dart';
-import 'package:takion/src/presentation/components/section_header.dart';
-import 'package:takion/src/presentation/components/shimmer_widget.dart';
-import 'package:takion/src/presentation/components/skeleton.dart';
+import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart';
-import 'package:takion/src/presentation/providers/repository_providers.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class ReadingListDetailsScreen extends ConsumerStatefulWidget {
