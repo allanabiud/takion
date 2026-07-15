@@ -220,10 +220,22 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remoteDto =
-                await _remoteDataSource.getSeriesDetails(seriesId);
-            await _localDataSource.cacheSeriesDetails(remoteDto);
-            _indexSeriesName(remoteDto.name);
+            await _fetchWithConditional<SeriesDetails>(
+              fetch: _remoteDataSource.getSeriesDetails(seriesId),
+              cached: () async {
+                final dto = await _localDataSource.getSeriesDetails(seriesId);
+                return dto!.toEntity();
+              },
+              cache: (response) async {
+                final remoteDto = SeriesDetailsDto.fromJson(
+                    response.data as Map<String, dynamic>);
+                await _localDataSource.cacheSeriesDetails(remoteDto);
+                _indexSeriesName(remoteDto.name);
+              },
+              updateTtl: () async {
+                await _localDataSource.cacheSeriesDetails(cachedDto);
+              },
+            );
           },
           cacheKey: 'series_details:$seriesId',
           cooldown: MetronCachePolicies.seriesDetails.refreshCooldown,
@@ -235,10 +247,24 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     try {
       final key = '$seriesId|$forceRefresh';
       return _coalesce(_seriesDetailsInFlight, key, () async {
-        final remoteDto = await _remoteDataSource.getSeriesDetails(seriesId);
-        await _localDataSource.cacheSeriesDetails(remoteDto);
-        _indexSeriesName(remoteDto.name);
-        return remoteDto.toEntity();
+        return await _fetchWithConditional<SeriesDetails>(
+          fetch: _remoteDataSource.getSeriesDetails(seriesId),
+          cached: () async {
+            final dto = await _localDataSource.getSeriesDetails(seriesId);
+            return dto!.toEntity();
+          },
+          cache: (response) async {
+            final remoteDto = SeriesDetailsDto.fromJson(
+                response.data as Map<String, dynamic>);
+            await _localDataSource.cacheSeriesDetails(remoteDto);
+            _indexSeriesName(remoteDto.name);
+          },
+          updateTtl: () async {
+            if (cachedDto != null) {
+              await _localDataSource.cacheSeriesDetails(cachedDto);
+            }
+          },
+        );
       }, timeout: const Duration(seconds: 30));
     } catch (_) {
       if (cachedDto != null) {

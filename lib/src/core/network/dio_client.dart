@@ -2,9 +2,15 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/cache_header_store.dart';
+import 'package:takion/src/core/network/conditional_interceptor.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+
+final cacheHeaderStoreProvider = Provider<CacheHeaderStore>((ref) {
+  return CacheHeaderStore();
+});
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -17,6 +23,10 @@ final dioProvider = Provider<Dio>((ref) {
 
   // Rate limiter should be early in the chain
   dio.interceptors.add(RateLimitInterceptor());
+
+  // Conditional request interceptor
+  final headerStore = ref.read(cacheHeaderStoreProvider);
+  dio.interceptors.add(ConditionalRequestInterceptor(headerStore));
 
   dio.interceptors.add(
     InterceptorsWrapper(
