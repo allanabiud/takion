@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -19,11 +20,9 @@ class DriveBackupService {
   static const _appFolderName = 'Takion';
   static const _backupFileName = 'takion_backup.tkbk';
 
-  static bool _googleInitialized = false;
-
   final HiveService _hiveService;
   final Dio _dio;
-  GoogleSignInAccount? _currentUser;
+  final GoogleSignIn _googleSignIn;
 
   DriveBackupService(this._hiveService)
       : _dio = Dio(
@@ -31,47 +30,33 @@ class DriveBackupService {
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 10),
           ),
-        );
+        ),
+        _googleSignIn = GoogleSignIn(scopes: [_driveScope]);
 
-  Future<void> _ensureInitialized() async {
-    if (!_googleInitialized) {
-      await GoogleSignIn.instance.initialize();
-      _googleInitialized = true;
-    }
-  }
+  GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
 
-  GoogleSignInAccount? get currentUser => _currentUser;
-
-  bool get isSignedIn => _currentUser != null;
+  bool get isSignedIn => _googleSignIn.currentUser != null;
 
   Future<GoogleSignInAccount?> signIn() async {
-    await _ensureInitialized();
-    final account = await GoogleSignIn.instance.authenticate(scopeHint: [_driveScope]);
-    _currentUser = account;
+    final account = await _googleSignIn.signIn();
     return account;
   }
 
   Future<GoogleSignInAccount?> signInSilently() async {
-    await _ensureInitialized();
-    final account = await GoogleSignIn.instance.attemptLightweightAuthentication();
-    if (account != null) {
-      _currentUser = account;
-    }
+    final account = await _googleSignIn.signInSilently();
     return account;
   }
 
   Future<void> signOut() async {
-    await _ensureInitialized();
-    await GoogleSignIn.instance.signOut();
-    _currentUser = null;
+    await _googleSignIn.signOut();
   }
 
   Future<String> _getAccessToken() async {
-    final user = _currentUser;
+    final user = _googleSignIn.currentUser;
     if (user == null) throw StateError('Not signed in to Google Drive');
-    final authz = await user.authorizationClient.authorizeScopes([_driveScope]);
-    final token = authz.accessToken;
-    if (token.isEmpty) {
+    final auth = await user.authentication;
+    final token = auth.accessToken;
+    if (token == null || token.isEmpty) {
       throw StateError('Google Drive access token is empty, please re-authenticate');
     }
     return token;
@@ -174,7 +159,9 @@ class DriveBackupService {
 
   Future<Uint8List?> downloadBackup() async {
     final fileId = await _findBackupFileId();
-    if (fileId == null) return null;
+    if (fileId == null) {
+      return null;
+    }
     final token = await _getAccessToken();
     final response = await _dio.get(
       'https://www.googleapis.com/drive/v3/files/$fileId',
@@ -185,8 +172,11 @@ class DriveBackupService {
         validateStatus: (status) => status == 200 || status == 404,
       ),
     );
-    if (response.statusCode == 404) return null;
-    return response.data as Uint8List;
+    if (response.statusCode == 404) {
+      return null;
+    }
+    final bytes = response.data as Uint8List;
+    return bytes;
   }
 
   Future<void> restoreFromDrive() async {
@@ -218,7 +208,6 @@ class DriveBackupService {
           .toSet();
 
       await backupService.restoreBoxes(data: data, boxNames: boxNames);
-      await _hiveService.resetSyncTimestamps();
     } finally {
       try {
         await tempFile.delete();
@@ -226,7 +215,25 @@ class DriveBackupService {
     }
   }
 
+  Future<String>? _currentBackupUpload;
+
   Future<String> uploadBackup({DateTime? lastSyncTime, int retryCount = 0}) async {
+    if (_currentBackupUpload != null) {
+      return _currentBackupUpload!;
+    }
+
+    _currentBackupUpload = _performUpload(
+      lastSyncTime: lastSyncTime,
+      retryCount: retryCount,
+    );
+    try {
+      return await _currentBackupUpload!;
+    } finally {
+      _currentBackupUpload = null;
+    }
+  }
+
+  Future<String> _performUpload({DateTime? lastSyncTime, int retryCount = 0}) async {
     final token = await _getAccessToken();
     final folderId = await _ensureAppFolderId();
 
@@ -244,34 +251,37 @@ class DriveBackupService {
 
     final downloadTime = DateTime.now();
     Uint8List data;
-    if (lastSyncTime != null) {
-      final existingBytes = await downloadBackup();
-      if (existingBytes != null) {
-        final mergedData = await _mergeAndResolve(
-          existingBytes,
-          changedKeys,
-          deletedKeys,
-          allBoxNames,
-        );
-        data = await backupService.createBackupData(
-          boxNames: allBoxNames,
-          boxes: mergedData,
-        );
-      } else if (changedKeys.isNotEmpty || deletedKeys.isNotEmpty) {
-        data = await backupService.createBackupData(boxNames: allBoxNames);
-      } else {
-        final existingId = await _findBackupFileId();
-        if (existingId != null) return existingId;
-        data = await backupService.createBackupData(boxNames: allBoxNames);
+
+    final existingBytes = await downloadBackup();
+    if (existingBytes != null) {
+      if (lastSyncTime == null) {
+        final allTimestamps = await _hiveService.getAllTimestamps();
+        changedKeys = Map.fromEntries(allTimestamps.entries);
       }
+      final mergedData = await _mergeAndResolve(
+        existingBytes,
+        changedKeys,
+        deletedKeys,
+        allBoxNames,
+      );
+      data = await backupService.createBackupData(
+        boxNames: allBoxNames,
+        boxes: mergedData,
+      );
+    } else if (changedKeys.isNotEmpty || deletedKeys.isNotEmpty) {
+      data = await backupService.createBackupData(boxNames: allBoxNames);
     } else {
+      final existingId = await _findBackupFileId();
+      if (existingId != null) {
+        return existingId;
+      }
       data = await backupService.createBackupData(boxNames: allBoxNames);
     }
 
     if (retryCount < 3) {
       final remoteModified = await _getBackupModificationTime();
       if (remoteModified != null && remoteModified.isAfter(downloadTime)) {
-        return uploadBackup(
+        return _performUpload(
           lastSyncTime: lastSyncTime,
           retryCount: retryCount + 1,
         );
@@ -284,42 +294,61 @@ class DriveBackupService {
       if (existingId == null) 'parents': [folderId],
     });
 
-    final formData = FormData.fromMap({
-      'metadata': MultipartFile.fromString(
-        metadata,
-        contentType: DioMediaType('application', 'json'),
-      ),
-      'file': MultipartFile.fromBytes(
-        data,
-        filename: _backupFileName,
-        contentType: DioMediaType('application', 'octet-stream'),
-      ),
-    });
+    final boundary = 'boundary_${DateTime.now().millisecondsSinceEpoch}';
+    final bodyBytes = _multipartRelatedBody(metadata, data, boundary);
+    final uri = existingId != null
+        ? Uri.parse(
+            'https://www.googleapis.com/upload/drive/v3/files/$existingId?uploadType=multipart')
+        : Uri.parse(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
 
-    final url = existingId != null
-        ? 'https://www.googleapis.com/upload/drive/v3/files/$existingId'
-        : 'https://www.googleapis.com/upload/drive/v3/files';
+    final request = http.Request(
+      existingId != null ? 'PATCH' : 'POST',
+      uri,
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Content-Type'] = 'multipart/related; boundary=$boundary';
+    request.bodyBytes = bodyBytes;
 
-    final Response response;
-    if (existingId != null) {
-      response = await _dio.patch(
-        url,
-        queryParameters: {'uploadType': 'multipart'},
-        data: formData,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
-    } else {
-      response = await _dio.post(
-        url,
-        queryParameters: {'uploadType': 'multipart'},
-        data: formData,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+
+    if (response.statusCode != 200) {
+      throw StateError(
+        'Upload failed (HTTP ${response.statusCode}): ${response.body}',
       );
     }
 
-    final result = response.data as Map<String, dynamic>;
+    final result = jsonDecode(response.body) as Map<String, dynamic>;
     await _hiveService.clearDeleteTimestamps();
     return result['id'] as String;
+  }
+
+  List<int> _multipartRelatedBody(
+    String metadata,
+    Uint8List fileData,
+    String boundary,
+  ) {
+    final bytes = <int>[];
+    bytes.addAll(utf8.encode('--$boundary\r\n'));
+    bytes.addAll(
+      utf8.encode(
+        'Content-Disposition: form-data; name="metadata"\r\n'
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n'
+        '$metadata\r\n',
+      ),
+    );
+    bytes.addAll(utf8.encode('--$boundary\r\n'));
+    bytes.addAll(
+      utf8.encode(
+        'Content-Disposition: form-data; name="file"; '
+        'filename="$_backupFileName"\r\n'
+        'Content-Type: application/octet-stream\r\n\r\n',
+      ),
+    );
+    bytes.addAll(fileData);
+    bytes.addAll(utf8.encode('\r\n--$boundary--\r\n'));
+    return bytes;
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _mergeAndResolve(
@@ -336,6 +365,7 @@ class DriveBackupService {
       final backupService = BackupService(_hiveService);
       final driveData = await backupService.readBackupData(filePath: tempPath);
 
+      // Phase 1: Process local changes (changedKeys)
       for (final entry in changedKeys.entries) {
         final compositeKey = entry.key;
         final colonIdx = compositeKey.indexOf(':');
@@ -380,6 +410,7 @@ class DriveBackupService {
         }
       }
 
+      // Phase 2: Apply newer Drive entries to local
       final allLocalTimestamps = await _hiveService.getAllTimestamps();
       for (final boxName in driveData.keys) {
         if (!allBoxNames.contains(boxName)) continue;
@@ -402,6 +433,7 @@ class DriveBackupService {
         }
       }
 
+      // Phase 3: Process local deletions
       for (final entry in deletedKeys.entries) {
         final compositeKey = entry.key;
         final colonIdx = compositeKey.indexOf(':');

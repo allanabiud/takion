@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
@@ -151,6 +150,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                   ref.read(driveSyncProvider.notifier).enable(
                     email: account.email,
                   );
+                  if (!mounted) return;
                   _syncNow();
                 }
               } else {
@@ -245,31 +245,28 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
 
   Future<void> _syncNow() async {
     final driveService = ref.read(driveBackupServiceProvider);
-    final hiveService = ref.read(hiveServiceProvider);
     final syncState = ref.read(driveSyncProvider);
+    final syncNotifier = ref.read(driveSyncProvider.notifier);
+    final container = ProviderScope.containerOf(context, listen: false);
 
-    ref.read(driveSyncProvider.notifier).setSyncing(true);
-    _syncAnimController.repeat();
+    syncNotifier.setSyncing(true);
+    if (mounted) {
+      _syncAnimController.repeat();
+    }
     try {
-      final hasDriveBackup = await driveService.getLastBackupTime() != null;
-      final isEmpty = !await hiveService.hasBackupData();
-      if (hasDriveBackup && isEmpty) {
-        await driveService.restoreFromDrive();
-        await hiveService.resetSyncTimestamps();
-        if (mounted) TakionAlerts.success(context, 'Restored from Drive');
-      } else {
-        await driveService.uploadBackup(
-          lastSyncTime: hasDriveBackup ? syncState.lastSync : null,
-        );
-        if (mounted) TakionAlerts.success(context, 'Synced to Drive');
-      }
-      await ref.read(driveSyncProvider.notifier).updateLastSync();
-      invalidateCacheBackedProviders((p) => ref.invalidate(p));
+      await driveService.uploadBackup(
+        lastSyncTime: syncState.lastSync,
+      );
+      await syncNotifier.updateLastSync();
+      invalidateCacheBackedProviders((p) => container.invalidate(p));
+      // Ensure syncing state is rendered for at least one frame
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) TakionAlerts.success(context, 'Synced to Drive');
     } catch (e) {
       if (mounted) TakionAlerts.error(context, 'Sync failed: $e');
     } finally {
-      _syncAnimController.reset();
-      ref.read(driveSyncProvider.notifier).setSyncing(false);
+      if (mounted) _syncAnimController.reset();
+      syncNotifier.setSyncing(false);
     }
   }
 

@@ -7,7 +7,6 @@ import 'package:takion/src/data/dto/dto.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
@@ -67,15 +66,6 @@ void invalidateCacheBackedProviders(void Function(dynamic provider) invalidate) 
   invalidate(issueSearchResultsProvider);
   invalidate(collectionIssueStatusMapProvider);
   invalidate(allLibraryItemsProvider);
-  invalidate(allCollectionItemsProvider);
-  invalidate(collectionItemsByOwnershipStatusProvider);
-  invalidate(collectionItemsByReadStatusProvider);
-  invalidate(unratedCollectionItemsProvider);
-  invalidate(wishlistCollectionItemsProvider);
-  invalidate(collectionSeriesKeysProvider);
-  invalidate(collectionItemsProvider);
-  invalidate(currentCollectionItemsProvider);
-  invalidate(collectionStatsProvider);
   invalidate(seriesDetailsProvider);
   invalidate(seriesIssueListProvider);
   invalidate(seriesListProvider);
@@ -89,7 +79,6 @@ void invalidateCacheBackedProviders(void Function(dynamic provider) invalidate) 
   invalidate(continueReadingSuggestionsProvider);
   invalidate(becauseYouPulledIssuesProvider);
   invalidate(activeSubscriptionsProvider);
-  invalidate(activeSubscriptionsCountProvider);
   invalidate(subscribedSeriesListProvider);
   invalidate(subscribedSeriesPageProvider);
   invalidate(seriesSubscriptionProvider);
@@ -115,15 +104,10 @@ void invalidateCacheBackedProviders(void Function(dynamic provider) invalidate) 
   invalidate(publisherDetailsProvider);
   invalidate(publisherSearchResultsProvider);
   invalidate(favoriteSeriesListProvider);
-  invalidate(favoriteSeriesFullListProvider);
   invalidate(favoriteIssuesListProvider);
-  invalidate(favoriteIssuesFullListProvider);
   invalidate(favoriteReadingListsListProvider);
-  invalidate(favoriteReadingListsFullListProvider);
   invalidate(favoriteCharactersListProvider);
-  invalidate(favoriteCharactersFullListProvider);
   invalidate(favoriteCreatorsListProvider);
-  invalidate(favoriteCreatorsFullListProvider);
 }
 
 @riverpod

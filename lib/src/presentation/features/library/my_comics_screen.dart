@@ -38,7 +38,6 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
 
   Future<void> _refreshPage() async {
     ref.invalidate(collectionItemsProvider(_page));
-    await ref.read(collectionItemsProvider(_page).future);
   }
 
   @override

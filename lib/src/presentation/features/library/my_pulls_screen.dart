@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -56,8 +54,6 @@ class MyPullsScreen extends ConsumerWidget {
         affected++;
       }
 
-      ref.invalidate(collectionIssueStatusMapProvider);
-      ref.invalidate(collectionStatsProvider);
       invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
@@ -112,8 +108,6 @@ class MyPullsScreen extends ConsumerWidget {
         affected++;
       }
 
-      ref.invalidate(collectionIssueStatusMapProvider);
-      ref.invalidate(collectionStatsProvider);
       invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;

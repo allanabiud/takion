@@ -92,29 +92,28 @@ class _TakionAppState extends ConsumerState<TakionApp> {
 
   Future<void> _runDriveAutoSyncIfEnabled() async {
     final syncState = ref.read(driveSyncProvider);
-    if (!syncState.enabled) return;
-    final driveService = ref.read(driveBackupServiceProvider);
-    final hiveService = ref.read(hiveServiceProvider);
-    final account = await driveService.signInSilently();
-    if (account == null) return;
-    ref.read(driveSyncProvider.notifier).setSyncing(true);
-    try {
-      final hasDriveBackup = await driveService.getLastBackupTime() != null;
-      final isEmpty = !await hiveService.hasBackupData();
-      if (hasDriveBackup && isEmpty) {
-        await driveService.restoreFromDrive();
-        await hiveService.resetSyncTimestamps();
-      } else {
-        await driveService.uploadBackup(
-          lastSyncTime: hasDriveBackup ? syncState.lastSync : null,
-        );
-      }
-      await ref.read(driveSyncProvider.notifier).updateLastSync();
-      invalidateCacheBackedProviders((p) => ref.invalidate(p));
-    } catch (e) {
-      debugPrint('Auto-sync failed: $e');
+    if (!syncState.enabled) {
+      return;
     }
-    ref.read(driveSyncProvider.notifier).setSyncing(false);
+    final driveService = ref.read(driveBackupServiceProvider);
+    final syncNotifier = ref.read(driveSyncProvider.notifier);
+    final container = ProviderScope.containerOf(context, listen: false);
+    final account = await driveService.signInSilently();
+    if (account == null) {
+      return;
+    }
+    syncNotifier.setSyncing(true);
+    try {
+      await driveService.uploadBackup(
+        lastSyncTime: syncState.lastSync,
+      );
+      await syncNotifier.updateLastSync();
+      invalidateCacheBackedProviders((p) => container.invalidate(p));
+      await Future<void>.delayed(Duration.zero);
+    } catch (_) {
+      // sync failure is non-critical; state resets on next launch
+    }
+    syncNotifier.setSyncing(false);
   }
 
   Future<void> _scheduleWeeklyPullNotification() async {

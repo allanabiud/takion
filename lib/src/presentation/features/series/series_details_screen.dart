@@ -3,7 +3,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
@@ -73,21 +72,10 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             .reconcile(force: true, onlySeriesId: widget.seriesId);
       }
       final selectedWeek = ref.read(selectedWeekProvider);
-      ref.invalidate(seriesSubscriptionProvider(widget.seriesId));
-      ref.invalidate(issuePullListEntryProvider);
-      ref.invalidate(pullListEntriesForWeekProvider);
-      ref.invalidate(pullsIssuesForWeekProvider);
-      ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
-      ref.invalidate(currentWeekPullsProvider);
-      ref.invalidate(currentWeekPullsCountProvider);
-      await invalidateSubscriptionsLocalCacheWithHive(
-        ref.read(hiveServiceProvider),
+      invalidateOnSubscriptionToggle(ref,
+        seriesId: widget.seriesId,
+        selectedWeek: selectedWeek,
       );
-      ref.invalidate(activeSubscriptionsProvider);
-      ref.invalidate(activeSubscriptionsCountProvider);
-      ref.invalidate(subscribedSeriesListProvider);
-      ref.invalidate(subscribedSeriesPageProvider);
-      await ref.read(currentWeekPullsProvider.future);
       if (mounted) {
         (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
@@ -105,13 +93,10 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 metronSeriesId: widget.seriesId,
               );
             }
-            ref.invalidate(seriesSubscriptionProvider(widget.seriesId));
-            ref.invalidate(issuePullListEntryProvider);
-            ref.invalidate(pullListEntriesForWeekProvider);
-            ref.invalidate(pullsIssuesForWeekProvider);
-            ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
-            ref.invalidate(currentWeekPullsProvider);
-            ref.invalidate(currentWeekPullsCountProvider);
+            invalidateOnSubscriptionToggle(ref,
+              seriesId: widget.seriesId,
+              selectedWeek: selectedWeek,
+            );
           },
         );
       }

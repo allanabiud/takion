@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
@@ -21,23 +22,29 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
             children: [
               buildSettingsGroup(
                 context,
-                'Weekly Pull Summary',
+                'Pull Notifications',
                 [
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text(
-                      'Enable Reminder',
+                      'Weekly Reminder',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: const Text(
-                      'Get a notification every week with your pull count',
+                      'Get a weekly push with your pull count',
                     ),
                     value: enabled,
                     onChanged: enabledAsync.isLoading
                         ? null
-                        : (v) => ref
-                            .read(notificationsEnabledProvider.notifier)
-                            .setEnabled(v),
+                        : (v) async {
+                            if (v) {
+                              await NotificationService.instance
+                                  .requestPermissions();
+                            }
+                            ref
+                                .read(notificationsEnabledProvider.notifier)
+                                .setEnabled(v);
+                          },
                   ),
                   const Divider(height: 8),
                   Padding(
@@ -55,11 +62,11 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Reminder Day',
+                                'Remind Me On',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                'You\'ll be notified at 8 PM every $selectedDay',
+                                'Every ${selectedDay.label} at 8 PM',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall

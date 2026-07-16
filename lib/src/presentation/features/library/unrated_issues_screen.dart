@@ -23,7 +23,6 @@ class UnratedIssuesScreen extends ConsumerWidget {
 
     Future<void> refresh() async {
       ref.invalidate(unratedCollectionItemsProvider);
-      await ref.read(unratedCollectionItemsProvider.future);
     }
 
     return Scaffold(

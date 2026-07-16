@@ -49,18 +49,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   late AnimationController _rotationController;
 
-  late AnimationController _pageAnimController;
-  late AnimationController _allDoneAnimController;
   late AnimationController _pulseController;
-
-  late Animation<double> _heroAnim;
-  late Animation<double> _titleAnim;
-  late Animation<double> _bodyAnim;
-  late Animation<double> _buttonAnim;
-  late Animation<double> _allDoneBadgeAnim;
-  late Animation<double> _allDoneTitleAnim;
-  late Animation<double> _allDoneBodyAnim;
-  late Animation<double> _allDoneButtonAnim;
 
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -100,52 +89,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       duration: const Duration(seconds: 14),
     );
 
-    _pageAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
-    );
-
-    _allDoneAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-
-    _heroAnim = CurvedAnimation(
-      parent: _pageAnimController,
-      curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-    );
-    _titleAnim = CurvedAnimation(
-      parent: _pageAnimController,
-      curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
-    );
-    _bodyAnim = CurvedAnimation(
-      parent: _pageAnimController,
-      curve: const Interval(0.35, 0.75, curve: Curves.easeOut),
-    );
-    _buttonAnim = CurvedAnimation(
-      parent: _pageAnimController,
-      curve: const Interval(0.55, 1.0, curve: Curves.easeOut),
-    );
-    _allDoneBadgeAnim = CurvedAnimation(
-      parent: _allDoneAnimController,
-      curve: const Interval(0.0, 0.4, curve: Curves.easeOutBack),
-    );
-    _allDoneTitleAnim = CurvedAnimation(
-      parent: _allDoneAnimController,
-      curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
-    );
-    _allDoneBodyAnim = CurvedAnimation(
-      parent: _allDoneAnimController,
-      curve: const Interval(0.35, 0.75, curve: Curves.easeOut),
-    );
-    _allDoneButtonAnim = CurvedAnimation(
-      parent: _allDoneAnimController,
-      curve: const Interval(0.55, 1.0, curve: Curves.easeOut),
     );
   }
 
@@ -182,19 +128,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOut,
     );
-    _pageAnimController.forward(from: 0.0);
     if (page == 4) {
       HapticFeedback.mediumImpact();
+      _pulseController.repeat(reverse: true);
       Future.delayed(const Duration(milliseconds: 400), () {
-        if (_currentPage != 4) return;
-        _allDoneAnimController.forward(from: 0.0);
-        _pulseController.repeat(reverse: true);
-      });
-      Future.delayed(const Duration(milliseconds: 800), () {
         if (_currentPage == 4) _rotationController.repeat();
       });
     } else {
-      _allDoneAnimController.reset();
       _rotationController.reset();
       _pulseController.reset();
     }
@@ -286,6 +226,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   Future<void> _restoreFromDrive() async {
     setState(() => _isDriveRestoring = true);
+    final container = ProviderScope.containerOf(context, listen: false);
     try {
       final driveService = ref.read(driveBackupServiceProvider);
       if (driveService.currentUser == null) {
@@ -318,6 +259,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       await ref.read(driveSyncProvider.notifier).enable(email: email);
 
       if (hadBackup) {
+        invalidateCacheBackedProviders((p) => container.invalidate(p));
         if (mounted) {
           setState(() {
             _restoreCompleted = true;
@@ -355,8 +297,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _pageController.dispose();
     _fadeController.dispose();
     _rotationController.dispose();
-    _pageAnimController.dispose();
-    _allDoneAnimController.dispose();
     _pulseController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -500,228 +440,213 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final currentScheme =
         ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                children: [
-                  FadeTransition(
-                    opacity: _titleAnim,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.2),
-                        end: Offset.zero,
-                      ).animate(_titleAnim),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.palette_outlined,
-                            size: 48,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.palette_outlined,
+                          size: 48,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Appearance',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
                             color: theme.colorScheme.primary,
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Appearance',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  FadeTransition(
-                    opacity: _bodyAnim,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.2),
-                        end: Offset.zero,
-                      ).animate(_bodyAnim),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'THEME MODE',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
+                    const SizedBox(height: 28),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'THEME MODE',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: RadioGroup<ThemeMode>(
+                            groupValue: themeSettings.themeMode,
+                            onChanged: (value) {
+                              if (value == null) return;
+                              ref.read(themeProvider.notifier).setThemeMode(value);
+                            },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RadioListTile<ThemeMode>(
+                                  value: ThemeMode.system,
+                                  title: const Text('System'),
+                                  secondary: const Icon(
+                                    Icons.brightness_auto_outlined,
+                                  ),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                RadioListTile<ThemeMode>(
+                                  value: ThemeMode.light,
+                                  title: const Text('Light'),
+                                  secondary: const Icon(Icons.light_mode_outlined),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                RadioListTile<ThemeMode>(
+                                  value: ThemeMode.dark,
+                                  title: const Text('Dark'),
+                                  secondary: const Icon(Icons.dark_mode_outlined),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: RadioGroup<ThemeMode>(
-                              groupValue: themeSettings.themeMode,
-                              onChanged: (value) {
-                                if (value == null) return;
-                                ref.read(themeProvider.notifier).setThemeMode(value);
-                              },
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  RadioListTile<ThemeMode>(
-                                    value: ThemeMode.system,
-                                    title: const Text('System'),
-                                    secondary: const Icon(
-                                      Icons.brightness_auto_outlined,
-                                    ),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  RadioListTile<ThemeMode>(
-                                    value: ThemeMode.light,
-                                    title: const Text('Light'),
-                                    secondary: const Icon(Icons.light_mode_outlined),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  RadioListTile<ThemeMode>(
-                                    value: ThemeMode.dark,
-                                    title: const Text('Dark'),
-                                    secondary: const Icon(Icons.dark_mode_outlined),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ],
-                              ),
-                            ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'ACCENT COLOR',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'ACCENT COLOR',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          const SizedBox(height: 12),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: 12,
-                              runSpacing: 12,
-                              children: accentSchemes.map((scheme) {
-                                final schemeData = FlexColor.schemes[scheme];
-                                final primary =
-                                    schemeData?.light.primary ?? Colors.blue;
-                                final selected = currentScheme == scheme;
-                                final luminance = primary.computeLuminance();
-                                final tickColor = luminance > 0.5
-                                    ? Colors.black87
-                                    : Colors.white;
-                                return GestureDetector(
-                                  onTap: () => ref
-                                      .read(accentSchemeProvider.notifier)
-                                      .setScheme(scheme),
-                                  child: Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: primary,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: selected
-                                          ? Border.all(
-                                              color: theme.colorScheme.onSurface,
-                                              width: 3,
-                                            )
-                                          : null,
-                                      boxShadow: selected
-                                          ? [
-                                              BoxShadow(
-                                                color: primary.withValues(
-                                                  alpha: 0.39,
-                                                ),
-                                                blurRadius: 8,
-                                                spreadRadius: 1,
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    child: selected
-                                        ? Icon(
-                                            Icons.check,
-                                            color: tickColor,
-                                            size: 22,
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: accentSchemes.map((scheme) {
+                              final schemeData = FlexColor.schemes[scheme];
+                              final primary =
+                                  schemeData?.light.primary ?? Colors.blue;
+                              final selected = currentScheme == scheme;
+                              final luminance = primary.computeLuminance();
+                              final tickColor = luminance > 0.5
+                                  ? Colors.black87
+                                  : Colors.white;
+                              return GestureDetector(
+                                onTap: () => ref
+                                    .read(accentSchemeProvider.notifier)
+                                    .setScheme(scheme),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: primary,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: selected
+                                        ? Border.all(
+                                            color: theme.colorScheme.onSurface,
+                                            width: 3,
                                           )
                                         : null,
+                                    boxShadow: selected
+                                        ? [
+                                            BoxShadow(
+                                              color: primary.withValues(
+                                                alpha: 0.39,
+                                              ),
+                                              blurRadius: 8,
+                                              spreadRadius: 1,
+                                            ),
+                                          ]
+                                        : null,
                                   ),
-                                );
-                              }).toList(),
-                            ),
+                                  child: selected
+                                      ? Icon(
+                                          Icons.check,
+                                          color: tickColor,
+                                          size: 22,
+                                        )
+                                      : null,
+                                ),
+                              );
+                            }).toList(),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'DARK MODE',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'DARK MODE',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
                           ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text(
-                                'Pure Black',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: const Text(
-                                'Use a true black background in dark mode',
-                              ),
-                              value: themeSettings.darkIsTrueBlack,
-                              onChanged: (bool value) {
-                                ref
-                                    .read(themeProvider.notifier)
-                                    .setDarkIsTrueBlack(value);
-                              },
-                            ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ],
-                      ),
+                          child: SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text(
+                              'Pure Black',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              'Use a true black background in dark mode',
+                            ),
+                            value: themeSettings.darkIsTrueBlack,
+                            onChanged: (bool value) {
+                              ref
+                                  .read(themeProvider.notifier)
+                                  .setDarkIsTrueBlack(value);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            FadeTransition(
-              opacity: _buttonAnim,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.1),
-                  end: Offset.zero,
-                ).animate(_buttonAnim),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: FilledButton(
-                    onPressed: () => _goToPage(2),
-                    child: const Text('Continue'),
-                  ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  onPressed: () => _goToPage(2),
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -852,277 +777,235 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final metronConnectionAsync = ref.watch(metronConnectionProvider);
     final isConnected = metronConnectionAsync.value != null;
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FadeTransition(
-                      opacity: _heroAnim,
-                      child: ScaleTransition(
-                        scale: _heroAnim,
-                        child: Icon(
-                          LucideIcons.atom,
-                          size: 64,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.atom,
+                        size: 64,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Metron',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                           color: theme.colorScheme.primary,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    FadeTransition(
-                      opacity: _titleAnim,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.2),
-                          end: Offset.zero,
-                        ).animate(_titleAnim),
-                        child: Text(
-                          'Metron',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FadeTransition(
-                      opacity: _bodyAnim,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.2),
-                          end: Offset.zero,
-                        ).animate(_bodyAnim),
-                        child: isConnected
-                            ? Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 28,
-                                  horizontal: 24,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      LucideIcons.badgeCheck,
-                                      size: 56,
-                                      color: theme.colorScheme.primary,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Connected as ${_usernameController.text}',
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Your Metron account is linked.',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Text(
-                                'Takion uses The Metron Comic Database to keep up to date with comics.',
-                                style: theme.textTheme.bodyLarge,
-                                textAlign: TextAlign.center,
+                      const SizedBox(height: 16),
+                      isConnected
+                          ? Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 28,
+                                horizontal: 24,
                               ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer.withValues(
+                                  alpha: 0.3,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    LucideIcons.badgeCheck,
+                                    size: 56,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Connected as ${_usernameController.text}',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Your Metron account is linked.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Text(
+                              'Takion uses The Metron Comic Database to keep up to date with comics.',
+                              style: theme.textTheme.bodyLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: isConnected
+                    ? FilledButton(
+                        onPressed: () => _goToPage(3),
+                        child: const Text('Continue'),
+                      )
+                    : FilledButton(
+                        onPressed: _showConnectSheet,
+                        child: const Text('Connect Metron'),
                       ),
-                    ),
-                  ],
-                ),
               ),
-            ),
-            FadeTransition(
-              opacity: _buttonAnim,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.1),
-                  end: Offset.zero,
-                ).animate(_buttonAnim),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: isConnected
-                      ? FilledButton(
-                          onPressed: () => _goToPage(3),
-                          child: const Text('Continue'),
-                        )
-                      : FilledButton(
-                          onPressed: _showConnectSheet,
-                          child: const Text('Connect Metron'),
-                        ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildRestoreBackupPage(ThemeData theme) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FadeTransition(
-                      opacity: _heroAnim,
-                      child: ScaleTransition(
-                        scale: _heroAnim,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (child, animation) =>
-                              ScaleTransition(scale: animation, child: child),
-                          child: Icon(
-                            _restoreCompleted
-                                ? LucideIcons.badgeCheck
-                                : LucideIcons.rotateCcw,
-                            key: ValueKey(_restoreCompleted),
-                            size: 64,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    FadeTransition(
-                      opacity: _titleAnim,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.2),
-                          end: Offset.zero,
-                        ).animate(_titleAnim),
-                        child: Text(
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: Icon(
                           _restoreCompleted
-                              ? 'Backup Restored'
-                              : 'Restore from Backup',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
+                              ? LucideIcons.badgeCheck
+                              : LucideIcons.rotateCcw,
+                          key: ValueKey(_restoreCompleted),
+                          size: 64,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    FadeTransition(
-                      opacity: _bodyAnim,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.2),
-                          end: Offset.zero,
-                        ).animate(_bodyAnim),
-                        child: Column(
-                          children: [
+                      const SizedBox(height: 24),
+                      Text(
+                        _restoreCompleted
+                            ? 'Backup Restored'
+                            : 'Restore from Backup',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        children: [
+                          Text(
+                            _restoreCompleted
+                                ? 'Your data has been restored successfully.'
+                                : 'If you have a previous Takion backup, you can restore your data now.',
+                            style: theme.textTheme.bodyLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          if (!_restoreCompleted) ...[
+                            const SizedBox(height: 8),
                             Text(
-                              _restoreCompleted
-                                  ? 'Your data has been restored successfully.'
-                                  : 'If you have a previous Takion backup, you can restore your data now.',
-                              style: theme.textTheme.bodyLarge,
+                              'You can also do this later from Settings.',
+                              style: theme.textTheme.bodySmall,
                               textAlign: TextAlign.center,
                             ),
-                            if (!_restoreCompleted) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'You can also do this later from Settings.',
-                                style: theme.textTheme.bodySmall,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
                           ],
-                        ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Column(
+                children: [
+                  if (_restoreCompleted)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: () => _goToPage(4),
+                        child: const Text('Continue'),
+                      ),
+                    )
+                  else if (_isDriveRestoring)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: CircularProgressIndicator(strokeWidth: 3),
+                          ),
+                          SizedBox(height: 16),
+                          Text('Restoring from Google Drive...'),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton.icon(
+                        onPressed: _showRestoreChoiceSheet,
+                        icon: const Icon(LucideIcons.rotateCcw),
+                        label: const Text('Restore'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: () => _goToPage(4),
+                        child: const Text('Skip'),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-            ),
-            FadeTransition(
-              opacity: _buttonAnim,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.1),
-                  end: Offset.zero,
-                ).animate(_buttonAnim),
-                child: Column(
-                  children: [
-                    if (_restoreCompleted)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton(
-                          onPressed: () => _goToPage(4),
-                          child: const Text('Continue'),
-                        ),
-                      )
-                    else if (_isDriveRestoring)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16),
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              width: 32,
-                              height: 32,
-                              child: CircularProgressIndicator(strokeWidth: 3),
-                            ),
-                            SizedBox(height: 16),
-                            Text('Restoring from Google Drive...'),
-                          ],
-                        ),
-                      )
-                    else ...[
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton.icon(
-                          onPressed: _showRestoreChoiceSheet,
-                          icon: const Icon(LucideIcons.rotateCcw),
-                          label: const Text('Restore'),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: OutlinedButton(
-                          onPressed: () => _goToPage(4),
-                          child: const Text('Skip'),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1141,93 +1024,105 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ScaleTransition(
-                        scale: Tween<double>(
-                          begin: 0.3,
-                          end: 1.0,
-                        ).animate(_allDoneBadgeAnim),
-                        child: FadeTransition(
-                          opacity: _allDoneBadgeAnim,
-                          child: SizedBox(
-                            width: 150,
-                            height: 150,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                RotationTransition(
-                                  turns: _rotationController,
-                                  child: CustomPaint(
-                                    size: const Size(150, 150),
-                                    painter: _CheckShapePainter(
-                                      color: theme.colorScheme.primary,
-                                    ),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 700),
+                        curve: Curves.easeOutBack,
+                        builder: (context, value, child) => Transform.scale(
+                          scale: value,
+                          child: Opacity(
+                            opacity: value.clamp(0.0, 1.0),
+                            child: child,
+                          ),
+                        ),
+                        child: SizedBox(
+                          width: 150,
+                          height: 150,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              RotationTransition(
+                                turns: _rotationController,
+                                child: CustomPaint(
+                                  size: const Size(150, 150),
+                                  painter: _CheckShapePainter(
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
-                                ScaleTransition(
-                                  scale: Tween<double>(
-                                    begin: 1.0,
-                                    end: 1.05,
-                                  ).animate(_pulseController),
-                                  child: const Icon(
-                                    Icons.check,
-                                    size: 75,
-                                    color: Colors.white,
-                                  ),
+                              ),
+                              ScaleTransition(
+                                scale: Tween<double>(
+                                  begin: 1.0,
+                                  end: 1.05,
+                                ).animate(_pulseController),
+                                child: const Icon(
+                                  Icons.check,
+                                  size: 75,
+                                  color: Colors.white,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      FadeTransition(
-                        opacity: _allDoneTitleAnim,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.1),
-                            end: Offset.zero,
-                          ).animate(_allDoneTitleAnim),
-                          child: Text(
-                            'All Done!',
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOut,
+                        builder: (context, value, child) => Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, 20 * (1 - value)),
+                            child: child,
+                          ),
+                        ),
+                        child: Text(
+                          'All Done!',
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      FadeTransition(
-                        opacity: _allDoneBodyAnim,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.1),
-                            end: Offset.zero,
-                          ).animate(_allDoneBodyAnim),
-                          child: Text(
-                            'All set to start discovering, tracking and collecting new comics.',
-                            style: theme.textTheme.bodyLarge,
-                            textAlign: TextAlign.center,
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOut,
+                        builder: (context, value, child) => Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, 20 * (1 - value)),
+                            child: child,
                           ),
+                        ),
+                        child: Text(
+                          'All set to start discovering, tracking and collecting new comics.',
+                          style: theme.textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              FadeTransition(
-                opacity: _allDoneButtonAnim,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.1),
-                    end: Offset.zero,
-                  ).animate(_allDoneButtonAnim),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: _finishSetup,
-                      child: const Text('Finish Setup'),
-                    ),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOut,
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton(
+                    onPressed: _finishSetup,
+                    child: const Text('Finish Setup'),
                   ),
                 ),
               ),

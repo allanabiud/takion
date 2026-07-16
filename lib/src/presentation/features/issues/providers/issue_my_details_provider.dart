@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -102,11 +100,8 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         }
       }
       await invalidateLibraryItemsLocalCache(ref);
-
       ref.invalidate(issueMyDetailsProvider(_issueId));
-      ref.invalidate(collectionIssueStatusMapProvider);
-      ref.invalidate(collectionStatsProvider);
-      invalidateLibraryCollectionProviders(ref);
+      ref.invalidate(issueCollectionStatusProvider(_issueId));
     });
   }
 
@@ -143,11 +138,8 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         readAt: normalizedReadAt,
       );
       await invalidateLibraryItemsLocalCache(ref);
-
       ref.invalidate(issueMyDetailsProvider(_issueId));
-      ref.invalidate(collectionIssueStatusMapProvider);
-      ref.invalidate(collectionStatsProvider);
-      invalidateLibraryCollectionProviders(ref);
+      ref.invalidate(issueCollectionStatusProvider(_issueId));
     });
   }
 
@@ -191,11 +183,8 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         acquiredOn: item.acquiredOn,
       );
       await invalidateLibraryItemsLocalCache(ref);
-
       ref.invalidate(issueMyDetailsProvider(_issueId));
-      ref.invalidate(collectionIssueStatusMapProvider);
-      ref.invalidate(collectionStatsProvider);
-      invalidateLibraryCollectionProviders(ref);
+      ref.invalidate(issueCollectionStatusProvider(_issueId));
     });
   }
 }

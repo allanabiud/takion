@@ -21,12 +21,15 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        titleTextStyle: const TextStyle(
-          fontSize: 26,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Rubik',
+        title: Text(
+          'Settings',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Rubik',
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
-        title: const Text('Settings'),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),

@@ -9,7 +9,6 @@ import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
@@ -453,14 +452,9 @@ Future<void> applySeriesIssueBulkAction({
     }
 
     ref.invalidate(allLibraryItemsProvider);
-    await ref.read(allLibraryItemsProvider.future);
-    ref.invalidate(collectionIssueStatusMapProvider);
-    await ref.read(collectionIssueStatusMapProvider.future);
     for (final issueId in affectedIssueIds) {
       ref.invalidate(issueCollectionStatusProvider(issueId));
     }
-    ref.invalidate(collectionStatsProvider);
-    invalidateLibraryCollectionProvidersForWidget(ref);
 
     if (context.mounted) {
       final actionText = switch (operation) {

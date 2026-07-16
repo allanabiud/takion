@@ -287,7 +287,10 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
         },
       );
 
-      _invalidateProviders(boxNames);
+      if (mounted) {
+        final container = ProviderScope.containerOf(context, listen: false);
+        invalidateCacheBackedProviders((p) => container.invalidate(p));
+      }
 
       if (mounted) {
         final needsRestart = boxNames.contains('settings_box');
@@ -307,10 +310,6 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
         setState(() => _restoring = false);
       }
     }
-  }
-
-  void _invalidateProviders(Set<String> boxNames) {
-    invalidateCacheBackedProviders((p) => widget.ref.invalidate(p));
   }
 
   String _formatDate(DateTime date) {

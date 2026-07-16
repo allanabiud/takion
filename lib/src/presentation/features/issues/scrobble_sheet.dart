@@ -134,8 +134,6 @@ Future<void> showScrobbleSheet({
                                   .scrobble(
                                     addToCollection: newValue,
                                     addToWishlist: newValue ? false : null,
-                                    refreshReadingSuggestion: true,
-                                    refreshRateSuggestion: true,
                                   )
                                   .then((_) {
                                     if (!context.mounted) return;
@@ -172,8 +170,6 @@ Future<void> showScrobbleSheet({
                                     markAsRead: newValue,
                                     dateRead: newValue ? DateTime.now().toUtc() : null,
                                     rating: newValue && selectedRating > 0 ? selectedRating : null,
-                                    refreshReadingSuggestion: true,
-                                    refreshRateSuggestion: true,
                                   )
                                   .then((_) {
                                     if (!context.mounted) return;
@@ -263,8 +259,6 @@ Future<void> showScrobbleSheet({
                                   .scrobble(
                                     addToWishlist: newValue,
                                     addToCollection: newValue ? false : null,
-                                    refreshReadingSuggestion: true,
-                                    refreshRateSuggestion: true,
                                   )
                                   .then((_) {
                                     if (!context.mounted) return;
@@ -305,8 +299,6 @@ Future<void> showScrobbleSheet({
                           markAsRead: true,
                           rating: value,
                           dateRead: DateTime.now().toUtc(),
-                          refreshReadingSuggestion: true,
-                          refreshRateSuggestion: true,
                         )
                         .then((_) {
                           if (!context.mounted) return;
@@ -327,8 +319,6 @@ Future<void> showScrobbleSheet({
                         .read(scrobbleIssueProvider(issueId).notifier)
                         .scrobble(
                           rating: null,
-                          refreshReadingSuggestion: true,
-                          refreshRateSuggestion: true,
                         )
                         .then((_) {
                           if (!context.mounted) return;

@@ -55,7 +55,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     if (!mounted) return;
     setState(_resetCoverFetchLimit);
     ref.invalidate(subscribedSeriesPageProvider(_page));
-    await ref.read(subscribedSeriesPageProvider(_page).future);
   }
 
   @override

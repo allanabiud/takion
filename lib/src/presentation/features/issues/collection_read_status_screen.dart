@@ -32,7 +32,6 @@ class CollectionReadStatusScreen extends ConsumerWidget {
 
     Future<void> refresh() async {
       ref.invalidate(collectionItemsByReadStatusProvider(isRead));
-      await ref.read(collectionItemsByReadStatusProvider(isRead).future);
     }
 
     return Scaffold(

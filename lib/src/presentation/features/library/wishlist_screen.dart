@@ -23,7 +23,6 @@ class WishlistScreen extends ConsumerWidget {
 
     Future<void> refresh() async {
       ref.invalidate(wishlistCollectionItemsProvider);
-      await ref.read(wishlistCollectionItemsProvider.future);
     }
 
     return Scaffold(

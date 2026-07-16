@@ -23,7 +23,6 @@ import 'package:takion/src/presentation/features/issues/issue_details/issue_my_d
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
@@ -280,21 +279,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
             .reconcile(force: true, onlySeriesId: seriesId);
       }
       final selectedWeek = ref.read(selectedWeekProvider);
-      ref.invalidate(seriesSubscriptionProvider(seriesId));
-      ref.invalidate(issuePullListEntryProvider);
-      ref.invalidate(pullListEntriesForWeekProvider);
-      ref.invalidate(pullsIssuesForWeekProvider);
-      ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
-      ref.invalidate(currentWeekPullsProvider);
-      ref.invalidate(currentWeekPullsCountProvider);
-      await invalidateSubscriptionsLocalCacheWithHive(
-        ref.read(hiveServiceProvider),
+      invalidateOnSubscriptionToggle(ref,
+        seriesId: seriesId,
+        selectedWeek: selectedWeek,
       );
-      ref.invalidate(activeSubscriptionsProvider);
-      ref.invalidate(activeSubscriptionsCountProvider);
-      ref.invalidate(subscribedSeriesListProvider);
-      ref.invalidate(subscribedSeriesPageProvider);
-      await ref.read(currentWeekPullsProvider.future);
       if (mounted) {
         (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
@@ -310,13 +298,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
             } else {
               await subscriptionRepository.subscribe(metronSeriesId: seriesId);
             }
-            ref.invalidate(seriesSubscriptionProvider(seriesId));
-            ref.invalidate(issuePullListEntryProvider);
-            ref.invalidate(pullListEntriesForWeekProvider);
-            ref.invalidate(pullsIssuesForWeekProvider);
-            ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
-            ref.invalidate(currentWeekPullsProvider);
-            ref.invalidate(currentWeekPullsCountProvider);
+            invalidateOnSubscriptionToggle(ref,
+              seriesId: seriesId,
+              selectedWeek: selectedWeek,
+            );
           },
         );
       }

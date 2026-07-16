@@ -5,6 +5,7 @@ import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 
 const _subscriptionsPageSize = metronDefaultPageSize;
 const _subscriptionsCacheBoxName = 'subscriptions_cache_box';
@@ -47,6 +48,24 @@ void invalidateSubscriptionProviders(Ref ref) {
   ref.invalidate(activeSubscriptionsCountProvider);
   ref.invalidate(subscribedSeriesListProvider);
   ref.invalidate(subscribedSeriesPageProvider);
+}
+
+void invalidateSubscriptionProvidersForWidget(WidgetRef ref) {
+  ref.invalidate(activeSubscriptionsProvider);
+  ref.invalidate(activeSubscriptionsCountProvider);
+  ref.invalidate(subscribedSeriesListProvider);
+  ref.invalidate(subscribedSeriesPageProvider);
+}
+
+void invalidateOnSubscriptionToggle(WidgetRef ref, {int? seriesId, DateTime? selectedWeek}) {
+  if (seriesId != null) ref.invalidate(seriesSubscriptionProvider(seriesId));
+  ref.invalidate(issuePullListEntryProvider);
+  ref.invalidate(pullListEntriesForWeekProvider);
+  ref.invalidate(pullsIssuesForWeekProvider);
+  if (selectedWeek != null) ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
+  ref.invalidate(currentWeekPullsProvider);
+  ref.invalidate(currentWeekPullsCountProvider);
+  invalidateSubscriptionProvidersForWidget(ref);
 }
 
 Map<String, dynamic> _seriesListToJson(SeriesList series) {

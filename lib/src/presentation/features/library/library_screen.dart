@@ -84,7 +84,6 @@ class LibraryScreen extends ConsumerWidget {
                                     .scrobble(
                                       dateRead: DateTime.now(),
                                       rating: selectedRating,
-                                      refreshRateSuggestion: true,
                                     );
 
                                 final latestState = ref.read(

@@ -72,6 +72,24 @@ class NotificationService {
     );
   }
 
+  Future<bool> requestPermissions() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return (await android.requestNotificationsPermission()) ?? true;
+    }
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      return (await ios.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      )) ?? true;
+    }
+    return true;
+  }
+
   Future<void> cancel() async {
     await _plugin.cancel(_notificationId);
   }
