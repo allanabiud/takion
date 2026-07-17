@@ -117,11 +117,11 @@ class SubscriptionPullReconciler {
     }
 
     if (useDelta) {
-      var page = 1;
+      String? nextUrl;
       final subscriptionSeriesIds = seriesIds.toSet();
       while (true) {
         final issuePage = await metronRepository.getIssueList(
-          page: page,
+          nextUrl: nextUrl,
           modifiedGt: lastRun,
         );
         for (final issue in issuePage.results) {
@@ -146,17 +146,16 @@ class SubscriptionPullReconciler {
             await flushBatch();
           }
         }
-        final nextPage = issuePage.nextPage;
-        if (nextPage == null) break;
-        page = nextPage;
+        nextUrl = issuePage.next;
+        if (nextUrl == null) break;
       }
     } else {
       for (final seriesId in seriesIds) {
-        var page = 1;
+        String? nextUrl;
         while (true) {
           final issuePage = await metronRepository.getSeriesIssueList(
             seriesId,
-            page: page,
+            nextUrl: nextUrl,
           );
           for (final issue in issuePage.results) {
             final issueId = issue.id;
@@ -179,7 +178,7 @@ class SubscriptionPullReconciler {
           }
           final nextPage = issuePage.nextPage;
           if (nextPage == null) break;
-          page = nextPage;
+          nextUrl = issuePage.next;
         }
       }
     }

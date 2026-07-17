@@ -3,6 +3,7 @@ part of 'metron_repository_impl.dart';
 mixin _ReadingListsRepositoryMixin on _RepositoryState {
 
   Future<MetronReadingListPage> searchReadingLists({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     String? name,
@@ -13,6 +14,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     bool forceRefresh = false,
   }) async {
     final dto = await _remoteDataSource.getReadingLists(
+      nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
       page: page,
       name: name,
       listType: listType,
@@ -37,14 +39,17 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
   }
 
   Future<List<MetronReadingListItem>> getReadingListItems(int id) async {
-    var page = 1;
     final allItems = <MetronReadingListItem>[];
+    Uri? nextUrl;
 
     while (true) {
-      final dto = await _remoteDataSource.getReadingListItems(id, page: page);
+      final dto = await _remoteDataSource.getReadingListItems(
+        id,
+        nextUrl: nextUrl,
+      );
       allItems.addAll(dto.results.map((e) => e.toEntity()));
       if (dto.next == null) break;
-      page++;
+      nextUrl = Uri.parse(dto.next!);
     }
 
     return allItems;

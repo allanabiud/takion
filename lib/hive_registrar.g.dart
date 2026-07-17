@@ -3,8 +3,11 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
-import 'package:takion/src/data/dto/dto.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/data/dto/issue_details_dto.dart';
+import 'package:takion/src/data/dto/issue_list_dto.dart';
+import 'package:takion/src/data/dto/issue_list_series_dto.dart';
+import 'package:takion/src/data/dto/series_dto.dart';
+import 'package:takion/src/domain/entities/reading_list.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {

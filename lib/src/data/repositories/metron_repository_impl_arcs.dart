@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _ArcsRepositoryMixin on _RepositoryState {
 
   Future<ArcListPage> getArcList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getArcList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getArcList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getArcList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return ArcListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
 
   Future<ArcListPage> searchArcs(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchArcs(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchArcs(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchArcs(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheArcSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:arc:$query:$page',
+          cacheKey: nextUrl ?? 'search:arc:$query:$page',
           cooldown: MetronCachePolicies.arcSearchResults.refreshCooldown,
         );
       }
@@ -84,14 +99,21 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
       return _coalesce(_arcSearchInFlight, key, () async {
-        final remotePage = await _remoteDataSource.searchArcs(
-          query,
-          page: page,
-          limit: limit,
-          cancelToken: cancelToken,
-        );
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.searchArcs(
+                query,
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.searchArcs(
+                query,
+                page: page,
+                limit: limit,
+                cancelToken: cancelToken,
+              );
         await _localDataSource.cacheArcSearchResults(
           query,
           remotePage.results,
@@ -176,6 +198,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
 
   Future<ArcIssueListPage> getArcIssueList(
     int arcId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -206,12 +229,19 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.getArcIssueList(
-              arcId,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getArcIssueList(
+                    arcId,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getArcIssueList(
+                    arcId,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheArcIssueListResults(
               arcId,
               remotePage.results,
@@ -223,7 +253,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
             );
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: 'arc_issue_list:$arcId:$page',
+          cacheKey: nextUrl ?? 'arc_issue_list:$arcId:$page',
           cooldown: MetronCachePolicies.arcIssueList.refreshCooldown,
         );
       }
@@ -239,14 +269,21 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = '$arcId|$page|$forceRefresh';
+      final key = nextUrl ?? '$arcId|$page|$forceRefresh';
       return _coalesce(_arcIssueListInFlight, key, () async {
-        final remotePage = await _remoteDataSource.getArcIssueList(
-          arcId,
-          page: page,
-          limit: limit,
-          cancelToken: cancelToken,
-        );
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getArcIssueList(
+                arcId,
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getArcIssueList(
+                arcId,
+                page: page,
+                limit: limit,
+                cancelToken: cancelToken,
+              );
         await _localDataSource.cacheArcIssueListResults(
           arcId,
           remotePage.results,

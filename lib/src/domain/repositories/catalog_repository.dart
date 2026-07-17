@@ -20,6 +20,7 @@ abstract class CatalogRepository {
 
   Future<IssueSearchPage> searchIssues(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -27,6 +28,7 @@ abstract class CatalogRepository {
   });
 
   Future<IssueSearchPage> getIssueList({
+    String? nextUrl,
     int page = 1,
     bool forceRefresh = false,
     String? ordering,
@@ -37,6 +39,7 @@ abstract class CatalogRepository {
 
   Future<SeriesSearchPage> searchSeries(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -44,6 +47,7 @@ abstract class CatalogRepository {
   });
 
   Future<SeriesListPage> getSeriesList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -57,6 +61,7 @@ abstract class CatalogRepository {
 
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -64,6 +69,7 @@ abstract class CatalogRepository {
   });
   Future<CharacterListPage> searchCharacters(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -75,6 +81,7 @@ abstract class CatalogRepository {
   });
   Future<CharacterIssueListPage> getCharacterIssueList(
     int characterId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -83,6 +90,7 @@ abstract class CatalogRepository {
 
   Future<CreatorListPage> searchCreators(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -96,6 +104,7 @@ abstract class CatalogRepository {
 
   Future<UniverseListPage> searchUniverses(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -109,6 +118,7 @@ abstract class CatalogRepository {
 
   Future<ImprintListPage> searchImprints(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -122,6 +132,7 @@ abstract class CatalogRepository {
 
   Future<TeamListPage> searchTeams(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -135,6 +146,7 @@ abstract class CatalogRepository {
 
   Future<ArcListPage> searchArcs(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -148,6 +160,7 @@ abstract class CatalogRepository {
 
   Future<ArcIssueListPage> getArcIssueList(
     int arcId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -156,6 +169,7 @@ abstract class CatalogRepository {
 
   Future<PublisherListPage> searchPublishers(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -169,6 +183,7 @@ abstract class CatalogRepository {
 
   Future<SeriesListPage> getPublisherSeriesList(
     int publisherId, {
+    String? nextUrl,
     int page = 1,
     CancelToken? cancelToken,
     bool forceRefresh = false,

@@ -139,7 +139,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     ),
                   ),
                   subtitle: const Text('Remove all cached metadata and images'),
-                  onTap: appSettings.isSyncing
+                  onTap: appSettings.isBusy
                       ? null
                       : () async {
                           final confirm = await showDialog<bool>(

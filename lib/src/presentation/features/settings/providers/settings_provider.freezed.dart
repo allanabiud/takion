@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppSettings {
 
- bool get isSyncing; String? get lastSyncMessage;
+ bool get isBusy; String? get statusMessage;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.isSyncing, isSyncing) || other.isSyncing == isSyncing)&&(identical(other.lastSyncMessage, lastSyncMessage) || other.lastSyncMessage == lastSyncMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.isBusy, isBusy) || other.isBusy == isBusy)&&(identical(other.statusMessage, statusMessage) || other.statusMessage == statusMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isSyncing,lastSyncMessage);
+int get hashCode => Object.hash(runtimeType,isBusy,statusMessage);
 
 @override
 String toString() {
-  return 'AppSettings(isSyncing: $isSyncing, lastSyncMessage: $lastSyncMessage)';
+  return 'AppSettings(isBusy: $isBusy, statusMessage: $statusMessage)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- bool isSyncing, String? lastSyncMessage
+ bool isBusy, String? statusMessage
 });
 
 
@@ -62,10 +62,10 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isSyncing = null,Object? lastSyncMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isBusy = null,Object? statusMessage = freezed,}) {
   return _then(_self.copyWith(
-isSyncing: null == isSyncing ? _self.isSyncing : isSyncing // ignore: cast_nullable_to_non_nullable
-as bool,lastSyncMessage: freezed == lastSyncMessage ? _self.lastSyncMessage : lastSyncMessage // ignore: cast_nullable_to_non_nullable
+isBusy: null == isBusy ? _self.isBusy : isBusy // ignore: cast_nullable_to_non_nullable
+as bool,statusMessage: freezed == statusMessage ? _self.statusMessage : statusMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -151,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isSyncing,  String? lastSyncMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isBusy,  String? statusMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.isSyncing,_that.lastSyncMessage);case _:
+return $default(_that.isBusy,_that.statusMessage);case _:
   return orElse();
 
 }
@@ -172,10 +172,10 @@ return $default(_that.isSyncing,_that.lastSyncMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isSyncing,  String? lastSyncMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isBusy,  String? statusMessage)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.isSyncing,_that.lastSyncMessage);case _:
+return $default(_that.isBusy,_that.statusMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +192,10 @@ return $default(_that.isSyncing,_that.lastSyncMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isSyncing,  String? lastSyncMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isBusy,  String? statusMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.isSyncing,_that.lastSyncMessage);case _:
+return $default(_that.isBusy,_that.statusMessage);case _:
   return null;
 
 }
@@ -207,11 +207,11 @@ return $default(_that.isSyncing,_that.lastSyncMessage);case _:
 
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({this.isSyncing = false, this.lastSyncMessage});
+  const _AppSettings({this.isBusy = false, this.statusMessage});
   
 
-@override@JsonKey() final  bool isSyncing;
-@override final  String? lastSyncMessage;
+@override@JsonKey() final  bool isBusy;
+@override final  String? statusMessage;
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +223,16 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.isSyncing, isSyncing) || other.isSyncing == isSyncing)&&(identical(other.lastSyncMessage, lastSyncMessage) || other.lastSyncMessage == lastSyncMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.isBusy, isBusy) || other.isBusy == isBusy)&&(identical(other.statusMessage, statusMessage) || other.statusMessage == statusMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isSyncing,lastSyncMessage);
+int get hashCode => Object.hash(runtimeType,isBusy,statusMessage);
 
 @override
 String toString() {
-  return 'AppSettings(isSyncing: $isSyncing, lastSyncMessage: $lastSyncMessage)';
+  return 'AppSettings(isBusy: $isBusy, statusMessage: $statusMessage)';
 }
 
 
@@ -243,7 +243,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- bool isSyncing, String? lastSyncMessage
+ bool isBusy, String? statusMessage
 });
 
 
@@ -260,10 +260,10 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isSyncing = null,Object? lastSyncMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isBusy = null,Object? statusMessage = freezed,}) {
   return _then(_AppSettings(
-isSyncing: null == isSyncing ? _self.isSyncing : isSyncing // ignore: cast_nullable_to_non_nullable
-as bool,lastSyncMessage: freezed == lastSyncMessage ? _self.lastSyncMessage : lastSyncMessage // ignore: cast_nullable_to_non_nullable
+isBusy: null == isBusy ? _self.isBusy : isBusy // ignore: cast_nullable_to_non_nullable
+as bool,statusMessage: freezed == statusMessage ? _self.statusMessage : statusMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

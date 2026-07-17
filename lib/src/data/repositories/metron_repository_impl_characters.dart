@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _CharactersRepositoryMixin on _RepositoryState {
 
   Future<CharacterListPage> getCharacterList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getCharacterList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getCharacterList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getCharacterList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return CharacterListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
 
   Future<CharacterListPage> searchCharacters(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchCharacters(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchCharacters(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchCharacters(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheCharacterSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:character:$query:$page',
+          cacheKey: nextUrl ?? 'search:character:$query:$page',
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -84,12 +99,19 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchCharacters(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchCharacters(
+              query,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchCharacters(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cacheCharacterSearchResults(
         query,
         remotePage.results,
@@ -177,6 +199,7 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
 
   Future<CharacterIssueListPage> getCharacterIssueList(
     int characterId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -207,12 +230,19 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.getCharacterIssueList(
-              characterId,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getCharacterIssueList(
+                    characterId,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getCharacterIssueList(
+                    characterId,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheCharacterIssueListResults(
               characterId,
               remotePage.results,
@@ -224,7 +254,7 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
             );
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: 'character_issue_list:$characterId:$page',
+          cacheKey: nextUrl ?? 'character_issue_list:$characterId:$page',
           cooldown: MetronCachePolicies.characterIssueList.refreshCooldown,
         );
       }
@@ -240,14 +270,21 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = '$characterId|$page|$forceRefresh';
+      final key = nextUrl ?? '$characterId|$page|$forceRefresh';
       return _coalesce(_characterIssueListInFlight, key, () async {
-        final remotePage = await _remoteDataSource.getCharacterIssueList(
-          characterId,
-          page: page,
-          limit: limit,
-          cancelToken: cancelToken,
-        );
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getCharacterIssueList(
+                characterId,
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getCharacterIssueList(
+                characterId,
+                page: page,
+                limit: limit,
+                cancelToken: cancelToken,
+              );
         await _localDataSource.cacheCharacterIssueListResults(
           characterId,
           remotePage.results,

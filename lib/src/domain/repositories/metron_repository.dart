@@ -25,6 +25,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<IssueSearchPage> searchIssues(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -33,6 +34,7 @@ abstract class MetronRepository implements CatalogRepository {
 
   @override
   Future<IssueSearchPage> getIssueList({
+    String? nextUrl,
     int page = 1,
     bool forceRefresh = false,
     String? ordering,
@@ -44,6 +46,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<SeriesSearchPage> searchSeries(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,6 +55,7 @@ abstract class MetronRepository implements CatalogRepository {
 
   @override
   Future<SeriesListPage> getSeriesList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -67,6 +71,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -76,6 +81,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<CharacterListPage> searchCharacters(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -83,6 +89,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<CharacterListPage> getCharacterList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -98,6 +105,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<CharacterIssueListPage> getCharacterIssueList(
     int characterId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -105,6 +113,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<CreatorListPage> getCreatorList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -114,6 +123,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<CreatorListPage> searchCreators(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -127,6 +137,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<UniverseListPage> getUniverseList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -136,6 +147,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<UniverseListPage> searchUniverses(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -149,6 +161,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<ImprintListPage> getImprintList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -158,6 +171,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<ImprintListPage> searchImprints(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -171,6 +185,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<TeamListPage> getTeamList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -180,6 +195,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<TeamListPage> searchTeams(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -193,6 +209,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<ArcListPage> getArcList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -202,6 +219,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<ArcListPage> searchArcs(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -217,6 +235,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<ArcIssueListPage> getArcIssueList(
     int arcId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -224,6 +243,7 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   Future<PublisherListPage> getPublisherList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -233,6 +253,7 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<PublisherListPage> searchPublishers(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -248,12 +269,14 @@ abstract class MetronRepository implements CatalogRepository {
   @override
   Future<SeriesListPage> getPublisherSeriesList(
     int publisherId, {
+    String? nextUrl,
     int page = 1,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
 
   Future<MetronReadingListPage> searchReadingLists({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     String? name,

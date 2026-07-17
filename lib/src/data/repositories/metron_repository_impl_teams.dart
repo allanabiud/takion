@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _TeamsRepositoryMixin on _RepositoryState {
 
   Future<TeamListPage> getTeamList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getTeamList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getTeamList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getTeamList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return TeamListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
 
   Future<TeamListPage> searchTeams(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchTeams(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchTeams(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchTeams(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheTeamSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:team:$query:$page',
+          cacheKey: nextUrl ?? 'search:team:$query:$page',
           cooldown: MetronCachePolicies.teamSearchResults.refreshCooldown,
         );
       }
@@ -84,12 +99,19 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchTeams(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchTeams(
+              query,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchTeams(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cacheTeamSearchResults(
         query,
         remotePage.results,

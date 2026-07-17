@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _ImprintsRepositoryMixin on _RepositoryState {
 
   Future<ImprintListPage> getImprintList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getImprintList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getImprintList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getImprintList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return ImprintListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
 
   Future<ImprintListPage> searchImprints(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchImprints(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchImprints(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchImprints(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheImprintSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:imprint:$query:$page',
+          cacheKey: nextUrl ?? 'search:imprint:$query:$page',
           cooldown: MetronCachePolicies.universeSearchResults.refreshCooldown,
         );
       }
@@ -84,12 +99,19 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchImprints(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchImprints(
+              query,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchImprints(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cacheImprintSearchResults(
         query,
         remotePage.results,

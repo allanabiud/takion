@@ -4,6 +4,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
 
   Future<SeriesSearchPage> searchSeries(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -33,12 +34,19 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         _refreshInBackground(
           task: () async {
             final corrected = await _correctSearchQuery(query);
-            final remotePage = await _remoteDataSource.searchSeries(
-              corrected,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchSeries(
+                    corrected,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchSeries(
+                    corrected,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheSeriesSearchResults(
               query,
               remotePage.results,
@@ -52,7 +60,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
               if (dto.series.trim().isNotEmpty) _indexSeriesName(dto.series);
             }
           },
-          cacheKey: 'search:series:$query:$page',
+          cacheKey: 'search:series:$query:${nextUrl ?? "$page"}',
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -69,12 +77,19 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
 
     try {
       final corrected = await _correctSearchQuery(query);
-      final remotePage = await _remoteDataSource.searchSeries(
-        corrected,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchSeries(
+              corrected,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchSeries(
+              corrected,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cacheSeriesSearchResults(
         query,
         remotePage.results,
@@ -110,6 +125,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
   }
 
   Future<SeriesListPage> getSeriesList({
+    String? nextUrl,
     int page = 1,
     bool forceRefresh = false,
     int limit = metronDefaultPageSize,
@@ -135,11 +151,17 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.getSeriesList(
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getSeriesList(
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getSeriesList(
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheSeriesListResults(
               remotePage.results,
               page: page,
@@ -149,7 +171,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'series_list:$page',
+          cacheKey: 'series_list:${nextUrl ?? "$page"}',
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -167,13 +189,19 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     AppPerformanceMetrics.instance.recordCacheMiss('series_list');
 
     try {
-      final key = '$page|$forceRefresh';
+      final key = '${nextUrl ?? "$page"}|$forceRefresh';
       return _coalesce(_seriesListInFlight, key, () async {
-        final remotePage = await _remoteDataSource.getSeriesList(
-          page: page,
-          limit: limit,
-          cancelToken: cancelToken,
-        );
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getSeriesList(
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getSeriesList(
+                page: page,
+                limit: limit,
+                cancelToken: cancelToken,
+              );
         await _localDataSource.cacheSeriesListResults(
           remotePage.results,
           page: page,
@@ -277,6 +305,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
 
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -305,12 +334,19 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.getSeriesIssueList(
-              seriesId,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getSeriesIssueList(
+                    seriesId,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getSeriesIssueList(
+                    seriesId,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheSeriesIssueListResults(
               seriesId,
               remotePage.results,
@@ -322,7 +358,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
             );
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: 'series_issue_list:$seriesId:$page',
+          cacheKey: 'series_issue_list:$seriesId:${nextUrl ?? "$page"}',
           cooldown: MetronCachePolicies.seriesIssueList.refreshCooldown,
         );
       }
@@ -338,14 +374,21 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = '$seriesId|$page|$forceRefresh';
+      final key = '$seriesId|${nextUrl ?? "$page"}|$forceRefresh';
       return _coalesce(_seriesIssueListInFlight, key, () async {
-        final remotePage = await _remoteDataSource.getSeriesIssueList(
-          seriesId,
-          page: page,
-          limit: limit,
-          cancelToken: cancelToken,
-        );
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getSeriesIssueList(
+                seriesId,
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getSeriesIssueList(
+                seriesId,
+                page: page,
+                limit: limit,
+                cancelToken: cancelToken,
+              );
         await _localDataSource.cacheSeriesIssueListResults(
           seriesId,
           remotePage.results,

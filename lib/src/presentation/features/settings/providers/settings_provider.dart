@@ -46,13 +46,13 @@ import 'package:takion/src/core/logging/app_logger.dart';
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';
 
-enum SyncType { full, quick }
+enum RefreshType { full, quick }
 
 @freezed
 abstract class AppSettings with _$AppSettings {
   const factory AppSettings({
-    @Default(false) bool isSyncing,
-    String? lastSyncMessage,
+    @Default(false) bool isBusy,
+    String? statusMessage,
   }) = _AppSettings;
 }
 
@@ -158,10 +158,10 @@ class SettingsNotifier extends _$SettingsNotifier {
     invalidateCacheBackedProviders((p) => ref.invalidate(p));
   }
 
-  static const _syncRequestDelay = Duration(milliseconds: 3500);
+  static const _refreshRequestDelay = Duration(milliseconds: 3500);
 
   Future<void> _throttle() async {
-    await Future.delayed(_syncRequestDelay);
+    await Future.delayed(_refreshRequestDelay);
   }
 
   ({String query, int page})? _parseSearchKey(Object? key) {
@@ -205,7 +205,7 @@ class SettingsNotifier extends _$SettingsNotifier {
     return !policy.isFresh(cachedAt, now);
   }
 
-  Future<int> _syncMetronCaches({required bool quick}) async {
+  Future<int> _refreshCatalogCaches({required bool quick}) async {
     final hive = ref.read(hiveServiceProvider);
     final repository = ref.read(catalogRepositoryProvider);
     final localDataSource = ref.read(metronLocalDataSourceProvider);
@@ -437,7 +437,7 @@ class SettingsNotifier extends _$SettingsNotifier {
     return synced;
   }
 
-  Future<void> _syncLocalData({required bool quick}) async {
+  Future<void> _refreshLocalData({required bool quick}) async {
     final pullRepo = ref.read(pullListRepositoryProvider);
     final profileService = ref.read(localProfileServiceProvider);
     final reconciler = ref.read(subscriptionPullReconcilerProvider);
@@ -456,70 +456,70 @@ class SettingsNotifier extends _$SettingsNotifier {
     ]);
   }
 
-  Future<void> triggerFullSync() async {
-    if (state.isSyncing) return;
+  Future<void> refreshAllCatalogData() async {
+    if (state.isBusy) return;
 
-    AppLogger.info('Starting full sync');
+    AppLogger.info('Refreshing all catalog data');
 
     state = state.copyWith(
-      isSyncing: true,
-      lastSyncMessage: 'Starting full sync...',
+      isBusy: true,
+      statusMessage: 'Refreshing all catalog data...',
     );
 
     try {
-      final synced = await _syncMetronCaches(quick: false);
-      await _syncLocalData(quick: false);
+      final synced = await _refreshCatalogCaches(quick: false);
+      await _refreshLocalData(quick: false);
       _invalidateCacheBackedProviders();
-      AppLogger.info('Full sync completed ($synced cached slice(s) refreshed)');
+      AppLogger.info('Full catalog refresh completed ($synced cached slice(s) refreshed)');
       state = state.copyWith(
-        isSyncing: false,
-        lastSyncMessage:
-            'Full sync completed ($synced cached slice(s) refreshed)',
+        isBusy: false,
+        statusMessage:
+            'Full catalog refresh completed ($synced cached slice(s) refreshed)',
       );
     } catch (e) {
-      AppLogger.error('Full sync failed', error: e);
+      AppLogger.error('Full catalog refresh failed', error: e);
       state = state.copyWith(
-        isSyncing: false,
-        lastSyncMessage: 'Full sync failed',
+        isBusy: false,
+        statusMessage: 'Full catalog refresh failed',
       );
     }
   }
 
-  Future<void> triggerQuickSync() async {
-    if (state.isSyncing) return;
+  Future<void> refreshStaleCatalogData() async {
+    if (state.isBusy) return;
 
-    AppLogger.info('Starting quick sync');
+    AppLogger.info('Refreshing stale catalog data');
 
     state = state.copyWith(
-      isSyncing: true,
-      lastSyncMessage: 'Starting quick sync...',
+      isBusy: true,
+      statusMessage: 'Refreshing stale catalog data...',
     );
 
     try {
-      final synced = await _syncMetronCaches(quick: true);
-      await _syncLocalData(quick: true);
+      final synced = await _refreshCatalogCaches(quick: true);
+      await _refreshLocalData(quick: true);
       _invalidateCacheBackedProviders();
-      AppLogger.info('Quick sync completed ($synced stale/missing cache slice(s) refreshed)');
+      AppLogger.info('Stale catalog refresh completed ($synced stale/missing cache slice(s) refreshed)');
       state = state.copyWith(
-        isSyncing: false,
-        lastSyncMessage:
-            'Quick sync completed ($synced stale/missing cache slice(s) refreshed)',
+        isBusy: false,
+        statusMessage:
+            'Stale catalog refresh completed ($synced stale/missing cache slice(s) refreshed)',
       );
     } catch (e) {
-      AppLogger.error('Quick sync failed', error: e);
+      AppLogger.error('Stale catalog refresh failed', error: e);
       state = state.copyWith(
-        isSyncing: false,
-        lastSyncMessage: 'Quick sync failed',
+        isBusy: false,
+        statusMessage: 'Stale catalog refresh failed',
       );
     }
   }
 
   Future<void> clearCache() async {
-    if (state.isSyncing) return;
+    if (state.isBusy) return;
 
     state = state.copyWith(
-      isSyncing: true,
-      lastSyncMessage: 'Clearing local cache and metadata...',
+      isBusy: true,
+      statusMessage: 'Clearing local cache and metadata...',
     );
     final hive = ref.read(hiveServiceProvider);
 
@@ -527,14 +527,14 @@ class SettingsNotifier extends _$SettingsNotifier {
       await hive.clearLocalCache();
       _invalidateCacheBackedProviders();
       state = state.copyWith(
-        isSyncing: false,
-        lastSyncMessage: 'Cache and metadata cleared successfully',
+        isBusy: false,
+        statusMessage: 'Cache and metadata cleared successfully',
       );
     } catch (e) {
       AppLogger.error('Failed to clear cache', error: e);
       state = state.copyWith(
-        isSyncing: false,
-        lastSyncMessage: 'Failed to clear cache',
+        isBusy: false,
+        statusMessage: 'Failed to clear cache',
       );
     }
   }

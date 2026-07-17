@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _UniversesRepositoryMixin on _RepositoryState {
 
   Future<UniverseListPage> getUniverseList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getUniverseList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getUniverseList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getUniverseList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return UniverseListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
 
   Future<UniverseListPage> searchUniverses(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchUniverses(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchUniverses(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchUniverses(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheUniverseSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:universe:$query:$page',
+          cacheKey: nextUrl ?? 'search:universe:$query:$page',
           cooldown: MetronCachePolicies.universeSearchResults.refreshCooldown,
         );
       }
@@ -84,12 +99,19 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchUniverses(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchUniverses(
+              query,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchUniverses(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cacheUniverseSearchResults(
         query,
         remotePage.results,

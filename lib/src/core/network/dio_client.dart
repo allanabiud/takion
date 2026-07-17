@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/cache_header_store.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/conditional_interceptor.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
@@ -10,6 +12,10 @@ import 'package:takion/src/core/storage/hive_service.dart';
 
 final cacheHeaderStoreProvider = Provider<CacheHeaderStore>((ref) {
   return CacheHeaderStore();
+});
+
+final rateLimitInterceptorProvider = Provider<RateLimitInterceptor>((ref) {
+  return RateLimitInterceptor();
 });
 
 final dioProvider = Provider<Dio>((ref) {
@@ -21,8 +27,9 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  // Rate limiter should be early in the chain
-  dio.interceptors.add(RateLimitInterceptor());
+  // Rate limiter should be early in the chain (shared via provider)
+  final rateLimitInterceptor = ref.read(rateLimitInterceptorProvider);
+  dio.interceptors.add(rateLimitInterceptor);
 
   // Conditional request interceptor
   final headerStore = ref.read(cacheHeaderStoreProvider);
@@ -94,6 +101,33 @@ final dioProvider = Provider<Dio>((ref) {
               final response = await dio.fetch(retryRequest);
               return handler.resolve(response);
             } on DioException catch (retryError) {
+              return handler.next(retryError);
+            }
+          }
+        }
+
+        final statusCode = error.response?.statusCode;
+        if (statusCode != null && statusCode >= 500 && statusCode < 600) {
+          final retryCount =
+              error.requestOptions.extra['retry_5xx_count'] as int? ?? 0;
+          if (retryCount < 3) {
+            final delay = Duration(seconds: pow(2, retryCount).toInt());
+            await Future.delayed(delay);
+            final retryRequest = error.requestOptions
+              ..extra = {
+                ...error.requestOptions.extra,
+                'retry_5xx_count': retryCount + 1,
+              };
+            try {
+              final response = await dio.fetch(retryRequest);
+              return handler.resolve(response);
+            } on DioException catch (retryError) {
+              if (retryCount >= 2) {
+                AppLogger.warning(
+                  'Server error after ${retryCount + 1} retries',
+                  error: retryError,
+                );
+              }
               return handler.next(retryError);
             }
           }

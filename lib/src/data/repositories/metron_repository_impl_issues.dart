@@ -84,6 +84,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
 
   Future<IssueSearchPage> searchIssues(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -115,6 +116,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             final corrected = await _correctSearchQuery(query);
             final remotePage = await _remoteDataSource.searchIssues(
               corrected,
+              nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
               page: page,
               limit: limit,
               cancelToken: cancelToken,
@@ -130,7 +132,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             );
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: 'search:issue:$query:$page',
+          cacheKey: nextUrl != null ? 'search:issue:$query:$nextUrl' : 'search:issue:$query:$page',
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -149,6 +151,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       final corrected = await _correctSearchQuery(query);
       final remotePage = await _remoteDataSource.searchIssues(
         corrected,
+        nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
         page: page,
         limit: limit,
         cancelToken: cancelToken,
@@ -186,6 +189,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
   }
 
   Future<IssueSearchPage> getIssueList({
+    String? nextUrl,
     int page = 1,
     bool forceRefresh = false,
     String? ordering,
@@ -217,11 +221,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
       if (!isFresh) {
-        final key =
+        final key = nextUrl ??
             '$page|${ordering ?? ''}|${modifiedGt?.toUtc().toIso8601String() ?? ''}|${limit ?? ''}';
         _refreshInBackground(
           task: () async {
             final remotePage = await _remoteDataSource.getIssueList(
+              nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
               page: page,
               ordering: ordering,
               modifiedGt: modifiedGt,
@@ -256,11 +261,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     }
     AppPerformanceMetrics.instance.recordCacheMiss('issue_list');
 
-    final key =
+    final key = nextUrl ??
         '$page|${ordering ?? ''}|${modifiedGt?.toUtc().toIso8601String() ?? ''}|${limit ?? ''}|$forceRefresh';
     try {
       return _coalesce(_issueListInFlight, key, () async {
         final remotePage = await _remoteDataSource.getIssueList(
+          nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
           page: page,
           ordering: ordering,
           modifiedGt: modifiedGt,

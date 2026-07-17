@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _CreatorsRepositoryMixin on _RepositoryState {
 
   Future<CreatorListPage> getCreatorList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getCreatorList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getCreatorList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getCreatorList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return CreatorListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
 
   Future<CreatorListPage> searchCreators(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchCreators(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchCreators(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchCreators(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cacheCreatorSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:creator:$query:$page',
+          cacheKey: nextUrl ?? 'search:creator:$query:$page',
           cooldown: MetronCachePolicies.creatorSearchResults.refreshCooldown,
         );
       }
@@ -84,12 +99,19 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchCreators(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchCreators(
+              query,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchCreators(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cacheCreatorSearchResults(
         query,
         remotePage.results,

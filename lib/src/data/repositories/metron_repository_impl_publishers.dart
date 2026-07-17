@@ -3,16 +3,23 @@ part of 'metron_repository_impl.dart';
 mixin _PublishersRepositoryMixin on _RepositoryState {
 
   Future<PublisherListPage> getPublisherList({
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getPublisherList(
-      page: page,
-      limit: limit,
-      cancelToken: cancelToken,
-    );
+    final dto = nextUrl != null
+        ? await _remoteDataSource.getPublisherList(
+            nextUrl: Uri.parse(nextUrl),
+            limit: limit,
+            cancelToken: cancelToken,
+          )
+        : await _remoteDataSource.getPublisherList(
+            page: page,
+            limit: limit,
+            cancelToken: cancelToken,
+          );
     return PublisherListPage(
       count: dto.count,
       next: dto.next,
@@ -24,6 +31,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
 
   Future<PublisherListPage> searchPublishers(
     String query, {
+    String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
@@ -52,12 +60,19 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.searchPublishers(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.searchPublishers(
+                    query,
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.searchPublishers(
+                    query,
+                    page: page,
+                    limit: limit,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cachePublisherSearchResults(
               query,
               remotePage.results,
@@ -68,7 +83,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'search:publisher:$query:$page',
+          cacheKey: nextUrl ?? 'search:publisher:$query:$page',
           cooldown: MetronCachePolicies.universeSearchResults.refreshCooldown,
         );
       }
@@ -84,12 +99,19 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchPublishers(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.searchPublishers(
+              query,
+              nextUrl: Uri.parse(nextUrl),
+              limit: limit,
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.searchPublishers(
+              query,
+              page: page,
+              limit: limit,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cachePublisherSearchResults(
         query,
         remotePage.results,
@@ -174,6 +196,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
 
   Future<SeriesListPage> getPublisherSeriesList(
     int publisherId, {
+    String? nextUrl,
     int page = 1,
     CancelToken? cancelToken,
     bool forceRefresh = false,
@@ -203,11 +226,17 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final remotePage = await _remoteDataSource.getPublisherSeriesList(
-              publisherId,
-              page: page,
-              cancelToken: cancelToken,
-            );
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getPublisherSeriesList(
+                    publisherId,
+                    nextUrl: Uri.parse(nextUrl),
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getPublisherSeriesList(
+                    publisherId,
+                    page: page,
+                    cancelToken: cancelToken,
+                  );
             await _localDataSource.cachePublisherSeriesListResults(
               publisherId,
               remotePage.results,
@@ -218,7 +247,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'publisher_series_list:$publisherId:$page',
+          cacheKey: nextUrl ?? 'publisher_series_list:$publisherId:$page',
           cooldown: MetronCachePolicies.universeSearchResults.refreshCooldown,
         );
       }
@@ -234,11 +263,17 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.getPublisherSeriesList(
-        publisherId,
-        page: page,
-        cancelToken: cancelToken,
-      );
+      final remotePage = nextUrl != null
+          ? await _remoteDataSource.getPublisherSeriesList(
+              publisherId,
+              nextUrl: Uri.parse(nextUrl),
+              cancelToken: cancelToken,
+            )
+          : await _remoteDataSource.getPublisherSeriesList(
+              publisherId,
+              page: page,
+              cancelToken: cancelToken,
+            );
       await _localDataSource.cachePublisherSeriesListResults(
         publisherId,
         remotePage.results,
