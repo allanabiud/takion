@@ -43,8 +43,49 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
 
   String _pad(int n) => n.toString().padLeft(2, '0');
 
+  String _formatReadableTimestamp(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(dt.year, dt.month, dt.day);
+    final diff = today.difference(date).inDays;
+
+    final time = _formatTime(dt);
+
+    if (diff == 0) return 'today at $time';
+    if (diff == 1) return 'yesterday at $time';
+    if (diff > 1 && diff < 7) return '$diff days ago at $time';
+    if (diff >= 7 && diff < 30) return '${(diff / 7).floor()} weeks ago at $time';
+    return 'on ${_dayMonth(dt)} at $time';
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour < 12 ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
+  String _dayMonth(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]}';
+  }
+
   Future<String> _buildLogContent(List<String> logLines) async {
     final info = await PackageInfo.fromPlatform();
+    final historyLength = talker.history.length;
     final buffer = StringBuffer();
     buffer.writeln('Takion Debug Logs');
     buffer.writeln('=' * 50);
@@ -55,7 +96,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
         '${Platform.operatingSystemVersion}');
     buffer.writeln('Device: ${Platform.localHostname}');
     buffer.writeln('Generated: ${_formatTimestamp(DateTime.now())}');
-    buffer.writeln('Log Entries: ${logLines.length}');
+    buffer.writeln('Log Entries: $historyLength');
     buffer.writeln();
     buffer.writeln('--- LOGS ---');
     for (final line in logLines) {
@@ -114,9 +155,9 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
 
   @override
   Widget build(BuildContext context) {
-    final logLines = _logLines;
-    final logCount = logLines.length;
     final history = talker.history;
+    final historyLength = history.length;
+    final logLines = _logLines;
 
     DateTime? oldest;
     DateTime? newest;
@@ -126,24 +167,32 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     }
 
     final theme = Theme.of(context);
+    final maxHistory = talker.settings.maxHistoryItems;
+    final isCapped = historyLength >= maxHistory;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           buildSettingsGroup(context, 'Overview', [
-            _statRow(context, 'Total Entries', '$logCount'),
+            _statRow(context, 'Total Entries', '$historyLength'),
+            if (isCapped)
+              _statRow(
+                context,
+                'Retention',
+                'Capped at $maxHistory',
+              ),
             if (oldest != null)
               _statRow(
                 context,
                 'Oldest',
-                _formatTimestamp(oldest),
+                _formatReadableTimestamp(oldest),
               ),
             if (newest != null)
               _statRow(
                 context,
                 'Newest',
-                _formatTimestamp(newest),
+                _formatReadableTimestamp(newest),
               ),
           ]),
           const SizedBox(height: 16),

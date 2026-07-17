@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
+import 'package:takion/src/core/network/rate_limit_interceptor.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
+import 'package:takion/src/presentation/providers/rate_limit_status_provider.dart';
 
 Future<void> disconnectMetronAccount(BuildContext context, WidgetRef ref) async {
   await ref.read(metronAccountServiceProvider).disconnect();
@@ -97,194 +99,442 @@ Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async 
   }
 }
 
+enum _MetronMode { account, catalog }
+
 void showMetronConnectionSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
     title: 'Metron',
-    child: Consumer(
-      builder: (context, ref, _) {
-        final metronConnectionAsync = ref.watch(metronConnectionProvider);
-        final isConnected = metronConnectionAsync.value != null;
-        final appSettings = ref.watch(settingsProvider);
+    child: const _MetronConnectionContent(),
+  );
+}
 
-        ref.listen<AppSettings>(settingsProvider, (previous, next) {
-          if (!context.mounted) return;
-          final justFinishedSync =
-              (previous?.isSyncing ?? false) && !next.isSyncing;
-          if (!justFinishedSync) return;
+class _MetronConnectionContent extends ConsumerStatefulWidget {
+  const _MetronConnectionContent();
 
-          final message = next.lastSyncMessage?.trim();
-          if (message == null || message.isEmpty) return;
+  @override
+  ConsumerState<_MetronConnectionContent> createState() =>
+      _MetronConnectionContentState();
+}
 
-          final normalized = message.toLowerCase();
-          if (normalized.contains('failed')) {
-            TakionAlerts.error(context, message);
-            return;
-          }
-          if (normalized.contains('completed')) {
-            TakionAlerts.success(context, message);
-          }
-        });
+class _MetronConnectionContentState extends ConsumerState<_MetronConnectionContent> {
+  _MetronMode _mode = _MetronMode.account;
 
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (appSettings.isSyncing)
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    final metronConnectionAsync = ref.watch(metronConnectionProvider);
+    final isConnected = metronConnectionAsync.value != null;
+    final appSettings = ref.watch(settingsProvider);
+
+    ref.listen<AppSettings>(settingsProvider, (previous, next) {
+      if (!context.mounted) return;
+      final justFinishedSync =
+          (previous?.isBusy ?? false) && !next.isBusy;
+      if (!justFinishedSync) return;
+
+      final message = next.statusMessage?.trim();
+      if (message == null || message.isEmpty) return;
+
+      final normalized = message.toLowerCase();
+      if (normalized.contains('failed')) {
+        TakionAlerts.error(context, message);
+        return;
+      }
+      if (normalized.contains('completed')) {
+        TakionAlerts.success(context, message);
+      }
+    });
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (appSettings.isBusy)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              appSettings.lastSyncMessage?.trim().isNotEmpty == true
-                                  ? appSettings.lastSyncMessage!.trim()
-                                  : 'Sync in progress...',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      const SizedBox(height: 10),
-                      const LinearProgressIndicator(minHeight: 4),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          appSettings.statusMessage?.trim().isNotEmpty == true
+                              ? appSettings.statusMessage!.trim()
+                              : 'Refreshing...',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  const LinearProgressIndicator(minHeight: 4),
+                ],
+              ),
+            ),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<_MetronMode>(
+              segments: const [
+                ButtonSegment(
+                  value: _MetronMode.account,
+                  icon: Icon(Icons.person_outline),
+                  label: Text('ACCOUNT'),
                 ),
-              buildSettingsGroup(context, 'Connection Status', [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.link),
-                  title: const Text('Status'),
-                  subtitle: metronConnectionAsync.when(
-                    data: (connection) => connection == null
-                        ? const Text('Not connected')
-                        : Text('Connected as ${connection.username}'),
-                    loading: () => const Text('Checking connection...'),
-                    error: (error, _) => Text(TakionAlerts.cleanError(error, fallback: 'Connection check failed')),
-                  ),
+                ButtonSegment(
+                  value: _MetronMode.catalog,
+                  icon: Icon(Icons.download_outlined),
+                  label: Text('DATA'),
                 ),
-              ]),
-              const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Sync Options', [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  enabled: isConnected && !appSettings.isSyncing,
-                  leading: Icon(
-                    Icons.sync_rounded,
-                    color: isConnected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outline,
+              ],
+              selected: {_mode},
+              onSelectionChanged: (selected) =>
+                  setState(() => _mode = selected.first),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_mode == _MetronMode.account) ...[
+            _buildAccountSection(
+              context,
+              ref,
+              metronConnectionAsync,
+              isConnected,
+              appSettings,
+            ),
+          ] else ...[
+            _buildCatalogSection(
+              context,
+              ref,
+              isConnected,
+              appSettings,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<MetronAccountConnection?> metronConnectionAsync,
+    bool isConnected,
+    AppSettings appSettings,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        buildSettingsGroup(context, 'Connection Status', [
+          _buildConnectionStatus(context, ref, metronConnectionAsync, isConnected),
+        ]),
+        const SizedBox(height: 16),
+        buildSettingsGroup(context, 'API Usage', [
+          _buildRateLimitRow(
+            context,
+            ref,
+            'Rate Limit',
+            (state) => '${state.sustainedLimit} requests/day',
+          ),
+          const Divider(height: 1),
+          _buildRateLimitRow(
+            context,
+            ref,
+            'Remaining Today',
+            (state) => state.sustainedRemaining.toString(),
+          ),
+          const Divider(height: 1),
+          _buildRateLimitRow(
+            context,
+            ref,
+            'Burst Remaining',
+            (state) => '${state.burstRemaining} / min',
+          ),
+          if (ref.watch(rateLimitStatusProvider).sustainedReset case final reset
+              when reset > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  title: const Text(
-                    'Full Sync',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    !isConnected
-                        ? 'Connect Metron account to sync'
-                        : appSettings.isSyncing
-                            ? 'Sync currently running...'
-                            : 'Update all app data from Metron',
-                  ),
-                  trailing: appSettings.isSyncing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.chevron_right_rounded),
-                  onTap: !isConnected || appSettings.isSyncing
-                      ? null
-                      : () => ref
-                            .read(settingsProvider.notifier)
-                            .triggerFullSync(),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  enabled: isConnected && !appSettings.isSyncing,
-                  leading: Icon(
-                    Icons.sync_problem_rounded,
-                    color: isConnected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outline,
-                  ),
-                  title: const Text(
-                    'Quick Sync',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    !isConnected
-                        ? 'Connect Metron account to sync'
-                        : appSettings.isSyncing
-                            ? 'Sync currently running...'
-                            : 'Update modified data only',
-                  ),
-                  trailing: appSettings.isSyncing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.chevron_right_rounded),
-                  onTap: !isConnected || appSettings.isSyncing
-                      ? null
-                      : () => ref
-                            .read(settingsProvider.notifier)
-                            .triggerQuickSync(),
-                ),
-              ]),
-              const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Account Actions', [
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: isConnected
-                        ? null
-                        : () async {
-                            Navigator.of(context).pop();
-                            await showMetronConnectDialog(context, ref);
-                          },
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text('Connect Metron'),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Reset: ${_formatResetTime(reset)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonal(
-                    onPressed: !isConnected
-                        ? null
-                        : () => disconnectMetronAccount(context, ref),
-                    child: const Text('Disconnect Metron'),
-                  ),
-                ),
-              ]),
-            ],
+                ],
+              ),
+            ),
+        ]),
+        const SizedBox(height: 16),
+        buildSettingsGroup(context, 'Account Actions', [
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: isConnected
+                  ? null
+                  : () async {
+                      Navigator.of(context).pop();
+                      await showMetronConnectDialog(context, ref);
+                    },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Connect Metron'),
+              ),
+            ),
           ),
-        );
-      },
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonal(
+              onPressed: !isConnected
+                  ? null
+                  : () => disconnectMetronAccount(context, ref),
+              child: const Text('Disconnect Metron'),
+            ),
+          ),
+        ]),
+      ],
+    );
+  }
+
+  Widget _buildConnectionStatus(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<MetronAccountConnection?> metronConnectionAsync,
+    bool isConnected,
+  ) {
+    final theme = Theme.of(context);
+    final connection = metronConnectionAsync.value;
+
+    Color backgroundColor;
+    Color foregroundColor;
+    IconData icon;
+    String label;
+
+    if (!isConnected) {
+      backgroundColor = theme.colorScheme.surfaceContainerHighest;
+      foregroundColor = theme.colorScheme.onSurfaceVariant;
+      icon = Icons.link_off_rounded;
+      label = 'Not connected';
+    } else if (metronConnectionAsync.isLoading) {
+      backgroundColor = theme.colorScheme.surfaceContainerHighest;
+      foregroundColor = theme.colorScheme.onSurfaceVariant;
+      icon = Icons.pending_rounded;
+      label = 'Checking connection...';
+    } else if (metronConnectionAsync.hasError) {
+      backgroundColor = theme.colorScheme.errorContainer.withValues(alpha: 0.3);
+      foregroundColor = theme.colorScheme.onErrorContainer;
+      icon = Icons.error_outline_rounded;
+      label = 'Connection check failed';
+    } else {
+      backgroundColor = theme.colorScheme.primaryContainer.withValues(alpha: 0.4);
+      foregroundColor = theme.colorScheme.onPrimaryContainer;
+      icon = Icons.check_circle_rounded;
+      label = 'Connected as ${connection?.username ?? 'Unknown'}';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: foregroundColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: foregroundColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: foregroundColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCatalogSection(
+    BuildContext context,
+    WidgetRef ref,
+    bool isConnected,
+    AppSettings appSettings,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        buildSettingsGroup(context, 'Data', [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            enabled: isConnected && !appSettings.isBusy,
+            leading: Icon(
+              Icons.download_rounded,
+              color: isConnected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outline,
+            ),
+            title: const Text(
+              'Refresh All',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              !isConnected
+                  ? 'Connect Metron account to refresh'
+                  : appSettings.isBusy
+                      ? 'Refresh running...'
+                      : 'Re-fetch all catalog data from Metron',
+            ),
+            trailing: appSettings.isBusy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: !isConnected || appSettings.isBusy
+                ? null
+                : () => ref
+                      .read(settingsProvider.notifier)
+                      .refreshAllCatalogData(),
+          ),
+          const Divider(),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            enabled: isConnected && !appSettings.isBusy,
+            leading: Icon(
+              Icons.downloading_rounded,
+              color: isConnected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outline,
+            ),
+            title: const Text(
+              'Refresh Stale',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              !isConnected
+                  ? 'Connect Metron account to refresh'
+                  : appSettings.isBusy
+                      ? 'Refresh running...'
+                      : 'Re-fetch only stale or missing data',
+            ),
+            trailing: appSettings.isBusy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: !isConnected || appSettings.isBusy
+                ? null
+                : () => ref
+                      .read(settingsProvider.notifier)
+                      .refreshStaleCatalogData(),
+          ),
+        ]),
+      ],
+    );
+  }
+}
+
+Widget _buildRateLimitRow(
+  BuildContext context,
+  WidgetRef ref,
+  String label,
+  String Function(RateLimitState state) valueBuilder,
+) {
+  final state = ref.watch(rateLimitStatusProvider);
+  final theme = Theme.of(context);
+  return ListTile(
+    contentPadding: EdgeInsets.zero,
+    title: Text(
+      label,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    trailing: Text(
+      valueBuilder(state),
+      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
     ),
   );
+}
+
+String _formatResetTime(int reset) {
+  final resetDate = DateTime.fromMillisecondsSinceEpoch(reset * 1000).toLocal();
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final resetDay = DateTime(resetDate.year, resetDate.month, resetDate.day);
+  final difference = resetDay.difference(today).inDays;
+
+  final time = _formatTime(resetDate);
+
+  if (difference == 0) return 'today at $time';
+  if (difference == 1) return 'tomorrow at $time';
+  if (difference > 1 && difference < 7) return 'in ${_weekday(resetDate)} at $time';
+  return 'on ${_dayMonth(resetDate)} at $time';
+}
+
+String _formatTime(DateTime dateTime) {
+  final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+  final minute = dateTime.minute.toString().padLeft(2, '0');
+  final period = dateTime.hour < 12 ? 'AM' : 'PM';
+  return '$hour:$minute $period';
+}
+
+String _weekday(DateTime date) {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  return days[date.weekday - 1];
+}
+
+String _dayMonth(DateTime date) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${date.day} ${months[date.month - 1]}';
 }
