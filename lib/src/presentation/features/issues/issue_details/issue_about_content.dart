@@ -1,7 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/components/components.dart';
@@ -497,7 +497,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     }
 
     String? formatDate(DateTime? date) =>
-        date == null ? null : DateFormat.yMMMd().format(date.toLocal());
+        date == null ? null : DateFormatter.comicDate(date);
 
     final price = priceValue != null && priceValue.isNotEmpty
         ? '${currencySymbol(currency)}$priceValue'

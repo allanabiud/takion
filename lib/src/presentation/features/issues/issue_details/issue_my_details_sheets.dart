@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
@@ -91,9 +91,7 @@ Future<void> showEditMyDetailsSheet(
                       controller: TextEditingController(
                         text: purchaseDate == null
                             ? ''
-                            : DateFormat.yMMMd().format(
-                                purchaseDate!.toLocal(),
-                              ),
+                            : DateFormatter.comicDate(purchaseDate!),
                       ),
                       onTap: saveState.isLoading
                           ? null
@@ -301,8 +299,8 @@ Future<void> showEditMyDetailsSheet(
                       _detailTile(
                         icon: Icons.calendar_month_outlined,
                         label: 'Purchase Date',
-                        value: DateFormat.yMMMd().format(
-                          item.purchaseDate!.toLocal(),
+                        value: DateFormatter.comicDate(
+                          item.purchaseDate!,
                         ),
                         theme: theme,
                       ),
@@ -440,8 +438,8 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                       itemCount: logs.length,
                       itemBuilder: (context, index) {
                         final log = logs[index];
-                        final dt = DateFormat.yMMMd().add_jm().format(
-                          log.readAt.toLocal(),
+                        final dt = DateFormatter.comicDateTime(
+                          log.readAt,
                         );
                         return ListTile(
                           title: Text(dt),

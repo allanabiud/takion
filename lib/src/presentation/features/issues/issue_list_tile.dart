@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities/entities.dart';
@@ -264,7 +264,7 @@ class IssueListTile extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
-                            DateFormat.yMMMd().format(
+                            DateFormatter.comicDate(
                               effectiveIssue.storeDate!,
                             ),
                             style: Theme.of(context).textTheme.bodySmall,

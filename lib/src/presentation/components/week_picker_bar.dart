@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 
 class WeekPickerBar extends ConsumerWidget {
@@ -20,7 +20,7 @@ class WeekPickerBar extends ConsumerWidget {
 
     // Calculate New Comic Book Day (Wednesday = Sunday + 3 days)
     final wednesday = startOfWeek.add(const Duration(days: 3));
-    final dateString = DateFormat('MMM dd, yyyy').format(wednesday);
+    final dateString = DateFormatter.comicDate(wednesday);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

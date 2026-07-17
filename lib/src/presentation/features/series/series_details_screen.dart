@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
@@ -446,12 +447,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
 
         String? modifiedValue(DateTime? modified) {
           if (modified == null) return null;
-          final year = modified.year.toString().padLeft(4, '0');
-          final month = modified.month.toString().padLeft(2, '0');
-          final day = modified.day.toString().padLeft(2, '0');
-          final hour = modified.hour.toString().padLeft(2, '0');
-          final minute = modified.minute.toString().padLeft(2, '0');
-          return '$year-$month-$day $hour:$minute';
+          return DateFormatter.isoDateTime(modified);
         }
 
         return [

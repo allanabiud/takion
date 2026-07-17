@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/reading_history_provider.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
@@ -31,17 +32,17 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
       String key;
       switch (_filter) {
         case HistoryFilter.day:
-          key = DateFormat.yMMMd().format(date);
+          key = DateFormatter.comicDate(date);
           break;
         case HistoryFilter.week:
           final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
-          key = 'Week of ${DateFormat.yMMMd().format(startOfWeek)}';
+          key = 'Week of ${DateFormatter.comicDate(startOfWeek)}';
           break;
         case HistoryFilter.month:
           key = DateFormat.yMMMM().format(date);
           break;
         case HistoryFilter.year:
-          key = DateFormat.y().format(date);
+          key = DateFormatter.isoDateTime(date).split('-').first;
           break;
       }
       grouped.putIfAbsent(key, () => []).add(entry);

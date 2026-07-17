@@ -2,12 +2,11 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
 Future<void> exportCollectionToCsv(WidgetRef ref) async {
   final items = await ref.watch(allCollectionItemsProvider.future);
-  final dateFormat = DateFormat('yyyy-MM-dd');
 
   final buffer = StringBuffer();
   buffer.writeln('Series,Issue Number,Title,Quantity,Format,Read,Rating,Purchase Date');
@@ -21,7 +20,7 @@ Future<void> exportCollectionToCsv(WidgetRef ref) async {
     final read = item.isRead ? 'Yes' : 'No';
     final rating = item.rating != null ? item.rating.toString() : '';
     final purchaseDate = item.purchaseDate != null
-        ? dateFormat.format(item.purchaseDate!)
+        ? DateFormatter.isoDate(item.purchaseDate!)
         : '';
 
     buffer.writeln(
@@ -30,7 +29,7 @@ Future<void> exportCollectionToCsv(WidgetRef ref) async {
     );
   }
 
-  final today = dateFormat.format(DateTime.now());
+  final today = DateFormatter.isoDate(DateTime.now());
   final bytes = utf8.encode(buffer.toString());
 
   await FilePicker.saveFile(

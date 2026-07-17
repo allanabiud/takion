@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -193,7 +193,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
               .length;
           readingTrends.add(
             ReadingTrendPoint(
-              label: DateFormat.E().format(day),
+              label: DateFormatter.weekdayAbbrev(day),
               count: count,
               date: day,
             ),
@@ -238,7 +238,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
               .length;
           readingTrends.add(
             ReadingTrendPoint(
-              label: DateFormat.MMM().format(month),
+              label: DateFormatter.monthAbbrev(month),
               count: count,
               date: month,
             ),
@@ -255,7 +255,7 @@ final profileInsightsProvider = FutureProvider.autoDispose
               .length;
           readingTrends.add(
             ReadingTrendPoint(
-              label: DateFormat.MMM().format(month),
+              label: DateFormatter.monthAbbrev(month),
               count: count,
               date: month,
             ),

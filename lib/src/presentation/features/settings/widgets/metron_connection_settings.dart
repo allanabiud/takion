@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
@@ -280,7 +281,7 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Reset: ${_formatResetTime(reset)}',
+                      'Reset: ${DateFormatter.relativeDetailed(DateTime.fromMillisecondsSinceEpoch(reset * 1000))}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -492,49 +493,4 @@ Widget _buildRateLimitRow(
       style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
     ),
   );
-}
-
-String _formatResetTime(int reset) {
-  final resetDate = DateTime.fromMillisecondsSinceEpoch(reset * 1000).toLocal();
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final resetDay = DateTime(resetDate.year, resetDate.month, resetDate.day);
-  final difference = resetDay.difference(today).inDays;
-
-  final time = _formatTime(resetDate);
-
-  if (difference == 0) return 'today at $time';
-  if (difference == 1) return 'tomorrow at $time';
-  if (difference > 1 && difference < 7) return 'in ${_weekday(resetDate)} at $time';
-  return 'on ${_dayMonth(resetDate)} at $time';
-}
-
-String _formatTime(DateTime dateTime) {
-  final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
-  final minute = dateTime.minute.toString().padLeft(2, '0');
-  final period = dateTime.hour < 12 ? 'AM' : 'PM';
-  return '$hour:$minute $period';
-}
-
-String _weekday(DateTime date) {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return days[date.weekday - 1];
-}
-
-String _dayMonth(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${date.day} ${months[date.month - 1]}';
 }

@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/universes/providers/universe_details_provider.dart';
@@ -137,16 +138,11 @@ class _UniverseInfoSection extends StatelessWidget {
     );
   }
 
-  String? _modifiedValue() {
-    final modified = details.modified;
-    if (modified == null) return null;
-    final year = modified.year.toString().padLeft(4, '0');
-    final month = modified.month.toString().padLeft(2, '0');
-    final day = modified.day.toString().padLeft(2, '0');
-    final hour = modified.hour.toString().padLeft(2, '0');
-    final minute = modified.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
+    String? _modifiedValue() {
+      final modified = details.modified;
+      if (modified == null) return null;
+      return DateFormatter.isoDateTime(modified);
+    }
 
   Widget _buildDatabaseIdsSection(BuildContext context) {
     final entries = <Widget>[];

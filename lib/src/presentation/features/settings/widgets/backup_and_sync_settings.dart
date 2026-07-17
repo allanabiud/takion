@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
@@ -185,7 +186,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 syncState.isSyncing
                     ? 'Please wait'
                     : syncState.lastSync != null
-                        ? 'Last sync: ${_formatTime(syncState.lastSync!)}'
+                        ? 'Last sync: ${DateFormatter.relativeShort(syncState.lastSync!)}'
                         : 'Never synced',
               ),
               onTap: syncState.isSyncing ? null : () => _syncNow(),
@@ -270,16 +271,4 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     }
   }
 
-  String _formatTime(DateTime dt) {
-    final now = DateTime.now().toUtc();
-    final diff = now.difference(dt);
-
-    if (diff.inSeconds < 60) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 2) return 'Yesterday';
-    if (diff.inDays < 30) return '${diff.inDays}d ago';
-    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo ago';
-    return '${(diff.inDays / 365).floor()}y ago';
-  }
 }

@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -184,7 +185,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'Backup from ${_formatDate(manifest.createdAt)}',
+              'Backup from ${DateFormatter.isoDate(manifest.createdAt)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -312,11 +313,6 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.year}-${_pad(date.month)}-${_pad(date.day)}';
-  }
-
-  String _pad(int n) => n.toString().padLeft(2, '0');
 }
 
 enum _RestorePhase { loading, error, selecting }

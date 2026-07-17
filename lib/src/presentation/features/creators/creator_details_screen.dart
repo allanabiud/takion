@@ -1,8 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -154,7 +154,7 @@ class _CreatorInfoCard extends StatelessWidget {
 
   String? _dateValue(DateTime? date) {
     if (date == null) return null;
-    return DateFormat.yMMMd().format(date.toLocal());
+    return DateFormatter.comicDate(date);
   }
 
   String? _modifiedValue() {

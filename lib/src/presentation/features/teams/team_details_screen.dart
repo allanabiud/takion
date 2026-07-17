@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -199,12 +200,7 @@ class _TeamInfoSection extends StatelessWidget {
   String? _modifiedValue() {
     final modified = details.modified;
     if (modified == null) return null;
-    final year = modified.year.toString().padLeft(4, '0');
-    final month = modified.month.toString().padLeft(2, '0');
-    final day = modified.day.toString().padLeft(2, '0');
-    final hour = modified.hour.toString().padLeft(2, '0');
-    final minute = modified.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
+    return DateFormatter.isoDateTime(modified);
   }
 
   Widget _buildDatabaseIdsSection(BuildContext context) {

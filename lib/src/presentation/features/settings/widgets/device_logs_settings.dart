@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/logging/talker_setup.dart';
 import 'package:talker/talker.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -36,51 +37,11 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     return text.split('\n');
   }
 
+  String _pad(int n) => n.toString().padLeft(2, '0');
+
   String _formatTimestamp(DateTime dt) {
     return '${dt.year}-${_pad(dt.month)}-${_pad(dt.day)} '
         '${_pad(dt.hour)}:${_pad(dt.minute)}:${_pad(dt.second)}';
-  }
-
-  String _pad(int n) => n.toString().padLeft(2, '0');
-
-  String _formatReadableTimestamp(DateTime dt) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final date = DateTime(dt.year, dt.month, dt.day);
-    final diff = today.difference(date).inDays;
-
-    final time = _formatTime(dt);
-
-    if (diff == 0) return 'today at $time';
-    if (diff == 1) return 'yesterday at $time';
-    if (diff > 1 && diff < 7) return '$diff days ago at $time';
-    if (diff >= 7 && diff < 30) return '${(diff / 7).floor()} weeks ago at $time';
-    return 'on ${_dayMonth(dt)} at $time';
-  }
-
-  String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = dateTime.hour < 12 ? 'AM' : 'PM';
-    return '$hour:$minute $period';
-  }
-
-  String _dayMonth(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]}';
   }
 
   Future<String> _buildLogContent(List<String> logLines) async {
@@ -186,13 +147,13 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
               _statRow(
                 context,
                 'Oldest',
-                _formatReadableTimestamp(oldest),
+                DateFormatter.relativeDetailed(oldest),
               ),
             if (newest != null)
               _statRow(
                 context,
                 'Newest',
-                _formatReadableTimestamp(newest),
+                DateFormatter.relativeDetailed(newest),
               ),
           ]),
           const SizedBox(height: 16),
