@@ -459,6 +459,8 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<void> triggerFullSync() async {
     if (state.isSyncing) return;
 
+    AppLogger.info('Starting full sync');
+
     state = state.copyWith(
       isSyncing: true,
       lastSyncMessage: 'Starting full sync...',
@@ -468,6 +470,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       final synced = await _syncMetronCaches(quick: false);
       await _syncLocalData(quick: false);
       _invalidateCacheBackedProviders();
+      AppLogger.info('Full sync completed ($synced cached slice(s) refreshed)');
       state = state.copyWith(
         isSyncing: false,
         lastSyncMessage:
@@ -485,6 +488,8 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<void> triggerQuickSync() async {
     if (state.isSyncing) return;
 
+    AppLogger.info('Starting quick sync');
+
     state = state.copyWith(
       isSyncing: true,
       lastSyncMessage: 'Starting quick sync...',
@@ -494,6 +499,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       final synced = await _syncMetronCaches(quick: true);
       await _syncLocalData(quick: true);
       _invalidateCacheBackedProviders();
+      AppLogger.info('Quick sync completed ($synced stale/missing cache slice(s) refreshed)');
       state = state.copyWith(
         isSyncing: false,
         lastSyncMessage:

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
 class DriveSyncState {
@@ -44,6 +45,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   }
 
   Future<void> enable({required String email}) async {
+    AppLogger.info('Drive sync enabled for $email');
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_enabledKey, true);
@@ -52,6 +54,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   }
 
   Future<void> disable() async {
+    AppLogger.info('Drive sync disabled');
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_enabledKey, false);
@@ -61,6 +64,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
 
   Future<void> updateLastSync() async {
     final now = DateTime.now();
+    AppLogger.info('Last sync timestamp updated');
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_lastSyncKey, now.toIso8601String());
@@ -72,6 +76,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   }
 
   void setSyncing(bool value) {
+    AppLogger.info('Sync state: $value');
     state = DriveSyncState(
       enabled: state.enabled,
       email: state.email,

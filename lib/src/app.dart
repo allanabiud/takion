@@ -91,6 +91,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   Future<void> _runDriveAutoSyncIfEnabled() async {
     final syncState = ref.read(driveSyncProvider);
     if (!syncState.enabled) {
+      AppLogger.info('Drive auto sync skipped: disabled');
       return;
     }
     final driveService = ref.read(driveBackupServiceProvider);
@@ -98,8 +99,10 @@ class _TakionAppState extends ConsumerState<TakionApp> {
     final container = ProviderScope.containerOf(context, listen: false);
     final account = await driveService.signInSilently();
     if (account == null) {
+      AppLogger.info('Drive auto sync skipped: no account');
       return;
     }
+    AppLogger.info('Drive auto sync triggered');
     syncNotifier.setSyncing(true);
     try {
       await driveService.uploadBackup(
@@ -108,6 +111,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       await syncNotifier.updateLastSync();
       invalidateCacheBackedProviders((p) => container.invalidate(p));
       await Future<void>.delayed(Duration.zero);
+      AppLogger.info('Drive auto sync completed');
     } catch (e) {
       AppLogger.warning('Background sync failed', error: e);
       // sync failure is non-critical; state resets on next launch

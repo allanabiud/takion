@@ -160,6 +160,7 @@ class DriveBackupService {
   }
 
   Future<Uint8List?> downloadBackup() async {
+    AppLogger.info('Backup download started');
     final fileId = await _findBackupFileId();
     if (fileId == null) {
       return null;
@@ -178,10 +179,12 @@ class DriveBackupService {
       return null;
     }
     final bytes = response.data as Uint8List;
+    AppLogger.info('Backup download completed');
     return bytes;
   }
 
   Future<void> restoreFromDrive() async {
+    AppLogger.info('Drive restore started');
     final bytes = await downloadBackup();
     if (bytes == null) throw StateError('No backup found on Drive');
 
@@ -210,6 +213,7 @@ class DriveBackupService {
           .toSet();
 
       await backupService.restoreBoxes(data: data, boxNames: boxNames);
+      AppLogger.info('Drive restore completed');
     } finally {
       try {
         await tempFile.delete();
@@ -226,12 +230,15 @@ class DriveBackupService {
       return _currentBackupUpload!;
     }
 
+    AppLogger.info('Backup upload started');
     _currentBackupUpload = _performUpload(
       lastSyncTime: lastSyncTime,
       retryCount: retryCount,
     );
     try {
-      return await _currentBackupUpload!;
+      final result = await _currentBackupUpload!;
+      AppLogger.info('Backup upload completed');
+      return result;
     } finally {
       _currentBackupUpload = null;
     }
@@ -285,6 +292,7 @@ class DriveBackupService {
     if (retryCount < 3) {
       final remoteModified = await _getBackupModificationTime();
       if (remoteModified != null && remoteModified.isAfter(downloadTime)) {
+        AppLogger.info('Backup upload conflict detected, retry ${retryCount + 1}');
         return _performUpload(
           lastSyncTime: lastSyncTime,
           retryCount: retryCount + 1,
@@ -361,6 +369,7 @@ class DriveBackupService {
     Map<String, int> deletedKeys,
     Set<String> allBoxNames,
   ) async {
+    AppLogger.info('Backup merge started');
     final tempDir = await getTemporaryDirectory();
     final tempPath = '${tempDir.path}/$_backupFileName.merge.tmp';
     final tempFile = await File(tempPath).writeAsBytes(existingBytes.toList());
@@ -468,6 +477,7 @@ class DriveBackupService {
     } finally {
       try {
         await tempFile.delete();
+        AppLogger.info('Backup merge completed');
       } catch (e) {
         AppLogger.warning('Failed to delete temp file', error: e);
       }

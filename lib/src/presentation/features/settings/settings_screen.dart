@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:takion/src/presentation/features/settings/providers/debug_mode_provider.dart';
+import 'package:takion/src/presentation/features/settings/widgets/device_logs_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_nav_tile.dart';
 import 'package:takion/src/presentation/features/settings/widgets/metron_connection_settings.dart';
@@ -19,6 +21,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final debugEnabled = ref.watch(debugModeProvider).value ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -75,21 +79,29 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'Cache and data management',
             onTap: () => showDataStorageSettings(context, ref),
           ),
-          const SizedBox(height: 16),
-          buildSettingsSectionHeader(context, 'ADVANCED'),
-          SettingsNavTile(
-            icon: Icons.analytics_outlined,
-            title: 'Performance Metrics',
-            subtitle: 'System timing and cache stats',
-            onTap: () => showPerformanceMetrics(context, ref),
-          ),
+          if (debugEnabled) ...[
+            const SizedBox(height: 16),
+            buildSettingsSectionHeader(context, 'ADVANCED'),
+            SettingsNavTile(
+              icon: Icons.analytics_outlined,
+              title: 'Performance Metrics',
+              subtitle: 'System timing and cache stats',
+              onTap: () => showPerformanceMetrics(context, ref),
+            ),
+            SettingsNavTile(
+              icon: Icons.bug_report_outlined,
+              title: 'Device Logs',
+              subtitle: 'View and share debug logs',
+              onTap: () => showDeviceLogs(context, ref),
+            ),
+          ],
           const SizedBox(height: 16),
           buildSettingsSectionHeader(context, 'APP INFO'),
           SettingsNavTile(
             icon: Icons.info_outline,
             title: 'About',
             subtitle: 'Takion version and info',
-            onTap: () => showAboutSettings(context),
+            onTap: () => showAboutSettings(context, ref),
           ),
           const SizedBox(height: 24),
         ],

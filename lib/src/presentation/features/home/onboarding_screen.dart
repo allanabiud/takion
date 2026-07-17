@@ -226,6 +226,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Future<void> _restoreFromDrive() async {
+    AppLogger.info('Drive restore started during onboarding');
     setState(() => _isDriveRestoring = true);
     final container = ProviderScope.containerOf(context, listen: false);
     try {
@@ -261,6 +262,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
       if (hadBackup) {
         invalidateCacheBackedProviders((p) => container.invalidate(p));
+        AppLogger.info('Drive restore completed');
+        AppLogger.info('Onboarding completed');
         if (mounted) {
           setState(() {
             _restoreCompleted = true;
@@ -270,9 +273,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       } else {
         try {
           await driveService.uploadBackup();
+          AppLogger.info('Initial backup uploaded to Drive');
         } catch (e) {
           AppLogger.warning('Onboarding backup upload failed', error: e);
         }
+        AppLogger.info('Onboarding completed');
         if (mounted) {
           setState(() {
             _restoreCompleted = true;
