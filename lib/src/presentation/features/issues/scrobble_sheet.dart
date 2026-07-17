@@ -1,31 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
-
-String _issueTitle(IssueDetails? issue, int issueId) {
-  if (issue == null) return 'Issue #$issueId';
-  final seriesName = issue.series?.name.trim();
-  final issueNumber = issue.number.trim();
-
-  if (seriesName != null &&
-      seriesName.isNotEmpty &&
-      issueNumber.isNotEmpty) {
-    return '$seriesName #$issueNumber';
-  }
-  if (issue.names.isNotEmpty && issue.names.first.trim().isNotEmpty) {
-    return issue.names.first.trim();
-  }
-  return issueNumber.isNotEmpty ? 'Issue #$issueNumber' : 'Issue';
-}
 
 class _ScrobbleActionIcon extends StatelessWidget {
   const _ScrobbleActionIcon({
@@ -47,7 +30,7 @@ class _ScrobbleActionIcon extends StatelessWidget {
       children: [
         IconButton(
           icon: Icon(icon),
-          iconSize: 32,
+          iconSize: 36,
           color: color,
           onPressed: onPressed,
         ),
@@ -69,18 +52,20 @@ Future<void> showScrobbleSheet({
   required WidgetRef ref,
   required int issueId,
   String? sheetTitle,
+  int? seriesId,
+  bool? isSubscribed,
+  DateTime? releaseDate,
 }) async {
-  final issueDetailsAsync = ref.read(issueDetailsProvider(issueId));
-  var issueDetails = issueDetailsAsync.asData?.value;
-  if (issueDetails == null && !issueDetailsAsync.isLoading) {
-    issueDetails = await ref.read(issueDetailsProvider(issueId).future);
-  }
-
   final issueStatus = ref.read(issueCollectionStatusProvider(issueId));
   final pullEntryAsync = ref.read(issuePullListEntryProvider(issueId));
   final isInPullList = pullEntryAsync.asData?.value != null;
 
-  final title = sheetTitle ?? _issueTitle(issueDetails, issueId);
+  final title = sheetTitle ?? 'Issue #$issueId';
+
+  // Series id is supplied by the caller from the issue-list data (which always
+  // includes the series), so the Subscribe tile can render immediately without
+  // fetching full issue details.
+  final resolvedSeriesId = seriesId;
 
   var addToCollection = issueStatus?.isCollected ?? false;
   var markAsRead = issueStatus?.isRead ?? false;
@@ -101,6 +86,10 @@ Future<void> showScrobbleSheet({
         final submitError = scrobbleState.whenOrNull(
           error: (error, _) => error,
         );
+        final subState = resolvedSeriesId != null
+            ? ref.watch(seriesSubscriptionProvider(resolvedSeriesId))
+            : null;
+        final liveSubscribed = subState?.asData?.value?.isActive ?? false;
 
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -202,9 +191,9 @@ Future<void> showScrobbleSheet({
                           ? null
                           : () async {
                               final newValue = !pullIssue;
-                              final series = issueDetails?.series;
+                              final seriesIdLocal = resolvedSeriesId;
 
-                              if (newValue && series == null) {
+                              if (newValue && seriesIdLocal == null) {
                                 TakionAlerts.noLinkedSeriesForIssue(context);
                                 return;
                               }
@@ -219,9 +208,9 @@ Future<void> showScrobbleSheet({
                                   AppLogger.info('Scrobble: removed issue #$issueId from pull list');
                                 } else {
                                   await ref.read(pullListRepositoryProvider).upsertManualEntry(
-                                    metronSeriesId: series!.id,
+                                    metronSeriesId: seriesIdLocal!,
                                     metronIssueId: issueId,
-                                    releaseDate: issueDetails?.storeDate ?? issueDetails?.coverDate,
+                                    releaseDate: releaseDate,
                                   );
                                   AppLogger.info('Scrobble: added issue #$issueId to pull list');
                                 }
@@ -288,14 +277,10 @@ Future<void> showScrobbleSheet({
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                Text(
-                  'Rating',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 6),
                 RatingPicker(
                   selectedRating: selectedRating,
                   enabled: !isSubmitting,
+                  resetIconEdgeInset: 0,
                   onChanged: (value) {
                     final previousRead = markAsRead;
                     final previousRating = selectedRating;
@@ -340,6 +325,15 @@ Future<void> showScrobbleSheet({
                         });
                   },
                 ),
+                const SizedBox(height: 12),
+                if (resolvedSeriesId != null) ...[
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  _SubscribeTile(
+                    seriesId: resolvedSeriesId,
+                    initialSubscribed: liveSubscribed,
+                  ),
+                ],
                 if (submitError != null) ...[
                   const SizedBox(height: 6),
                   Text(
@@ -365,4 +359,70 @@ Future<void> showScrobbleSheet({
       },
     ),
   );
+}
+
+class _SubscribeTile extends ConsumerStatefulWidget {
+  final int seriesId;
+  final bool initialSubscribed;
+
+  const _SubscribeTile({
+    required this.seriesId,
+    required this.initialSubscribed,
+  });
+
+  @override
+  ConsumerState<_SubscribeTile> createState() => _SubscribeTileState();
+}
+
+class _SubscribeTileState extends ConsumerState<_SubscribeTile> {
+  bool _isUpdating = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final subState = ref.watch(seriesSubscriptionProvider(widget.seriesId));
+    final subscribed = subState.asData?.value?.isActive ?? widget.initialSubscribed;
+
+    return ListTile(
+      enabled: !_isUpdating,
+      leading: _isUpdating
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(
+              subscribed
+                  ? Icons.notifications_active
+                  : Icons.notifications_outlined,
+              color: subscribed ? Theme.of(context).colorScheme.error : null,
+            ),
+      title: Text(
+        subscribed ? 'Unsubscribe from Series' : 'Subscribe to Series',
+        style: subscribed
+            ? TextStyle(color: Theme.of(context).colorScheme.error)
+            : null,
+      ),
+      onTap: _isUpdating
+          ? null
+          : () async {
+              setState(() {
+                _isUpdating = true;
+              });
+              try {
+                await toggleSeriesSubscription(
+                  context,
+                  ref,
+                  !subscribed,
+                  widget.seriesId,
+                );
+              } finally {
+                if (mounted) {
+                  setState(() {
+                    _isUpdating = false;
+                  });
+                }
+              }
+            },
+    );
+  }
 }

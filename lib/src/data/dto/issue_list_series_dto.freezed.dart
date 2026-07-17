@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IssueListSeriesDto {
 
-@HiveField(0) String get name;@HiveField(1) int get volume;@HiveField(2)@JsonKey(name: 'year_began') int get yearBegan;
+@HiveField(0) String get name;@HiveField(1) int get volume;@HiveField(2)@JsonKey(name: 'year_began') int get yearBegan;@HiveField(3) int? get id;
 /// Create a copy of IssueListSeriesDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $IssueListSeriesDtoCopyWith<IssueListSeriesDto> get copyWith => _$IssueListSerie
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueListSeriesDto&&(identical(other.name, name) || other.name == name)&&(identical(other.volume, volume) || other.volume == volume)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueListSeriesDto&&(identical(other.name, name) || other.name == name)&&(identical(other.volume, volume) || other.volume == volume)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.id, id) || other.id == id));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,volume,yearBegan);
+int get hashCode => Object.hash(runtimeType,name,volume,yearBegan,id);
 
 @override
 String toString() {
-  return 'IssueListSeriesDto(name: $name, volume: $volume, yearBegan: $yearBegan)';
+  return 'IssueListSeriesDto(name: $name, volume: $volume, yearBegan: $yearBegan, id: $id)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $IssueListSeriesDtoCopyWith<$Res>  {
   factory $IssueListSeriesDtoCopyWith(IssueListSeriesDto value, $Res Function(IssueListSeriesDto) _then) = _$IssueListSeriesDtoCopyWithImpl;
 @useResult
 $Res call({
-@HiveField(0) String name,@HiveField(1) int volume,@HiveField(2)@JsonKey(name: 'year_began') int yearBegan
+@HiveField(0) String name,@HiveField(1) int volume,@HiveField(2)@JsonKey(name: 'year_began') int yearBegan,@HiveField(3) int? id
 });
 
 
@@ -65,12 +65,13 @@ class _$IssueListSeriesDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueListSeriesDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? volume = null,Object? yearBegan = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? volume = null,Object? yearBegan = null,Object? id = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,volume: null == volume ? _self.volume : volume // ignore: cast_nullable_to_non_nullable
 as int,yearBegan: null == yearBegan ? _self.yearBegan : yearBegan // ignore: cast_nullable_to_non_nullable
-as int,
+as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  int volume, @HiveField(2)@JsonKey(name: 'year_began')  int yearBegan)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  int volume, @HiveField(2)@JsonKey(name: 'year_began')  int yearBegan, @HiveField(3)  int? id)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueListSeriesDto() when $default != null:
-return $default(_that.name,_that.volume,_that.yearBegan);case _:
+return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.name,_that.volume,_that.yearBegan);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  int volume, @HiveField(2)@JsonKey(name: 'year_began')  int yearBegan)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  int volume, @HiveField(2)@JsonKey(name: 'year_began')  int yearBegan, @HiveField(3)  int? id)  $default,) {final _that = this;
 switch (_that) {
 case _IssueListSeriesDto():
-return $default(_that.name,_that.volume,_that.yearBegan);case _:
+return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.name,_that.volume,_that.yearBegan);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String name, @HiveField(1)  int volume, @HiveField(2)@JsonKey(name: 'year_began')  int yearBegan)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String name, @HiveField(1)  int volume, @HiveField(2)@JsonKey(name: 'year_began')  int yearBegan, @HiveField(3)  int? id)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueListSeriesDto() when $default != null:
-return $default(_that.name,_that.volume,_that.yearBegan);case _:
+return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
   return null;
 
 }
@@ -211,12 +212,13 @@ return $default(_that.name,_that.volume,_that.yearBegan);case _:
 @JsonSerializable()
 
 class _IssueListSeriesDto extends IssueListSeriesDto {
-  const _IssueListSeriesDto({@HiveField(0) required this.name, @HiveField(1) required this.volume, @HiveField(2)@JsonKey(name: 'year_began') required this.yearBegan}): super._();
+  const _IssueListSeriesDto({@HiveField(0) required this.name, @HiveField(1) required this.volume, @HiveField(2)@JsonKey(name: 'year_began') required this.yearBegan, @HiveField(3) this.id}): super._();
   factory _IssueListSeriesDto.fromJson(Map<String, dynamic> json) => _$IssueListSeriesDtoFromJson(json);
 
 @override@HiveField(0) final  String name;
 @override@HiveField(1) final  int volume;
 @override@HiveField(2)@JsonKey(name: 'year_began') final  int yearBegan;
+@override@HiveField(3) final  int? id;
 
 /// Create a copy of IssueListSeriesDto
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueListSeriesDto&&(identical(other.name, name) || other.name == name)&&(identical(other.volume, volume) || other.volume == volume)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueListSeriesDto&&(identical(other.name, name) || other.name == name)&&(identical(other.volume, volume) || other.volume == volume)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.id, id) || other.id == id));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,volume,yearBegan);
+int get hashCode => Object.hash(runtimeType,name,volume,yearBegan,id);
 
 @override
 String toString() {
-  return 'IssueListSeriesDto(name: $name, volume: $volume, yearBegan: $yearBegan)';
+  return 'IssueListSeriesDto(name: $name, volume: $volume, yearBegan: $yearBegan, id: $id)';
 }
 
 
@@ -251,7 +253,7 @@ abstract mixin class _$IssueListSeriesDtoCopyWith<$Res> implements $IssueListSer
   factory _$IssueListSeriesDtoCopyWith(_IssueListSeriesDto value, $Res Function(_IssueListSeriesDto) _then) = __$IssueListSeriesDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@HiveField(0) String name,@HiveField(1) int volume,@HiveField(2)@JsonKey(name: 'year_began') int yearBegan
+@HiveField(0) String name,@HiveField(1) int volume,@HiveField(2)@JsonKey(name: 'year_began') int yearBegan,@HiveField(3) int? id
 });
 
 
@@ -268,12 +270,13 @@ class __$IssueListSeriesDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueListSeriesDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? volume = null,Object? yearBegan = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? volume = null,Object? yearBegan = null,Object? id = freezed,}) {
   return _then(_IssueListSeriesDto(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,volume: null == volume ? _self.volume : volume // ignore: cast_nullable_to_non_nullable
 as int,yearBegan: null == yearBegan ? _self.yearBegan : yearBegan // ignore: cast_nullable_to_non_nullable
-as int,
+as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

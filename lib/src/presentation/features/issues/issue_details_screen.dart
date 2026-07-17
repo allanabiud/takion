@@ -5,7 +5,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -16,15 +15,14 @@ import 'package:takion/src/presentation/features/library/providers/pulls_provide
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
+import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
+import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
 
 @RoutePage()
@@ -177,15 +175,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
   }
 
   Future<void> _shareResourceUrl(IssueDetails issue) async {
-    final uri = _resourceUri(issue);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'issue');
-      return;
-    }
-
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: _displayTitle(issue)),
-    );
+    await shareIssueResourceUrl(context, issue);
   }
 
   Future<void> _openResourceUrlInBrowser(IssueDetails issue) async {
@@ -213,10 +203,20 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
   }
 
   void scrobbleCurrentIssue() {
+    final issue = ref.read(issueDetailsProvider(_currentIssueId)).asData?.value;
+    final seriesId = issue?.series?.id;
+    final subscriptionAsync = seriesId != null
+        ? ref.read(seriesSubscriptionProvider(seriesId)).asData?.value
+        : null;
+    final isSubscribed = subscriptionAsync?.isActive ?? false;
+
     showScrobbleSheet(
       context: context,
       ref: ref,
       issueId: _currentIssueId,
+      seriesId: seriesId,
+      isSubscribed: isSubscribed,
+      releaseDate: issue?.storeDate ?? issue?.coverDate,
     );
   }
 
@@ -254,62 +254,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
   }
 
   Future<void> _setSeriesSubscription(bool enabled, int seriesId) async {
-    try {
-      final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
-      if (enabled) {
-        await subscriptionRepository.subscribe(metronSeriesId: seriesId);
-      } else {
-        await subscriptionRepository.unsubscribe(seriesId);
-        await ref
-            .read(pullListRepositoryProvider)
-            .deleteEntriesBySeriesId(seriesId);
-      }
-      final now = DateTime.now();
-      final startOfWeek = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: now.weekday % 7));
-      await ref
-          .read(pullListRepositoryProvider)
-          .regenerateFromSubscriptions(fromDate: startOfWeek);
-      if (enabled) {
-        await ref
-            .read(subscriptionPullReconcilerProvider)
-            .reconcile(force: true, onlySeriesId: seriesId);
-      }
-      final selectedWeek = ref.read(selectedWeekProvider);
-      invalidateOnSubscriptionToggle(ref,
-        seriesId: seriesId,
-        selectedWeek: selectedWeek,
-      );
-      if (mounted) {
-        (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          enabled ? 'Subscribed' : 'Unsubscribed',
-          icon: Icons.notifications,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            if (enabled) {
-              await subscriptionRepository.unsubscribe(seriesId);
-              await ref
-                  .read(pullListRepositoryProvider)
-                  .deleteEntriesBySeriesId(seriesId);
-            } else {
-              await subscriptionRepository.subscribe(metronSeriesId: seriesId);
-            }
-            invalidateOnSubscriptionToggle(ref,
-              seriesId: seriesId,
-              selectedWeek: selectedWeek,
-            );
-          },
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update subscription');
-      }
-    }
+    await toggleSeriesSubscription(context, ref, enabled, seriesId);
   }
 
   @override

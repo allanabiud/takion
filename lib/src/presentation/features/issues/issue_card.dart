@@ -22,6 +22,7 @@ class IssueCard extends ConsumerWidget {
   final bool? isPulled;
   final ItemRole? role;
   final bool compact;
+  final int? seriesId;
 
   const IssueCard({
     super.key,
@@ -37,6 +38,7 @@ class IssueCard extends ConsumerWidget {
     this.isPulled,
     this.role,
     this.compact = false,
+    this.seriesId,
   });
 
   @override
@@ -74,6 +76,7 @@ class IssueCard extends ConsumerWidget {
                   ref: ref,
                   issueId: issueId!,
                   sheetTitle: title,
+                  seriesId: seriesId,
                 )
             : null);
 

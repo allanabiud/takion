@@ -54,6 +54,18 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
 
   @override
   Widget build(BuildContext context) {
+    // Drive the rotation from the live provider value so the visible tile
+    // always reflects the syncing state, even if _syncNow captured a stale
+    // element (e.g. after the tree rebuilds on enable()).
+    ref.listen(driveSyncProvider, (_, next) {
+      if (!mounted) return;
+      if (next.isSyncing) {
+        _syncAnimController.repeat();
+      } else {
+        _syncAnimController.reset();
+      }
+    });
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,15 +160,15 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
               if (value) {
                 final account = await driveService.signIn();
                 if (account != null) {
-                  ref.read(driveSyncProvider.notifier).enable(
-                    email: account.email,
-                  );
+                  await ref
+                      .read(driveSyncProvider.notifier)
+                      .enable(email: account.email);
                   if (!mounted) return;
                   _syncNow();
                 }
               } else {
                 await driveService.signOut();
-                ref.read(driveSyncProvider.notifier).disable();
+                await ref.read(driveSyncProvider.notifier).disable();
               }
             },
           ),
@@ -186,8 +198,8 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 syncState.isSyncing
                     ? 'Please wait'
                     : syncState.lastSync != null
-                        ? 'Last sync: ${DateFormatter.relativeShort(syncState.lastSync!)}'
-                        : 'Never synced',
+                    ? 'Last sync: ${DateFormatter.relativeShort(syncState.lastSync!)}'
+                    : 'Never synced',
               ),
               onTap: syncState.isSyncing ? null : () => _syncNow(),
             ),
@@ -202,9 +214,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 'Delete Backup from Drive',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text(
-                'Remove backup file from Google Drive',
-              ),
+              subtitle: const Text('Remove backup file from Google Drive'),
               onTap: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
@@ -233,12 +243,15 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                   TakionAlerts.success(context, 'Backup deleted from Drive');
                 } catch (e) {
                   if (!mounted) return;
-                  TakionAlerts.safeError(context, e, userMessage: 'Failed to delete backup');
+                  TakionAlerts.safeError(
+                    context,
+                    e,
+                    userMessage: 'Failed to delete backup',
+                  );
                 }
               },
             ),
           ]),
-
         ],
       ],
     );
@@ -251,24 +264,19 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     final container = ProviderScope.containerOf(context, listen: false);
 
     syncNotifier.setSyncing(true);
-    if (mounted) {
-      _syncAnimController.repeat();
-    }
     try {
-      await driveService.uploadBackup(
-        lastSyncTime: syncState.lastSync,
-      );
+      await driveService.uploadBackup(lastSyncTime: syncState.lastSync);
       await syncNotifier.updateLastSync();
       invalidateCacheBackedProviders((p) => container.invalidate(p));
       // Ensure syncing state is rendered for at least one frame
       await Future<void>.delayed(Duration.zero);
       if (mounted) TakionAlerts.success(context, 'Synced to Drive');
     } catch (e) {
-      if (mounted) TakionAlerts.safeError(context, e, userMessage: 'Sync failed');
+      if (mounted) {
+        TakionAlerts.safeError(context, e, userMessage: 'Sync failed');
+      }
     } finally {
-      if (mounted) _syncAnimController.reset();
       syncNotifier.setSyncing(false);
     }
   }
-
 }

@@ -272,10 +272,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         }
       } else {
         try {
+          ref.read(driveSyncProvider.notifier).setSyncing(true);
           await driveService.uploadBackup();
+          await ref.read(driveSyncProvider.notifier).updateLastSync();
           AppLogger.info('Initial backup uploaded to Drive');
         } catch (e) {
           AppLogger.warning('Onboarding backup upload failed', error: e);
+        } finally {
+          ref.read(driveSyncProvider.notifier).setSyncing(false);
         }
         AppLogger.info('Onboarding completed');
         if (mounted) {

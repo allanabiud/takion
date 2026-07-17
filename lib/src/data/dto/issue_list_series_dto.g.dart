@@ -20,19 +20,22 @@ class IssueListSeriesDtoAdapter extends TypeAdapter<IssueListSeriesDto> {
       name: fields[0] as String,
       volume: (fields[1] as num).toInt(),
       yearBegan: (fields[2] as num).toInt(),
+      id: (fields[3] as num?)?.toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, IssueListSeriesDto obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
       ..write(obj.volume)
       ..writeByte(2)
-      ..write(obj.yearBegan);
+      ..write(obj.yearBegan)
+      ..writeByte(3)
+      ..write(obj.id);
   }
 
   @override
@@ -55,6 +58,7 @@ _IssueListSeriesDto _$IssueListSeriesDtoFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       volume: (json['volume'] as num).toInt(),
       yearBegan: (json['year_began'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$IssueListSeriesDtoToJson(_IssueListSeriesDto instance) =>
@@ -62,4 +66,5 @@ Map<String, dynamic> _$IssueListSeriesDtoToJson(_IssueListSeriesDto instance) =>
       'name': instance.name,
       'volume': instance.volume,
       'year_began': instance.yearBegan,
+      'id': instance.id,
     };

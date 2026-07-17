@@ -14,6 +14,20 @@ class DriveSyncState {
     this.lastSync,
     this.isSyncing = false,
   });
+
+  DriveSyncState copyWith({
+    bool? enabled,
+    String? email,
+    DateTime? lastSync,
+    bool? isSyncing,
+  }) {
+    return DriveSyncState(
+      enabled: enabled ?? this.enabled,
+      email: email ?? this.email,
+      lastSync: lastSync ?? this.lastSync,
+      isSyncing: isSyncing ?? this.isSyncing,
+    );
+  }
 }
 
 final driveSyncProvider =
@@ -50,7 +64,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
     final box = await hive.openBox(_boxName);
     await box.put(_enabledKey, true);
     await box.put(_emailKey, email);
-    state = DriveSyncState(enabled: true, email: email, lastSync: state.lastSync);
+    state = state.copyWith(enabled: true, email: email);
   }
 
   Future<void> disable() async {
@@ -68,20 +82,11 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     await box.put(_lastSyncKey, now.toIso8601String());
-    state = DriveSyncState(
-      enabled: state.enabled,
-      email: state.email,
-      lastSync: now,
-    );
+    state = state.copyWith(lastSync: now);
   }
 
   void setSyncing(bool value) {
     AppLogger.info('Sync state: $value');
-    state = DriveSyncState(
-      enabled: state.enabled,
-      email: state.email,
-      lastSync: state.lastSync,
-      isSyncing: value,
-    );
+    state = state.copyWith(isSyncing: value);
   }
 }

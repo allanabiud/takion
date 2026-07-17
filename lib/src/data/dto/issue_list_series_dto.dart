@@ -12,6 +12,7 @@ abstract class IssueListSeriesDto with _$IssueListSeriesDto {
     @HiveField(0) required String name,
     @HiveField(1) required int volume,
     @HiveField(2) @JsonKey(name: 'year_began') required int yearBegan,
+    @HiveField(3) int? id,
   }) = _IssueListSeriesDto;
 
   factory IssueListSeriesDto.fromJson(Map<String, dynamic> json) =>
@@ -20,6 +21,6 @@ abstract class IssueListSeriesDto with _$IssueListSeriesDto {
   const IssueListSeriesDto._();
 
   Series toEntity() {
-    return Series(id: 0, name: name, volume: volume, yearBegan: yearBegan);
+    return Series(id: id ?? 0, name: name, volume: volume, yearBegan: yearBegan);
   }
 }

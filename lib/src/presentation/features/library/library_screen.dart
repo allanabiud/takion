@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
@@ -21,100 +20,6 @@ class LibraryScreen extends ConsumerWidget {
     final statsAsync = ref.watch(collectionStatsProvider);
     final suggestionAsync = ref.watch(readingSuggestionIssueProvider);
     final rateSuggestionAsync = ref.watch(rateSuggestionIssueProvider);
-
-    void showRateSuggestionSheet({
-      required int issueId,
-      required String comicName,
-      required int initialRating,
-    }) {
-      var selectedRating = initialRating.clamp(0, 5);
-      ref.read(scrobbleIssueProvider(issueId).notifier).reset();
-
-      TakionBottomSheet.show<void>(
-        context: context,
-        title: 'Rate $comicName',
-        child: Consumer(
-          builder: (context, ref, _) {
-            final scrobbleState = ref.watch(scrobbleIssueProvider(issueId));
-            final isSubmitting = scrobbleState.isLoading;
-            final errorMessage = scrobbleState.whenOrNull(
-              error: (error, _) => TakionAlerts.cleanError(error, fallback: 'Something went wrong'),
-            );
-
-            return StatefulBuilder(
-              builder: (context, setModalState) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RatingPicker(
-                      selectedRating: selectedRating,
-                      enabled: !isSubmitting,
-                      iconSize: 38,
-                      onChanged: (value) {
-                        setModalState(() {
-                          selectedRating = value;
-                        });
-                      },
-                      onReset: () {
-                        setModalState(() {
-                          selectedRating = 0;
-                        });
-                      },
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        errorMessage,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton(
-                        onPressed: isSubmitting || selectedRating <= 0
-                            ? null
-                            : () async {
-                                await ref
-                                    .read(
-                                      scrobbleIssueProvider(issueId).notifier,
-                                    )
-                                    .scrobble(
-                                      dateRead: DateTime.now(),
-                                      rating: selectedRating,
-                                    );
-
-                                final latestState = ref.read(
-                                  scrobbleIssueProvider(issueId),
-                                );
-                                if (latestState.hasError) return;
-
-                                if (context.mounted) {
-                                  Navigator.of(context).pop();
-                                }
-                              },
-                        child: isSubmitting
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Done'),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        ),
-      );
-    }
 
     return Scaffold(
       appBar: statsAsync.isLoading
@@ -403,15 +308,6 @@ class LibraryScreen extends ConsumerWidget {
                       isCollected: suggestion.isCollected,
                       isRead: suggestion.isRead,
                       rating: suggestion.rating,
-                      onTap: suggestion.issue.id == null
-                          ? null
-                          : () {
-                              showRateSuggestionSheet(
-                                issueId: suggestion.issue.id!,
-                                comicName: suggestion.issue.name,
-                                initialRating: suggestion.rating ?? 0,
-                              );
-                            },
                     ),
                   ],
                 );

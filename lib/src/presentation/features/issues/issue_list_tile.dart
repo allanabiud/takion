@@ -77,7 +77,14 @@ class IssueListTile extends ConsumerWidget {
             id: hydratedIssue.id,
             name: effectiveName,
             number: hydratedIssue.number,
-            series: null,
+            series: hydratedIssue.series == null
+                ? null
+                : Series(
+                    id: hydratedIssue.series!.id,
+                    name: hydratedIssue.series!.name,
+                    volume: hydratedIssue.series!.volume,
+                    yearBegan: hydratedIssue.series!.yearBegan,
+                  ),
             coverDate: hydratedIssue.coverDate,
             storeDate: hydratedIssue.storeDate,
             image: hydratedIssue.image ?? issue.image ?? cachedImage,
@@ -111,6 +118,8 @@ class IssueListTile extends ConsumerWidget {
                 ref: ref,
                 issueId: effectiveIssue.id!,
                 sheetTitle: issueTitle,
+                seriesId: effectiveIssue.series?.id,
+                releaseDate: effectiveIssue.storeDate ?? effectiveIssue.coverDate,
               )
             : null);
 

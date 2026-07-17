@@ -135,6 +135,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               issueId: issueId,
               imageUrl: issue.image,
               title: '${issue.series?.name ?? issue.name} #${issue.number}',
+              seriesId: issue.series?.id,
               isCollected: collectionStatus?.isCollected ?? false,
               isWishlisted: collectionStatus?.isWishlisted ?? false,
               isRead: collectionStatus?.isRead ?? false,

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -11,6 +12,7 @@ void invalidateLibraryCollectionProviders(Ref ref) {
   ref.invalidate(allCollectionItemsProvider);
   ref.invalidate(collectionItemsProvider);
   ref.invalidate(currentCollectionItemsProvider);
+  ref.invalidate(collectionStatsProvider);
 }
 
 void invalidateLibraryCollectionProvidersForWidget(WidgetRef ref) {
@@ -18,6 +20,7 @@ void invalidateLibraryCollectionProvidersForWidget(WidgetRef ref) {
   ref.invalidate(allCollectionItemsProvider);
   ref.invalidate(collectionItemsProvider);
   ref.invalidate(currentCollectionItemsProvider);
+  ref.invalidate(collectionStatsProvider);
 }
 
 final selectedCollectionItemsPageProvider =

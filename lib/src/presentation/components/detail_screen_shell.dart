@@ -48,14 +48,15 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final void Function(T data)? onShare;
   final void Function(T data)? onOpenInBrowser;
   final Iterable<Widget> Function(BuildContext context, T data, WidgetRef ref)
-      sheetContentBuilder;
+  sheetContentBuilder;
   final double heroWidth;
   final double heroHeight;
   final double heroBorderRadius;
   final bool circular;
   final double headerHeight;
   final bool showHero;
-  final Iterable<Widget> Function(BuildContext context, T data)? headerBackground;
+  final Iterable<Widget> Function(BuildContext context, T data)?
+  headerBackground;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,8 +70,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   Widget _buildLoading(BuildContext context) {
     final theme = Theme.of(context);
     final scaffoldBg = theme.colorScheme.surface;
-    final hasImage =
-        loadingImageUrl != null && loadingImageUrl!.isNotEmpty;
+    final hasImage = loadingImageUrl != null && loadingImageUrl!.isNotEmpty;
 
     return Scaffold(
       body: Stack(
@@ -117,7 +117,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
+                  top: Radius.circular(28),
                 ),
               ),
               child: CustomScrollView(
@@ -199,7 +199,12 @@ class DetailScreenShell<T> extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(),
       body: Center(
-        child: Text(TakionAlerts.cleanError(error, fallback: 'Failed to load $entityType details')),
+        child: Text(
+          TakionAlerts.cleanError(
+            error,
+            fallback: 'Failed to load $entityType details',
+          ),
+        ),
       ),
     );
   }
@@ -235,12 +240,13 @@ class DetailScreenShell<T> extends ConsumerWidget {
                         placeholder: (context, url) => ColoredBox(
                           color: theme.colorScheme.surfaceContainerHighest,
                         ),
-                        errorWidget: (context, url, error) => imageErrorPlaceholder(
-                          context,
-                          url,
-                          error,
-                          label: null,
-                        ),
+                        errorWidget: (context, url, error) =>
+                            imageErrorPlaceholder(
+                              context,
+                              url,
+                              error,
+                              label: null,
+                            ),
                       ),
                     )
                   else
@@ -269,25 +275,30 @@ class DetailScreenShell<T> extends ConsumerWidget {
                       children: [
                         const SizedBox(height: 48),
                         if (hasImage)
-                        Hero(
-                          tag: heroTag,
-                          child: GestureDetector(
-                            onTap: () => context.pushRoute(
-                              ImagePreviewRoute(
-                                imageUrl: imageUrl,
-                                title: title,
-                                heroTag: heroTag,
+                          Hero(
+                            tag: heroTag,
+                            child: GestureDetector(
+                              onTap: () => context.pushRoute(
+                                ImagePreviewRoute(
+                                  imageUrl: imageUrl,
+                                  title: title,
+                                  heroTag: heroTag,
+                                ),
+                              ),
+                              child: _buildHeroClip(
+                                context,
+                                data,
+                                title,
+                                hasImage,
                               ),
                             ),
-                            child: _buildHeroClip(context, data, title, hasImage),
-                          ),
-                        )
-                      else
-                        _buildHeroClip(context, data, title, hasImage),
-                      const SizedBox(height: 24),
-                    ],
+                          )
+                        else
+                          _buildHeroClip(context, data, title, hasImage),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
-                ),
                 Positioned(
                   top: 0,
                   left: 0,
@@ -297,8 +308,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
                     elevation: 0,
                     actions: [
                       EntityDetailActions(
-                        onShare:
-                            onShare != null ? () => onShare!(data) : null,
+                        onShare: onShare != null ? () => onShare!(data) : null,
                         onOpenInBrowser: onOpenInBrowser != null
                             ? () => onOpenInBrowser!(data)
                             : null,
@@ -318,7 +328,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
             builder: (context, scrollController) {
               return ClipRRect(
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
+                  top: Radius.circular(28),
                 ),
                 child: Container(
                   color: theme.colorScheme.surface,
@@ -327,8 +337,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -338,8 +347,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
                                   width: 32,
                                   height: 4,
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme
-                                        .onSurfaceVariant
+                                    color: theme.colorScheme.onSurfaceVariant
                                         .withValues(alpha: 0.4),
                                     borderRadius: BorderRadius.circular(2),
                                   ),
@@ -351,21 +359,26 @@ class DetailScreenShell<T> extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           title,
-                                          style: theme.textTheme.titleLarge?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: theme.textTheme.titleLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                         if (subtitle != null) ...[
                                           const SizedBox(height: 4),
                                           Text(
                                             subtitle,
-                                            style: theme.textTheme.bodyMedium?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant,
-                                            ),
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
                                           ),
                                         ],
                                       ],
@@ -388,8 +401,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
                       ...sheetContentBuilder(context, data, ref),
                       SliverToBoxAdapter(
                         child: SizedBox(
-                          height:
-                              MediaQuery.of(context).padding.bottom + 24,
+                          height: MediaQuery.of(context).padding.bottom + 24,
                         ),
                       ),
                     ],
@@ -403,7 +415,12 @@ class DetailScreenShell<T> extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeroClip(BuildContext context, T data, String title, bool hasImage) {
+  Widget _buildHeroClip(
+    BuildContext context,
+    T data,
+    String title,
+    bool hasImage,
+  ) {
     final imageUrl = hasImage ? toImageUrl(data) : null;
 
     final child = SizedBox(
@@ -413,16 +430,14 @@ class DetailScreenShell<T> extends ConsumerWidget {
           ? CachedNetworkImage(
               imageUrl: imageUrl!,
               fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  bannerPlaceholder(context, title),
-              errorWidget: (context, url, error) =>
-                  imageErrorPlaceholder(
-                    context,
-                    url,
-                    error,
-                    label: title,
-                    iconSize: 48,
-                  ),
+              placeholder: (context, url) => bannerPlaceholder(context, title),
+              errorWidget: (context, url, error) => imageErrorPlaceholder(
+                context,
+                url,
+                error,
+                label: title,
+                iconSize: 48,
+              ),
             )
           : bannerPlaceholder(context, title),
     );
@@ -438,10 +453,9 @@ class DetailScreenShell<T> extends ConsumerWidget {
 
   static Widget bannerPlaceholder(BuildContext context, String name) {
     return Container(
-      color: Theme.of(context)
-          .colorScheme
-          .primaryContainer
-          .withValues(alpha: 0.8),
+      color: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withValues(alpha: 0.8),
       child: Center(
         child: Text(
           initials(name),
