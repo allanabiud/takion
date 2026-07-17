@@ -45,6 +45,21 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   static const _descriptionMaxLines = 4;
   bool _isDescriptionExpanded = false;
 
+  static bool _isCollectedEdition(String? seriesType) {
+    if (seriesType == null) return false;
+    final lower = seriesType.toLowerCase();
+    return lower.contains('trade paperback') ||
+        lower.contains('tpb') ||
+        lower.contains('hardcover') ||
+        lower.contains('hc') ||
+        lower.contains('omnibus') ||
+        lower.contains('graphic novel') ||
+        lower.contains('gn') ||
+        lower.contains('compendium') ||
+        lower.contains('digest') ||
+        lower.contains('treasury');
+  }
+
   Widget _buildSectionCard(
     BuildContext context,
     Widget child, {
@@ -200,10 +215,11 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       return const SizedBox.shrink();
     }
 
+    final isCollected = _isCollectedEdition(widget.issue.series?.seriesType?.name);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'REPRINTED IN'),
+        SectionHeader(title: isCollected ? 'REPRINTS' : 'REPRINTED IN'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,

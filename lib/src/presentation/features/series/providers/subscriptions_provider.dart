@@ -6,6 +6,7 @@ import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 const _subscriptionsPageSize = metronDefaultPageSize;
 const _subscriptionsCacheBoxName = 'subscriptions_cache_box';
@@ -188,7 +189,8 @@ Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
         final seriesId = subscription.metronSeriesId;
         try {
           return await _loadSeriesListItem(ref, seriesId);
-        } catch (_) {
+        } catch (e) {
+          AppLogger.warning('Failed to load subscription series list item', error: e);
           return _seriesListFromSubscriptionFallback(seriesId);
         }
       }),
@@ -211,7 +213,8 @@ Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
       next: hasNext ? 'app://subscriptions?page=${safePage + 1}' : null,
       results: seriesList,
     );
-  } catch (_) {
+  } catch (e) {
+    AppLogger.error('Failed to load subscriptions page', error: e);
     if (cachedSeries.isNotEmpty || safePage == 1) {
       return SeriesListPage(
         count: cachedHasNext

@@ -82,7 +82,7 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
         return _buildSkeletonList();
       },
       error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: '${widget.errorPrefix}: $error'),
+          AsyncStatePanel.error(errorMessage: widget.errorPrefix),
       data: (pageData) {
         return _buildScaffold(pageData, isLoading: false);
       },

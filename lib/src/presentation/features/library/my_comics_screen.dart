@@ -71,11 +71,12 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Collection Value: ',
+                    'Collection Value',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                   ),
+                  const Spacer(),
                   Text(
                     statsAsync.asData!.value.totalValue,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -161,7 +162,7 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen> {
                 return const AsyncStatePanel.loading();
               },
               error: (error, _) => AsyncStatePanel.error(
-                errorMessage: 'Failed to load comics: $error',
+                errorMessage: 'Failed to load comics',
               ),
               data: (pageData) => _buildContent(
                   pageData, selectedTagId, isLoading: false),

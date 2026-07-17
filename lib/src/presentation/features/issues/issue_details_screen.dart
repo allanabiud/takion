@@ -376,7 +376,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
             appBar: AppBar(),
             body: AsyncStatePanel.error(
               title: 'Failed to load issue details',
-              errorMessage: '$error',
+              errorMessage: TakionAlerts.cleanError(error, fallback: 'Something went wrong'),
               onRetry: () {
                 ref
                     .read(issueDetailsProvider(_currentIssueId).notifier)

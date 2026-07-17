@@ -483,7 +483,9 @@ class _ReadingListDetailsScreenState
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text('Error: $e')),
+        body: Center(
+          child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to load reading list')),
+        ),
       ),
       data: (list) {
         if (list == null) {

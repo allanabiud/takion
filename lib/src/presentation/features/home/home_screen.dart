@@ -604,24 +604,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ? null
                               : ref.watch(issuePullListEntryProvider(issueId));
 
-                          return IssueCard(
-                            imageUrl: issue.image,
-                            title:
-                                '${issue.series?.name ?? 'Issue'} #${issue.number}',
-                            isCollected: collectionStatus?.isCollected ?? false,
-                            isWishlisted:
-                                collectionStatus?.isWishlisted ?? false,
-                            isRead: collectionStatus?.isRead ?? false,
-                            isPulled: pullEntry?.asData?.value != null,
-                            onTap: issueId == null
-                                ? null
-                                : () => context.pushRoute(
-                                    IssueDetailsRoute(
-                                      issueId: issueId,
-                                      initialImageUrl: issue.image,
-                                    ),
-                                  ),
-                          );
+                           return IssueCard(
+                             issueId: issueId,
+                             imageUrl: issue.image,
+                             title:
+                                 '${issue.series?.name ?? 'Issue'} #${issue.number}',
+                             isCollected: collectionStatus?.isCollected ?? false,
+                             isWishlisted:
+                                 collectionStatus?.isWishlisted ?? false,
+                             isRead: collectionStatus?.isRead ?? false,
+                             isPulled: pullEntry?.asData?.value != null,
+                             onTap: issueId == null
+                                 ? null
+                                 : () => context.pushRoute(
+                                     IssueDetailsRoute(
+                                       issueId: issueId,
+                                       initialImageUrl: issue.image,
+                                     ),
+                                   ),
+                           );
                         },
                       ),
                     ),

@@ -63,7 +63,7 @@ class MyPullsScreen extends ConsumerWidget {
       );
     } catch (error) {
       if (!context.mounted) return;
-      TakionAlerts.error(context, 'Failed to add pulled issues: $error');
+      TakionAlerts.safeError(context, error, userMessage: 'Failed to add pulled issues');
     }
   }
 
@@ -114,10 +114,7 @@ class MyPullsScreen extends ConsumerWidget {
       TakionAlerts.success(context, '$affected Marked as Read');
     } catch (error) {
       if (!context.mounted) return;
-      TakionAlerts.error(
-        context,
-        'Failed to mark pulled issues as read: $error',
-      );
+      TakionAlerts.safeError(context, error, userMessage: 'Failed to mark pulled issues as read');
     }
   }
 
@@ -169,7 +166,7 @@ class MyPullsScreen extends ConsumerWidget {
       transformIssues: (issues) => sortIssues(issues, sortOption),
       emptyMessage: 'No pulls for this week.',
       emptyIcon: Icons.shopping_bag_outlined,
-      errorTextBuilder: (error) => 'Failed to load pulls: $error',
+      errorTextBuilder: (error) => 'Failed to load pulls',
       header: pullsAsync.maybeWhen(
         data: (issues) => ListHeader(
           count: issues.length,

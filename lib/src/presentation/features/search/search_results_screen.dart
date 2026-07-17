@@ -312,7 +312,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastPublisherPage;
@@ -368,7 +368,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastArcPage;
@@ -421,7 +421,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastUniversePage;
@@ -474,7 +474,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastImprintPage;
@@ -527,7 +527,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastTeamPage;
@@ -580,7 +580,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastCreatorPage;
@@ -629,7 +629,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastCharacterPage;
@@ -678,7 +678,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastSeriesPage;
@@ -736,7 +736,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   ) {
     if (async.hasError) {
       return AsyncStatePanel.error(
-        errorMessage: 'Search failed: ${async.error}',
+        errorMessage: 'Search failed',
       );
     }
     final pageData = async.asData?.value ?? _lastIssuePage;

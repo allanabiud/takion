@@ -165,7 +165,7 @@ class _AddReadingListItemsBottomSheetState
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to add items: $e');
+        TakionAlerts.safeError(context, e, userMessage: 'Failed to add items');
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);
@@ -220,7 +220,9 @@ class _AddReadingListItemsBottomSheetState
                   },
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => Center(
+                  child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to add items')),
+                ),
               ) ??
               const SizedBox.shrink(),
         ),

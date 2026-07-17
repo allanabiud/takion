@@ -166,7 +166,8 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
           _characterDetailsGate.release();
         }
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch character details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

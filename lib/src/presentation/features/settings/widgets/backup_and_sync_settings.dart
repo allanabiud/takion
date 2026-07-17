@@ -232,7 +232,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                   TakionAlerts.success(context, 'Backup deleted from Drive');
                 } catch (e) {
                   if (!mounted) return;
-                  TakionAlerts.error(context, 'Failed to delete: $e');
+                  TakionAlerts.safeError(context, e, userMessage: 'Failed to delete backup');
                 }
               },
             ),
@@ -263,7 +263,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
       await Future<void>.delayed(Duration.zero);
       if (mounted) TakionAlerts.success(context, 'Synced to Drive');
     } catch (e) {
-      if (mounted) TakionAlerts.error(context, 'Sync failed: $e');
+      if (mounted) TakionAlerts.safeError(context, e, userMessage: 'Sync failed');
     } finally {
       if (mounted) _syncAnimController.reset();
       syncNotifier.setSyncing(false);

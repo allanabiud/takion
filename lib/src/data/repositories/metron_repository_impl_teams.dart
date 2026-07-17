@@ -162,7 +162,8 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       } finally {
         _teamDetailsGate.release();
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch team details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

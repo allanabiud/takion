@@ -73,7 +73,8 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           _issueDetailsGate.release();
         }
       });
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch issue details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

@@ -293,4 +293,33 @@ class LocalLibraryRepository implements LibraryRepository {
         .where(set.contains)
         .toSet();
   }
+
+  @override
+  Future<void> updateItemPricePaid(int metronIssueId, double pricePaid) async {
+    final box = await _hiveService.openBox<Map>(_itemsBox);
+    final existingRaw = box.get(metronIssueId.toString());
+    if (existingRaw == null) return;
+    final existing = _itemFromMap(existingRaw.cast<String, dynamic>());
+    if (existing.pricePaid != null) return;
+    final updated = LibraryItem(
+      id: existing.id,
+      userId: existing.userId,
+      metronIssueId: existing.metronIssueId,
+      metronSeriesId: existing.metronSeriesId,
+      ownershipStatus: existing.ownershipStatus,
+      isRead: existing.isRead,
+      rating: existing.rating,
+      purchaseDate: existing.purchaseDate,
+      pricePaid: pricePaid,
+      quantityOwned: existing.quantityOwned,
+      format: existing.format,
+      firstReadAt: existing.firstReadAt,
+      conditionGrade: existing.conditionGrade,
+      acquiredOn: existing.acquiredOn,
+      notes: existing.notes,
+      createdAt: existing.createdAt,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    await box.put(metronIssueId.toString(), _itemToMap(updated));
+  }
 }

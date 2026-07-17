@@ -163,7 +163,8 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       } finally {
         _imprintDetailsGate.release();
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch imprint details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

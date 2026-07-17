@@ -163,7 +163,8 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       } finally {
         _publisherDetailsGate.release();
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch publisher details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -83,10 +84,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       await ref.read(subscriptionPullReconcilerProvider).reconcile();
     } catch (error) {
       if (!mounted) return;
-      TakionAlerts.error(
-        context,
-        'Background pull reconciliation failed: $error',
-      );
+      TakionAlerts.safeError(context, error, userMessage: 'Background pull reconciliation failed');
     }
   }
 
@@ -110,7 +108,8 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       await syncNotifier.updateLastSync();
       invalidateCacheBackedProviders((p) => container.invalidate(p));
       await Future<void>.delayed(Duration.zero);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('Background sync failed', error: e);
       // sync failure is non-critical; state resets on next launch
     }
     syncNotifier.setSyncing(false);

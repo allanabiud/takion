@@ -59,7 +59,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     return Scaffold(
       body: profileAsync.when(
         loading: () => const ProfileLoadingView(),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => Center(child: Text(TakionAlerts.cleanError(error, fallback: 'Failed to load profile'))),
         data: (profile) {
           if (profile == null) {
             return Scaffold(
@@ -204,7 +204,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                   error: (error, _) => Padding(
                                     key: ValueKey('error'),
                                     padding: const EdgeInsets.all(16),
-                                    child: Text('$error'),
+                                    child: Text(TakionAlerts.cleanError(error, fallback: 'Failed to load insights')),
                                   ),
                                   data: (insights) => Column(
                                     key: ValueKey(_filter),

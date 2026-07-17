@@ -13,6 +13,7 @@ import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/logic/shortcut_handler.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
@@ -169,7 +170,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       return true;
     } catch (error) {
       if (!mounted || !context.mounted) return false;
-      TakionAlerts.error(context, error.toString());
+      TakionAlerts.safeError(context, error, userMessage: 'Connection failed');
       return false;
     }
   }
@@ -269,7 +270,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       } else {
         try {
           await driveService.uploadBackup();
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.warning('Onboarding backup upload failed', error: e);
+        }
         if (mounted) {
           setState(() {
             _restoreCompleted = true;
@@ -286,8 +289,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         setState(() => _isDriveRestoring = false);
         final msg = e.toString().contains('No backup found on Drive')
             ? 'No backup file found'
-            : 'Drive restore failed: $e';
-        TakionAlerts.error(context, msg);
+            : 'Drive restore failed';
+        TakionAlerts.safeError(context, msg == 'Drive restore failed' ? e : null, userMessage: msg);
       }
     }
   }
@@ -489,42 +492,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: RadioGroup<ThemeMode>(
-                            groupValue: themeSettings.themeMode,
-                            onChanged: (value) {
-                              if (value == null) return;
-                              ref.read(themeProvider.notifier).setThemeMode(value);
-                            },
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                RadioListTile<ThemeMode>(
-                                  value: ThemeMode.system,
-                                  title: const Text('System'),
-                                  secondary: const Icon(
-                                    Icons.brightness_auto_outlined,
+                        Material(
+                          color: theme.colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: RadioGroup<ThemeMode>(
+                              groupValue: themeSettings.themeMode,
+                              onChanged: (value) {
+                                if (value == null) return;
+                                ref.read(themeProvider.notifier).setThemeMode(value);
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  RadioListTile<ThemeMode>(
+                                    value: ThemeMode.system,
+                                    title: const Text('System'),
+                                    secondary: const Icon(
+                                      Icons.brightness_auto_outlined,
+                                    ),
+                                    contentPadding: EdgeInsets.zero,
                                   ),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                RadioListTile<ThemeMode>(
-                                  value: ThemeMode.light,
-                                  title: const Text('Light'),
-                                  secondary: const Icon(Icons.light_mode_outlined),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                RadioListTile<ThemeMode>(
-                                  value: ThemeMode.dark,
-                                  title: const Text('Dark'),
-                                  secondary: const Icon(Icons.dark_mode_outlined),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              ],
+                                  RadioListTile<ThemeMode>(
+                                    value: ThemeMode.light,
+                                    title: const Text('Light'),
+                                    secondary: const Icon(Icons.light_mode_outlined),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  RadioListTile<ThemeMode>(
+                                    value: ThemeMode.dark,
+                                    title: const Text('Dark'),
+                                    secondary: const Icon(Icons.dark_mode_outlined),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -608,27 +611,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              'Pure Black',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                        Material(
+                          color: theme.colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text(
+                                'Pure Black',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: const Text(
+                                'Use a true black background in dark mode',
+                              ),
+                              value: themeSettings.darkIsTrueBlack,
+                              onChanged: (bool value) {
+                                ref
+                                    .read(themeProvider.notifier)
+                                    .setDarkIsTrueBlack(value);
+                              },
                             ),
-                            subtitle: const Text(
-                              'Use a true black background in dark mode',
-                            ),
-                            value: themeSettings.darkIsTrueBlack,
-                            onChanged: (bool value) {
-                              ref
-                                  .read(themeProvider.notifier)
-                                  .setDarkIsTrueBlack(value);
-                            },
                           ),
                         ),
                       ],

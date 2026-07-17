@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 final readingListSharingServiceProvider = Provider(
   (ref) => ReadingListSharingService(),
@@ -49,7 +50,7 @@ class ReadingListSharingService {
           updatedAt: DateTime.now(),
         );
       } catch (e) {
-        // Handle parsing error
+        AppLogger.warning('Failed to parse imported reading list', error: e);
         return null;
       }
     }

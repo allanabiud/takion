@@ -78,7 +78,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           return const AsyncStatePanel.loading();
         },
         error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load subscriptions: $error',
+          errorMessage: 'Failed to load subscriptions',
         ),
         data: (pageData) =>
             _buildContent(pageData, sortOption, isLoading: false),

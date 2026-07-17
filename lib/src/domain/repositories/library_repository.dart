@@ -36,4 +36,6 @@ abstract class LibraryRepository {
   Future<void> deleteItemByIssueId(int metronIssueId);
 
   Future<Set<int>> getOwnedIssueIds(List<int> metronIssueIds);
+
+  Future<void> updateItemPricePaid(int metronIssueId, double pricePaid);
 }

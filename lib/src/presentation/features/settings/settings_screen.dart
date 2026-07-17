@@ -52,7 +52,7 @@ class SettingsScreen extends ConsumerWidget {
           SettingsNavTile(
             icon: Icons.notifications_outlined,
             title: 'Notifications',
-            subtitle: 'Weekly pull summary reminders',
+            subtitle: 'Weekly pull notifications',
             onTap: () => showNotificationSettings(context, ref),
           ),
           const SizedBox(height: 16),

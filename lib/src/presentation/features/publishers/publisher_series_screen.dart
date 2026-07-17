@@ -66,7 +66,7 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
         return const AsyncStatePanel.loading();
       },
       error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load series: $error',
+        errorMessage: 'Failed to load series',
       ),
       data: (seriesPage) => _buildContent(context, seriesPage, sortOption, isLoading: false),
     );

@@ -30,7 +30,7 @@ class WishlistScreen extends ConsumerWidget {
       body: itemsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load wishlist comics: $error',
+          errorMessage: 'Failed to load wishlist comics',
         ),
         data: (items) {
           final sortedItems = sortCollectionItems(items, sortOption);

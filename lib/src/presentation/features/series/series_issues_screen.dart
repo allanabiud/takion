@@ -92,7 +92,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
         return const AsyncStatePanel.loading();
       },
       error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load issues: $error',
+        errorMessage: 'Failed to load issues',
       ),
       data: (issuePage) =>
           _buildContent(context, ref, issuePage, sortOption, isLoading: false),
@@ -469,10 +469,7 @@ Future<void> applySeriesIssueBulkAction({
     }
   } catch (error) {
     if (context.mounted) {
-      TakionAlerts.error(
-        context,
-        'Failed to apply series issue action: $error',
-      );
+      TakionAlerts.safeError(context, error, userMessage: 'Failed to apply series issue action');
     }
   }
 }

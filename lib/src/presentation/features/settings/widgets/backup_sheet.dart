@@ -168,7 +168,7 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Backup failed: $e');
+        TakionAlerts.safeError(context, e, userMessage: 'Backup failed');
       }
     } finally {
       if (mounted) setState(() => _loading = false);

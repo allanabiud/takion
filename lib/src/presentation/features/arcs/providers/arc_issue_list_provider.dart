@@ -5,6 +5,7 @@ import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 class ArcIssueListArgs {
   const ArcIssueListArgs({
@@ -123,10 +124,16 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
 
   final futures = <Future<List<IssueList>>>[];
   if (page2Future != null) {
-    futures.add(page2Future.then((p) => p.results).catchError((_) => <IssueList>[]));
+    futures.add(page2Future.then((p) => p.results).catchError((e) {
+      AppLogger.debug('Failed to fetch arc page 2, falling back to empty', error: e);
+      return <IssueList>[];
+    }));
   }
   if (lastPageFuture != null) {
-    futures.add(lastPageFuture.then((p) => p.results).catchError((_) => <IssueList>[]));
+    futures.add(lastPageFuture.then((p) => p.results).catchError((e) {
+      AppLogger.debug('Failed to fetch arc last page, falling back to empty', error: e);
+      return <IssueList>[];
+    }));
   }
 
   if (futures.isNotEmpty) {

@@ -50,7 +50,7 @@ class PagedIssueListScaffold extends StatelessWidget {
             child: issuesAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (error, _) => AsyncStatePanel.error(
-                errorMessage: errorTextBuilder?.call(error) ?? 'Error: $error',
+                errorMessage: errorTextBuilder?.call(error) ?? 'Something went wrong',
               ),
               data: (issues) {
                 final visibleIssues = transformIssues(issues);

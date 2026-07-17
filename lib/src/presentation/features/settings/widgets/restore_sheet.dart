@@ -105,7 +105,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
       if (!mounted) return;
       final message = e is FormatException
           ? 'Invalid backup file'
-          : 'Failed to read backup: $e';
+          : 'Failed to read backup';
       setState(() {
         _loadError = message;
         _phase = _RestorePhase.error;
@@ -306,7 +306,7 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Restore failed: $e');
+        TakionAlerts.safeError(context, e, userMessage: 'Restore failed');
         setState(() => _restoring = false);
       }
     }

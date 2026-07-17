@@ -41,6 +41,7 @@ import 'package:takion/src/presentation/features/publishers/providers/publisher_
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/storage/local_profile_service.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';
@@ -473,9 +474,10 @@ class SettingsNotifier extends _$SettingsNotifier {
             'Full sync completed ($synced cached slice(s) refreshed)',
       );
     } catch (e) {
+      AppLogger.error('Full sync failed', error: e);
       state = state.copyWith(
         isSyncing: false,
-        lastSyncMessage: 'Full sync failed: $e',
+        lastSyncMessage: 'Full sync failed',
       );
     }
   }
@@ -498,9 +500,10 @@ class SettingsNotifier extends _$SettingsNotifier {
             'Quick sync completed ($synced stale/missing cache slice(s) refreshed)',
       );
     } catch (e) {
+      AppLogger.error('Quick sync failed', error: e);
       state = state.copyWith(
         isSyncing: false,
-        lastSyncMessage: 'Quick sync failed: $e',
+        lastSyncMessage: 'Quick sync failed',
       );
     }
   }
@@ -522,9 +525,10 @@ class SettingsNotifier extends _$SettingsNotifier {
         lastSyncMessage: 'Cache and metadata cleared successfully',
       );
     } catch (e) {
+      AppLogger.error('Failed to clear cache', error: e);
       state = state.copyWith(
         isSyncing: false,
-        lastSyncMessage: 'Failed to clear cache: $e',
+        lastSyncMessage: 'Failed to clear cache',
       );
     }
   }

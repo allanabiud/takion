@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/tags/providers/tag_provider.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/tags/widgets/tag_manager_sheet.dart';
 import 'package:takion/src/presentation/components/components.dart';
 
@@ -15,7 +16,7 @@ void showTagSelectorSheet(BuildContext context, WidgetRef ref, int issueId) {
 
         return allTagsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('$error')),
+          error: (error, _) => Center(child: Text(TakionAlerts.cleanError(error, fallback: 'Something went wrong'))),
           data: (allTags) {
             if (allTags.isEmpty) {
               return Column(

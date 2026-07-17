@@ -3,6 +3,7 @@ import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/domain/repositories/repositories.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 final readingListLocalDataSourceProvider = Provider<ReadingListRepository>((ref) {
   return ReadingListLocalDataSource(ref.read(hiveServiceProvider));
@@ -94,7 +95,8 @@ class ReadingListLocalDataSource implements ReadingListRepository {
     final box = await _getBox();
     try {
       return box.values.firstWhere((l) => l.metronSourceId == metronSourceId);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.verbose('Reading list not found for metronSourceId', error: e);
       return null;
     }
   }

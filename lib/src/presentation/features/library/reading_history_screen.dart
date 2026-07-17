@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 
 enum HistoryFilter { day, week, month, year }
 
@@ -56,7 +57,9 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
       appBar: AppBar(title: const Text('Reading History')),
       body: historyAsync.when(
         loading: () => const AsyncStatePanel.loading(),
-        error: (error, _) => AsyncStatePanel.error(errorMessage: '$error'),
+        error: (error, _) => AsyncStatePanel.error(
+          errorMessage: TakionAlerts.cleanError(error, fallback: 'Failed to load reading history'),
+        ),
         data: (entries) {
           if (entries.isEmpty) {
             return const EmptyContentState(

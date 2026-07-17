@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
@@ -19,10 +20,14 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
       )
       .length;
 
-  final totalValue = collectedItems.fold<double>(
-    0,
-    (sum, item) => sum + (item.pricePaid ?? 0) * item.quantityOwned,
-  );
+  final hiveService = ref.read(hiveServiceProvider);
+  double totalValue = 0;
+  for (final item in collectedItems) {
+    final unitPrice = item.pricePaid ??
+        await hiveService.getIssuePrice(item.metronIssueId) ??
+        0;
+    totalValue += unitPrice * item.quantityOwned;
+  }
   final currencyFormat = NumberFormat('#,##0.00');
 
   return CollectionStats(

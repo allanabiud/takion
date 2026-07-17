@@ -6,6 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:takion/src/core/cache/cache_header_store.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/core/logging/talker_setup.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/data/dto/dto.dart';
@@ -17,6 +19,7 @@ import 'package:timezone/timezone.dart' as tz;
 /// Bootstraps the application by initializing core services and state management.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   FlutterError.onError = (details) {
+    talker.handle(details.exception, details.stack);
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
 
@@ -31,7 +34,8 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   try {
     final timezoneInfo = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
-  } catch (_) {
+  } catch (e) {
+    AppLogger.warning('Failed to initialize local timezone, falling back to UTC', error: e);
     tz.setLocalLocation(tz.getLocation('UTC'));
   }
   await NotificationService.instance.init();
@@ -49,7 +53,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     hiveService.openBox<Map>('series_list_meta_box'),
     hiveService.openBox<List>('series_issue_list_box'),
     hiveService.openBox<Map>('series_issue_list_meta_box'),
-    hiveService.openBox<Map>('home_content_box'),
+    hiveService.openBox<dynamic>('home_content_box'),
     hiveService.openBox<int>('cache_meta_box'),
     hiveService.openBox<IssueDetailsDto>('issue_details_box'),
     hiveService.openBox<Map>('series_details_box'),

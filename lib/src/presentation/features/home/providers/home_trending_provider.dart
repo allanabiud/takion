@@ -5,6 +5,7 @@ import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 class HomeTrendingEntry {
   const HomeTrendingEntry({required this.issue, required this.reason});
@@ -104,8 +105,10 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
             })
             .whereType<HomeTrendingEntry>()
             .toList() ??
-        const <HomeTrendingEntry>[];
-  } catch (_) {}
+         const <HomeTrendingEntry>[];
+  } catch (e) {
+    AppLogger.warning('Failed to load cached home trending', error: e);
+  }
   final hasFreshCache =
       cachedAt != null &&
       HomeCachePolicies.seriesSuggestions.isFresh(cachedAt, DateTime.now()) &&
@@ -135,9 +138,12 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
             .toList(),
       );
       await cache.writeCachedAtNow(homeTrendingMetaKey);
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to cache home trending', error: e);
+    }
     return fresh;
-  } catch (_) {
+  } catch (e) {
+    AppLogger.error('Failed to compute home trending', error: e);
     return cached;
   }
 });

@@ -112,7 +112,7 @@ class _AddToReadingListBottomSheetState
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to add to reading list: $e');
+        TakionAlerts.safeError(context, e, userMessage: 'Failed to add to reading list');
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);
@@ -132,7 +132,7 @@ class _AddToReadingListBottomSheetState
       children: [
         readingListsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Text('Error: $err'),
+          error: (err, stack) => Text(TakionAlerts.cleanError(err, fallback: 'Failed to add to reading list')),
           data: (lists) {
             final contentTypeLists = lists
                 .where((list) => list.contentType == contentType)

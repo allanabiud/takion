@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/issues/providers/issue_details_
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 String _issueTitle(IssueDetails? issue, int issueId) {
   if (issue == null) return 'Issue #$issueId';
@@ -98,7 +99,7 @@ Future<void> showScrobbleSheet({
         final scrobbleState = ref.watch(scrobbleIssueProvider(issueId));
         final isSubmitting = scrobbleState.isLoading;
         final submitError = scrobbleState.whenOrNull(
-          error: (error, _) => '$error',
+          error: (error, _) => error,
         );
 
         return StatefulBuilder(
@@ -228,7 +229,8 @@ Future<void> showScrobbleSheet({
                                     TakionAlerts.info(context, 'Removed from Pull List');
                                   }
                                 }
-                              } catch (_) {
+                              } catch (e) {
+                                AppLogger.warning('Failed to update pull list', error: e);
                                 if (context.mounted) {
                                   setModalState(() {
                                     pullIssue = !newValue;
@@ -333,7 +335,16 @@ Future<void> showScrobbleSheet({
                 if (submitError != null) ...[
                   const SizedBox(height: 6),
                   Text(
-                    submitError,
+                    () {
+                      final raw = submitError.toString().trim();
+                      var cleaned = raw.replaceFirst(RegExp(
+                        r'^(Exception|StateError|DioException|PlatformException): ',
+                      ), '').trim();
+                      if (cleaned.isEmpty || cleaned.length > 120) {
+                        cleaned = 'Something went wrong';
+                      }
+                      return cleaned;
+                    }(),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.error,
                     ),

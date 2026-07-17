@@ -163,7 +163,8 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       } finally {
         _creatorDetailsGate.release();
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch creator details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

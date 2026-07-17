@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class DetailScreenShell<T> extends ConsumerWidget {
@@ -197,7 +198,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(),
       body: Center(
-        child: Text('Failed to load $entityType details: $error'),
+        child: Text(TakionAlerts.cleanError(error, fallback: 'Failed to load $entityType details')),
       ),
     );
   }

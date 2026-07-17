@@ -93,7 +93,7 @@ Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async 
     }
   } catch (error) {
     if (!context.mounted) return;
-    TakionAlerts.error(context, error.toString());
+    TakionAlerts.safeError(context, error, userMessage: 'Connection failed');
   }
 }
 
@@ -179,7 +179,7 @@ void showMetronConnectionSettings(BuildContext context, WidgetRef ref) {
                         ? const Text('Not connected')
                         : Text('Connected as ${connection.username}'),
                     loading: () => const Text('Checking connection...'),
-                    error: (error, _) => Text(error.toString()),
+                    error: (error, _) => Text(TakionAlerts.cleanError(error, fallback: 'Connection check failed')),
                   ),
                 ),
               ]),

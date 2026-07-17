@@ -241,9 +241,10 @@ Future<void> showEditMyDetailsSheet(
                                   );
                                   if (s.hasError) {
                                     if (context.mounted) {
-                                      TakionAlerts.error(
+                                      TakionAlerts.safeError(
                                         context,
-                                        s.error.toString(),
+                                        s.error,
+                                        userMessage: 'Failed to save changes',
                                       );
                                     }
                                     return;
@@ -418,7 +419,7 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
               ),
             ),
           ),
-          error: (e, _) => Text('$e'),
+          error: (e, _) => Text(TakionAlerts.cleanError(e, fallback: 'Something went wrong')),
           data: (data) {
             final logs = data.readLogs;
             return Column(

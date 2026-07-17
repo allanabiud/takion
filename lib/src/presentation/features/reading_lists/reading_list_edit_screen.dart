@@ -166,7 +166,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to update read status: $e');
+        TakionAlerts.safeError(context, e, userMessage: 'Failed to update read status');
       }
     } finally {
       if (mounted) setState(() => _isUpdating = false);
@@ -302,7 +302,11 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
     return listValue.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => Scaffold(
+        body: Center(
+          child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to load reading list')),
+        ),
+      ),
       data: (list) {
         if (list == null) {
           return const Scaffold(body: Center(child: Text('List not found')));

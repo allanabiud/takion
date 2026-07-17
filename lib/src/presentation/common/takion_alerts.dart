@@ -89,6 +89,36 @@ class TakionAlerts {
     info(context, 'Enter email and password');
   }
 
+  static String cleanError(
+    Object? error, {
+    String fallback = 'Something went wrong',
+  }) {
+    final raw = error?.toString().trim() ?? '';
+    var cleaned = raw.replaceFirst(RegExp(
+      r'^(Exception|StateError|DioException|PlatformException|FormatException'
+      r'|HttpException|ArgumentError|TypeError|RangeError|TimeoutException'
+      r'|BadStateError|ConcurrentModificationError): ',
+    ), '').trim();
+
+    if (cleaned.isEmpty ||
+        cleaned.length > 120 ||
+        cleaned.contains('file://') ||
+        cleaned.contains('package:') ||
+        cleaned.contains('dart:')) {
+      cleaned = fallback;
+    }
+
+    return cleaned;
+  }
+
+  static void safeError(
+    BuildContext context,
+    Object? error, {
+    String? userMessage,
+  }) {
+    TakionAlerts.error(context, cleanError(error, fallback: userMessage ?? 'Something went wrong'));
+  }
+
   static void authError(BuildContext context, Object error) {
     final raw = error.toString().trim();
     final cleaned = raw

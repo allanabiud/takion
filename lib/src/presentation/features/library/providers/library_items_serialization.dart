@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 
 const _maxHydrationConcurrency = 4;
 
@@ -74,10 +76,20 @@ CollectionItem toCollectionItem(
 
 Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
   final localDataSource = ref.read(metronLocalDataSourceProvider);
+  final repo = ref.read(libraryRepositoryProvider);
 
   try {
     final details = await localDataSource.getIssueDetails(item.metronIssueId);
     if (details != null) {
+      if (item.pricePaid == null && details.price != null) {
+        final coverPrice = double.tryParse(details.price!);
+        if (coverPrice != null) {
+          await repo.updateItemPricePaid(item.metronIssueId, coverPrice);
+          try {
+            ref.invalidate(collectionStatsProvider);
+          } catch (_) {}
+        }
+      }
       return toCollectionItem(
         item,
         details.series?.name,
@@ -90,7 +102,8 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
         details.modified != null ? DateTime.tryParse(details.modified!) : null,
       );
     }
-  } catch (_) {
+  } catch (e) {
+    AppLogger.warning('Failed to hydrate library item from issue details', error: e);
     // Fall through to series details lookup
   }
 
@@ -110,7 +123,8 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
         null,
       );
     }
-  } catch (_) {
+  } catch (e) {
+    AppLogger.warning('Failed to hydrate library item from series details', error: e);
     // Fall through to fallback
   }
 

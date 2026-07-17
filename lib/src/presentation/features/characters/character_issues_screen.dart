@@ -66,7 +66,7 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
         return const AsyncStatePanel.loading();
       },
       error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load issues: $error',
+        errorMessage: 'Failed to load issues',
       ),
       data: (issuePage) =>
           _buildContent(context, ref, issuePage, sortOption, isLoading: false),

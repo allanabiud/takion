@@ -6,6 +6,7 @@ import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 
@@ -188,7 +189,9 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
           );
         },
         loading: () => _buildSkeletonList(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to load reading lists')),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => CreateOrImportReadingListSheet.show(context),

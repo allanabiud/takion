@@ -66,7 +66,8 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
           },
         );
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch weekly releases', error: e);
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
       }
@@ -136,7 +137,8 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
           },
         );
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch FOC releases', error: e);
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
       }

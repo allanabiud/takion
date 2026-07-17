@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:takion/src/core/backup/backup_service.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
 final driveBackupServiceProvider = Provider<DriveBackupService>((ref) {
@@ -138,7 +139,8 @@ class DriveBackupService {
       final timeStr = data['createdTime'] as String?;
       if (timeStr == null) return null;
       return DateTime.parse(timeStr).toLocal();
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('Failed to get backup modification time', error: e);
       return null;
     }
   }
@@ -211,7 +213,9 @@ class DriveBackupService {
     } finally {
       try {
         await tempFile.delete();
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('Failed to delete temp file', error: e);
+      }
     }
   }
 
@@ -464,7 +468,9 @@ class DriveBackupService {
     } finally {
       try {
         await tempFile.delete();
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('Failed to delete temp file', error: e);
+      }
     }
   }
 

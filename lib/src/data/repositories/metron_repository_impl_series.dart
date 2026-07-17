@@ -266,7 +266,8 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
           },
         );
       }, timeout: const Duration(seconds: 30));
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch series details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

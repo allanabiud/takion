@@ -78,7 +78,7 @@ class _FavoriteSeriesTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite series: $error',
+        errorMessage: 'Failed to load favorite series',
         onRetry: () => ref.invalidate(favoriteSeriesListProvider),
       ),
     );
@@ -116,7 +116,7 @@ class _FavoriteIssuesTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite issues: $error',
+        errorMessage: 'Failed to load favorite issues',
         onRetry: () => ref.invalidate(favoriteIssuesListProvider),
       ),
     );
@@ -155,7 +155,7 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite reading lists: $error',
+        errorMessage: 'Failed to load favorite reading lists',
         onRetry: () => ref.invalidate(favoriteReadingListsListProvider),
       ),
     );
@@ -194,7 +194,7 @@ class _FavoriteCreatorsTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite creators: $error',
+        errorMessage: 'Failed to load favorite creators',
         onRetry: () => ref.invalidate(favoriteCreatorsListProvider),
       ),
     );
@@ -233,7 +233,7 @@ class _FavoriteCharactersTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite characters: $error',
+        errorMessage: 'Failed to load favorite characters',
         onRetry: () => ref.invalidate(favoriteCharactersListProvider),
       ),
     );

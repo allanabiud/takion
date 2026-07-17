@@ -5,6 +5,7 @@ import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 class ContinueReadingSuggestion {
   const ContinueReadingSuggestion({
@@ -158,7 +159,9 @@ final continueReadingAllSuggestionsProvider =
                 .whereType<ContinueReadingSuggestion>()
                 .toList() ??
             const <ContinueReadingSuggestion>[];
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('Failed to load cached continue reading', error: e);
+      }
       final hasFreshCache =
           cachedAt != null &&
           HomeCachePolicies.continueReading.isFresh(cachedAt, DateTime.now()) &&
@@ -189,9 +192,12 @@ final continueReadingAllSuggestionsProvider =
                 .toList(),
           );
           await cache.writeCachedAtNow(homeContinueReadingMetaKey);
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.warning('Failed to cache continue reading', error: e);
+        }
         return fresh;
-      } catch (_) {
+      } catch (e) {
+        AppLogger.error('Failed to compute continue reading', error: e);
         return cached;
       }
     });

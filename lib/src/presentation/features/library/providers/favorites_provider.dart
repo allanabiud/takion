@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 final favoriteSeriesListProvider = FutureProvider<List<FavoriteSeries>>((
   ref,
@@ -23,13 +24,15 @@ final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
         SeriesList(
           id: details.id,
           name: details.name,
-          yearBegan: details.yearBegan,
           volume: details.volume,
+          yearBegan: details.yearBegan,
           issueCount: details.issueCount,
           modified: details.modified,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to load series favorite details', error: e);
+    }
   }
   return results;
 });
@@ -87,7 +90,9 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
           modified: details.modified,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to load issue favorite details', error: e);
+    }
   }
   return results;
 });
@@ -119,7 +124,9 @@ final favoriteReadingListsFullListProvider = FutureProvider<List<ReadingList>>((
       if (list != null) {
         results.add(list);
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to load reading list favorite details', error: e);
+    }
   }
   return results;
 });
@@ -157,7 +164,9 @@ final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
           modified: details.modified,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to load character favorite details', error: e);
+    }
   }
   return results;
 });
@@ -194,7 +203,9 @@ final favoriteCreatorsFullListProvider = FutureProvider<List<CreatorList>>((
           modified: details.modified,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to load creator favorite details', error: e);
+    }
   }
   return results;
 });

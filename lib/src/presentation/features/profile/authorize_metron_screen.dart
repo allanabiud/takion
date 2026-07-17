@@ -87,7 +87,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
       context.router.replaceAll([const MainRoute()]);
     } catch (error) {
       if (!mounted || !context.mounted) return;
-      TakionAlerts.error(context, error.toString());
+      TakionAlerts.safeError(context, error, userMessage: 'Connection failed');
     } finally {
       if (mounted) {
         setState(() {

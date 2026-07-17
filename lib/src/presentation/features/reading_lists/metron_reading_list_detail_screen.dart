@@ -94,7 +94,7 @@ class _MetronReadingListDetailScreenState
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to import: $e');
+        TakionAlerts.safeError(context, e, userMessage: 'Failed to import reading list');
       }
     } finally {
       if (mounted) setState(() => _isLoadingImport = false);
@@ -537,7 +537,7 @@ class _MetronReadingListDetailScreenState
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: AsyncStatePanel.error(
-          errorMessage: 'Failed to load reading list: $error',
+          errorMessage: 'Failed to load reading list',
         ),
       ),
       data: (data) {

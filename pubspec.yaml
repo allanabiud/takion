@@ -45,6 +45,7 @@ dependencies:
   timelines_plus: ^2.0.0
   uuid: ^4.5.3
   file_picker: ^12.0.0-0
+  talker: ^5.1.19
 
 
 dev_dependencies:

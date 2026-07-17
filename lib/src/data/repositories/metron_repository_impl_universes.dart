@@ -163,7 +163,8 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
       } finally {
         _universeDetailsGate.release();
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch universe details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

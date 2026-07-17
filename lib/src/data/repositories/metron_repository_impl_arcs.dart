@@ -165,7 +165,8 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       } finally {
         _arcDetailsGate.release();
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogger.error('Failed to fetch arc details', error: e);
       if (cachedDto != null) {
         return cachedDto.toEntity();
       }

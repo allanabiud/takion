@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 class SuggestionIssueTileData {
   const SuggestionIssueTileData({
@@ -102,7 +103,8 @@ Future<IssueList> _toSuggestionIssueList(Ref ref, LibraryItem item) async {
       image: details.image,
       modified: details.modified,
     );
-  } catch (_) {
+  } catch (e) {
+    AppLogger.warning('Failed to load suggestion issue details', error: e);
     return IssueList(
       id: item.metronIssueId,
       name: 'Issue #${item.metronIssueId}',

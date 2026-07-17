@@ -1373,6 +1373,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.1"
+  talker:
+    dependency: "direct main"
+    description:
+      name: talker
+      sha256: "342a30d81df3fc2ffca8daafdfee0c1b882269b0825dcc62093075c08bac9500"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.19"
+  talker_logger:
+    dependency: transitive
+    description:
+      name: talker_logger
+      sha256: "999b76cb583ee89da098e8ef3a7b863eb5261326f0d33e0877f20c9df1003790"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.19"
   term_glyph:
     dependency: transitive
     description:

@@ -25,7 +25,7 @@ class ContinueReadingScreen extends ConsumerWidget {
       body: suggestionsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load continue reading: $error',
+          errorMessage: 'Failed to load continue reading',
         ),
         data: (items) {
           final sortedItems = sortItemsByNameAndDate(

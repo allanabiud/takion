@@ -30,7 +30,7 @@ class UnratedIssuesScreen extends ConsumerWidget {
       body: itemsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load unrated comics: $error',
+          errorMessage: 'Failed to load unrated comics',
         ),
         data: (items) {
           final sortedItems = sortCollectionItems(items, sortOption);

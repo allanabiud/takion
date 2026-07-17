@@ -103,7 +103,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
       TakionAlerts.success(context, 'Image Saved');
     } catch (e) {
       if (!mounted) return;
-      TakionAlerts.error(context, 'Failed to save image: $e');
+      TakionAlerts.safeError(context, e, userMessage: 'Failed to save image');
     } finally {
       if (mounted) {
         setState(() => _isDownloading = false);

@@ -6,6 +6,7 @@ import 'package:takion/src/presentation/features/library/providers/collection_it
 import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 Set<String> _seriesTokens(String name) {
   return name
@@ -112,7 +113,9 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
     cached =
         cachedJson?.map(issueListFromJson).whereType<IssueList>().toList() ??
         const <IssueList>[];
-  } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to load cached because you pulled', error: e);
+    }
   final hasFreshCache =
       cachedAt != null &&
       HomeCachePolicies.becauseYouPulled.isFresh(cachedAt, DateTime.now()) &&
@@ -135,9 +138,12 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
         fresh.map(issueListToJson).toList(),
       );
       await cache.writeCachedAtNow(homeBecauseYouPulledMetaKey);
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.warning('Failed to cache because you pulled', error: e);
+    }
     return fresh;
-  } catch (_) {
+  } catch (e) {
+    AppLogger.error('Failed to compute because you pulled', error: e);
     return cached;
   }
 });

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 
 final localProfileServiceProvider = Provider<LocalProfileService>((ref) {
   return LocalProfileService(ref.watch(hiveServiceProvider));
@@ -82,7 +83,9 @@ class LocalProfileService {
           mimeType = 'image/webp';
         }
         return 'data:$mimeType;base64,$base64Str';
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('Failed to read profile image', error: e);
+      }
     }
     return normalized;
   }
