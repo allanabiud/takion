@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/dio_client.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
@@ -54,13 +55,18 @@ class MetronAccountService {
   Future<bool> connect(String username, String password) async {
     final trimmedUsername = username.trim();
     final trimmedPassword = password.trim();
+    AppLogger.info('Metron connect started for $trimmedUsername');
     final isValid = await verifyCredentials(trimmedUsername, trimmedPassword);
-    if (!isValid) return false;
+    if (!isValid) {
+      AppLogger.warning('Metron connect failed: invalid credentials for $trimmedUsername');
+      return false;
+    }
 
     final box = await _hiveService.openBox<String>(_boxName);
     await box.put(_usernameKey, trimmedUsername);
     await box.put(_passwordKey, trimmedPassword);
     invalidateCachedStatus();
+    AppLogger.info('Metron connected: $trimmedUsername');
     return true;
   }
 
@@ -89,12 +95,14 @@ class MetronAccountService {
     final box = await _hiveService.openBox<String>(_boxName);
     await box.clear();
     invalidateCachedStatus();
+    AppLogger.info('Metron disconnected');
   }
 
   Future<MetronConnectionStatus> validateStoredConnection() async {
     if (_cachedStatus != null &&
         _cachedAt != null &&
         DateTime.now().difference(_cachedAt!) < _cacheDuration) {
+      AppLogger.debug('Metron validation using cached status: $_cachedStatus');
       return _cachedStatus!;
     }
 
@@ -102,6 +110,7 @@ class MetronAccountService {
     if (creds == null) {
       _cachedStatus = MetronConnectionStatus.missing;
       _cachedAt = DateTime.now();
+      AppLogger.info('Metron validation: no stored credentials');
       return _cachedStatus!;
     }
 
@@ -114,10 +123,12 @@ class MetronAccountService {
       _cachedStatus =
           isValid ? MetronConnectionStatus.valid : MetronConnectionStatus.invalid;
       _cachedAt = DateTime.now();
+      AppLogger.info('Metron validation result: $_cachedStatus for ${creds['username']}');
       return _cachedStatus!;
-    } on DioException {
+    } on DioException catch (e) {
       _cachedStatus = MetronConnectionStatus.unreachable;
       _cachedAt = DateTime.now();
+      AppLogger.warning('Metron validation failed: server unreachable', error: e);
       return _cachedStatus!;
     }
   }

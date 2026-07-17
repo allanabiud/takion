@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/presentation/components/image_error_placeholder.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
@@ -93,14 +94,20 @@ class PersonListTile extends ConsumerWidget {
                             height: 60,
                             child: effectiveImageUrl != null &&
                                     effectiveImageUrl.isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: effectiveImageUrl,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        _initialsAvatar(theme),
-                                    errorWidget: (context, url, error) =>
-                                        _initialsAvatar(theme),
-                                  )
+                                 ? CachedNetworkImage(
+                                     imageUrl: effectiveImageUrl,
+                                     fit: BoxFit.cover,
+                                     placeholder: (context, url) =>
+                                         _initialsAvatar(theme),
+                                     errorWidget: (context, url, error) =>
+                                         imageErrorPlaceholder(
+                                           context,
+                                           url,
+                                           error,
+                                           label: initials(name),
+                                           iconSize: 22,
+                                         ),
+                                   )
                                 : _initialsAvatar(theme),
                           ),
                         ),

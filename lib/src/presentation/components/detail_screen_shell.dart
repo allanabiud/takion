@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/components/image_error_placeholder.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class DetailScreenShell<T> extends ConsumerWidget {
@@ -234,8 +235,11 @@ class DetailScreenShell<T> extends ConsumerWidget {
                         placeholder: (context, url) => ColoredBox(
                           color: theme.colorScheme.surfaceContainerHighest,
                         ),
-                        errorWidget: (context, url, error) => ColoredBox(
-                          color: theme.colorScheme.surfaceContainerHighest,
+                        errorWidget: (context, url, error) => imageErrorPlaceholder(
+                          context,
+                          url,
+                          error,
+                          label: null,
                         ),
                       ),
                     )
@@ -412,7 +416,13 @@ class DetailScreenShell<T> extends ConsumerWidget {
               placeholder: (context, url) =>
                   bannerPlaceholder(context, title),
               errorWidget: (context, url, error) =>
-                  bannerPlaceholder(context, title),
+                  imageErrorPlaceholder(
+                    context,
+                    url,
+                    error,
+                    label: title,
+                    iconSize: 48,
+                  ),
             )
           : bannerPlaceholder(context, title),
     );

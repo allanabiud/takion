@@ -81,6 +81,7 @@ final dioProvider = Provider<Dio>((ref) {
           );
         }
         if (error.response?.statusCode == 429) {
+          AppLogger.warning('HTTP 429 received for ${error.requestOptions.path}');
           AppPerformanceMetrics.instance.recordHttp429();
         }
         if (error.response?.statusCode == 429 &&
@@ -89,6 +90,7 @@ final dioProvider = Provider<Dio>((ref) {
           final retryAfterSeconds = int.tryParse(retryAfterHeader ?? '');
 
           if (retryAfterSeconds != null && retryAfterSeconds > 0) {
+            AppLogger.warning('HTTP 429 retry-after: ${retryAfterSeconds}s for ${error.requestOptions.path}');
             AppPerformanceMetrics.instance.recordRetryAfter429();
             await Future.delayed(Duration(seconds: retryAfterSeconds));
             final retryRequest = error.requestOptions
@@ -98,9 +100,11 @@ final dioProvider = Provider<Dio>((ref) {
               };
 
             try {
+              AppLogger.info('HTTP 429 retry for ${error.requestOptions.path}');
               final response = await dio.fetch(retryRequest);
               return handler.resolve(response);
             } on DioException catch (retryError) {
+              AppLogger.error('HTTP 429 retry failed for ${error.requestOptions.path}', error: retryError);
               return handler.next(retryError);
             }
           }
@@ -119,12 +123,13 @@ final dioProvider = Provider<Dio>((ref) {
                 'retry_5xx_count': retryCount + 1,
               };
             try {
+              AppLogger.info('HTTP $statusCode retry attempt ${retryCount + 1} for ${error.requestOptions.path}');
               final response = await dio.fetch(retryRequest);
               return handler.resolve(response);
             } on DioException catch (retryError) {
               if (retryCount >= 2) {
                 AppLogger.warning(
-                  'Server error after ${retryCount + 1} retries',
+                  'Server error after ${retryCount + 1} retries for ${error.requestOptions.path}',
                   error: retryError,
                 );
               }

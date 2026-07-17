@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/presentation/components/image_error_placeholder.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class ImprintCard extends ConsumerWidget {
@@ -50,7 +51,13 @@ class ImprintCard extends ConsumerWidget {
                     ? CachedNetworkImage(
                         imageUrl: effectiveImageUrl,
                         fit: BoxFit.cover,
-                        errorWidget: (_, _, _) => _buildInitials(theme),
+                        errorWidget: (context, url, error) => imageErrorPlaceholder(
+                          context,
+                          url,
+                          error,
+                          label: initials(name),
+                          iconSize: 20,
+                        ),
                         placeholder: (_, _) => const Center(
                           child: SizedBox(
                             width: 20,

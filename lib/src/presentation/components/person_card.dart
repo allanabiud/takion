@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/presentation/components/image_error_placeholder.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
@@ -95,15 +96,12 @@ class PersonCard extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            errorWidget: (context, url, error) => Center(
-                              child: Text(
-                                initials(name),
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                            errorWidget: (context, url, error) => imageErrorPlaceholder(
+                              context,
+                              url,
+                              error,
+                              label: initials(name),
+                              iconSize: 24,
                             ),
                           )
                         : Center(

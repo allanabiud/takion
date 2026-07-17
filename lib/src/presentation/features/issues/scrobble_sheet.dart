@@ -144,7 +144,10 @@ Future<void> showScrobbleSheet({
                                         if (newValue) addToWishlist = previousWishlist;
                                       });
                                     } else if (newValue) {
+                                      AppLogger.info('Scrobble: added issue #$issueId to collection');
                                       TakionAlerts.libraryAddedToCollection(context);
+                                    } else {
+                                      AppLogger.info('Scrobble: removed issue #$issueId from collection');
                                     }
                                   });
                             },
@@ -180,7 +183,10 @@ Future<void> showScrobbleSheet({
                                         selectedRating = previousRating;
                                       });
                                     } else if (newValue) {
+                                      AppLogger.info('Scrobble: marked issue #$issueId as read');
                                       TakionAlerts.libraryMarkedAsRead(context);
+                                    } else {
+                                      AppLogger.info('Scrobble: unmarked issue #$issueId as read');
                                     }
                                   });
                             },
@@ -210,12 +216,14 @@ Future<void> showScrobbleSheet({
                               try {
                                 if (!newValue) {
                                   await ref.read(pullListRepositoryProvider).deleteEntryByIssueId(issueId);
+                                  AppLogger.info('Scrobble: removed issue #$issueId from pull list');
                                 } else {
                                   await ref.read(pullListRepositoryProvider).upsertManualEntry(
                                     metronSeriesId: series!.id,
                                     metronIssueId: issueId,
                                     releaseDate: issueDetails?.storeDate ?? issueDetails?.coverDate,
                                   );
+                                  AppLogger.info('Scrobble: added issue #$issueId to pull list');
                                 }
 
                                 ref.invalidate(issuePullListEntryProvider(issueId));

@@ -2,8 +2,8 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
@@ -29,7 +29,7 @@ class TakionApp extends ConsumerStatefulWidget {
   ConsumerState<TakionApp> createState() => _TakionAppState();
 }
 
-class _TakionAppState extends ConsumerState<TakionApp> {
+class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserver {
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _metronCheckedForSession = false;
@@ -37,6 +37,7 @@ class _TakionAppState extends ConsumerState<TakionApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _appRouter = AppRouter(AuthGuard(ref));
     _shortcutHandler.init();
     final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
@@ -148,11 +149,13 @@ class _TakionAppState extends ConsumerState<TakionApp> {
       return;
     }
 
+    AppLogger.info('Metron session check: stored connection found for ${hasStoredConnection.username}');
     final status = await service.validateStoredConnection();
 
     if (!mounted) return;
 
     if (status == MetronConnectionStatus.invalid) {
+      AppLogger.warning('Metron session check: invalid credentials for ${hasStoredConnection.username}, disconnecting');
       await service.disconnect();
       if (!mounted) return;
 
@@ -161,6 +164,8 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         'Metron connection is invalid. Please reconnect your Metron account.',
       );
       _appRouter.replaceAll([const AuthorizeMetronRoute()]);
+    } else {
+      AppLogger.info('Metron session check: status=$status for ${hasStoredConnection.username}');
     }
   }
 
@@ -303,5 +308,16 @@ class _TakionAppState extends ConsumerState<TakionApp> {
         );
       },
     );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    AppLogger.debug('App lifecycle state: $state');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }

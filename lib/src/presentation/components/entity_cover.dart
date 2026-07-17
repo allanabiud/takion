@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/components/image_error_placeholder.dart';
 
 class EntityCover extends StatelessWidget {
   final String? imageUrl;
@@ -54,26 +55,13 @@ class EntityCover extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                      errorWidget: (context, url, error) => Container(
-                        color: placeholderLabel != null && placeholderLabel!.isNotEmpty
-                            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.8)
-                            : theme.colorScheme.surfaceContainerHighest,
-                        child: placeholderLabel != null && placeholderLabel!.isNotEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Text(
-                                    placeholderLabel!,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.primary,
-                                      fontSize: iconSize,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              )
-                            : Icon(Icons.broken_image, size: iconSize),
+                      errorWidget: (context, url, error) => imageErrorPlaceholder(
+                        context,
+                        url,
+                        error,
+                        label: placeholderLabel,
+                        icon: placeholderIcon,
+                        iconSize: iconSize,
                       ),
                     )
                   : Container(

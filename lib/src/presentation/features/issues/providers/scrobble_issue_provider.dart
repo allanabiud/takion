@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
@@ -48,6 +49,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
     state = await AsyncValue.guard(() async {
       try {
+        AppLogger.info('Scrobble started for issue #$_issueId: collection=$addToCollection, read=$markAsRead, wishlist=$addToWishlist, rating=$rating');
         final libraryRepository = ref.read(libraryRepositoryProvider);
 
         final existing = await libraryRepository.getItemByIssueId(_issueId);
@@ -93,40 +95,41 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           if (existing != null) {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
-        await invalidateLibraryItemsLocalCache(ref);
-        ref.invalidate(issueMyDetailsProvider(_issueId));
-        ref.invalidate(issueCollectionStatusProvider(_issueId));
-        return;
-      }
+          AppLogger.info('Scrobble: deleted item for issue #$_issueId');
+          await invalidateLibraryItemsLocalCache(ref);
+          ref.invalidate(issueMyDetailsProvider(_issueId));
+          ref.invalidate(issueCollectionStatusProvider(_issueId));
+          return;
+        }
 
-      await libraryRepository.upsertItem(
-          metronIssueId: _issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus: targetIsCollected
-              ? LibraryOwnershipStatus.owned
-              : (targetIsWishlisted
-                    ? LibraryOwnershipStatus.wishlist
-                    : LibraryOwnershipStatus.notOwned),
-          isRead: targetIsRead,
-          rating: targetIsRead ? (rating ?? existing?.rating) : null,
-          firstReadAt: targetIsRead
-              ? (existing?.firstReadAt ?? readAt)
-              : (() {
-                  if (existing?.firstReadAt == null) return null;
-                  final remaining = readLogs
-                      .where(
-                        (log) =>
-                            log.readAt.toUtc().toIso8601String() !=
-                            existing!.firstReadAt!.toUtc().toIso8601String(),
-                      )
-                      .toList();
-                  if (remaining.isEmpty) return null;
-                  remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
-                  return remaining.first.readAt;
-                })(),
-          format: existing?.format ?? _resolveDefaultFormat(),
-          acquiredOn:
-              existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
+        await libraryRepository.upsertItem(
+            metronIssueId: _issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: targetIsCollected
+                ? LibraryOwnershipStatus.owned
+                : (targetIsWishlisted
+                      ? LibraryOwnershipStatus.wishlist
+                      : LibraryOwnershipStatus.notOwned),
+            isRead: targetIsRead,
+            rating: targetIsRead ? (rating ?? existing?.rating) : null,
+            firstReadAt: targetIsRead
+                ? (existing?.firstReadAt ?? readAt)
+                : (() {
+                    if (existing?.firstReadAt == null) return null;
+                    final remaining = readLogs
+                        .where(
+                          (log) =>
+                              log.readAt.toUtc().toIso8601String() !=
+                              existing!.firstReadAt!.toUtc().toIso8601String(),
+                        )
+                        .toList();
+                    if (remaining.isEmpty) return null;
+                    remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
+                    return remaining.first.readAt;
+                  })(),
+            format: existing?.format ?? _resolveDefaultFormat(),
+            acquiredOn:
+                existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
         );
 
         if (targetIsRead && !wasRead) {
@@ -134,6 +137,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             metronIssueId: _issueId,
             readAt: readAt,
           );
+          AppLogger.info('Scrobble: created read log for issue #$_issueId at $readAt');
         } else if (!targetIsRead && wasRead && existing?.firstReadAt != null) {
           final firstLog = readLogs
               .where(
@@ -145,8 +149,10 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
               .toList();
           if (firstLog.isNotEmpty) {
             await libraryRepository.deleteReadLogById(firstLog.first.id);
+            AppLogger.info('Scrobble: deleted read log for issue #$_issueId');
           }
         }
+        AppLogger.info('Scrobble completed for issue #$_issueId');
         await invalidateLibraryItemsLocalCache(ref);
         ref.invalidate(issueMyDetailsProvider(_issueId));
         ref.invalidate(issueCollectionStatusProvider(_issueId));

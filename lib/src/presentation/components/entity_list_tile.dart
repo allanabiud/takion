@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
+import 'package:takion/src/presentation/components/image_error_placeholder.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class EntityListTile extends ConsumerWidget {
@@ -68,14 +69,20 @@ class EntityListTile extends ConsumerWidget {
                     ),
                     child: effectiveImageUrl != null &&
                             effectiveImageUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: effectiveImageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                _buildInitials(theme),
-                            errorWidget: (context, url, error) =>
-                                _buildInitials(theme),
-                          )
+                         ? CachedNetworkImage(
+                             imageUrl: effectiveImageUrl,
+                             fit: BoxFit.cover,
+                             placeholder: (context, url) =>
+                                 _buildInitials(theme),
+                             errorWidget: (context, url, error) =>
+                                 imageErrorPlaceholder(
+                                   context,
+                                   url,
+                                   error,
+                                   label: initials(name),
+                                   iconSize: 20,
+                                 ),
+                           )
                         : _buildInitials(theme),
                   ),
                 ),
