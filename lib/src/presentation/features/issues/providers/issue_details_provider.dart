@@ -18,7 +18,6 @@ class IssueDetailsNotifier extends _$IssueDetailsNotifier {
 
   @override
   Future<IssueDetails> build(int issueId) async {
-    ref.keepAlive();
     final repository = ref.watch(catalogRepositoryProvider);
     final details = await AppPerformanceMetrics.instance.trackProvider(
       'issueDetailsProvider',

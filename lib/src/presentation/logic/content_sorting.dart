@@ -1,5 +1,45 @@
 import 'package:takion/src/domain/entities/entities.dart';
 
+int naturalCompare(String a, String b) {
+  final aLower = a.toLowerCase();
+  final bLower = b.toLowerCase();
+  var ai = 0;
+  var bi = 0;
+
+  while (ai < aLower.length && bi < bLower.length) {
+    final aDigit = _isDigit(aLower[ai]);
+    final bDigit = _isDigit(bLower[bi]);
+
+    if (aDigit && bDigit) {
+      var an = 0;
+      while (ai < aLower.length && _isDigit(aLower[ai])) {
+        an = an * 10 + aLower.codeUnitAt(ai) - 48;
+        ai++;
+      }
+      var bn = 0;
+      while (bi < bLower.length && _isDigit(bLower[bi])) {
+        bn = bn * 10 + bLower.codeUnitAt(bi) - 48;
+        bi++;
+      }
+      if (an != bn) return an.compareTo(bn);
+    } else if (!aDigit && !bDigit) {
+      final cmp = aLower[ai].compareTo(bLower[bi]);
+      if (cmp != 0) return cmp;
+      ai++;
+      bi++;
+    } else {
+      return aDigit ? -1 : 1;
+    }
+  }
+
+  return (aLower.length - ai).compareTo(bLower.length - bi);
+}
+
+bool _isDigit(String ch) {
+  final c = ch.codeUnitAt(0);
+  return c >= 48 && c <= 57;
+}
+
 enum ContentSortOption { nameAsc, nameDesc, dateNewest, dateOldest }
 
 enum SortPreferenceContext {
@@ -276,7 +316,7 @@ List<IssueList> sortIssues(
   final sorted = [...issues];
 
   int compareByName(IssueList a, IssueList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      naturalCompare(a.name, b.name);
 
   DateTime? issueDate(IssueList issue) {
     return issue.storeDate ?? issue.coverDate ?? issue.modified;
@@ -560,9 +600,10 @@ List<CollectionItem> sortCollectionItems(
   final sorted = [...items];
 
   int compareByName(CollectionItem a, CollectionItem b) {
-    return _collectionItemName(
-      a,
-    ).toLowerCase().compareTo(_collectionItemName(b).toLowerCase());
+    return naturalCompare(
+      _collectionItemName(a),
+      _collectionItemName(b),
+    );
   }
 
   int compareByDate(CollectionItem a, CollectionItem b) {
@@ -603,7 +644,7 @@ List<T> sortItemsByNameAndDate<T>(
   final sorted = [...items];
 
   int compareByName(T a, T b) {
-    return nameOf(a).toLowerCase().compareTo(nameOf(b).toLowerCase());
+    return naturalCompare(nameOf(a), nameOf(b));
   }
 
   int compareByDate(T a, T b) {

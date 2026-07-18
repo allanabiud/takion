@@ -63,9 +63,9 @@ class SubscriptionPullReconciler {
     return subscriptions;
   }
 
-  Future<int> reconcile({bool force = false, int? onlySeriesId}) async {
+  Future<ReconcileResult> reconcile({bool force = false, int? onlySeriesId}) async {
     final runNow = await _shouldRun(force: force, onlySeriesId: onlySeriesId);
-    if (!runNow) return 0;
+    if (!runNow) return const ReconcileResult(upserted: 0, issueIds: []);
 
     final metronRepository = ref.read(metronRepositoryProvider);
     final pullListRepository = ref.read(pullListRepositoryProvider);
@@ -86,7 +86,7 @@ class SubscriptionPullReconciler {
       if (onlySeriesId == null) {
         await _recordRun();
       }
-      return 0;
+      return const ReconcileResult(upserted: 0, issueIds: []);
     }
 
     final hive = ref.read(hiveServiceProvider);
@@ -187,8 +187,14 @@ class SubscriptionPullReconciler {
     if (onlySeriesId == null) {
       await _recordRun();
     }
-    return upserted;
+    return ReconcileResult(upserted: upserted, issueIds: uniqueIssueIds.toList());
   }
+}
+
+class ReconcileResult {
+  const ReconcileResult({required this.upserted, required this.issueIds});
+  final int upserted;
+  final List<int> issueIds;
 }
 
 final subscriptionPullReconcilerProvider = Provider<SubscriptionPullReconciler>(

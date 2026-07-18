@@ -210,26 +210,30 @@ class LocalPullListRepository implements PullListRepository {
     final box = await _hiveService.openBox<Map>(_boxName);
     await box.delete(metronIssueId.toString());
     await _hiveService.deleteTimestamp(boxName, metronIssueId.toString());
+    await _hiveService.recordDeleteTimestamp(boxName, metronIssueId.toString());
   }
 
   @override
-  Future<void> deleteEntriesBySeriesId(int metronSeriesId) async {
+  Future<List<PullListEntry>> deleteEntriesBySeriesId(int metronSeriesId) async {
     final box = await _hiveService.openBox<Map>(_boxName);
-    final keysToDelete = box.values
-        .where((raw) {
-          final map = raw;
-          final status = map['entry_status'] as String;
-
-          final isUpcoming = status == 'upcoming';
-
-          return map['metron_series_id'] as int == metronSeriesId && isUpcoming;
-        })
-        .map((raw) => (raw)['metron_issue_id'].toString())
-        .toList();
+    final entriesToDelete = <PullListEntry>[];
+    final keysToDelete = <String>[];
+    for (final key in box.keys) {
+      final raw = box.get(key);
+      if (raw is! Map) continue;
+      final map = raw.cast<String, dynamic>();
+      if (map['metron_series_id'] as int == metronSeriesId &&
+          map['entry_status'] as String == 'upcoming') {
+        entriesToDelete.add(_fromMap(map));
+        keysToDelete.add(key);
+      }
+    }
     for (final key in keysToDelete) {
       await box.delete(key);
       await _hiveService.deleteTimestamp(boxName, key);
+      await _hiveService.recordDeleteTimestamp(boxName, key);
     }
+    return entriesToDelete;
   }
 
   @override

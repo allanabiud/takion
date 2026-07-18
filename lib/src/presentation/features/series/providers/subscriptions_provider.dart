@@ -58,15 +58,52 @@ void invalidateSubscriptionProvidersForWidget(WidgetRef ref) {
   ref.invalidate(subscribedSeriesPageProvider);
 }
 
-void invalidateOnSubscriptionToggle(WidgetRef ref, {int? seriesId, DateTime? selectedWeek}) {
+void invalidateOnSubscriptionToggle(WidgetRef ref, {int? seriesId, DateTime? selectedWeek, List<int>? affectedIssueIds}) {
   if (seriesId != null) ref.invalidate(seriesSubscriptionProvider(seriesId));
-  ref.invalidate(issuePullListEntryProvider);
+  _invalidateIssuePullProviders(ref, affectedIssueIds: affectedIssueIds);
   ref.invalidate(pullListEntriesForWeekProvider);
   ref.invalidate(pullsIssuesForWeekProvider);
   if (selectedWeek != null) ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
   ref.invalidate(currentWeekPullsProvider);
   ref.invalidate(currentWeekPullsCountProvider);
-  invalidateSubscriptionProvidersForWidget(ref);
+  ref.invalidate(activeSubscriptionsProvider);
+  ref.invalidate(activeSubscriptionsCountProvider);
+  ref.invalidate(subscribedSeriesListProvider);
+  ref.invalidate(subscribedSeriesPageProvider);
+}
+
+void invalidateOnSubscriptionToggleContainer(ProviderContainer container, {int? seriesId, DateTime? selectedWeek, List<int>? affectedIssueIds}) {
+  if (seriesId != null) container.invalidate(seriesSubscriptionProvider(seriesId));
+  _invalidateIssuePullProvidersContainer(container, affectedIssueIds: affectedIssueIds);
+  container.invalidate(pullListEntriesForWeekProvider);
+  container.invalidate(pullsIssuesForWeekProvider);
+  if (selectedWeek != null) container.invalidate(pullsIssuesForWeekProvider(selectedWeek));
+  container.invalidate(currentWeekPullsProvider);
+  container.invalidate(currentWeekPullsCountProvider);
+  container.invalidate(activeSubscriptionsProvider);
+  container.invalidate(activeSubscriptionsCountProvider);
+  container.invalidate(subscribedSeriesListProvider);
+  container.invalidate(subscribedSeriesPageProvider);
+}
+
+void _invalidateIssuePullProviders(WidgetRef ref, {List<int>? affectedIssueIds}) {
+  if (affectedIssueIds != null && affectedIssueIds.isNotEmpty) {
+    for (final issueId in affectedIssueIds) {
+      ref.invalidate(issuePullListEntryProvider(issueId));
+    }
+  } else {
+    ref.invalidate(issuePullListEntryProvider);
+  }
+}
+
+void _invalidateIssuePullProvidersContainer(ProviderContainer container, {List<int>? affectedIssueIds}) {
+  if (affectedIssueIds != null && affectedIssueIds.isNotEmpty) {
+    for (final issueId in affectedIssueIds) {
+      container.invalidate(issuePullListEntryProvider(issueId));
+    }
+  } else {
+    container.invalidate(issuePullListEntryProvider);
+  }
 }
 
 Map<String, dynamic> _seriesListToJson(SeriesList series) {

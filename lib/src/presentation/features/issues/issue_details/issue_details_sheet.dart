@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_more_options_sheet.dart';
 

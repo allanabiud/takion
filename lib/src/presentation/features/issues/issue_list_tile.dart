@@ -137,7 +137,7 @@ class IssueListTile extends ConsumerWidget {
     final effectiveRating = rating ?? providerStatus?.rating;
     final isFavorite =
         effectiveIssue.id != null &&
-        ref.watch(isIssueFavoriteProvider(effectiveIssue.id!)).asData?.value ==
+        ref.watch(favoriteIssueIdsProvider).asData?.value.contains(effectiveIssue.id!) ==
             true;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;

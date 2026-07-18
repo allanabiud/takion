@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart';
+import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
@@ -56,10 +60,6 @@ Future<void> showScrobbleSheet({
   bool? isSubscribed,
   DateTime? releaseDate,
 }) async {
-  final issueStatus = ref.read(issueCollectionStatusProvider(issueId));
-  final pullEntryAsync = ref.read(issuePullListEntryProvider(issueId));
-  final isInPullList = pullEntryAsync.asData?.value != null;
-
   final title = sheetTitle ?? 'Issue #$issueId';
 
   // Series id is supplied by the caller from the issue-list data (which always
@@ -67,14 +67,12 @@ Future<void> showScrobbleSheet({
   // fetching full issue details.
   final resolvedSeriesId = seriesId;
 
-  var addToCollection = issueStatus?.isCollected ?? false;
-  var markAsRead = issueStatus?.isRead ?? false;
-  var pullIssue = isInPullList;
-  var addToWishlist = issueStatus?.isWishlisted ?? false;
-  var selectedRating = (issueStatus?.rating ?? 0).clamp(0, 5);
+  var isPulling = false;
   ref.read(scrobbleIssueProvider(issueId).notifier).reset();
 
   if (!context.mounted) return;
+
+  final callerContext = context;
 
   TakionBottomSheet.show<void>(
     context: context,
@@ -90,6 +88,15 @@ Future<void> showScrobbleSheet({
             ? ref.watch(seriesSubscriptionProvider(resolvedSeriesId))
             : null;
         final liveSubscribed = subState?.asData?.value?.isActive ?? false;
+        final pullEntryWatch = ref.watch(issuePullListEntryProvider(issueId));
+        final pullIssue = pullEntryWatch.asData?.value != null;
+        final collectionStatus = ref.watch(issueCollectionStatusProvider(issueId));
+        final isCollected = collectionStatus?.isCollected ?? false;
+
+        var addToCollection = collectionStatus?.isCollected ?? false;
+        var markAsRead = collectionStatus?.isRead ?? false;
+        var addToWishlist = collectionStatus?.isWishlisted ?? false;
+        var selectedRating = (collectionStatus?.rating ?? 0).clamp(0, 5);
 
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -187,10 +194,11 @@ Future<void> showScrobbleSheet({
                           : Icons.shopping_bag_outlined,
                       label: 'Pull',
                       color: toggleColor(pullIssue),
-                      onPressed: isSubmitting
+                      onPressed: isSubmitting || isPulling || pullEntryWatch.isLoading
                           ? null
                           : () async {
-                              final newValue = !pullIssue;
+                              final currentlyPulled = pullIssue;
+                              final newValue = !currentlyPulled;
                               final seriesIdLocal = resolvedSeriesId;
 
                               if (newValue && seriesIdLocal == null) {
@@ -198,9 +206,8 @@ Future<void> showScrobbleSheet({
                                 return;
                               }
 
-                              setModalState(() {
-                                pullIssue = newValue;
-                              });
+                              isPulling = true;
+                              setModalState(() {});
 
                               try {
                                 if (!newValue) {
@@ -229,10 +236,12 @@ Future<void> showScrobbleSheet({
                               } catch (e) {
                                 AppLogger.warning('Failed to update pull list', error: e);
                                 if (context.mounted) {
-                                  setModalState(() {
-                                    pullIssue = !newValue;
-                                  });
                                   TakionAlerts.error(context, 'Failed to update pull list');
+                                }
+                              } finally {
+                                isPulling = false;
+                                if (context.mounted) {
+                                  setModalState(() {});
                                 }
                               }
                             },
@@ -332,8 +341,53 @@ Future<void> showScrobbleSheet({
                   _SubscribeTile(
                     seriesId: resolvedSeriesId,
                     initialSubscribed: liveSubscribed,
+                    callerContext: callerContext,
                   ),
                 ],
+                const Divider(),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.playlist_add),
+                  title: const Text('Add to Reading List'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => AddToReadingListBottomSheet.show(
+                    context: callerContext,
+                    targetId: 'issue-$issueId',
+                    isSeries: false,
+                  ),
+                ),
+                if (isCollected)
+                  ListTile(
+                    leading: const Icon(Icons.library_books_outlined),
+                    title: const Text('My Details'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showEditMyDetailsSheet(
+                      callerContext,
+                      ref,
+                      issueId,
+                    ),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.share),
+                  title: const Text('Share'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    try {
+                      final details = await ref.read(
+                        issueDetailsProvider(issueId).future,
+                      );
+                      if (!context.mounted) return;
+                      await shareIssueResourceUrl(callerContext, details);
+                    } catch (e) {
+                      if (context.mounted) {
+                        TakionAlerts.error(
+                          callerContext,
+                          'Could not load issue details',
+                        );
+                      }
+                    }
+                  },
+                ),
                 if (submitError != null) ...[
                   const SizedBox(height: 6),
                   Text(
@@ -364,10 +418,12 @@ Future<void> showScrobbleSheet({
 class _SubscribeTile extends ConsumerStatefulWidget {
   final int seriesId;
   final bool initialSubscribed;
+  final BuildContext callerContext;
 
   const _SubscribeTile({
     required this.seriesId,
     required this.initialSubscribed,
+    required this.callerContext,
   });
 
   @override
@@ -408,12 +464,13 @@ class _SubscribeTileState extends ConsumerState<_SubscribeTile> {
               setState(() {
                 _isUpdating = true;
               });
+              final container = ref.container;
               try {
                 await toggleSeriesSubscription(
-                  context,
-                  ref,
-                  !subscribed,
-                  widget.seriesId,
+                  context: widget.callerContext,
+                  container: container,
+                  enabled: !subscribed,
+                  seriesId: widget.seriesId,
                 );
               } finally {
                 if (mounted) {

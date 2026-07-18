@@ -433,7 +433,7 @@ class DriveBackupService {
           final driveTs = entry['t'] as int?;
           if (driveTs == null) continue;
           final compositeKey = '$boxName:$key';
-          if (changedKeys.containsKey(compositeKey)) continue;
+          if (changedKeys.containsKey(compositeKey) || deletedKeys.containsKey(compositeKey)) continue;
           final localTs = allLocalTimestamps[compositeKey];
           if (localTs == null || driveTs > localTs) {
             if (entry['v'] == null) {

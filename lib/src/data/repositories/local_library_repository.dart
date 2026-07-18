@@ -258,6 +258,7 @@ class LocalLibraryRepository implements LibraryRepository {
     final box = await _hiveService.openBox<Map>(_readLogsBox);
     await box.delete(readLogId);
     await _hiveService.deleteTimestamp(readLogsBoxName, readLogId);
+    await _hiveService.recordDeleteTimestamp(readLogsBoxName, readLogId);
   }
 
   @override
@@ -266,6 +267,7 @@ class LocalLibraryRepository implements LibraryRepository {
     final itemsBox = await _hiveService.openBox<Map>(_itemsBox);
     await itemsBox.delete(metronIssueId.toString());
     await _hiveService.deleteTimestamp(itemsBoxName, metronIssueId.toString());
+    await _hiveService.recordDeleteTimestamp(itemsBoxName, metronIssueId.toString());
 
     if (item == null) return;
     final logsBox = await _hiveService.openBox<Map>(_readLogsBox);
@@ -279,6 +281,7 @@ class LocalLibraryRepository implements LibraryRepository {
     for (final key in keysToDelete) {
       await logsBox.delete(key);
       await _hiveService.deleteTimestamp(readLogsBoxName, key);
+      await _hiveService.recordDeleteTimestamp(readLogsBoxName, key);
     }
   }
 

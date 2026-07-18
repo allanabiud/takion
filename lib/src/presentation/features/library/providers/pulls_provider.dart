@@ -54,8 +54,6 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
           .toSet();
 
       final issuesToPull = <IssueList>[];
-      final missingSubscriptionEntries =
-          <({int metronSeriesId, int metronIssueId, DateTime? releaseDate})>[];
 
       for (final issue in weeklyIssues) {
         final issueId = issue.id;
@@ -69,24 +67,7 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
         final seriesId = issue.series?.id;
         if (seriesId != null && subscribedSeriesIds.contains(seriesId)) {
           issuesToPull.add(issue);
-          missingSubscriptionEntries.add((
-            metronSeriesId: seriesId,
-            metronIssueId: issueId,
-            releaseDate: issue.storeDate ?? issue.coverDate,
-          ));
         }
-      }
-
-      if (missingSubscriptionEntries.isNotEmpty) {
-        // Run this in the background to avoid blocking the UI,
-        // but it will ensure the local pull list is updated
-        ref
-            .read(pullListRepositoryProvider)
-            .upsertSubscriptionEntries(missingSubscriptionEntries)
-            .then((_) {
-              // Invalidate pull list provider for this week to reflect changes
-              ref.invalidate(pullListEntriesForWeekProvider(date));
-            });
       }
 
       return issuesToPull;

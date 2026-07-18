@@ -46,7 +46,8 @@ class IssueCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final isFavorite =
         issueId != null &&
-        ref.watch(isIssueFavoriteProvider(issueId!)).asData?.value == true;
+        ref.watch(favoriteIssueIdsProvider).asData?.value.contains(issueId!) ==
+            true;
     final showReadTickOverlay =
         ref.watch(showReadIssueTickOverlayProvider).value ?? false;
     final id = issueId;

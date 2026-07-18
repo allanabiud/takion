@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 class IssueMyDetailsData {
@@ -12,7 +12,7 @@ class IssueMyDetailsData {
   final List<LibraryReadLog> readLogs;
 }
 
-final issueMyDetailsProvider = FutureProvider.family<IssueMyDetailsData, int>((
+final issueMyDetailsProvider = FutureProvider.autoDispose.family<IssueMyDetailsData, int>((
   ref,
   issueId,
 ) async {
@@ -23,7 +23,7 @@ final issueMyDetailsProvider = FutureProvider.family<IssueMyDetailsData, int>((
 });
 
 final issueMyDetailsControllerProvider =
-    NotifierProvider.family<IssueMyDetailsController, AsyncValue<void>, int>(
+    NotifierProvider.autoDispose.family<IssueMyDetailsController, AsyncValue<void>, int>(
       IssueMyDetailsController.new,
     );
 
@@ -46,100 +46,126 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
     required String? conditionGrade,
     required String? notes,
   }) async {
+    final keepAlive = ref.keepAlive();
     state = const AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
-      final libraryRepository = ref.read(libraryRepositoryProvider);
+      try {
+        final libraryRepository = ref.read(libraryRepositoryProvider);
 
-      final existing = await libraryRepository.getItemByIssueId(_issueId);
-      final seriesId = await resolveIssueSeriesId(
-        ref,
-        _issueId,
-        existingSeriesId: existing?.metronSeriesId,
-      );
-
-      if (seriesId == null || seriesId <= 0) {
-        throw StateError(
-          'Could not save this issue because its series metadata is unavailable. '
-          'Try refreshing the issue details, then save again.',
-        );
-      }
-
-      if (!isCollected && !isRead) {
-        if (existing != null) {
-          await libraryRepository.deleteItemByIssueId(_issueId);
-        }
-      } else {
-        final now = DateTime.now().toUtc();
-        final resolvedRating = isRead ? rating : null;
-        final firstReadAt = isRead ? (existing?.firstReadAt ?? now) : null;
-
-        await libraryRepository.upsertItem(
-          metronIssueId: _issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus: isCollected
-              ? LibraryOwnershipStatus.owned
-              : LibraryOwnershipStatus.notOwned,
-          isRead: isRead,
-          rating: resolvedRating,
-          purchaseDate: purchaseDate,
-          pricePaid: pricePaid,
-          quantityOwned: quantityOwned,
-          format: format,
-          firstReadAt: firstReadAt,
-          conditionGrade: conditionGrade,
-          notes: notes,
-          acquiredOn: existing?.acquiredOn ?? now,
+        final existing = await libraryRepository.getItemByIssueId(_issueId);
+        final seriesId = await resolveIssueSeriesId(
+          ref,
+          _issueId,
+          existingSeriesId: existing?.metronSeriesId,
         );
 
-        if (isRead && !(existing?.isRead ?? false)) {
-          await libraryRepository.addReadLog(
-            metronIssueId: _issueId,
-            readAt: now,
+        if (seriesId == null || seriesId <= 0) {
+          throw StateError(
+            'Could not save this issue because its series metadata is unavailable. '
+            'Try refreshing the issue details, then save again.',
           );
         }
+
+        if (!isCollected && !isRead) {
+          if (existing != null) {
+            await libraryRepository.deleteItemByIssueId(_issueId);
+          }
+          ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
+        } else {
+          final now = DateTime.now().toUtc();
+          final resolvedRating = isRead ? rating : null;
+          final firstReadAt = isRead ? (existing?.firstReadAt ?? now) : null;
+
+          await libraryRepository.upsertItem(
+            metronIssueId: _issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: isCollected
+                ? LibraryOwnershipStatus.owned
+                : LibraryOwnershipStatus.notOwned,
+            isRead: isRead,
+            rating: resolvedRating,
+            purchaseDate: purchaseDate,
+            pricePaid: pricePaid,
+            quantityOwned: quantityOwned,
+            format: format,
+            firstReadAt: firstReadAt,
+            conditionGrade: conditionGrade,
+            notes: notes,
+            acquiredOn: existing?.acquiredOn ?? now,
+          );
+
+          if (isRead && !(existing?.isRead ?? false)) {
+            await libraryRepository.addReadLog(
+              metronIssueId: _issueId,
+              readAt: now,
+            );
+          }
+
+          ref.read(collectionStatusCacheProvider.notifier).updateIssue(
+            _issueId,
+            IssueCollectionStatus(
+              isCollected: isCollected,
+              isWishlisted: existing?.ownershipStatus == LibraryOwnershipStatus.wishlist,
+              isRead: isRead,
+              rating: resolvedRating,
+            ),
+          );
+        }
+        ref.invalidate(issueMyDetailsProvider(_issueId));
+      } finally {
+        keepAlive.close();
       }
-      await invalidateLibraryItemsLocalCache(ref);
-      ref.invalidate(issueMyDetailsProvider(_issueId));
-      ref.invalidate(issueCollectionStatusProvider(_issueId));
     });
   }
 
   Future<void> addReadLogAt(DateTime readAt) async {
+    final keepAlive = ref.keepAlive();
     state = const AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
-      final libraryRepository = ref.read(libraryRepositoryProvider);
-      final item = await libraryRepository.getItemByIssueId(_issueId);
-      if (item == null) {
-        throw StateError('Add the issue to your library before logging reads.');
+      try {
+        final libraryRepository = ref.read(libraryRepositoryProvider);
+        final item = await libraryRepository.getItemByIssueId(_issueId);
+        if (item == null) {
+          throw StateError('Add the issue to your library before logging reads.');
+        }
+
+        final normalizedReadAt = readAt.toUtc();
+
+        await libraryRepository.upsertItem(
+          metronIssueId: item.metronIssueId,
+          metronSeriesId: item.metronSeriesId,
+          ownershipStatus: item.ownershipStatus,
+          isRead: true,
+          rating: item.rating,
+          purchaseDate: item.purchaseDate,
+          pricePaid: item.pricePaid,
+          quantityOwned: item.quantityOwned,
+          format: item.format,
+          firstReadAt: item.firstReadAt ?? normalizedReadAt,
+          conditionGrade: item.conditionGrade,
+          notes: item.notes,
+          acquiredOn: item.acquiredOn,
+        );
+
+        await libraryRepository.addReadLog(
+          metronIssueId: _issueId,
+          readAt: normalizedReadAt,
+        );
+        ref.read(collectionStatusCacheProvider.notifier).updateIssue(
+          _issueId,
+          IssueCollectionStatus(
+            isCollected: item.ownershipStatus == LibraryOwnershipStatus.owned,
+            isWishlisted: item.ownershipStatus == LibraryOwnershipStatus.wishlist,
+            isRead: true,
+            rating: item.rating,
+          ),
+        );
+        ref.invalidate(issueMyDetailsProvider(_issueId));
+      } finally {
+        keepAlive.close();
       }
-
-      final normalizedReadAt = readAt.toUtc();
-
-      await libraryRepository.upsertItem(
-        metronIssueId: item.metronIssueId,
-        metronSeriesId: item.metronSeriesId,
-        ownershipStatus: item.ownershipStatus,
-        isRead: true,
-        rating: item.rating,
-        purchaseDate: item.purchaseDate,
-        pricePaid: item.pricePaid,
-        quantityOwned: item.quantityOwned,
-        format: item.format,
-        firstReadAt: item.firstReadAt ?? normalizedReadAt,
-        conditionGrade: item.conditionGrade,
-        notes: item.notes,
-        acquiredOn: item.acquiredOn,
-      );
-
-      await libraryRepository.addReadLog(
-        metronIssueId: _issueId,
-        readAt: normalizedReadAt,
-      );
-      await invalidateLibraryItemsLocalCache(ref);
-      ref.invalidate(issueMyDetailsProvider(_issueId));
-      ref.invalidate(issueCollectionStatusProvider(_issueId));
     });
   }
 
@@ -148,43 +174,46 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
   }
 
   Future<void> deleteReadLogById(String readLogId) async {
+    final keepAlive = ref.keepAlive();
     state = const AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
-      final libraryRepository = ref.read(libraryRepositoryProvider);
-      final item = await libraryRepository.getItemByIssueId(_issueId);
-      if (item == null) {
-        throw StateError('No library item found for this issue.');
+      try {
+        final libraryRepository = ref.read(libraryRepositoryProvider);
+        final item = await libraryRepository.getItemByIssueId(_issueId);
+        if (item == null) {
+          throw StateError('No library item found for this issue.');
+        }
+
+        await libraryRepository.deleteReadLogById(readLogId);
+
+        final remainingLogs = await libraryRepository.getReadLogsByIssueId(
+          _issueId,
+        );
+        remainingLogs.sort((a, b) => a.readAt.compareTo(b.readAt));
+        final nextFirstReadAt = remainingLogs.isEmpty
+            ? null
+            : remainingLogs.first.readAt;
+
+        await libraryRepository.upsertItem(
+          metronIssueId: item.metronIssueId,
+          metronSeriesId: item.metronSeriesId,
+          ownershipStatus: item.ownershipStatus,
+          isRead: item.isRead,
+          rating: item.rating,
+          purchaseDate: item.purchaseDate,
+          pricePaid: item.pricePaid,
+          quantityOwned: item.quantityOwned,
+          format: item.format,
+          firstReadAt: nextFirstReadAt,
+          conditionGrade: item.conditionGrade,
+          notes: item.notes,
+          acquiredOn: item.acquiredOn,
+        );
+        ref.invalidate(issueMyDetailsProvider(_issueId));
+      } finally {
+        keepAlive.close();
       }
-
-      await libraryRepository.deleteReadLogById(readLogId);
-
-      final remainingLogs = await libraryRepository.getReadLogsByIssueId(
-        _issueId,
-      );
-      remainingLogs.sort((a, b) => a.readAt.compareTo(b.readAt));
-      final nextFirstReadAt = remainingLogs.isEmpty
-          ? null
-          : remainingLogs.first.readAt;
-
-      await libraryRepository.upsertItem(
-        metronIssueId: item.metronIssueId,
-        metronSeriesId: item.metronSeriesId,
-        ownershipStatus: item.ownershipStatus,
-        isRead: item.isRead,
-        rating: item.rating,
-        purchaseDate: item.purchaseDate,
-        pricePaid: item.pricePaid,
-        quantityOwned: item.quantityOwned,
-        format: item.format,
-        firstReadAt: nextFirstReadAt,
-        conditionGrade: item.conditionGrade,
-        notes: item.notes,
-        acquiredOn: item.acquiredOn,
-      );
-      await invalidateLibraryItemsLocalCache(ref);
-      ref.invalidate(issueMyDetailsProvider(_issueId));
-      ref.invalidate(issueCollectionStatusProvider(_issueId));
     });
   }
 }

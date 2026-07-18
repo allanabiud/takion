@@ -29,7 +29,7 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
 
     final previousStatus = previousIssueId == null
         ? null
-        : ref.watch(issueCollectionStatusProvider(previousIssueId));
+        : ref.watch(issueCollectionStatusProvider(previousIssueId!));
     final prevIsRead = previousStatus?.isRead ?? false;
 
     final seriesName = item.seriesName?.trim();

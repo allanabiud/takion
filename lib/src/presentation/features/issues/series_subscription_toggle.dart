@@ -6,21 +6,23 @@ import 'package:takion/src/presentation/features/releases/providers/selected_wee
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-Future<void> toggleSeriesSubscription(
-  BuildContext context,
-  WidgetRef ref,
-  bool enabled,
-  int seriesId,
-) async {
+Future<void> toggleSeriesSubscription({
+  required BuildContext context,
+  required ProviderContainer container,
+  required bool enabled,
+  required int seriesId,
+}) async {
   try {
-    final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
+    final subscriptionRepository = container.read(subscriptionRepositoryProvider);
+    final pullListRepository = container.read(pullListRepositoryProvider);
+
+    List<int>? affectedIssueIds;
     if (enabled) {
       await subscriptionRepository.subscribe(metronSeriesId: seriesId);
     } else {
       await subscriptionRepository.unsubscribe(seriesId);
-      await ref
-          .read(pullListRepositoryProvider)
-          .deleteEntriesBySeriesId(seriesId);
+      final deleted = await pullListRepository.deleteEntriesBySeriesId(seriesId);
+      affectedIssueIds = deleted.map((e) => e.metronIssueId).toList();
     }
     final now = DateTime.now();
     final startOfWeek = DateTime(
@@ -28,19 +30,22 @@ Future<void> toggleSeriesSubscription(
       now.month,
       now.day,
     ).subtract(Duration(days: now.weekday % 7));
-    await ref
-        .read(pullListRepositoryProvider)
-        .regenerateFromSubscriptions(fromDate: startOfWeek);
+    await pullListRepository.regenerateFromSubscriptions(fromDate: startOfWeek);
+
     if (enabled) {
-      await ref
+      final result = await container
           .read(subscriptionPullReconcilerProvider)
           .reconcile(force: true, onlySeriesId: seriesId);
+      affectedIssueIds = result.issueIds;
     }
-    final selectedWeek = ref.read(selectedWeekProvider);
-    invalidateOnSubscriptionToggle(ref,
+
+    final selectedWeek = container.read(selectedWeekProvider);
+    invalidateOnSubscriptionToggleContainer(container,
       seriesId: seriesId,
       selectedWeek: selectedWeek,
+      affectedIssueIds: affectedIssueIds,
     );
+
     if (!context.mounted) return;
     (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
       context,
@@ -50,13 +55,11 @@ Future<void> toggleSeriesSubscription(
       onUndo: () async {
         if (enabled) {
           await subscriptionRepository.unsubscribe(seriesId);
-          await ref
-              .read(pullListRepositoryProvider)
-              .deleteEntriesBySeriesId(seriesId);
+          await pullListRepository.deleteEntriesBySeriesId(seriesId);
         } else {
           await subscriptionRepository.subscribe(metronSeriesId: seriesId);
         }
-        invalidateOnSubscriptionToggle(ref,
+        invalidateOnSubscriptionToggleContainer(container,
           seriesId: seriesId,
           selectedWeek: selectedWeek,
         );

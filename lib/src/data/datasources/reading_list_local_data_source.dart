@@ -38,6 +38,7 @@ class ReadingListLocalDataSource implements ReadingListRepository {
     final box = await _getBox();
     await box.delete(id);
     await _hiveService.deleteTimestamp(_boxName, id);
+    await _hiveService.recordDeleteTimestamp(_boxName, id);
   }
 
   @override

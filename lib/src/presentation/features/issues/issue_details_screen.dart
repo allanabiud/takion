@@ -231,6 +231,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
 
       ref.invalidate(isIssueFavoriteProvider(_currentIssueId));
       ref.invalidate(favoriteIssuesListProvider);
+      ref.invalidate(favoriteIssueIdsProvider);
 
       if (mounted) {
         final added = !isFavorite;
@@ -243,6 +244,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
             await repository.toggleIssueFavorite(_currentIssueId);
             ref.invalidate(isIssueFavoriteProvider(_currentIssueId));
             ref.invalidate(favoriteIssuesListProvider);
+            ref.invalidate(favoriteIssueIdsProvider);
           },
         );
       }
@@ -254,7 +256,12 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
   }
 
   Future<void> _setSeriesSubscription(bool enabled, int seriesId) async {
-    await toggleSeriesSubscription(context, ref, enabled, seriesId);
+    await toggleSeriesSubscription(
+      context: context,
+      container: ref.container,
+      enabled: enabled,
+      seriesId: seriesId,
+    );
   }
 
   @override

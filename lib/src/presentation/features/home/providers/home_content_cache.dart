@@ -32,6 +32,11 @@ class HomeContentCache {
     await metaBox.put(metaKey, DateTime.now().millisecondsSinceEpoch);
   }
 
+  Future<void> deleteCachedAt(String metaKey) async {
+    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
+    await metaBox.delete(metaKey);
+  }
+
   Future<List<Map<String, dynamic>>?> readJsonList(String key) async {
     final box = await _hiveService.openBox<dynamic>(_homeContentBox);
     final value = box.get(key);

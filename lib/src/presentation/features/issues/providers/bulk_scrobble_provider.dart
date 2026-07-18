@@ -1,14 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 final bulkScrobbleProvider =
-    NotifierProvider<BulkScrobbleController, AsyncValue<void>>(
+    NotifierProvider.autoDispose<BulkScrobbleController, AsyncValue<void>>(
       BulkScrobbleController.new,
     );
 
@@ -111,8 +109,6 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
         }
 
         await invalidateLibraryItemsLocalCache(ref);
-        ref.invalidate(collectionIssueStatusMapProvider);
-        invalidateLibraryCollectionProviders(ref);
       } finally {
         keepAlive.close();
       }
