@@ -4,9 +4,8 @@ import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
@@ -99,9 +98,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           }
           AppLogger.info('Scrobble: deleted item for issue #$_issueId');
           ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
-          ref.invalidate(allLibraryItemsProvider);
-          ref.invalidate(continueReadingAllSuggestionsProvider);
-          ref.invalidate(continueReadingSuggestionsProvider);
+          await invalidateLibraryItemsLocalCache(ref);
           ref.invalidate(issueMyDetailsProvider(_issueId));
           return;
         }
@@ -166,9 +163,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             rating: targetIsRead ? (rating ?? existing?.rating) : null,
           ),
         );
-        ref.invalidate(allLibraryItemsProvider);
-        ref.invalidate(continueReadingAllSuggestionsProvider);
-        ref.invalidate(continueReadingSuggestionsProvider);
+        await invalidateLibraryItemsLocalCache(ref);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();

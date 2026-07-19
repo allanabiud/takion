@@ -156,16 +156,26 @@ class SubscriptionPullReconciler {
           final issuePage = await metronRepository.getSeriesIssueList(
             seriesId,
             nextUrl: nextUrl,
+            ordering: '-store_date',
+            storeDateGte: fromDate,
+            storeDateLte: toDate,
           );
+          var pageHasInWindow = false;
+          var anyBeforeWindow = false;
           for (final issue in issuePage.results) {
             final issueId = issue.id;
             if (issueId == null || uniqueIssueIds.contains(issueId)) continue;
             final releaseDate = issue.storeDate ?? issue.coverDate;
             if (releaseDate == null) continue;
             final releaseDay = _dateOnly(releaseDate);
-            if (releaseDay.isBefore(fromDate) || releaseDay.isAfter(toDate)) {
+            if (releaseDay.isBefore(fromDate)) {
+              anyBeforeWindow = true;
               continue;
             }
+            if (releaseDay.isAfter(toDate)) {
+              continue;
+            }
+            pageHasInWindow = true;
             uniqueIssueIds.add(issueId);
             batch.add((
               metronSeriesId: seriesId,
@@ -178,6 +188,10 @@ class SubscriptionPullReconciler {
           }
           final nextPage = issuePage.nextPage;
           if (nextPage == null) break;
+          // Ordered by -store_date (newest first). Once we hit a page with
+          // no in-window issues and at least one issue before the window,
+          // all subsequent pages will be older still — safe to break.
+          if (!pageHasInWindow && anyBeforeWindow) break;
           nextUrl = issuePage.next;
         }
       }

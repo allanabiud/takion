@@ -70,6 +70,9 @@ abstract class CatalogRepository {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });

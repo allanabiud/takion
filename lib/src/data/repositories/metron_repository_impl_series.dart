@@ -308,97 +308,116 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final cachedDtos = await _localDataSource.getSeriesIssueListResults(
-      seriesId,
-      page: page,
-      limit: limit,
-    );
-    final cachedAt = await _localDataSource.getSeriesIssueListResultsCachedAt(
-      seriesId,
-      page: page,
-      limit: limit,
-    );
-    final cachedMeta = await _localDataSource.getSeriesIssueListResultsMeta(
-      seriesId,
-      page: page,
-      limit: limit,
-    );
+    final hasFilters = ordering != null ||
+        storeDateGte != null ||
+        storeDateLte != null;
 
-    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
-      final isFresh =
-          cachedAt != null &&
-          MetronCachePolicies.seriesIssueList.isFresh(cachedAt, _now());
-      if (!isFresh) {
-        _refreshInBackground(
-          task: () async {
-            final remotePage = nextUrl != null
-                ? await _remoteDataSource.getSeriesIssueList(
-                    seriesId,
-                    nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
-                    cancelToken: cancelToken,
-                  )
-                : await _remoteDataSource.getSeriesIssueList(
-                    seriesId,
-                    page: page,
-                    limit: limit,
-                    cancelToken: cancelToken,
-                  );
-            await _localDataSource.cacheSeriesIssueListResults(
-              seriesId,
-              remotePage.results,
-              page: page,
-              limit: limit,
-              count: remotePage.count,
-              next: remotePage.next,
-              previous: remotePage.previous,
-            );
-            _indexSeriesNamesFromIssueList(remotePage.results);
-          },
-          cacheKey: 'series_issue_list:$seriesId:${nextUrl ?? "$page"}',
-          cooldown: MetronCachePolicies.seriesIssueList.refreshCooldown,
-        );
-      }
-      if (cachedMeta != null) {
-        return SeriesIssueListPage(
-          count: cachedMeta.count,
-          next: cachedMeta.next,
-          previous: cachedMeta.previous,
-          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
-          currentPage: page,
-        );
+    if (!forceRefresh && !hasFilters) {
+      final cachedDtos = await _localDataSource.getSeriesIssueListResults(
+        seriesId,
+        page: page,
+        limit: limit,
+      );
+      final cachedAt =
+          await _localDataSource.getSeriesIssueListResultsCachedAt(
+        seriesId,
+        page: page,
+        limit: limit,
+      );
+      final cachedMeta =
+          await _localDataSource.getSeriesIssueListResultsMeta(
+        seriesId,
+        page: page,
+        limit: limit,
+      );
+
+      if (cachedDtos != null && cachedDtos.isNotEmpty) {
+        final isFresh =
+            cachedAt != null &&
+            MetronCachePolicies.seriesIssueList.isFresh(cachedAt, _now());
+        if (!isFresh) {
+          _refreshInBackground(
+            task: () async {
+              final remotePage = nextUrl != null
+                  ? await _remoteDataSource.getSeriesIssueList(
+                      seriesId,
+                      nextUrl: Uri.parse(nextUrl),
+                      limit: limit,
+                      cancelToken: cancelToken,
+                    )
+                  : await _remoteDataSource.getSeriesIssueList(
+                      seriesId,
+                      page: page,
+                      limit: limit,
+                      cancelToken: cancelToken,
+                    );
+              await _localDataSource.cacheSeriesIssueListResults(
+                seriesId,
+                remotePage.results,
+                page: page,
+                limit: limit,
+                count: remotePage.count,
+                next: remotePage.next,
+                previous: remotePage.previous,
+              );
+              _indexSeriesNamesFromIssueList(remotePage.results);
+            },
+            cacheKey: 'series_issue_list:$seriesId:${nextUrl ?? "$page"}',
+            cooldown: MetronCachePolicies.seriesIssueList.refreshCooldown,
+          );
+        }
+        if (cachedMeta != null) {
+          return SeriesIssueListPage(
+            count: cachedMeta.count,
+            next: cachedMeta.next,
+            previous: cachedMeta.previous,
+            results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+            currentPage: page,
+          );
+        }
       }
     }
 
     try {
-      final key = '$seriesId|${nextUrl ?? "$page"}|$forceRefresh';
+      final key = '$seriesId|${nextUrl ?? "$page"}|$forceRefresh|$ordering|${storeDateGte?.millisecondsSinceEpoch}|${storeDateLte?.millisecondsSinceEpoch}';
       return _coalesce(_seriesIssueListInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getSeriesIssueList(
                 seriesId,
                 nextUrl: Uri.parse(nextUrl),
                 limit: limit,
+                ordering: ordering,
+                storeDateGte: storeDateGte,
+                storeDateLte: storeDateLte,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getSeriesIssueList(
                 seriesId,
                 page: page,
                 limit: limit,
+                ordering: ordering,
+                storeDateGte: storeDateGte,
+                storeDateLte: storeDateLte,
                 cancelToken: cancelToken,
               );
-        await _localDataSource.cacheSeriesIssueListResults(
-          seriesId,
-          remotePage.results,
-          page: page,
-          limit: limit,
-          count: remotePage.count,
-          next: remotePage.next,
-          previous: remotePage.previous,
-        );
-        _indexSeriesNamesFromIssueList(remotePage.results);
+        if (!hasFilters) {
+          await _localDataSource.cacheSeriesIssueListResults(
+            seriesId,
+            remotePage.results,
+            page: page,
+            limit: limit,
+            count: remotePage.count,
+            next: remotePage.next,
+            previous: remotePage.previous,
+          );
+          _indexSeriesNamesFromIssueList(remotePage.results);
+        }
         return SeriesIssueListPage(
           count: remotePage.count,
           next: remotePage.next,
@@ -410,14 +429,27 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
       if (_isCancelled(error)) rethrow;
-      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
-        return SeriesIssueListPage(
-          count: cachedMeta.count,
-          next: cachedMeta.next,
-          previous: cachedMeta.previous,
-          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
-          currentPage: page,
+      if (!hasFilters) {
+        final cachedDtos = await _localDataSource.getSeriesIssueListResults(
+          seriesId,
+          page: page,
+          limit: limit,
         );
+        final cachedMeta =
+            await _localDataSource.getSeriesIssueListResultsMeta(
+          seriesId,
+          page: page,
+          limit: limit,
+        );
+        if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+          return SeriesIssueListPage(
+            count: cachedMeta.count,
+            next: cachedMeta.next,
+            previous: cachedMeta.previous,
+            results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+            currentPage: page,
+          );
+        }
       }
       rethrow;
     }

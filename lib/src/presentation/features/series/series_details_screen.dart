@@ -50,13 +50,15 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     });
     try {
       final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
+      List<int>? affectedIssueIds;
       if (enabled) {
         await subscriptionRepository.subscribe(metronSeriesId: widget.seriesId);
       } else {
         await subscriptionRepository.unsubscribe(widget.seriesId);
-        await ref
+        final deleted = await ref
             .read(pullListRepositoryProvider)
             .deleteEntriesBySeriesId(widget.seriesId);
+        affectedIssueIds = deleted.map((e) => e.metronIssueId).toList();
       }
       final now = DateTime.now();
       final startOfWeek = DateTime(
@@ -68,15 +70,17 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           .read(pullListRepositoryProvider)
           .regenerateFromSubscriptions(fromDate: startOfWeek);
       if (enabled) {
-        await ref
+        final result = await ref
             .read(subscriptionPullReconcilerProvider)
             .reconcile(force: true, onlySeriesId: widget.seriesId);
+        affectedIssueIds = result.issueIds;
       }
       final selectedWeek = ref.read(selectedWeekProvider);
       invalidateOnSubscriptionToggle(
         ref,
         seriesId: widget.seriesId,
         selectedWeek: selectedWeek,
+        affectedIssueIds: affectedIssueIds,
       );
       if (mounted) {
         (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(

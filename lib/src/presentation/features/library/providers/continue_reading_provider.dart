@@ -66,8 +66,19 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
   int? maxSeriesCount,
 }) async {
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-  final readItems = libraryItems.where((item) => item.isRead).toList();
-  if (readItems.isEmpty) return const [];
+
+  // Only collected+read items qualify a series for Continue Reading.
+  final collectedReadItems = libraryItems.where(
+    (item) =>
+        item.ownershipStatus == LibraryOwnershipStatus.owned && item.isRead,
+  ).toList();
+  if (collectedReadItems.isEmpty) return const [];
+
+  // All read issue IDs (collected or not) are used for the "skip already read" logic.
+  final allReadIssueIds = libraryItems
+      .where((item) => item.isRead)
+      .map((item) => item.metronIssueId)
+      .toSet();
 
   final readIssueIdsBySeries = <int, Set<int>>{};
   final latestReadAtBySeries = <int, DateTime>{};
@@ -76,7 +87,7 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
   DateTime readTimestamp(LibraryItem item) =>
       item.firstReadAt ?? item.updatedAt;
 
-  for (final item in readItems) {
+  for (final item in collectedReadItems) {
     readIssueIdsBySeries
         .putIfAbsent(item.metronSeriesId, () => <int>{})
         .add(item.metronIssueId);
@@ -105,7 +116,7 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
         ref,
         seriesId: seriesId,
         lastReadIssueId: lastReadIssueId,
-        readIssueIds: readIssueIdsBySeries[seriesId] ?? const <int>{},
+        readIssueIds: allReadIssueIds,
       );
       if (nextIssue == null) return null;
       return ContinueReadingSuggestion(

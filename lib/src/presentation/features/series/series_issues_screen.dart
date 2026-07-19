@@ -288,6 +288,7 @@ Future<List<SeriesIssueBulkCandidate>> allSeriesIssues(
     final issuePage = await metronRepository.getSeriesIssueList(
       seriesId,
       page: page,
+      limit: 500,
     );
     for (final issue in issuePage.results) {
       final issueId = issue.id;

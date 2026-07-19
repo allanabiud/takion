@@ -49,6 +49,9 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
     CancelToken? cancelToken,
   });
   Future<CharacterListResponseDto> getCharacterList({
@@ -411,15 +414,43 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
     CancelToken? cancelToken,
   }) async {
+    String formatDate(DateTime d) =>
+        "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
-        : await _dio.get(
-            'series/$seriesId/issue_list/',
-            queryParameters: {'page': page},
-            cancelToken: cancelToken,
-          );
+        : (storeDateGte != null || storeDateLte != null)
+            ? await _dio.get(
+                'issue/',
+                queryParameters: {
+                  'series_id': seriesId,
+                  'series': seriesId,
+                  'page': page,
+                  if (limit != metronDefaultPageSize) 'limit': limit,
+                  if (ordering != null && ordering.trim().isNotEmpty)
+                    'ordering': ordering.trim(),
+                  if (storeDateGte != null)
+                    'store_date_range_after': formatDate(storeDateGte),
+                  if (storeDateLte != null)
+                    'store_date_range_before': formatDate(storeDateLte),
+                },
+                cancelToken: cancelToken,
+              )
+            : await _dio.get(
+                'series/$seriesId/issue_list/',
+                queryParameters: {
+                  'page': page,
+                  if (limit != metronDefaultPageSize) 'limit': limit,
+                  if (ordering != null && ordering.trim().isNotEmpty)
+                    'ordering': ordering.trim(),
+                },
+                cancelToken: cancelToken,
+              );
 
     return SeriesIssueListResponseDto.fromJson(
       response.data as Map<String, dynamic>,

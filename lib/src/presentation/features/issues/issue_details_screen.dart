@@ -210,10 +210,12 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
         : null;
     final isSubscribed = subscriptionAsync?.isActive ?? false;
 
+    final title = issue != null ? _displayTitle(issue) : null;
     showScrobbleSheet(
       context: context,
       ref: ref,
       issueId: _currentIssueId,
+      sheetTitle: title,
       seriesId: seriesId,
       isSubscribed: isSubscribed,
       releaseDate: issue?.storeDate ?? issue?.coverDate,
