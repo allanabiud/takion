@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/icon.png" alt="Takion App Icon" width="128" />
+  <img src="assets/branding/icon.png" alt="Takion App Icon" width="128" />
 </p>
 
 <h1 align="center">Takion</h1>

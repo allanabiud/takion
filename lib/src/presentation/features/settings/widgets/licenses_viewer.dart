@@ -76,7 +76,7 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                   child: Row(
                     children: [
                       SvgPicture.asset(
-                        'assets/images/takion_logo.svg',
+                        'assets/branding/takion_logo.svg',
                         height: 32,
                         colorFilter: ColorFilter.mode(
                           theme.colorScheme.primary,

@@ -53,7 +53,7 @@ class _AboutBody extends ConsumerWidget {
                   );
                 },
                 child: SvgPicture.asset(
-                  'assets/images/takion_logo.svg',
+                  'assets/branding/takion_logo.svg',
                   height: 64,
                   colorFilter: ColorFilter.mode(
                     Theme.of(context).colorScheme.primary,

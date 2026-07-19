@@ -373,7 +373,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       child: ScaleTransition(
                         scale: _logoFade,
                         child: SvgPicture.asset(
-                          'assets/images/takion_logo.svg',
+                          'assets/branding/takion_logo.svg',
                           height: 96,
                           colorFilter: ColorFilter.mode(
                             theme.colorScheme.primary,
