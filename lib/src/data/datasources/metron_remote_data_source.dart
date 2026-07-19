@@ -11,6 +11,10 @@ abstract class MetronRemoteDataSource {
   Future<Response> getWeeklyReleasesForDate(DateTime date);
   Future<Response> getFocReleasesForDate(DateTime date);
   Future<Response> getIssueDetails(int issueId);
+  Future<IssueSearchResponseDto> searchIssuesByUpc(
+    String upc, {
+    CancelToken? cancelToken,
+  });
   Future<IssueSearchResponseDto> searchIssues(
     String query, {
     Uri? nextUrl,
@@ -276,6 +280,21 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   @override
   Future<Response> getIssueDetails(int issueId) async {
     return _dio.get('issue/$issueId/');
+  }
+
+  @override
+  Future<IssueSearchResponseDto> searchIssuesByUpc(
+    String upc, {
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'issue/',
+      queryParameters: {'upc': upc},
+      cancelToken: cancelToken,
+    );
+    return IssueSearchResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   @override

@@ -305,4 +305,97 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       rethrow;
     }
   }
+
+  Future<IssueSearchPage> searchIssuesByUpc(
+    String upc, {
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getIssueSearchResults(
+      'upc:$upc',
+      page: 1,
+      limit: 1,
+    );
+    final cachedAt = await _localDataSource.getIssueSearchResultsCachedAt(
+      'upc:$upc',
+      page: 1,
+      limit: 1,
+    );
+    final cachedMeta = await _localDataSource.getIssueSearchResultsMeta(
+      'upc:$upc',
+      page: 1,
+      limit: 1,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchIssuesByUpc(
+              upc,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheIssueSearchResults(
+              'upc:$upc',
+              remotePage.results,
+              page: 1,
+              limit: 1,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:upc:$upc',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        return IssueSearchPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: 1,
+        );
+      }
+    }
+
+    try {
+      final remotePage = await _remoteDataSource.searchIssuesByUpc(
+        upc,
+        cancelToken: cancelToken,
+      );
+      await _localDataSource.cacheIssueSearchResults(
+        'upc:$upc',
+        remotePage.results,
+        page: 1,
+        limit: 1,
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+      );
+      return IssueSearchPage(
+        count: remotePage.count,
+        next: remotePage.next,
+        previous: remotePage.previous,
+        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: 1,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return IssueSearchPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: 1,
+        );
+      }
+      rethrow;
+    }
+  }
 }

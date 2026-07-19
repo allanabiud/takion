@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/features/tags/widgets/tag_manager_sheet.dart';
 
 void showCollectionSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
@@ -157,27 +156,6 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
                     onChanged: (v) => ref
                         .read(showReadIssueTickOverlayProvider.notifier)
                         .setEnabled(v),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              buildSettingsGroup(
-                context,
-                'Organization',
-                [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.label_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: const Text(
-                      'Tag Management',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: const Text('Create and organize custom tags'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => showTagManagerSheet(context, ref),
                   ),
                 ],
               ),

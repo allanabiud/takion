@@ -7,10 +7,8 @@ import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
@@ -68,6 +66,7 @@ Future<void> showScrobbleSheet({
   final resolvedSeriesId = seriesId;
 
   var isPulling = false;
+  var isSharing = false;
   ref.read(scrobbleIssueProvider(issueId).notifier).reset();
 
   if (!context.mounted) return;
@@ -223,7 +222,8 @@ Future<void> showScrobbleSheet({
                                 }
 
                                 ref.invalidate(issuePullListEntryProvider(issueId));
-                                ref.invalidate(pullsIssuesForWeekProvider(ref.read(selectedWeekProvider)));
+                                ref.invalidate(pullListEntriesForWeekProvider);
+                                ref.invalidate(pullsIssuesForWeekProvider);
                                 ref.invalidate(currentWeekPullsProvider);
 
                                 if (context.mounted) {
@@ -311,6 +311,8 @@ Future<void> showScrobbleSheet({
                               selectedRating = previousRating;
                               markAsRead = previousRead;
                             });
+                          } else {
+                            TakionAlerts.libraryMarkedAsRead(context);
                           }
                         });
                   },
@@ -322,7 +324,7 @@ Future<void> showScrobbleSheet({
                     ref
                         .read(scrobbleIssueProvider(issueId).notifier)
                         .scrobble(
-                          rating: null,
+                          rating: 0,
                         )
                         .then((_) {
                           if (!context.mounted) return;
@@ -335,17 +337,14 @@ Future<void> showScrobbleSheet({
                   },
                 ),
                 const SizedBox(height: 12),
-                if (resolvedSeriesId != null) ...[
-                  const Divider(),
-                  const SizedBox(height: 8),
+                const Divider(),
+                const SizedBox(height: 8),
+                if (resolvedSeriesId != null)
                   _SubscribeTile(
                     seriesId: resolvedSeriesId,
                     initialSubscribed: liveSubscribed,
                     callerContext: callerContext,
                   ),
-                ],
-                const Divider(),
-                const SizedBox(height: 8),
                 ListTile(
                   leading: const Icon(Icons.playlist_add),
                   title: const Text('Add to Reading List'),
@@ -368,25 +367,50 @@ Future<void> showScrobbleSheet({
                     ),
                   ),
                 ListTile(
-                  leading: const Icon(Icons.share),
+                  leading: isSharing
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.share),
                   title: const Text('Share'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    try {
-                      final details = await ref.read(
-                        issueDetailsProvider(issueId).future,
-                      );
-                      if (!context.mounted) return;
-                      await shareIssueResourceUrl(callerContext, details);
-                    } catch (e) {
-                      if (context.mounted) {
-                        TakionAlerts.error(
-                          callerContext,
-                          'Could not load issue details',
-                        );
-                      }
-                    }
-                  },
+                  onTap: isSharing
+                      ? null
+                      : () async {
+                          setModalState(() => isSharing = true);
+                          try {
+                            AppLogger.info('Share: fetching issue #$issueId details');
+                            final repo = ref.read(catalogRepositoryProvider);
+                            final details = await repo.getIssueDetails(issueId);
+
+                            if (!context.mounted) return;
+
+                            final resourceUrl = details.resourceUrl?.trim();
+                            AppLogger.info('Share: issue #$issueId resourceUrl=$resourceUrl');
+
+                            if (resourceUrl == null || resourceUrl.isEmpty) {
+                              TakionAlerts.noShareUrl(callerContext, 'issue');
+                              return;
+                            }
+
+                            await shareIssueResourceUrl(callerContext, details);
+                            AppLogger.info('Share: completed for issue #$issueId');
+                          } catch (e) {
+                            AppLogger.warning('Share: failed for issue #$issueId', error: e);
+                            if (context.mounted) {
+                              TakionAlerts.error(
+                                callerContext,
+                                'Could not load issue details',
+                              );
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              setModalState(() => isSharing = false);
+                            }
+                          }
+                        },
                 ),
                 if (submitError != null) ...[
                   const SizedBox(height: 6),

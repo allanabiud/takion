@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 class IssueMyDetailsData {
@@ -72,6 +74,9 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
           ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
+          ref.invalidate(allLibraryItemsProvider);
+          ref.invalidate(continueReadingAllSuggestionsProvider);
+          ref.invalidate(continueReadingSuggestionsProvider);
         } else {
           final now = DateTime.now().toUtc();
           final resolvedRating = isRead ? rating : null;
@@ -112,6 +117,9 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             ),
           );
         }
+        ref.invalidate(allLibraryItemsProvider);
+        ref.invalidate(continueReadingAllSuggestionsProvider);
+        ref.invalidate(continueReadingSuggestionsProvider);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();
@@ -162,6 +170,9 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             rating: item.rating,
           ),
         );
+        ref.invalidate(allLibraryItemsProvider);
+        ref.invalidate(continueReadingAllSuggestionsProvider);
+        ref.invalidate(continueReadingSuggestionsProvider);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();
@@ -210,6 +221,9 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           notes: item.notes,
           acquiredOn: item.acquiredOn,
         );
+        ref.invalidate(allLibraryItemsProvider);
+        ref.invalidate(continueReadingAllSuggestionsProvider);
+        ref.invalidate(continueReadingSuggestionsProvider);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();

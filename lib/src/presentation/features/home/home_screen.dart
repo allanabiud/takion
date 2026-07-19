@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/releases/providers/selected_wee
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 @RoutePage()
 class HomeScreen extends ConsumerStatefulWidget {
@@ -215,35 +216,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: InkWell(
-                onTap: () {
-                  context
-                      .findAncestorStateOfType<MainScreenState>()
-                      ?.openSearch();
-                },
-                borderRadius: BorderRadius.circular(28),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.search,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Search comics...',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          context
+                              .findAncestorStateOfType<MainScreenState>()
+                              ?.openSearch();
+                        },
+                        borderRadius: BorderRadius.circular(28),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.search,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Search comics...',
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: const Icon(LucideIcons.scanBarcode),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      onPressed: () => context.pushRoute(const BarcodeScannerRoute()),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                 ),
               ),
             ),
@@ -605,25 +620,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ? null
                               : ref.watch(issuePullListEntryProvider(issueId));
 
-                           return IssueCard(
-                             issueId: issueId,
-                             imageUrl: issue.image,
-                             title:
-                                 '${issue.series?.name ?? 'Issue'} #${issue.number}',
-                             isCollected: collectionStatus?.isCollected ?? false,
-                             isWishlisted:
-                                 collectionStatus?.isWishlisted ?? false,
-                             isRead: collectionStatus?.isRead ?? false,
-                             isPulled: pullEntry?.asData?.value != null,
-                             onTap: issueId == null
-                                 ? null
-                                 : () => context.pushRoute(
-                                     IssueDetailsRoute(
-                                       issueId: issueId,
-                                       initialImageUrl: issue.image,
-                                     ),
-                                   ),
-                           );
+                          return IssueCard(
+                            issueId: issueId,
+                            imageUrl: issue.image,
+                            title:
+                                '${issue.series?.name ?? 'Issue'} #${issue.number}',
+                            seriesId: issue.series?.id,
+                            isCollected: collectionStatus?.isCollected ?? false,
+                            isWishlisted:
+                                collectionStatus?.isWishlisted ?? false,
+                            isRead: collectionStatus?.isRead ?? false,
+                            isPulled: pullEntry?.asData?.value != null,
+                            onTap: issueId == null
+                                ? null
+                                : () => context.pushRoute(
+                                    IssueDetailsRoute(
+                                      issueId: issueId,
+                                      initialImageUrl: issue.image,
+                                    ),
+                                  ),
+                          );
                         },
                       ),
                     ),

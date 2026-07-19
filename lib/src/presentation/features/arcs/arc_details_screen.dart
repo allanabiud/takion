@@ -70,11 +70,16 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       initialChildSize: 0.55,
-      sheetContentBuilder: (context, d, ref) => _buildArcSheetSlivers(d, context, ref),
+      sheetContentBuilder: (context, d, ref) =>
+          _buildArcSheetSlivers(d, context, ref),
     );
   }
 
-  Iterable<Widget> _buildArcSheetSlivers(ArcDetails details, BuildContext context, WidgetRef ref) sync* {
+  Iterable<Widget> _buildArcSheetSlivers(
+    ArcDetails details,
+    BuildContext context,
+    WidgetRef ref,
+  ) sync* {
     final description = details.desc?.trim();
     final hasDescription = description != null && description.isNotEmpty;
     if (hasDescription) {
@@ -86,9 +91,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
         ),
       );
     }
-    yield SliverToBoxAdapter(
-      child: _ArcIssuesSection(arcId: details.id),
-    );
+    yield SliverToBoxAdapter(child: _ArcIssuesSection(arcId: details.id));
     yield const SliverToBoxAdapter(child: SizedBox(height: 16));
     yield SliverToBoxAdapter(
       child: Padding(
@@ -148,10 +151,10 @@ class _ArcIssuesSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(
-                title: '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
-                onViewAll: () => context.pushRoute(
-                  ArcIssuesRoute(arcId: arcId),
-                ),
+                title:
+                    '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
+                onViewAll: () =>
+                    context.pushRoute(ArcIssuesRoute(arcId: arcId)),
               ),
               const SizedBox(height: 12),
               HorizontalPreviewSection(
@@ -166,16 +169,18 @@ class _ArcIssuesSection extends ConsumerWidget {
                   return IssueCard(
                     issueId: issueId,
                     imageUrl: issue.image,
-                    title: '${issue.series?.name ?? issue.name} #${issue.number}',
+                    title:
+                        '${issue.series?.name ?? issue.name} #${issue.number}',
+                    seriesId: issue.series?.id,
                     compact: true,
                     onTap: issueId == null
                         ? null
                         : () => context.pushRoute(
-                          IssueDetailsRoute(
-                            issueId: issueId,
-                            initialImageUrl: issue.image,
+                            IssueDetailsRoute(
+                              issueId: issueId,
+                              initialImageUrl: issue.image,
+                            ),
                           ),
-                        ),
                   );
                 },
               ),
@@ -199,10 +204,14 @@ class _ArcDatabaseIdsSection extends StatelessWidget {
       entries.add(
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -226,11 +235,7 @@ class _ArcDatabaseIdsSection extends StatelessWidget {
       children: [
         const SectionHeader(title: 'DATABASE IDS'),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: entries,
-        ),
+        Wrap(spacing: 6, runSpacing: 6, children: entries),
       ],
     );
   }
@@ -243,7 +248,8 @@ class _ArcModifiedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatted = '${modified.day.toString().padLeft(2, '0')}/${modified.month.toString().padLeft(2, '0')}/${modified.year}';
+    final formatted =
+        '${modified.day.toString().padLeft(2, '0')}/${modified.month.toString().padLeft(2, '0')}/${modified.year}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

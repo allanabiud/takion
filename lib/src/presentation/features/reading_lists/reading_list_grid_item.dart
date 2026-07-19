@@ -35,11 +35,12 @@ class ReadingListGridItem extends ConsumerWidget {
     final theme = Theme.of(context);
     final metadataAsync = allowRemoteHydration
         ? ref.watch(
-            readingListItemMetadataProvider((
-              targetId: item.targetId,
-              isSeries: item.isSeries,
-            )),
-          ) as AsyncValue<Object?>
+                readingListItemMetadataProvider((
+                  targetId: item.targetId,
+                  isSeries: item.isSeries,
+                )),
+              )
+              as AsyncValue<Object?>
         : ref.watch(
             readingListItemCachedMetadataProvider((
               targetId: item.targetId,
@@ -67,17 +68,18 @@ class ReadingListGridItem extends ConsumerWidget {
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
                 border: isSelected
-                    ? Border.all(
-                        color: theme.colorScheme.primary,
-                        width: 1.5,
-                      )
+                    ? Border.all(color: theme.colorScheme.primary, width: 1.5)
                     : null,
               ),
               child: Stack(
                 children: [
                   metadataAsync.when(
                     data: (metadata) {
-                      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+                      final id =
+                          int.tryParse(
+                            item.targetId.replaceAll(RegExp(r'\D'), ''),
+                          ) ??
+                          0;
                       if (item.isSeries) {
                         SeriesList series;
                         String? imageUrl;
@@ -117,11 +119,15 @@ class ReadingListGridItem extends ConsumerWidget {
 
                         String title = id > 0 ? 'Issue #$id' : 'Issue';
                         String? imageUrl;
+                        int? seriesId;
 
                         if (metadata is IssueDetails) {
                           final seriesName = metadata.series?.name ?? '';
-                          title = seriesName.isNotEmpty ? '$seriesName #${metadata.number}' : 'Issue #${metadata.number}';
+                          title = seriesName.isNotEmpty
+                              ? '$seriesName #${metadata.number}'
+                              : 'Issue #${metadata.number}';
                           imageUrl = metadata.image;
+                          seriesId = metadata.series?.id;
                         } else {
                           ref.watch(entityImageVersionProvider);
                           final cache = ref.read(entityImageCacheProvider);
@@ -133,6 +139,7 @@ class ReadingListGridItem extends ConsumerWidget {
                           issueId: id > 0 ? id : null,
                           imageUrl: imageUrl,
                           title: title,
+                          seriesId: seriesId,
                           onTap: onTap,
                           width: double.infinity,
                           isRead: effectiveIsRead,
@@ -145,7 +152,11 @@ class ReadingListGridItem extends ConsumerWidget {
                       }
                     },
                     loading: () {
-                      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+                      final id =
+                          int.tryParse(
+                            item.targetId.replaceAll(RegExp(r'\D'), ''),
+                          ) ??
+                          0;
                       if (item.isSeries) {
                         return SeriesCard(
                           series: SeriesList(
@@ -173,7 +184,11 @@ class ReadingListGridItem extends ConsumerWidget {
                       }
                     },
                     error: (error, stack) {
-                      final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+                      final id =
+                          int.tryParse(
+                            item.targetId.replaceAll(RegExp(r'\D'), ''),
+                          ) ??
+                          0;
                       if (item.isSeries) {
                         return SeriesCard(
                           series: SeriesList(

@@ -113,6 +113,11 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: BarcodeScannerRoute.page,
+      path: '/barcode-scanner',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: CollectionReadStatusRoute.page,
       path: '/my-comics/read-status',
       guards: [authGuard],

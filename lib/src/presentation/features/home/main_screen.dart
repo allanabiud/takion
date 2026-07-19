@@ -6,6 +6,7 @@ import 'package:takion/src/presentation/features/profile/providers/profile_provi
 import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 @RoutePage()
 class MainScreen extends ConsumerStatefulWidget {
@@ -339,6 +340,13 @@ class MainScreenState extends ConsumerState<MainScreen>
           )
         else
           const SizedBox(width: 48),
+        IconButton(
+          tooltip: 'Scan barcode',
+          icon: const Icon(LucideIcons.scanBarcode),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          onPressed: () => context.pushRoute(const BarcodeScannerRoute()),
+        ),
+        const SizedBox(width: 4),
       ],
     );
   }

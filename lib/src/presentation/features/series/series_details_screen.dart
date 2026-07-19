@@ -73,7 +73,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             .reconcile(force: true, onlySeriesId: widget.seriesId);
       }
       final selectedWeek = ref.read(selectedWeekProvider);
-      invalidateOnSubscriptionToggle(ref,
+      invalidateOnSubscriptionToggle(
+        ref,
         seriesId: widget.seriesId,
         selectedWeek: selectedWeek,
       );
@@ -94,7 +95,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 metronSeriesId: widget.seriesId,
               );
             }
-            invalidateOnSubscriptionToggle(ref,
+            invalidateOnSubscriptionToggle(
+              ref,
               seriesId: widget.seriesId,
               selectedWeek: selectedWeek,
             );
@@ -187,13 +189,22 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
         allowRemoteFetch: true,
       )),
     );
-    final issuesPreviewAsync = ref.watch(seriesDetailsIssuesProvider(widget.seriesId));
-    final subscriptionAsync = ref.watch(seriesSubscriptionProvider(widget.seriesId));
-    final isFavoriteAsync = ref.watch(isSeriesFavoriteProvider(widget.seriesId));
-    final ownedCountAsync = ref.watch(seriesOwnedCountProvider(widget.seriesId));
+    final issuesPreviewAsync = ref.watch(
+      seriesDetailsIssuesProvider(widget.seriesId),
+    );
+    final subscriptionAsync = ref.watch(
+      seriesSubscriptionProvider(widget.seriesId),
+    );
+    final isFavoriteAsync = ref.watch(
+      isSeriesFavoriteProvider(widget.seriesId),
+    );
+    final ownedCountAsync = ref.watch(
+      seriesOwnedCountProvider(widget.seriesId),
+    );
 
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
-    final isSubscriptionLoading = subscriptionAsync.isLoading || _isUpdatingSubscription;
+    final isSubscriptionLoading =
+        subscriptionAsync.isLoading || _isUpdatingSubscription;
     final isFavorite = isFavoriteAsync.asData?.value ?? false;
     final issuesPreview = issuesPreviewAsync.asData != null
         ? sortIssues(
@@ -245,97 +256,112 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 ),
               ),
             const SizedBox(height: 16),
-            Row(children: [
-              Expanded(
-                flex: 3,
-                child: FilledButton(
-                  style: isSubscribed
-                      ? FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.errorContainer,
-                          foregroundColor: theme.colorScheme.onErrorContainer,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          textStyle: theme.textTheme.titleMedium,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        )
-                      : FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          textStyle: theme.textTheme.titleMedium,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                  onPressed: isSubscriptionLoading
-                      ? null
-                      : () => _setSeriesSubscription(!isSubscribed),
-                  child: isSubscriptionLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isSubscribed ? Icons.notifications_active : Icons.notifications_outlined,
-                              size: 26,
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: FilledButton(
+                    style: isSubscribed
+                        ? FilledButton.styleFrom(
+                            backgroundColor: theme.colorScheme.errorContainer,
+                            foregroundColor: theme.colorScheme.onErrorContainer,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            textStyle: theme.textTheme.titleMedium,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                isSubscribed ? 'Unsubscribe' : 'Subscribe',
-                                overflow: TextOverflow.ellipsis,
+                          )
+                        : FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            textStyle: theme.textTheme.titleMedium,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                    onPressed: isSubscriptionLoading
+                        ? null
+                        : () => _setSeriesSubscription(!isSubscribed),
+                    child: isSubscriptionLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isSubscribed
+                                    ? Icons.notifications_active
+                                    : Icons.notifications_outlined,
+                                size: 26,
                               ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  isSubscribed ? 'Unsubscribe' : 'Subscribe',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  flex: 1,
+                  child: isFavorite
+                      ? FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            foregroundColor:
+                                theme.colorScheme.onPrimaryContainer,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            iconSize: 28,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ],
+                          ),
+                          onPressed: _toggleFavorite,
+                          child: const Icon(Icons.favorite),
+                        )
+                      : FilledButton.tonal(
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            iconSize: 28,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: _toggleFavorite,
+                          child: const Icon(Icons.favorite_border),
                         ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                flex: 1,
-                child: isFavorite
-                    ? FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          foregroundColor: theme.colorScheme.onPrimaryContainer,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          iconSize: 28,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _toggleFavorite,
-                        child: const Icon(Icons.favorite),
-                      )
-                    : FilledButton.tonal(
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          iconSize: 28,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _toggleFavorite,
-                        child: const Icon(Icons.favorite_border),
+                const SizedBox(width: 6),
+                Expanded(
+                  flex: 1,
+                  child: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      iconSize: 28,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                flex: 1,
-                child: FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
-                    foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    iconSize: 28,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => _showSeriesMoreOptionsSheet(
+                      context,
+                      ref,
+                      widget.seriesId,
+                      seriesName: d.name,
+                      seriesYear: d.yearBegan,
+                    ),
+                    child: const Icon(Icons.more_vert),
                   ),
-                  onPressed: () => _showSeriesMoreOptionsSheet(
-                    context,
-                    ref,
-                    widget.seriesId,
-                    seriesName: d.name,
-                    seriesYear: d.yearBegan,
-                  ),
-                  child: const Icon(Icons.more_vert),
                 ),
-              ),
-            ]),
+              ],
+            ),
             if (d.issueCount != null && d.issueCount! > 0) ...[
               const SizedBox(height: 12),
               SectionHeader(
@@ -345,10 +371,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                     : null,
               ),
               const SizedBox(height: 8),
-              _SeriesCompletionCompact(
-                seriesId: d.id,
-                total: d.issueCount!,
-              ),
+              _SeriesCompletionCompact(seriesId: d.id, total: d.issueCount!),
             ],
           ],
         );
@@ -362,9 +385,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
+                    placeholder: (context, url) =>
+                        Container(color: Theme.of(context).colorScheme.surface),
                     errorWidget: (context, url, error) => Container(
                       color: Theme.of(context).colorScheme.surface,
                       child: const Icon(Icons.broken_image_outlined),
@@ -375,9 +397,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                   color: Theme.of(context).colorScheme.surface,
                   child: const Icon(Icons.image_outlined, size: 40),
                 ),
-          loading: () => Container(
-            color: Theme.of(context).colorScheme.surface,
-          ),
+          loading: () =>
+              Container(color: Theme.of(context).colorScheme.surface),
           error: (_, _) => Container(
             color: Theme.of(context).colorScheme.surface,
             child: const Icon(Icons.error_outline),
@@ -415,10 +436,14 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             entries.add(
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.4,
+                  ),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.3,
+                    ),
                   ),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -432,6 +457,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
               ),
             );
           }
+
           addEntry('Metron', '${d.id}');
           if (d.cvId != null) addEntry('CV', '${d.cvId}');
           if (d.gcdId != null) addEntry('GCD', '${d.gcdId}');
@@ -475,7 +501,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SectionHeader(
-                    title: '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
+                    title:
+                        '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
                     onViewAll: () => context.pushRoute(
                       SeriesIssuesRoute(seriesId: widget.seriesId),
                     ),
@@ -493,7 +520,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                       return IssueCard(
                         issueId: issueId,
                         imageUrl: issue.image,
-                        title: '${issue.series?.name ?? issue.name} #${issue.number}',
+                        title:
+                            '${issue.series?.name ?? issue.name} #${issue.number}',
+                        seriesId: issue.series?.id,
                         onTap: issueId == null
                             ? null
                             : () {
@@ -545,9 +574,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'Last modified: ${modifiedValue(d.modified)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
             ),
@@ -559,9 +588,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
 }
 
 class _SeriesAssociatedCard extends StatelessWidget {
-  const _SeriesAssociatedCard({
-    required this.associated,
-  });
+  const _SeriesAssociatedCard({required this.associated});
 
   final List<SeriesDetailsAssociated> associated;
 
@@ -582,7 +609,9 @@ class _SeriesAssociatedCard extends StatelessWidget {
               constraints: BoxConstraints(maxWidth: chipWidth),
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.25,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: theme.colorScheme.primary.withValues(alpha: 0.5),
@@ -594,12 +623,13 @@ class _SeriesAssociatedCard extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: () {
-                      context.pushRoute(
-                        SeriesDetailsRoute(seriesId: entry.id),
-                      );
+                      context.pushRoute(SeriesDetailsRoute(seriesId: entry.id));
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -649,15 +679,20 @@ class _SeriesGenresCard extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 4,
-          children: genres.map(
-            (genre) => Chip(
-              label: Text(genre.name, style: Theme.of(context).textTheme.labelSmall),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-          ).toList(),
+          children: genres
+              .map(
+                (genre) => Chip(
+                  label: Text(
+                    genre.name,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -688,11 +723,11 @@ class _SeriesInfoCard extends StatelessWidget {
         InfoGridItem(label: 'Status', value: details.status!),
       if (details.volume != null)
         InfoGridItem(label: 'Volume', value: '${details.volume}'),
-      if (years != null)
-        InfoGridItem(label: 'Years', value: years),
+      if (years != null) InfoGridItem(label: 'Years', value: years),
       if (details.issueCount != null)
         InfoGridItem(label: 'Issues', value: '${details.issueCount}'),
-      if (details.imprint?.name != null && details.imprint!.name.trim().isNotEmpty)
+      if (details.imprint?.name != null &&
+          details.imprint!.name.trim().isNotEmpty)
         InfoGridItem(label: 'Imprint', value: details.imprint!.name.trim()),
     ];
 
@@ -755,10 +790,7 @@ class _SeriesCompletionCompact extends ConsumerWidget {
   final int seriesId;
   final int total;
 
-  const _SeriesCompletionCompact({
-    required this.seriesId,
-    required this.total,
-  });
+  const _SeriesCompletionCompact({required this.seriesId, required this.total});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

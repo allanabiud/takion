@@ -18,8 +18,18 @@ import 'package:url_launcher/url_launcher.dart';
 
 String _monthYear(DateTime date) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   return '${months[date.month - 1]} ${date.year}';
 }
@@ -121,10 +131,7 @@ class _CharacterDetailsScreenState
     final isIssuesLoading = issueListAsync.isLoading;
 
     final previewIssues = allIssues.isNotEmpty
-        ? sortIssues(
-            allIssues,
-            ContentSortOption.dateNewest,
-          ).take(5).toList()
+        ? sortIssues(allIssues, ContentSortOption.dateNewest).take(5).toList()
         : <IssueList>[];
 
     return DetailScreenShell<CharacterDetails>(
@@ -208,26 +215,17 @@ class _CharacterDetailsScreenState
                           children: [
                             Expanded(
                               flex: 2,
-                              child: SkeletonBox(
-                                borderRadius: 12,
-                                height: 70,
-                              ),
+                              child: SkeletonBox(borderRadius: 12, height: 70),
                             ),
                             SizedBox(width: 6),
                             Expanded(
                               flex: 2,
-                              child: SkeletonBox(
-                                borderRadius: 12,
-                                height: 70,
-                              ),
+                              child: SkeletonBox(borderRadius: 12, height: 70),
                             ),
                             SizedBox(width: 6),
                             Expanded(
                               flex: 4,
-                              child: SkeletonBox(
-                                borderRadius: 12,
-                                height: 70,
-                              ),
+                              child: SkeletonBox(borderRadius: 12, height: 70),
                             ),
                           ],
                         ),
@@ -247,10 +245,7 @@ class _CharacterDetailsScreenState
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: isIssuesLoading
                     ? const ShimmerWidget(
-                        child: SkeletonBox(
-                          borderRadius: 14,
-                          height: 90,
-                        ),
+                        child: SkeletonBox(borderRadius: 14, height: 90),
                       )
                     : _CharacterFirstAppearanceCard(issue: firstAppearance!),
               ),
@@ -287,8 +282,7 @@ class _CharacterDetailsScreenState
                                 scrollDirection: Axis.horizontal,
                                 itemCount: 5,
                                 padding: EdgeInsets.zero,
-                                itemBuilder: (context, index) =>
-                                    const Padding(
+                                itemBuilder: (context, index) => const Padding(
                                   padding: EdgeInsets.only(right: 12),
                                   child: SkeletonBox(
                                     width: 150,
@@ -307,9 +301,7 @@ class _CharacterDetailsScreenState
                           SectionHeader(
                             title: 'Recently Appeared In',
                             onViewAll: () => context.pushRoute(
-                              CharacterIssuesRoute(
-                                characterId: data.id,
-                              ),
+                              CharacterIssuesRoute(characterId: data.id),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -327,6 +319,7 @@ class _CharacterDetailsScreenState
                                 imageUrl: issue.image,
                                 title:
                                     '${issue.series?.name ?? issue.name} #${issue.number}',
+                                seriesId: issue.series?.id,
                                 onTap: issueId == null
                                     ? null
                                     : () {
@@ -369,9 +362,8 @@ class _CharacterDetailsScreenState
                       entityId: team.id,
                       name: team.name,
                       width: 110,
-                      onTap: () => context.pushRoute(
-                        TeamDetailsRoute(teamId: team.id),
-                      ),
+                      onTap: () =>
+                          context.pushRoute(TeamDetailsRoute(teamId: team.id)),
                     );
                   },
                 ),
@@ -695,9 +687,9 @@ class _CharacterInfoCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Last modified: $modifiedValue',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           ),
         ],
       ],
@@ -710,14 +702,14 @@ class _CharacterInfoCard extends StatelessWidget {
       entries.add(
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context)
-                  .colorScheme
-                  .outlineVariant
-                  .withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -731,6 +723,7 @@ class _CharacterInfoCard extends StatelessWidget {
         ),
       );
     }
+
     addEntry('Metron', '${details.id}');
     if (details.cvId != null) addEntry('CV', '${details.cvId}');
     if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
@@ -740,11 +733,7 @@ class _CharacterInfoCard extends StatelessWidget {
       children: [
         const SectionHeader(title: 'DATABASE IDS'),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: entries,
-        ),
+        Wrap(spacing: 6, runSpacing: 6, children: entries),
       ],
     );
   }

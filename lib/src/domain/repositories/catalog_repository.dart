@@ -27,6 +27,12 @@ abstract class CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<IssueSearchPage> searchIssuesByUpc(
+    String upc, {
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
   Future<IssueSearchPage> getIssueList({
     String? nextUrl,
     int page = 1,

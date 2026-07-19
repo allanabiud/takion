@@ -132,13 +132,15 @@ class ReleasesScreen extends ConsumerWidget {
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w700,
                             ),
-                              children: [
-                                TextSpan(
-                                  text: pullsCountAsync == 1
-                                      ? ' Pull This Week'
-                                      : ' Pulls This Week',
+                            children: [
+                              TextSpan(
+                                text: pullsCountAsync == 1
+                                    ? ' Pull This Week'
+                                    : ' Pulls This Week',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -178,6 +180,7 @@ class ReleasesScreen extends ConsumerWidget {
                               issueId: issueId,
                               imageUrl: issue.image,
                               title: issue.name,
+                              seriesId: issue.series?.id,
                               isCollected: isCollected,
                               isWishlisted: isWishlisted,
                               isRead: isRead,

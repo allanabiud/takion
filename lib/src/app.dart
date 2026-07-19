@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/core/logging/talker_setup.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
@@ -207,7 +209,11 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
       ),
       themeMode: themeSettings.themeMode,
       debugShowCheckedModeBanner: false,
-      routerConfig: _appRouter.config(),
+      routerConfig: _appRouter.config(
+        navigatorObservers: () => [
+          TalkerRouteObserver(talker),
+        ],
+      ),
       builder: (context, child) {
         final bannerColor = Theme.of(context).colorScheme.errorContainer;
         final bannerTextColor = Theme.of(

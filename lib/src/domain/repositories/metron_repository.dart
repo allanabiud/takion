@@ -33,6 +33,13 @@ abstract class MetronRepository implements CatalogRepository {
   });
 
   @override
+  Future<IssueSearchPage> searchIssuesByUpc(
+    String upc, {
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
+  @override
   Future<IssueSearchPage> getIssueList({
     String? nextUrl,
     int page = 1,

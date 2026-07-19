@@ -37,7 +37,6 @@ export 'series_list.dart';
 export 'series_list_page.dart';
 export 'series_search_page.dart';
 export 'series_subscription.dart';
-export 'tag.dart';
 export 'team_details.dart';
 export 'team_list.dart';
 export 'team_list_page.dart';

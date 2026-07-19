@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/features/tags/widgets/tag_selector_sheet.dart';
 
 void showIssueMoreOptionsSheet(
   BuildContext context, {
@@ -49,15 +48,6 @@ void showIssueMoreOptionsSheet(
               onTap: () {
                 Navigator.of(context).pop();
                 onReadingHistory();
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.label_outline),
-              title: const Text('Tags'),
-              onTap: () {
-                Navigator.of(context).pop();
-                showTagSelectorSheet(context, ref, issueId);
               },
             ),
           ],

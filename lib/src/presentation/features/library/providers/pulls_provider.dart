@@ -77,7 +77,7 @@ final currentWeekPullsProvider = FutureProvider.autoDispose<List<IssueList>>((
   ref,
 ) async {
   final pulls = await ref.watch(
-    pullsIssuesForWeekProvider(DateTime.now()).future,
+    pullsIssuesForWeekProvider(dateOnly(DateTime.now())).future,
   );
   return pulls;
 });
