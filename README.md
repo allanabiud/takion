@@ -49,7 +49,6 @@
 
 - **Barcode Scanner**: Scan comic barcodes (UPC-A, UPC-E, EAN-8, EAN-13, Code 128) to quickly look up, add, and collect issues.
 - **Bulk Actions**: Apply pull list, collection, read status, wishlist, and rating changes to multiple scanned issues at once.
-- **Scan History**: Review recently scanned barcodes with timestamps and re-lookup past scans.
 - **Wishlist Support**: Keep a separate, organized list of wanted issues.
 - **Detailed Insights**: View collector-focused stats about your reading habits.
 
@@ -74,16 +73,16 @@
 
 ## 🛠️ Tech Stack
 
-| Category             | Technology                            |
-| -------------------- | ------------------------------------- |
-| **Language**         | [Dart](https://dart.dev/)             |
-| **Framework**        | [Flutter](https://flutter.dev/)       |
-| **State Management** | [Riverpod](https://riverpod.dev/)     |
-| **Networking**       | [Dio](https://pub.dev/packages/dio)   |
-| **Logging**          | [Talker](https://pub.dev/packages/talker) |
-| **Database**         | [Hive](https://pub.dev/packages/hive) |
+| Category             | Technology                                              |
+| -------------------- | ------------------------------------------------------- |
+| **Language**         | [Dart](https://dart.dev/)                               |
+| **Framework**        | [Flutter](https://flutter.dev/)                         |
+| **State Management** | [Riverpod](https://riverpod.dev/)                       |
+| **Networking**       | [Dio](https://pub.dev/packages/dio)                     |
+| **Logging**          | [Talker](https://pub.dev/packages/talker)               |
+| **Database**         | [Hive](https://pub.dev/packages/hive)                   |
 | **Cloud Storage**    | [Google Drive API](https://pub.dev/packages/googleapis) |
-| **Architecture**     | Domain-Driven-Design                  |
+| **Architecture**     | Domain-Driven-Design                                    |
 
 ---
 
