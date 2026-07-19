@@ -25,7 +25,7 @@
         <img src="https://img.shields.io/github/v/release/allanabiud/takion?include_prereleases&logo=github&style=for-the-badge&label=Latest%20Release" alt="Latest Release">
     </a>
     <img src="https://img.shields.io/badge/Android-10%2B-green?style=for-the-badge&logo=android" alt="Android 10+">
-    <img src="https://img.shields.io/badge/Dart-100%25-blue?style=for-the-badge&logo=dart" alt="Dart">
+    <img src="https://img.shields.io/badge/Dart-blue?style=for-the-badge&logo=dart" alt="Dart">
 </p>
 
 ---
@@ -34,40 +34,26 @@
 
 ### 📋 Pull List Management
 
-- **Weekly Activity**: Track upcoming issues and manage your weekly pull list efficiently.
-- **Automated Sync**: Keep your list in sync with Metron-powered data.
+- **Weekly Releases**: Track upcoming issues and keep up to date with your favourite comic series.
+- **Pull Reminders**: Receive weekly notifications about upcoming pull list issues.
 
 ### 📚 Library Tracking
 
-- **Collection Management**: Organize your comic book collection with ease.
-- **Reading Lists**: Create and manage custom reading lists for your favorite arcs, series, or themes.
-- **Reading Progress**: Mark issues as read and keep track of your reading history.
-- **Comprehensive Library Stats**: Gain deep insights into your collection with detailed visualizations and reading metrics.
-- **Personal Ratings**: Rate your issues and see statistics of your collection.
+- **Collection Management**: Track which comics are in your collection with ease.
+- **Reading Lists**: Create custom reading lists, mark issues as read to track your history and export/import lists for sharing.
+- **Collection Stats**: Visualize reading metrics and collection insights.
 
 ### 🔍 Discovery & Organization
 
-- **Barcode Scanner**: Scan comic barcodes (UPC-A, UPC-E, EAN-8, EAN-13, Code 128) to quickly look up, add, and collect issues.
-- **Bulk Actions**: Apply pull list, collection, read status, wishlist, and rating changes to multiple scanned issues at once.
-- **Wishlist Support**: Keep a separate, organized list of wanted issues.
+- **Barcode Scanner**: Scan comic barcodes to quickly look up, add and collect issues.
+- **Bulk Actions**: Apply pull list, collection, read status, wishlist and rating changes to multiple scanned issues at once.
+- **Wishlist**: Keep an organized list of wanted issues.
 - **Detailed Insights**: View collector-focused stats about your reading habits.
 
 ### 💾 Backup & Sync
 
-- **Encrypted Local Backups**: Create AES-256-GCM encrypted backups (.tkbk) of your data with password protection.
-- **Cloud Sync**: Seamlessly sync your pull list, library, reading logs, favorites, and reading lists across devices via Google Drive.
-- **Real-time Sync**: Changes are automatically synced when the app starts.
-- **Selective Restore**: Choose which data categories to restore from a backup file.
-- **Reading List Export/Import**: Export individual reading lists as .tk files for sharing or archival.
-
-### 🔔 Notifications
-
-- **Pull Reminders**: Receive daily notifications (every Tuesday) about upcoming pull list issues.
-- **Schedule Configuration**: Configure notification times and enable/disable from Settings.
-
-### 📱 App Shortcuts
-
-- **Dynamic Home Screen Shortcuts**: Long-press the app icon for quick access to My Pulls and Subscriptions (appears after onboarding).
+- **Local Backups**: Create backups of your data for safekeeping.
+- **Cloud Sync**: Seamlessly sync your pull list, library, reading logs, favorites and reading lists across devices via Google Drive.
 
 ---
 
@@ -80,18 +66,26 @@
 | **State Management** | [Riverpod](https://riverpod.dev/)                       |
 | **Networking**       | [Dio](https://pub.dev/packages/dio)                     |
 | **Logging**          | [Talker](https://pub.dev/packages/talker)               |
-| **Database**         | [Hive](https://pub.dev/packages/hive)                   |
+| **Database**         | [hive_ce](https://pub.dev/packages/hive_ce)             |
 | **Cloud Storage**    | [Google Drive API](https://pub.dev/packages/googleapis) |
 | **Architecture**     | Domain-Driven-Design                                    |
 
 ---
 
-## 🚀 Getting Started
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ### Prerequisites
 
 - Flutter SDK 3.x
-- Android Studio or VS Code with Flutter extensions
+- Flutter-supported IDE
 - Android SDK 29+
 
 ### Installation
@@ -110,19 +104,7 @@
 
 3. **Run the project**
    - Connect a device or start an emulator
-   - Click Run
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+   - Run via IDE or `flutter run`
 
 ---
 
