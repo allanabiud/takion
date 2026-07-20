@@ -6,8 +6,6 @@ const String homeTrendingCacheKey = 'home:series_suggestions';
 const String homeTrendingMetaKey = 'home:series_suggestions';
 const String homeBecauseYouPulledCacheKey = 'home:because_you_pulled';
 const String homeBecauseYouPulledMetaKey = 'home:because_you_pulled';
-const String homeContinueReadingCacheKey = 'home:continue_reading';
-const String homeContinueReadingMetaKey = 'home:continue_reading';
 
 final homeContentCacheProvider = Provider<HomeContentCache>((ref) {
   return HomeContentCache(ref.read(hiveServiceProvider));

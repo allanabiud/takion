@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
@@ -138,77 +135,10 @@ final continueReadingSuggestionsProvider =
 
 final continueReadingAllSuggestionsProvider =
     FutureProvider.autoDispose<List<ContinueReadingSuggestion>>((ref) async {
-      final metrics = AppPerformanceMetrics.instance;
-      final cache = ref.read(homeContentCacheProvider);
-      DateTime? cachedAt;
-      var cached = const <ContinueReadingSuggestion>[];
       try {
-        cachedAt = await cache.getCachedAt(homeContinueReadingMetaKey);
-        final cachedJson = await cache.readJsonList(
-          homeContinueReadingCacheKey,
-        );
-        cached =
-            cachedJson
-                ?.map((json) {
-                  final issue = issueListFromJson(
-                    (json['issue'] as Map?)?.cast<String, dynamic>() ??
-                        const {},
-                  );
-                  final seriesId = (json['series_id'] as num?)?.toInt();
-                  final lastReadAt = DateTime.tryParse(
-                    json['last_read_at'] as String? ?? '',
-                  );
-                  if (issue == null || seriesId == null || lastReadAt == null) {
-                    return null;
-                  }
-                  return ContinueReadingSuggestion(
-                    seriesId: seriesId,
-                    issue: issue,
-                    lastReadAt: lastReadAt,
-                  );
-                })
-                .whereType<ContinueReadingSuggestion>()
-                .toList() ??
-            const <ContinueReadingSuggestion>[];
-      } catch (e) {
-        AppLogger.warning('Failed to load cached continue reading', error: e);
-      }
-      final hasFreshCache =
-          cachedAt != null &&
-          HomeCachePolicies.continueReading.isFresh(cachedAt, DateTime.now()) &&
-          cached.isNotEmpty;
-
-      if (hasFreshCache) {
-        metrics.recordCacheHit(homeContinueReadingMetaKey);
-        return cached;
-      }
-      metrics.recordCacheMiss(homeContinueReadingMetaKey);
-
-      try {
-        final fresh = await metrics.trackProvider(
-          'continueReadingAllSuggestionsProvider',
-          () => _computeContinueReadingSuggestions(ref),
-        );
-        try {
-          await cache.writeJsonList(
-            homeContinueReadingCacheKey,
-            fresh
-                .map(
-                  (entry) => {
-                    'series_id': entry.seriesId,
-                    'issue': issueListToJson(entry.issue),
-                    'last_read_at': entry.lastReadAt.toIso8601String(),
-                  },
-                )
-                .toList(),
-          );
-          await cache.writeCachedAtNow(homeContinueReadingMetaKey);
-        } catch (e) {
-          AppLogger.warning('Failed to cache continue reading', error: e);
-        }
-        return fresh;
+        return await _computeContinueReadingSuggestions(ref);
       } catch (e) {
         AppLogger.error('Failed to compute continue reading', error: e);
-        return cached;
+        return const [];
       }
     });
