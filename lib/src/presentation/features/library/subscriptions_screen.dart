@@ -75,7 +75,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           if (_lastPage != null) {
             return _buildContent(_lastPage!, sortOption, isLoading: true);
           }
-          return const AsyncStatePanel.loading();
+          return _buildSkeletonList();
         },
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: 'Failed to load subscriptions',
@@ -83,6 +83,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         data: (pageData) =>
             _buildContent(pageData, sortOption, isLoading: false),
       ),
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return const ShimmerWidget(
+      child: _SubscriptionSkeletonContent(),
     );
   }
 
@@ -149,6 +155,62 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
       },
       emptyMessage: 'No subscriptions yet.',
       emptyIcon: Icons.notifications_outlined,
+    );
+  }
+}
+
+class _SubscriptionSkeletonContent extends StatelessWidget {
+  const _SubscriptionSkeletonContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 8,
+      padding: const EdgeInsets.only(bottom: 8),
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 12,
+            right: 12,
+            top: index == 0 ? 12 : 2,
+            bottom: index == 7 ? 12 : 2,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBox(width: 90, height: 100, borderRadius: 8),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonBox(height: 16, width: double.infinity),
+                        SizedBox(height: 8),
+                        SkeletonBox(height: 14, width: 180),
+                        SizedBox(height: 12),
+                        SkeletonBox(height: 6, width: double.infinity, borderRadius: 3),
+                        SizedBox(height: 12),
+                        Row(
+                          children: [
+                            SkeletonBox(width: 16, height: 16, borderRadius: 4),
+                            SizedBox(width: 8),
+                            SkeletonBox(width: 16, height: 16, borderRadius: 4),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
