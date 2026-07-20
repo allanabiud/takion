@@ -4,6 +4,7 @@ class TakionBottomSheet extends StatelessWidget {
   final String title;
   final Widget child;
   final List<Widget>? actions;
+  final Widget? titleHeader;
   final bool showHandle;
   final double horizontalPadding;
 
@@ -12,6 +13,7 @@ class TakionBottomSheet extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions,
+    this.titleHeader,
     this.showHandle = true,
     this.horizontalPadding = 24,
   });
@@ -28,7 +30,7 @@ class TakionBottomSheet extends StatelessWidget {
         left: horizontalPadding,
         right: horizontalPadding,
         top: 12,
-        bottom: viewInsets.bottom + (viewInsets.bottom > 0 ? 8 : safeAreaBottom + 16),
+        bottom: viewInsets.bottom + (viewInsets.bottom > 0 ? 8 : safeAreaBottom + 8),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -46,20 +48,24 @@ class TakionBottomSheet extends StatelessWidget {
                 ),
               ),
             ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+          if (titleHeader != null)
+            titleHeader!
+          else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              ...?actions,
-            ],
-          ),
+                ...?actions,
+              ],
+            ),
+          ],
           const SizedBox(height: 24),
           Flexible(child: child),
         ],
@@ -72,6 +78,7 @@ class TakionBottomSheet extends StatelessWidget {
     required String title,
     required Widget child,
     List<Widget>? actions,
+    Widget? titleHeader,
     bool isScrollControlled = true,
   }) {
     return showModalBottomSheet<T>(
@@ -82,7 +89,12 @@ class TakionBottomSheet extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) =>
-          TakionBottomSheet(title: title, actions: actions, child: child),
+          TakionBottomSheet(
+            title: title,
+            actions: actions,
+            titleHeader: titleHeader,
+            child: child,
+          ),
     );
   }
 }
