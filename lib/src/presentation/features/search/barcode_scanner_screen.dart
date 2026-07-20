@@ -9,8 +9,8 @@ import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/search/providers/barcode_scan_providers.dart';
 import 'package:takion/src/presentation/features/search/widgets/bulk_scan_actions_sheet.dart';
+import 'package:takion/src/presentation/features/search/widgets/issue_picker_sheet.dart';
 import 'package:takion/src/presentation/features/search/widgets/manual_upc_dialog.dart';
-import 'package:takion/src/presentation/features/search/widgets/scan_history_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -92,56 +92,68 @@ class _BarcodeScannerScreenState
     }
   }
 
-  Future<void> _lookupUpc(String upc) async {
+  Future<void> _lookupUpc(String upc, {bool exactFirst = false}) async {
     if (!mounted) return;
     setState(() => _isLookingUp = true);
 
     try {
       AppLogger.info('BarcodeScannerScreen lookup UPC: $upc');
       final repo = ref.read(catalogRepositoryProvider);
-      final result = await repo.searchIssuesByUpc(upc);
+
+      IssueSearchPage result;
+      if (exactFirst) {
+        result = await repo.searchIssuesByUpc(upc);
+        if (result.results.isEmpty) {
+          result = await repo.searchIssuesByUpcPrefix(upc);
+        }
+      } else {
+        result = await repo.searchIssuesByUpcPrefix(upc);
+      }
 
       if (!mounted) return;
 
       if (result.results.isEmpty) {
-        if (upc.length == 12 || upc.length == 13) {
-          final combinedUpc = await showUpcExtensionDialog(
-            context: context,
-            mainUpc: upc,
-          );
-          if (combinedUpc != null && mounted) {
-            await _lookupUpc(combinedUpc);
-          }
-          return;
-        }
-
         TakionAlerts.info(context, 'No issue found for barcode $upc');
         return;
       }
 
-      final issue = result.results.first;
-      if (issue.id == null) {
-        TakionAlerts.info(context, 'No issue found for barcode $upc');
-        return;
+      final List<IssueList> issuesToAdd;
+      if (result.results.length == 1) {
+        issuesToAdd = result.results;
+      } else {
+        final picked = await showIssuePickerSheet(context, result.results);
+        if (!mounted) return;
+        if (picked == null || picked.isEmpty) return;
+        issuesToAdd = picked;
       }
 
       final scannedIds = ref.read(scannedIssueIdsProvider);
-      final alreadyExists = scannedIds.any((s) => s.issueId == issue.id);
-      if (alreadyExists) {
-        TakionAlerts.info(context, 'Already in list: ${_issueTitle(issue)}');
-        return;
+      var added = 0;
+      var skipped = 0;
+
+      for (final issue in issuesToAdd) {
+        if (issue.id == null) continue;
+        if (scannedIds.any((s) => s.issueId == issue.id)) {
+          skipped++;
+          continue;
+        }
+
+        ref.read(scannedIssueIdsProvider.notifier).addIssue(issue);
+        added++;
       }
 
-      ref.read(scannedIssueIdsProvider.notifier).addIssue(issue);
-      ref.read(scanHistoryProvider.notifier).addEntry(
-        ScanHistoryEntry(
-          upc: upc,
-          scannedAt: DateTime.now(),
-          issueId: issue.id,
-          issueName: _issueTitle(issue),
-        ),
-      );
-      TakionAlerts.success(context, 'Added: ${_issueTitle(issue)}');
+      if (!mounted) return;
+      if (added > 0) {
+        final msg = skipped > 0
+            ? 'Added $added issue${added > 1 ? 's' : ''} ($skipped already in list)'
+            : 'Added $added issue${added > 1 ? 's' : ''}';
+        TakionAlerts.success(context, msg);
+      } else if (skipped > 0) {
+        TakionAlerts.info(
+          context,
+          'All $skipped issue${skipped > 1 ? 's' : ''} already in list',
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       TakionAlerts.safeError(context, e, userMessage: 'Failed to look up barcode');
@@ -160,19 +172,8 @@ class _BarcodeScannerScreenState
   Future<void> _showManualUpcDialog() async {
     final upc = await showManualUpcDialog(context);
     if (upc != null && mounted) {
-      await _lookupUpc(upc);
+      await _lookupUpc(upc, exactFirst: true);
     }
-  }
-
-  void _showScanHistory() {
-    showScanHistorySheet(
-      context,
-      ref,
-      onSelectUpc: (upc) async {
-        if (!mounted) return;
-        await _lookupUpc(upc);
-      },
-    );
   }
 
   Future<void> _showBulkActionsSheet() async {
@@ -220,11 +221,6 @@ class _BarcodeScannerScreenState
             tooltip: 'Enter UPC manually',
             icon: const Icon(Icons.keyboard),
             onPressed: _showManualUpcDialog,
-          ),
-          IconButton(
-            tooltip: 'Scan history',
-            icon: const Icon(Icons.history),
-            onPressed: _showScanHistory,
           ),
         ],
       ),
@@ -513,70 +509,4 @@ class _CornerBracket extends StatelessWidget {
   }
 }
 
-Future<String?> showUpcExtensionDialog({
-  required BuildContext context,
-  required String mainUpc,
-}) async {
-  final controller = TextEditingController();
-  final theme = Theme.of(context);
-
-  final result = await showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Enter Barcode Extension'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Scanned Code: $mainUpc',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Metron expects the full UPC including the 2-digit or 5-digit issue extension.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: controller,
-            autofocus: true,
-            keyboardType: TextInputType.number,
-            maxLength: 5,
-            decoration: InputDecoration(
-              labelText: 'Extension (2 or 5 digits)',
-              hintText: 'e.g. 02111',
-              border: const OutlineInputBorder(),
-              prefixText: '$mainUpc ',
-              prefixStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            onSubmitted: (value) {
-              Navigator.of(context).pop(value.trim());
-            },
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('CANCEL'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-          child: const Text('LOOKUP'),
-        ),
-      ],
-    ),
-  );
-
-  WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
-  if (result == null || result.isEmpty) return null;
-  return '$mainUpc$result';
-}
 

@@ -15,6 +15,14 @@ abstract class MetronRemoteDataSource {
     String upc, {
     CancelToken? cancelToken,
   });
+  Future<IssueSearchResponseDto> searchIssuesByUpcPrefix(
+    String prefix, {
+    CancelToken? cancelToken,
+  });
+  Future<IssueSearchResponseDto> getIssueSearchPage(
+    String url, {
+    CancelToken? cancelToken,
+  });
   Future<IssueSearchResponseDto> searchIssues(
     String query, {
     Uri? nextUrl,
@@ -293,6 +301,35 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     final response = await _dio.get(
       'issue/',
       queryParameters: {'upc': upc},
+      cancelToken: cancelToken,
+    );
+    return IssueSearchResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<IssueSearchResponseDto> searchIssuesByUpcPrefix(
+    String prefix, {
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      'issue/',
+      queryParameters: {'upc_starts_with': prefix},
+      cancelToken: cancelToken,
+    );
+    return IssueSearchResponseDto.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<IssueSearchResponseDto> getIssueSearchPage(
+    String url, {
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.getUri(
+      Uri.parse(url),
       cancelToken: cancelToken,
     );
     return IssueSearchResponseDto.fromJson(

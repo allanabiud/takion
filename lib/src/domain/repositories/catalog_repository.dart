@@ -33,6 +33,12 @@ abstract class CatalogRepository {
     bool forceRefresh = false,
   });
 
+  Future<IssueSearchPage> searchIssuesByUpcPrefix(
+    String prefix, {
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  });
+
   Future<IssueSearchPage> getIssueList({
     String? nextUrl,
     int page = 1,

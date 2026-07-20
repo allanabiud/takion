@@ -334,28 +334,23 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
 
     Color backgroundColor;
     Color foregroundColor;
-    IconData icon;
     String label;
 
     if (!isConnected) {
       backgroundColor = theme.colorScheme.surfaceContainerHighest;
       foregroundColor = theme.colorScheme.onSurfaceVariant;
-      icon = Icons.link_off_rounded;
       label = 'Not connected';
     } else if (metronConnectionAsync.isLoading) {
       backgroundColor = theme.colorScheme.surfaceContainerHighest;
       foregroundColor = theme.colorScheme.onSurfaceVariant;
-      icon = Icons.pending_rounded;
       label = 'Checking connection...';
     } else if (metronConnectionAsync.hasError) {
       backgroundColor = theme.colorScheme.errorContainer.withValues(alpha: 0.3);
       foregroundColor = theme.colorScheme.onErrorContainer;
-      icon = Icons.error_outline_rounded;
       label = 'Connection check failed';
     } else {
       backgroundColor = theme.colorScheme.primaryContainer.withValues(alpha: 0.4);
       foregroundColor = theme.colorScheme.onPrimaryContainer;
-      icon = Icons.check_circle_rounded;
       label = 'Connected as ${connection?.username ?? 'Unknown'}';
     }
 
@@ -370,20 +365,12 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
           width: 1,
         ),
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: foregroundColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: foregroundColor,
-              ),
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: foregroundColor,
+        ),
       ),
     );
   }

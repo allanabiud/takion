@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/releases/providers/selected_wee
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
+import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 @RoutePage()
@@ -298,6 +299,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       issueId: issueId,
                                       initialImageUrl: issue.image,
                                     ),
+                                  ),
+                            onLongPress: issueId == null
+                                ? null
+                                : () => showScrobbleSheet(
+                                    context: context,
+                                    ref: ref,
+                                    issueId: issueId,
+                                    sheetTitle:
+                                        '${series?.name ?? issue.name} #${issue.number}',
+                                    seriesId: series?.id,
+                                    releaseDate: issue.storeDate ??
+                                        issue.coverDate,
                                   ),
                             child: Stack(
                               fit: StackFit.expand,

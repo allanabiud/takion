@@ -252,7 +252,12 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
               fetch: _remoteDataSource.getSeriesDetails(seriesId),
               cached: () async {
                 final dto = await _localDataSource.getSeriesDetails(seriesId);
-                return dto!.toEntity();
+                if (dto == null) {
+                  throw StateError(
+                    'Cached series details missing after 304',
+                  );
+                }
+                return dto.toEntity();
               },
               cache: (response) async {
                 final remoteDto = SeriesDetailsDto.fromJson(
@@ -279,7 +284,12 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
           fetch: _remoteDataSource.getSeriesDetails(seriesId),
           cached: () async {
             final dto = await _localDataSource.getSeriesDetails(seriesId);
-            return dto!.toEntity();
+            if (dto == null) {
+              throw StateError(
+                'Cached series details missing after 304',
+              );
+            }
+            return dto.toEntity();
           },
           cache: (response) async {
             final remoteDto = SeriesDetailsDto.fromJson(

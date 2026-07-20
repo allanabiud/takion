@@ -14,6 +14,7 @@ class HiveService {
   bool _initialized = false;
   final _clearFns = <String, Future<void> Function()>{};
   static const Set<String> _recoverableCacheBoxes = {
+    'cache_headers_box',
     'weekly_releases_box',
     'foc_releases_box',
     'cache_meta_box',

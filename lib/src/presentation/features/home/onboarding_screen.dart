@@ -847,12 +847,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               ),
                               child: Column(
                                 children: [
-                                  Icon(
-                                    LucideIcons.badgeCheck,
-                                    size: 56,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(height: 16),
                                   Text(
                                     'Connected as ${_usernameController.text}',
                                     style: theme.textTheme.titleMedium?.copyWith(

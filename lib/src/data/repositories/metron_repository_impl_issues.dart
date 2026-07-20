@@ -21,7 +21,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
                 fetch: _remoteDataSource.getIssueDetails(issueId),
                 cached: () async {
                   final dto = await _localDataSource.getIssueDetails(issueId);
-                  return dto!.toEntity();
+                  if (dto == null) {
+                    throw StateError(
+                      'Cached issue details missing after 304',
+                    );
+                  }
+                  return dto.toEntity();
                 },
                 cache: (response) async {
                   final remoteDto = IssueDetailsDto.fromJson(
@@ -55,7 +60,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             fetch: _remoteDataSource.getIssueDetails(issueId),
             cached: () async {
               final dto = await _localDataSource.getIssueDetails(issueId);
-              return dto!.toEntity();
+              if (dto == null) {
+                throw StateError(
+                  'Cached issue details missing after 304',
+                );
+              }
+              return dto.toEntity();
             },
             cache: (response) async {
               final remoteDto = IssueDetailsDto.fromJson(
@@ -382,6 +392,114 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         next: remotePage.next,
         previous: remotePage.previous,
         results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+        currentPage: 1,
+      );
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return IssueSearchPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: 1,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<IssueSearchPage> searchIssuesByUpcPrefix(
+    String prefix, {
+    CancelToken? cancelToken,
+    bool forceRefresh = false,
+  }) async {
+    final cachedDtos = await _localDataSource.getIssueSearchResults(
+      'upc_prefix:$prefix',
+      page: 1,
+      limit: 1,
+    );
+    final cachedAt = await _localDataSource.getIssueSearchResultsCachedAt(
+      'upc_prefix:$prefix',
+      page: 1,
+      limit: 1,
+    );
+    final cachedMeta = await _localDataSource.getIssueSearchResultsMeta(
+      'upc_prefix:$prefix',
+      page: 1,
+      limit: 1,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.searchIssuesByUpcPrefix(
+              prefix,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheIssueSearchResults(
+              'upc_prefix:$prefix',
+              remotePage.results,
+              page: 1,
+              limit: 1,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'search:upc_prefix:$prefix',
+          cooldown: MetronCachePolicies.searchResults.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        return IssueSearchPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: 1,
+        );
+      }
+    }
+
+    try {
+      final allDtos = <IssueListDto>[];
+      var totalCount = 0;
+      String? nextUrl;
+
+      final firstPage = await _remoteDataSource.searchIssuesByUpcPrefix(
+        prefix,
+        cancelToken: cancelToken,
+      );
+      allDtos.addAll(firstPage.results);
+      totalCount = firstPage.count;
+      nextUrl = firstPage.next;
+
+      while (nextUrl != null) {
+        final page = await _remoteDataSource.getIssueSearchPage(
+          nextUrl,
+          cancelToken: cancelToken,
+        );
+        allDtos.addAll(page.results);
+        nextUrl = page.next;
+      }
+
+      await _localDataSource.cacheIssueSearchResults(
+        'upc_prefix:$prefix',
+        allDtos,
+        page: 1,
+        limit: 1,
+        count: totalCount,
+        next: null,
+        previous: null,
+      );
+      return IssueSearchPage(
+        count: totalCount,
+        results: allDtos.map((entry) => entry.toEntity()).toList(),
         currentPage: 1,
       );
     } catch (error) {
