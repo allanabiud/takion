@@ -12,6 +12,11 @@
 .swiftpm/
 migrate_working_dir/
 
+# Plan files
+.plans/
+.kilo/
+.opencode/
+
 # IntelliJ related
 *.iml
 *.ipr
@@ -47,6 +52,3 @@ app.*.map.json
 .env
 *.sql
 /android/app/google-services.json
-
-# Plan files
-plans/

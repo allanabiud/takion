@@ -64,23 +64,21 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-          ..._sortedEntries.map(
-            (entry) {
-              final group = entry.key;
+          ..._sortedEntries.map((entry) {
+            final group = entry.key;
 
-              return SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _selections[group] ?? false,
-                onChanged: _loading
-                    ? null
-                    : (v) => setState(() => _selections[group] = v),
-                title: Text(
-                  group,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              );
-            },
-          ),
+            return SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _selections[group] ?? false,
+              onChanged: _loading
+                  ? null
+                  : (v) => setState(() => _selections[group] = v),
+              title: Text(
+                group,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            );
+          }),
           const Divider(),
           if (_loading)
             Padding(
@@ -88,7 +86,8 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
               child: Column(
                 children: [
                   LinearProgressIndicator(
-                      value: _progress > 0 ? _progress : null),
+                    value: _progress > 0 ? _progress : null,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     _progress > 0
@@ -103,8 +102,9 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed:
-                      _loading ? null : () => Navigator.of(context).pop(),
+                  onPressed: _loading
+                      ? null
+                      : () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
               ),
@@ -146,9 +146,7 @@ class _CreateBackupSheetState extends ConsumerState<_CreateBackupSheet> {
       final hiveService = widget.ref.read(hiveServiceProvider);
       final service = BackupService(hiveService);
 
-      final data = await service.createBackupData(
-        boxNames: boxNames,
-      );
+      final data = await service.createBackupData(boxNames: boxNames);
 
       if (!mounted) return;
       setState(() => _progress = 1);

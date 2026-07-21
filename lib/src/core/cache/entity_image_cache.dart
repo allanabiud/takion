@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
-
 final entityImageCacheProvider = Provider<EntityImageCache>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
   final cache = EntityImageCache(hiveService: hiveService);
@@ -19,10 +18,14 @@ class EntityImageVersionNotifier extends Notifier<int> {
   }
 }
 
-final entityImageVersionProvider = NotifierProvider<EntityImageVersionNotifier, int>(EntityImageVersionNotifier.new);
+final entityImageVersionProvider =
+    NotifierProvider<EntityImageVersionNotifier, int>(
+      EntityImageVersionNotifier.new,
+    );
 
 class EntityImageCache {
-  EntityImageCache({required HiveService hiveService}) : _hiveService = hiveService;
+  EntityImageCache({required HiveService hiveService})
+    : _hiveService = hiveService;
 
   static const boxName = 'entity_image_cache_box';
   final HiveService _hiveService;

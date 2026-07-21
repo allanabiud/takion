@@ -31,11 +31,9 @@ dependencies:
   flash: ^3.1.1
   fl_chart: ^1.2.0
   intl: ^0.20.2
-  flutter_svg: ^2.2.3
   package_info_plus: ^10.2.1
   share_plus: ^13.2.1
   connectivity_plus: ^7.1.1
-  image_picker: ^1.2.0
   lucide_icons_flutter: ^3.1.13
   gal: ^2.3.2
   google_sign_in: ^6.2.2
@@ -86,9 +84,9 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: assets/branding/icon.png
+  image_path: assets/branding/logo.png
   adaptive_icon_background: "#121212"
-  adaptive_icon_foreground: assets/branding/icon.png
+  adaptive_icon_foreground: assets/branding/logo.png
   adaptive_icon_foreground_inset: 20
 
 flutter_native_splash:

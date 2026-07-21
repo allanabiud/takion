@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/profile/providers/daily_read_activity_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/daily_read_activity_provider.dart';
 
 class StreakCalendarWidget extends ConsumerWidget {
   const StreakCalendarWidget({super.key});
@@ -35,7 +35,9 @@ class StreakCalendarWidget extends ConsumerWidget {
             final dayDate = today.subtract(Duration(days: w * 7 + d));
             final count = activity[dayDate] ?? 0;
             if (count > maxCount) maxCount = count;
-            week.add(_DayData(date: dayDate, count: count, isToday: dayDate == today));
+            week.add(
+              _DayData(date: dayDate, count: count, isToday: dayDate == today),
+            );
           }
           weeks.add(week);
 
@@ -44,7 +46,9 @@ class StreakCalendarWidget extends ConsumerWidget {
           } else {
             final prevMonth = weeks[weeks.length - 2][6].date.month;
             final thisMonth = week[6].date.month;
-            monthLabels.add(thisMonth != prevMonth ? _monthAbbr(thisMonth) : '');
+            monthLabels.add(
+              thisMonth != prevMonth ? _monthAbbr(thisMonth) : '',
+            );
           }
         }
 
@@ -56,7 +60,11 @@ class StreakCalendarWidget extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.local_fire_department, color: Colors.orange.shade400, size: 20),
+                  Icon(
+                    Icons.local_fire_department,
+                    color: Colors.orange.shade400,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Reading Activity',
@@ -87,7 +95,15 @@ class StreakCalendarWidget extends ConsumerWidget {
                         children: [
                           SizedBox(height: monthLabelHeight + 2),
                           ...List.generate(7, (i) {
-                            final labels = ['Mon', '', 'Wed', '', 'Fri', '', ''];
+                            final labels = [
+                              'Mon',
+                              '',
+                              'Wed',
+                              '',
+                              'Fri',
+                              '',
+                              '',
+                            ];
                             return SizedBox(
                               height: step,
                               child: Center(
@@ -122,10 +138,13 @@ class StreakCalendarWidget extends ConsumerWidget {
                                       width: step,
                                       child: Text(
                                         monthLabels[w],
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          fontSize: 8,
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              fontSize: 8,
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
                                       ),
                                     );
                                   }),
@@ -139,8 +158,17 @@ class StreakCalendarWidget extends ConsumerWidget {
                                     children: List.generate(52, (col) {
                                       final data = weeks[col][row];
                                       final cellColor = maxCount > 0
-                                          ? _intensityColor(theme, (data.count / maxCount).clamp(0.0, 1.0))
-                                          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
+                                          ? _intensityColor(
+                                              theme,
+                                              (data.count / maxCount).clamp(
+                                                0.0,
+                                                1.0,
+                                              ),
+                                            )
+                                          : theme
+                                                .colorScheme
+                                                .surfaceContainerHighest
+                                                .withValues(alpha: 0.4);
                                       return _StreakCell(
                                         size: cellSize,
                                         gap: cellGap,
@@ -164,14 +192,26 @@ class StreakCalendarWidget extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text('Less', style: theme.textTheme.labelSmall?.copyWith(fontSize: 9, color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Less',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 9,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(width: 4),
                   _legendCell(theme, 0.0),
                   _legendCell(theme, 0.33),
                   _legendCell(theme, 0.66),
                   _legendCell(theme, 1.0),
                   const SizedBox(width: 4),
-                  Text('More', style: theme.textTheme.labelSmall?.copyWith(fontSize: 9, color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'More',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 9,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -183,8 +223,18 @@ class StreakCalendarWidget extends ConsumerWidget {
 
   String _monthAbbr(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }
@@ -238,7 +288,11 @@ class _DayData {
   final DateTime date;
   final int count;
   final bool isToday;
-  const _DayData({required this.date, required this.count, required this.isToday});
+  const _DayData({
+    required this.date,
+    required this.count,
+    required this.isToday,
+  });
 }
 
 class _StreakCell extends StatelessWidget {

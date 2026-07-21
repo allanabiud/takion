@@ -9,7 +9,8 @@ import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-
+import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/presentation/logic/content_sorting.dart';
 
 @RoutePage()
 class WishlistScreen extends ConsumerStatefulWidget {
@@ -63,14 +64,30 @@ class _WishlistBrowseTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seriesAsync = ref.watch(wishlistSeriesProvider);
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(SortPreferenceContext.libraryWishlist),
+    );
 
     return seriesAsync.when(
       loading: () => const AsyncStatePanel.loading(),
-      error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load wishlist series',
-      ),
+      error: (error, _) =>
+          AsyncStatePanel.error(errorMessage: 'Failed to load wishlist series'),
       data: (seriesList) {
-        if (seriesList.isEmpty) {
+        final sortedResults = sortSeries(
+          seriesList
+              .map(
+                (s) => SeriesList(
+                  id: s.seriesId,
+                  name: s.seriesName,
+                  volume: s.volume,
+                  yearBegan: s.yearBegan,
+                  issueCount: s.categoryCount,
+                ),
+              )
+              .toList(),
+          sortOption,
+        );
+        if (sortedResults.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(wishlistSeriesProvider),
             child: CustomScrollView(
@@ -93,37 +110,38 @@ class _WishlistBrowseTab extends ConsumerWidget {
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 12),
-            itemCount: seriesList.length + 1,
+            itemCount: sortedResults.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: ListHeader(
-                    count: seriesList.length,
+                    count: sortedResults.length,
                     unit: 'series',
                     pluralUnit: 'series',
                     enabled: true,
+                    sortLabel: seriesSortLabel(sortOption),
+                    onSortTap: () => showSortBottomSheet(
+                      context,
+                      ref,
+                      SortPreferenceContext.libraryWishlist,
+                      seriesSortLabel,
+                    ),
                   ),
                 );
               }
-              final summary = seriesList[index - 1];
+              final summary = sortedResults[index - 1];
               return SeriesListTile(
-                series: SeriesList(
-                  id: summary.seriesId,
-                  name: summary.seriesName,
-                  volume: summary.volume,
-                  yearBegan: summary.yearBegan,
-                  issueCount: summary.categoryCount,
-                ),
-                categoryCount: summary.categoryCount,
+                series: summary,
+                categoryCount: summary.issueCount,
                 categoryLabel: 'wishlist',
                 isFirst: index == 1,
-                isLast: index == seriesList.length,
+                isLast: index == sortedResults.length,
                 onTap: () => context.pushRoute(
                   LibrarySeriesRoute(
-                    seriesId: summary.seriesId,
+                    seriesId: summary.id,
                     category: 'wishlist',
-                    seriesName: summary.seriesName,
+                    seriesName: summary.name,
                   ),
                 ),
               );
@@ -134,4 +152,3 @@ class _WishlistBrowseTab extends ConsumerWidget {
     );
   }
 }
-

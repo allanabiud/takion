@@ -113,10 +113,7 @@ class HiveService {
         final serialized = boxName == 'reading_lists_box'
             ? (value as ReadingList).toJson()
             : value;
-        final entry = <String, dynamic>{
-          'k': key,
-          'v': serialized,
-        };
+        final entry = <String, dynamic>{'k': key, 'v': serialized};
         final ts = tsBox.get('$boxName:$key');
         if (ts != null) entry['t'] = ts;
         entries.add(entry);
@@ -227,7 +224,6 @@ class HiveService {
 
   Future<bool> hasBackupData() async {
     const backupBoxNames = [
-      'local_profile_box',
       'local_library_items_box',
       'local_library_read_logs_box',
       'local_pull_list_box',

@@ -5,19 +5,21 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
 import 'package:takion/src/presentation/common/async_state_panel.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/features/profile/widgets/stat_card.dart';
-import 'package:takion/src/presentation/features/profile/widgets/profile_charts.dart';
-import 'package:takion/src/presentation/features/profile/widgets/top_entity_tile.dart';
-import 'package:takion/src/presentation/features/profile/screens/top_characters_screen.dart';
-import 'package:takion/src/presentation/features/profile/screens/top_creators_screen.dart';
+import 'package:takion/src/presentation/features/library/widgets/stat_card.dart';
+import 'package:takion/src/presentation/features/library/widgets/library_charts.dart';
+import 'package:takion/src/presentation/features/library/widgets/top_entity_tile.dart';
+import 'package:takion/src/presentation/features/library/screens/top_characters_screen.dart';
+import 'package:takion/src/presentation/features/library/screens/top_creators_screen.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/presentation/logic/content_sorting.dart';
 
 @RoutePage()
 class MyComicsScreen extends ConsumerStatefulWidget {
@@ -73,6 +75,9 @@ class _MyComicsBrowseTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seriesAsync = ref.watch(collectedSeriesProvider);
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(SortPreferenceContext.libraryMyComics),
+    );
 
     return seriesAsync.when(
       loading: () => const AsyncStatePanel.loading(),
@@ -80,7 +85,21 @@ class _MyComicsBrowseTab extends ConsumerWidget {
         errorMessage: 'Failed to load collected series',
       ),
       data: (seriesList) {
-        if (seriesList.isEmpty) {
+        final sortedResults = sortSeries(
+          seriesList
+              .map(
+                (s) => SeriesList(
+                  id: s.seriesId,
+                  name: s.seriesName,
+                  volume: s.volume,
+                  yearBegan: s.yearBegan,
+                  issueCount: s.categoryCount,
+                ),
+              )
+              .toList(),
+          sortOption,
+        );
+        if (sortedResults.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(collectedSeriesProvider),
             child: CustomScrollView(
@@ -103,37 +122,38 @@ class _MyComicsBrowseTab extends ConsumerWidget {
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 12),
-            itemCount: seriesList.length + 1,
+            itemCount: sortedResults.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: ListHeader(
-                    count: seriesList.length,
+                    count: sortedResults.length,
                     unit: 'series',
                     pluralUnit: 'series',
                     enabled: true,
+                    sortLabel: seriesSortLabel(sortOption),
+                    onSortTap: () => showSortBottomSheet(
+                      context,
+                      ref,
+                      SortPreferenceContext.libraryMyComics,
+                      seriesSortLabel,
+                    ),
                   ),
                 );
               }
-              final summary = seriesList[index - 1];
+              final summary = sortedResults[index - 1];
               return SeriesListTile(
-                series: SeriesList(
-                  id: summary.seriesId,
-                  name: summary.seriesName,
-                  volume: summary.volume,
-                  yearBegan: summary.yearBegan,
-                  issueCount: summary.categoryCount,
-                ),
-                categoryCount: summary.categoryCount,
+                series: summary,
+                categoryCount: summary.issueCount,
                 categoryLabel: 'collected',
                 isFirst: index == 1,
-                isLast: index == seriesList.length,
+                isLast: index == sortedResults.length,
                 onTap: () => context.pushRoute(
                   LibrarySeriesRoute(
-                    seriesId: summary.seriesId,
+                    seriesId: summary.id,
                     category: 'collected',
-                    seriesName: summary.seriesName,
+                    seriesName: summary.name,
                   ),
                 ),
               );
@@ -145,20 +165,18 @@ class _MyComicsBrowseTab extends ConsumerWidget {
   }
 }
 
-
-
 class _MyComicsStatsTab extends ConsumerStatefulWidget {
   @override
   ConsumerState<_MyComicsStatsTab> createState() => _MyComicsStatsTabState();
 }
 
 class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
-  ProfileFilter _filter = ProfileFilter.month;
-  ProfileInsights? _cachedInsights;
+  LibraryFilter _filter = LibraryFilter.month;
+  LibraryInsights? _cachedInsights;
 
   @override
   Widget build(BuildContext context) {
-    final insightsAsync = ref.watch(profileInsightsProvider(_filter));
+    final insightsAsync = ref.watch(libraryInsightsProvider(_filter));
     final collectionStatsAsync = ref.watch(collectionStatsProvider);
     final theme = Theme.of(context);
 
@@ -170,7 +188,7 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(profileInsightsProvider(_filter));
+        ref.invalidate(libraryInsightsProvider(_filter));
         ref.invalidate(collectionStatsProvider);
       },
       child: SingleChildScrollView(
@@ -183,13 +201,12 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
-                children: ProfileFilter.values.map((f) {
-
+                children: LibraryFilter.values.map((f) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
                       label: Text(
-                        f == ProfileFilter.allTime
+                        f == LibraryFilter.allTime
                             ? 'All-Time'
                             : f.name[0].toUpperCase() + f.name.substring(1),
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -218,9 +235,15 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                     if (insightsAsync.hasError)
                       Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 64.0, horizontal: 16.0),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 64.0,
+                            horizontal: 16.0,
+                          ),
                           child: Text(
-                            TakionAlerts.cleanError(insightsAsync.error!, fallback: 'Failed to load stats'),
+                            TakionAlerts.cleanError(
+                              insightsAsync.error!,
+                              fallback: 'Failed to load stats',
+                            ),
                             style: theme.textTheme.bodyMedium,
                           ),
                         ),
@@ -228,7 +251,10 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                     else if (insightsAsync.isLoading && _cachedInsights == null)
                       const Center(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 64.0, horizontal: 16.0),
+                          padding: EdgeInsets.symmetric(
+                            vertical: 64.0,
+                            horizontal: 16.0,
+                          ),
                           child: CircularProgressIndicator(),
                         ),
                       )
@@ -236,142 +262,159 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: StatCard(
-                                  icon: Icons.inventory_2,
-                                  value: '${insights.totalOwned}',
-                                  label: 'Comics',
-                                  color: theme.colorScheme.primary,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: StatCard(
+                                    icon: Icons.inventory_2,
+                                    value: '${insights.totalOwned}',
+                                    label: 'Comics',
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: StatCard(
-                                  icon: Icons.shopping_bag_outlined,
-                                  value: '${insights.pullsInPeriod}',
-                                  label: 'Pulls',
-                                  color: Colors.orange,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: StatCard(
+                                    icon: Icons.shopping_bag_outlined,
+                                    value: '${insights.pullsInPeriod}',
+                                    label: 'Pulls',
+                                    color: Colors.orange,
+                                  ),
                                 ),
-                              ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: StatCard(
+                                    icon: Icons.notifications_outlined,
+                                    value: '${insights.subscriptionsCount}',
+                                    label: 'Subscriptions',
+                                    color: theme.colorScheme.error,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: StatCard(
+                                    icon: Icons.account_balance_wallet_outlined,
+                                    value:
+                                        collectionStatsAsync
+                                            .asData
+                                            ?.value
+                                            .totalValue ??
+                                        '\$0.00',
+                                    label: 'Value',
+                                    color: theme.colorScheme.tertiary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (insights.topPublishers.isNotEmpty) ...[
+                              const SizedBox(height: 24),
+                              SectionHeader(title: 'TOP PUBLISHERS'),
+                              const SizedBox(height: 12),
+                              StatBarTable(items: insights.topPublishers),
                             ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: StatCard(
-                                  icon: Icons.notifications_outlined,
-                                  value: '${insights.subscriptionsCount}',
-                                  label: 'Subscriptions',
-                                  color: theme.colorScheme.error,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: StatCard(
-                                  icon: Icons.account_balance_wallet_outlined,
-                                  value: collectionStatsAsync.asData?.value.totalValue ?? '\$0.00',
-                                  label: 'Value',
-                                  color: theme.colorScheme.tertiary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (insights.topPublishers.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            SectionHeader(title: 'TOP PUBLISHERS'),
-                            const SizedBox(height: 12),
-                            StatBarTable(items: insights.topPublishers),
-                          ],
-                          if (insights.topCharacters.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            SectionHeader(
-                              title: 'TOP CHARACTERS',
-                              onViewAll: insights.allCharacters.length > 5
-                                  ? () => Navigator.of(context).push(
+                            if (insights.topCharacters.isNotEmpty) ...[
+                              const SizedBox(height: 24),
+                              SectionHeader(
+                                title: 'TOP CHARACTERS',
+                                onViewAll: insights.allCharacters.length > 5
+                                    ? () => Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (_) => TopCharactersScreen(
                                             characters: insights.allCharacters,
                                           ),
                                         ),
                                       )
-                                  : null,
-                            ),
-                            const SizedBox(height: 8),
-                            ...insights.topCharacters.asMap().entries.map((entry) =>
-                              TopEntityTile(
-                                index: entry.key,
-                                entity: entry.value,
-                                isCharacter: true,
-                                isLast: entry.key == insights.topCharacters.length - 1 &&
-                                    insights.allCharacters.length <= 5,
+                                    : null,
                               ),
-                            ),
-                          ],
-                          if (insights.topCreators.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            SectionHeader(
-                              title: 'TOP CREATORS',
-                              onViewAll: insights.allCreators.length > 5
-                                  ? () => Navigator.of(context).push(
+                              const SizedBox(height: 8),
+                              ...insights.topCharacters.asMap().entries.map(
+                                (entry) => TopEntityTile(
+                                  index: entry.key,
+                                  entity: entry.value,
+                                  isCharacter: true,
+                                  isLast:
+                                      entry.key ==
+                                          insights.topCharacters.length - 1 &&
+                                      insights.allCharacters.length <= 5,
+                                ),
+                              ),
+                            ],
+                            if (insights.topCreators.isNotEmpty) ...[
+                              const SizedBox(height: 24),
+                              SectionHeader(
+                                title: 'TOP CREATORS',
+                                onViewAll: insights.allCreators.length > 5
+                                    ? () => Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (_) => TopCreatorsScreen(
                                             creators: insights.allCreators,
                                           ),
                                         ),
                                       )
-                                  : null,
-                            ),
-                            const SizedBox(height: 8),
-                            ...insights.topCreators.asMap().entries.map((entry) =>
-                              TopEntityTile(
-                                index: entry.key,
-                                entity: entry.value,
-                                isCharacter: false,
-                                isLast: entry.key == insights.topCreators.length - 1 &&
-                                    insights.allCreators.length <= 5,
-                              ),
-                            ),
-                          ],
-                          if (insights.recentlyFinished.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            SectionHeader(title: 'RECENTLY FINISHED'),
-                            const SizedBox(height: 8),
-                            ...insights.recentlyFinished.map((item) => IssueListTile(
-                              issue: IssueList(
-                                id: item.issue?.id ?? 0,
-                                name: item.issue?.series?.name ?? item.issue?.number ?? '',
-                                number: item.issue?.number ?? '',
-                                series: item.issue?.series != null
-                                    ? Series(
-                                        id: 0,
-                                        name: item.issue!.series!.name,
-                                        volume: item.issue!.series!.volume,
-                                        yearBegan: item.issue!.series!.yearBegan,
-                                      )
                                     : null,
-                                image: item.issue?.image,
-                                coverDate: item.issue?.coverDate,
-                                storeDate: item.issue?.storeDate,
-                                modified: null,
                               ),
-                              isCollected: item.quantity > 0,
-                              isRead: item.isRead,
-                              rating: item.rating,
-                              onTap: item.issue?.id != null
-                                  ? () => context.pushRoute(
-                                        IssueDetailsRoute(issueId: item.issue!.id),
-                                      )
-                                  : null,
-                            )),
+                              const SizedBox(height: 8),
+                              ...insights.topCreators.asMap().entries.map(
+                                (entry) => TopEntityTile(
+                                  index: entry.key,
+                                  entity: entry.value,
+                                  isCharacter: false,
+                                  isLast:
+                                      entry.key ==
+                                          insights.topCreators.length - 1 &&
+                                      insights.allCreators.length <= 5,
+                                ),
+                              ),
+                            ],
+                            if (insights.recentlyFinished.isNotEmpty) ...[
+                              const SizedBox(height: 24),
+                              SectionHeader(title: 'RECENTLY FINISHED'),
+                              const SizedBox(height: 8),
+                              ...insights.recentlyFinished.map(
+                                (item) => IssueListTile(
+                                  issue: IssueList(
+                                    id: item.issue?.id ?? 0,
+                                    name:
+                                        item.issue?.series?.name ??
+                                        item.issue?.number ??
+                                        '',
+                                    number: item.issue?.number ?? '',
+                                    series: item.issue?.series != null
+                                        ? Series(
+                                            id: 0,
+                                            name: item.issue!.series!.name,
+                                            volume: item.issue!.series!.volume,
+                                            yearBegan:
+                                                item.issue!.series!.yearBegan,
+                                          )
+                                        : null,
+                                    image: item.issue?.image,
+                                    coverDate: item.issue?.coverDate,
+                                    storeDate: item.issue?.storeDate,
+                                    modified: null,
+                                  ),
+                                  isCollected: item.quantity > 0,
+                                  isRead: item.isRead,
+                                  rating: item.rating,
+                                  onTap: item.issue?.id != null
+                                      ? () => context.pushRoute(
+                                          IssueDetailsRoute(
+                                            issueId: item.issue!.id,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -382,4 +425,3 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
     );
   }
 }
-

@@ -63,7 +63,10 @@ class SubscriptionPullReconciler {
     return subscriptions;
   }
 
-  Future<ReconcileResult> reconcile({bool force = false, int? onlySeriesId}) async {
+  Future<ReconcileResult> reconcile({
+    bool force = false,
+    int? onlySeriesId,
+  }) async {
     final runNow = await _shouldRun(force: force, onlySeriesId: onlySeriesId);
     if (!runNow) return const ReconcileResult(upserted: 0, issueIds: []);
 
@@ -96,7 +99,8 @@ class SubscriptionPullReconciler {
         ? DateTime.fromMillisecondsSinceEpoch(lastRunEpoch)
         : null;
 
-    final useDelta = lastRun != null &&
+    final useDelta =
+        lastRun != null &&
         DateTime.now().difference(lastRun).inDays <= 30 &&
         onlySeriesId == null;
 
@@ -201,7 +205,10 @@ class SubscriptionPullReconciler {
     if (onlySeriesId == null) {
       await _recordRun();
     }
-    return ReconcileResult(upserted: upserted, issueIds: uniqueIssueIds.toList());
+    return ReconcileResult(
+      upserted: upserted,
+      issueIds: uniqueIssueIds.toList(),
+    );
   }
 }
 

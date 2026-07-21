@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
-import 'package:takion/src/presentation/features/profile/widgets/top_entity_tile.dart';
+import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/widgets/top_entity_tile.dart';
 
 class TopCreatorsScreen extends StatelessWidget {
   final List<EntityStat> creators;

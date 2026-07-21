@@ -53,8 +53,10 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     buffer.writeln();
     buffer.writeln('App Version: ${info.version}+${info.buildNumber}');
     buffer.writeln('Package Name: ${info.packageName}');
-    buffer.writeln('Platform: ${Platform.operatingSystem} '
-        '${Platform.operatingSystemVersion}');
+    buffer.writeln(
+      'Platform: ${Platform.operatingSystem} '
+      '${Platform.operatingSystemVersion}',
+    );
     buffer.writeln('Device: ${Platform.localHostname}');
     buffer.writeln('Generated: ${_formatTimestamp(DateTime.now())}');
     buffer.writeln('Log Entries: $historyLength');
@@ -90,7 +92,9 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
         ),
       );
     } catch (e) {
-      if (mounted) TakionAlerts.safeError(context, e, userMessage: 'Failed to share logs');
+      if (mounted) {
+        TakionAlerts.safeError(context, e, userMessage: 'Failed to share logs');
+      }
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -105,9 +109,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
         return;
       }
 
-      await Clipboard.setData(
-        ClipboardData(text: logLines.join('\n')),
-      );
+      await Clipboard.setData(ClipboardData(text: logLines.join('\n')));
       if (mounted) TakionAlerts.success(context, 'Logs copied to clipboard');
     } finally {
       if (mounted) setState(() => _copying = false);
@@ -138,11 +140,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
           buildSettingsGroup(context, 'Overview', [
             _statRow(context, 'Total Entries', '$historyLength'),
             if (isCapped)
-              _statRow(
-                context,
-                'Retention',
-                'Capped at $maxHistory',
-              ),
+              _statRow(context, 'Retention', 'Capped at $maxHistory'),
             if (oldest != null)
               _statRow(
                 context,
@@ -224,63 +222,61 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
           ]),
           if (logLines.isNotEmpty) ...[
             const SizedBox(height: 16),
-            buildSettingsGroup(
-              context,
-              'Recent Logs',
-              [
-                InkWell(
-                  onTap: () => setState(
-                    () => _previewExpanded = !_previewExpanded,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Text(
-                          _previewExpanded ? 'Hide preview' : 'Show preview',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          _previewExpanded
-                              ? Icons.expand_less
-                              : Icons.expand_more,
-                          size: 18,
+            buildSettingsGroup(context, 'Recent Logs', [
+              InkWell(
+                onTap: () =>
+                    setState(() => _previewExpanded = !_previewExpanded),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        _previewExpanded ? 'Hide preview' : 'Show preview',
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _previewExpanded
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
                   ),
                 ),
-                if (_previewExpanded)
-                  Container(
-                    width: double.infinity,
-                    constraints: const BoxConstraints(maxHeight: 300),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(8),
+              ),
+              if (_previewExpanded)
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
                     ),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        logLines.sublist(
-                          0,
-                          logLines.length > 50 ? 50 : logLines.length,
-                        ).join('\n'),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          fontSize: 11,
-                          height: 1.4,
-                        ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      logLines
+                          .sublist(
+                            0,
+                            logLines.length > 50 ? 50 : logLines.length,
+                          )
+                          .join('\n'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        height: 1.4,
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ]),
           ],
         ],
       ),

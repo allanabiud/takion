@@ -105,7 +105,7 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
             })
             .whereType<HomeTrendingEntry>()
             .toList() ??
-         const <HomeTrendingEntry>[];
+        const <HomeTrendingEntry>[];
   } catch (e) {
     AppLogger.warning('Failed to load cached home trending', error: e);
   }

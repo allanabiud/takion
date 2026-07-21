@@ -4,21 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
-import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
+import 'package:takion/src/presentation/features/settings/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/rate_limit_status_provider.dart';
 
-Future<void> disconnectMetronAccount(BuildContext context, WidgetRef ref) async {
+Future<void> disconnectMetronAccount(
+  BuildContext context,
+  WidgetRef ref,
+) async {
   await ref.read(metronAccountServiceProvider).disconnect();
   ref.invalidate(metronConnectionProvider);
   if (!context.mounted) return;
   TakionAlerts.info(context, 'Disconnected');
 }
 
-Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async {
+Future<void> showMetronConnectDialog(
+  BuildContext context,
+  WidgetRef ref,
+) async {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -33,9 +39,7 @@ Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async 
             children: [
               TextField(
                 controller: usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Metron Username',
-                ),
+                decoration: const InputDecoration(labelText: 'Metron Username'),
                 autofillHints: const [AutofillHints.username],
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -43,9 +47,7 @@ Future<void> showMetronConnectDialog(BuildContext context, WidgetRef ref) async 
               const SizedBox(height: 12),
               TextField(
                 controller: passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Metron Password',
-                ),
+                decoration: const InputDecoration(labelText: 'Metron Password'),
                 obscureText: true,
                 autofillHints: const [AutofillHints.password],
                 textInputAction: TextInputAction.done,
@@ -118,7 +120,8 @@ class _MetronConnectionContent extends ConsumerStatefulWidget {
       _MetronConnectionContentState();
 }
 
-class _MetronConnectionContentState extends ConsumerState<_MetronConnectionContent> {
+class _MetronConnectionContentState
+    extends ConsumerState<_MetronConnectionContent> {
   _MetronMode _mode = _MetronMode.account;
 
   @override
@@ -129,8 +132,7 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
 
     ref.listen<AppSettings>(settingsProvider, (previous, next) {
       if (!context.mounted) return;
-      final justFinishedSync =
-          (previous?.isBusy ?? false) && !next.isBusy;
+      final justFinishedSync = (previous?.isBusy ?? false) && !next.isBusy;
       if (!justFinishedSync) return;
 
       final message = next.statusMessage?.trim();
@@ -157,9 +159,7 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -219,12 +219,7 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
               appSettings,
             ),
           ] else ...[
-            _buildCatalogSection(
-              context,
-              ref,
-              isConnected,
-              appSettings,
-            ),
+            _buildCatalogSection(context, ref, isConnected, appSettings),
           ],
         ],
       ),
@@ -243,7 +238,12 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
       mainAxisSize: MainAxisSize.min,
       children: [
         buildSettingsGroup(context, 'Connection Status', [
-          _buildConnectionStatus(context, ref, metronConnectionAsync, isConnected),
+          _buildConnectionStatus(
+            context,
+            ref,
+            metronConnectionAsync,
+            isConnected,
+          ),
         ]),
         const SizedBox(height: 16),
         buildSettingsGroup(context, 'API Usage', [
@@ -349,7 +349,9 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
       foregroundColor = theme.colorScheme.onErrorContainer;
       label = 'Connection check failed';
     } else {
-      backgroundColor = theme.colorScheme.primaryContainer.withValues(alpha: 0.4);
+      backgroundColor = theme.colorScheme.primaryContainer.withValues(
+        alpha: 0.4,
+      );
       foregroundColor = theme.colorScheme.onPrimaryContainer;
       label = 'Connected as ${connection?.username ?? 'Unknown'}';
     }
@@ -403,8 +405,8 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
               !isConnected
                   ? 'Connect Metron account to refresh'
                   : appSettings.isBusy
-                      ? 'Refresh running...'
-                      : 'Re-fetch all catalog data from Metron',
+                  ? 'Refresh running...'
+                  : 'Re-fetch all catalog data from Metron',
             ),
             trailing: appSettings.isBusy
                 ? const SizedBox(
@@ -437,8 +439,8 @@ class _MetronConnectionContentState extends ConsumerState<_MetronConnectionConte
               !isConnected
                   ? 'Connect Metron account to refresh'
                   : appSettings.isBusy
-                      ? 'Refresh running...'
-                      : 'Re-fetch only stale or missing data',
+                  ? 'Refresh running...'
+                  : 'Re-fetch only stale or missing data',
             ),
             trailing: appSettings.isBusy
                 ? const SizedBox(

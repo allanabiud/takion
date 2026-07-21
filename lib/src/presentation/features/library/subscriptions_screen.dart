@@ -77,9 +77,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           }
           return _buildSkeletonList();
         },
-        error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load subscriptions',
-        ),
+        error: (error, _) =>
+            AsyncStatePanel.error(errorMessage: 'Failed to load subscriptions'),
         data: (pageData) =>
             _buildContent(pageData, sortOption, isLoading: false),
       ),
@@ -87,9 +86,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   }
 
   Widget _buildSkeletonList() {
-    return const ShimmerWidget(
-      child: _SubscriptionSkeletonContent(),
-    );
+    return const ShimmerWidget(child: _SubscriptionSkeletonContent());
   }
 
   Widget _buildContent(
@@ -193,7 +190,11 @@ class _SubscriptionSkeletonContent extends StatelessWidget {
                         SizedBox(height: 8),
                         SkeletonBox(height: 14, width: 180),
                         SizedBox(height: 12),
-                        SkeletonBox(height: 6, width: double.infinity, borderRadius: 3),
+                        SkeletonBox(
+                          height: 6,
+                          width: double.infinity,
+                          borderRadius: 3,
+                        ),
                         SizedBox(height: 12),
                         Row(
                           children: [

@@ -159,8 +159,7 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
                           ]
                         : metrics.providerCalls.entries.map((e) {
                             final avg =
-                                (metrics.providerTotalMs[e.key] ?? 0) /
-                                e.value;
+                                (metrics.providerTotalMs[e.key] ?? 0) / e.value;
                             return buildSettingsRow(
                               e.key,
                               '${avg.toStringAsFixed(0)}ms',

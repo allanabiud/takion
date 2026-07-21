@@ -10,8 +10,7 @@ DateTime weekStart(DateTime date) {
   return normalized.subtract(Duration(days: offset));
 }
 
-DateTime weekEnd(DateTime date) =>
-    weekStart(date).add(const Duration(days: 6));
+DateTime weekEnd(DateTime date) => weekStart(date).add(const Duration(days: 6));
 
 DateTime dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 

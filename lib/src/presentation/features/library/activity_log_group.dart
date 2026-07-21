@@ -37,10 +37,13 @@ List<ActivityLogGroup> groupActivityEvents(List<LibraryActivityEvent> events) {
     final dateOnly = DateTime(local.year, local.month, local.day);
     final key = '${dateOnly.millisecondsSinceEpoch}:${event.type.name}';
 
-    groups.putIfAbsent(
-      key,
-      () => ActivityLogGroup(type: event.type, events: [], date: dateOnly),
-    ).events.add(event);
+    groups
+        .putIfAbsent(
+          key,
+          () => ActivityLogGroup(type: event.type, events: [], date: dateOnly),
+        )
+        .events
+        .add(event);
   }
 
   final result = groups.values.toList();

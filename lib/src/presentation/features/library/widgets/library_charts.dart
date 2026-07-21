@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
 
 class ReadingTrendChart extends StatelessWidget {
   const ReadingTrendChart({super.key, required this.data});
@@ -157,11 +157,7 @@ class ReadingTrendChart extends StatelessWidget {
 }
 
 class StatBarTable extends StatelessWidget {
-  const StatBarTable({
-    super.key,
-    required this.items,
-    this.color,
-  });
+  const StatBarTable({super.key, required this.items, this.color});
 
   final List<MapEntry<String, int>> items;
   final Color? color;
@@ -173,9 +169,7 @@ class StatBarTable extends StatelessWidget {
 
     if (items.isEmpty) return const SizedBox.shrink();
 
-    final maxCount = items
-        .map((e) => e.value)
-        .reduce((a, b) => a > b ? a : b);
+    final maxCount = items.map((e) => e.value).reduce((a, b) => a > b ? a : b);
 
     return Column(
       children: items.map((item) {
@@ -204,9 +198,7 @@ class StatBarTable extends StatelessWidget {
                     height: 18,
                     child: Stack(
                       children: [
-                        Container(
-                          color: barColor.withValues(alpha: 0.12),
-                        ),
+                        Container(color: barColor.withValues(alpha: 0.12)),
                         FractionallySizedBox(
                           widthFactor: fraction,
                           child: Container(

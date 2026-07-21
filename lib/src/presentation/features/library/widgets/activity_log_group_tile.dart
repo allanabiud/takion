@@ -36,22 +36,22 @@ class ActivityLogGroupTile extends ConsumerWidget {
           indicator: DotIndicator(
             size: 32,
             color: eventColor.withValues(alpha: 0.12),
-            child: Icon(
-              _iconForEvent(group.type),
-              color: eventColor,
-              size: 16,
-            ),
+            child: Icon(_iconForEvent(group.type), color: eventColor, size: 16),
           ),
           startConnector: isFirst
               ? null
               : SolidLineConnector(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   thickness: 2,
                 ),
           endConnector: isLast
               ? null
               : SolidLineConnector(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   thickness: 2,
                 ),
         ),
@@ -92,7 +92,9 @@ class ActivityLogGroupTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            DateFormat('h:mm a').format(group.latestTimestamp.toLocal()),
+                            DateFormat(
+                              'h:mm a',
+                            ).format(group.latestTimestamp.toLocal()),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -174,7 +176,9 @@ class ActivityLogGroupTile extends ConsumerWidget {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final event = group.events[index];
-              final issueStr = event.issueNumber != null ? '#${event.issueNumber}' : '';
+              final issueStr = event.issueNumber != null
+                  ? '#${event.issueNumber}'
+                  : '';
               final seriesStr = event.seriesName ?? 'Unknown Series';
 
               return ListTile(
@@ -198,10 +202,11 @@ class ActivityLogGroupTile extends ConsumerWidget {
                         text: seriesStr,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      if (issueStr.isNotEmpty) TextSpan(
-                        text: ' $issueStr',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      if (issueStr.isNotEmpty)
+                        TextSpan(
+                          text: ' $issueStr',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                     ],
                   ),
                 ),

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/components/image_error_placeholder.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
 class TopEntityTile extends ConsumerWidget {
@@ -43,9 +43,7 @@ class TopEntityTile extends ConsumerWidget {
                   CharacterDetailsRoute(characterId: entity.id),
                 );
               } else {
-                context.pushRoute(
-                  CreatorDetailsRoute(creatorId: entity.id),
-                );
+                context.pushRoute(CreatorDetailsRoute(creatorId: entity.id));
               }
             },
             child: Padding(

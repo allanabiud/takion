@@ -239,13 +239,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             children: [
                               Icon(
                                 Icons.search,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 'Search comics...',
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                               ),
                             ],
@@ -256,7 +261,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     IconButton(
                       icon: const Icon(LucideIcons.scanBarcode),
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      onPressed: () => context.pushRoute(const BarcodeScannerRoute()),
+                      onPressed: () =>
+                          context.pushRoute(const BarcodeScannerRoute()),
                     ),
                     const SizedBox(width: 4),
                   ],
@@ -309,8 +315,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     sheetTitle:
                                         '${series?.name ?? issue.name} #${issue.number}',
                                     seriesId: series?.id,
-                                    releaseDate: issue.storeDate ??
-                                        issue.coverDate,
+                                    releaseDate:
+                                        issue.storeDate ?? issue.coverDate,
                                   ),
                             child: Stack(
                               fit: StackFit.expand,

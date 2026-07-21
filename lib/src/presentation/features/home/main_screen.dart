@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
 import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/common/empty_content_state.dart';
@@ -104,13 +103,6 @@ class MainScreenState extends ConsumerState<MainScreen>
 
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(userProfileProvider);
-    final avatarUrl = profileAsync.maybeWhen(
-      data: (profile) => (profile?['avatar_url'] as String?)?.trim(),
-      orElse: () => null,
-    );
-    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
-
     final bodyHeight = MediaQuery.of(context).size.height;
     final bodyWidth = MediaQuery.of(context).size.width;
     final topPadding = MediaQuery.of(context).padding.top;
@@ -131,21 +123,6 @@ class MainScreenState extends ConsumerState<MainScreen>
           },
           child: Scaffold(
             appBar: AppBar(
-              leading: IconButton(
-                icon: hasAvatar
-                    ? ClipOval(
-                        child: Image.network(
-                          avatarUrl,
-                          width: 32,
-                          height: 32,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              const Icon(Icons.account_circle_outlined),
-                        ),
-                      )
-                    : const Icon(Icons.account_circle_outlined),
-                onPressed: () => context.pushRoute(const UserProfileRoute()),
-              ),
               title: Text(
                 titles[tabsRouter.activeIndex],
                 style: const TextStyle(
@@ -180,9 +157,12 @@ class MainScreenState extends ConsumerState<MainScreen>
                             children: [
                               Text(
                                 'Syncing with Google Drive',
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
                               ),
                             ],
                           ),
@@ -195,28 +175,28 @@ class MainScreenState extends ConsumerState<MainScreen>
                     ),
                   ),
                 NavigationBar(
-              selectedIndex: tabsRouter.activeIndex,
-              onDestinationSelected: tabsRouter.setActiveIndex,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.new_releases_outlined),
-                  selectedIcon: Icon(Icons.new_releases),
-                  label: 'Releases',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.collections_bookmark_outlined),
-                  selectedIcon: Icon(Icons.collections_bookmark),
-                  label: 'Library',
+                  selectedIndex: tabsRouter.activeIndex,
+                  onDestinationSelected: tabsRouter.setActiveIndex,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: 'Home',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.new_releases_outlined),
+                      selectedIcon: Icon(Icons.new_releases),
+                      label: 'Releases',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.collections_bookmark_outlined),
+                      selectedIcon: Icon(Icons.collections_bookmark),
+                      label: 'Library',
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-          ),
           ),
         );
       },
@@ -466,4 +446,3 @@ class MainScreenState extends ConsumerState<MainScreen>
     );
   }
 }
-

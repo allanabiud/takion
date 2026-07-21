@@ -28,11 +28,7 @@ class BackupService {
   static const _version = <int>[0x02];
 
   static const Map<String, List<String>> backupGroups = {
-    'User Profile': ['local_profile_box'],
-    'My Library': [
-      'local_library_items_box',
-      'local_library_read_logs_box',
-    ],
+    'My Library': ['local_library_items_box', 'local_library_read_logs_box'],
     'Pull List': ['local_pull_list_box'],
     'Subscriptions': ['local_subscriptions_box'],
     'Favorites': [
@@ -99,9 +95,7 @@ class BackupService {
     return header;
   }
 
-  Future<BackupManifest> loadManifest({
-    required String filePath,
-  }) async {
+  Future<BackupManifest> loadManifest({required String filePath}) async {
     final payload = await _readFile(filePath);
     final boxes = payload['b'] as Map<String, dynamic>;
     final counts = <String, int>{};
@@ -122,10 +116,8 @@ class BackupService {
     final payload = await _readFile(filePath);
     final boxes = payload['b'] as Map<String, dynamic>;
     return boxes.map(
-      (key, value) => MapEntry(
-        key,
-        (value as List).cast<Map<String, dynamic>>(),
-      ),
+      (key, value) =>
+          MapEntry(key, (value as List).cast<Map<String, dynamic>>()),
     );
   }
 
@@ -171,7 +163,8 @@ class BackupService {
 
     offset += _version.length;
 
-    final jsonLen = data[offset] |
+    final jsonLen =
+        data[offset] |
         (data[offset + 1] << 8) |
         (data[offset + 2] << 16) |
         (data[offset + 3] << 24);

@@ -3,11 +3,14 @@ import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
-final collectionStatusCacheProvider = NotifierProvider.autoDispose<CollectionStatusCacheNotifier, AsyncValue<Map<int, IssueCollectionStatus>>>(
-  CollectionStatusCacheNotifier.new,
-);
+final collectionStatusCacheProvider =
+    NotifierProvider.autoDispose<
+      CollectionStatusCacheNotifier,
+      AsyncValue<Map<int, IssueCollectionStatus>>
+    >(CollectionStatusCacheNotifier.new);
 
-class CollectionStatusCacheNotifier extends Notifier<AsyncValue<Map<int, IssueCollectionStatus>>> {
+class CollectionStatusCacheNotifier
+    extends Notifier<AsyncValue<Map<int, IssueCollectionStatus>>> {
   @override
   AsyncValue<Map<int, IssueCollectionStatus>> build() {
     final allItems = ref.watch(allLibraryItemsProvider);

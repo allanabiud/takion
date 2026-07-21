@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 void showLicensesSheet(BuildContext context) {
   showModalBottomSheet(
@@ -34,10 +33,12 @@ class _LicensesSheetState extends State<_LicensesSheet> {
   Future<void> _loadLicenses() async {
     final entries = <_LicenseEntry>[];
     await for (final entry in LicenseRegistry.licenses) {
-      entries.add(_LicenseEntry(
-        packages: entry.packages.toList(),
-        paragraphs: entry.paragraphs.toList(),
-      ));
+      entries.add(
+        _LicenseEntry(
+          packages: entry.packages.toList(),
+          paragraphs: entry.paragraphs.toList(),
+        ),
+      );
     }
     entries.sort((a, b) => a.packages.first.compareTo(b.packages.first));
     if (mounted) setState(() => _licenses = entries);
@@ -75,13 +76,9 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [
-                      SvgPicture.asset(
-                        'assets/branding/takion_logo.svg',
+                      Image.asset(
+                        'assets/branding/logo.png',
                         height: 32,
-                        colorFilter: ColorFilter.mode(
-                          theme.colorScheme.primary,
-                          BlendMode.srcIn,
-                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -94,13 +91,8 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Divider(
-                  height: 1,
-                  color: theme.colorScheme.outlineVariant,
-                ),
-                Expanded(
-                  child: _buildList(scrollController),
-                ),
+                Divider(height: 1, color: theme.colorScheme.outlineVariant),
+                Expanded(child: _buildList(scrollController)),
               ],
             ),
           ),
@@ -189,8 +181,5 @@ class _LicenseEntry {
   final List<String> packages;
   final List<LicenseParagraph> paragraphs;
 
-  const _LicenseEntry({
-    required this.packages,
-    required this.paragraphs,
-  });
+  const _LicenseEntry({required this.packages, required this.paragraphs});
 }

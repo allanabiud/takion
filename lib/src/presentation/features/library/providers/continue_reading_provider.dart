@@ -65,10 +65,12 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
 
   // Only collected+read items qualify a series for Continue Reading.
-  final collectedReadItems = libraryItems.where(
-    (item) =>
-        item.ownershipStatus == LibraryOwnershipStatus.owned && item.isRead,
-  ).toList();
+  final collectedReadItems = libraryItems
+      .where(
+        (item) =>
+            item.ownershipStatus == LibraryOwnershipStatus.owned && item.isRead,
+      )
+      .toList();
   if (collectedReadItems.isEmpty) return const [];
 
   // All read issue IDs (collected or not) are used for the "skip already read" logic.

@@ -169,7 +169,10 @@ class LibraryScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text(
-                      TakionAlerts.cleanError(error, fallback: 'Something went wrong'),
+                      TakionAlerts.cleanError(
+                        error,
+                        fallback: 'Something went wrong',
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -270,7 +273,10 @@ class LibraryScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text(
-                      TakionAlerts.cleanError(error, fallback: 'Something went wrong'),
+                      TakionAlerts.cleanError(
+                        error,
+                        fallback: 'Something went wrong',
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),

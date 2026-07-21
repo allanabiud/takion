@@ -113,9 +113,9 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
     cached =
         cachedJson?.map(issueListFromJson).whereType<IssueList>().toList() ??
         const <IssueList>[];
-    } catch (e) {
-      AppLogger.warning('Failed to load cached because you pulled', error: e);
-    }
+  } catch (e) {
+    AppLogger.warning('Failed to load cached because you pulled', error: e);
+  }
   final hasFreshCache =
       cachedAt != null &&
       HomeCachePolicies.becauseYouPulled.isFresh(cachedAt, DateTime.now()) &&

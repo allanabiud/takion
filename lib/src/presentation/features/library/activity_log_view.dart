@@ -11,10 +11,7 @@ import 'package:takion/src/presentation/features/library/widgets/activity_log_gr
 class ActivityLogView extends ConsumerWidget {
   final ActivityEventType? typeFilter;
 
-  const ActivityLogView({
-    super.key,
-    required this.typeFilter,
-  });
+  const ActivityLogView({super.key, required this.typeFilter});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,9 +19,8 @@ class ActivityLogView extends ConsumerWidget {
 
     return activityAsync.when(
       loading: () => const AsyncStatePanel.loading(),
-      error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load activity',
-      ),
+      error: (error, _) =>
+          AsyncStatePanel.error(errorMessage: 'Failed to load activity'),
       data: (events) {
         if (events.isEmpty) {
           return const Center(
@@ -47,18 +43,21 @@ class ActivityLogView extends ConsumerWidget {
           }
 
           final isFirstInDate = isNewDate;
-          final isLastInDate = i == groups.length - 1 ||
-              groups[i + 1].date != group.date;
+          final isLastInDate =
+              i == groups.length - 1 || groups[i + 1].date != group.date;
 
-          flatItems.add(_ActivityLogItem.group(
-            group: group,
-            isFirst: isFirstInDate,
-            isLast: isLastInDate,
-          ));
+          flatItems.add(
+            _ActivityLogItem.group(
+              group: group,
+              isFirst: isFirstInDate,
+              isLast: isLastInDate,
+            ),
+          );
         }
 
         return RefreshIndicator(
-          onRefresh: () async => ref.invalidate(recentActivityProvider(typeFilter)),
+          onRefresh: () async =>
+              ref.invalidate(recentActivityProvider(typeFilter)),
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -83,14 +82,19 @@ class ActivityLogView extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context, DateTime date) {
     return Padding(
-      padding: const EdgeInsets.only(left: 20.0, right: 16.0, top: 16.0, bottom: 8.0),
+      padding: const EdgeInsets.only(
+        left: 20.0,
+        right: 16.0,
+        top: 16.0,
+        bottom: 8.0,
+      ),
       child: Text(
         _formatDateHeader(date),
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -118,9 +122,9 @@ class _ActivityLogItem {
   final bool isLast;
 
   _ActivityLogItem.header(this.date)
-      : group = null,
-        isFirst = false,
-        isLast = false;
+    : group = null,
+      isFirst = false,
+      isLast = false;
 
   _ActivityLogItem.group({
     required this.group,

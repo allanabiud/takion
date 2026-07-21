@@ -7,8 +7,7 @@ import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
+import 'package:takion/src/presentation/features/settings/providers/metron_account_provider.dart';
 import 'package:takion/src/presentation/common/floating_icons_background.dart';
 import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -68,23 +67,26 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
     });
 
     try {
-      AppLogger.info('Metron connect attempt from authorize screen for $username');
+      AppLogger.info(
+        'Metron connect attempt from authorize screen for $username',
+      );
       final connected = await ref
           .read(metronAccountServiceProvider)
           .connect(username, password);
       if (!mounted || !context.mounted) return;
 
       if (!connected) {
-        AppLogger.warning('Metron connect failed: invalid credentials for $username');
+        AppLogger.warning(
+          'Metron connect failed: invalid credentials for $username',
+        );
         TakionAlerts.error(context, 'Invalid credentials');
         return;
       }
 
-      AppLogger.info('Metron connect succeeded from authorize screen for $username');
+      AppLogger.info(
+        'Metron connect succeeded from authorize screen for $username',
+      );
       ref.invalidate(metronConnectionProvider);
-      await ref
-          .read(userProfileProvider.notifier)
-          .saveProfile(displayName: username);
       if (!mounted) return;
       _passwordController.clear();
       _didAutoRedirect = true;

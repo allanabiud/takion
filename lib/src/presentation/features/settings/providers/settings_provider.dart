@@ -22,8 +22,6 @@ import 'package:takion/src/presentation/features/library/providers/collection_su
 import 'package:takion/src/presentation/features/library/providers/because_you_pulled_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
@@ -40,7 +38,7 @@ import 'package:takion/src/presentation/features/publishers/providers/publisher_
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/storage/local_profile_service.dart';
+import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
 part 'settings_provider.freezed.dart';
@@ -61,7 +59,9 @@ void invalidateReleaseProviders(void Function(dynamic provider) invalidate) {
   invalidate(focReleasesProvider);
 }
 
-void invalidateCacheBackedProviders(void Function(dynamic provider) invalidate) {
+void invalidateCacheBackedProviders(
+  void Function(dynamic provider) invalidate,
+) {
   invalidateReleaseProviders(invalidate);
   invalidate(issueDetailsProvider);
   invalidate(issueSearchResultsProvider);
@@ -88,8 +88,7 @@ void invalidateCacheBackedProviders(void Function(dynamic provider) invalidate) 
   invalidate(pullsIssuesForWeekProvider);
   invalidate(currentWeekPullsProvider);
   invalidate(currentWeekPullsCountProvider);
-  invalidate(userProfileProvider);
-  invalidate(profileInsightsProvider);
+  invalidate(libraryInsightsProvider);
   invalidate(characterDetailsProvider);
   invalidate(characterSearchResultsProvider);
   invalidate(characterIssueListProvider);
@@ -439,7 +438,6 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   Future<void> _refreshLocalData({required bool quick}) async {
     final pullRepo = ref.read(pullListRepositoryProvider);
-    final profileService = ref.read(localProfileServiceProvider);
     final reconciler = ref.read(subscriptionPullReconcilerProvider);
     final fromDate = _weekStart(DateTime.now());
     await pullRepo.regenerateFromSubscriptions(
@@ -452,7 +450,6 @@ class SettingsNotifier extends _$SettingsNotifier {
       ref.read(allLibraryItemsProvider.future),
       ref.read(activeSubscriptionsProvider.future),
       ref.read(currentWeekPullsProvider.future),
-      profileService.getCurrentProfile(forceRefresh: !quick),
     ]);
   }
 
@@ -470,7 +467,9 @@ class SettingsNotifier extends _$SettingsNotifier {
       final synced = await _refreshCatalogCaches(quick: false);
       await _refreshLocalData(quick: false);
       _invalidateCacheBackedProviders();
-      AppLogger.info('Full catalog refresh completed ($synced cached slice(s) refreshed)');
+      AppLogger.info(
+        'Full catalog refresh completed ($synced cached slice(s) refreshed)',
+      );
       state = state.copyWith(
         isBusy: false,
         statusMessage:
@@ -499,7 +498,9 @@ class SettingsNotifier extends _$SettingsNotifier {
       final synced = await _refreshCatalogCaches(quick: true);
       await _refreshLocalData(quick: true);
       _invalidateCacheBackedProviders();
-      AppLogger.info('Stale catalog refresh completed ($synced stale/missing cache slice(s) refreshed)');
+      AppLogger.info(
+        'Stale catalog refresh completed ($synced stale/missing cache slice(s) refreshed)',
+      );
       state = state.copyWith(
         isBusy: false,
         statusMessage:
@@ -632,46 +633,6 @@ class AutoPullToCollectionNotifier extends AsyncNotifier<bool> {
   }
 }
 
-enum DefaultSortOrder { dateAdded, title, series }
-
-final defaultSortOrderProvider =
-    AsyncNotifierProvider<DefaultSortOrderNotifier, DefaultSortOrder>(
-      DefaultSortOrderNotifier.new,
-    );
-
-class DefaultSortOrderNotifier extends AsyncNotifier<DefaultSortOrder> {
-  static const _boxName = 'settings_box';
-  static const _key = 'default_sort_order';
-
-  @override
-  Future<DefaultSortOrder> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final raw =
-        (box.get(_key, defaultValue: 'date_added') as String?) ?? 'date_added';
-    switch (raw) {
-      case 'title':
-        return DefaultSortOrder.title;
-      case 'series':
-        return DefaultSortOrder.series;
-      default:
-        return DefaultSortOrder.dateAdded;
-    }
-  }
-
-  Future<void> setSortOrder(DefaultSortOrder order) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final value = switch (order) {
-      DefaultSortOrder.dateAdded => 'date_added',
-      DefaultSortOrder.title => 'title',
-      DefaultSortOrder.series => 'series',
-    };
-    await box.put(_key, value);
-    state = AsyncValue.data(order);
-  }
-}
-
 final showReadIssueTickOverlayProvider =
     AsyncNotifierProvider<ShowReadIssueTickOverlayNotifier, bool>(
       ShowReadIssueTickOverlayNotifier.new,
@@ -710,7 +671,9 @@ class AccentSchemeNotifier extends AsyncNotifier<FlexScheme> {
     final hive = ref.read(hiveServiceProvider);
     final box = await hive.openBox(_boxName);
     final raw = box.get(_key, defaultValue: FlexScheme.green.index) as int;
-    return FlexScheme.values.length > raw ? FlexScheme.values[raw] : FlexScheme.green;
+    return FlexScheme.values.length > raw
+        ? FlexScheme.values[raw]
+        : FlexScheme.green;
   }
 
   Future<void> setScheme(FlexScheme scheme) async {

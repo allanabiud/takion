@@ -59,7 +59,10 @@ Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
       .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
       .toList();
   final totalCount = ownedItems.length;
-  final libraryItems = ownedItems.skip(offset).take(_collectionPageSize).toList();
+  final libraryItems = ownedItems
+      .skip(offset)
+      .take(_collectionPageSize)
+      .toList();
 
   final enriched = await mapWithConcurrency<LibraryItem, CollectionItem>(
     libraryItems,
@@ -123,9 +126,7 @@ final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((
     libraryItems,
     (item) => enrichLibraryItem(ref, item),
   );
-  return enriched
-      .where((item) => item.quantity > 0 || item.isRead)
-      .toList();
+  return enriched.where((item) => item.quantity > 0 || item.isRead).toList();
 });
 
 final collectionItemsByOwnershipStatusProvider = FutureProvider.autoDispose
@@ -141,7 +142,10 @@ final collectionItemsByReadStatusProvider = FutureProvider.autoDispose
     .family<List<CollectionItem>, bool>((ref, isRead) async {
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final filtered = libraryItems
-          .where((item) => item.isRead == isRead && (isRead || item.quantityOwned > 0))
+          .where(
+            (item) =>
+                item.isRead == isRead && (isRead || item.quantityOwned > 0),
+          )
           .toList();
       return Future.wait(filtered.map((item) => enrichLibraryItem(ref, item)));
     });

@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/storage/hive_service.dart';
 
-final debugModeProvider =
-    AsyncNotifierProvider<DebugModeNotifier, bool>(
-      DebugModeNotifier.new,
-    );
+final debugModeProvider = AsyncNotifierProvider<DebugModeNotifier, bool>(
+  DebugModeNotifier.new,
+);
 
 class DebugModeNotifier extends AsyncNotifier<bool> {
   static const _boxName = 'settings_box';

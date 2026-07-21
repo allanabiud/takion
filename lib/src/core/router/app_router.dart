@@ -238,11 +238,6 @@ class AppRouter extends RootStackRouter {
       path: '/series/:seriesId/issues',
       guards: [authGuard],
     ),
-    AutoRoute(
-      page: UserProfileRoute.page,
-      path: '/profile',
-      guards: [authGuard],
-    ),
     AutoRoute(page: SettingsRoute.page, path: '/settings', guards: [authGuard]),
     AutoRoute(
       page: LibrarySeriesRoute.page,

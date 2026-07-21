@@ -23,7 +23,8 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
   final hiveService = ref.read(hiveServiceProvider);
   double totalValue = 0;
   for (final item in collectedItems) {
-    final unitPrice = item.pricePaid ??
+    final unitPrice =
+        item.pricePaid ??
         await hiveService.getIssuePrice(item.metronIssueId) ??
         0;
     totalValue += unitPrice * item.quantityOwned;

@@ -97,19 +97,27 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
         details.series?.yearBegan,
         details.number,
         details.image,
-        details.coverDate != null ? DateTime.tryParse(details.coverDate!) : null,
-        details.storeDate != null ? DateTime.tryParse(details.storeDate!) : null,
+        details.coverDate != null
+            ? DateTime.tryParse(details.coverDate!)
+            : null,
+        details.storeDate != null
+            ? DateTime.tryParse(details.storeDate!)
+            : null,
         details.modified != null ? DateTime.tryParse(details.modified!) : null,
       );
     }
   } catch (e) {
-    AppLogger.warning('Failed to hydrate library item from issue details', error: e);
+    AppLogger.warning(
+      'Failed to hydrate library item from issue details',
+      error: e,
+    );
     // Fall through to series details lookup
   }
 
   try {
-    final seriesDetails =
-        await localDataSource.getSeriesDetails(item.metronSeriesId);
+    final seriesDetails = await localDataSource.getSeriesDetails(
+      item.metronSeriesId,
+    );
     if (seriesDetails != null) {
       return toCollectionItem(
         item,
@@ -124,19 +132,12 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
       );
     }
   } catch (e) {
-    AppLogger.warning('Failed to hydrate library item from series details', error: e);
+    AppLogger.warning(
+      'Failed to hydrate library item from series details',
+      error: e,
+    );
     // Fall through to fallback
   }
 
-  return toCollectionItem(
-    item,
-    null,
-    null,
-    null,
-    '',
-    null,
-    null,
-    null,
-    null,
-  );
+  return toCollectionItem(item, null, null, null, '', null, null, null, null);
 }

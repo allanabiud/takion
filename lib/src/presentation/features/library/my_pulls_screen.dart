@@ -71,13 +71,14 @@ class MyPullsScreen extends ConsumerWidget {
       invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
-      TakionAlerts.success(
-        context,
-        '$affected Added to Collection',
-      );
+      TakionAlerts.success(context, '$affected Added to Collection');
     } catch (error) {
       if (!context.mounted) return;
-      TakionAlerts.safeError(context, error, userMessage: 'Failed to add pulled issues');
+      TakionAlerts.safeError(
+        context,
+        error,
+        userMessage: 'Failed to add pulled issues',
+      );
     }
   }
 
@@ -142,7 +143,11 @@ class MyPullsScreen extends ConsumerWidget {
       TakionAlerts.success(context, '$affected Marked as Read');
     } catch (error) {
       if (!context.mounted) return;
-      TakionAlerts.safeError(context, error, userMessage: 'Failed to mark pulled issues as read');
+      TakionAlerts.safeError(
+        context,
+        error,
+        userMessage: 'Failed to mark pulled issues as read',
+      );
     }
   }
 

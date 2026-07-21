@@ -37,7 +37,11 @@ class MetronCachePolicies {
 
   static DateTime _weekStart(DateTime date) {
     final offset = date.weekday % 7;
-    return DateTime(date.year, date.month, date.day).subtract(Duration(days: offset));
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).subtract(Duration(days: offset));
   }
 
   static CachePolicy weeklyReleasesForDate(DateTime date) {
@@ -52,7 +56,6 @@ class MetronCachePolicies {
 class LocalDataCachePolicies {
   const LocalDataCachePolicies._();
 
-  static const profile = CachePolicy(ttl: Duration(hours: 1));
   static const collectionStats = CachePolicy(ttl: Duration(hours: 3));
   static const collectionItems = CachePolicy(ttl: Duration(hours: 3));
   static const collectionItemDetails = CachePolicy(ttl: Duration(hours: 3));

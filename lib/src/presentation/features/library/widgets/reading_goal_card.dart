@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
 import 'package:takion/src/presentation/components/components.dart';
 
 class ReadingGoalCard extends ConsumerWidget {
-  final ProfileFilter filter;
+  final LibraryFilter filter;
 
-  const ReadingGoalCard({super.key, this.filter = ProfileFilter.month});
+  const ReadingGoalCard({super.key, this.filter = LibraryFilter.month});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goalAsync = ref.watch(readingGoalProvider);
-    final insightsAsync = ref.watch(profileInsightsProvider(filter));
+    final insightsAsync = ref.watch(libraryInsightsProvider(filter));
 
     return goalAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -51,17 +51,13 @@ class ReadingGoalCard extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Text(
                           'Reading Goal',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
                         Text(
                           '${(percent * 100).toStringAsFixed(0)}%',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).colorScheme.primary,
@@ -75,17 +71,17 @@ class ReadingGoalCard extends ConsumerWidget {
                       child: LinearProgressIndicator(
                         value: percent,
                         minHeight: 12,
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '$progress / $target issues (${goal.period})',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -94,14 +90,17 @@ class ReadingGoalCard extends ConsumerWidget {
                         TextButton.icon(
                           icon: const Icon(Icons.edit_outlined, size: 18),
                           label: const Text('Edit Goal'),
-                          onPressed: () => _showEditGoalSheet(context, ref, goal),
+                          onPressed: () =>
+                              _showEditGoalSheet(context, ref, goal),
                         ),
                         const SizedBox(width: 8),
                         TextButton.icon(
                           icon: const Icon(Icons.delete_outline, size: 18),
                           label: const Text('Clear'),
                           onPressed: () async {
-                            await ref.read(readingGoalProvider.notifier).clearGoal();
+                            await ref
+                                .read(readingGoalProvider.notifier)
+                                .clearGoal();
                           },
                         ),
                       ],
@@ -116,7 +115,11 @@ class ReadingGoalCard extends ConsumerWidget {
     );
   }
 
-  void _showEditGoalSheet(BuildContext context, WidgetRef ref, ReadingGoal current) {
+  void _showEditGoalSheet(
+    BuildContext context,
+    WidgetRef ref,
+    ReadingGoal current,
+  ) {
     var target = current.target;
     var period = current.period;
 

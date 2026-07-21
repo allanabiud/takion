@@ -8,7 +8,10 @@ import 'package:takion/src/presentation/common/takion_alerts.dart';
 import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
-Future<bool?> showRestoreBackupSheet(BuildContext context, WidgetRef ref) async {
+Future<bool?> showRestoreBackupSheet(
+  BuildContext context,
+  WidgetRef ref,
+) async {
   final result = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['tkbk'],
@@ -26,11 +29,7 @@ Future<bool?> showRestoreBackupSheet(BuildContext context, WidgetRef ref) async 
   return TakionBottomSheet.show<bool>(
     context: context,
     title: 'Restore from Backup',
-    child: _RestoreSheet(
-      ref: ref,
-      service: service,
-      filePath: filePath,
-    ),
+    child: _RestoreSheet(ref: ref, service: service, filePath: filePath),
   );
 }
 
@@ -71,12 +70,13 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
     for (final boxName in _manifest!.boxNames) {
       availableGroups.add(BackupService.groupForBox(boxName));
     }
-    final entries = BackupService.backupGroups.entries
-        .where((e) => availableGroups.contains(e.key))
-        .toList()
-      ..sort((a, b) {
-        return 0;
-      });
+    final entries =
+        BackupService.backupGroups.entries
+            .where((e) => availableGroups.contains(e.key))
+            .toList()
+          ..sort((a, b) {
+            return 0;
+          });
     return entries;
   }
 
@@ -150,8 +150,11 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Column(
             children: [
-              Icon(Icons.error_outline,
-                  size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 _loadError,
@@ -196,23 +199,21 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-          ..._sortedEntries.map(
-            (entry) {
-              final group = entry.key;
+          ..._sortedEntries.map((entry) {
+            final group = entry.key;
 
-              return SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _selections[group] ?? false,
-                onChanged: _restoring
-                    ? null
-                    : (v) => setState(() => _selections[group] = v),
-                title: Text(
-                  group,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              );
-            },
-          ),
+            return SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _selections[group] ?? false,
+              onChanged: _restoring
+                  ? null
+                  : (v) => setState(() => _selections[group] = v),
+              title: Text(
+                group,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            );
+          }),
           const Divider(),
           if (_restoring) ...[
             Padding(
@@ -220,7 +221,8 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
               child: Column(
                 children: [
                   LinearProgressIndicator(
-                      value: _progress > 0 ? _progress : null),
+                    value: _progress > 0 ? _progress : null,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     _statusText,
@@ -234,8 +236,9 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed:
-                      _restoring ? null : () => Navigator.of(context).pop(),
+                  onPressed: _restoring
+                      ? null
+                      : () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
               ),
@@ -297,8 +300,10 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
         final needsRestart = boxNames.contains('settings_box');
 
         if (needsRestart) {
-          TakionAlerts.info(context,
-              'Restore complete. Some restored settings will take effect after restarting the app.');
+          TakionAlerts.info(
+            context,
+            'Restore complete. Some restored settings will take effect after restarting the app.',
+          );
         } else {
           TakionAlerts.success(context, 'Backup restored successfully');
         }
@@ -312,7 +317,6 @@ class _RestoreSheetState extends ConsumerState<_RestoreSheet> {
       }
     }
   }
-
 }
 
 enum _RestorePhase { loading, error, selecting }

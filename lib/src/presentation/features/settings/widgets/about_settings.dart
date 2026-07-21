@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/components/components.dart';
@@ -44,21 +43,16 @@ class _AboutBody extends ConsumerWidget {
               GestureDetector(
                 onLongPress: () async {
                   await ref.read(debugModeProvider.notifier).toggle();
-                  final isEnabled =
-                      ref.read(debugModeProvider).value ?? false;
+                  final isEnabled = ref.read(debugModeProvider).value ?? false;
                   if (!context.mounted) return;
                   TakionAlerts.info(
                     context,
                     isEnabled ? 'Debug mode enabled' : 'Debug mode disabled',
                   );
                 },
-                child: SvgPicture.asset(
-                  'assets/branding/takion_logo.svg',
+                child: Image.asset(
+                  'assets/branding/logo.png',
                   height: 64,
-                  colorFilter: ColorFilter.mode(
-                    Theme.of(context).colorScheme.primary,
-                    BlendMode.srcIn,
-                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -130,9 +124,7 @@ class _AboutBody extends ConsumerWidget {
                             'GitHub Repository',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -166,12 +158,9 @@ class _AboutBody extends ConsumerWidget {
                       ),
                       Text(
                         'Creator and maintainer',
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -193,9 +182,7 @@ class _AboutBody extends ConsumerWidget {
                 'Open Source Licenses',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text(
-                'View licenses for third-party libraries',
-              ),
+              subtitle: const Text('View licenses for third-party libraries'),
               onTap: () => showLicensesSheet(context),
             ),
           ]),

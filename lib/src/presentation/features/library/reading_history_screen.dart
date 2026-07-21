@@ -59,7 +59,10 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
       body: historyAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
-          errorMessage: TakionAlerts.cleanError(error, fallback: 'Failed to load reading history'),
+          errorMessage: TakionAlerts.cleanError(
+            error,
+            fallback: 'Failed to load reading history',
+          ),
         ),
         data: (entries) {
           if (entries.isEmpty) {

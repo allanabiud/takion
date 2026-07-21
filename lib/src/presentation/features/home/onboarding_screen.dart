@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
@@ -14,8 +13,7 @@ import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/logic/shortcut_handler.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/presentation/features/profile/providers/metron_account_provider.dart';
-import 'package:takion/src/presentation/features/profile/providers/profile_provider.dart';
+import 'package:takion/src/presentation/features/settings/providers/metron_account_provider.dart';
 import 'package:takion/src/data/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -162,9 +160,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       }
 
       ref.invalidate(metronConnectionProvider);
-      await ref
-          .read(userProfileProvider.notifier)
-          .saveProfile(displayName: username);
       if (!mounted) return false;
       _passwordController.clear();
       return true;
@@ -299,7 +294,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         final msg = e.toString().contains('No backup found on Drive')
             ? 'No backup file found'
             : 'Drive restore failed';
-        TakionAlerts.safeError(context, msg == 'Drive restore failed' ? e : null, userMessage: msg);
+        TakionAlerts.safeError(
+          context,
+          msg == 'Drive restore failed' ? e : null,
+          userMessage: msg,
+        );
       }
     }
   }
@@ -372,13 +371,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       opacity: _logoFade,
                       child: ScaleTransition(
                         scale: _logoFade,
-                        child: SvgPicture.asset(
-                          'assets/branding/takion_logo.svg',
+                        child: Image.asset(
+                          'assets/branding/logo.png',
                           height: 96,
-                          colorFilter: ColorFilter.mode(
-                            theme.colorScheme.primary,
-                            BlendMode.srcIn,
-                          ),
                         ),
                       ),
                     ),
@@ -510,7 +505,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               groupValue: themeSettings.themeMode,
                               onChanged: (value) {
                                 if (value == null) return;
-                                ref.read(themeProvider.notifier).setThemeMode(value);
+                                ref
+                                    .read(themeProvider.notifier)
+                                    .setThemeMode(value);
                               },
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -526,13 +523,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                                   RadioListTile<ThemeMode>(
                                     value: ThemeMode.light,
                                     title: const Text('Light'),
-                                    secondary: const Icon(Icons.light_mode_outlined),
+                                    secondary: const Icon(
+                                      Icons.light_mode_outlined,
+                                    ),
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                   RadioListTile<ThemeMode>(
                                     value: ThemeMode.dark,
                                     title: const Text('Dark'),
-                                    secondary: const Icon(Icons.dark_mode_outlined),
+                                    secondary: const Icon(
+                                      Icons.dark_mode_outlined,
+                                    ),
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                 ],
@@ -773,9 +774,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 alignment: Alignment.center,
                 child: TextButton(
                   onPressed: isOffline ? null : _launchMetronSignup,
-                  child: const Text(
-                    'Don\'t have an account? Create one',
-                  ),
+                  child: const Text('Don\'t have an account? Create one'),
                 ),
               ),
             ],
@@ -835,9 +834,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                                 horizontal: 24,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer.withValues(
-                                  alpha: 0.3,
-                                ),
+                                color: theme.colorScheme.primaryContainer
+                                    .withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: theme.colorScheme.primary.withValues(
@@ -849,9 +847,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                                 children: [
                                   Text(
                                     'Connected as ${_usernameController.text}',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
@@ -1173,12 +1170,7 @@ class _CheckShapePainter extends CustomPainter {
       );
     }
 
-    path.addOval(
-      Rect.fromCircle(
-        center: Offset(cx, cy),
-        radius: distance,
-      ),
-    );
+    path.addOval(Rect.fromCircle(center: Offset(cx, cy), radius: distance));
 
     canvas.drawPath(path, paint);
   }

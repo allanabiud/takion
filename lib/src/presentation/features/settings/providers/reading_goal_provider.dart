@@ -5,10 +5,7 @@ class ReadingGoal {
   final int target;
   final String period; // 'monthly' or 'yearly'
 
-  const ReadingGoal({
-    required this.target,
-    required this.period,
-  });
+  const ReadingGoal({required this.target, required this.period});
 
   ReadingGoal copyWith({int? target, String? period}) {
     return ReadingGoal(
@@ -17,21 +14,18 @@ class ReadingGoal {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'target': target,
-        'period': period,
-      };
+  Map<String, dynamic> toJson() => {'target': target, 'period': period};
 
   factory ReadingGoal.fromJson(Map<String, dynamic> json) => ReadingGoal(
-        target: json['target'] as int,
-        period: json['period'] as String,
-      );
+    target: json['target'] as int,
+    period: json['period'] as String,
+  );
 }
 
 final readingGoalProvider =
     AsyncNotifierProvider<ReadingGoalNotifier, ReadingGoal?>(
-  ReadingGoalNotifier.new,
-);
+      ReadingGoalNotifier.new,
+    );
 
 class ReadingGoalNotifier extends AsyncNotifier<ReadingGoal?> {
   static const _boxName = 'settings_box';

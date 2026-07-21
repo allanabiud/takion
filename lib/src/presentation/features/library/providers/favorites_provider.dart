@@ -52,7 +52,9 @@ final favoriteIssuesListProvider = FutureProvider<List<FavoriteIssue>>((
   return repository.listFavoriteIssues();
 });
 
-final favoriteIssueIdsProvider = FutureProvider.autoDispose<Set<int>>((ref) async {
+final favoriteIssueIdsProvider = FutureProvider.autoDispose<Set<int>>((
+  ref,
+) async {
   final favorites = await ref.watch(favoriteIssuesListProvider.future);
   return favorites.map((f) => f.metronIssueId).toSet();
 });
@@ -130,7 +132,10 @@ final favoriteReadingListsFullListProvider = FutureProvider<List<ReadingList>>((
         results.add(list);
       }
     } catch (e) {
-      AppLogger.warning('Failed to load reading list favorite details', error: e);
+      AppLogger.warning(
+        'Failed to load reading list favorite details',
+        error: e,
+      );
     }
   }
   return results;
@@ -160,7 +165,9 @@ final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
   for (final fav in favorites) {
     try {
       final repository = ref.watch(metronRepositoryProvider);
-      final details = await repository.getCharacterDetails(fav.metronCharacterId);
+      final details = await repository.getCharacterDetails(
+        fav.metronCharacterId,
+      );
       results.add(
         CharacterList(
           id: details.id,
