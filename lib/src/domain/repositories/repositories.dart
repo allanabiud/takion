@@ -1,3 +1,4 @@
+export 'activity_repository.dart';
 export 'catalog_repository.dart';
 export 'favorites_repository.dart';
 export 'library_repository.dart';

@@ -269,6 +269,83 @@ Future<void> _applyBulkActions(
             );
           }
 
+          // Log activity events
+          final activityRepo = ref.read(activityRepositoryProvider);
+          String seriesName = 'Unknown Series';
+          String issueNumber = '';
+          String? imageUrl;
+          try {
+            final details = await catalogRepo.getIssueDetails(issueId);
+            seriesName = details.series?.name ?? 'Unknown Series';
+            issueNumber = details.number;
+            imageUrl = details.image;
+          } catch (_) {}
+
+          if (wantCollection && existing?.ownershipStatus != LibraryOwnershipStatus.owned) {
+            await activityRepo.addEvent(
+              LibraryActivityEvent(
+                id: 'act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.collected,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+              ),
+            );
+          }
+
+          if (wantWishlist && existing?.ownershipStatus != LibraryOwnershipStatus.wishlist) {
+            await activityRepo.addEvent(
+              LibraryActivityEvent(
+                id: 'act-wsh-$issueId-${DateTime.now().microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.wishlisted,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+              ),
+            );
+          }
+
+          if (wantRead && !wasRead) {
+            await activityRepo.addEvent(
+              LibraryActivityEvent(
+                id: 'act-read-$issueId-${DateTime.now().microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.read,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+              ),
+            );
+          }
+
+          if (wantRate && targetRating != null && targetRating > 0 && targetRating != existing?.rating) {
+            await activityRepo.addEvent(
+              LibraryActivityEvent(
+                id: 'act-rat-$issueId-${DateTime.now().microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.rated,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+                metadata: {'rating': targetRating},
+              ),
+            );
+          }
+
           cacheUpdates.add(MapEntry(
             issueId,
             IssueCollectionStatus(

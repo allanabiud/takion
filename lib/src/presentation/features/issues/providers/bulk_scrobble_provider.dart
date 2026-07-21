@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
@@ -88,6 +89,41 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
               metronIssueId: issueId,
               readAt: readAt,
             );
+            final activityRepository = ref.read(activityRepositoryProvider);
+            final catalogRepository = ref.read(catalogRepositoryProvider);
+            final imageCache = ref.read(entityImageCacheProvider);
+            String? imageUrl;
+            String seriesName = 'Unknown Series';
+            String issueNumber = '';
+            try {
+              String? cachedUrl;
+              try {
+                cachedUrl = await imageCache.get('issue', issueId);
+              } catch (_) {}
+              if (cachedUrl != null && cachedUrl.isNotEmpty) {
+                imageUrl = cachedUrl;
+              }
+              final details = await catalogRepository.getIssueDetails(issueId);
+              seriesName = details.series?.name ?? 'Unknown Series';
+              issueNumber = details.number;
+              imageUrl ??= details.image;
+              if (details.image != null && details.image!.isNotEmpty) {
+                await imageCache.set('issue', issueId, details.image!);
+              }
+            } catch (_) {}
+            await activityRepository.addEvent(
+              LibraryActivityEvent(
+                id: 'act-read-$issueId-${readAt.microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.read,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: readAt,
+              ),
+            );
           } else if (!targetIsRead &&
               wasRead &&
               existing?.firstReadAt != null) {
@@ -105,6 +141,41 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
             if (firstLog.isNotEmpty) {
               await libraryRepository.deleteReadLogById(firstLog.first.id);
             }
+            final activityRepository = ref.read(activityRepositoryProvider);
+            final catalogRepository = ref.read(catalogRepositoryProvider);
+            final imageCache = ref.read(entityImageCacheProvider);
+            String? imageUrl;
+            String seriesName = 'Unknown Series';
+            String issueNumber = '';
+            try {
+              String? cachedUrl;
+              try {
+                cachedUrl = await imageCache.get('issue', issueId);
+              } catch (_) {}
+              if (cachedUrl != null && cachedUrl.isNotEmpty) {
+                imageUrl = cachedUrl;
+              }
+              final details = await catalogRepository.getIssueDetails(issueId);
+              seriesName = details.series?.name ?? 'Unknown Series';
+              issueNumber = details.number;
+              imageUrl ??= details.image;
+              if (details.image != null && details.image!.isNotEmpty) {
+                await imageCache.set('issue', issueId, details.image!);
+              }
+            } catch (_) {}
+            await activityRepository.addEvent(
+              LibraryActivityEvent(
+                id: 'act-unrd-$issueId-${now.microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.unread,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+              ),
+            );
           }
         }
 

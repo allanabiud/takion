@@ -5,6 +5,7 @@ import 'package:takion/src/data/datasources/metron_local_data_source.dart';
 import 'package:takion/src/data/datasources/metron_remote_data_source.dart';
 import 'package:takion/src/data/datasources/reading_list_local_data_source.dart';
 import 'package:takion/src/data/datasources/series_name_index.dart';
+import 'package:takion/src/data/repositories/local_activity_repository.dart';
 import 'package:takion/src/data/repositories/local_favorites_repository.dart';
 import 'package:takion/src/data/repositories/local_library_repository.dart';
 import 'package:takion/src/data/repositories/local_pull_list_repository.dart';
@@ -60,4 +61,9 @@ final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
 
 final readingListRepositoryProvider = Provider<ReadingListRepository>((ref) {
   return ref.watch(readingListLocalDataSourceProvider);
+});
+
+final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
+  final hiveService = ref.watch(hiveServiceProvider);
+  return LocalActivityRepository(hiveService);
 });

@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/series/providers/series_details
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/logic/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 
 enum SeriesIssueBulkOperation {
   addToCollection,
@@ -343,8 +344,32 @@ Future<void> applySeriesIssueBulkAction({
 }) async {
   try {
     final libraryRepository = ref.read(libraryRepositoryProvider);
+    final catalogRepository = ref.read(catalogRepositoryProvider);
+    final activityRepository = ref.read(activityRepositoryProvider);
+    final imageCache = ref.read(entityImageCacheProvider);
     var affected = 0;
     final affectedIssueIds = <int>{};
+
+    Future<_ResolvedIssueMeta> resolveMeta(int id, String fallbackNumber) async {
+      String? cachedUrl;
+      try { cachedUrl = await imageCache.get('issue', id); } catch (_) {}
+      if (cachedUrl != null && cachedUrl.isNotEmpty) {
+        return _ResolvedIssueMeta(seriesName: '', issueNumber: fallbackNumber, imageUrl: cachedUrl);
+      }
+      try {
+        final details = await catalogRepository.getIssueDetails(id);
+        if (details.image != null && details.image!.isNotEmpty) {
+          await imageCache.set('issue', id, details.image!);
+        }
+        return _ResolvedIssueMeta(
+          seriesName: details.series?.name ?? 'Unknown Series',
+          issueNumber: details.number,
+          imageUrl: details.image,
+        );
+      } catch (_) {
+        return _ResolvedIssueMeta(seriesName: 'Unknown Series', issueNumber: fallbackNumber, imageUrl: null);
+      }
+    }
 
     for (final issue in issues) {
       final issueId = issue.issueId;
@@ -366,6 +391,7 @@ Future<void> applySeriesIssueBulkAction({
                   isRead: isRead,
                 ));
       if (!matchesSelection) continue;
+      final now = DateTime.now().toUtc();
 
       if (operation == SeriesIssueBulkOperation.addToCollection) {
         if (isCollected) continue;
@@ -381,8 +407,22 @@ Future<void> applySeriesIssueBulkAction({
           format: existing?.format ?? LibraryItemFormat.print,
           firstReadAt: existing?.firstReadAt,
           conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+          acquiredOn: existing?.acquiredOn ?? now,
           notes: existing?.notes,
+        );
+        final meta = await resolveMeta(issueId, issue.issueNumber);
+        await activityRepository.addEvent(
+          LibraryActivityEvent(
+            id: 'act-col-$issueId-${now.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.collected,
+            issueId: issueId,
+            seriesId: seriesId,
+            seriesName: meta.seriesName,
+            issueNumber: meta.issueNumber,
+            imageUrl: meta.imageUrl,
+            timestamp: now,
+          ),
         );
         affected++;
         affectedIssueIds.add(issueId);
@@ -392,6 +432,20 @@ Future<void> applySeriesIssueBulkAction({
       if (operation == SeriesIssueBulkOperation.removeFromCollection) {
         if (!isCollected) continue;
         await libraryRepository.deleteItemByIssueId(issueId);
+        final meta = await resolveMeta(issueId, issue.issueNumber);
+        await activityRepository.addEvent(
+          LibraryActivityEvent(
+            id: 'act-ucol-$issueId-${now.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.uncollected,
+            issueId: issueId,
+            seriesId: seriesId,
+            seriesName: meta.seriesName,
+            issueNumber: meta.issueNumber,
+            imageUrl: meta.imageUrl,
+            timestamp: now,
+          ),
+        );
         affected++;
         affectedIssueIds.add(issueId);
         continue;
@@ -399,7 +453,6 @@ Future<void> applySeriesIssueBulkAction({
 
       if (operation == SeriesIssueBulkOperation.markAsRead) {
         if (isRead) continue;
-        final now = DateTime.now().toUtc();
         await libraryRepository.upsertItem(
           metronIssueId: issueId,
           metronSeriesId: seriesId,
@@ -419,6 +472,20 @@ Future<void> applySeriesIssueBulkAction({
         await libraryRepository.addReadLog(
           metronIssueId: issueId,
           readAt: now,
+        );
+        final meta = await resolveMeta(issueId, issue.issueNumber);
+        await activityRepository.addEvent(
+          LibraryActivityEvent(
+            id: 'act-read-$issueId-${now.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.read,
+            issueId: issueId,
+            seriesId: seriesId,
+            seriesName: meta.seriesName,
+            issueNumber: meta.issueNumber,
+            imageUrl: meta.imageUrl,
+            timestamp: now,
+          ),
         );
         affected++;
         affectedIssueIds.add(issueId);
@@ -440,13 +507,27 @@ Future<void> applySeriesIssueBulkAction({
           format: existing?.format ?? LibraryItemFormat.print,
           firstReadAt: null,
           conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+          acquiredOn: existing?.acquiredOn ?? now,
           notes: existing?.notes,
         );
         final logs = await libraryRepository.getReadLogsByIssueId(issueId);
         for (final log in logs) {
           await libraryRepository.deleteReadLogById(log.id);
         }
+        final meta = await resolveMeta(issueId, issue.issueNumber);
+        await activityRepository.addEvent(
+          LibraryActivityEvent(
+            id: 'act-unrd-$issueId-${now.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.unread,
+            issueId: issueId,
+            seriesId: seriesId,
+            seriesName: meta.seriesName,
+            issueNumber: meta.issueNumber,
+            imageUrl: meta.imageUrl,
+            timestamp: now,
+          ),
+        );
         affected++;
         affectedIssueIds.add(issueId);
       }
@@ -473,6 +554,17 @@ Future<void> applySeriesIssueBulkAction({
       TakionAlerts.safeError(context, error, userMessage: 'Failed to apply series issue action');
     }
   }
+}
+
+class _ResolvedIssueMeta {
+  const _ResolvedIssueMeta({
+    required this.seriesName,
+    required this.issueNumber,
+    this.imageUrl,
+  });
+  final String seriesName;
+  final String issueNumber;
+  final String? imageUrl;
 }
 
 int? _findClosestIssueIndex(List<SeriesIssueBulkCandidate> issues, String input, {int? startAfter}) {

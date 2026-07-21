@@ -118,12 +118,17 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
-      page: CollectionReadStatusRoute.page,
-      path: '/my-comics/read-status',
+      page: ReadRoute.page,
+      path: '/my-comics/read',
       guards: [authGuard],
     ),
     AutoRoute(
-      page: UnratedIssuesRoute.page,
+      page: UnreadRoute.page,
+      path: '/my-comics/unread',
+      guards: [authGuard],
+    ),
+    AutoRoute(
+      page: UnratedRoute.page,
       path: '/my-comics/unrated',
       guards: [authGuard],
     ),
@@ -239,5 +244,10 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(page: SettingsRoute.page, path: '/settings', guards: [authGuard]),
+    AutoRoute(
+      page: LibrarySeriesRoute.page,
+      path: '/library/series/:seriesId',
+      guards: [authGuard],
+    ),
   ];
 }

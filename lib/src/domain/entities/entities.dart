@@ -1,4 +1,5 @@
 export 'arc_details.dart';
+export 'category_series_summary.dart';
 export 'arc_issue_list_page.dart';
 export 'arc_list.dart';
 export 'arc_list_page.dart';
@@ -17,6 +18,7 @@ export 'imprint_details.dart';
 export 'imprint_list.dart';
 export 'imprint_list_page.dart';
 export 'issue_details.dart';
+export 'library_activity_event.dart';
 export 'issue_list.dart';
 export 'issue_search_page.dart';
 export 'library_item.dart';

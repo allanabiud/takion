@@ -16,9 +16,13 @@ DateTime weekEnd(DateTime date) =>
 DateTime dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 
 final issuePullListEntryProvider = FutureProvider.autoDispose
-    .family<PullListEntry?, int>((ref, issueId) {
+    .family<PullListEntry?, int>((ref, issueId) async {
       final repository = ref.watch(pullListRepositoryProvider);
-      return repository.getEntryByIssueId(issueId);
+      final entry = await repository.getEntryByIssueId(issueId);
+      if (entry != null && entry.entryStatus == PullListEntryStatus.skipped) {
+        return null;
+      }
+      return entry;
     });
 
 final seriesSubscriptionProvider = FutureProvider.autoDispose
@@ -46,6 +50,17 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
       );
       final issueIds = pullEntries.map((entry) => entry.metronIssueId).toSet();
 
+      final repository = ref.watch(pullListRepositoryProvider);
+      final dismissedEntries = await repository.listEntries(
+        fromDate: weekStart(date),
+        toDate: weekEnd(date),
+        status: PullListEntryStatus.skipped,
+        limit: 500,
+      );
+      final dismissedIssueIds = dismissedEntries
+          .map((entry) => entry.metronIssueId)
+          .toSet();
+
       final activeSubscriptions = await ref.watch(
         activeSubscriptionsProvider.future,
       );
@@ -65,7 +80,9 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
         }
 
         final seriesId = issue.series?.id;
-        if (seriesId != null && subscribedSeriesIds.contains(seriesId)) {
+        if (seriesId != null &&
+            subscribedSeriesIds.contains(seriesId) &&
+            !dismissedIssueIds.contains(issueId)) {
           issuesToPull.add(issue);
         }
       }

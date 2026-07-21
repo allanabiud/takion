@@ -7,6 +7,7 @@ import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
+import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/presentation/logic/string_extensions.dart';
 
@@ -20,6 +21,9 @@ class SeriesListTile extends ConsumerWidget {
   final bool? isRead;
   final double horizontalPadding;
   final ItemRole? role;
+  final int? categoryCount;
+  final String? categoryLabel;
+  final bool showProgressBar;
 
   const SeriesListTile({
     super.key,
@@ -32,6 +36,9 @@ class SeriesListTile extends ConsumerWidget {
     this.isRead,
     this.horizontalPadding = 12,
     this.role,
+    this.categoryCount,
+    this.categoryLabel,
+    this.showProgressBar = true,
   });
 
   String _formatSeriesType(String? type) {
@@ -66,7 +73,8 @@ class SeriesListTile extends ConsumerWidget {
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final isFavorite =
         ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
-    final issueCount = series.issueCount ?? 0;
+    final detailsAsync = ref.watch(seriesDetailsProvider(series.id));
+    final totalIssuesCount = detailsAsync.asData?.value.issueCount ?? series.issueCount ?? 0;
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedImage = cache.getCached('series', series.id);
@@ -155,13 +163,19 @@ class SeriesListTile extends ConsumerWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '$issueCount ${issueCount == 1 ? 'issue' : 'issues'}',
+                                categoryCount != null
+                                    ? '$categoryCount / $totalIssuesCount ${totalIssuesCount == 1 ? 'issue' : 'issues'}'
+                                    : '$totalIssuesCount ${totalIssuesCount == 1 ? 'issue' : 'issues'}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
-                          if (issueCount > 0)
-                            _SeriesProgressBar(seriesId: series.id, total: issueCount),
+                          if (showProgressBar && totalIssuesCount > 0)
+                            _SeriesProgressBar(
+                              seriesId: series.id,
+                              total: totalIssuesCount,
+                              categoryCount: categoryCount,
+                            ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
@@ -237,11 +251,48 @@ class SeriesListTile extends ConsumerWidget {
 class _SeriesProgressBar extends ConsumerWidget {
   final int seriesId;
   final int total;
+  final int? categoryCount;
 
-  const _SeriesProgressBar({required this.seriesId, required this.total});
+  const _SeriesProgressBar({
+    required this.seriesId,
+    required this.total,
+    this.categoryCount,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (categoryCount != null) {
+      final count = categoryCount!;
+      if (count == 0) return const SizedBox(height: 4);
+      final percent = (count / total).clamp(0.0, 1.0);
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: percent,
+                  minHeight: 6,
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$count/$total',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final ownedAsync = ref.watch(seriesOwnedCountProvider(seriesId));
 
     return ownedAsync.when(

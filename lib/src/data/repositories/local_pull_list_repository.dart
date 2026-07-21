@@ -255,7 +255,7 @@ class LocalPullListRepository implements PullListRepository {
         metronSeriesId: item.metronSeriesId,
         metronIssueId: item.metronIssueId,
         releaseDate: item.releaseDate,
-        entryStatus: PullListEntryStatus.upcoming,
+        entryStatus: existing?.entryStatus ?? PullListEntryStatus.upcoming,
         source: PullListEntrySource.subscription,
         generatedAt: now,
         createdAt: existing?.createdAt ?? now,

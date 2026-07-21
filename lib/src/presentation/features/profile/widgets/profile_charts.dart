@@ -156,6 +156,88 @@ class ReadingTrendChart extends StatelessWidget {
   }
 }
 
+class StatBarTable extends StatelessWidget {
+  const StatBarTable({
+    super.key,
+    required this.items,
+    this.color,
+  });
+
+  final List<MapEntry<String, int>> items;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final barColor = color ?? theme.colorScheme.primary;
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final maxCount = items
+        .map((e) => e.value)
+        .reduce((a, b) => a > b ? a : b);
+
+    return Column(
+      children: items.map((item) {
+        final fraction = maxCount > 0 ? item.value / maxCount : 0.0;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 120,
+                child: Text(
+                  item.key,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: SizedBox(
+                    height: 18,
+                    child: Stack(
+                      children: [
+                        Container(
+                          color: barColor.withValues(alpha: 0.12),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: fraction,
+                          child: Container(
+                            color: barColor.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 32,
+                child: Text(
+                  '${item.value}',
+                  textAlign: TextAlign.right,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
 class PublisherDistributionChart extends StatelessWidget {
   const PublisherDistributionChart({super.key, required this.publishers});
 

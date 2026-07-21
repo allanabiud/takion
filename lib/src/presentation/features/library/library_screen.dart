@@ -62,9 +62,7 @@ class LibraryScreen extends ConsumerWidget {
                     ),
                     label: 'Read',
                     onTap: () {
-                      context.pushRoute(
-                        CollectionReadStatusRoute(isRead: true),
-                      );
+                      context.pushRoute(const ReadRoute());
                     },
                   ),
                   const SizedBox(width: 4),
@@ -96,7 +94,7 @@ class LibraryScreen extends ConsumerWidget {
                     error: (_, _) => '!',
                   ),
                   onTap: () {
-                    context.pushRoute(CollectionReadStatusRoute(isRead: false));
+                    context.pushRoute(const UnreadRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -108,7 +106,7 @@ class LibraryScreen extends ConsumerWidget {
                     error: (_, _) => '!',
                   ),
                   onTap: () {
-                    context.pushRoute(const UnratedIssuesRoute());
+                    context.pushRoute(const UnratedRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -130,13 +128,6 @@ class LibraryScreen extends ConsumerWidget {
                   label: 'Favorites',
                   onTap: () {
                     context.pushRoute(const FavoritesRoute());
-                  },
-                ),
-                CompactListSectionItem(
-                  icon: Icons.history_outlined,
-                  label: 'Reading History',
-                  onTap: () {
-                    context.pushRoute(const ReadingHistoryRoute());
                   },
                 ),
               ],

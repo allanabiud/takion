@@ -238,6 +238,7 @@ class HiveService {
       'local_favorite_characters_box',
       'local_favorite_creators_box',
       'reading_lists_box',
+      'local_library_activity_box',
     ];
     for (final boxName in backupBoxNames) {
       final box = await _openBoxForBackup(boxName);

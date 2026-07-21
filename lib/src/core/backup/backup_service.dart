@@ -43,6 +43,7 @@ class BackupService {
       'local_favorite_creators_box',
     ],
     'Reading Lists': ['reading_lists_box'],
+    'Activity Log': ['local_library_activity_box'],
   };
 
   static Set<String> allBoxNames() =>

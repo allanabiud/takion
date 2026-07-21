@@ -51,6 +51,20 @@ class MyPullsScreen extends ConsumerWidget {
           acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
           notes: existing?.notes,
         );
+        final activityRepo = ref.read(activityRepositoryProvider);
+        await activityRepo.addEvent(
+          LibraryActivityEvent(
+            id: 'act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.collected,
+            issueId: issueId,
+            seriesId: seriesId,
+            seriesName: issue.series?.name ?? 'Unknown Series',
+            issueNumber: issue.number,
+            imageUrl: issue.image,
+            timestamp: DateTime.now().toUtc(),
+          ),
+        );
         affected++;
       }
 
@@ -105,6 +119,20 @@ class MyPullsScreen extends ConsumerWidget {
           notes: existing?.notes,
         );
         await libraryRepository.addReadLog(metronIssueId: issueId, readAt: now);
+        final activityRepo = ref.read(activityRepositoryProvider);
+        await activityRepo.addEvent(
+          LibraryActivityEvent(
+            id: 'act-read-$issueId-${now.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.read,
+            issueId: issueId,
+            seriesId: seriesId,
+            seriesName: issue.series?.name ?? 'Unknown Series',
+            issueNumber: issue.number,
+            imageUrl: issue.image,
+            timestamp: now,
+          ),
+        );
         affected++;
       }
 

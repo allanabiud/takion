@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/library/providers/collection_ca
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
+
 final scrobbleIssueProvider =
     NotifierProvider.autoDispose.family<ScrobbleIssueController, AsyncValue<void>, int>(
       ScrobbleIssueController.new,
@@ -97,6 +98,57 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
           AppLogger.info('Scrobble: deleted item for issue #$_issueId');
+          if (wasCollected || wasRead || wasWishlisted) {
+            final metadata = await _resolveIssueMetadata();
+            if (metadata != null) {
+              final repository = ref.read(activityRepositoryProvider);
+              if (wasCollected) {
+                await repository.addEvent(
+                  LibraryActivityEvent(
+                    id: 'act-ucol-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+                    userId: 'local-user',
+                    type: ActivityEventType.uncollected,
+                    issueId: _issueId,
+                    seriesId: seriesId,
+                    seriesName: metadata.seriesName,
+                    issueNumber: metadata.issueNumber,
+                    imageUrl: metadata.imageUrl,
+                    timestamp: DateTime.now().toUtc(),
+                  ),
+                );
+              }
+              if (wasRead) {
+                await repository.addEvent(
+                  LibraryActivityEvent(
+                    id: 'act-unrd-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+                    userId: 'local-user',
+                    type: ActivityEventType.unread,
+                    issueId: _issueId,
+                    seriesId: seriesId,
+                    seriesName: metadata.seriesName,
+                    issueNumber: metadata.issueNumber,
+                    imageUrl: metadata.imageUrl,
+                    timestamp: DateTime.now().toUtc(),
+                  ),
+                );
+              }
+              if (wasWishlisted) {
+                await repository.addEvent(
+                  LibraryActivityEvent(
+                    id: 'act-uwsh-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+                    userId: 'local-user',
+                    type: ActivityEventType.unwishlisted,
+                    issueId: _issueId,
+                    seriesId: seriesId,
+                    seriesName: metadata.seriesName,
+                    issueNumber: metadata.issueNumber,
+                    imageUrl: metadata.imageUrl,
+                    timestamp: DateTime.now().toUtc(),
+                  ),
+                );
+              }
+            }
+          }
           ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
           await invalidateLibraryItemsLocalCache(ref);
           ref.invalidate(issueMyDetailsProvider(_issueId));
@@ -153,6 +205,18 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             AppLogger.info('Scrobble: deleted read log for issue #$_issueId');
           }
         }
+        await _recordActivityEvents(
+          seriesId: seriesId,
+          wasCollected: wasCollected,
+          isCollected: targetIsCollected,
+          wasWishlisted: wasWishlisted,
+          isWishlisted: targetIsWishlisted,
+          wasRead: wasRead,
+          isRead: targetIsRead,
+          wasRating: existing?.rating,
+          isRating: rating,
+        );
+
         AppLogger.info('Scrobble completed for issue #$_issueId');
         ref.read(collectionStatusCacheProvider.notifier).updateIssue(
           _issueId,
@@ -171,7 +235,117 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     });
   }
 
+  Future<void> _recordActivityEvents({
+    required int seriesId,
+    required bool wasCollected,
+    required bool isCollected,
+    required bool wasWishlisted,
+    required bool isWishlisted,
+    required bool wasRead,
+    required bool isRead,
+    int? wasRating,
+    int? isRating,
+  }) async {
+    final metadata = await _resolveIssueMetadata();
+    if (metadata == null) return;
+
+    final repository = ref.read(activityRepositoryProvider);
+
+    if (wasCollected != isCollected) {
+      await repository.addEvent(
+        LibraryActivityEvent(
+          id: 'act-${isCollected ? 'col' : 'ucol'}-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          userId: 'local-user',
+          type: isCollected ? ActivityEventType.collected : ActivityEventType.uncollected,
+          issueId: _issueId,
+          seriesId: seriesId,
+          seriesName: metadata.seriesName,
+          issueNumber: metadata.issueNumber,
+          imageUrl: metadata.imageUrl,
+          timestamp: DateTime.now().toUtc(),
+        ),
+      );
+    }
+
+    if (wasRead != isRead) {
+      await repository.addEvent(
+        LibraryActivityEvent(
+          id: 'act-${isRead ? 'read' : 'unrd'}-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          userId: 'local-user',
+          type: isRead ? ActivityEventType.read : ActivityEventType.unread,
+          issueId: _issueId,
+          seriesId: seriesId,
+          seriesName: metadata.seriesName,
+          issueNumber: metadata.issueNumber,
+          imageUrl: metadata.imageUrl,
+          timestamp: DateTime.now().toUtc(),
+        ),
+      );
+    }
+
+    if (wasWishlisted != isWishlisted) {
+      await repository.addEvent(
+        LibraryActivityEvent(
+          id: 'act-${isWishlisted ? 'wsh' : 'uwsh'}-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          userId: 'local-user',
+          type: isWishlisted ? ActivityEventType.wishlisted : ActivityEventType.unwishlisted,
+          issueId: _issueId,
+          seriesId: seriesId,
+          seriesName: metadata.seriesName,
+          issueNumber: metadata.issueNumber,
+          imageUrl: metadata.imageUrl,
+          timestamp: DateTime.now().toUtc(),
+        ),
+      );
+    }
+
+    if (isRating != null && isRating > 0 && isRating != wasRating) {
+      await repository.addEvent(
+        LibraryActivityEvent(
+          id: 'act-rat-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          userId: 'local-user',
+          type: ActivityEventType.rated,
+          issueId: _issueId,
+          seriesId: seriesId,
+          seriesName: metadata.seriesName,
+          issueNumber: metadata.issueNumber,
+          imageUrl: metadata.imageUrl,
+          timestamp: DateTime.now().toUtc(),
+          metadata: {'rating': isRating},
+        ),
+      );
+    }
+  }
+
+
+  Future<_IssueMetadata?> _resolveIssueMetadata() async {
+    try {
+      final details = await ref
+          .read(catalogRepositoryProvider)
+          .getIssueDetails(_issueId);
+      return _IssueMetadata(
+        seriesName: details.series?.name ?? 'Unknown Series',
+        issueNumber: details.number,
+        imageUrl: details.image,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   void reset() {
     state = const AsyncValue.data(null);
   }
+}
+
+class _IssueMetadata {
+  const _IssueMetadata({
+    required this.seriesName,
+    required this.issueNumber,
+    this.imageUrl,
+  });
+
+  final String seriesName;
+  final String issueNumber;
+  final String? imageUrl;
 }

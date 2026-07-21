@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
@@ -53,6 +54,7 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
     state = await AsyncValue.guard(() async {
       try {
         final libraryRepository = ref.read(libraryRepositoryProvider);
+        final activityRepository = ref.read(activityRepositoryProvider);
 
         final existing = await libraryRepository.getItemByIssueId(_issueId);
         final seriesId = await resolveIssueSeriesId(
@@ -68,10 +70,88 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           );
         }
 
+        final wasCollected =
+            existing?.ownershipStatus == LibraryOwnershipStatus.owned;
+        final wasRead = existing?.isRead ?? false;
+        final wasRating = existing?.rating;
+
+        Future<void> recordEvents() async {
+          final now = DateTime.now().toUtc();
+          final catalogRepository = ref.read(catalogRepositoryProvider);
+          final imageCache = ref.read(entityImageCacheProvider);
+          String? imageUrl;
+          String seriesName = 'Unknown Series';
+          String issueNumber = '';
+          try {
+            String? cachedUrl;
+            try {
+              cachedUrl = await imageCache.get('issue', _issueId);
+            } catch (_) {}
+            final details = await catalogRepository.getIssueDetails(_issueId);
+            seriesName = details.series?.name ?? 'Unknown Series';
+            issueNumber = details.number;
+            imageUrl = cachedUrl ?? details.image;
+            if (details.image != null && details.image!.isNotEmpty) {
+              await imageCache.set('issue', _issueId, details.image!);
+            }
+          } catch (_) {}
+
+          if (isCollected != wasCollected) {
+            await activityRepository.addEvent(
+              LibraryActivityEvent(
+                id: 'act-${isCollected ? 'col' : 'ucol'}-$_issueId-${now.microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: isCollected ? ActivityEventType.collected : ActivityEventType.uncollected,
+                issueId: _issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+              ),
+            );
+          }
+
+          if (isRead != wasRead) {
+            await activityRepository.addEvent(
+              LibraryActivityEvent(
+                id: 'act-${isRead ? 'read' : 'unrd'}-$_issueId-${now.microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: isRead ? ActivityEventType.read : ActivityEventType.unread,
+                issueId: _issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+              ),
+            );
+          }
+
+          final effectiveRating = isRead ? rating : null;
+          if (effectiveRating != null && effectiveRating > 0 && effectiveRating != wasRating) {
+            await activityRepository.addEvent(
+              LibraryActivityEvent(
+                id: 'act-rat-$_issueId-${now.microsecondsSinceEpoch}',
+                userId: 'local-user',
+                type: ActivityEventType.rated,
+                issueId: _issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+                timestamp: now,
+                metadata: {'rating': effectiveRating},
+              ),
+            );
+          }
+        }
+
         if (!isCollected && !isRead) {
           if (existing != null) {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
+          await recordEvents();
           ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
           await invalidateLibraryItemsLocalCache(ref);
         } else {
@@ -97,12 +177,14 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             acquiredOn: existing?.acquiredOn ?? now,
           );
 
-          if (isRead && !(existing?.isRead ?? false)) {
+          if (isRead && !wasRead) {
             await libraryRepository.addReadLog(
               metronIssueId: _issueId,
               readAt: now,
             );
           }
+
+          await recordEvents();
 
           ref.read(collectionStatusCacheProvider.notifier).updateIssue(
             _issueId,
@@ -156,6 +238,38 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           metronIssueId: _issueId,
           readAt: normalizedReadAt,
         );
+
+        final activityRepository = ref.read(activityRepositoryProvider);
+        final catalogRepository = ref.read(catalogRepositoryProvider);
+        final imageCache = ref.read(entityImageCacheProvider);
+        String? imageUrl;
+        String seriesName = 'Unknown Series';
+        String issueNumber = '';
+        try {
+          String? cachedUrl;
+          try { cachedUrl = await imageCache.get('issue', _issueId); } catch (_) {}
+          final details = await catalogRepository.getIssueDetails(_issueId);
+          seriesName = details.series?.name ?? 'Unknown Series';
+          issueNumber = details.number;
+          imageUrl = cachedUrl ?? details.image;
+          if (details.image != null && details.image!.isNotEmpty) {
+            await imageCache.set('issue', _issueId, details.image!);
+          }
+        } catch (_) {}
+        await activityRepository.addEvent(
+          LibraryActivityEvent(
+            id: 'act-read-$_issueId-${normalizedReadAt.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            type: ActivityEventType.read,
+            issueId: _issueId,
+            seriesId: item.metronSeriesId,
+            seriesName: seriesName,
+            issueNumber: issueNumber,
+            imageUrl: imageUrl,
+            timestamp: normalizedReadAt,
+          ),
+        );
+
         ref.read(collectionStatusCacheProvider.notifier).updateIssue(
           _issueId,
           IssueCollectionStatus(

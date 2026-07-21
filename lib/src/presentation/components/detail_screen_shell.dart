@@ -25,6 +25,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.toTrailingHeaderAction,
     this.onShare,
     this.onOpenInBrowser,
+    this.appBarTrailingAction,
     required this.sheetContentBuilder,
     this.heroWidth = 250,
     this.heroHeight = 250,
@@ -47,6 +48,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final Widget? Function(T data)? toTrailingHeaderAction;
   final void Function(T data)? onShare;
   final void Function(T data)? onOpenInBrowser;
+  final Widget Function(T data)? appBarTrailingAction;
   final Iterable<Widget> Function(BuildContext context, T data, WidgetRef ref)
   sheetContentBuilder;
   final double heroWidth;
@@ -307,12 +309,15 @@ class DetailScreenShell<T> extends ConsumerWidget {
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     actions: [
-                      EntityDetailActions(
-                        onShare: onShare != null ? () => onShare!(data) : null,
-                        onOpenInBrowser: onOpenInBrowser != null
-                            ? () => onOpenInBrowser!(data)
-                            : null,
-                      ),
+                      if (appBarTrailingAction != null)
+                        appBarTrailingAction!(data)
+                      else
+                        EntityDetailActions(
+                          onShare: onShare != null ? () => onShare!(data) : null,
+                          onOpenInBrowser: onOpenInBrowser != null
+                              ? () => onOpenInBrowser!(data)
+                              : null,
+                        ),
                     ],
                   ),
                 ),

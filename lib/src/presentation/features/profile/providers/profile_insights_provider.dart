@@ -7,6 +7,18 @@ import 'package:takion/src/presentation/features/series/providers/subscriptions_
 
 enum ProfileFilter { week, month, year, allTime }
 
+class EntityStat {
+  const EntityStat({
+    required this.id,
+    required this.name,
+    required this.count,
+  });
+
+  final int id;
+  final String name;
+  final int count;
+}
+
 class ReadingTrendPoint {
   const ReadingTrendPoint({
     required this.label,
@@ -28,9 +40,14 @@ class ProfileInsights {
     required this.pullsInPeriod,
     required this.readsInPeriod,
     required this.topPublishers,
+    required this.topCharacters,
+    required this.allCharacters,
+    required this.topCreators,
+    required this.allCreators,
     required this.streakDays,
     required this.averageRating,
     required this.mostReadSeries,
+    required this.mostReadSeriesYear,
     required this.readingTrends,
     required this.recentlyFinished,
     required this.filter,
@@ -43,9 +60,14 @@ class ProfileInsights {
   final int pullsInPeriod;
   final int readsInPeriod;
   final List<MapEntry<String, int>> topPublishers;
+  final List<EntityStat> topCharacters;
+  final List<EntityStat> allCharacters;
+  final List<EntityStat> topCreators;
+  final List<EntityStat> allCreators;
   final int streakDays;
   final double averageRating;
   final String? mostReadSeries;
+  final int? mostReadSeriesYear;
   final List<ReadingTrendPoint> readingTrends;
   final List<CollectionItem> recentlyFinished;
   final ProfileFilter filter;
@@ -104,20 +126,24 @@ final profileInsightsProvider = FutureProvider.autoDispose
 
       final now = DateTime.now().toLocal();
       DateTime? startDate;
-      final endDate = now;
+      DateTime? endDate;
 
       switch (filter) {
         case ProfileFilter.week:
           startDate = _atStartOfWeek(now);
+          endDate = startDate.add(const Duration(days: 6));
           break;
         case ProfileFilter.month:
           startDate = _atStartOfMonth(now);
+          endDate = DateTime(startDate.year, startDate.month + 1, 0);
           break;
         case ProfileFilter.year:
           startDate = _atStartOfYear(now);
+          endDate = DateTime(startDate.year, 12, 31);
           break;
         case ProfileFilter.allTime:
           startDate = null;
+          endDate = null;
           break;
       }
 
@@ -148,13 +174,12 @@ final profileInsightsProvider = FutureProvider.autoDispose
         return !readAt.isBefore(startDate);
       }).length;
 
-      final pullsInPeriod = startDate == null
-          ? owned.length
-          : (await pullRepository.listEntries(
-              fromDate: startDate,
-              toDate: endDate,
-              limit: 1000,
-            )).length;
+      final pullsInPeriod = (await pullRepository.listEntries(
+        fromDate: startDate,
+        toDate: endDate,
+        limit: 10000,
+      )).length;
+
 
       final ratings = allRead
           .map((entry) => entry.rating)
@@ -165,17 +190,25 @@ final profileInsightsProvider = FutureProvider.autoDispose
           : (ratings.reduce((a, b) => a + b) / ratings.length).toDouble();
 
       final readSeries = <String, int>{};
+      final readSeriesYear = <String, int?>{};
       for (final item in collectionItems.where((entry) => entry.isRead)) {
         final seriesName = item.issue?.series?.name.trim();
         if (seriesName == null || seriesName.isEmpty) continue;
+        final yearBegan = item.issue?.series?.yearBegan;
         readSeries.update(seriesName, (value) => value + 1, ifAbsent: () => 1);
+        if (!readSeriesYear.containsKey(seriesName)) {
+          readSeriesYear[seriesName] = yearBegan;
+        }
       }
-      final mostReadSeries = readSeries.entries.isEmpty
+      final mostReadSeriesEntry = readSeries.entries.isEmpty
           ? null
           : (readSeries.entries.toList()
-                  ..sort((a, b) => b.value.compareTo(a.value)))
-                .first
-                .key;
+                ..sort((a, b) => b.value.compareTo(a.value)))
+              .first;
+      final mostReadSeries = mostReadSeriesEntry?.key;
+      final mostReadSeriesYear = mostReadSeriesEntry == null
+          ? null
+          : readSeriesYear[mostReadSeriesEntry.key];
 
       final readDates = allRead
           .map((item) => item.firstReadAt)
@@ -282,6 +315,10 @@ final profileInsightsProvider = FutureProvider.autoDispose
             });
 
       final topPublisherCounts = <String, int>{};
+      final characterCounts = <int, int>{};
+      final characterNames = <int, String>{};
+      final creatorCounts = <int, int>{};
+      final creatorNames = <int, String>{};
       final insightIssueIds = (owned.map((item) => item.metronIssueId).toSet()
             ..addAll(allRead.map((item) => item.metronIssueId)))
           .toList();
@@ -291,12 +328,37 @@ final profileInsightsProvider = FutureProvider.autoDispose
       );
       for (final details in cachedDetails) {
         final name = details?.publisher?.name.trim();
-        if (name == null || name.isEmpty) continue;
-        topPublisherCounts.update(
-          name,
-          (value) => value + 1,
-          ifAbsent: () => 1,
-        );
+        if (name != null && name.isNotEmpty) {
+          topPublisherCounts.update(
+            name,
+            (value) => value + 1,
+            ifAbsent: () => 1,
+          );
+        }
+        final seenCreatorIds = <int>{};
+        for (final char in details?.characters ?? []) {
+          final charName = char.name.trim();
+          if (charName.isEmpty) continue;
+          characterCounts.update(
+            char.id,
+            (value) => value + 1,
+            ifAbsent: () => 1,
+          );
+          characterNames[char.id] = charName;
+        }
+        for (final credit in details?.credits ?? []) {
+          if (credit.creatorId == null ||
+              !seenCreatorIds.add(credit.creatorId!)) {
+            continue;
+          }
+          final creatorName = credit.creator?.trim() ?? 'Unknown';
+          creatorCounts.update(
+            credit.creatorId!,
+            (value) => value + 1,
+            ifAbsent: () => 1,
+          );
+          creatorNames[credit.creatorId!] = creatorName;
+        }
       }
 
       final topPublishers =
@@ -304,6 +366,24 @@ final profileInsightsProvider = FutureProvider.autoDispose
                 ..sort((a, b) => b.value.compareTo(a.value)))
               .take(5)
               .toList();
+      final allCharacters = characterCounts.entries
+          .map((e) => EntityStat(
+            id: e.key,
+            name: characterNames[e.key] ?? 'Unknown',
+            count: e.value,
+          ))
+          .toList()
+        ..sort((a, b) => b.count.compareTo(a.count));
+      final topCharacters = allCharacters.take(5).toList();
+      final allCreators = creatorCounts.entries
+          .map((e) => EntityStat(
+            id: e.key,
+            name: creatorNames[e.key] ?? 'Unknown',
+            count: e.value,
+          ))
+          .toList()
+        ..sort((a, b) => b.count.compareTo(a.count));
+      final topCreators = allCreators.take(5).toList();
 
       return ProfileInsights(
         totalOwned: totalOwned,
@@ -313,9 +393,14 @@ final profileInsightsProvider = FutureProvider.autoDispose
         pullsInPeriod: pullsInPeriod,
         readsInPeriod: readsInPeriod,
         topPublishers: topPublishers,
+        topCharacters: topCharacters,
+        allCharacters: allCharacters,
+        topCreators: topCreators,
+        allCreators: allCreators,
         streakDays: _streakDays(readDates),
         averageRating: averageRating,
         mostReadSeries: mostReadSeries,
+        mostReadSeriesYear: mostReadSeriesYear,
         readingTrends: readingTrends,
         recentlyFinished: recentlyFinished.take(5).toList(),
         filter: filter,

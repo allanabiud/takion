@@ -11,6 +11,7 @@ import 'package:takion/src/presentation/features/issues/providers/scrobble_issue
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/domain/entities/entities.dart';
 
 class _ScrobbleActionIcon extends StatelessWidget {
   const _ScrobbleActionIcon({
@@ -88,7 +89,8 @@ Future<void> showScrobbleSheet({
             : null;
         final liveSubscribed = subState?.asData?.value?.isActive ?? false;
         final pullEntryWatch = ref.watch(issuePullListEntryProvider(issueId));
-        final pullIssue = pullEntryWatch.asData?.value != null;
+        final pullEntry = pullEntryWatch.asData?.value;
+        final pullIssue = pullEntry != null && pullEntry.entryStatus != PullListEntryStatus.skipped;
         final collectionStatus = ref.watch(issueCollectionStatusProvider(issueId));
         final isCollected = collectionStatus?.isCollected ?? false;
 
@@ -210,8 +212,11 @@ Future<void> showScrobbleSheet({
 
                               try {
                                 if (!newValue) {
-                                  await ref.read(pullListRepositoryProvider).deleteEntryByIssueId(issueId);
-                                  AppLogger.info('Scrobble: removed issue #$issueId from pull list');
+                                  await ref.read(pullListRepositoryProvider).updateEntryStatus(
+                                    metronIssueId: issueId,
+                                    status: PullListEntryStatus.skipped,
+                                  );
+                                  AppLogger.info('Scrobble: dismissed issue #$issueId from pull list');
                                 } else {
                                   await ref.read(pullListRepositoryProvider).upsertManualEntry(
                                     metronSeriesId: seriesIdLocal!,
@@ -230,7 +235,7 @@ Future<void> showScrobbleSheet({
                                   if (newValue) {
                                     TakionAlerts.success(context, 'Added to Pull List');
                                   } else {
-                                    TakionAlerts.info(context, 'Removed from Pull List');
+                                    TakionAlerts.info(context, 'Dismissed from Pull List');
                                   }
                                 }
                               } catch (e) {
