@@ -49,6 +49,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Android & Gradle caches
+android/.gradle/*
+android/.kotlin/*
+
 .env
 *.sql
 /android/app/google-services.json
