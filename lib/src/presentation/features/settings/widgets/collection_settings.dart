@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 
@@ -120,24 +120,6 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
                 ),
               ]),
               const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Display Options', [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text(
-                    'Read Tick Overlay on Cards',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text(
-                    'Show a checkmark overlay on issue covers when marked as read',
-                  ),
-                  value:
-                      ref.watch(showReadIssueTickOverlayProvider).value ??
-                      false,
-                  onChanged: (v) => ref
-                      .read(showReadIssueTickOverlayProvider.notifier)
-                      .setEnabled(v),
-                ),
-              ]),
               const SizedBox(height: 16),
             ],
           ),
@@ -146,4 +128,3 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
     ),
   );
 }
-

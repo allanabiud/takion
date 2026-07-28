@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
@@ -98,7 +99,8 @@ Future<void> showBulkScanActionsSheet(
                   setSheetState(() {
                     actionsState[BulkAction.addToWishlist]!.selected = value!;
                     if (value == true) {
-                      actionsState[BulkAction.addToCollection]!.selected = false;
+                      actionsState[BulkAction.addToCollection]!.selected =
+                          false;
                     }
                   });
                 },
@@ -106,8 +108,10 @@ Future<void> showBulkScanActionsSheet(
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: RatingPicker(
-                  selectedRating:
-                      actionsState[BulkAction.rate]!.rating.clamp(0, 5),
+                  selectedRating: actionsState[BulkAction.rate]!.rating.clamp(
+                    0,
+                    5,
+                  ),
                   enabled: true,
                   onChanged: (value) {
                     setSheetState(() {
@@ -139,7 +143,9 @@ Future<void> showBulkScanActionsSheet(
                           if (selected.isEmpty) {
                             setSheetState(() => isApplying = false);
                             TakionAlerts.info(
-                                context, 'Select at least one action');
+                              context,
+                              'Select at least one action',
+                            );
                             return;
                           }
                           await _applyBulkActions(
@@ -196,7 +202,9 @@ Future<void> _applyBulkActions(
       .where((e) => e.value.selected)
       .map((e) => e.key.name)
       .join(', ');
-  AppLogger.info('BulkActions: applying [$selectedActions] to $totalCount issues');
+  AppLogger.info(
+    'BulkActions: applying [$selectedActions] to $totalCount issues',
+  );
 
   try {
     final libraryRepo = ref.read(libraryRepositoryProvider);
@@ -212,8 +220,18 @@ Future<void> _applyBulkActions(
           seriesId = issueSeriesIds?[issueId];
         }
         if (seriesId == null || seriesId <= 0) {
-          final details = await catalogRepo.getIssueDetails(issueId);
-          seriesId = details.series?.id;
+          final pullEntry = await pullRepo.getEntryByIssueId(issueId);
+          seriesId = pullEntry?.metronSeriesId;
+        }
+        if (seriesId == null || seriesId <= 0) {
+          final libItem = await libraryRepo.getItemByIssueId(issueId);
+          seriesId = libItem?.metronSeriesId;
+        }
+        if (seriesId == null || seriesId <= 0) {
+          try {
+            final details = await catalogRepo.getIssueDetails(issueId);
+            seriesId = details.series?.id;
+          } catch (_) {}
         }
         if (seriesId == null || seriesId <= 0) {
           errorCount++;
@@ -229,14 +247,18 @@ Future<void> _applyBulkActions(
           );
         }
 
-        final wantCollection = actions[BulkAction.addToCollection]?.selected == true;
-        final wantWishlist = actions[BulkAction.addToWishlist]?.selected == true;
+        final wantCollection =
+            actions[BulkAction.addToCollection]?.selected == true;
+        final wantWishlist =
+            actions[BulkAction.addToWishlist]?.selected == true;
         final wantRead = actions[BulkAction.markAsRead]?.selected == true;
-        final wantRate = actions[BulkAction.rate]?.selected == true &&
+        final wantRate =
+            actions[BulkAction.rate]?.selected == true &&
             actions[BulkAction.rate]!.rating > 0;
 
         if (wantCollection || wantWishlist || wantRead || wantRate) {
-          var ownershipStatus = existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned;
+          var ownershipStatus =
+              existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned;
           if (wantCollection) {
             ownershipStatus = LibraryOwnershipStatus.owned;
           } else if (wantWishlist) {
@@ -255,33 +277,37 @@ Future<void> _applyBulkActions(
             ownershipStatus: ownershipStatus,
             isRead: wantRead || wasRead,
             rating: (wantRead || wantRate) ? targetRating : existing?.rating,
-            firstReadAt: wantRead && !wasRead
-                ? now
-                : existing?.firstReadAt,
+            firstReadAt: wantRead && !wasRead ? now : existing?.firstReadAt,
             format: existing?.format ?? LibraryItemFormat.print,
-            acquiredOn: wantCollection ? (existing?.acquiredOn ?? now) : existing?.acquiredOn,
+            acquiredOn: wantCollection
+                ? (existing?.acquiredOn ?? now)
+                : existing?.acquiredOn,
           );
 
           if (wantRead && !wasRead) {
-            await libraryRepo.addReadLog(
-              metronIssueId: issueId,
-              readAt: now,
-            );
+            await libraryRepo.addReadLog(metronIssueId: issueId, readAt: now);
           }
 
           // Log activity events
           final activityRepo = ref.read(activityRepositoryProvider);
+          final imageCache = ref.read(entityImageCacheProvider);
           String seriesName = 'Unknown Series';
-          String issueNumber = '';
+          String issueNumber = '#$issueId';
           String? imageUrl;
           try {
-            final details = await catalogRepo.getIssueDetails(issueId);
-            seriesName = details.series?.name ?? 'Unknown Series';
-            issueNumber = details.number;
-            imageUrl = details.image;
+            imageUrl = await imageCache.get('issue', issueId);
           } catch (_) {}
+          if (imageUrl == null || imageUrl.isEmpty) {
+            try {
+              final details = await catalogRepo.getIssueDetails(issueId);
+              seriesName = details.series?.name ?? 'Unknown Series';
+              issueNumber = details.number;
+              imageUrl = details.image;
+            } catch (_) {}
+          }
 
-          if (wantCollection && existing?.ownershipStatus != LibraryOwnershipStatus.owned) {
+          if (wantCollection &&
+              existing?.ownershipStatus != LibraryOwnershipStatus.owned) {
             await activityRepo.addEvent(
               LibraryActivityEvent(
                 id: 'act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}',
@@ -297,7 +323,8 @@ Future<void> _applyBulkActions(
             );
           }
 
-          if (wantWishlist && existing?.ownershipStatus != LibraryOwnershipStatus.wishlist) {
+          if (wantWishlist &&
+              existing?.ownershipStatus != LibraryOwnershipStatus.wishlist) {
             await activityRepo.addEvent(
               LibraryActivityEvent(
                 id: 'act-wsh-$issueId-${DateTime.now().microsecondsSinceEpoch}',
@@ -329,32 +356,21 @@ Future<void> _applyBulkActions(
             );
           }
 
-          if (wantRate && targetRating != null && targetRating > 0 && targetRating != existing?.rating) {
-            await activityRepo.addEvent(
-              LibraryActivityEvent(
-                id: 'act-rat-$issueId-${DateTime.now().microsecondsSinceEpoch}',
-                userId: 'local-user',
-                type: ActivityEventType.rated,
-                issueId: issueId,
-                seriesId: seriesId,
-                seriesName: seriesName,
-                issueNumber: issueNumber,
-                imageUrl: imageUrl,
-                timestamp: now,
-                metadata: {'rating': targetRating},
-              ),
-            );
-          }
+          // Rated events intentionally not recorded per user requirement
 
-          cacheUpdates.add(MapEntry(
-            issueId,
-            IssueCollectionStatus(
-              isCollected: wantCollection,
-              isWishlisted: wantWishlist,
-              isRead: wantRead || wasRead,
-              rating: (wantRead || wantRate) ? targetRating : existing?.rating,
+          cacheUpdates.add(
+            MapEntry(
+              issueId,
+              IssueCollectionStatus(
+                isCollected: wantCollection,
+                isWishlisted: wantWishlist,
+                isRead: wantRead || wasRead,
+                rating: (wantRead || wantRate)
+                    ? targetRating
+                    : existing?.rating,
+              ),
             ),
-          ));
+          );
         }
 
         successCount++;
@@ -376,8 +392,8 @@ Future<void> _applyBulkActions(
       }
     }
 
-    for (final update in cacheUpdates) {
-      ref.read(collectionStatusCacheProvider.notifier).updateIssue(update.key, update.value);
+    if (cacheUpdates.isNotEmpty) {
+      ref.invalidate(collectionStatusCacheProvider);
     }
 
     if (!context.mounted) return;
@@ -390,10 +406,7 @@ Future<void> _applyBulkActions(
       if (successCount > 0) {
         onApplied?.call();
       }
-      TakionAlerts.success(
-        context,
-        '$successCount/$totalCount issues updated',
-      );
+      TakionAlerts.success(context, '$successCount/$totalCount issues updated');
     } else {
       final sample = errorMessages.take(3).join('\n');
       TakionAlerts.error(

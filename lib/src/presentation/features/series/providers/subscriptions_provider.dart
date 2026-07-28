@@ -1,278 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/core/constants/pagination.dart';
 
 const _subscriptionsPageSize = metronDefaultPageSize;
-const _subscriptionsCacheBoxName = 'subscriptions_cache_box';
 
-String _subscriptionsPageKey(int page) => 'active_series:p$page';
-String _subscriptionsPageMetaKey(int page) =>
-    'subscriptions:active_series:p$page';
-
-Future<void> invalidateSubscriptionsLocalCacheWithHive(
-  HiveService hiveService,
-) async {
-  final cacheBox = await hiveService.openBox<dynamic>(
-    _subscriptionsCacheBoxName,
-  );
-  final metaBox = await hiveService.openBox<int>('cache_meta_box');
-  final cacheKeys = cacheBox.keys
-      .whereType<String>()
-      .where((key) => key.startsWith('active_series:'))
-      .toList(growable: false);
-  for (final key in cacheKeys) {
-    await cacheBox.delete(key);
-  }
-  final metaKeys = metaBox.keys
-      .whereType<String>()
-      .where((key) => key.startsWith('subscriptions:active_series:'))
-      .toList(growable: false);
-  for (final key in metaKeys) {
-    await metaBox.delete(key);
-  }
-}
-
-Future<void> invalidateSubscriptionsLocalCache(Ref ref) {
-  return invalidateSubscriptionsLocalCacheWithHive(
-    ref.read(hiveServiceProvider),
-  );
-}
-
-void invalidateSubscriptionProviders(Ref ref) {
-  ref.invalidate(activeSubscriptionsProvider);
-  ref.invalidate(activeSubscriptionsCountProvider);
-  ref.invalidate(subscribedSeriesListProvider);
-  ref.invalidate(subscribedSeriesPageProvider);
-}
-
-void invalidateSubscriptionProvidersForWidget(WidgetRef ref) {
-  ref.invalidate(activeSubscriptionsProvider);
-  ref.invalidate(activeSubscriptionsCountProvider);
-  ref.invalidate(subscribedSeriesListProvider);
-  ref.invalidate(subscribedSeriesPageProvider);
-}
-
-void invalidateOnSubscriptionToggle(WidgetRef ref, {int? seriesId, DateTime? selectedWeek, List<int>? affectedIssueIds}) {
-  if (seriesId != null) ref.invalidate(seriesSubscriptionProvider(seriesId));
-  _invalidateIssuePullProviders(ref, affectedIssueIds: affectedIssueIds);
-  ref.invalidate(pullListEntriesForWeekProvider);
-  ref.invalidate(pullsIssuesForWeekProvider);
-  if (selectedWeek != null) ref.invalidate(pullsIssuesForWeekProvider(selectedWeek));
-  ref.invalidate(currentWeekPullsProvider);
-  ref.invalidate(currentWeekPullsCountProvider);
-  ref.invalidate(activeSubscriptionsProvider);
-  ref.invalidate(activeSubscriptionsCountProvider);
-  ref.invalidate(subscribedSeriesListProvider);
-  ref.invalidate(subscribedSeriesPageProvider);
-}
-
-void invalidateOnSubscriptionToggleContainer(ProviderContainer container, {int? seriesId, DateTime? selectedWeek, List<int>? affectedIssueIds}) {
-  if (seriesId != null) container.invalidate(seriesSubscriptionProvider(seriesId));
-  _invalidateIssuePullProvidersContainer(container, affectedIssueIds: affectedIssueIds);
-  container.invalidate(pullListEntriesForWeekProvider);
-  container.invalidate(pullsIssuesForWeekProvider);
-  if (selectedWeek != null) container.invalidate(pullsIssuesForWeekProvider(selectedWeek));
-  container.invalidate(currentWeekPullsProvider);
-  container.invalidate(currentWeekPullsCountProvider);
-  container.invalidate(activeSubscriptionsProvider);
-  container.invalidate(activeSubscriptionsCountProvider);
-  container.invalidate(subscribedSeriesListProvider);
-  container.invalidate(subscribedSeriesPageProvider);
-}
-
-void _invalidateIssuePullProviders(WidgetRef ref, {List<int>? affectedIssueIds}) {
-  if (affectedIssueIds != null && affectedIssueIds.isNotEmpty) {
-    for (final issueId in affectedIssueIds) {
-      ref.invalidate(issuePullListEntryProvider(issueId));
-    }
-  } else {
-    ref.invalidate(issuePullListEntryProvider);
-  }
-}
-
-void _invalidateIssuePullProvidersContainer(ProviderContainer container, {List<int>? affectedIssueIds}) {
-  if (affectedIssueIds != null && affectedIssueIds.isNotEmpty) {
-    for (final issueId in affectedIssueIds) {
-      container.invalidate(issuePullListEntryProvider(issueId));
-    }
-  } else {
-    container.invalidate(issuePullListEntryProvider);
-  }
-}
-
-Map<String, dynamic> _seriesListToJson(SeriesList series) {
-  return {
-    'id': series.id,
-    'name': series.name,
-    'year_began': series.yearBegan,
-    'volume': series.volume,
-    'issue_count': series.issueCount,
-    'modified': series.modified?.toIso8601String(),
-  };
-}
-
-SeriesList? _seriesListFromJson(Map<String, dynamic> json) {
-  final id = (json['id'] as num?)?.toInt();
-  final name = json['name'] as String?;
-  if (id == null || name == null || name.trim().isEmpty) return null;
-
-  return SeriesList(
-    id: id,
-    name: name,
-    yearBegan: (json['year_began'] as num?)?.toInt(),
-    volume: (json['volume'] as num?)?.toInt(),
-    issueCount: (json['issue_count'] as num?)?.toInt(),
-    modified: DateTime.tryParse(json['modified'] as String? ?? ''),
-  );
-}
-
-SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
-  return SeriesList(
-    id: seriesId,
-    name: 'Series $seriesId',
-    yearBegan: 0,
-    volume: 1,
-  );
-}
-
-Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {
-  final localDataSource = ref.read(metronLocalDataSourceProvider);
-  final localDetails = await localDataSource.getSeriesDetails(seriesId);
-  if (localDetails != null) {
-    return SeriesList(
-      id: localDetails.id,
-      name: localDetails.name,
-      yearBegan: localDetails.yearBegan,
-      volume: localDetails.volume,
-      issueCount: localDetails.issueCount,
-      modified: DateTime.tryParse(localDetails.modified ?? ''),
-    );
-  }
-
-  final remoteDetails = await ref
-      .read(metronRepositoryProvider)
-      .getSeriesDetails(seriesId);
-  return SeriesList(
-    id: remoteDetails.id,
-    name: remoteDetails.name,
-    yearBegan: remoteDetails.yearBegan,
-    volume: remoteDetails.volume,
-    issueCount: remoteDetails.issueCount,
-    modified: remoteDetails.modified,
-  );
-}
-
-Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
-  final safePage = page < 1 ? 1 : page;
-  final offset = (safePage - 1) * _subscriptionsPageSize;
-  final hiveService = ref.read(hiveServiceProvider);
-  final cacheBox = await hiveService.openBox<dynamic>(
-    _subscriptionsCacheBoxName,
-  );
-  final metaBox = await hiveService.openBox<int>('cache_meta_box');
-  final cacheKey = _subscriptionsPageKey(safePage);
-  final metaKey = _subscriptionsPageMetaKey(safePage);
-  final cachedAtEpoch = metaBox.get(metaKey);
-  final cachedAt = cachedAtEpoch == null
-      ? null
-      : DateTime.fromMillisecondsSinceEpoch(cachedAtEpoch);
-  final cachedRaw = cacheBox.get(cacheKey);
-  final cachedMap = cachedRaw is Map ? cachedRaw.cast<String, dynamic>() : null;
-  final cachedSeries =
-      ((cachedMap?['results'] as List?)
-          ?.whereType<Map>()
-          .map((item) => _seriesListFromJson(item.cast<String, dynamic>()))
-          .whereType<SeriesList>()
-          .toList()) ??
-      <SeriesList>[];
-  final cachedHasNext = cachedMap?['has_next'] as bool? ?? false;
-  final hasFreshCache =
-      cachedAt != null &&
-      LocalDataCachePolicies.subscriptions.isFresh(cachedAt, DateTime.now());
-  if (hasFreshCache) {
-    AppPerformanceMetrics.instance.recordCacheHit(metaKey);
-    return SeriesListPage(
-      count: cachedHasNext
-          ? (safePage * _subscriptionsPageSize) + 1
-          : offset + cachedSeries.length,
-      currentPage: safePage,
-      previous: safePage > 1
-          ? 'app://subscriptions?page=${safePage - 1}'
-          : null,
-      next: cachedHasNext ? 'app://subscriptions?page=${safePage + 1}' : null,
-      results: cachedSeries,
-    );
-  }
-  AppPerformanceMetrics.instance.recordCacheMiss(metaKey);
-
-  try {
-    final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
-    final subscriptions = await subscriptionRepository.listSubscriptions(
-      limit: _subscriptionsPageSize + 1,
-      offset: offset,
-    );
-    final hasNext = subscriptions.length > _subscriptionsPageSize;
-    final pagedSubscriptions = subscriptions
-        .take(_subscriptionsPageSize)
-        .toList();
-    final seriesList = await Future.wait(
-      pagedSubscriptions.map((subscription) async {
-        final seriesId = subscription.metronSeriesId;
-        try {
-          return await _loadSeriesListItem(ref, seriesId);
-        } catch (e) {
-          AppLogger.warning('Failed to load subscription series list item', error: e);
-          return _seriesListFromSubscriptionFallback(seriesId);
-        }
-      }),
-    );
-
-    await cacheBox.put(cacheKey, {
-      'results': seriesList.map(_seriesListToJson).toList(),
-      'has_next': hasNext,
-    });
-    await metaBox.put(metaKey, DateTime.now().millisecondsSinceEpoch);
-
-    return SeriesListPage(
-      count: hasNext
-          ? (safePage * _subscriptionsPageSize) + 1
-          : offset + seriesList.length,
-      currentPage: safePage,
-      previous: safePage > 1
-          ? 'app://subscriptions?page=${safePage - 1}'
-          : null,
-      next: hasNext ? 'app://subscriptions?page=${safePage + 1}' : null,
-      results: seriesList,
-    );
-  } catch (e) {
-    AppLogger.error('Failed to load subscriptions page', error: e);
-    if (cachedSeries.isNotEmpty || safePage == 1) {
-      return SeriesListPage(
-        count: cachedHasNext
-            ? (safePage * _subscriptionsPageSize) + 1
-            : offset + cachedSeries.length,
-        currentPage: safePage,
-        previous: safePage > 1
-            ? 'app://subscriptions?page=${safePage - 1}'
-            : null,
-        next: cachedHasNext ? 'app://subscriptions?page=${safePage + 1}' : null,
-        results: cachedSeries,
+final activeSubscriptionsProvider =
+    StreamProvider.autoDispose<List<SeriesSubscription>>((ref) {
+      final dao = ref.watch(driftDatabaseProvider).subscriptionDao;
+      return dao.watchActive().map(
+        (rows) => rows.map((row) {
+          return SeriesSubscription(
+            id: row.id,
+            userId: row.userId,
+            metronSeriesId: row.metronSeriesId,
+            isActive: row.isActive,
+            autoAddToPullList: row.autoAddPull,
+            subscribedAt: DateTime.parse(row.subscribedAt),
+            createdAt: DateTime.parse(row.createdAt),
+            updatedAt: DateTime.parse(row.updatedAt),
+          );
+        }).toList(),
       );
-    }
-    rethrow;
-  }
-}
-
-final activeSubscriptionsProvider = FutureProvider.autoDispose((ref) {
-  final repository = ref.watch(subscriptionRepositoryProvider);
-  return repository.listSubscriptions(limit: 500);
-});
+    });
 
 final activeSubscriptionsCountProvider = Provider<int>((ref) {
   final subscriptionsAsync = ref.watch(activeSubscriptionsProvider);
@@ -294,3 +45,100 @@ final subscribedSeriesPageProvider = FutureProvider.family<SeriesListPage, int>(
     return _loadSubscribedSeriesPage(ref, page);
   },
 );
+
+Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {
+  final db = ref.read(driftDatabaseProvider);
+  final localSeries = await db.metronEntityDao.getSeries(seriesId);
+  if (localSeries != null) {
+    return SeriesList(
+      id: localSeries.id,
+      name: localSeries.name,
+      yearBegan: localSeries.yearBegan,
+      volume: localSeries.volume,
+      issueCount: localSeries.issueCount,
+      modified: localSeries.modified != null
+          ? DateTime.tryParse(localSeries.modified!)
+          : null,
+    );
+  }
+
+  final remoteDetails = await ref
+      .read(metronRepositoryProvider)
+      .getSeriesDetails(seriesId);
+  return SeriesList(
+    id: remoteDetails.id,
+    name: remoteDetails.name,
+    yearBegan: remoteDetails.yearBegan,
+    volume: remoteDetails.volume,
+    issueCount: remoteDetails.issueCount,
+    modified: remoteDetails.modified,
+  );
+}
+
+SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
+  return SeriesList(
+    id: seriesId,
+    name: 'Series $seriesId',
+    yearBegan: 0,
+    volume: 1,
+  );
+}
+
+Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
+  final safePage = page < 1 ? 1 : page;
+  final offset = (safePage - 1) * _subscriptionsPageSize;
+
+  try {
+    final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
+    final subscriptions = await subscriptionRepository.listSubscriptions(
+      limit: _subscriptionsPageSize + 1,
+      offset: offset,
+    );
+    final hasNext = subscriptions.length > _subscriptionsPageSize;
+    final pagedSubscriptions = subscriptions
+        .take(_subscriptionsPageSize)
+        .toList();
+    final results = List<SeriesList?>.filled(pagedSubscriptions.length, null);
+    var cursor = 0;
+    Future<void> worker() async {
+      while (true) {
+        final index = cursor;
+        if (index >= pagedSubscriptions.length) return;
+        cursor = index + 1;
+        final seriesId = pagedSubscriptions[index].metronSeriesId;
+        try {
+          results[index] = await _loadSeriesListItem(ref, seriesId);
+        } catch (e) {
+          AppLogger.warning(
+            'Failed to load subscription series list item $seriesId',
+            error: e,
+          );
+          results[index] = _seriesListFromSubscriptionFallback(seriesId);
+        }
+      }
+    }
+
+    final workerCount = pagedSubscriptions.length < 4
+        ? pagedSubscriptions.length
+        : 4;
+    if (workerCount > 0) {
+      await Future.wait(List.generate(workerCount, (_) => worker()));
+    }
+    final seriesList = results.whereType<SeriesList>().toList(growable: false);
+
+    return SeriesListPage(
+      count: hasNext
+          ? (safePage * _subscriptionsPageSize) + 1
+          : offset + seriesList.length,
+      currentPage: safePage,
+      previous: safePage > 1
+          ? 'app://subscriptions?page=${safePage - 1}'
+          : null,
+      next: hasNext ? 'app://subscriptions?page=${safePage + 1}' : null,
+      results: seriesList,
+    );
+  } catch (e) {
+    AppLogger.error('Failed to load subscriptions page', error: e);
+    rethrow;
+  }
+}

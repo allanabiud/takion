@@ -2,12 +2,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 
 enum _ReadingListFilter { all, local, metron }
@@ -17,8 +17,7 @@ class ReadingListsScreen extends ConsumerStatefulWidget {
   const ReadingListsScreen({super.key});
 
   @override
-  ConsumerState<ReadingListsScreen> createState() =>
-      _ReadingListsScreenState();
+  ConsumerState<ReadingListsScreen> createState() => _ReadingListsScreenState();
 }
 
 class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
@@ -79,8 +78,8 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
           final query = _searchController.text.toLowerCase().trim();
           final matchQuery = _isSearching && query.isNotEmpty
               ? (ReadingList l) =>
-                  l.title.toLowerCase().contains(query) ||
-                  l.description.toLowerCase().contains(query)
+                    l.title.toLowerCase().contains(query) ||
+                    l.description.toLowerCase().contains(query)
               : (ReadingList l) => true;
 
           final filtered = lists.where((l) {
@@ -119,9 +118,7 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                 message: 'No Metron reading lists imported yet.',
                 actionLabel: 'Browse Metron',
                 onAction: () {
-                  context.pushRoute(
-                    const MetronReadingListBrowserRoute(),
-                  );
+                  context.pushRoute(const MetronReadingListBrowserRoute());
                 },
               );
             } else {
@@ -134,17 +131,14 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
             content = ListView.separated(
               padding: const EdgeInsets.only(bottom: 8),
               itemCount: filtered.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(height: 1),
+              separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final list = filtered[index];
                 return ReadingListCard(
                   list: list,
                   flat: true,
                   onTap: () {
-                    context.pushRoute(
-                      ReadingListDetailsRoute(listId: list.id),
-                    );
+                    context.pushRoute(ReadingListDetailsRoute(listId: list.id));
                   },
                 );
               },
@@ -182,15 +176,18 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                   ),
                 ),
               ),
-              Expanded(
-                child: content,
-              ),
+              Expanded(child: content),
             ],
           );
         },
         loading: () => _buildSkeletonList(),
         error: (e, _) => Center(
-          child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to load reading lists')),
+          child: Text(
+            TakionAlerts.cleanError(
+              e,
+              fallback: 'Failed to load reading lists',
+            ),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -222,7 +219,9 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                     child: Container(
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
@@ -275,7 +274,9 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                                 width: coverWidth,
                                 height: coverHeight,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
@@ -291,20 +292,35 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: SkeletonBox(height: 16, width: double.infinity),
+                                  child: SkeletonBox(
+                                    height: 16,
+                                    width: double.infinity,
+                                  ),
                                 ),
                                 SizedBox(width: 8),
-                                SkeletonBox(width: 16, height: 16, borderRadius: 3),
+                                SkeletonBox(
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: 3,
+                                ),
                               ],
                             ),
                             SizedBox(height: 6),
                             SkeletonBox(height: 14, width: 120),
                             SizedBox(height: 12),
-                            SkeletonBox(height: 6, width: double.infinity, borderRadius: 3),
+                            SkeletonBox(
+                              height: 6,
+                              width: double.infinity,
+                              borderRadius: 3,
+                            ),
                             SizedBox(height: 4),
                             Align(
                               alignment: Alignment.centerRight,
-                              child: SkeletonBox(height: 12, width: 60, borderRadius: 2),
+                              child: SkeletonBox(
+                                height: 12,
+                                width: 60,
+                                borderRadius: 2,
+                              ),
                             ),
                           ],
                         ),
@@ -320,4 +336,3 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
     );
   }
 }
-

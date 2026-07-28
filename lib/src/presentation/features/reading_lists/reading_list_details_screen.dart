@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
@@ -15,9 +15,9 @@ import 'package:takion/src/presentation/features/reading_lists/add_reading_list_
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_details_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart';
@@ -41,7 +41,6 @@ enum _ReadingListDetailsMenuAction { edit, share, delete }
 
 class _ReadingListDetailsScreenState
     extends ConsumerState<ReadingListDetailsScreen> {
-
   void _openReadingListItemDetails(ReadingListItem item) {
     final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
     final id = int.tryParse(idString);
@@ -63,8 +62,6 @@ class _ReadingListDetailsScreenState
       final repository = ref.read(favoritesRepositoryProvider);
       final isFavorite = await repository.isReadingListFavorite(list.id);
       await repository.toggleReadingListFavorite(list.id);
-      ref.invalidate(isReadingListFavoriteProvider(list.id));
-      ref.invalidate(favoriteReadingListsListProvider);
       if (context.mounted) {
         final added = !isFavorite;
         (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
@@ -74,8 +71,6 @@ class _ReadingListDetailsScreenState
           actionLabel: 'Undo',
           onUndo: () async {
             await repository.toggleReadingListFavorite(list.id);
-            ref.invalidate(isReadingListFavoriteProvider(list.id));
-            ref.invalidate(favoriteReadingListsListProvider);
           },
         );
       }
@@ -156,10 +151,7 @@ class _ReadingListDetailsScreenState
             onPressed: isMetron
                 ? () => _confirmDelete(context, list)
                 : () => AddReadingListItemsBottomSheet.show(context, list),
-            icon: Icon(
-              isMetron ? Icons.delete_outline : Icons.add,
-              size: 22,
-            ),
+            icon: Icon(isMetron ? Icons.delete_outline : Icons.add, size: 22),
             label: Text(isMetron ? 'Remove' : 'Add Items'),
           ),
         ),
@@ -203,8 +195,9 @@ class _ReadingListDetailsScreenState
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () =>
-                ref.read(readingListSharingServiceProvider).shareReadingList(list),
+            onPressed: () => ref
+                .read(readingListSharingServiceProvider)
+                .shareReadingList(list),
             child: const Icon(Icons.share),
           ),
         ),
@@ -449,11 +442,7 @@ class _ReadingListDetailsScreenState
                         borderRadius: 12,
                       ),
                       const SizedBox(width: 12),
-                      const SkeletonBox(
-                        width: 60,
-                        height: 85,
-                        borderRadius: 6,
-                      ),
+                      const SkeletonBox(width: 60, height: 85, borderRadius: 6),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -484,7 +473,9 @@ class _ReadingListDetailsScreenState
       error: (e, _) => Scaffold(
         appBar: AppBar(),
         body: Center(
-          child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to load reading list')),
+          child: Text(
+            TakionAlerts.cleanError(e, fallback: 'Failed to load reading list'),
+          ),
         ),
       ),
       data: (list) {
@@ -594,7 +585,9 @@ class _ReadingListDetailsScreenState
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: SectionHeader(
-              title: list.contentType == ListContentType.series ? 'SERIES' : 'ISSUES',
+              title: list.contentType == ListContentType.series
+                  ? 'SERIES'
+                  : 'ISSUES',
               count: items.length,
             ),
           ),
@@ -704,5 +697,4 @@ class _ReadingListDetailsScreenState
         return theme.colorScheme.primary;
     }
   }
-
 }

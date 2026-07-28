@@ -6,7 +6,7 @@ import 'package:takion/src/presentation/features/releases/providers/selected_wee
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 
@@ -181,6 +181,8 @@ class ReleasesScreen extends ConsumerWidget {
                               imageUrl: issue.image,
                               title: issue.name,
                               seriesId: issue.series?.id,
+                              seriesName: issue.series?.name,
+                              issueNumber: issue.number,
                               isCollected: isCollected,
                               isWishlisted: isWishlisted,
                               isRead: isRead,
@@ -203,11 +205,17 @@ class ReleasesScreen extends ConsumerWidget {
                     ],
                   );
                 },
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                loading: () => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: SizedBox(
                     height: 232,
-                    child: Center(child: CircularProgressIndicator()),
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 5,
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      itemBuilder: (_, _) =>
+                          const ShimmerWidget(child: IssueCardSkeleton()),
+                    ),
                   ),
                 ),
                 error: (_, _) => const Padding(

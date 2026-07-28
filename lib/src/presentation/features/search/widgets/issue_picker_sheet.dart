@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/domain/common/string_extensions.dart';
 
 Future<List<IssueList>?> showIssuePickerSheet(
   BuildContext context,
@@ -35,10 +35,9 @@ Future<List<IssueList>?> showIssuePickerSheet(
         }).toList();
       }
 
-      bool allSelected() =>
-          issues.where((i) => i.id != null).every(
-            (i) => selectedIds.contains(i.id),
-          );
+      bool allSelected() => issues
+          .where((i) => i.id != null)
+          .every((i) => selectedIds.contains(i.id));
 
       String issueTitle(IssueList issue) {
         if (issue.name.contains('#${issue.number}') || issue.number.isEmpty) {
@@ -56,27 +55,30 @@ Future<List<IssueList>?> showIssuePickerSheet(
           return TakionBottomSheet(
             title: 'Select Issues',
             titleHeader: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Select Issues',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Select Issues',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    '$selectedCount of ${issues.length}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                ),
+                Text(
+                  '$selectedCount of ${issues.length}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 0,
+                    vertical: 4,
+                  ),
                   child: TextField(
                     controller: filterController,
                     decoration: const InputDecoration(
@@ -157,7 +159,8 @@ Future<List<IssueList>?> showIssuePickerSheet(
                                       fit: BoxFit.cover,
                                       placeholder: (_, _) => Container(
                                         color: theme
-                                            .colorScheme.surfaceContainerHighest,
+                                            .colorScheme
+                                            .surfaceContainerHighest,
                                       ),
                                       errorWidget: (_, _, _) =>
                                           _PlaceholderInitials(
@@ -180,7 +183,8 @@ Future<List<IssueList>?> showIssuePickerSheet(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          subtitle: issue.storeDate != null || issue.coverDate != null
+                          subtitle:
+                              issue.storeDate != null || issue.coverDate != null
                               ? Text(
                                   DateFormatter.comicDate(
                                     issue.storeDate ?? issue.coverDate!,
@@ -226,10 +230,7 @@ class _PlaceholderInitials extends StatelessWidget {
   final String initials;
   final ThemeData theme;
 
-  const _PlaceholderInitials({
-    required this.initials,
-    required this.theme,
-  });
+  const _PlaceholderInitials({required this.initials, required this.theme});
 
   @override
   Widget build(BuildContext context) {

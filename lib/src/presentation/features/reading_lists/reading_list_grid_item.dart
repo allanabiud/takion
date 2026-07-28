@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 
@@ -140,6 +141,12 @@ class ReadingListGridItem extends ConsumerWidget {
                           imageUrl: imageUrl,
                           title: title,
                           seriesId: seriesId,
+                          seriesName: metadata is IssueDetails
+                              ? metadata.series?.name
+                              : null,
+                          issueNumber: metadata is IssueDetails
+                              ? metadata.number
+                              : null,
                           onTap: onTap,
                           width: double.infinity,
                           isRead: effectiveIsRead,
@@ -152,36 +159,31 @@ class ReadingListGridItem extends ConsumerWidget {
                       }
                     },
                     loading: () {
-                      final id =
-                          int.tryParse(
-                            item.targetId.replaceAll(RegExp(r'\D'), ''),
-                          ) ??
-                          0;
                       if (item.isSeries) {
-                        return SeriesCard(
-                          series: SeriesList(
-                            id: id,
-                            name: id > 0 ? 'Series #$id' : 'Series',
-                            yearBegan: null,
-                            volume: null,
+                        return const ShimmerWidget(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              children: [
+                                SkeletonBox(
+                                  height: 180,
+                                  width: double.infinity,
+                                  borderRadius: 8,
+                                ),
+                                SizedBox(height: 8),
+                                SkeletonBox(
+                                  height: 14,
+                                  width: 140,
+                                  borderRadius: 4,
+                                ),
+                              ],
+                            ),
                           ),
-                          imageUrl: null,
-                          onTap: onTap,
-                          width: double.infinity,
-                          isRead: effectiveIsRead,
-                          role: item.role,
-                        );
-                      } else {
-                        return IssueCard(
-                          issueId: id > 0 ? id : null,
-                          imageUrl: null,
-                          title: id > 0 ? 'Issue #$id' : 'Issue',
-                          onTap: onTap,
-                          width: double.infinity,
-                          isRead: effectiveIsRead,
-                          compact: true,
                         );
                       }
+                      return const ShimmerWidget(
+                        child: IssueCardSkeleton(width: 120),
+                      );
                     },
                     error: (error, stack) {
                       final id =

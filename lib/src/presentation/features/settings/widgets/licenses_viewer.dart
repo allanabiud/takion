@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void showLicensesSheet(BuildContext context) {
   showModalBottomSheet(
@@ -76,9 +77,13 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [
-                      Image.asset(
-                        'assets/branding/logo.png',
+                      SvgPicture.asset(
+                        'assets/branding/takion_logo.svg',
                         height: 32,
+                        colorFilter: ColorFilter.mode(
+                          theme.colorScheme.primary,
+                          BlendMode.srcIn,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(

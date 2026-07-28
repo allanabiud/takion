@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
 
 part 'theme_provider.freezed.dart';
 part 'theme_provider.g.dart';
@@ -16,17 +16,17 @@ abstract class ThemeSettings with _$ThemeSettings {
 
 @riverpod
 class ThemeNotifier extends _$ThemeNotifier {
-  static const _boxName = 'settings_box';
   static const _themeKey = 'theme_mode';
   static const _blackKey = 'dark_is_true_black';
 
   @override
   FutureOr<ThemeSettings> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-
-    final index = box.get(_themeKey, defaultValue: ThemeMode.system.index);
-    final isTrueBlack = box.get(_blackKey, defaultValue: false);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final index = await dao.getInt(
+      _themeKey,
+      defaultValue: ThemeMode.system.index,
+    );
+    final isTrueBlack = await dao.getBool(_blackKey);
 
     return ThemeSettings(
       themeMode: ThemeMode.values[index],
@@ -35,9 +35,8 @@ class ThemeNotifier extends _$ThemeNotifier {
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_themeKey, mode.index);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setInt(_themeKey, mode.index);
 
     final currentSettings =
         state.value ??
@@ -49,9 +48,8 @@ class ThemeNotifier extends _$ThemeNotifier {
   }
 
   Future<void> setDarkIsTrueBlack(bool value) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_blackKey, value);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setBool(_blackKey, value);
 
     final currentSettings =
         state.value ??

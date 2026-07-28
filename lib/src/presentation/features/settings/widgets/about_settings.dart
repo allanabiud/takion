@@ -1,12 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/settings/providers/debug_mode_provider.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/settings/widgets/licenses_viewer.dart';
 
 Future<void> launchGitHubRepo(BuildContext context) async {
@@ -50,9 +51,13 @@ class _AboutBody extends ConsumerWidget {
                     isEnabled ? 'Debug mode enabled' : 'Debug mode disabled',
                   );
                 },
-                child: Image.asset(
-                  'assets/branding/logo.png',
+                child: SvgPicture.asset(
+                  'assets/branding/takion_logo.svg',
                   height: 64,
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),

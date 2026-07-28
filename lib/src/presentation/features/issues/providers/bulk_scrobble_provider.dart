@@ -1,10 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
+
+/// Lightweight metadata for a single issue so the bulk scrobble controller
+/// doesn't need to fetch full issue details from the network.
+class BulkScrobbleIssueContext {
+  const BulkScrobbleIssueContext({
+    this.seriesId,
+    this.seriesName,
+    this.issueNumber,
+    this.imageUrl,
+  });
+
+  final int? seriesId;
+  final String? seriesName;
+  final String? issueNumber;
+  final String? imageUrl;
+}
 
 final bulkScrobbleProvider =
     NotifierProvider.autoDispose<BulkScrobbleController, AsyncValue<void>>(
@@ -14,6 +29,27 @@ final bulkScrobbleProvider =
 class BulkScrobbleController extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
+
+  Future<({String seriesName, String issueNumber, String? imageUrl})>
+  _resolveIssueMetadata(int issueId, BulkScrobbleIssueContext? ctx) async {
+    String seriesName = ctx?.seriesName ?? 'Unknown Series';
+    String issueNumber = ctx?.issueNumber ?? '#$issueId';
+    String? imageUrl = ctx?.imageUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      try {
+        imageUrl = await ref
+            .read(entityImageCacheProvider)
+            .get('issue', issueId);
+      } catch (_) {}
+    }
+
+    return (
+      seriesName: seriesName,
+      issueNumber: issueNumber,
+      imageUrl: imageUrl,
+    );
+  }
 
   LibraryItemFormat _resolveDefaultFormat() {
     final setting = ref
@@ -34,6 +70,7 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
     required List<int> issueIds,
     bool? markAsRead,
     DateTime? dateRead,
+    Map<int, BulkScrobbleIssueContext>? issueContexts,
   }) async {
     final keepAlive = ref.keepAlive();
     state = const AsyncValue.loading();
@@ -47,10 +84,11 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
 
         for (final issueId in issueIds) {
           final existing = await libraryRepository.getItemByIssueId(issueId);
+          final ctx = issueContexts?[issueId];
           final seriesId = await resolveIssueSeriesId(
             ref,
             issueId,
-            existingSeriesId: existing?.metronSeriesId,
+            existingSeriesId: ctx?.seriesId ?? existing?.metronSeriesId,
           );
 
           if (seriesId == null || seriesId <= 0) continue;
@@ -90,27 +128,7 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
               readAt: readAt,
             );
             final activityRepository = ref.read(activityRepositoryProvider);
-            final catalogRepository = ref.read(catalogRepositoryProvider);
-            final imageCache = ref.read(entityImageCacheProvider);
-            String? imageUrl;
-            String seriesName = 'Unknown Series';
-            String issueNumber = '';
-            try {
-              String? cachedUrl;
-              try {
-                cachedUrl = await imageCache.get('issue', issueId);
-              } catch (_) {}
-              if (cachedUrl != null && cachedUrl.isNotEmpty) {
-                imageUrl = cachedUrl;
-              }
-              final details = await catalogRepository.getIssueDetails(issueId);
-              seriesName = details.series?.name ?? 'Unknown Series';
-              issueNumber = details.number;
-              imageUrl ??= details.image;
-              if (details.image != null && details.image!.isNotEmpty) {
-                await imageCache.set('issue', issueId, details.image!);
-              }
-            } catch (_) {}
+            final meta = await _resolveIssueMetadata(issueId, ctx);
             await activityRepository.addEvent(
               LibraryActivityEvent(
                 id: 'act-read-$issueId-${readAt.microsecondsSinceEpoch}',
@@ -118,9 +136,9 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
                 type: ActivityEventType.read,
                 issueId: issueId,
                 seriesId: seriesId,
-                seriesName: seriesName,
-                issueNumber: issueNumber,
-                imageUrl: imageUrl,
+                seriesName: meta.seriesName,
+                issueNumber: meta.issueNumber,
+                imageUrl: meta.imageUrl,
                 timestamp: readAt,
               ),
             );
@@ -141,45 +159,9 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
             if (firstLog.isNotEmpty) {
               await libraryRepository.deleteReadLogById(firstLog.first.id);
             }
-            final activityRepository = ref.read(activityRepositoryProvider);
-            final catalogRepository = ref.read(catalogRepositoryProvider);
-            final imageCache = ref.read(entityImageCacheProvider);
-            String? imageUrl;
-            String seriesName = 'Unknown Series';
-            String issueNumber = '';
-            try {
-              String? cachedUrl;
-              try {
-                cachedUrl = await imageCache.get('issue', issueId);
-              } catch (_) {}
-              if (cachedUrl != null && cachedUrl.isNotEmpty) {
-                imageUrl = cachedUrl;
-              }
-              final details = await catalogRepository.getIssueDetails(issueId);
-              seriesName = details.series?.name ?? 'Unknown Series';
-              issueNumber = details.number;
-              imageUrl ??= details.image;
-              if (details.image != null && details.image!.isNotEmpty) {
-                await imageCache.set('issue', issueId, details.image!);
-              }
-            } catch (_) {}
-            await activityRepository.addEvent(
-              LibraryActivityEvent(
-                id: 'act-unrd-$issueId-${now.microsecondsSinceEpoch}',
-                userId: 'local-user',
-                type: ActivityEventType.unread,
-                issueId: issueId,
-                seriesId: seriesId,
-                seriesName: seriesName,
-                issueNumber: issueNumber,
-                imageUrl: imageUrl,
-                timestamp: now,
-              ),
-            );
+            // Unread events intentionally not recorded per user requirement
           }
         }
-
-        await invalidateLibraryItemsLocalCache(ref);
       } finally {
         keepAlive.close();
       }

@@ -6,9 +6,12 @@ import 'package:takion/src/core/logging/talker_setup.dart';
 
 /// The entry point for the application.
 void main() async {
-  runZonedGuarded(() async {
-    await bootstrap(() => const TakionApp());
-  }, (error, stack) {
-    talker.handle(error, stack);
-  });
+  runZonedGuarded(
+    () async {
+      await bootstrap(() => const TakionApp());
+    },
+    (error, stack) {
+      talker.handle(error, stack);
+    },
+  );
 }

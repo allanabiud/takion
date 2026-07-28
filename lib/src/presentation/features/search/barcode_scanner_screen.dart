@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/search/providers/barcode_scan_providers.dart';
 import 'package:takion/src/presentation/features/search/widgets/bulk_scan_actions_sheet.dart';
@@ -34,8 +34,7 @@ class BarcodeScannerScreen extends ConsumerStatefulWidget {
       _BarcodeScannerScreenState();
 }
 
-class _BarcodeScannerScreenState
-    extends ConsumerState<BarcodeScannerScreen> {
+class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
   late MobileScannerController _scannerController;
   Timer? _scanCooldown;
   bool _isScanningEnabled = true;
@@ -51,15 +50,23 @@ class _BarcodeScannerScreenState
       detectionTimeoutMs: 250,
       cameraResolution: const Size(1920, 1080),
     );
-    _scannerController.start().then((_) {
-      final running = _scannerController.value.isRunning;
-      AppLogger.info('BarcodeScannerScreen camera start(): isRunning=$running');
-      if (running) {
-        _scannerController.setZoomScale(0.5);
-      }
-    }).catchError((e) {
-      AppLogger.error('BarcodeScannerScreen camera start() failed', error: e);
-    });
+    _scannerController
+        .start()
+        .then((_) {
+          final running = _scannerController.value.isRunning;
+          AppLogger.info(
+            'BarcodeScannerScreen camera start(): isRunning=$running',
+          );
+          if (running) {
+            _scannerController.setZoomScale(0.5);
+          }
+        })
+        .catchError((e) {
+          AppLogger.error(
+            'BarcodeScannerScreen camera start() failed',
+            error: e,
+          );
+        });
   }
 
   @override
@@ -156,7 +163,11 @@ class _BarcodeScannerScreenState
       }
     } catch (e) {
       if (!mounted) return;
-      TakionAlerts.safeError(context, e, userMessage: 'Failed to look up barcode');
+      TakionAlerts.safeError(
+        context,
+        e,
+        userMessage: 'Failed to look up barcode',
+      );
     } finally {
       if (mounted) setState(() => _isLookingUp = false);
     }
@@ -232,9 +243,7 @@ class _BarcodeScannerScreenState
               controller: _scannerController,
               onDetect: _onBarcodeDetected,
               overlayBuilder: (context, constraints) =>
-                  _ScannerOverlay(
-                    isLookingUp: _isLookingUp,
-                  ),
+                  _ScannerOverlay(isLookingUp: _isLookingUp),
               errorBuilder: (context, error, child) {
                 AppLogger.error(
                   'BarcodeScannerScreen error: ${error.errorCode} '
@@ -255,11 +264,15 @@ class _BarcodeScannerScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          error.errorCode == MobileScannerErrorCode.permissionDenied
+                          error.errorCode ==
+                                  MobileScannerErrorCode.permissionDenied
                               ? 'Camera permission denied. Please grant camera permission in your system settings.'
                               : 'Scanner error: ${error.errorDetails?.message ?? error.errorCode.name}',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -276,7 +289,9 @@ class _BarcodeScannerScreenState
                   height: 44,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   color: scanStatus == _ScanStatus.scanning
-                      ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                      ? theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.3,
+                        )
                       : theme.colorScheme.surfaceContainer,
                   child: Row(
                     children: [
@@ -428,9 +443,7 @@ class _ScannerOverlay extends StatelessWidget {
     final bracketColor = isLookingUp ? theme.colorScheme.primary : Colors.white;
     return Stack(
       children: [
-        ColoredBox(
-          color: Colors.black.withValues(alpha: 0.3),
-        ),
+        ColoredBox(color: Colors.black.withValues(alpha: 0.3)),
         Center(
           child: SizedBox(
             width: 250,
@@ -508,5 +521,3 @@ class _CornerBracket extends StatelessWidget {
     );
   }
 }
-
-

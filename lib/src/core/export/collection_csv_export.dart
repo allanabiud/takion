@@ -9,7 +9,9 @@ Future<void> exportCollectionToCsv(WidgetRef ref) async {
   final items = await ref.watch(allCollectionItemsProvider.future);
 
   final buffer = StringBuffer();
-  buffer.writeln('Series,Issue Number,Title,Quantity,Format,Read,Rating,Purchase Date');
+  buffer.writeln(
+    'Series,Issue Number,Title,Quantity,Format,Read,Rating,Purchase Date',
+  );
 
   for (final item in items) {
     final series = item.issue?.series?.name ?? '';

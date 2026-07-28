@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 Future<void> showEditMyDetailsSheet(
-    BuildContext context, WidgetRef ref, int issueId) async {
+  BuildContext context,
+  WidgetRef ref,
+  int issueId,
+) async {
   ref.invalidate(issueMyDetailsProvider(issueId));
   final detailsAsync = await ref.read(issueMyDetailsProvider(issueId).future);
   if (!context.mounted) return;
@@ -21,9 +24,7 @@ Future<void> showEditMyDetailsSheet(
   final conditionController = TextEditingController(
     text: item?.conditionGrade ?? '',
   );
-  final notesController = TextEditingController(
-    text: item?.notes ?? '',
-  );
+  final notesController = TextEditingController(text: item?.notes ?? '');
   var format = item?.format;
   var purchaseDate = item?.purchaseDate;
   var isEditing = item == null;
@@ -33,9 +34,7 @@ Future<void> showEditMyDetailsSheet(
     title: 'My Details',
     child: Consumer(
       builder: (context, ref, _) {
-        final saveState = ref.watch(
-          issueMyDetailsControllerProvider(issueId),
-        );
+        final saveState = ref.watch(issueMyDetailsControllerProvider(issueId));
         return StatefulBuilder(
           builder: (context, setSheetState) {
             if (isEditing) {
@@ -104,9 +103,7 @@ Future<void> showEditMyDetailsSheet(
                                 lastDate: DateTime(now.year + 2),
                               );
                               if (picked != null) {
-                                setSheetState(
-                                  () => purchaseDate = picked,
-                                );
+                                setSheetState(() => purchaseDate = picked);
                               }
                             },
                       decoration: const InputDecoration(
@@ -146,7 +143,7 @@ Future<void> showEditMyDetailsSheet(
                             onChanged: saveState.isLoading
                                 ? null
                                 : (value) =>
-                                    setSheetState(() => format = value),
+                                      setSheetState(() => format = value),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -188,8 +185,7 @@ Future<void> showEditMyDetailsSheet(
                         TextButton(
                           onPressed: saveState.isLoading
                               ? null
-                              : () => setSheetState(
-                                  () => isEditing = false),
+                              : () => setSheetState(() => isEditing = false),
                           child: const Text('Cancel'),
                         ),
                         const Spacer(),
@@ -198,20 +194,21 @@ Future<void> showEditMyDetailsSheet(
                               ? null
                               : () async {
                                   final ctrl = ref.read(
-                                    issueMyDetailsControllerProvider(issueId)
-                                        .notifier,
+                                    issueMyDetailsControllerProvider(
+                                      issueId,
+                                    ).notifier,
                                   );
                                   final qty =
                                       int.tryParse(
                                         quantityController.text.trim(),
                                       ) ??
                                       0;
-                                  final price =
-                                      double.tryParse(
-                                        priceController.text.trim(),
-                                      );
+                                  final price = double.tryParse(
+                                    priceController.text.trim(),
+                                  );
                                   await ctrl.saveDetails(
-                                    isCollected: qty > 0 ||
+                                    isCollected:
+                                        qty > 0 ||
                                         price != null ||
                                         purchaseDate != null ||
                                         conditionController.text
@@ -224,10 +221,8 @@ Future<void> showEditMyDetailsSheet(
                                     pricePaid: price,
                                     quantityOwned: qty < 0 ? 0 : qty,
                                     format: format ?? LibraryItemFormat.print,
-                                    conditionGrade: conditionController
-                                        .text
-                                        .trim()
-                                        .isEmpty
+                                    conditionGrade:
+                                        conditionController.text.trim().isEmpty
                                         ? null
                                         : conditionController.text.trim(),
                                     notes: notesController.text.trim().isEmpty
@@ -284,7 +279,8 @@ Future<void> showEditMyDetailsSheet(
                     _detailTile(
                       icon: Icons.library_books_outlined,
                       label: 'Format',
-                      value: item.format.name[0].toUpperCase() +
+                      value:
+                          item.format.name[0].toUpperCase() +
                           item.format.name.substring(1),
                       theme: theme,
                     ),
@@ -299,9 +295,7 @@ Future<void> showEditMyDetailsSheet(
                       _detailTile(
                         icon: Icons.calendar_month_outlined,
                         label: 'Purchase Date',
-                        value: DateFormatter.comicDate(
-                          item.purchaseDate!,
-                        ),
+                        value: DateFormatter.comicDate(item.purchaseDate!),
                         theme: theme,
                       ),
                     if (item.conditionGrade != null &&
@@ -312,8 +306,7 @@ Future<void> showEditMyDetailsSheet(
                         value: item.conditionGrade!.trim(),
                         theme: theme,
                       ),
-                    if (item.notes != null &&
-                        item.notes!.trim().isNotEmpty)
+                    if (item.notes != null && item.notes!.trim().isNotEmpty)
                       _detailTile(
                         icon: Icons.notes_outlined,
                         label: 'Notes',
@@ -335,9 +328,7 @@ Future<void> showEditMyDetailsSheet(
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => setSheetState(
-                        () => isEditing = true,
-                      ),
+                      onPressed: () => setSheetState(() => isEditing = true),
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Edit'),
                     ),
@@ -370,7 +361,11 @@ Widget _detailTile({
             color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 18, color: theme.colorScheme.onPrimaryContainer),
+          child: Icon(
+            icon,
+            size: 18,
+            color: theme.colorScheme.onPrimaryContainer,
+          ),
         ),
         const SizedBox(width: 12),
         Column(
@@ -404,20 +399,21 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
     title: 'Reading History',
     child: Consumer(
       builder: (context, ref, _) {
-        final detailsAsync = ref.watch(
-          issueMyDetailsProvider(issueId),
-        );
+        final detailsAsync = ref.watch(issueMyDetailsProvider(issueId));
         return detailsAsync.when(
           loading: () => const Center(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: SizedBox(
-                width: 16, height: 16,
+                width: 16,
+                height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
           ),
-          error: (e, _) => Text(TakionAlerts.cleanError(e, fallback: 'Something went wrong')),
+          error: (e, _) => Text(
+            TakionAlerts.cleanError(e, fallback: 'Something went wrong'),
+          ),
           data: (data) {
             final logs = data.readLogs;
             return Column(
@@ -438,9 +434,7 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                       itemCount: logs.length,
                       itemBuilder: (context, index) {
                         final log = logs[index];
-                        final dt = DateFormatter.comicDateTime(
-                          log.readAt,
-                        );
+                        final dt = DateFormatter.comicDateTime(log.readAt);
                         return ListTile(
                           title: Text(dt),
                           subtitle: (log.notes?.trim().isNotEmpty ?? false)
@@ -451,13 +445,12 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                             onPressed: () {
                               ref
                                   .read(
-                                    issueMyDetailsControllerProvider(issueId)
-                                        .notifier,
+                                    issueMyDetailsControllerProvider(
+                                      issueId,
+                                    ).notifier,
                                   )
                                   .deleteReadLogById(log.id);
-                              ref.invalidate(
-                                issueMyDetailsProvider(issueId),
-                              );
+                              ref.invalidate(issueMyDetailsProvider(issueId));
                             },
                             icon: const Icon(Icons.delete_outline),
                           ),
@@ -498,7 +491,11 @@ void showLogReadPicker(BuildContext context, WidgetRef ref, int issueId) {
     ).then((time) {
       if (time == null || !context.mounted) return;
       final dt = DateTime(
-        picked.year, picked.month, picked.day, time.hour, time.minute,
+        picked.year,
+        picked.month,
+        picked.day,
+        time.hour,
+        time.minute,
       );
       ref
           .read(issueMyDetailsControllerProvider(issueId).notifier)

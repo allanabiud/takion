@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:takion/src/core/cache/cache_header_store.dart';
+import 'package:takion/src/data/common/drift/database.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
 class ConditionalRequestInterceptor extends Interceptor {
-  ConditionalRequestInterceptor(this._store);
+  ConditionalRequestInterceptor(this._store, this._db);
 
   final CacheHeaderStore _store;
+  final AppDatabase _db;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -24,7 +26,10 @@ class ConditionalRequestInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  Future<void> onResponse(
+    Response response,
+    ResponseInterceptorHandler handler,
+  ) async {
     final url = response.requestOptions.uri.toString();
     if (response.statusCode == 304) {
       AppLogger.debug('Cache: 304 Not Modified for $url');
@@ -33,7 +38,7 @@ class ConditionalRequestInterceptor extends Interceptor {
       final etag = response.headers.value('etag');
       final lastModified = response.headers.value('last-modified');
       if (etag != null || lastModified != null) {
-        _store.store(url, etag: etag, lastModified: lastModified);
+        await _store.store(_db, url, etag: etag, lastModified: lastModified);
       }
     }
     handler.next(response);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
@@ -45,11 +45,12 @@ class ReadingListTimelineTile extends ConsumerWidget {
 
     final metadataAsync = allowRemoteHydration
         ? ref.watch(
-            readingListItemMetadataProvider((
-              targetId: item.targetId,
-              isSeries: item.isSeries,
-            )),
-          ) as AsyncValue<Object?>
+                readingListItemMetadataProvider((
+                  targetId: item.targetId,
+                  isSeries: item.isSeries,
+                )),
+              )
+              as AsyncValue<Object?>
         : ref.watch(
             readingListItemCachedMetadataProvider((
               targetId: item.targetId,

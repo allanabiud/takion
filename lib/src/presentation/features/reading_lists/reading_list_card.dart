@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,10 +60,10 @@ class ReadingListCard extends ConsumerWidget {
 
     final cardChild = Stack(
       children: [
-          InkWell(
-            onTap: onTap,
-            child: Opacity(
-              opacity: alreadyExists && !isMetronBrowse ? 0.6 : 1.0,
+        InkWell(
+          onTap: onTap,
+          child: Opacity(
+            opacity: alreadyExists && !isMetronBrowse ? 0.6 : 1.0,
             child: Padding(
               padding: compact
                   ? const EdgeInsets.all(8)
@@ -101,13 +101,17 @@ class ReadingListCard extends ConsumerWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.secondaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondaryContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     'Added',
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -115,12 +119,12 @@ class ReadingListCard extends ConsumerWidget {
                                 ),
                               ),
                             if (isFavorite)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 8),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
                                 child: Icon(
                                   Icons.favorite,
                                   size: 16,
-                                  color: Colors.red,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             Icon(
@@ -138,15 +142,18 @@ class ReadingListCard extends ConsumerWidget {
                             Text(
                               isMetronBrowse && !alreadyExists
                                   ? [
-                                      if (list.metronListType != null) list.metronListType,
-                                      if (list.metronAttributionSource != null) list.metronAttributionSource,
+                                      if (list.metronListType != null)
+                                        list.metronListType,
+                                      if (list.metronAttributionSource != null)
+                                        list.metronAttributionSource,
                                     ].join(' • ')
                                   : '$itemCount $unitLabel • $contentTypeLabel',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
-                        if (list.metronAttributionSource != null && (!isMetronBrowse || alreadyExists)) ...[
+                        if (list.metronAttributionSource != null &&
+                            (!isMetronBrowse || alreadyExists)) ...[
                           const SizedBox(height: 4),
                           Row(
                             children: [
@@ -156,9 +163,9 @@ class ReadingListCard extends ConsumerWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .tertiaryContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.tertiaryContainer,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -166,9 +173,9 @@ class ReadingListCard extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onTertiaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onTertiaryContainer,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -191,9 +198,8 @@ class ReadingListCard extends ConsumerWidget {
                                 Text(
                                   '${averageRating!.toStringAsFixed(1)}'
                                   '${ratingCount != null && ratingCount! > 0 ? " ($ratingCount)" : ""}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ],
                             )
@@ -259,10 +265,12 @@ class ReadingListCard extends ConsumerWidget {
             left: 4,
             top: 4,
             child: Icon(
-              isSelected == true ? Icons.check_circle : Icons.check_circle_outline,
-              color: alreadyExists 
-                ? Theme.of(context).colorScheme.outline
-                : Theme.of(context).colorScheme.primary,
+              isSelected == true
+                  ? Icons.check_circle
+                  : Icons.check_circle_outline,
+              color: alreadyExists
+                  ? Theme.of(context).colorScheme.outline
+                  : Theme.of(context).colorScheme.primary,
               size: 24,
             ),
           ),

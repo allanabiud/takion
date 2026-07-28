@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
@@ -215,7 +215,9 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
       return const SizedBox.shrink();
     }
 
-    final isCollected = _isCollectedEdition(widget.issue.series?.seriesType?.name);
+    final isCollected = _isCollectedEdition(
+      widget.issue.series?.seriesType?.name,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -406,7 +408,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: 'Arcs',
           itemCount: arcs.length,
-          height: 140,
+          height: 155,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final arc = arcs[index];
@@ -505,25 +507,16 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     final allItems = <InfoGridItem>[
       // Format / Pages / Price / Volume / Rating
-      if (seriesType != null)
-        InfoGridItem(label: 'Format', value: seriesType),
-      if (pages != null)
-        InfoGridItem(label: 'Pages', value: '$pages'),
-      if (price != null)
-        InfoGridItem(label: 'Price', value: price),
+      if (seriesType != null) InfoGridItem(label: 'Format', value: seriesType),
+      if (pages != null) InfoGridItem(label: 'Pages', value: '$pages'),
+      if (price != null) InfoGridItem(label: 'Price', value: price),
       if (widget.issue.series?.volume != null)
-        InfoGridItem(
-          label: 'Volume',
-          value: '${widget.issue.series!.volume}',
-        ),
+        InfoGridItem(label: 'Volume', value: '${widget.issue.series!.volume}'),
       if (rating != null && rating.isNotEmpty)
         InfoGridItem(label: 'Rating', value: rating),
       if (widget.issue.altNumber != null &&
           widget.issue.altNumber!.trim().isNotEmpty)
-        InfoGridItem(
-          label: 'Alt Number',
-          value: widget.issue.altNumber!,
-        ),
+        InfoGridItem(label: 'Alt Number', value: widget.issue.altNumber!),
       // Dates
       if (widget.issue.focDate != null)
         InfoGridItem(
@@ -542,15 +535,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         ),
       // Product codes
       if (distributorSku != null && distributorSku.isNotEmpty)
-        InfoGridItem(
-          label: 'Distributor SKU',
-          value: distributorSku,
-        ),
-      if (upcIsbn != null)
-        InfoGridItem(
-          label: 'UPC / ISBN',
-          value: upcIsbn,
-        ),
+        InfoGridItem(label: 'Distributor SKU', value: distributorSku),
+      if (upcIsbn != null) InfoGridItem(label: 'UPC / ISBN', value: upcIsbn),
     ];
 
     if (allItems.isEmpty) return const SizedBox.shrink();
@@ -782,12 +768,12 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           _buildSectionCard(context, _buildUniversesSection(context)),
           const SizedBox(height: 16),
         ],
-        if (hasStories) ...[
-          _buildSectionCard(context, _buildStoriesSection(context)),
-          const SizedBox(height: 16),
-        ],
         if (hasArcs) ...[
           _buildSectionCard(context, _buildArcsSection(context)),
+          const SizedBox(height: 16),
+        ],
+        if (hasStories) ...[
+          _buildSectionCard(context, _buildStoriesSection(context)),
           const SizedBox(height: 16),
         ],
         if (hasAdditionalInfo) ...[

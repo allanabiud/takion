@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-final arcDetailsProvider =
-    FutureProvider.family<ArcDetails, int>((ref, id) async {
-  final repository = ref.watch(catalogRepositoryProvider);
-  final result = await repository.getArcDetails(id);
-  if (result.image != null && result.image!.trim().isNotEmpty) {
-    ref.read(entityImageCacheProvider).set('arc', id, result.image!);
-    ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
+final arcDetailsProvider = FutureProvider.autoDispose.family<ArcDetails, int>((
+  ref,
+  id,
+) async {
+  final details = await ref
+      .watch(catalogRepositoryProvider)
+      .getArcDetails(id, forceRefresh: false);
+  if (details.image != null && details.image!.trim().isNotEmpty) {
+    ref.read(entityImageCacheProvider).set('arc', id, details.image!);
+    ref.read(entityImageVersionProvider.notifier).update((value) => value + 1);
   }
-  return result;
+  return details;
 });

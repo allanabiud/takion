@@ -6,11 +6,11 @@ import 'package:takion/src/presentation/features/library/providers/category_seri
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/features/library/widgets/stat_card.dart';
 import 'package:takion/src/presentation/features/library/widgets/library_charts.dart';
@@ -18,8 +18,9 @@ import 'package:takion/src/presentation/features/library/widgets/top_entity_tile
 import 'package:takion/src/presentation/features/library/screens/top_characters_screen.dart';
 import 'package:takion/src/presentation/features/library/screens/top_creators_screen.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
+import 'package:takion/src/presentation/features/library/widgets/stats_skeleton.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 
 @RoutePage()
 class MyComicsScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,8 @@ class MyComicsScreen extends ConsumerStatefulWidget {
 class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -49,7 +53,32 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Comics'),
+        titleSpacing: _isSearching && _tabController.index == 0 ? 0 : null,
+        title: _isSearching && _tabController.index == 0
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Search series...',
+                  border: InputBorder.none,
+                  isDense: true,
+                  filled: false,
+                  suffixIcon: IconButton(
+                    tooltip: 'Close search',
+                    iconSize: 28,
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _isSearching = false;
+                        _searchController.clear();
+                      });
+                    },
+                  ),
+                ),
+              )
+            : const Text('My Comics'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -58,11 +87,25 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
             Tab(text: 'STATS'),
           ],
         ),
+        actions: _tabController.index == 0
+            ? (_isSearching
+                ? null
+                : [
+                    IconButton(
+                      tooltip: 'Search',
+                      onPressed: () => setState(() => _isSearching = true),
+                      icon: const Icon(Icons.search),
+                    ),
+                  ])
+            : null,
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _MyComicsBrowseTab(),
+          _MyComicsBrowseTab(
+            isSearching: _isSearching,
+            searchQuery: _searchController.text,
+          ),
           const ActivityLogView(typeFilter: ActivityEventType.collected),
           _MyComicsStatsTab(),
         ],
@@ -72,6 +115,14 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
 }
 
 class _MyComicsBrowseTab extends ConsumerWidget {
+  final bool isSearching;
+  final String searchQuery;
+
+  const _MyComicsBrowseTab({
+    required this.isSearching,
+    required this.searchQuery,
+  });
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seriesAsync = ref.watch(collectedSeriesProvider);
@@ -85,21 +136,34 @@ class _MyComicsBrowseTab extends ConsumerWidget {
         errorMessage: 'Failed to load collected series',
       ),
       data: (seriesList) {
+        final mapped = seriesList.map((s) {
+          return (
+            series: SeriesList(
+              id: s.seriesId,
+              name: s.seriesName,
+              volume: s.volume,
+              yearBegan: s.yearBegan,
+              issueCount: s.issueCount,
+            ),
+            categoryCount: s.categoryCount,
+          );
+        }).toList();
         final sortedResults = sortSeries(
-          seriesList
-              .map(
-                (s) => SeriesList(
-                  id: s.seriesId,
-                  name: s.seriesName,
-                  volume: s.volume,
-                  yearBegan: s.yearBegan,
-                  issueCount: s.categoryCount,
-                ),
-              )
-              .toList(),
+          mapped.map((e) => e.series).toList(),
           sortOption,
         );
-        if (sortedResults.isEmpty) {
+        final categoryCounts = <int, int>{
+          for (final e in mapped) e.series.id: e.categoryCount,
+        };
+        final query = searchQuery.toLowerCase().trim();
+        final filtered = isSearching && query.isNotEmpty
+            ? sortedResults
+                .where(
+                  (s) => s.name.toLowerCase().contains(query),
+                )
+                .toList()
+            : sortedResults;
+        if (filtered.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(collectedSeriesProvider),
             child: CustomScrollView(
@@ -108,7 +172,7 @@ class _MyComicsBrowseTab extends ConsumerWidget {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: EmptyContentState(
-                    icon: Icons.library_books_outlined,
+                    icon: Icons.inventory_2_outlined,
                     message: 'No comics in your collection yet.',
                   ),
                 ),
@@ -122,13 +186,13 @@ class _MyComicsBrowseTab extends ConsumerWidget {
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 12),
-            itemCount: sortedResults.length + 1,
+            itemCount: filtered.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: ListHeader(
-                    count: sortedResults.length,
+                    count: filtered.length,
                     unit: 'series',
                     pluralUnit: 'series',
                     enabled: true,
@@ -142,13 +206,13 @@ class _MyComicsBrowseTab extends ConsumerWidget {
                   ),
                 );
               }
-              final summary = sortedResults[index - 1];
+              final summary = filtered[index - 1];
               return SeriesListTile(
                 series: summary,
-                categoryCount: summary.issueCount,
+                categoryCount: categoryCounts[summary.id],
                 categoryLabel: 'collected',
                 isFirst: index == 1,
-                isLast: index == sortedResults.length,
+                isLast: index == filtered.length,
                 onTap: () => context.pushRoute(
                   LibrarySeriesRoute(
                     seriesId: summary.id,
@@ -249,13 +313,56 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                         ),
                       )
                     else if (insightsAsync.isLoading && _cachedInsights == null)
-                      const Center(
+                      ShimmerWidget(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 64.0,
-                            horizontal: 16.0,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Expanded(child: StatCardSkeleton()),
+                                  SizedBox(width: 8),
+                                  Expanded(child: StatCardSkeleton()),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: const [
+                                  Expanded(child: StatCardSkeleton()),
+                                  SizedBox(width: 8),
+                                  Expanded(child: StatCardSkeleton()),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              const SectionHeaderSkeleton(),
+                              const SizedBox(height: 12),
+                              const StatBarTableSkeleton(),
+                              const SizedBox(height: 24),
+                              const SectionHeaderSkeleton(showChevron: true),
+                              const SizedBox(height: 8),
+                              ...List.generate(
+                                5,
+                                (index) =>
+                                    TopEntityTileSkeleton(isLast: index == 4),
+                              ),
+                              const SizedBox(height: 24),
+                              const SectionHeaderSkeleton(showChevron: true),
+                              const SizedBox(height: 8),
+                              ...List.generate(
+                                5,
+                                (index) =>
+                                    TopEntityTileSkeleton(isLast: index == 4),
+                              ),
+                              const SizedBox(height: 24),
+                              const SectionHeaderSkeleton(),
+                              const SizedBox(height: 8),
+                              ...List.generate(
+                                3,
+                                (index) => const IssueListTileSkeleton(),
+                              ),
+                            ],
                           ),
-                          child: CircularProgressIndicator(),
                         ),
                       )
                     else if (insights != null)
@@ -387,7 +494,7 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                                     number: item.issue?.number ?? '',
                                     series: item.issue?.series != null
                                         ? Series(
-                                            id: 0,
+                                            id: item.issue?.series?.id ?? 0,
                                             name: item.issue!.series!.name,
                                             volume: item.issue!.series!.volume,
                                             yearBegan:

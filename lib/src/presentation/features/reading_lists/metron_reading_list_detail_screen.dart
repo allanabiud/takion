@@ -5,11 +5,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_timeline_tile.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
@@ -94,7 +94,11 @@ class _MetronReadingListDetailScreenState
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.safeError(context, e, userMessage: 'Failed to import reading list');
+        TakionAlerts.safeError(
+          context,
+          e,
+          userMessage: 'Failed to import reading list',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoadingImport = false);
@@ -178,10 +182,7 @@ class _MetronReadingListDetailScreenState
     }
   }
 
-  Widget _buildActionRow(
-    ReadingList list,
-    MetronReadingListDetail detail,
-  ) {
+  Widget _buildActionRow(ReadingList list, MetronReadingListDetail detail) {
     final theme = Theme.of(context);
 
     return Row(
@@ -502,11 +503,7 @@ class _MetronReadingListDetailScreenState
                         borderRadius: 12,
                       ),
                       const SizedBox(width: 12),
-                      const SkeletonBox(
-                        width: 60,
-                        height: 85,
-                        borderRadius: 6,
-                      ),
+                      const SkeletonBox(width: 60, height: 85, borderRadius: 6),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -546,17 +543,22 @@ class _MetronReadingListDetailScreenState
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          ref.read(metronListPreviewItemsProvider.notifier).setPreviewItems(
-            widget.id,
-            items.take(3).map(
-              (item) => ReadingListItem(
-                targetId: 'issue-${item.issueId}',
-                isSeries: false,
-                role: ItemRole.standard,
-                isRead: false,
-              ),
-            ).toList(),
-          );
+          ref
+              .read(metronListPreviewItemsProvider.notifier)
+              .setPreviewItems(
+                widget.id,
+                items
+                    .take(3)
+                    .map(
+                      (item) => ReadingListItem(
+                        targetId: 'issue-${item.issueId}',
+                        isSeries: false,
+                        role: ItemRole.standard,
+                        isRead: false,
+                      ),
+                    )
+                    .toList(),
+              );
         });
 
         final readingListItems = items.map((item) {

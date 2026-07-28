@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_more_options_sheet.dart';
@@ -98,14 +98,10 @@ class IssueDetailsSheet extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         child: CustomScrollView(
           controller: scrollController,
           slivers: [
@@ -121,8 +117,9 @@ class IssueDetailsSheet extends StatelessWidget {
                         width: 32,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.4,
+                          ),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -209,63 +206,91 @@ class IssueDetailsSheet extends StatelessWidget {
                       children: [
                         Expanded(
                           flex: 3,
-                        child: (collectionStatus?.isCollected == true)
-                            ? FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.errorContainer,
-                                  foregroundColor: theme.colorScheme.onErrorContainer,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  textStyle: Theme.of(context).textTheme.titleMedium,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: onShowScrobbleSheet,
-                                icon: const Icon(Icons.delete_outline, size: 22),
-                                label: const Text('Remove'),
-                              )
-                            : (collectionStatus?.isWishlisted == true)
-                                ? FilledButton.icon(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: theme.colorScheme.tertiaryContainer,
-                                      foregroundColor: theme.colorScheme.onTertiaryContainer,
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      textStyle: Theme.of(context).textTheme.titleMedium,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
+                          child: (collectionStatus?.isCollected == true)
+                              ? FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor:
+                                        theme.colorScheme.errorContainer,
+                                    foregroundColor:
+                                        theme.colorScheme.onErrorContainer,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
                                     ),
-                                    onPressed: onShowScrobbleSheet,
-                                    icon: const Icon(Icons.turned_in, size: 22),
-                                    label: const Text('Wishlisted'),
-                                  )
-                                : isInPullList
-                                    ? FilledButton.icon(
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: theme.colorScheme.secondaryContainer,
-                                          foregroundColor: theme.colorScheme.onSecondaryContainer,
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          textStyle: Theme.of(context).textTheme.titleMedium,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        onPressed: onShowScrobbleSheet,
-                                        icon: const Icon(Icons.shopping_bag, size: 22),
-                                        label: const Text('Pulled'),
-                                      )
-                                    : FilledButton.icon(
-                                        style: FilledButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          textStyle: Theme.of(context).textTheme.titleMedium,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        onPressed: onShowScrobbleSheet,
-                                        icon: const Icon(Icons.add, size: 22),
-                                        label: const Text('Add'),
-                                      ),
+                                    textStyle: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onShowScrobbleSheet,
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 22,
+                                  ),
+                                  label: const Text('Remove'),
+                                )
+                              : (collectionStatus?.isWishlisted == true)
+                              ? FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor:
+                                        theme.colorScheme.tertiaryContainer,
+                                    foregroundColor:
+                                        theme.colorScheme.onTertiaryContainer,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    textStyle: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onShowScrobbleSheet,
+                                  icon: const Icon(Icons.turned_in, size: 22),
+                                  label: const Text('Wishlisted'),
+                                )
+                              : isInPullList
+                              ? FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor:
+                                        theme.colorScheme.secondaryContainer,
+                                    foregroundColor:
+                                        theme.colorScheme.onSecondaryContainer,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    textStyle: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onShowScrobbleSheet,
+                                  icon: const Icon(
+                                    Icons.shopping_bag,
+                                    size: 22,
+                                  ),
+                                  label: const Text('Pulled'),
+                                )
+                              : FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    textStyle: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: onShowScrobbleSheet,
+                                  icon: const Icon(Icons.add, size: 22),
+                                  label: const Text('Add'),
+                                ),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -273,9 +298,13 @@ class IssueDetailsSheet extends StatelessWidget {
                           child: isFavorite
                               ? FilledButton(
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primaryContainer,
-                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    backgroundColor:
+                                        theme.colorScheme.primaryContainer,
+                                    foregroundColor:
+                                        theme.colorScheme.onPrimaryContainer,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
                                     iconSize: 28,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -286,7 +315,9 @@ class IssueDetailsSheet extends StatelessWidget {
                                 )
                               : FilledButton.tonal(
                                   style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
                                     iconSize: 28,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -301,8 +332,10 @@ class IssueDetailsSheet extends StatelessWidget {
                           flex: 1,
                           child: FilledButton.tonal(
                             style: FilledButton.styleFrom(
-                              backgroundColor: theme.colorScheme.surfaceContainerHigh,
-                              foregroundColor: theme.colorScheme.onSurfaceVariant,
+                              backgroundColor:
+                                  theme.colorScheme.surfaceContainerHigh,
+                              foregroundColor:
+                                  theme.colorScheme.onSurfaceVariant,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               iconSize: 28,
                               shape: RoundedRectangleBorder(
@@ -330,10 +363,7 @@ class IssueDetailsSheet extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: IssueAboutContent(
-                  issue: issue,
-                  issueId: issueId,
-                ),
+                child: IssueAboutContent(issue: issue, issueId: issueId),
               ),
             ),
             SliverToBoxAdapter(

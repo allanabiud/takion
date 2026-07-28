@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/entity_cover.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/entity_cover.dart';
 import 'package:takion/src/presentation/features/library/activity_log_group.dart';
 import 'package:timelines_plus/timelines_plus.dart';
 
@@ -67,53 +66,40 @@ class ActivityLogGroupTile extends ConsumerWidget {
                 color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               ),
             ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _showIssueSheet(context, ref),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _titleForGroup(),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _titleForGroup(),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    if (showTimestamp) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 12,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            DateFormat(
-                              'h:mm a',
-                            ).format(group.latestTimestamp.toLocal()),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (group.events.length > 1) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tap for details',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                  ),
+                  if (showTimestamp) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 12,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                    ],
-                    _buildCoverStrip(context),
+                        const SizedBox(width: 4),
+                        Text(
+                          DateFormat(
+                            'h:mm a',
+                          ).format(group.latestTimestamp.toLocal()),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
-                ),
+                  _buildCoverStrip(context),
+                ],
               ),
             ),
           ),
@@ -123,15 +109,16 @@ class ActivityLogGroupTile extends ConsumerWidget {
   }
 
   Widget _buildCoverStrip(BuildContext context) {
-    final uniqueImages = <String?>[];
+    final coverEntries = <({String url, int issueId})>[];
     final seen = <String>{};
-    for (final url in group.imageUrls) {
+    for (var i = 0; i < group.imageUrls.length; i++) {
+      final url = group.imageUrls[i];
       if (url != null && url.isNotEmpty && seen.add(url)) {
-        uniqueImages.add(url);
+        coverEntries.add((url: url, issueId: group.issueIds[i]));
       }
     }
 
-    if (uniqueImages.isEmpty) return const SizedBox.shrink();
+    if (coverEntries.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -140,88 +127,28 @@ class ActivityLogGroupTile extends ConsumerWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          itemCount: uniqueImages.length,
+          itemCount: coverEntries.length,
           separatorBuilder: (_, _) => const SizedBox(width: 6),
           itemBuilder: (context, index) {
-            return SizedBox(
-              width: 48,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: EntityCover(
-                  imageUrl: uniqueImages[index],
-                  aspectRatio: 2 / 3,
-                  borderRadius: 4,
-                  iconSize: 14,
+            final entry = coverEntries[index];
+            return GestureDetector(
+              onTap: () =>
+                  context.pushRoute(IssueDetailsRoute(issueId: entry.issueId)),
+              child: SizedBox(
+                width: 48,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: EntityCover(
+                    imageUrl: entry.url,
+                    aspectRatio: 2 / 3,
+                    borderRadius: 4,
+                    iconSize: 14,
+                  ),
                 ),
               ),
             );
           },
         ),
-      ),
-    );
-  }
-
-  void _showIssueSheet(BuildContext context, WidgetRef ref) {
-    TakionBottomSheet.show(
-      context: context,
-      title: _titleForGroup(),
-      isScrollControlled: true,
-      child: Builder(
-        builder: (sheetContext) {
-          final sheetTheme = Theme.of(sheetContext);
-          return ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: group.events.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final event = group.events[index];
-              final issueStr = event.issueNumber != null
-                  ? '#${event.issueNumber}'
-                  : '';
-              final seriesStr = event.seriesName ?? 'Unknown Series';
-
-              return ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: SizedBox(
-                    width: 36,
-                    height: 54,
-                    child: EntityCover(
-                      imageUrl: event.imageUrl,
-                      aspectRatio: 2 / 3,
-                      borderRadius: 4,
-                      iconSize: 12,
-                    ),
-                  ),
-                ),
-                title: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: seriesStr,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (issueStr.isNotEmpty)
-                        TextSpan(
-                          text: ' $issueStr',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                    ],
-                  ),
-                ),
-                subtitle: Text(
-                  DateFormat('h:mm a').format(event.timestamp.toLocal()),
-                  style: sheetTheme.textTheme.bodySmall,
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  context.pushRoute(IssueDetailsRoute(issueId: event.issueId));
-                },
-              );
-            },
-          );
-        },
       ),
     );
   }
@@ -243,6 +170,18 @@ class ActivityLogGroupTile extends ConsumerWidget {
         return 'Removed $count ${count == 1 ? 'issue' : 'issues'} from wishlist';
       case ActivityEventType.rated:
         return 'Rated $count ${count == 1 ? 'issue' : 'issues'}';
+      case ActivityEventType.subscribed:
+        return 'Subscribed to $count ${count == 1 ? 'series' : 'series'}';
+      case ActivityEventType.unsubscribed:
+        return 'Unsubscribed from $count ${count == 1 ? 'series' : 'series'}';
+      case ActivityEventType.favorited:
+        return 'Favorited $count ${count == 1 ? 'item' : 'items'}';
+      case ActivityEventType.unfavorited:
+        return 'Unfavorited $count ${count == 1 ? 'item' : 'items'}';
+      case ActivityEventType.pulled:
+        return 'Added $count ${count == 1 ? 'issue' : 'issues'} to pull list';
+      case ActivityEventType.unpulled:
+        return 'Removed $count ${count == 1 ? 'issue' : 'issues'} from pull list';
     }
   }
 
@@ -262,6 +201,18 @@ class ActivityLogGroupTile extends ConsumerWidget {
         return Icons.turned_in_not;
       case ActivityEventType.rated:
         return Icons.star;
+      case ActivityEventType.subscribed:
+        return Icons.notifications_active;
+      case ActivityEventType.unsubscribed:
+        return Icons.notifications_off_outlined;
+      case ActivityEventType.favorited:
+        return Icons.favorite;
+      case ActivityEventType.unfavorited:
+        return Icons.favorite_border;
+      case ActivityEventType.pulled:
+        return Icons.shopping_bag;
+      case ActivityEventType.unpulled:
+        return Icons.shopping_bag_outlined;
     }
   }
 
@@ -282,6 +233,18 @@ class ActivityLogGroupTile extends ConsumerWidget {
         return theme.colorScheme.outline;
       case ActivityEventType.rated:
         return Colors.amber;
+      case ActivityEventType.subscribed:
+        return theme.colorScheme.primary;
+      case ActivityEventType.unsubscribed:
+        return theme.colorScheme.outline;
+      case ActivityEventType.favorited:
+        return Colors.redAccent;
+      case ActivityEventType.unfavorited:
+        return theme.colorScheme.outline;
+      case ActivityEventType.pulled:
+        return theme.colorScheme.secondary;
+      case ActivityEventType.unpulled:
+        return theme.colorScheme.outline;
     }
   }
 }

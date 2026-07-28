@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class ReadingGoalCard extends ConsumerWidget {
   final LibraryFilter filter;

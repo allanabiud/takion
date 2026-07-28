@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
@@ -114,7 +114,8 @@ final libraryInsightsProvider = FutureProvider.autoDispose
       );
       final subscriptionsFuture = ref.watch(activeSubscriptionsProvider.future);
       final pullRepository = ref.watch(pullListRepositoryProvider);
-      final localDataSource = ref.watch(metronLocalDataSourceProvider);
+      final db = ref.watch(driftDatabaseProvider);
+      final mapper = ref.watch(entityMapperProvider);
 
       final libraryItems = await libraryItemsFuture;
       final collectionItems = await collectionItemsFuture;
@@ -318,12 +319,21 @@ final libraryInsightsProvider = FutureProvider.autoDispose
           (owned.map((item) => item.metronIssueId).toSet()
                 ..addAll(allRead.map((item) => item.metronIssueId)))
               .toList();
-      final sampleIssueIds = insightIssueIds.take(120).toList();
-      final cachedDetails = await Future.wait(
-        sampleIssueIds.map(localDataSource.getIssueDetails),
-      );
+      final cachedDetails = <IssueDetails>[];
+      for (final issueId in insightIssueIds) {
+        var issue = await db.metronEntityDao.getIssue(issueId);
+        if (issue == null || !issue.isFullyHydrated) {
+          try {
+            await ref.read(metronRepositoryProvider).getIssueDetails(issueId);
+            issue = await db.metronEntityDao.getIssue(issueId);
+          } catch (_) {}
+        }
+        if (issue != null) {
+          cachedDetails.add(await mapper.issueToEntity(issue));
+        }
+      }
       for (final details in cachedDetails) {
-        final name = details?.publisher?.name.trim();
+        final name = details.publisher?.name.trim();
         if (name != null && name.isNotEmpty) {
           topPublisherCounts.update(
             name,
@@ -331,8 +341,7 @@ final libraryInsightsProvider = FutureProvider.autoDispose
             ifAbsent: () => 1,
           );
         }
-        final seenCreatorIds = <int>{};
-        for (final char in details?.characters ?? []) {
+        for (final char in details.characters) {
           final charName = char.name.trim();
           if (charName.isEmpty) continue;
           characterCounts.update(
@@ -342,18 +351,30 @@ final libraryInsightsProvider = FutureProvider.autoDispose
           );
           characterNames[char.id] = charName;
         }
-        for (final credit in details?.credits ?? []) {
-          if (credit.creatorId == null ||
-              !seenCreatorIds.add(credit.creatorId!)) {
+        final seenCreatorIds = <int>{};
+        for (final credit in details.credits) {
+          final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
+              ? credit.creatorId!
+              : credit.id;
+          if (creatorId <= 0 || !seenCreatorIds.add(creatorId)) {
             continue;
           }
-          final creatorName = credit.creator?.trim() ?? 'Unknown';
+          final rawName = credit.creator?.trim();
+          if (rawName != null && rawName.isNotEmpty) {
+            creatorNames[creatorId] = rawName;
+          } else {
+            final c = await db.metronEntityDao.getCreator(creatorId);
+            final daoName = c?.name;
+            creatorNames[creatorId] =
+                (daoName != null && daoName.trim().isNotEmpty)
+                ? daoName.trim()
+                : 'Unknown';
+          }
           creatorCounts.update(
-            credit.creatorId!,
+            creatorId,
             (value) => value + 1,
             ifAbsent: () => 1,
           );
-          creatorNames[credit.creatorId!] = creatorName;
         }
       }
 

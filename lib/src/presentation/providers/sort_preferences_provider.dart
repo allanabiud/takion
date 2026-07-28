@@ -1,9 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
 
 class SortPreferencesNotifier extends Notifier<Map<String, ContentSortOption>> {
-  static const _settingsBoxName = 'settings_box';
   static const _sortPreferencesKey = 'sort_preferences';
 
   bool _hydrated = false;
@@ -18,16 +19,22 @@ class SortPreferencesNotifier extends Notifier<Map<String, ContentSortOption>> {
   }
 
   Future<void> _hydrateFromStorage() async {
-    final hive = ref.read(hiveServiceProvider);
-    final settingsBox = await hive.openBox<dynamic>(_settingsBoxName);
-    final rawMap = settingsBox.get(_sortPreferencesKey);
-    if (rawMap is! Map) return;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final rawMap = await dao.getString(_sortPreferencesKey);
+    if (rawMap == null) return;
+
+    Map<String, dynamic> decoded;
+    try {
+      decoded = Map<String, dynamic>.from(jsonDecode(rawMap) as Map);
+    } on FormatException {
+      return;
+    }
 
     final next = <String, ContentSortOption>{};
-    for (final entry in rawMap.entries) {
-      final key = entry.key?.toString();
-      final value = entry.value?.toString();
-      if (key == null || value == null || key.trim().isEmpty) continue;
+    for (final entry in decoded.entries) {
+      final key = entry.key;
+      final value = entry.value as String?;
+      if (value == null || key.trim().isEmpty) continue;
       final parsed = ContentSortOption.values.where(
         (item) => item.name == value,
       );
@@ -39,10 +46,9 @@ class SortPreferencesNotifier extends Notifier<Map<String, ContentSortOption>> {
   }
 
   Future<void> _persist() async {
-    final hive = ref.read(hiveServiceProvider);
-    final settingsBox = await hive.openBox<dynamic>(_settingsBoxName);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
     final serialized = state.map((key, value) => MapEntry(key, value.name));
-    await settingsBox.put(_sortPreferencesKey, serialized);
+    await dao.setString(_sortPreferencesKey, jsonEncode(serialized));
   }
 
   void setPreference(

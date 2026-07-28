@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 class AddReadingListItemsBottomSheet extends ConsumerStatefulWidget {
   final ReadingList list;
@@ -136,10 +136,7 @@ class _AddReadingListItemsBottomSheetState
 
       if (newItems.isEmpty && itemsToAdd.isNotEmpty) {
         if (mounted) {
-          TakionAlerts.info(
-            context,
-            'Already in this list',
-          );
+          TakionAlerts.info(context, 'Already in this list');
           Navigator.pop(context);
         }
         return;
@@ -154,10 +151,7 @@ class _AddReadingListItemsBottomSheetState
 
       if (mounted) {
         if (skippedCount > 0) {
-          TakionAlerts.success(
-            context,
-            'Added ${newItems.length} Items',
-          );
+          TakionAlerts.success(context, 'Added ${newItems.length} Items');
         } else {
           TakionAlerts.success(context, 'Added to Reading List');
         }
@@ -221,7 +215,9 @@ class _AddReadingListItemsBottomSheetState
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(
-                  child: Text(TakionAlerts.cleanError(e, fallback: 'Failed to add items')),
+                  child: Text(
+                    TakionAlerts.cleanError(e, fallback: 'Failed to add items'),
+                  ),
                 ),
               ) ??
               const SizedBox.shrink(),

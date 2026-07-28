@@ -2,14 +2,13 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 
 @RoutePage()
@@ -49,12 +48,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   }
 
   Future<void> _refreshPage() async {
-    await invalidateSubscriptionsLocalCacheWithHive(
-      ref.read(hiveServiceProvider),
-    );
+    ref.invalidate(subscribedSeriesPageProvider(_page));
     if (!mounted) return;
     setState(_resetCoverFetchLimit);
-    ref.invalidate(subscribedSeriesPageProvider(_page));
   }
 
   @override

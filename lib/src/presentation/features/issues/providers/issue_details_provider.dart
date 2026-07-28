@@ -1,45 +1,20 @@
-import 'dart:async';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-part 'issue_details_provider.g.dart';
-
-@riverpod
-class IssueDetailsNotifier extends _$IssueDetailsNotifier {
-  Future<void> _cacheIssueImage(IssueDetails details) async {
-    final image = details.image?.trim();
-    if (image == null || image.isEmpty) return;
-    await ref.read(entityImageCacheProvider).set('issue', details.id, image);
-    ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
-  }
-
-  @override
-  Future<IssueDetails> build(int issueId) async {
-    final repository = ref.watch(catalogRepositoryProvider);
-    final details = await AppPerformanceMetrics.instance.trackProvider(
-      'issueDetailsProvider',
-      () => repository.getIssueDetails(issueId),
-    );
-    await _cacheIssueImage(details);
-    return details;
-  }
-
-  Future<void> refresh() async {
-    // ignore: invalid_use_of_internal_member
-    state = AsyncLoading<IssueDetails>().copyWithPrevious(state);
-
-    final newState = await AsyncValue.guard(() async {
-      final repository = ref.read(catalogRepositoryProvider);
-      final details = await repository.getIssueDetails(
-        issueId,
-        forceRefresh: true,
-      );
-      await _cacheIssueImage(details);
-      return details;
+/// Detail responses contain fields that are not represented by the normalized
+/// entity tables (notably variants and reprints), so expose the full response.
+final issueDetailsProvider = FutureProvider.autoDispose
+    .family<IssueDetails, int>((ref, id) async {
+      final issue = await ref
+          .watch(catalogRepositoryProvider)
+          .getIssueDetails(id, forceRefresh: false);
+      if (issue.image != null && issue.image!.trim().isNotEmpty) {
+        ref.read(entityImageCacheProvider).set('issue', id, issue.image!);
+        ref
+            .read(entityImageVersionProvider.notifier)
+            .update((value) => value + 1);
+      }
+      return issue;
     });
-    state = newState;
-  }
-}

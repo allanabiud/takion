@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
-final seriesOwnedCountProvider = FutureProvider.autoDispose
-    .family<int, int>((ref, seriesId) async {
+final seriesOwnedCountProvider = FutureProvider.autoDispose.family<int, int>((
+  ref,
+  seriesId,
+) async {
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
   return libraryItems
       .where(

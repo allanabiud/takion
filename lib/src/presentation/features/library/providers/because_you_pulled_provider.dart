@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
@@ -17,26 +18,80 @@ Set<String> _seriesTokens(String name) {
       .toSet();
 }
 
-double _scoreIssue(
-  IssueList issue, {
-  required Set<int> pulledSeriesIds,
-  required Set<String> pulledPublishers,
-  required Set<String> pulledTokens,
-}) {
-  final series = issue.series;
-  if (series == null) return 0;
+List<int> _scoreBecauseYouPulledCandidates(Map<String, dynamic> input) {
+  final weeklySeriesIds = (input['weekly_series_ids'] as List).cast<int?>();
+  final weeklyIssueIds = (input['weekly_issue_ids'] as List).cast<int?>();
+  final weeklyPublishers = (input['weekly_publishers'] as List).cast<String?>();
+  final weeklyNames = (input['weekly_names'] as List).cast<String?>();
+
+  final pulledSeriesIdsSet = (input['pulled_series_ids'] as List)
+      .cast<int>()
+      .toSet();
+  final pulledIssueIdsSet = (input['pulled_issue_ids'] as List)
+      .cast<int>()
+      .toSet();
+  final ownedIssueIdsSet = (input['owned_issue_ids'] as List)
+      .cast<int>()
+      .toSet();
+  final pulledPublishersSet = (input['pulled_publishers'] as List)
+      .cast<String>()
+      .toSet();
+  final pulledTokens = (input['pulled_tokens'] as List).cast<String>().toSet();
+
+  final candidateIndices = <int>[];
+  for (var i = 0; i < weeklyIssueIds.length; i++) {
+    final issueId = weeklyIssueIds[i];
+    final seriesId = weeklySeriesIds[i];
+    if (issueId == null || seriesId == null) continue;
+    if (pulledIssueIdsSet.contains(issueId) ||
+        ownedIssueIdsSet.contains(issueId)) {
+      continue;
+    }
+    candidateIndices.add(i);
+  }
+
+  candidateIndices.sort((a, b) {
+    final aScore = _scoreSeries(
+      weeklySeriesIds[a],
+      weeklyPublishers[a],
+      weeklyNames[a],
+      pulledSeriesIdsSet,
+      pulledPublishersSet,
+      pulledTokens,
+    );
+    final bScore = _scoreSeries(
+      weeklySeriesIds[b],
+      weeklyPublishers[b],
+      weeklyNames[b],
+      pulledSeriesIdsSet,
+      pulledPublishersSet,
+      pulledTokens,
+    );
+    return bScore.compareTo(aScore);
+  });
+
+  return candidateIndices.take(10).toList();
+}
+
+double _scoreSeries(
+  int? seriesId,
+  String? publisher,
+  String? name,
+  Set<int> pulledSeriesIds,
+  Set<String> pulledPublishers,
+  Set<String> pulledTokens,
+) {
+  if (name == null || name.isEmpty) return 0;
 
   var score = 0.0;
-  if (series.id != null && pulledSeriesIds.contains(series.id!)) {
+  if (seriesId != null && pulledSeriesIds.contains(seriesId)) {
     score += 6;
   }
-  final publisher = series.publisherName?.trim().toLowerCase();
-  if (publisher != null &&
-      publisher.isNotEmpty &&
-      pulledPublishers.contains(publisher)) {
+  final pub = publisher?.trim().toLowerCase();
+  if (pub != null && pub.isNotEmpty && pulledPublishers.contains(pub)) {
     score += 4;
   }
-  final overlap = _seriesTokens(series.name).intersection(pulledTokens).length;
+  final overlap = _seriesTokens(name).intersection(pulledTokens).length;
   score += overlap.clamp(0, 3).toDouble();
   return score;
 }
@@ -48,56 +103,56 @@ Future<List<IssueList>> _computeBecauseYouPulledIssues(Ref ref) async {
 
   if (pulledIssues.isEmpty) return const [];
 
-  final pulledIssueIds = pulledIssues
-      .map((issue) => issue.id)
-      .whereType<int>()
-      .toSet();
   final ownedIssueIds = libraryItems
       .where((item) => item.quantityOwned > 0)
       .map((item) => item.metronIssueId)
       .toSet();
+
+  final pulledIssueIds = pulledIssues
+      .map((issue) => issue.id)
+      .whereType<int>()
+      .toList(growable: false);
   final pulledSeriesIds = pulledIssues
       .map((issue) => issue.series?.id)
       .whereType<int>()
-      .toSet();
+      .toList(growable: false);
   final pulledPublishers = pulledIssues
       .map((issue) => issue.series?.publisherName?.trim().toLowerCase())
       .whereType<String>()
       .where((name) => name.isNotEmpty)
-      .toSet();
+      .toList(growable: false);
   final pulledTokens = pulledIssues
       .map((issue) => issue.series?.name)
       .whereType<String>()
       .expand(_seriesTokens)
-      .toSet();
+      .toList(growable: false);
 
-  final candidates = weeklyIssues.where((issue) {
-    final issueId = issue.id;
-    final series = issue.series;
-    if (issueId == null || series == null) return false;
-    if (pulledIssueIds.contains(issueId) || ownedIssueIds.contains(issueId)) {
-      return false;
-    }
-    return true;
-  }).toList();
+  final weeklyIssueIds = weeklyIssues
+      .map((issue) => issue.id)
+      .toList(growable: false);
+  final weeklySeriesIds = weeklyIssues
+      .map((issue) => issue.series?.id)
+      .toList(growable: false);
+  final weeklyPublishers = weeklyIssues
+      .map((issue) => issue.series?.publisherName)
+      .toList(growable: false);
+  final weeklyNames = weeklyIssues
+      .map((issue) => issue.series?.name)
+      .toList(growable: false);
 
-  candidates.sort((a, b) {
-    final aScore = _scoreIssue(
-      a,
-      pulledSeriesIds: pulledSeriesIds,
-      pulledPublishers: pulledPublishers,
-      pulledTokens: pulledTokens,
-    );
-    final bScore = _scoreIssue(
-      b,
-      pulledSeriesIds: pulledSeriesIds,
-      pulledPublishers: pulledPublishers,
-      pulledTokens: pulledTokens,
-    );
-    return bScore.compareTo(aScore);
+  final topIndices = await compute(_scoreBecauseYouPulledCandidates, {
+    'weekly_issue_ids': weeklyIssueIds,
+    'weekly_series_ids': weeklySeriesIds,
+    'weekly_publishers': weeklyPublishers,
+    'weekly_names': weeklyNames,
+    'pulled_issue_ids': pulledIssueIds,
+    'pulled_series_ids': pulledSeriesIds,
+    'pulled_publishers': pulledPublishers,
+    'pulled_tokens': pulledTokens,
+    'owned_issue_ids': ownedIssueIds.toList(growable: false),
   });
 
-  return candidates.take(10).toList();
+  return topIndices.map((i) => weeklyIssues[i]).toList(growable: false);
 }
 
 final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((

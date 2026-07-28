@@ -1,26 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/data/common/drift/database.dart' as db;
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
 
 const _collectionPageSize = metronDefaultPageSize;
 
-void invalidateLibraryCollectionProviders(Ref ref) {
-  ref.invalidate(allLibraryItemsProvider);
-  ref.invalidate(allCollectionItemsProvider);
-  ref.invalidate(collectionItemsProvider);
-  ref.invalidate(currentCollectionItemsProvider);
-  ref.invalidate(collectionStatsProvider);
+LibraryOwnershipStatus _ownershipFromRaw(String raw) {
+  switch (raw) {
+    case 'owned':
+      return LibraryOwnershipStatus.owned;
+    case 'wishlist':
+      return LibraryOwnershipStatus.wishlist;
+    default:
+      return LibraryOwnershipStatus.notOwned;
+  }
 }
 
-void invalidateLibraryCollectionProvidersForWidget(WidgetRef ref) {
-  ref.invalidate(allLibraryItemsProvider);
-  ref.invalidate(allCollectionItemsProvider);
-  ref.invalidate(collectionItemsProvider);
-  ref.invalidate(currentCollectionItemsProvider);
-  ref.invalidate(collectionStatsProvider);
+LibraryItemFormat _formatFromRaw(String raw) {
+  switch (raw) {
+    case 'digital':
+      return LibraryItemFormat.digital;
+    case 'both':
+      return LibraryItemFormat.both;
+    default:
+      return LibraryItemFormat.print;
+  }
+}
+
+LibraryItem _driftItemToDomain(db.LibraryItem d) {
+  return LibraryItem(
+    id: d.id,
+    userId: d.userId,
+    metronIssueId: d.metronIssueId,
+    metronSeriesId: d.metronSeriesId,
+    ownershipStatus: _ownershipFromRaw(d.ownershipStatus),
+    isRead: d.isRead,
+    rating: d.rating,
+    purchaseDate: d.purchaseDate != null
+        ? DateTime.tryParse(d.purchaseDate!)
+        : null,
+    pricePaid: d.pricePaid,
+    quantityOwned: d.quantityOwned,
+    format: _formatFromRaw(d.format),
+    firstReadAt: d.firstReadAt != null
+        ? DateTime.tryParse(d.firstReadAt!)
+        : null,
+    conditionGrade: d.conditionGrade,
+    acquiredOn: d.acquiredOn != null ? DateTime.tryParse(d.acquiredOn!) : null,
+    notes: d.notes,
+    createdAt: DateTime.parse(d.createdAt),
+    updatedAt: DateTime.parse(d.updatedAt),
+  );
 }
 
 final selectedCollectionItemsPageProvider =
@@ -44,6 +76,14 @@ class SelectedCollectionItemsPage extends Notifier<int> {
     state = state > 1 ? state - 1 : 1;
   }
 }
+
+final libraryItemsStreamProvider = StreamProvider<List<LibraryItem>>((ref) {
+  return ref
+      .watch(driftDatabaseProvider)
+      .libraryItemDao
+      .watchAll()
+      .map((rows) => rows.map(_driftItemToDomain).toList());
+});
 
 final collectionItemsProvider = FutureProvider.family<CollectionItemsPage, int>(
   (ref, page) {
@@ -93,30 +133,7 @@ final currentCollectionItemsProvider = FutureProvider<CollectionItemsPage>((
   return ref.watch(collectionItemsProvider(page).future);
 });
 
-Future<List<LibraryItem>> _loadAllLibraryItems(Ref ref) async {
-  final repository = ref.read(libraryRepositoryProvider);
-  final totalCount = await repository.getItemCount();
-  if (totalCount <= 0) return <LibraryItem>[];
-
-  final items = <LibraryItem>[];
-  var offset = 0;
-
-  while (items.length < totalCount) {
-    final batch = await repository.listItems(
-      limit: _collectionPageSize,
-      offset: offset,
-    );
-    if (batch.isEmpty) break;
-    items.addAll(batch);
-    offset += batch.length;
-  }
-
-  return items;
-}
-
-final allLibraryItemsProvider = FutureProvider<List<LibraryItem>>((ref) async {
-  return _loadAllLibraryItems(ref);
-});
+final allLibraryItemsProvider = libraryItemsStreamProvider;
 
 final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((
   ref,

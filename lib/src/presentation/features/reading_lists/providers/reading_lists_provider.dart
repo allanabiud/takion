@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 
 final readingListsProvider =
     AsyncNotifierProvider<ReadingListsNotifier, List<ReadingList>>(() {

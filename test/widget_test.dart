@@ -8,35 +8,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/app.dart';
-import 'package:hive_ce/hive_ce.dart';
-import 'package:takion/hive_registrar.g.dart';
-import 'dart:io';
 
 void main() {
-  late Directory tempDir;
-
-  setUpAll(() async {
-    TestWidgetsFlutterBinding.ensureInitialized();
-    tempDir = await Directory.systemTemp.createTemp('hive_test');
-    Hive.init(tempDir.path);
-    Hive.registerAdapters();
-  });
-
-  tearDownAll(() async {
-    await Hive.close();
-    if (tempDir.existsSync()) {
-      await tempDir.delete(recursive: true);
-    }
-  });
-
   testWidgets('TakionApp can be rendered', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
     await tester.pumpWidget(const ProviderScope(child: TakionApp()));
-
-    // Verify that TakionApp is rendered. We can look for the title or any unique widget.
     expect(find.byType(TakionApp), findsOneWidget);
-    // You can add more specific assertions here if needed, for example,
-    // to check for specific text or widgets that should be present on app startup.
-    // expect(find.text('Takion'), findsOneWidget);
   });
 }

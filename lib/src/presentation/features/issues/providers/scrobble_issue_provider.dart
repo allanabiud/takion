@@ -1,17 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
+/// Lightweight metadata passed from the UI layer so the scrobble controller
+/// doesn't need to fetch full issue details from the network.
+class ScrobbleIssueContext {
+  const ScrobbleIssueContext({
+    this.seriesId,
+    this.seriesName,
+    this.issueNumber,
+    this.imageUrl,
+  });
 
-final scrobbleIssueProvider =
-    NotifierProvider.autoDispose.family<ScrobbleIssueController, AsyncValue<void>, int>(
+  final int? seriesId;
+  final String? seriesName;
+  final String? issueNumber;
+  final String? imageUrl;
+}
+
+final scrobbleIssueProvider = NotifierProvider.autoDispose
+    .family<ScrobbleIssueController, AsyncValue<void>, int>(
       ScrobbleIssueController.new,
     );
 
@@ -19,6 +34,11 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
   ScrobbleIssueController(this._issueId);
 
   final int _issueId;
+  ScrobbleIssueContext? _context;
+
+  void setContext(ScrobbleIssueContext context) {
+    _context = context;
+  }
 
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
@@ -44,21 +64,22 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     bool? addToCollection,
     bool? addToWishlist,
     bool? markAsRead,
-
   }) async {
     final keepAlive = ref.keepAlive();
     state = const AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
       try {
-        AppLogger.info('Scrobble started for issue #$_issueId: collection=$addToCollection, read=$markAsRead, wishlist=$addToWishlist, rating=$rating');
+        AppLogger.info(
+          'Scrobble started for issue #$_issueId: collection=$addToCollection, read=$markAsRead, wishlist=$addToWishlist, rating=$rating',
+        );
         final libraryRepository = ref.read(libraryRepositoryProvider);
 
         final existing = await libraryRepository.getItemByIssueId(_issueId);
         final seriesId = await resolveIssueSeriesId(
           ref,
           _issueId,
-          existingSeriesId: existing?.metronSeriesId,
+          existingSeriesId: _context?.seriesId ?? existing?.metronSeriesId,
         );
 
         if (seriesId == null || seriesId <= 0) {
@@ -98,91 +119,41 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
           AppLogger.info('Scrobble: deleted item for issue #$_issueId');
-          if (wasCollected || wasRead || wasWishlisted) {
-            final metadata = await _resolveIssueMetadata();
-            if (metadata != null) {
-              final repository = ref.read(activityRepositoryProvider);
-              if (wasCollected) {
-                await repository.addEvent(
-                  LibraryActivityEvent(
-                    id: 'act-ucol-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-                    userId: 'local-user',
-                    type: ActivityEventType.uncollected,
-                    issueId: _issueId,
-                    seriesId: seriesId,
-                    seriesName: metadata.seriesName,
-                    issueNumber: metadata.issueNumber,
-                    imageUrl: metadata.imageUrl,
-                    timestamp: DateTime.now().toUtc(),
-                  ),
-                );
-              }
-              if (wasRead) {
-                await repository.addEvent(
-                  LibraryActivityEvent(
-                    id: 'act-unrd-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-                    userId: 'local-user',
-                    type: ActivityEventType.unread,
-                    issueId: _issueId,
-                    seriesId: seriesId,
-                    seriesName: metadata.seriesName,
-                    issueNumber: metadata.issueNumber,
-                    imageUrl: metadata.imageUrl,
-                    timestamp: DateTime.now().toUtc(),
-                  ),
-                );
-              }
-              if (wasWishlisted) {
-                await repository.addEvent(
-                  LibraryActivityEvent(
-                    id: 'act-uwsh-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-                    userId: 'local-user',
-                    type: ActivityEventType.unwishlisted,
-                    issueId: _issueId,
-                    seriesId: seriesId,
-                    seriesName: metadata.seriesName,
-                    issueNumber: metadata.issueNumber,
-                    imageUrl: metadata.imageUrl,
-                    timestamp: DateTime.now().toUtc(),
-                  ),
-                );
-              }
-            }
-          }
-          ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
-          await invalidateLibraryItemsLocalCache(ref);
+          // Removal activity events intentionally not recorded
+          ref.invalidate(collectionStatsProvider);
+          ref.invalidate(categoryInsightsProvider);
           ref.invalidate(issueMyDetailsProvider(_issueId));
           return;
         }
 
         await libraryRepository.upsertItem(
-            metronIssueId: _issueId,
-            metronSeriesId: seriesId,
-            ownershipStatus: targetIsCollected
-                ? LibraryOwnershipStatus.owned
-                : (targetIsWishlisted
-                      ? LibraryOwnershipStatus.wishlist
-                      : LibraryOwnershipStatus.notOwned),
-            isRead: targetIsRead,
-            rating: targetIsRead ? (rating ?? existing?.rating) : null,
-            firstReadAt: targetIsRead
-                ? (existing?.firstReadAt ?? readAt)
-                : (() {
-                    if (existing?.firstReadAt == null) return null;
-                    final remaining = readLogs
-                        .where(
-                          (log) =>
-                              log.readAt.toUtc().toIso8601String() !=
-                              existing!.firstReadAt!.toUtc().toIso8601String(),
-                        )
-                        .toList();
-                    if (remaining.isEmpty) return null;
-                    remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
-                    return remaining.first.readAt;
-                  })(),
-            format: existing?.format ?? _resolveDefaultFormat(),
-            acquiredOn:
-                existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
+          metronIssueId: _issueId,
+          metronSeriesId: seriesId,
+          ownershipStatus: targetIsCollected
+              ? LibraryOwnershipStatus.owned
+              : (targetIsWishlisted
+                    ? LibraryOwnershipStatus.wishlist
+                    : LibraryOwnershipStatus.notOwned),
+          isRead: targetIsRead,
+          rating: targetIsRead ? (rating ?? existing?.rating) : null,
+          firstReadAt: targetIsRead
+              ? (existing?.firstReadAt ?? readAt)
+              : (() {
+                  if (existing?.firstReadAt == null) return null;
+                  final remaining = readLogs
+                      .where(
+                        (log) =>
+                            log.readAt.toUtc().toIso8601String() !=
+                            existing!.firstReadAt!.toUtc().toIso8601String(),
+                      )
+                      .toList();
+                  if (remaining.isEmpty) return null;
+                  remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
+                  return remaining.first.readAt;
+                })(),
+          format: existing?.format ?? _resolveDefaultFormat(),
+          acquiredOn:
+              existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
         );
 
         if (targetIsRead && !wasRead) {
@@ -190,7 +161,9 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             metronIssueId: _issueId,
             readAt: readAt,
           );
-          AppLogger.info('Scrobble: created read log for issue #$_issueId at $readAt');
+          AppLogger.info(
+            'Scrobble: created read log for issue #$_issueId at $readAt',
+          );
         } else if (!targetIsRead && wasRead && existing?.firstReadAt != null) {
           final firstLog = readLogs
               .where(
@@ -218,16 +191,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         );
 
         AppLogger.info('Scrobble completed for issue #$_issueId');
-        ref.read(collectionStatusCacheProvider.notifier).updateIssue(
-          _issueId,
-          IssueCollectionStatus(
-            isCollected: targetIsCollected,
-            isWishlisted: targetIsWishlisted,
-            isRead: targetIsRead,
-            rating: targetIsRead ? (rating ?? existing?.rating) : null,
-          ),
-        );
-        await invalidateLibraryItemsLocalCache(ref);
+        ref.invalidate(collectionStatsProvider);
+        ref.invalidate(categoryInsightsProvider);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();
@@ -251,12 +216,12 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
     final repository = ref.read(activityRepositoryProvider);
 
-    if (wasCollected != isCollected) {
+    if (isCollected && !wasCollected) {
       await repository.addEvent(
         LibraryActivityEvent(
-          id: 'act-${isCollected ? 'col' : 'ucol'}-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          id: 'act-col-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
           userId: 'local-user',
-          type: isCollected ? ActivityEventType.collected : ActivityEventType.uncollected,
+          type: ActivityEventType.collected,
           issueId: _issueId,
           seriesId: seriesId,
           seriesName: metadata.seriesName,
@@ -267,66 +232,43 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
       );
     }
 
-    if (wasRead != isRead) {
+    if (isRead && !wasRead) {
       await repository.addEvent(
         LibraryActivityEvent(
-          id: 'act-${isRead ? 'read' : 'unrd'}-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          id: 'act-read-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
           userId: 'local-user',
-          type: isRead ? ActivityEventType.read : ActivityEventType.unread,
+          type: ActivityEventType.read,
           issueId: _issueId,
           seriesId: seriesId,
           seriesName: metadata.seriesName,
           issueNumber: metadata.issueNumber,
           imageUrl: metadata.imageUrl,
           timestamp: DateTime.now().toUtc(),
-        ),
-      );
-    }
-
-    if (wasWishlisted != isWishlisted) {
-      await repository.addEvent(
-        LibraryActivityEvent(
-          id: 'act-${isWishlisted ? 'wsh' : 'uwsh'}-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-          userId: 'local-user',
-          type: isWishlisted ? ActivityEventType.wishlisted : ActivityEventType.unwishlisted,
-          issueId: _issueId,
-          seriesId: seriesId,
-          seriesName: metadata.seriesName,
-          issueNumber: metadata.issueNumber,
-          imageUrl: metadata.imageUrl,
-          timestamp: DateTime.now().toUtc(),
-        ),
-      );
-    }
-
-    if (isRating != null && isRating > 0 && isRating != wasRating) {
-      await repository.addEvent(
-        LibraryActivityEvent(
-          id: 'act-rat-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-          userId: 'local-user',
-          type: ActivityEventType.rated,
-          issueId: _issueId,
-          seriesId: seriesId,
-          seriesName: metadata.seriesName,
-          issueNumber: metadata.issueNumber,
-          imageUrl: metadata.imageUrl,
-          timestamp: DateTime.now().toUtc(),
-          metadata: {'rating': isRating},
         ),
       );
     }
   }
 
-
   Future<_IssueMetadata?> _resolveIssueMetadata() async {
     try {
-      final details = await ref
-          .read(catalogRepositoryProvider)
-          .getIssueDetails(_issueId);
+      // Prefer metadata passed in from the UI layer.
+      final ctx = _context;
+      String seriesName = ctx?.seriesName ?? 'Unknown Series';
+      String issueNumber = ctx?.issueNumber ?? '#$_issueId';
+      String? imageUrl = ctx?.imageUrl;
+
+      if (imageUrl == null || imageUrl.isEmpty) {
+        try {
+          imageUrl = await ref
+              .read(entityImageCacheProvider)
+              .get('issue', _issueId);
+        } catch (_) {}
+      }
+
       return _IssueMetadata(
-        seriesName: details.series?.name ?? 'Unknown Series',
-        issueNumber: details.number,
-        imageUrl: details.image,
+        seriesName: seriesName,
+        issueNumber: issueNumber,
+        imageUrl: imageUrl,
       );
     } catch (_) {
       return null;

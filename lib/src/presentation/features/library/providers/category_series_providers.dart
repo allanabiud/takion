@@ -1,29 +1,55 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 List<CategorySeriesSummary> _groupBySeries(
   List<CollectionItem> items,
   Map<int, int> issueToSeriesId,
+  Map<int, int> issueCounts,
 ) {
   final groups = <int, List<CollectionItem>>{};
   for (final item in items) {
-    final seriesId = issueToSeriesId[item.issue?.id];
-    if (seriesId == null) continue;
+    final seriesId = issueToSeriesId[item.issue?.id] ?? item.issue?.series?.id;
+    if (seriesId == null || seriesId <= 0) continue;
     groups.putIfAbsent(seriesId, () => []).add(item);
   }
 
   return groups.entries.map((entry) {
-    final firstItem = entry.value.first;
-    final series = firstItem.issue?.series;
+    final seriesItems = entry.value;
+    String? resolvedName;
+    int? volume;
+    int? yearBegan;
+    String? coverImage;
+
+    for (final item in seriesItems) {
+      final name = item.issue?.series?.name.trim();
+      if (name != null && name.isNotEmpty) {
+        resolvedName = name;
+        volume ??= item.issue?.series?.volume;
+        yearBegan ??= item.issue?.series?.yearBegan;
+      }
+      final img = item.issue?.image?.trim();
+      if (coverImage == null && img != null && img.isNotEmpty) {
+        coverImage = img;
+      }
+      if (resolvedName != null && coverImage != null) break;
+    }
+
+    final seriesName = (resolvedName != null && resolvedName.isNotEmpty)
+        ? resolvedName
+        : 'Series ${entry.key}';
+
     return CategorySeriesSummary(
       seriesId: entry.key,
-      seriesName: series?.name.isNotEmpty == true ? series!.name : 'Unknown',
-      volume: series?.volume,
-      yearBegan: series?.yearBegan,
-      coverImage: firstItem.issue?.image,
-      categoryCount: entry.value.length,
-      items: entry.value,
+      seriesName: seriesName,
+      volume: volume,
+      yearBegan: yearBegan,
+      coverImage: coverImage,
+      categoryCount: seriesItems.length,
+      items: seriesItems,
+      issueCount: issueCounts[entry.key],
     );
   }).toList();
 }
@@ -36,8 +62,25 @@ Map<int, int> _buildIssueToSeriesId(List<LibraryItem> libraryItems) {
   return map;
 }
 
+Future<List<CategorySeriesSummary>> _groupWithIssueCounts(
+  MetronEntityDao dao,
+  List<CollectionItem> items,
+  Map<int, int> issueToSeriesId,
+) async {
+  final seriesIds = items
+      .map((item) => issueToSeriesId[item.issue?.id] ?? item.issue?.series?.id)
+      .whereType<int>()
+      .where((id) => id > 0)
+      .toSet()
+      .toList();
+  if (seriesIds.isEmpty) return _groupBySeries(items, issueToSeriesId, {});
+  final issueCounts = await dao.getSeriesIssueCounts(seriesIds);
+  return _groupBySeries(items, issueToSeriesId, issueCounts);
+}
+
 final collectedSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final collectionItems = await ref.watch(
         allCollectionItemsProvider.future,
@@ -46,43 +89,47 @@ final collectedSeriesProvider =
       final collected = collectionItems
           .where((item) => item.quantity > 0)
           .toList();
-      return _groupBySeries(collected, issueToSeriesId);
+      return _groupWithIssueCounts(dao, collected, issueToSeriesId);
     });
 
 final readSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(
         collectionItemsByReadStatusProvider(true).future,
       );
-      return _groupBySeries(items, issueToSeriesId);
+      return _groupWithIssueCounts(dao, items, issueToSeriesId);
     });
 
 final wishlistSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(wishlistCollectionItemsProvider.future);
-      return _groupBySeries(items, issueToSeriesId);
+      return _groupWithIssueCounts(dao, items, issueToSeriesId);
     });
 
 final unreadSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(
         collectionItemsByReadStatusProvider(false).future,
       );
-      return _groupBySeries(items, issueToSeriesId);
+      return _groupWithIssueCounts(dao, items, issueToSeriesId);
     });
 
 final unratedSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(unratedCollectionItemsProvider.future);
-      return _groupBySeries(items, issueToSeriesId);
+      return _groupWithIssueCounts(dao, items, issueToSeriesId);
     });
 
 final seriesByCategoryProvider = FutureProvider.autoDispose

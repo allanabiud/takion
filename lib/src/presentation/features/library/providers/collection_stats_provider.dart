@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
-final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
+final collectionStatsProvider = FutureProvider.autoDispose<CollectionStats>((
+  ref,
+) async {
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
   final collectedItems = libraryItems
       .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
@@ -20,13 +21,9 @@ final collectionStatsProvider = FutureProvider<CollectionStats>((ref) async {
       )
       .length;
 
-  final hiveService = ref.read(hiveServiceProvider);
   double totalValue = 0;
   for (final item in collectedItems) {
-    final unitPrice =
-        item.pricePaid ??
-        await hiveService.getIssuePrice(item.metronIssueId) ??
-        0;
+    final unitPrice = item.pricePaid ?? 0;
     totalValue += unitPrice * item.quantityOwned;
   }
   final currencyFormat = NumberFormat('#,##0.00');

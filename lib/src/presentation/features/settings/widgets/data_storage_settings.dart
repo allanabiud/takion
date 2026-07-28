@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/export/collection_csv_export.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
 
 void showDataStorageSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
@@ -34,7 +34,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     cacheSizeAsync.when(
                       data: (bytes) => _formatBytes(bytes),
                       loading: () => '...',
-                      error: (_, _) => 'Unknown',
+                      error: (error, _) => 'Unknown',
                     ),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -50,7 +50,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     imageCacheSizeAsync.when(
                       data: (bytes) => _formatBytes(bytes),
                       loading: () => '...',
-                      error: (_, _) => 'Unknown',
+                      error: (error, _) => 'Unknown',
                     ),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -114,10 +114,8 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                       ),
                     );
                     if (confirm == true) {
-                      final hive = ref.read(hiveServiceProvider);
-                      await hive.clearImageCache();
-                      ref.invalidate(cacheSizeProvider);
-                      ref.invalidate(imageCacheSizeProvider);
+                      final db = ref.read(driftDatabaseProvider);
+                      await db.imageCacheDao.clearAll();
                       if (context.mounted) {
                         TakionAlerts.success(context, 'Image Cache Cleared');
                       }
@@ -167,8 +165,6 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                             await ref
                                 .read(settingsProvider.notifier)
                                 .clearCache();
-                            ref.invalidate(cacheSizeProvider);
-                            ref.invalidate(imageCacheSizeProvider);
                             if (context.mounted) {
                               TakionAlerts.success(
                                 context,

@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
 class ContinueReadingScreen extends ConsumerWidget {

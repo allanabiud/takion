@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class ReadingListDetailsSheetHeader extends StatefulWidget {
   final ReadingList list;
@@ -139,8 +139,9 @@ class _ReadingListDetailsSheetHeaderState
     final source = detail.attributionSource?.trim();
     final type = detail.listType?.trim();
     final username = detail.username?.trim();
-    final attributionHost =
-        Uri.tryParse(detail.attributionUrl ?? '')?.host.trim();
+    final attributionHost = Uri.tryParse(
+      detail.attributionUrl ?? '',
+    )?.host.trim();
 
     if (source != null && source.isNotEmpty) {
       badges.add('Source: $source');
@@ -176,8 +177,9 @@ class _ReadingListDetailsSheetHeaderState
     final badges = <String>[];
     final source = list.metronAttributionSource?.trim();
     final type = list.metronListType?.trim();
-    final attributionHost =
-        Uri.tryParse(list.metronAttributionUrl ?? '')?.host.trim();
+    final attributionHost = Uri.tryParse(
+      list.metronAttributionUrl ?? '',
+    )?.host.trim();
 
     if (source != null && source.isNotEmpty) {
       badges.add('Source: $source');
@@ -251,8 +253,7 @@ class _ReadingListDetailsSheetHeaderState
                     duration: const Duration(milliseconds: 500),
                     curve: Curves.easeInOut,
                     alignment: Alignment.topCenter,
-                    heightFactor:
-                        _isDescriptionExpanded ? 1.0 : heightFactor,
+                    heightFactor: _isDescriptionExpanded ? 1.0 : heightFactor,
                     child: Text(rawDescription, style: textStyle),
                   ),
                 ),

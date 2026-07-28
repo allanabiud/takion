@@ -1,16 +1,14 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/data/services/drive_backup_service.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/features/settings/widgets/backup_sheet.dart';
-import 'package:takion/src/presentation/features/settings/widgets/restore_sheet.dart';
+import 'package:takion/src/data/common/services/drive_backup_service.dart';
+import 'package:takion/src/data/common/services/local_backup_service.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-
-enum _BackupSyncMode { backup, sync }
 
 void showBackupAndSyncSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
@@ -19,6 +17,8 @@ void showBackupAndSyncSettings(BuildContext context, WidgetRef ref) {
     child: const _BackupAndSyncContent(),
   );
 }
+
+enum _BackupSyncMode { backup, sync }
 
 class _BackupAndSyncContent extends ConsumerStatefulWidget {
   const _BackupAndSyncContent();
@@ -30,9 +30,11 @@ class _BackupAndSyncContent extends ConsumerStatefulWidget {
 
 class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     with SingleTickerProviderStateMixin {
-  _BackupSyncMode _mode = _BackupSyncMode.backup;
   late final AnimationController _syncAnimController;
   late final Animation<double> _syncRotation;
+  _BackupSyncMode _mode = _BackupSyncMode.backup;
+  bool _isBackingUp = false;
+  bool _isRestoring = false;
 
   @override
   void initState() {
@@ -54,9 +56,6 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
 
   @override
   Widget build(BuildContext context) {
-    // Drive the rotation from the live provider value so the visible tile
-    // always reflects the syncing state, even if _syncNow captured a stale
-    // element (e.g. after the tree rebuilds on enable()).
     ref.listen(driveSyncProvider, (_, next) {
       if (!mounted) return;
       if (next.isSyncing) {
@@ -77,12 +76,12 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
               segments: const [
                 ButtonSegment(
                   value: _BackupSyncMode.backup,
-                  icon: Icon(Icons.phone_android_outlined),
+                  icon: Icon(Icons.backup),
                   label: Text('BACKUP'),
                 ),
                 ButtonSegment(
                   value: _BackupSyncMode.sync,
-                  icon: Icon(Icons.sync_outlined),
+                  icon: Icon(Icons.sync),
                   label: Text('SYNC'),
                 ),
               ],
@@ -99,45 +98,9 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     );
   }
 
-  Widget _buildBackupSection() {
-    return buildSettingsGroup(context, 'Local Backup', [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          Icons.file_upload_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: const Text(
-          'Create Local Backup',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: const Text(
-          'Save your local app data to a backup file (.tkbk)',
-        ),
-        onTap: () => showCreateBackupSheet(context, ref),
-      ),
-      const Divider(height: 1),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          Icons.file_download_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: const Text(
-          'Restore from Backup',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: const Text(
-          'Restore local app data from a backup file (.tkbk)',
-        ),
-        onTap: () => showRestoreBackupSheet(context, ref),
-      ),
-    ]);
-  }
-
   Widget _buildSyncSection() {
     final syncState = ref.watch(driveSyncProvider);
-    final driveService = ref.read(driveBackupServiceProvider);
+    final driveService = ref.read(driveSyncServiceProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +201,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 );
                 if (confirm != true) return;
                 try {
-                  await driveService.deleteBackup();
+                  await driveService.deleteRemoteData();
                   if (!mounted) return;
                   TakionAlerts.success(context, 'Backup deleted from Drive');
                 } catch (e) {
@@ -257,18 +220,136 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     );
   }
 
+  Widget _buildBackupSection() {
+    return buildSettingsGroup(context, 'Local Backup', [
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(
+          Icons.backup,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: const Text(
+          'Create Local Backup',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: const Text('Save a .tkbk file of your data'),
+        onTap: _isBackingUp ? null : _createLocalBackup,
+        enabled: !_isBackingUp,
+      ),
+      const Divider(height: 1),
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(
+          Icons.restore_page,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: const Text(
+          'Restore from Backup',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: const Text('Import data from a .tkbk file'),
+        onTap: _isRestoring ? null : _restoreFromBackup,
+        enabled: !_isRestoring,
+      ),
+    ]);
+  }
+
+  Future<void> _createLocalBackup() async {
+    setState(() => _isBackingUp = true);
+    try {
+      final service = ref.read(localBackupServiceProvider);
+      final bytes = await service.exportBackupData();
+
+      final today = DateTime.now();
+      final dateStr =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+      final result = await FilePicker.saveFile(
+        fileName: 'takion_backup_$dateStr.tkbk',
+        bytes: bytes,
+      );
+      if (result != null && mounted) {
+        TakionAlerts.success(context, 'Backup saved successfully');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.safeError(
+          context,
+          e,
+          userMessage: 'Failed to create backup',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isBackingUp = false);
+    }
+  }
+
+  Future<void> _restoreFromBackup() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Restore Backup'),
+        content: const Text(
+          'This will merge the backup data into your current data. '
+          'Existing records will be kept if they are newer.\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _isRestoring = true);
+    try {
+      final result = await FilePicker.pickFiles(type: FileType.any);
+      if (result == null || result.files.isEmpty) {
+        if (mounted) setState(() => _isRestoring = false);
+        return;
+      }
+
+      final file = result.files.single;
+      final bytes = await file.readAsBytes();
+
+      final service = ref.read(localBackupServiceProvider);
+      await service.importBackupData(bytes);
+
+      invalidateCacheBackedProviders((p) => ref.invalidate(p));
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) {
+        TakionAlerts.success(context, 'Backup restored successfully');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.safeError(
+          context,
+          e,
+          userMessage: 'Failed to restore backup',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRestoring = false);
+    }
+  }
+
   Future<void> _syncNow() async {
-    final driveService = ref.read(driveBackupServiceProvider);
-    final syncState = ref.read(driveSyncProvider);
+    final driveService = ref.read(driveSyncServiceProvider);
     final syncNotifier = ref.read(driveSyncProvider.notifier);
     final container = ProviderScope.containerOf(context, listen: false);
 
     syncNotifier.setSyncing(true);
     try {
-      await driveService.uploadBackup(lastSyncTime: syncState.lastSync);
+      await driveService.triggerSync();
       await syncNotifier.updateLastSync();
       invalidateCacheBackedProviders((p) => container.invalidate(p));
-      // Ensure syncing state is rendered for at least one frame
       await Future<void>.delayed(Duration.zero);
       if (mounted) TakionAlerts.success(context, 'Synced to Drive');
     } catch (e) {

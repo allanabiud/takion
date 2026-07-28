@@ -1,10 +1,11 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/components/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+
+import '../../../shared/widgets/components.dart';
 
 const accentSchemes = [
   FlexScheme.green,
@@ -42,62 +43,64 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
             children: [
               buildSettingsGroup(context, 'Theme Mode', [
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.palette_outlined,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 16),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Theme Mode',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            'Choose your preferred interface theme',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ],
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.palette_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 16),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Theme Mode',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              'Choose your preferred interface theme',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                RadioGroup<ThemeMode>(
-                  groupValue: themeSettings.themeMode,
-                  onChanged: (value) {
-                    if (value == null) return;
-                    ref.read(themeProvider.notifier).setThemeMode(value);
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      RadioListTile<ThemeMode>(
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    segments: const [
+                      ButtonSegment(
                         value: ThemeMode.system,
-                        title: Text('System'),
-                        secondary: Icon(Icons.brightness_auto_outlined),
-                        contentPadding: EdgeInsets.zero,
+                        icon: Icon(Icons.brightness_auto_outlined),
+                        label: Text('AUTO'),
                       ),
-                      RadioListTile<ThemeMode>(
+                      ButtonSegment(
                         value: ThemeMode.light,
-                        title: Text('Light'),
-                        secondary: Icon(Icons.light_mode_outlined),
-                        contentPadding: EdgeInsets.zero,
+                        icon: Icon(Icons.light_mode_outlined),
+                        label: Text('LIGHT'),
                       ),
-                      RadioListTile<ThemeMode>(
+                      ButtonSegment(
                         value: ThemeMode.dark,
-                        title: Text('Dark'),
-                        secondary: Icon(Icons.dark_mode_outlined),
-                        contentPadding: EdgeInsets.zero,
+                        icon: Icon(Icons.dark_mode_outlined),
+                        label: Text('DARK'),
                       ),
                     ],
+                    selected: {themeSettings.themeMode},
+                    onSelectionChanged: (selected) {
+                      if (selected.isEmpty) return;
+                      ref
+                          .read(themeProvider.notifier)
+                          .setThemeMode(selected.first);
+                    },
                   ),
                 ),
-              ]),
+              ], padding: const EdgeInsets.fromLTRB(0, 16, 0, 16)),
               const SizedBox(height: 16),
               buildSettingsGroup(context, 'Accent Color', [
                 Wrap(

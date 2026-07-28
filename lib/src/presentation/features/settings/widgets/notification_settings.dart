@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 
 void showNotificationSettings(BuildContext context, WidgetRef ref) {
@@ -35,12 +35,16 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                       ? null
                       : (v) async {
                           if (v) {
-                            await NotificationService.instance
+                            final granted = await NotificationService.instance
                                 .requestPermissions();
+                            if (!granted) return;
+                            await NotificationService.instance
+                                .requestExactAlarmPermission();
                           }
-                          ref
+                          await ref
                               .read(notificationsEnabledProvider.notifier)
                               .setEnabled(v);
+                          await scheduleWeeklyPullNotification(ref);
                         },
                 ),
                 const Divider(height: 8),
@@ -63,7 +67,7 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              'Every ${selectedDay.label} at 8 PM',
+                              '${selectedDay.label} at 8:00 PM',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: Theme.of(
@@ -80,28 +84,31 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                 const SizedBox(height: 8),
                 RadioGroup<NotificationDay>(
                   groupValue: selectedDay,
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     if (value == null || !enabled || dayAsync.isLoading) return;
-                    ref.read(notificationDayProvider.notifier).setDay(value);
+                    await ref
+                        .read(notificationDayProvider.notifier)
+                        .setDay(value);
+                    await scheduleWeeklyPullNotification(ref);
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       RadioListTile<NotificationDay>(
                         value: NotificationDay.tuesday,
-                        title: const Text('Tuesday'),
+                        title: const Text('Before Release Day'),
                         contentPadding: EdgeInsets.zero,
                         enabled: enabled && !dayAsync.isLoading,
                       ),
                       RadioListTile<NotificationDay>(
                         value: NotificationDay.wednesday,
-                        title: const Text('Wednesday (Release Day)'),
+                        title: const Text('Release Day'),
                         contentPadding: EdgeInsets.zero,
                         enabled: enabled && !dayAsync.isLoading,
                       ),
                       RadioListTile<NotificationDay>(
                         value: NotificationDay.thursday,
-                        title: const Text('Thursday'),
+                        title: const Text('After Release Day'),
                         contentPadding: EdgeInsets.zero,
                         enabled: enabled && !dayAsync.isLoading,
                       ),

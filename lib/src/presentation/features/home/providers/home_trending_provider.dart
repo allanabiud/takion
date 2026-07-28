@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
@@ -23,35 +24,32 @@ Set<String> _seriesNameTokens(String name) {
       .toSet();
 }
 
-Future<List<HomeTrendingEntry>> _computeHomeTrendingEntries(Ref ref) async {
-  final weeklyIssues = await ref.watch(weeklyReleasesProvider().future);
-  final pullIssues = await ref.watch(currentWeekPullsProvider.future);
+List<Map<String, dynamic>> _scoreTrendingEntries(Map<String, dynamic> input) {
+  final weeklyNames = (input['weekly_names'] as List).cast<String>();
+  final pullNames = (input['pull_names'] as List).cast<String>();
 
-  if (weeklyIssues.isEmpty) return const [];
+  if (weeklyNames.isEmpty) return const [];
 
   final seriesFrequency = <String, int>{};
-  for (final issue in weeklyIssues) {
-    final seriesName = issue.series?.name.trim();
-    if (seriesName == null || seriesName.isEmpty) continue;
-    final key = seriesName.toLowerCase();
+  for (final name in weeklyNames) {
+    if (name.isEmpty) continue;
+    final key = name.toLowerCase();
     seriesFrequency[key] = (seriesFrequency[key] ?? 0) + 1;
   }
 
-  final pulledSeriesNames = pullIssues
-      .map((issue) => issue.series?.name.trim().toLowerCase())
-      .whereType<String>()
-      .where((name) => name.isNotEmpty)
+  final pulledSeriesNames = pullNames
+      .map((n) => n.toLowerCase())
+      .where((n) => n.isNotEmpty)
       .toSet();
-  final pulledTokens = pullIssues
-      .map((issue) => issue.series?.name)
-      .whereType<String>()
-      .expand(_seriesNameTokens)
-      .toSet();
+  final pulledTokens = pullNames.expand((n) => _seriesNameTokens(n)).toSet();
 
-  final bestIssuePerSeries = <String, ({IssueList issue, int score})>{};
-  for (final issue in weeklyIssues) {
-    final seriesName = issue.series?.name.trim();
-    if (seriesName == null || seriesName.isEmpty) continue;
+  final bestScores = <String, int>{};
+  final bestIndices = <String, int>{};
+  final bestReasons = <String, String>{};
+
+  for (var i = 0; i < weeklyNames.length; i++) {
+    final seriesName = weeklyNames[i];
+    if (seriesName.isEmpty) continue;
 
     final key = seriesName.toLowerCase();
     final overlap = _seriesNameTokens(seriesName).intersection(pulledTokens);
@@ -60,23 +58,52 @@ Future<List<HomeTrendingEntry>> _computeHomeTrendingEntries(Ref ref) async {
         (pulledSeriesNames.contains(key) ? 5 : 0) +
         overlap.length;
 
-    final current = bestIssuePerSeries[key];
-    if (current == null || score > current.score) {
-      bestIssuePerSeries[key] = (issue: issue, score: score);
+    final current = bestScores[key];
+    if (current == null || score > current) {
+      bestScores[key] = score;
+      bestIndices[key] = i;
+      final isPulledSeries = pulledSeriesNames.contains(key);
+      final isHot = (seriesFrequency[key] ?? 0) >= 2;
+      bestReasons[key] = isPulledSeries
+          ? 'In Pulls'
+          : (isHot ? 'Hot this week' : 'Trending');
     }
   }
 
-  final ranked = bestIssuePerSeries.entries.toList()
-    ..sort((a, b) => b.value.score.compareTo(a.value.score));
+  final ranked = bestScores.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
 
   return ranked.take(10).map((entry) {
-    final isPulledSeries = pulledSeriesNames.contains(entry.key);
-    final isHot = (seriesFrequency[entry.key] ?? 0) >= 2;
+    return <String, dynamic>{
+      'index': bestIndices[entry.key],
+      'reason': bestReasons[entry.key],
+    };
+  }).toList();
+}
+
+Future<List<HomeTrendingEntry>> _computeHomeTrendingEntries(Ref ref) async {
+  final weeklyIssues = await ref.watch(weeklyReleasesProvider().future);
+  final pullIssues = await ref.watch(currentWeekPullsProvider.future);
+
+  if (weeklyIssues.isEmpty) return const [];
+
+  final weeklyNames = weeklyIssues
+      .map((issue) => issue.series?.name.trim() ?? '')
+      .toList(growable: false);
+  final pullNames = pullIssues
+      .map((issue) => issue.series?.name ?? '')
+      .toList(growable: false);
+
+  final results = await compute(_scoreTrendingEntries, {
+    'weekly_names': weeklyNames,
+    'pull_names': pullNames,
+  });
+
+  return results.map((r) {
+    final index = r['index'] as int;
     return HomeTrendingEntry(
-      issue: entry.value.issue,
-      reason: isPulledSeries
-          ? 'In Pulls'
-          : (isHot ? 'Hot this week' : 'Trending'),
+      issue: weeklyIssues[index],
+      reason: r['reason'] as String,
     );
   }).toList();
 }

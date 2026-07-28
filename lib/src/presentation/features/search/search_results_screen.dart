@@ -2,10 +2,10 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_search_provider.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -16,8 +16,8 @@ import 'package:takion/src/presentation/features/series/providers/series_search_
 import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 
@@ -55,18 +55,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
   bool get _isCharacterSearch =>
       widget.searchChoice.toLowerCase() == 'characters';
-  bool get _isCreatorSearch =>
-      widget.searchChoice.toLowerCase() == 'creators';
+  bool get _isCreatorSearch => widget.searchChoice.toLowerCase() == 'creators';
   bool get _isUniverseSearch =>
       widget.searchChoice.toLowerCase() == 'universes';
-  bool get _isImprintSearch =>
-      widget.searchChoice.toLowerCase() == 'imprints';
-  bool get _isTeamSearch =>
-      widget.searchChoice.toLowerCase() == 'teams';
+  bool get _isImprintSearch => widget.searchChoice.toLowerCase() == 'imprints';
+  bool get _isTeamSearch => widget.searchChoice.toLowerCase() == 'teams';
   bool get _isPublisherSearch =>
       widget.searchChoice.toLowerCase() == 'publishers';
-  bool get _isArcSearch =>
-      widget.searchChoice.toLowerCase() == 'arcs';
+  bool get _isArcSearch => widget.searchChoice.toLowerCase() == 'arcs';
 
   SearchArgs get _currentSearchArgs =>
       SearchArgs(query: widget.query, page: _page);
@@ -77,50 +73,43 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           .read(metronRepositoryProvider)
           .searchCharacters(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(characterSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(characterSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(characterSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isCreatorSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchCreators(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(creatorSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(creatorSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(creatorSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isUniverseSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchUniverses(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(universeSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(universeSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(universeSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isImprintSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchImprints(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(imprintSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(imprintSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(imprintSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isTeamSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchTeams(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(teamSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(teamSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(teamSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isPublisherSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchPublishers(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(publisherSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(publisherSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(publisherSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isArcSearch) {
       await ref
           .read(metronRepositoryProvider)
           .searchArcs(widget.query, page: _page, forceRefresh: true);
       ref.invalidate(arcSearchResultsProvider(_currentSearchArgs));
-      await ref
-          .read(arcSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(arcSearchResultsProvider(_currentSearchArgs).future);
     } else if (_isSeriesSearch) {
       await ref
           .read(metronRepositoryProvider)
@@ -311,9 +300,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastPublisherPage;
     if (pageData == null) {
@@ -344,20 +331,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.business,
       emptyMessage: 'No publishers found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          EntityListTile(
-            entityType: 'publisher',
-            entityId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-            imageWidth: 80,
-            imageHeight: 80,
-            imageBorderRadius: 10,
-            onTap: () => context.pushRoute(
-              PublisherDetailsRoute(publisherId: item.id),
-            ),
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
+        entityType: 'publisher',
+        entityId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+        imageWidth: 80,
+        imageHeight: 80,
+        imageBorderRadius: 10,
+        onTap: () =>
+            context.pushRoute(PublisherDetailsRoute(publisherId: item.id)),
+      ),
     );
   }
 
@@ -367,18 +352,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastArcPage;
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final sortedItems = sortArcs(
-      _applyArcFilter(pageData.results),
-      sortOption,
-    );
+    final sortedItems = sortArcs(_applyArcFilter(pageData.results), sortOption);
     return PagedSearchSection<ArcList>(
       items: sortedItems,
       totalCount: pageData.count,
@@ -400,17 +380,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.auto_stories_outlined,
       emptyMessage: 'No arcs found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          EntityListTile(
-            entityType: 'arc',
-            entityId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-            onTap: () => context.pushRoute(
-              ArcDetailsRoute(arcId: item.id),
-            ),
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
+        entityType: 'arc',
+        entityId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+        onTap: () => context.pushRoute(ArcDetailsRoute(arcId: item.id)),
+      ),
     );
   }
 
@@ -420,9 +397,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastUniversePage;
     if (pageData == null) {
@@ -453,17 +428,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.language_outlined,
       emptyMessage: 'No universes found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          EntityListTile(
-            entityType: 'universe',
-            entityId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-            onTap: () => context.pushRoute(
-              UniverseDetailsRoute(universeId: item.id),
-            ),
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
+        entityType: 'universe',
+        entityId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+        onTap: () =>
+            context.pushRoute(UniverseDetailsRoute(universeId: item.id)),
+      ),
     );
   }
 
@@ -473,9 +446,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastImprintPage;
     if (pageData == null) {
@@ -506,17 +477,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.business_outlined,
       emptyMessage: 'No imprints found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          EntityListTile(
-            entityType: 'imprint',
-            entityId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-            onTap: () => context.pushRoute(
-              ImprintDetailsRoute(imprintId: item.id),
-            ),
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
+        entityType: 'imprint',
+        entityId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+        onTap: () => context.pushRoute(ImprintDetailsRoute(imprintId: item.id)),
+      ),
     );
   }
 
@@ -526,9 +494,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastTeamPage;
     if (pageData == null) {
@@ -559,17 +525,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.groups_outlined,
       emptyMessage: 'No teams found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          EntityListTile(
-            entityType: 'team',
-            entityId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-            onTap: () => context.pushRoute(
-              TeamDetailsRoute(teamId: item.id),
-            ),
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
+        entityType: 'team',
+        entityId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+        onTap: () => context.pushRoute(TeamDetailsRoute(teamId: item.id)),
+      ),
     );
   }
 
@@ -579,9 +542,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastCreatorPage;
     if (pageData == null) {
@@ -612,13 +573,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.person_outline,
       emptyMessage: 'No creators found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          PersonListTile(
-            creatorId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => PersonListTile(
+        creatorId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+      ),
     );
   }
 
@@ -628,9 +588,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastCharacterPage;
     if (pageData == null) {
@@ -661,13 +619,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.people_outline,
       emptyMessage: 'No characters found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          PersonListTile(
-            characterId: item.id,
-            name: item.name,
-            isFirst: isFirst,
-            isLast: isLast,
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => PersonListTile(
+        characterId: item.id,
+        name: item.name,
+        isFirst: isFirst,
+        isLast: isLast,
+      ),
     );
   }
 
@@ -677,9 +634,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastSeriesPage;
     if (pageData == null) {
@@ -716,14 +671,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       isLoading: async.isLoading,
       emptyIcon: Icons.collections_bookmark_outlined,
       emptyMessage: 'No series found.',
-      itemBuilder: (context, index, item, isFirst, isLast) =>
-          SeriesListTile(
-            series: item,
-            allowRemoteCoverFetch: index < _seriesCoverFetchLimit,
-            heroTag: 'series-cover-${item.id}',
-            isFirst: isFirst,
-            isLast: isLast,
-          ),
+      itemBuilder: (context, index, item, isFirst, isLast) => SeriesListTile(
+        series: item,
+        allowRemoteCoverFetch: index < _seriesCoverFetchLimit,
+        heroTag: 'series-cover-${item.id}',
+        isFirst: isFirst,
+        isLast: isLast,
+      ),
       onItemIndexed: (index, total) =>
           _maybeExpandSeriesCoverFetchLimit(index: index, total: total),
     );
@@ -735,18 +689,13 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(
-        errorMessage: 'Search failed',
-      );
+      return AsyncStatePanel.error(errorMessage: 'Search failed');
     }
     final pageData = async.asData?.value ?? _lastIssuePage;
     if (pageData == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final sortedItems = sortIssues(
-      _applyFilter(pageData.results),
-      sortOption,
-    );
+    final sortedItems = sortIssues(_applyFilter(pageData.results), sortOption);
     return PagedSearchSection<IssueList>(
       items: sortedItems,
       totalCount: pageData.count,
@@ -769,11 +718,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       emptyIcon: Icons.menu_book_outlined,
       emptyMessage: 'No issues found.',
       itemBuilder: (context, index, item, isFirst, isLast) =>
-          IssueListTile(
-            issue: item,
-            isFirst: isFirst,
-            isLast: isLast,
-          ),
+          IssueListTile(issue: item, isFirst: isFirst, isLast: isLast),
     );
   }
 
@@ -782,20 +727,20 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     final sortContext = _isCharacterSearch
         ? SortPreferenceContext.searchCharacters
         : _isCreatorSearch
-            ? SortPreferenceContext.searchCreators
-            : _isUniverseSearch
-                ? SortPreferenceContext.searchUniverses
-                : _isImprintSearch
-                    ? SortPreferenceContext.searchImprints
-                    : _isTeamSearch
-                        ? SortPreferenceContext.searchTeams
-                        : _isPublisherSearch
-                            ? SortPreferenceContext.searchPublishers
-                            : _isArcSearch
-                                ? SortPreferenceContext.searchTeams
-                                : _isSeriesSearch
-                                    ? SortPreferenceContext.searchSeries
-                                    : SortPreferenceContext.searchIssues;
+        ? SortPreferenceContext.searchCreators
+        : _isUniverseSearch
+        ? SortPreferenceContext.searchUniverses
+        : _isImprintSearch
+        ? SortPreferenceContext.searchImprints
+        : _isTeamSearch
+        ? SortPreferenceContext.searchTeams
+        : _isPublisherSearch
+        ? SortPreferenceContext.searchPublishers
+        : _isArcSearch
+        ? SortPreferenceContext.searchTeams
+        : _isSeriesSearch
+        ? SortPreferenceContext.searchSeries
+        : SortPreferenceContext.searchIssues;
     final sortOption = ref.watch(sortPreferenceForContextProvider(sortContext));
     final universeResultsAsync = _isUniverseSearch
         ? ref.watch(universeSearchResultsProvider(_currentSearchArgs))
@@ -818,7 +763,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     final characterResultsAsync = _isCharacterSearch
         ? ref.watch(characterSearchResultsProvider(_currentSearchArgs))
         : null;
-    final issueResultsAsync = _isSeriesSearch ||
+    final issueResultsAsync =
+        _isSeriesSearch ||
             _isCharacterSearch ||
             _isCreatorSearch ||
             _isUniverseSearch ||
@@ -834,20 +780,20 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     final isLoading = _isCreatorSearch
         ? creatorResultsAsync?.isLoading == true
         : _isCharacterSearch
-            ? characterResultsAsync?.isLoading == true
-            : _isUniverseSearch
-                ? universeResultsAsync?.isLoading == true
-                : _isImprintSearch
-                    ? imprintResultsAsync?.isLoading == true
-                    : _isTeamSearch
-                        ? teamResultsAsync?.isLoading == true
-                        : _isPublisherSearch
-                            ? publisherResultsAsync?.isLoading == true
-                            : _isArcSearch
-                                ? arcResultsAsync?.isLoading == true
-                                : _isSeriesSearch
-                                    ? seriesResultsAsync?.isLoading == true
-                                    : issueResultsAsync?.isLoading == true;
+        ? characterResultsAsync?.isLoading == true
+        : _isUniverseSearch
+        ? universeResultsAsync?.isLoading == true
+        : _isImprintSearch
+        ? imprintResultsAsync?.isLoading == true
+        : _isTeamSearch
+        ? teamResultsAsync?.isLoading == true
+        : _isPublisherSearch
+        ? publisherResultsAsync?.isLoading == true
+        : _isArcSearch
+        ? arcResultsAsync?.isLoading == true
+        : _isSeriesSearch
+        ? seriesResultsAsync?.isLoading == true
+        : issueResultsAsync?.isLoading == true;
 
     if (_isCreatorSearch) {
       if (creatorResultsAsync?.hasValue == true) {
@@ -948,31 +894,22 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             : null,
       ),
       body: _isCreatorSearch
-          ? _buildCreatorBody(
-              creatorResultsAsync!, sortOption, sortContext)
+          ? _buildCreatorBody(creatorResultsAsync!, sortOption, sortContext)
           : _isCharacterSearch
-              ? _buildCharacterBody(
-                  characterResultsAsync!, sortOption, sortContext)
-              : _isUniverseSearch
-                  ? _buildUniverseBody(
-                      universeResultsAsync!, sortOption, sortContext)
-                  : _isImprintSearch
-                      ? _buildImprintBody(
-                          imprintResultsAsync!, sortOption, sortContext)
-                      : _isTeamSearch
-                          ? _buildTeamBody(
-                              teamResultsAsync!, sortOption, sortContext)
-                          : _isPublisherSearch
-                              ? _buildPublisherBody(
-                                  publisherResultsAsync!, sortOption, sortContext)
-                              : _isArcSearch
-                                  ? _buildArcBody(
-                                      arcResultsAsync!, sortOption, sortContext)
-                                  : _isSeriesSearch
-                                  ? _buildSeriesBody(
-                                      seriesResultsAsync!, sortOption, sortContext)
-                                  : _buildIssueBody(
-                                      issueResultsAsync!, sortOption, sortContext),
+          ? _buildCharacterBody(characterResultsAsync!, sortOption, sortContext)
+          : _isUniverseSearch
+          ? _buildUniverseBody(universeResultsAsync!, sortOption, sortContext)
+          : _isImprintSearch
+          ? _buildImprintBody(imprintResultsAsync!, sortOption, sortContext)
+          : _isTeamSearch
+          ? _buildTeamBody(teamResultsAsync!, sortOption, sortContext)
+          : _isPublisherSearch
+          ? _buildPublisherBody(publisherResultsAsync!, sortOption, sortContext)
+          : _isArcSearch
+          ? _buildArcBody(arcResultsAsync!, sortOption, sortContext)
+          : _isSeriesSearch
+          ? _buildSeriesBody(seriesResultsAsync!, sortOption, sortContext)
+          : _buildIssueBody(issueResultsAsync!, sortOption, sortContext),
     );
   }
 }

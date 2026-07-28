@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:uuid/uuid.dart';
 

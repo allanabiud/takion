@@ -5,23 +5,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
@@ -50,38 +48,20 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     });
     try {
       final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
-      List<int>? affectedIssueIds;
       if (enabled) {
         await subscriptionRepository.subscribe(metronSeriesId: widget.seriesId);
       } else {
         await subscriptionRepository.unsubscribe(widget.seriesId);
-        final deleted = await ref
+        await ref
             .read(pullListRepositoryProvider)
             .deleteEntriesBySeriesId(widget.seriesId);
-        affectedIssueIds = deleted.map((e) => e.metronIssueId).toList();
       }
-      final now = DateTime.now();
-      final startOfWeek = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: now.weekday % 7));
-      await ref
-          .read(pullListRepositoryProvider)
-          .regenerateFromSubscriptions(fromDate: startOfWeek);
+      // Subscription activity events intentionally not recorded
       if (enabled) {
-        final result = await ref
+        await ref
             .read(subscriptionPullReconcilerProvider)
             .reconcile(force: true, onlySeriesId: widget.seriesId);
-        affectedIssueIds = result.issueIds;
       }
-      final selectedWeek = ref.read(selectedWeekProvider);
-      invalidateOnSubscriptionToggle(
-        ref,
-        seriesId: widget.seriesId,
-        selectedWeek: selectedWeek,
-        affectedIssueIds: affectedIssueIds,
-      );
       if (mounted) {
         (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
@@ -99,11 +79,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 metronSeriesId: widget.seriesId,
               );
             }
-            invalidateOnSubscriptionToggle(
-              ref,
-              seriesId: widget.seriesId,
-              selectedWeek: selectedWeek,
-            );
           },
         );
       }
@@ -160,9 +135,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
 
       await repository.toggleSeriesFavorite(widget.seriesId);
 
-      ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
-      ref.invalidate(favoriteSeriesListProvider);
-
       if (mounted) {
         final added = !isFavorite;
         (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
@@ -172,8 +144,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           actionLabel: 'Undo',
           onUndo: () async {
             await repository.toggleSeriesFavorite(widget.seriesId);
-            ref.invalidate(isSeriesFavoriteProvider(widget.seriesId));
-            ref.invalidate(favoriteSeriesListProvider);
           },
         );
       }
@@ -186,12 +156,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
+    final detailsAsync = ref.watch(seriesFullDetailsProvider(widget.seriesId));
     final coverImageAsync = ref.watch(
-      seriesCoverImageProvider((
-        seriesId: widget.seriesId,
-        allowRemoteFetch: true,
-      )),
+      seriesCoverImageProvider(widget.seriesId),
     );
     final issuesPreviewAsync = ref.watch(
       seriesDetailsIssuesProvider(widget.seriesId),
@@ -210,6 +177,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final isSubscriptionLoading =
         subscriptionAsync.isLoading || _isUpdatingSubscription;
     final isFavorite = isFavoriteAsync.asData?.value ?? false;
+    final isIssuesLoading = issuesPreviewAsync.isLoading;
     final issuesPreview = issuesPreviewAsync.asData != null
         ? sortIssues(
             issuesPreviewAsync.asData!.value.results,
@@ -505,41 +473,59 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SectionHeader(
-                    title:
-                        '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
-                    onViewAll: () => context.pushRoute(
-                      SeriesIssuesRoute(seriesId: widget.seriesId),
-                    ),
+                    title: isIssuesLoading
+                        ? 'Issues'
+                        : '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
+                    onViewAll: isIssuesLoading
+                        ? null
+                        : () => context.pushRoute(
+                            SeriesIssuesRoute(seriesId: widget.seriesId),
+                          ),
                   ),
                   const SizedBox(height: 12),
-                  HorizontalPreviewSection(
-                    title: '',
-                    onViewAll: null,
-                    itemCount: issuesPreview.length,
-                    height: 250,
-                    emptyText: 'No issues available.',
-                    itemBuilder: (context, index) {
-                      final issue = issuesPreview[index];
-                      final issueId = issue.id;
-                      return IssueCard(
-                        issueId: issueId,
-                        imageUrl: issue.image,
-                        title:
-                            '${issue.series?.name ?? issue.name} #${issue.number}',
-                        seriesId: issue.series?.id,
-                        onTap: issueId == null
-                            ? null
-                            : () {
-                                context.pushRoute(
-                                  IssueDetailsRoute(
-                                    issueId: issueId,
-                                    initialImageUrl: issue.image,
-                                  ),
-                                );
-                              },
-                      );
-                    },
-                  ),
+                  if (isIssuesLoading)
+                    SizedBox(
+                      height: 250,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        itemCount: 6,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (_, _) =>
+                            const ShimmerWidget(child: IssueCardSkeleton()),
+                      ),
+                    )
+                  else
+                    HorizontalPreviewSection(
+                      title: '',
+                      onViewAll: null,
+                      itemCount: issuesPreview.length,
+                      height: 250,
+                      emptyText: 'No issues available.',
+                      itemBuilder: (context, index) {
+                        final issue = issuesPreview[index];
+                        final issueId = issue.id;
+                        return IssueCard(
+                          issueId: issueId,
+                          imageUrl: issue.image,
+                          title:
+                              '${issue.series?.name ?? issue.name} #${issue.number}',
+                          seriesId: issue.series?.id,
+                          seriesName: issue.series?.name,
+                          issueNumber: issue.number,
+                          onTap: issueId == null
+                              ? null
+                              : () {
+                                  context.pushRoute(
+                                    IssueDetailsRoute(
+                                      issueId: issueId,
+                                      initialImageUrl: issue.image,
+                                    ),
+                                  );
+                                },
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -802,7 +788,20 @@ class _SeriesCompletionCompact extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return ownedAsync.when(
-      loading: () => const SizedBox.shrink(),
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4),
+        child: ShimmerWidget(
+          child: Row(
+            children: [
+              SkeletonBox(width: 16, height: 16, borderRadius: 4),
+              SizedBox(width: 8),
+              Expanded(child: SkeletonBox(height: 8, borderRadius: 4)),
+              SizedBox(width: 8),
+              SkeletonBox(width: 40, height: 12, borderRadius: 4),
+            ],
+          ),
+        ),
+      ),
       error: (_, _) => const SizedBox.shrink(),
       data: (owned) {
         final percent = (owned / total).clamp(0.0, 1.0);

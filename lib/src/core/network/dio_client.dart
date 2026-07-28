@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -8,7 +7,8 @@ import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/conditional_interceptor.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/presentation/providers/auth_provider.dart';
 
 final cacheHeaderStoreProvider = Provider<CacheHeaderStore>((ref) {
   return CacheHeaderStore();
@@ -24,8 +24,11 @@ final dioProvider = Provider<Dio>((ref) {
       baseUrl: 'https://metron.cloud/api/',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
+      validateStatus: (status) =>
+          status != null && ((status >= 200 && status < 300) || status == 304),
     ),
   );
+  dio.transformer = BackgroundTransformer();
 
   // Rate limiter should be early in the chain (shared via provider)
   final rateLimitInterceptor = ref.read(rateLimitInterceptorProvider);
@@ -33,24 +36,21 @@ final dioProvider = Provider<Dio>((ref) {
 
   // Conditional request interceptor
   final headerStore = ref.read(cacheHeaderStoreProvider);
-  dio.interceptors.add(ConditionalRequestInterceptor(headerStore));
+  final db = ref.read(driftDatabaseProvider);
+  dio.interceptors.add(ConditionalRequestInterceptor(headerStore, db));
 
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
         options.extra['start_time'] = DateTime.now().millisecondsSinceEpoch;
-        final hiveService = ref.read(hiveServiceProvider);
-        final box = hiveService.getBoxIfOpen<String>('metron_account_box') ??
-            await hiveService.openBox<String>('metron_account_box');
-        final username = box.get('username')?.trim();
-        final password = box.get('password')?.trim();
-        if (username != null &&
-            username.isNotEmpty &&
-            password != null &&
-            password.isNotEmpty) {
-          final auth =
-              'Basic ${base64Encode(utf8.encode('$username:$password'))}';
-          options.headers['Authorization'] = auth;
+        final dao = ref.read(driftDatabaseProvider).settingsDao;
+        final token = await dao.getString('metron_api_token');
+        final trimmedToken = token?.trim();
+        if (trimmedToken != null && trimmedToken.isNotEmpty) {
+          options.headers.putIfAbsent(
+            'Authorization',
+            () => 'Bearer $trimmedToken',
+          );
         }
         return handler.next(options);
       },
@@ -80,42 +80,105 @@ final dioProvider = Provider<Dio>((ref) {
             statusCode: error.response?.statusCode,
           );
         }
-        if (error.response?.statusCode == 429) {
-          AppLogger.warning('HTTP 429 received for ${error.requestOptions.path}');
+        final statusCode = error.response?.statusCode;
+
+        if (statusCode == 400) {
+          AppLogger.warning(
+            'HTTP 400 validation error for ${error.requestOptions.path} — check request parameters',
+          );
+          handler.next(error);
+          return;
+        }
+
+        if (statusCode == 401) {
+          AppLogger.warning(
+            'HTTP 401 received for ${error.requestOptions.path}',
+          );
+          final hadToken = error.requestOptions.headers.containsKey(
+            'Authorization',
+          );
+          if (hadToken) {
+            final dao = ref.read(driftDatabaseProvider).settingsDao;
+            await dao.deleteByKey('metron_api_token');
+            ref.invalidate(authStateProvider);
+          }
+          handler.next(error);
+          return;
+        }
+
+        if (statusCode == 403) {
+          AppLogger.warning(
+            'HTTP 403 insufficient permissions for ${error.requestOptions.path} — Editor/Admin role required',
+          );
+          handler.next(error);
+          return;
+        }
+
+        if (statusCode == 404) {
+          AppLogger.warning(
+            'HTTP 404 resource not found for ${error.requestOptions.path} — the ID may not exist',
+          );
+          handler.next(error);
+          return;
+        }
+
+        if (statusCode == 429) {
+          AppLogger.warning(
+            'HTTP 429 received for ${error.requestOptions.path}',
+          );
           AppPerformanceMetrics.instance.recordHttp429();
         }
-        if (error.response?.statusCode == 429 &&
+
+        if (statusCode == 429 &&
             error.requestOptions.extra['retried_after_429'] != true) {
-          final retryAfterHeader = error.response?.headers.value('retry-after');
-          final retryAfterSeconds = int.tryParse(retryAfterHeader ?? '');
+          final sustainedReset = error.response?.headers.value(
+            'x-ratelimit-sustained-reset',
+          );
+          final burstReset = error.response?.headers.value(
+            'x-ratelimit-burst-reset',
+          );
+          final resetValue = sustainedReset ?? burstReset;
+          final resetTimestamp = int.tryParse(resetValue ?? '');
 
-          if (retryAfterSeconds != null && retryAfterSeconds > 0) {
-            AppLogger.warning('HTTP 429 retry-after: ${retryAfterSeconds}s for ${error.requestOptions.path}');
-            AppPerformanceMetrics.instance.recordRetryAfter429();
-            await Future.delayed(Duration(seconds: retryAfterSeconds));
-            final retryRequest = error.requestOptions
-              ..extra = {
-                ...error.requestOptions.extra,
-                'retried_after_429': true,
-              };
+          int waitSeconds;
+          if (resetTimestamp != null && resetTimestamp > 0) {
+            final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+            waitSeconds = (resetTimestamp - now).clamp(1, 300);
+          } else {
+            waitSeconds = 5;
+          }
 
-            try {
-              AppLogger.info('HTTP 429 retry for ${error.requestOptions.path}');
-              final response = await dio.fetch(retryRequest);
-              return handler.resolve(response);
-            } on DioException catch (retryError) {
-              AppLogger.error('HTTP 429 retry failed for ${error.requestOptions.path}', error: retryError);
-              return handler.next(retryError);
-            }
+          AppLogger.warning(
+            'HTTP 429 waiting ${waitSeconds}s for ${error.requestOptions.path}',
+          );
+          AppPerformanceMetrics.instance.recordRetryAfter429();
+          await Future.delayed(Duration(seconds: waitSeconds + 1));
+          final retryRequest = error.requestOptions
+            ..extra = {
+              ...error.requestOptions.extra,
+              'retried_after_429': true,
+            };
+
+          try {
+            AppLogger.info('HTTP 429 retry for ${error.requestOptions.path}');
+            final response = await dio.fetch(retryRequest);
+            return handler.resolve(response);
+          } on DioException catch (retryError) {
+            AppLogger.error(
+              'HTTP 429 retry failed for ${error.requestOptions.path}',
+              error: retryError,
+            );
+            return handler.next(retryError);
           }
         }
 
-        final statusCode = error.response?.statusCode;
         if (statusCode != null && statusCode >= 500 && statusCode < 600) {
           final retryCount =
               error.requestOptions.extra['retry_5xx_count'] as int? ?? 0;
           if (retryCount < 3) {
-            final delay = Duration(seconds: pow(2, retryCount).toInt());
+            final delay = Duration(
+              seconds: min(pow(2, retryCount).toInt(), 60),
+            );
             await Future.delayed(delay);
             final retryRequest = error.requestOptions
               ..extra = {
@@ -123,7 +186,9 @@ final dioProvider = Provider<Dio>((ref) {
                 'retry_5xx_count': retryCount + 1,
               };
             try {
-              AppLogger.info('HTTP $statusCode retry attempt ${retryCount + 1} for ${error.requestOptions.path}');
+              AppLogger.info(
+                'HTTP $statusCode retry attempt ${retryCount + 1} for ${error.requestOptions.path}',
+              );
               final response = await dio.fetch(retryRequest);
               return handler.resolve(response);
             } on DioException catch (retryError) {

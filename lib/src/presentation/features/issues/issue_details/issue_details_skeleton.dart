@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class IssueDetailsSkeleton extends StatelessWidget {
   const IssueDetailsSkeleton({super.key, this.imageUrl});
@@ -20,10 +20,7 @@ class IssueDetailsSkeleton extends StatelessWidget {
           if (imageUrl != null && imageUrl!.isNotEmpty)
             ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: CachedNetworkImage(
-                imageUrl: imageUrl!,
-                fit: BoxFit.cover,
-              ),
+              child: CachedNetworkImage(imageUrl: imageUrl!, fit: BoxFit.cover),
             )
           else
             ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
@@ -78,31 +75,50 @@ class IssueDetailsSkeleton extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              ...List.generate(4, (_) => const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: SkeletonBox(width: 22, height: 22, borderRadius: 4),
-              )),
+              ...List.generate(
+                4,
+                (_) => const Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: SkeletonBox(width: 22, height: 22, borderRadius: 4),
+                ),
+              ),
               const Spacer(),
-              ...List.generate(5, (_) => const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: SkeletonBox(width: 16, height: 16, borderRadius: 2),
-              )),
+              ...List.generate(
+                5,
+                (_) => const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: SkeletonBox(width: 16, height: 16, borderRadius: 2),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: const [
-              Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
+              Expanded(
+                flex: 3,
+                child: SkeletonBox(height: 48, borderRadius: 12),
+              ),
               SizedBox(width: 6),
-              Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+              Expanded(
+                flex: 1,
+                child: SkeletonBox(height: 48, borderRadius: 12),
+              ),
               SizedBox(width: 6),
-              Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+              Expanded(
+                flex: 1,
+                child: SkeletonBox(height: 48, borderRadius: 12),
+              ),
             ],
           ),
           const SizedBox(height: 24),
           const SkeletonBox(height: 18, width: 90, borderRadius: 4),
           const SizedBox(height: 12),
-          const SkeletonBox(height: 14, width: double.infinity, borderRadius: 4),
+          const SkeletonBox(
+            height: 14,
+            width: double.infinity,
+            borderRadius: 4,
+          ),
           const SizedBox(height: 8),
           const SkeletonBox(height: 14, width: 280, borderRadius: 4),
           const SizedBox(height: 8),
@@ -155,6 +171,21 @@ class IssueDetailsSkeleton extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
+          const SkeletonBox(height: 18, width: 60, borderRadius: 4),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 155,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              padding: EdgeInsets.zero,
+              itemBuilder: (_, _) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SkeletonBox(width: 100, height: 155, borderRadius: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           const SkeletonBox(height: 18, width: 90, borderRadius: 4),
           const SizedBox(height: 12),
           SizedBox(
@@ -175,38 +206,30 @@ class IssueDetailsSkeleton extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: List.generate(5, (_) => const SkeletonBox(
-              height: 28, width: 80, borderRadius: 14,
-            )),
-          ),
-          const SizedBox(height: 24),
-          const SkeletonBox(height: 18, width: 60, borderRadius: 4),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 140,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 4,
-              padding: EdgeInsets.zero,
-              itemBuilder: (_, _) => const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: SkeletonBox(width: 100, height: 140, borderRadius: 12),
-              ),
+            children: List.generate(
+              5,
+              (_) => const SkeletonBox(height: 28, width: 80, borderRadius: 14),
             ),
           ),
           const SizedBox(height: 24),
           const SkeletonBox(height: 18, width: 80, borderRadius: 4),
           const SizedBox(height: 12),
-          ...List.generate(6, (_) => const Padding(
-            padding: EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                SizedBox(width: 80, child: SkeletonBox(height: 14, borderRadius: 4)),
-                SizedBox(width: 8),
-                Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
-              ],
+          ...List.generate(
+            6,
+            (_) => const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 80,
+                    child: SkeletonBox(height: 14, borderRadius: 4),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
+                ],
+              ),
             ),
-          )),
+          ),
           const SizedBox(height: 12),
           const SkeletonBox(height: 12, width: 160, borderRadius: 4),
         ],

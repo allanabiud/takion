@@ -34,6 +34,7 @@ class MetronCachePolicies {
   static const arcSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const arcDetails = CachePolicy(ttl: Duration(days: 7));
   static const arcIssueList = CachePolicy(ttl: Duration(hours: 24));
+  static const teamIssueList = CachePolicy(ttl: Duration(hours: 24));
 
   static DateTime _weekStart(DateTime date) {
     final offset = date.weekday % 7;

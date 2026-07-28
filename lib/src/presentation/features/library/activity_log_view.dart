@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/activity_log_group.dart';
 import 'package:takion/src/presentation/features/library/providers/library_activity_provider.dart';
 import 'package:takion/src/presentation/features/library/widgets/activity_log_group_tile.dart';

@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 Widget buildSettingsGroup(
   BuildContext context,
   String title,
-  List<Widget> children,
-) {
+  List<Widget> children, {
+  EdgeInsets? padding,
+}) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -21,7 +22,7 @@ Widget buildSettingsGroup(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: padding ?? const EdgeInsets.all(16),
           child: Column(children: children),
         ),
       ),

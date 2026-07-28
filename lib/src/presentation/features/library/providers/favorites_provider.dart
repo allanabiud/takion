@@ -1,13 +1,47 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/data/common/drift/database.dart' as db;
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
-final favoriteSeriesListProvider = FutureProvider<List<FavoriteSeries>>((
-  ref,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.listFavoriteSeries();
+FavoriteSeries _seriesToDomain(db.FavoriteSery d) {
+  return FavoriteSeries(
+    metronSeriesId: d.metronSeriesId,
+    createdAt: DateTime.parse(d.createdAt),
+  );
+}
+
+FavoriteIssue _issueToDomain(db.FavoriteIssue d) {
+  return FavoriteIssue(
+    metronIssueId: d.metronIssueId,
+    createdAt: DateTime.parse(d.createdAt),
+  );
+}
+
+FavoriteReadingList _readingListToDomain(db.FavoriteReadingList d) {
+  return FavoriteReadingList(
+    readingListId: d.readingListId,
+    createdAt: DateTime.parse(d.createdAt),
+  );
+}
+
+FavoriteCharacter _characterToDomain(db.FavoriteCharacter d) {
+  return FavoriteCharacter(
+    metronCharacterId: d.metronCharacterId,
+    createdAt: DateTime.parse(d.createdAt),
+  );
+}
+
+FavoriteCreator _creatorToDomain(db.FavoriteCreator d) {
+  return FavoriteCreator(
+    metronCreatorId: d.metronCreatorId,
+    createdAt: DateTime.parse(d.createdAt),
+  );
+}
+
+final favoriteSeriesListProvider = StreamProvider<List<FavoriteSeries>>((ref) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllSeries().map((rows) => rows.map(_seriesToDomain).toList());
 });
 
 final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
@@ -15,48 +49,71 @@ final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
 ) async {
   final favorites = await ref.watch(favoriteSeriesListProvider.future);
   final repository = ref.watch(metronRepositoryProvider);
+  final db = ref.watch(driftDatabaseProvider);
 
-  final results = <SeriesList>[];
-  for (final fav in favorites) {
-    try {
-      final details = await repository.getSeriesDetails(fav.metronSeriesId);
-      results.add(
-        SeriesList(
+  final results = List<SeriesList?>.filled(favorites.length, null);
+  var cursor = 0;
+  Future<void> worker() async {
+    while (true) {
+      final index = cursor;
+      if (index >= favorites.length) return;
+      cursor = index + 1;
+      final seriesId = favorites[index].metronSeriesId;
+      try {
+        final localSeries = await db.metronEntityDao.getSeries(seriesId);
+        if (localSeries != null) {
+          results[index] = SeriesList(
+            id: localSeries.id,
+            name: localSeries.name,
+            volume: localSeries.volume,
+            yearBegan: localSeries.yearBegan,
+            issueCount: localSeries.issueCount,
+            modified: localSeries.modified != null
+                ? DateTime.tryParse(localSeries.modified!)
+                : null,
+          );
+          continue;
+        }
+        final details = await repository.getSeriesDetails(seriesId);
+        results[index] = SeriesList(
           id: details.id,
           name: details.name,
           volume: details.volume,
           yearBegan: details.yearBegan,
           issueCount: details.issueCount,
           modified: details.modified,
-        ),
-      );
-    } catch (e) {
-      AppLogger.warning('Failed to load series favorite details', error: e);
+        );
+      } catch (e) {
+        AppLogger.warning('Failed to load series favorite details', error: e);
+      }
     }
   }
-  return results;
+
+  final workerCount = favorites.length < 4 ? favorites.length : 4;
+  if (workerCount > 0) {
+    await Future.wait(List.generate(workerCount, (_) => worker()));
+  }
+  return results.whereType<SeriesList>().toList();
 });
 
-final isSeriesFavoriteProvider = FutureProvider.family<bool, int>((
+final isSeriesFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   seriesId,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.isSeriesFavorite(seriesId);
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchSeriesBySeriesId(seriesId).map((row) => row != null);
 });
 
-final favoriteIssuesListProvider = FutureProvider<List<FavoriteIssue>>((
-  ref,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.listFavoriteIssues();
+final favoriteIssuesListProvider = StreamProvider<List<FavoriteIssue>>((ref) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllIssues().map((rows) => rows.map(_issueToDomain).toList());
 });
 
-final favoriteIssueIdsProvider = FutureProvider.autoDispose<Set<int>>((
-  ref,
-) async {
-  final favorites = await ref.watch(favoriteIssuesListProvider.future);
-  return favorites.map((f) => f.metronIssueId).toSet();
+final favoriteIssueIdsProvider = StreamProvider<Set<int>>((ref) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllIssues().map(
+    (rows) => rows.map((r) => r.metronIssueId).toSet(),
+  );
 });
 
 final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
@@ -64,29 +121,71 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
 ) async {
   final favorites = await ref.watch(favoriteIssuesListProvider.future);
   final repository = ref.watch(metronRepositoryProvider);
+  final db = ref.watch(driftDatabaseProvider);
 
-  final results = <IssueList>[];
-  for (final fav in favorites) {
-    try {
-      final details = await repository.getIssueDetails(fav.metronIssueId);
+  final results = List<IssueList?>.filled(favorites.length, null);
+  var cursor = 0;
+  Future<void> worker() async {
+    while (true) {
+      final index = cursor;
+      if (index >= favorites.length) return;
+      cursor = index + 1;
+      final issueId = favorites[index].metronIssueId;
+      try {
+        final localIssue = await db.metronEntityDao.getIssue(issueId);
+        if (localIssue != null) {
+          Series? series;
+          if (localIssue.seriesId != null) {
+            final localSeries = await db.metronEntityDao.getSeries(
+              localIssue.seriesId!,
+            );
+            if (localSeries != null) {
+              series = Series(
+                id: localSeries.id,
+                name: localSeries.name,
+                volume: localSeries.volume,
+                yearBegan: localSeries.yearBegan,
+              );
+            }
+          }
+          String displayName = series?.name ?? 'Issue';
+          if (localIssue.number.isNotEmpty) {
+            displayName += ' #${localIssue.number}';
+          }
+          results[index] = IssueList(
+            id: localIssue.id,
+            name: displayName,
+            number: localIssue.number,
+            series: series,
+            coverDate: localIssue.coverDate != null
+                ? DateTime.tryParse(localIssue.coverDate!)
+                : null,
+            storeDate: localIssue.storeDate != null
+                ? DateTime.tryParse(localIssue.storeDate!)
+                : null,
+            image: localIssue.imageUrl,
+            modified: localIssue.modified != null
+                ? DateTime.tryParse(localIssue.modified!)
+                : null,
+          );
+          continue;
+        }
 
-      Series? series;
-      if (details.series != null) {
-        series = Series(
-          id: details.series!.id,
-          name: details.series!.name,
-          volume: details.series!.volume,
-          yearBegan: details.series!.yearBegan,
-        );
-      }
-
-      String displayName = details.series?.name ?? 'Issue';
-      if (details.number.isNotEmpty) {
-        displayName += ' #${details.number}';
-      }
-
-      results.add(
-        IssueList(
+        final details = await repository.getIssueDetails(issueId);
+        Series? series;
+        if (details.series != null) {
+          series = Series(
+            id: details.series!.id,
+            name: details.series!.name,
+            volume: details.series!.volume,
+            yearBegan: details.series!.yearBegan,
+          );
+        }
+        String displayName = details.series?.name ?? 'Issue';
+        if (details.number.isNotEmpty) {
+          displayName += ' #${details.number}';
+        }
+        results[index] = IssueList(
           id: details.id,
           name: displayName,
           number: details.number,
@@ -95,27 +194,34 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
           storeDate: details.storeDate,
           image: details.image,
           modified: details.modified,
-        ),
-      );
-    } catch (e) {
-      AppLogger.warning('Failed to load issue favorite details', error: e);
+        );
+      } catch (e) {
+        AppLogger.warning('Failed to load issue favorite details', error: e);
+      }
     }
   }
-  return results;
+
+  final workerCount = favorites.length < 4 ? favorites.length : 4;
+  if (workerCount > 0) {
+    await Future.wait(List.generate(workerCount, (_) => worker()));
+  }
+  return results.whereType<IssueList>().toList();
 });
 
-final isIssueFavoriteProvider = FutureProvider.family<bool, int>((
+final isIssueFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   issueId,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.isIssueFavorite(issueId);
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchIssueByIssueId(issueId).map((row) => row != null);
 });
 
 final favoriteReadingListsListProvider =
-    FutureProvider<List<FavoriteReadingList>>((ref) async {
-      final repository = ref.watch(favoritesRepositoryProvider);
-      return repository.listFavoriteReadingLists();
+    StreamProvider<List<FavoriteReadingList>>((ref) {
+      final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+      return dao.watchAllReadingLists().map(
+        (rows) => rows.map(_readingListToDomain).toList(),
+      );
     });
 
 final favoriteReadingListsFullListProvider = FutureProvider<List<ReadingList>>((
@@ -141,19 +247,23 @@ final favoriteReadingListsFullListProvider = FutureProvider<List<ReadingList>>((
   return results;
 });
 
-final isReadingListFavoriteProvider = FutureProvider.family<bool, String>((
+final isReadingListFavoriteProvider = StreamProvider.family<bool, String>((
   ref,
   listId,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.isReadingListFavorite(listId);
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllReadingLists().map(
+    (list) => list.any((f) => f.readingListId == listId),
+  );
 });
 
-final favoriteCharactersListProvider = FutureProvider<List<FavoriteCharacter>>((
+final favoriteCharactersListProvider = StreamProvider<List<FavoriteCharacter>>((
   ref,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.listFavoriteCharacters();
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllCharacters().map(
+    (rows) => rows.map(_characterToDomain).toList(),
+  );
 });
 
 final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
@@ -161,41 +271,56 @@ final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
 ) async {
   final favorites = await ref.watch(favoriteCharactersListProvider.future);
 
-  final results = <CharacterList>[];
-  for (final fav in favorites) {
-    try {
-      final repository = ref.watch(metronRepositoryProvider);
-      final details = await repository.getCharacterDetails(
-        fav.metronCharacterId,
-      );
-      results.add(
-        CharacterList(
+  final results = List<CharacterList?>.filled(favorites.length, null);
+  var cursor = 0;
+  Future<void> worker() async {
+    while (true) {
+      final index = cursor;
+      if (index >= favorites.length) return;
+      cursor = index + 1;
+      final charId = favorites[index].metronCharacterId;
+      try {
+        final repository = ref.read(metronRepositoryProvider);
+        final details = await repository.getCharacterDetails(charId);
+        results[index] = CharacterList(
           id: details.id,
           name: details.name,
           slug: details.slug,
           modified: details.modified,
-        ),
-      );
-    } catch (e) {
-      AppLogger.warning('Failed to load character favorite details', error: e);
+        );
+      } catch (e) {
+        AppLogger.warning(
+          'Failed to load character favorite details',
+          error: e,
+        );
+      }
     }
   }
-  return results;
+
+  final workerCount = favorites.length < 4 ? favorites.length : 4;
+  if (workerCount > 0) {
+    await Future.wait(List.generate(workerCount, (_) => worker()));
+  }
+  return results.whereType<CharacterList>().toList();
 });
 
-final isCharacterFavoriteProvider = FutureProvider.family<bool, int>((
+final isCharacterFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   characterId,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.isCharacterFavorite(characterId);
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllCharacters().map(
+    (list) => list.any((f) => f.metronCharacterId == characterId),
+  );
 });
 
-final favoriteCreatorsListProvider = FutureProvider<List<FavoriteCreator>>((
+final favoriteCreatorsListProvider = StreamProvider<List<FavoriteCreator>>((
   ref,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.listFavoriteCreators();
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllCreators().map(
+    (rows) => rows.map(_creatorToDomain).toList(),
+  );
 });
 
 final favoriteCreatorsFullListProvider = FutureProvider<List<CreatorList>>((
@@ -203,29 +328,41 @@ final favoriteCreatorsFullListProvider = FutureProvider<List<CreatorList>>((
 ) async {
   final favorites = await ref.watch(favoriteCreatorsListProvider.future);
 
-  final results = <CreatorList>[];
-  for (final fav in favorites) {
-    try {
-      final repository = ref.watch(metronRepositoryProvider);
-      final details = await repository.getCreatorDetails(fav.metronCreatorId);
-      results.add(
-        CreatorList(
+  final results = List<CreatorList?>.filled(favorites.length, null);
+  var cursor = 0;
+  Future<void> worker() async {
+    while (true) {
+      final index = cursor;
+      if (index >= favorites.length) return;
+      cursor = index + 1;
+      final creatorId = favorites[index].metronCreatorId;
+      try {
+        final repository = ref.read(metronRepositoryProvider);
+        final details = await repository.getCreatorDetails(creatorId);
+        results[index] = CreatorList(
           id: details.id,
           name: details.name,
           modified: details.modified,
-        ),
-      );
-    } catch (e) {
-      AppLogger.warning('Failed to load creator favorite details', error: e);
+        );
+      } catch (e) {
+        AppLogger.warning('Failed to load creator favorite details', error: e);
+      }
     }
   }
-  return results;
+
+  final workerCount = favorites.length < 4 ? favorites.length : 4;
+  if (workerCount > 0) {
+    await Future.wait(List.generate(workerCount, (_) => worker()));
+  }
+  return results.whereType<CreatorList>().toList();
 });
 
-final isCreatorFavoriteProvider = FutureProvider.family<bool, int>((
+final isCreatorFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   creatorId,
-) async {
-  final repository = ref.watch(favoritesRepositoryProvider);
-  return repository.isCreatorFavorite(creatorId);
+) {
+  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
+  return dao.watchAllCreators().map(
+    (list) => list.any((f) => f.metronCreatorId == creatorId),
+  );
 });

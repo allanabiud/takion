@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart';
@@ -23,7 +23,7 @@ import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
 class IssueDetailsScreen extends ConsumerStatefulWidget {
@@ -57,8 +57,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     String baseName;
     if (seriesName != null && seriesName.isNotEmpty && issueNumber.isNotEmpty) {
       baseName = '$seriesName #$issueNumber';
-    } else if (issue.names.isNotEmpty &&
-        issue.names.first.trim().isNotEmpty) {
+    } else if (issue.names.isNotEmpty && issue.names.first.trim().isNotEmpty) {
       baseName = issue.names.first.trim();
     } else {
       baseName = issueNumber.isNotEmpty ? 'Issue #$issueNumber' : 'Issue';
@@ -219,6 +218,9 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
       seriesId: seriesId,
       isSubscribed: isSubscribed,
       releaseDate: issue?.storeDate ?? issue?.coverDate,
+      seriesName: issue?.series?.name,
+      issueNumber: issue?.number,
+      imageUrl: issue?.image,
     );
   }
 
@@ -231,10 +233,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
 
       await repository.toggleIssueFavorite(_currentIssueId);
 
-      ref.invalidate(isIssueFavoriteProvider(_currentIssueId));
-      ref.invalidate(favoriteIssuesListProvider);
-      ref.invalidate(favoriteIssueIdsProvider);
-
       if (mounted) {
         final added = !isFavorite;
         (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
@@ -244,9 +242,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
           actionLabel: 'Undo',
           onUndo: () async {
             await repository.toggleIssueFavorite(_currentIssueId);
-            ref.invalidate(isIssueFavoriteProvider(_currentIssueId));
-            ref.invalidate(favoriteIssuesListProvider);
-            ref.invalidate(favoriteIssueIdsProvider);
           },
         );
       }
@@ -270,13 +265,14 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final issueAsync = ref.watch(issueDetailsProvider(_currentIssueId));
-    final issueStatus = ref.watch(issueCollectionStatusProvider(_currentIssueId));
-    final pullEntryAsync =
-        ref.watch(issuePullListEntryProvider(_currentIssueId));
-    final isInPullList = pullEntryAsync.asData?.value != null;
-    final isFavoriteAsync = ref.watch(
-      isIssueFavoriteProvider(_currentIssueId),
+    final issueStatus = ref.watch(
+      issueCollectionStatusProvider(_currentIssueId),
     );
+    final pullEntryAsync = ref.watch(
+      issuePullListEntryProvider(_currentIssueId),
+    );
+    final isInPullList = pullEntryAsync.asData?.value != null;
+    final isFavoriteAsync = ref.watch(isIssueFavoriteProvider(_currentIssueId));
 
     final issue = issueAsync.asData?.value;
     final seriesId = issue?.series?.id;
@@ -287,14 +283,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
 
     final navAsync = seriesId == null
-        ? const AsyncValue<IssueSeriesNavResult>.data(
-            IssueSeriesNavResult())
+        ? const AsyncValue<IssueSeriesNavResult>.data(IssueSeriesNavResult())
         : ref.watch(
             issueSeriesNavigationProvider(
-              IssueSeriesNavArgs(
-                seriesId: seriesId,
-                issueId: _currentIssueId,
-              ),
+              IssueSeriesNavArgs(seriesId: seriesId, issueId: _currentIssueId),
             ),
           );
     final previousIssueId = navAsync.asData?.value.previousIssueId;
@@ -303,10 +295,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     if (seriesId != null) {
       ref.listen(
         issueSeriesNavigationProvider(
-          IssueSeriesNavArgs(
-            seriesId: seriesId,
-            issueId: _currentIssueId,
-          ),
+          IssueSeriesNavArgs(seriesId: seriesId, issueId: _currentIssueId),
         ),
         (previous, next) {
           final navResult = next.asData?.value;
@@ -330,11 +319,12 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
             appBar: AppBar(),
             body: AsyncStatePanel.error(
               title: 'Failed to load issue details',
-              errorMessage: TakionAlerts.cleanError(error, fallback: 'Something went wrong'),
+              errorMessage: TakionAlerts.cleanError(
+                error,
+                fallback: 'Something went wrong',
+              ),
               onRetry: () {
-                ref
-                    .read(issueDetailsProvider(_currentIssueId).notifier)
-                    .refresh();
+                ref.invalidate(issueDetailsProvider(_currentIssueId));
               },
             ),
           ),
@@ -350,10 +340,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
         duration: const Duration(milliseconds: 200),
         switchInCurve: Curves.easeIn,
         switchOutCurve: Curves.easeOut,
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
         child: KeyedSubtree(
           key: ValueKey(_currentIssueId),
           child: Stack(
@@ -365,10 +353,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                   children: [
                     if (isCurrentData && issue.image != null)
                       ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                          sigmaX: 8,
-                          sigmaY: 8,
-                        ),
+                        imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                         child: CachedNetworkImage(
                           imageUrl: issue.image!,
                           fit: BoxFit.cover,
@@ -384,11 +369,9 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            theme.colorScheme.surface
-                                .withValues(alpha: 0.75),
+                            theme.colorScheme.surface.withValues(alpha: 0.75),
                             Colors.transparent,
-                            theme.colorScheme.surface
-                                .withValues(alpha: 0.75),
+                            theme.colorScheme.surface.withValues(alpha: 0.75),
                           ],
                           stops: const [0.0, 0.5, 1.0],
                         ),
@@ -402,7 +385,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                             icon: const Icon(Icons.chevron_left),
                             style: IconButton.styleFrom(
                               backgroundColor: theme
-                                  .colorScheme.surfaceContainerHighest
+                                  .colorScheme
+                                  .surfaceContainerHighest
                                   .withValues(alpha: 0.85),
                               foregroundColor:
                                   theme.colorScheme.onSurfaceVariant,
@@ -413,8 +397,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                             onPressed: previousIssueId == null
                                 ? null
                                 : () => setState(
-                                    () =>
-                                        _currentIssueId = previousIssueId),
+                                    () => _currentIssueId = previousIssueId,
+                                  ),
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
@@ -422,16 +406,13 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                                 ? () => _openCoverGallery(issue)
                                 : null,
                             child: Hero(
-                              tag:
-                                  'issue-cover-$_currentIssueId',
+                              tag: 'issue-cover-$_currentIssueId',
                               child: ClipRRect(
-                                borderRadius:
-                                    BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(8),
                                 child: SizedBox(
                                   width: 180,
                                   height: 270,
-                                  child: isCurrentData &&
-                                          issue.image != null
+                                  child: isCurrentData && issue.image != null
                                       ? CachedNetworkImage(
                                           imageUrl: issue.image!,
                                           fit: BoxFit.cover,
@@ -454,7 +435,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                             icon: const Icon(Icons.chevron_right),
                             style: IconButton.styleFrom(
                               backgroundColor: theme
-                                  .colorScheme.surfaceContainerHighest
+                                  .colorScheme
+                                  .surfaceContainerHighest
                                   .withValues(alpha: 0.85),
                               foregroundColor:
                                   theme.colorScheme.onSurfaceVariant,
@@ -465,7 +447,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                             onPressed: nextIssueId == null
                                 ? null
                                 : () => setState(
-                                    () => _currentIssueId = nextIssueId),
+                                    () => _currentIssueId = nextIssueId,
+                                  ),
                           ),
                         ],
                       ),
@@ -479,8 +462,12 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                         elevation: 0,
                         actions: [
                           EntityDetailActions(
-                            onShare: isCurrentData ? () => _shareResourceUrl(issue) : null,
-                            onOpenInBrowser: isCurrentData ? () => _openResourceUrlInBrowser(issue) : null,
+                            onShare: isCurrentData
+                                ? () => _shareResourceUrl(issue)
+                                : null,
+                            onOpenInBrowser: isCurrentData
+                                ? () => _openResourceUrlInBrowser(issue)
+                                : null,
                           ),
                         ],
                       ),
@@ -499,20 +486,16 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                     scrollController: scrollController,
                     issue: issue,
                     issueId: _currentIssueId,
-                    collectionStatus:
-                        isCurrentData ? issueStatus : null,
+                    collectionStatus: isCurrentData ? issueStatus : null,
                     isInPullList: isCurrentData ? isInPullList : false,
                     isFavorite: isCurrentData
                         ? (isFavoriteAsync.asData?.value ?? false)
                         : false,
-                    displayTitle: isCurrentData
-                        ? _displayTitle(issue)
-                        : '',
+                    displayTitle: isCurrentData ? _displayTitle(issue) : '',
                     onShowScrobbleSheet: isCurrentData
                         ? scrobbleCurrentIssue
                         : () {},
-                    onToggleFavorite:
-                        isCurrentData ? toggleFavorite : () {},
+                    onToggleFavorite: isCurrentData ? toggleFavorite : () {},
                     onNavigateToSeries: isCurrentData
                         ? () => _navigateToSeries(issue)
                         : () {},
@@ -520,34 +503,30 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                         ? () {
                             AddToReadingListBottomSheet.show(
                               context: context,
-                              targetId:
-                                  'issue-$_currentIssueId',
+                              targetId: 'issue-$_currentIssueId',
                               isSeries: false,
                             );
                           }
                         : () {},
                     onMyDetails: isCurrentData
                         ? () => showEditMyDetailsSheet(
-                              context,
-                              ref,
-                              _currentIssueId,
-                            )
+                            context,
+                            ref,
+                            _currentIssueId,
+                          )
                         : () {},
                     onReadingHistory: isCurrentData
                         ? () => showReadingHistorySheet(
-                              context,
-                              ref,
-                              _currentIssueId,
-                            )
+                            context,
+                            ref,
+                            _currentIssueId,
+                          )
                         : () {},
                     seriesId: isCurrentData ? seriesId : null,
                     isSubscribed: isCurrentData ? isSubscribed : false,
-                    onToggleSeriesSubscription: (isCurrentData &&
-                            seriesId != null)
-                        ? () => _setSeriesSubscription(
-                              !isSubscribed,
-                              seriesId,
-                            )
+                    onToggleSeriesSubscription:
+                        (isCurrentData && seriesId != null)
+                        ? () => _setSeriesSubscription(!isSubscribed, seriesId)
                         : null,
                   );
                 },
@@ -559,4 +538,3 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
     );
   }
 }
-

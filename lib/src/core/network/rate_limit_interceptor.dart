@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:synchronized/synchronized.dart';
 
 class RateLimitState {
@@ -36,10 +35,7 @@ class RateLimitState {
 class RateLimitInterceptor extends Interceptor {
   final _lock = Lock();
 
-  static const String _statsBoxName = 'api_stats';
-  static const String _recentRequestsKey = 'recent_requests';
-
-  Box? _statsBox;
+  final List<int> _recentRequests = [];
 
   int _sustainedLimit = 4800;
   int _sustainedRemaining = 4800;
@@ -106,39 +102,27 @@ class RateLimitInterceptor extends Interceptor {
     return int.tryParse(value);
   }
 
-  Future<Box> _getStatsBox() async {
-    return _statsBox ??= await Hive.openBox(_statsBoxName);
-  }
-
   // Returns null if budget was consumed and the request may proceed,
   // or a Duration to wait before retrying (caller waits outside the lock).
   Future<Duration?> _tryConsumeMinuteBudget() {
     return _lock.synchronized<Duration?>(() async {
-      final box = await _getStatsBox();
-      final stored = box.get(_recentRequestsKey);
-      final List<int> storedList = stored != null
-          ? List<int>.from(stored as Iterable)
-          : [];
-
       final now = DateTime.now();
+      final nowMs = now.millisecondsSinceEpoch;
 
-      // Filter out requests older than 1 minute
-      final recent = storedList
-          .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-          .where((time) => now.difference(time) <= const Duration(minutes: 1))
-          .toList();
+      _recentRequests.removeWhere(
+        (ms) => nowMs - ms > const Duration(minutes: 1).inMilliseconds,
+      );
 
-      if (recent.length < maxRequestsPerMinute) {
-        recent.add(now);
-        await box.put(
-          _recentRequestsKey,
-          recent.map((time) => time.millisecondsSinceEpoch).toList(),
-        );
+      if (_recentRequests.length < maxRequestsPerMinute) {
+        _recentRequests.add(nowMs);
         return null;
       }
 
       final sleepTime =
-          const Duration(minutes: 1) - now.difference(recent.first);
+          const Duration(minutes: 1) -
+          now.difference(
+            DateTime.fromMillisecondsSinceEpoch(_recentRequests.first),
+          );
       return sleepTime > Duration.zero
           ? sleepTime + const Duration(milliseconds: 100)
           : const Duration(milliseconds: 100);
@@ -192,6 +176,11 @@ class RateLimitInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    final statusCode = err.response?.statusCode;
+    if (statusCode != 429) {
+      _sustainedRemaining = min(_sustainedLimit, _sustainedRemaining + 1);
+      _burstRemaining = min(maxRequestsPerMinute, _burstRemaining + 1);
+    }
     if (err.response?.headers.map case final headers? when headers.isNotEmpty) {
       _updateFromHeaders(headers);
     }

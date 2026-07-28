@@ -2,8 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
@@ -200,19 +200,21 @@ class _MetronReadingListBrowserScreenState
         );
 
         final previewItems = previewItemsMap[list.id] ?? const [];
-        final displayList = localList ?? ReadingList(
-          id: 'metron-${list.id}',
-          title: list.name,
-          description: '',
-          isOrdered: true,
-          contentType: ListContentType.issue,
-          createdAt: list.modified ?? DateTime.now(),
-          updatedAt: list.modified ?? DateTime.now(),
-          items: previewItems,
-          metronSourceId: list.id,
-          metronAttributionSource: list.attributionSource,
-          metronListType: list.listType,
-        );
+        final displayList =
+            localList ??
+            ReadingList(
+              id: 'metron-${list.id}',
+              title: list.name,
+              description: '',
+              isOrdered: true,
+              contentType: ListContentType.issue,
+              createdAt: list.modified ?? DateTime.now(),
+              updatedAt: list.modified ?? DateTime.now(),
+              items: previewItems,
+              metronSourceId: list.id,
+              metronAttributionSource: list.attributionSource,
+              metronListType: list.listType,
+            );
 
         return ReadingListCard(
           list: displayList,

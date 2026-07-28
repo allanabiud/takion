@@ -1,10 +1,11 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 @RoutePage()
@@ -123,6 +124,23 @@ class MainScreenState extends ConsumerState<MainScreen>
           },
           child: Scaffold(
             appBar: AppBar(
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: SvgPicture.asset(
+                      'assets/branding/takion_logo.svg',
+                      fit: BoxFit.contain,
+                      colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.primary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               title: Text(
                 titles[tabsRouter.activeIndex],
                 style: const TextStyle(

@@ -9,14 +9,12 @@ import 'package:takion/src/core/cache/cache_header_store.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/logging/talker_setup.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/data/dto/dto.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/data/common/drift/database.dart' hide ReadingList;
 import 'package:takion/src/core/network/dio_client.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-/// Bootstraps the application by initializing core services and state management.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   FlutterError.onError = (details) {
     talker.handle(details.exception, details.stack);
@@ -27,57 +25,27 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  final hiveService = HiveService();
-  await hiveService.init();
-
   tz.initializeTimeZones();
   try {
-    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
+    final timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName.identifier));
   } catch (e) {
-    AppLogger.warning('Failed to initialize local timezone, falling back to UTC', error: e);
+    AppLogger.warning(
+      'Failed to initialize local timezone, falling back to UTC',
+      error: e,
+    );
     tz.setLocalLocation(tz.getLocation('UTC'));
   }
   await NotificationService.instance.init();
 
-  // Pre-open essential boxes in parallel to avoid blocking the main thread
-  await Future.wait([
-    hiveService.openBox('settings_box'),
-    hiveService.openBox<String>('metron_account_box'),
-    hiveService.openBox<List>('weekly_releases_box'),
-    hiveService.openBox<List>('issue_search_box'),
-    hiveService.openBox<Map>('issue_search_meta_box'),
-    hiveService.openBox<List>('series_search_box'),
-    hiveService.openBox<Map>('series_search_meta_box'),
-    hiveService.openBox<List>('series_list_box'),
-    hiveService.openBox<Map>('series_list_meta_box'),
-    hiveService.openBox<List>('series_issue_list_box'),
-    hiveService.openBox<Map>('series_issue_list_meta_box'),
-    hiveService.openBox<dynamic>('home_content_box'),
-    hiveService.openBox<int>('cache_meta_box'),
-    hiveService.openBox<IssueDetailsDto>('issue_details_box'),
-    hiveService.openBox<Map>('series_details_box'),
-    hiveService.openBox<Map>('local_library_items_box'),
-    hiveService.openBox<Map>('local_library_read_logs_box'),
-    hiveService.openBox<Map>('local_pull_list_box'),
-    hiveService.openBox<Map>('local_subscriptions_box'),
-    hiveService.openBox<Map>('local_favorite_series_box'),
-    hiveService.openBox<Map>('local_favorite_issues_box'),
-    hiveService.openBox<Map>('local_favorite_reading_lists_box'),
-    hiveService.openBox<Map>('local_favorite_characters_box'),
-    hiveService.openBox<Map>('local_favorite_creators_box'),
-    hiveService.openBox<ReadingList>('reading_lists_box'),
-    hiveService.openBox<String>('series_name_index_box'),
-    hiveService.openBox<String>('cache_headers_box'),
-  ]);
-
+  final db = AppDatabase();
   final cacheHeaderStore = CacheHeaderStore();
-  await cacheHeaderStore.init(hiveService);
+  await cacheHeaderStore.init(db);
 
   runApp(
     ProviderScope(
       overrides: [
-        hiveServiceProvider.overrideWithValue(hiveService),
+        driftDatabaseProvider.overrideWithValue(db),
         cacheHeaderStoreProvider.overrideWithValue(cacheHeaderStore),
       ],
       child: await builder(),

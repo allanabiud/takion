@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 String issueDisplayTitle(IssueDetails issue) {
   final seriesName = issue.series?.name.trim();
@@ -24,7 +24,10 @@ String issueDisplayTitle(IssueDetails issue) {
   return baseName;
 }
 
-Future<void> shareIssueResourceUrl(BuildContext context, IssueDetails issue) async {
+Future<void> shareIssueResourceUrl(
+  BuildContext context,
+  IssueDetails issue,
+) async {
   final resourceUrl = issue.resourceUrl?.trim();
   if (resourceUrl == null || resourceUrl.isEmpty) {
     TakionAlerts.noShareUrl(context, 'issue');

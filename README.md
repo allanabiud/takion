@@ -66,7 +66,7 @@
 | **State Management** | [Riverpod](https://riverpod.dev/)                       |
 | **Networking**       | [Dio](https://pub.dev/packages/dio)                     |
 | **Logging**          | [Talker](https://pub.dev/packages/talker)               |
-| **Database**         | [hive_ce](https://pub.dev/packages/hive_ce)             |
+| **Database**         | [Drift](https://pub.dev/packages/hive_ce)               |
 | **Cloud Storage**    | [Google Drive API](https://pub.dev/packages/googleapis) |
 | **Architecture**     | Domain-Driven-Design                                    |
 

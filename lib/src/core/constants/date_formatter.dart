@@ -35,8 +35,12 @@ class DateFormatter {
 
     if (difference == 0) return 'Today at $time';
     if (difference == 1) return 'Yesterday at $time';
-    if (difference > 1 && difference < 7) return '$difference days ago at $time';
-    if (difference >= 7 && difference < 30) return '${(difference / 7).floor()} weeks ago at $time';
+    if (difference > 1 && difference < 7) {
+      return '$difference days ago at $time';
+    }
+    if (difference >= 7 && difference < 30) {
+      return '${(difference / 7).floor()} weeks ago at $time';
+    }
     return 'on ${_dayMonth(date)} at $time';
   }
 

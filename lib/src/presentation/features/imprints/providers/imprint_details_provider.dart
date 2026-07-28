@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-final imprintDetailsProvider =
-    FutureProvider.family<ImprintDetails, int>((ref, id) async {
-  final repository = ref.watch(catalogRepositoryProvider);
-  final result = await repository.getImprintDetails(id);
-  if (result.image != null && result.image!.trim().isNotEmpty) {
-    ref.read(entityImageCacheProvider).set('imprint', id, result.image!);
-    ref.read(entityImageVersionProvider.notifier).update((s) => s + 1);
-  }
-  return result;
-});
+final imprintDetailsProvider = FutureProvider.autoDispose
+    .family<ImprintDetails, int>((ref, id) async {
+      final details = await ref
+          .watch(catalogRepositoryProvider)
+          .getImprintDetails(id, forceRefresh: false);
+      if (details.image != null && details.image!.trim().isNotEmpty) {
+        ref.read(entityImageCacheProvider).set('imprint', id, details.image!);
+        ref
+            .read(entityImageVersionProvider.notifier)
+            .update((value) => value + 1);
+      }
+      return details;
+    });

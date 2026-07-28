@@ -5,14 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -90,9 +90,6 @@ class _CharacterDetailsScreenState
 
       await repository.toggleCharacterFavorite(widget.characterId);
 
-      ref.invalidate(isCharacterFavoriteProvider(widget.characterId));
-      ref.invalidate(favoriteCharactersListProvider);
-
       if (mounted) {
         final added = !isFavorite;
         (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
@@ -102,8 +99,6 @@ class _CharacterDetailsScreenState
           actionLabel: 'Undo',
           onUndo: () async {
             await repository.toggleCharacterFavorite(widget.characterId);
-            ref.invalidate(isCharacterFavoriteProvider(widget.characterId));
-            ref.invalidate(favoriteCharactersListProvider);
           },
         );
       }
@@ -284,11 +279,7 @@ class _CharacterDetailsScreenState
                                 padding: EdgeInsets.zero,
                                 itemBuilder: (context, index) => const Padding(
                                   padding: EdgeInsets.only(right: 12),
-                                  child: SkeletonBox(
-                                    width: 150,
-                                    height: 250,
-                                    borderRadius: 12,
-                                  ),
+                                  child: IssueCardSkeleton(),
                                 ),
                               ),
                             ),
@@ -320,6 +311,8 @@ class _CharacterDetailsScreenState
                                 title:
                                     '${issue.series?.name ?? issue.name} #${issue.number}',
                                 seriesId: issue.series?.id,
+                                seriesName: issue.series?.name,
+                                issueNumber: issue.number,
                                 onTap: issueId == null
                                     ? null
                                     : () {
@@ -349,7 +342,7 @@ class _CharacterDetailsScreenState
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 150,
+                height: 160,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 10),

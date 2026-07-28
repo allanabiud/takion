@@ -2,14 +2,14 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/domain/common/string_extensions.dart';
 
 class SeriesListTile extends ConsumerWidget {
   final SeriesList series;
@@ -74,7 +74,17 @@ class SeriesListTile extends ConsumerWidget {
     final isFavorite =
         ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
     final detailsAsync = ref.watch(seriesDetailsProvider(series.id));
-    final totalIssuesCount = detailsAsync.asData?.value.issueCount ?? series.issueCount ?? 0;
+    final cachedIssueCountAsync = ref.watch(
+      cachedSeriesIssueCountProvider(series.id),
+    );
+    // Category summaries deliberately store the category count in issueCount.
+    // If categoryCount is present, series.issueCount is the category count,
+    // not the series total. Try the full details API first, then fall back
+    // to the local DB cache (which has issue_count from list responses).
+    final totalIssuesCount =
+        detailsAsync.asData?.value.issueCount ??
+        cachedIssueCountAsync.asData?.value ??
+        series.issueCount;
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedImage = cache.getCached('series', series.id);
@@ -82,10 +92,12 @@ class SeriesListTile extends ConsumerWidget {
     final effectiveOnTap =
         onTap ??
         () {
-          context.pushRoute(SeriesDetailsRoute(
-            seriesId: series.id,
-            initialImageUrl: coverImage,
-          ));
+          context.pushRoute(
+            SeriesDetailsRoute(
+              seriesId: series.id,
+              initialImageUrl: coverImage,
+            ),
+          );
         };
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
@@ -164,13 +176,15 @@ class SeriesListTile extends ConsumerWidget {
                               const SizedBox(width: 8),
                               Text(
                                 categoryCount != null
-                                    ? '$categoryCount / $totalIssuesCount ${totalIssuesCount == 1 ? 'issue' : 'issues'}'
-                                    : '$totalIssuesCount ${totalIssuesCount == 1 ? 'issue' : 'issues'}',
+                                    ? '$categoryCount / ${totalIssuesCount ?? '…'} ${totalIssuesCount == 1 ? 'issue' : 'issues'}'
+                                    : '${totalIssuesCount ?? '…'} ${totalIssuesCount == 1 ? 'issue' : 'issues'}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
-                          if (showProgressBar && totalIssuesCount > 0)
+                          if (showProgressBar &&
+                              totalIssuesCount != null &&
+                              totalIssuesCount > 0)
                             _SeriesProgressBar(
                               seriesId: series.id,
                               total: totalIssuesCount,
@@ -181,9 +195,13 @@ class SeriesListTile extends ConsumerWidget {
                             children: [
                               if (isSubscribed)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Row(
@@ -192,16 +210,23 @@ class SeriesListTile extends ConsumerWidget {
                                       Icon(
                                         Icons.notifications_active,
                                         size: 12,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'SUBSCRIBED',
-                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 10,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 10,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -222,10 +247,10 @@ class SeriesListTile extends ConsumerWidget {
                               ],
                               if (isFavorite) ...[
                                 const SizedBox(width: 8),
-                                const Icon(
+                                Icon(
                                   Icons.favorite,
                                   size: 16,
-                                  color: Colors.red,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ],
                               if (role != null) ...[
@@ -275,9 +300,9 @@ class _SeriesProgressBar extends ConsumerWidget {
                 child: LinearProgressIndicator(
                   value: percent,
                   minHeight: 6,
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                 ),
               ),
             ),
@@ -285,8 +310,8 @@ class _SeriesProgressBar extends ConsumerWidget {
             Text(
               '$count/$total',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -311,9 +336,9 @@ class _SeriesProgressBar extends ConsumerWidget {
                   child: LinearProgressIndicator(
                     value: percent,
                     minHeight: 6,
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
@@ -321,8 +346,8 @@ class _SeriesProgressBar extends ConsumerWidget {
               Text(
                 '$owned/$total',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/home/main_screen.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
@@ -15,6 +15,7 @@ import 'package:takion/src/presentation/features/releases/providers/weekly_relea
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 @RoutePage()
@@ -138,6 +139,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               imageUrl: issue.image,
               title: '${issue.series?.name ?? issue.name} #${issue.number}',
               seriesId: issue.series?.id,
+              seriesName: issue.series?.name,
+              issueNumber: issue.number,
               isCollected: collectionStatus?.isCollected ?? false,
               isWishlisted: collectionStatus?.isWishlisted ?? false,
               isRead: collectionStatus?.isRead ?? false,
@@ -184,9 +187,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 8),
         issuesAsync.when(
           data: buildSectionContent,
-          loading: () => const SizedBox(
+          loading: () => SizedBox(
             height: 250,
-            child: Center(child: CircularProgressIndicator()),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: 5,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (_, _) =>
+                  const ShimmerWidget(child: IssueCardSkeleton()),
+            ),
           ),
           error: (_, _) => const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
@@ -315,6 +325,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     sheetTitle:
                                         '${series?.name ?? issue.name} #${issue.number}',
                                     seriesId: series?.id,
+                                    seriesName: series?.name,
+                                    issueNumber: issue.number,
+                                    imageUrl: issue.image,
                                     releaseDate:
                                         issue.storeDate ?? issue.coverDate,
                                   ),
@@ -645,6 +658,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             title:
                                 '${issue.series?.name ?? 'Issue'} #${issue.number}',
                             seriesId: issue.series?.id,
+                            seriesName: issue.series?.name,
+                            issueNumber: issue.number,
                             isCollected: collectionStatus?.isCollected ?? false,
                             isWishlisted:
                                 collectionStatus?.isWishlisted ?? false,
@@ -688,54 +703,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         scrollDirection: Axis.horizontal,
                         itemCount: 3,
                         separatorBuilder: (_, _) => SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          return SizedBox(
-                            width: 120,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Card(
-                                  clipBehavior: Clip.antiAlias,
-                                  child: AspectRatio(
-                                    aspectRatio: 2 / 3,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.surfaceContainer,
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.surfaceContainerHigh,
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  width: 110,
-                                  height: 12,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest,
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  width: 82,
-                                  height: 12,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        itemBuilder: (_, _) =>
+                            const ShimmerWidget(child: IssueCardSkeleton()),
                       ),
                     ),
                     const SizedBox(height: 20),

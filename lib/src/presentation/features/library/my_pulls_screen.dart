@@ -1,14 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
-import 'package:takion/src/presentation/components/components.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 @RoutePage()
 class MyPullsScreen extends ConsumerWidget {
@@ -67,8 +66,6 @@ class MyPullsScreen extends ConsumerWidget {
         );
         affected++;
       }
-
-      invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
       TakionAlerts.success(context, '$affected Added to Collection');
@@ -136,8 +133,6 @@ class MyPullsScreen extends ConsumerWidget {
         );
         affected++;
       }
-
-      invalidateLibraryCollectionProvidersForWidget(ref);
 
       if (!context.mounted) return;
       TakionAlerts.success(context, '$affected Marked as Read');

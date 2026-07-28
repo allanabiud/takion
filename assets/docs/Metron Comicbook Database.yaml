@@ -1,0 +1,3324 @@
+openapi: 3.0.3
+info:
+  title: Metron Comicbook Database
+  version: 1.0.0
+  description: API to retrieve comic book data
+  contact:
+    name: API Support
+    email: admin@metron.cloud
+  license:
+    name: Creative Commons License
+    url: https://creativecommons.org/licenses/by-sa/4.0/
+paths:
+  /api/arc/:
+    get:
+      operationId: api_arc_list
+      description: |-
+        list:
+        Returns a list of all the story arcs.
+
+        retrieve:
+        Returns the information of an individual story arc.
+      parameters:
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedArcListList'
+          description: ''
+  /api/arc/{id}/:
+    get:
+      operationId: api_arc_retrieve
+      description: |-
+        list:
+        Returns a list of all the story arcs.
+
+        retrieve:
+        Returns the information of an individual story arc.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arc.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Arc'
+          description: ''
+  /api/arc/{id}/issue_list/:
+    get:
+      operationId: api_arc_issue_list_list
+      description: |-
+        list:
+        Returns a list of all the story arcs.
+
+        retrieve:
+        Returns the information of an individual story arc.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this arc.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIssueListList'
+          description: ''
+  /api/character/:
+    get:
+      operationId: api_character_list
+      description: |-
+        list:
+        Return a list of all the characters.
+
+        retrieve:
+        Returns the information of an individual character.
+      parameters:
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCharacterListList'
+          description: ''
+  /api/character/{id}/:
+    get:
+      operationId: api_character_retrieve
+      description: |-
+        list:
+        Return a list of all the characters.
+
+        retrieve:
+        Returns the information of an individual character.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this character.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterRead'
+          description: ''
+  /api/character/{id}/issue_list/:
+    get:
+      operationId: api_character_issue_list_list
+      description: |-
+        list:
+        Return a list of all the characters.
+
+        retrieve:
+        Returns the information of an individual character.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this character.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIssueListList'
+          description: ''
+  /api/creator/:
+    get:
+      operationId: api_creator_list
+      description: |-
+        list:
+        Return a list of all the creators.
+
+        retrieve:
+        Returns the information of an individual creator.
+      parameters:
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCreatorListList'
+          description: ''
+  /api/creator/{id}/:
+    get:
+      operationId: api_creator_retrieve
+      description: |-
+        list:
+        Return a list of all the creators.
+
+        retrieve:
+        Returns the information of an individual creator.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this creator.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Creator'
+          description: ''
+  /api/imprint/:
+    get:
+      operationId: api_imprint_list
+      description: |-
+        list:
+        Returns a list of all imprints.
+
+        retrieve:
+        Returns the information of an individual imprint.
+
+        create:
+        Add a new imprint.
+
+        update:
+        Update an imprint's information.
+      parameters:
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedImprintListList'
+          description: ''
+  /api/imprint/{id}/:
+    get:
+      operationId: api_imprint_retrieve
+      description: |-
+        list:
+        Returns a list of all imprints.
+
+        retrieve:
+        Returns the information of an individual imprint.
+
+        create:
+        Add a new imprint.
+
+        update:
+        Update an imprint's information.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this imprint.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImprintRead'
+          description: ''
+  /api/issue/:
+    get:
+      operationId: api_issue_list
+      description: |-
+        list:
+        Return a list of all the issues.
+
+        retrieve:
+        Returns the information of an individual issue.
+
+        Note: cover_hash is a Perceptual hashing created with
+        ImageHash. https://github.com/JohannesBuchner/imagehash
+      parameters:
+      - in: query
+        name: alt_number
+        schema:
+          type: string
+        description: Alternate Number
+      - in: query
+        name: character_id
+        schema:
+          type: integer
+        description: Character Metron ID
+      - in: query
+        name: cover_hash
+        schema:
+          type: string
+        description: Cover Hash
+      - in: query
+        name: cover_month
+        schema:
+          type: number
+        description: Cover Month
+      - in: query
+        name: cover_year
+        schema:
+          type: number
+        description: Cover Year
+      - in: query
+        name: creator_id
+        schema:
+          type: integer
+        description: Creator Metron ID
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: foc_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: foc_date_range_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: foc_date_range_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: imprint_id
+        schema:
+          type: integer
+        description: Imprint Metron ID
+      - in: query
+        name: imprint_name
+        schema:
+          type: string
+        description: Imprint Name
+      - in: query
+        name: missing_cv_id
+        schema:
+          type: boolean
+      - in: query
+        name: missing_gcd_id
+        schema:
+          type: boolean
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: number
+        schema:
+          type: string
+        description: Issue Number
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: publisher_id
+        schema:
+          type: integer
+        description: Publisher Metron ID
+      - in: query
+        name: publisher_name
+        schema:
+          type: string
+        description: Publisher Name
+      - in: query
+        name: rating
+        schema:
+          type: string
+        description: Rating
+      - in: query
+        name: role_id
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: series_id
+        schema:
+          type: integer
+        description: Series Metron ID
+      - in: query
+        name: series_name
+        schema:
+          type: string
+        description: Series Name
+      - in: query
+        name: series_volume
+        schema:
+          type: integer
+        description: Series Volume Number
+      - in: query
+        name: series_year_began
+        schema:
+          type: integer
+        description: Series Beginning Year
+      - in: query
+        name: sku
+        schema:
+          type: string
+        description: Distributor SKU
+      - in: query
+        name: store_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: store_date_range_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: store_date_range_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: team_id
+        schema:
+          type: integer
+        description: Team Metron ID
+      - in: query
+        name: universe_id
+        schema:
+          type: integer
+        description: Universe Metron ID
+      - in: query
+        name: upc
+        schema:
+          type: string
+        description: UPC Code
+      - in: query
+        name: upc_starts_with
+        schema:
+          type: string
+        description: UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile
+          scanner that strips the 5-digit EAN supplemental)
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIssueListList'
+          description: ''
+  /api/issue/{id}/:
+    get:
+      operationId: api_issue_retrieve
+      description: |-
+        list:
+        Return a list of all the issues.
+
+        retrieve:
+        Returns the information of an individual issue.
+
+        Note: cover_hash is a Perceptual hashing created with
+        ImageHash. https://github.com/JohannesBuchner/imagehash
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this issue.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueRead'
+          description: ''
+  /api/publisher/:
+    get:
+      operationId: api_publisher_list
+      description: |-
+        list:
+        Returns a list of all publishers.
+
+        retrieve:
+        Returns the information of an individual publisher.
+
+        create:
+        Add a new publisher.
+
+        update:
+        Update a publisher's information.
+      parameters:
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPublisherListList'
+          description: ''
+  /api/publisher/{id}/:
+    get:
+      operationId: api_publisher_retrieve
+      description: |-
+        list:
+        Returns a list of all publishers.
+
+        retrieve:
+        Returns the information of an individual publisher.
+
+        create:
+        Add a new publisher.
+
+        update:
+        Update a publisher's information.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this publisher.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+          description: ''
+  /api/publisher/{id}/series_list/:
+    get:
+      operationId: api_publisher_series_list_list
+      description: Returns a list of series for a publisher.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this publisher.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSeriesListList'
+          description: ''
+  /api/reading_list/:
+    get:
+      operationId: api_reading_list_list
+      description: |-
+        list:
+        Returns a list of reading lists based on user permissions.
+        Requires authentication.
+        - Authenticated users: Public lists + own lists
+        - Admin users: Public lists + own lists + Metron's lists
+
+        retrieve:
+        Returns the information of an individual reading list.
+        Requires authentication.
+      parameters:
+      - in: query
+        name: attribution_source
+        schema:
+          type: string
+          enum:
+          - CBH
+          - CBRO
+          - CBT
+          - CMRO
+          - HTLC
+          - LOCG
+          - MG
+          - OTHER
+        description: |-
+          Source where this reading list information was obtained
+
+          * `CBRO` - Comic Book Reading Orders
+          * `CMRO` - Complete Marvel Reading Orders
+          * `CBH` - Comic Book Herald
+          * `CBT` - Comic Book Treasury
+          * `MG` - Marvel Guides
+          * `HTLC` - How To Love Comics
+          * `LOCG` - League of ComicGeeks
+          * `OTHER` - Other
+      - in: query
+        name: average_rating__gte
+        schema:
+          type: number
+        description: Minimum Rating
+      - in: query
+        name: is_private
+        schema:
+          type: boolean
+      - in: query
+        name: list_type
+        schema:
+          type: string
+          enum:
+          - CHARACTERS
+          - CREATOR
+          - EVENT
+          - MASTER
+          - STORY
+          - TEAMS
+        description: |-
+          The type of reading list
+
+          * `CREATOR` - Creator
+          * `EVENT` - Event
+          * `STORY` - Story
+          * `CHARACTERS` - Characters
+          * `TEAMS` - Teams
+          * `MASTER` - Master
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: publisher
+        schema:
+          type: string
+        description: Publisher
+      - in: query
+        name: user
+        schema:
+          type: integer
+      - in: query
+        name: username
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReadingListListList'
+          description: ''
+  /api/reading_list/{id}/:
+    get:
+      operationId: api_reading_list_retrieve
+      description: |-
+        list:
+        Returns a list of reading lists based on user permissions.
+        Requires authentication.
+        - Authenticated users: Public lists + own lists
+        - Admin users: Public lists + own lists + Metron's lists
+
+        retrieve:
+        Returns the information of an individual reading list.
+        Requires authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this reading list.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingListRead'
+          description: ''
+  /api/reading_list/{id}/items/:
+    get:
+      operationId: api_reading_list_items_list
+      description: Returns a paginated list of items for this reading list.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this reading list.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReadingListItemList'
+          description: ''
+  /api/role/:
+    get:
+      operationId: api_role_list
+      description: |-
+        list:
+        Returns a list of all the creator roles.
+      parameters:
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRoleList'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/series/:
+    get:
+      operationId: api_series_list
+      description: |-
+        list:
+        Returns a list of all the comic series.
+
+        retrieve:
+        Returns the information of an individual comic series.
+
+        create:
+        Add a new Series.
+
+        update:
+        Update a Series information.
+      parameters:
+      - in: query
+        name: character_id
+        schema:
+          type: integer
+        description: Character Metron ID
+      - in: query
+        name: creator_id
+        schema:
+          type: integer
+        description: Creator Metron ID
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: imprint_id
+        schema:
+          type: integer
+        description: Imprint Metron ID
+      - in: query
+        name: imprint_name
+        schema:
+          type: string
+      - in: query
+        name: missing_cv_id
+        schema:
+          type: boolean
+      - in: query
+        name: missing_gcd_id
+        schema:
+          type: boolean
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: publisher_id
+        schema:
+          type: integer
+      - in: query
+        name: publisher_name
+        schema:
+          type: string
+      - in: query
+        name: role_id
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: series_type
+        schema:
+          type: string
+      - in: query
+        name: series_type_id
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: integer
+      - in: query
+        name: team_id
+        schema:
+          type: integer
+        description: Team Metron ID
+      - in: query
+        name: universe_id
+        schema:
+          type: integer
+        description: Universe Metron ID
+      - in: query
+        name: volume
+        schema:
+          type: integer
+      - in: query
+        name: year_began
+        schema:
+          type: integer
+      - in: query
+        name: year_end
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSeriesListList'
+          description: ''
+  /api/series/{id}/:
+    get:
+      operationId: api_series_retrieve
+      description: |-
+        list:
+        Returns a list of all the comic series.
+
+        retrieve:
+        Returns the information of an individual comic series.
+
+        create:
+        Add a new Series.
+
+        update:
+        Update a Series information.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this series.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesRead'
+          description: ''
+  /api/series/{id}/issue_list/:
+    get:
+      operationId: api_series_issue_list_list
+      description: |-
+        list:
+        Returns a list of all the comic series.
+
+        retrieve:
+        Returns the information of an individual comic series.
+
+        create:
+        Add a new Series.
+
+        update:
+        Update a Series information.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this series.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIssueListList'
+          description: ''
+  /api/series_type/:
+    get:
+      operationId: api_series_type_list
+      description: |-
+        list:
+        Returns a list of the Series Types available.
+      parameters:
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSeriesTypeList'
+          description: ''
+  /api/team/:
+    get:
+      operationId: api_team_list
+      description: |-
+        list:
+        Return a list of all the teams.
+
+        retrieve:
+        Returns the information of an individual team.
+      parameters:
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeamListList'
+          description: ''
+  /api/team/{id}/:
+    get:
+      operationId: api_team_retrieve
+      description: |-
+        list:
+        Return a list of all the teams.
+
+        retrieve:
+        Returns the information of an individual team.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamRead'
+          description: ''
+  /api/team/{id}/issue_list/:
+    get:
+      operationId: api_team_issue_list_list
+      description: |-
+        list:
+        Return a list of all the teams.
+
+        retrieve:
+        Returns the information of an individual team.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIssueListList'
+          description: ''
+  /api/universe/:
+    get:
+      operationId: api_universe_list
+      description: |-
+        list:
+        Return a list of all the universes.
+
+        retrieve:
+        Returns the information of an individual universe.
+      parameters:
+      - in: query
+        name: designation
+        schema:
+          type: string
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - in: query
+        name: name
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUniverseListList'
+          description: ''
+  /api/universe/{id}/:
+    get:
+      operationId: api_universe_retrieve
+      description: |-
+        list:
+        Return a list of all the universes.
+
+        retrieve:
+        Returns the information of an individual universe.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this universe.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UniverseRead'
+          description: ''
+components:
+  schemas:
+    Arc:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+      - resource_url
+    ArcList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    AssociatedSeries:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          type: string
+      required:
+      - id
+      - series
+    AttributionSourceEnum:
+      enum:
+      - CBRO
+      - CMRO
+      - CBH
+      - CBT
+      - MG
+      - HTLC
+      - LOCG
+      - OTHER
+      type: string
+      description: |-
+        * `CBRO` - Comic Book Reading Orders
+        * `CMRO` - Complete Marvel Reading Orders
+        * `CBH` - Comic Book Herald
+        * `CBT` - Comic Book Treasury
+        * `MG` - Marvel Guides
+        * `HTLC` - How To Love Comics
+        * `LOCG` - League of ComicGeeks
+        * `OTHER` - Other
+    BasicImprint:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    BasicPublisher:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    BlankEnum:
+      enum:
+      - ''
+    CharacterList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    CharacterRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        alias:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+        creators:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreatorList'
+          readOnly: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamList'
+          readOnly: true
+        universes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UniverseList'
+          readOnly: true
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - creators
+      - id
+      - modified
+      - name
+      - resource_url
+      - teams
+      - universes
+    CreatorList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    CreditRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        creator:
+          type: string
+          readOnly: true
+        role:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+      required:
+      - creator
+      - id
+      - role
+    CurrencyEnum:
+      enum:
+      - USD
+      - GBP
+      type: string
+      description: |-
+        * `USD` - USD
+        * `GBP` - GBP
+    DesiredGradeEnum:
+      enum:
+      - 10.0
+      - 9.9
+      - 9.8
+      - 9.6
+      - 9.4
+      - 9.2
+      - 9.0
+      - 8.5
+      - 8.0
+      - 7.5
+      - 7.0
+      - 6.5
+      - 6.0
+      - 5.5
+      - 5.0
+      - 4.5
+      - 4.0
+      - 3.5
+      - 3.0
+      - 2.5
+      - 2.0
+      - 1.8
+      - 1.5
+      - 1.0
+      - 0.5
+      type: number
+      description: |-
+        * `10.0` - 10.0 (Gem Mint)
+        * `9.9` - 9.9 (Mint)
+        * `9.8` - 9.8 (NM/M - Near Mint/Mint)
+        * `9.6` - 9.6 (NM+ - Near Mint+)
+        * `9.4` - 9.4 (NM - Near Mint)
+        * `9.2` - 9.2 (NM- - Near Mint-)
+        * `9.0` - 9.0 (VF/NM - Very Fine/Near Mint)
+        * `8.5` - 8.5 (VF+ - Very Fine+)
+        * `8.0` - 8.0 (VF - Very Fine)
+        * `7.5` - 7.5 (VF- - Very Fine-)
+        * `7.0` - 7.0 (FN/VF - Fine/Very Fine)
+        * `6.5` - 6.5 (FN+ - Fine+)
+        * `6.0` - 6.0 (FN - Fine)
+        * `5.5` - 5.5 (FN- - Fine-)
+        * `5.0` - 5.0 (VG/FN - Very Good/Fine)
+        * `4.5` - 4.5 (VG+ - Very Good+)
+        * `4.0` - 4.0 (VG - Very Good)
+        * `3.5` - 3.5 (VG- - Very Good-)
+        * `3.0` - 3.0 (GD/VG - Good/Very Good)
+        * `2.5` - 2.5 (GD+ - Good+)
+        * `2.0` - 2.0 (GD - Good)
+        * `1.8` - 1.8 (GD- - Good-)
+        * `1.5` - 1.5 (FR/GD - Fair/Good)
+        * `1.0` - 1.0 (FR - Fair)
+        * `0.5` - 0.5 (PR - Poor)
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 25
+      required:
+      - id
+      - name
+    ImprintList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    ImprintRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        founded:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Year Founded
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Logo
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        publisher:
+          allOf:
+          - $ref: '#/components/schemas/BasicPublisher'
+          readOnly: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+      - publisher
+      - resource_url
+    IssueList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/IssueListSeries'
+          readOnly: true
+        number:
+          type: string
+          maxLength: 25
+        issue:
+          type: string
+        cover_date:
+          type: string
+          format: date
+        store_date:
+          type: string
+          format: date
+          nullable: true
+          title: In Store Date
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Cover
+        cover_hash:
+          type: string
+          maxLength: 16
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cover_date
+      - id
+      - issue
+      - modified
+      - number
+      - series
+    IssueListSeries:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        volume:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Volume Number
+        year_began:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - id
+      - name
+      - volume
+      - year_began
+    IssueRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        publisher:
+          allOf:
+          - $ref: '#/components/schemas/BasicPublisher'
+          readOnly: true
+        imprint:
+          allOf:
+          - $ref: '#/components/schemas/BasicImprint'
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/IssueSeries'
+          readOnly: true
+        number:
+          type: string
+          maxLength: 25
+        alt_number:
+          type: string
+          title: Alternative Number
+          maxLength: 25
+        title:
+          type: string
+          title: Collection Title
+          maxLength: 255
+        name:
+          type: array
+          items:
+            type: string
+            title: Story Title
+            maxLength: 150
+        cover_date:
+          type: string
+          format: date
+        store_date:
+          type: string
+          format: date
+          nullable: true
+          title: In Store Date
+        foc_date:
+          type: string
+          format: date
+          nullable: true
+          title: Final Order Cutoff Date
+        price:
+          oneOf:
+          - type: string
+            format: decimal
+            pattern: ^\d+\.\d{2}$
+            example: '3.99'
+            description: Decimal string — defaults to USD (e.g. '3.99').
+          - type: object
+            properties:
+              amount:
+                type: number
+                example: 3.99
+              currency:
+                type: string
+                enum:
+                - USD
+                - GBP
+                example: GBP
+            required:
+            - amount
+            - currency
+            description: Object format for non-USD prices (e.g. GBP for UK publishers).
+          description: 'Cover price. For reads, returns the amount as a decimal string;
+            see price_currency for the currency. For writes, pass a plain decimal
+            string (defaults to USD) or {"amount": 3.99, "currency": "GBP"} for UK
+            publishers. Supported currencies: USD, GBP.'
+          nullable: true
+          readOnly: true
+        price_currency:
+          type: string
+          description: Return the currency code for the price field.
+          readOnly: true
+        rating:
+          allOf:
+          - $ref: '#/components/schemas/Rating'
+          readOnly: true
+        sku:
+          type: string
+          title: Distributor SKU
+          maxLength: 12
+        isbn:
+          type: string
+          maxLength: 13
+        upc:
+          type: string
+          title: UPC Code
+          maxLength: 20
+        page:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Page Count
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Cover
+        cover_hash:
+          type: string
+          maxLength: 16
+        average_rating:
+          type: number
+          format: double
+          maximum: 10
+          minimum: -10
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+        rating_count:
+          type: integer
+          readOnly: true
+        arcs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArcList'
+          readOnly: true
+        credits:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditRead'
+          readOnly: true
+        characters:
+          type: array
+          items:
+            $ref: '#/components/schemas/CharacterList'
+          readOnly: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamList'
+          readOnly: true
+        universes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UniverseList'
+          readOnly: true
+        reprints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reprint'
+          readOnly: true
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariantsIssue'
+          readOnly: true
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - arcs
+      - average_rating
+      - characters
+      - cover_date
+      - credits
+      - id
+      - imprint
+      - modified
+      - number
+      - price
+      - price_currency
+      - publisher
+      - rating
+      - rating_count
+      - reprints
+      - resource_url
+      - series
+      - teams
+      - universes
+      - variants
+    IssueSeries:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        sort_name:
+          type: string
+          maxLength: 255
+        volume:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Volume Number
+        year_began:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        series_type:
+          allOf:
+          - $ref: '#/components/schemas/SeriesType'
+          readOnly: true
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/Genre'
+          readOnly: true
+      required:
+      - genres
+      - id
+      - name
+      - series_type
+      - sort_name
+      - volume
+      - year_began
+    MissingIssue:
+      type: object
+      description: Serializer for missing issues in a series.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/IssueListSeries'
+          readOnly: true
+        number:
+          type: string
+          maxLength: 25
+        cover_date:
+          type: string
+          format: date
+        store_date:
+          type: string
+          format: date
+          nullable: true
+          title: In Store Date
+      required:
+      - cover_date
+      - id
+      - number
+      - series
+    MissingSeries:
+      type: object
+      description: Serializer for series with missing issues.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        sort_name:
+          type: string
+          maxLength: 255
+        year_began:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        year_end:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Year Ended
+        publisher:
+          allOf:
+          - $ref: '#/components/schemas/BasicPublisher'
+          readOnly: true
+        series_type:
+          allOf:
+          - $ref: '#/components/schemas/SeriesType'
+          readOnly: true
+        total_issues:
+          type: integer
+          readOnly: true
+        owned_issues:
+          type: integer
+          readOnly: true
+        missing_count:
+          type: integer
+          readOnly: true
+        completion_percentage:
+          type: number
+          format: double
+          description: Calculate completion percentage.
+          readOnly: true
+      required:
+      - completion_percentage
+      - id
+      - missing_count
+      - name
+      - owned_issues
+      - publisher
+      - series_type
+      - sort_name
+      - total_issues
+      - year_began
+    NullEnum:
+      enum:
+      - null
+    PaginatedArcListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArcList'
+    PaginatedCharacterListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CharacterList'
+    PaginatedCreatorListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreatorList'
+    PaginatedImprintListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImprintList'
+    PaginatedIssueListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueList'
+    PaginatedMissingIssueList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MissingIssue'
+    PaginatedMissingSeriesList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MissingSeries'
+    PaginatedPublisherListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublisherList'
+    PaginatedReadingListItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadingListItem'
+    PaginatedReadingListListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadingListList'
+    PaginatedRoleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    PaginatedSeriesListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriesList'
+    PaginatedSeriesTypeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriesType'
+    PaginatedTeamListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamList'
+    PaginatedUniverseListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UniverseList'
+    PriorityEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      type: integer
+      description: |-
+        * `1` - 1
+        * `2` - 2
+        * `3` - 3
+        * `4` - 4
+        * `5` - 5
+    Publisher:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        founded:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Year Founded
+        country:
+          $ref: '#/components/schemas/CountryEnum'
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Logo
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+      - resource_url
+    PublisherList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    Rating:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    RatingEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      type: integer
+      description: |-
+        * `1` - 1
+        * `2` - 2
+        * `3` - 3
+        * `4` - 4
+        * `5` - 5
+    ReadDate:
+      type: object
+      description: Serializer for read dates.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        read_date:
+          type: string
+          format: date-time
+          description: Date and time when the issue was read
+        created_on:
+          type: string
+          format: date-time
+      required:
+      - created_on
+      - id
+      - read_date
+    ReadingListIssue:
+      type: object
+      description: Serializer for issues in reading lists (without image and cover_hash).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/IssueListSeries'
+          readOnly: true
+        number:
+          type: string
+          maxLength: 25
+        cover_date:
+          type: string
+          format: date
+        store_date:
+          type: string
+          format: date
+          nullable: true
+          title: In Store Date
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cover_date
+      - id
+      - modified
+      - number
+      - series
+    ReadingListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        issue:
+          allOf:
+          - $ref: '#/components/schemas/ReadingListIssue'
+          readOnly: true
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Position of this issue in the reading list
+        issue_type:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - issue
+      - issue_type
+    ReadingListList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        list_type:
+          type: string
+          readOnly: true
+        is_private:
+          type: boolean
+          description: Whether this list is private (only visible to the owner)
+        attribution_source:
+          description: |-
+            Source where this reading list information was obtained
+
+            * `CBRO` - Comic Book Reading Orders
+            * `CMRO` - Complete Marvel Reading Orders
+            * `CBH` - Comic Book Herald
+            * `CBT` - Comic Book Treasury
+            * `MG` - Marvel Guides
+            * `HTLC` - How To Love Comics
+            * `LOCG` - League of ComicGeeks
+            * `OTHER` - Other
+          oneOf:
+          - $ref: '#/components/schemas/AttributionSourceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        average_rating:
+          type: number
+          format: double
+          readOnly: true
+        rating_count:
+          type: integer
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - attribution_source
+      - average_rating
+      - id
+      - list_type
+      - modified
+      - name
+      - rating_count
+      - slug
+      - user
+    ReadingListNav:
+      type: object
+      description: Minimal representation of a reading list used for previous/next
+        links.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    ReadingListRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+        list_type:
+          type: string
+          readOnly: true
+        is_private:
+          type: boolean
+          description: Whether this list is private (only visible to the owner)
+        attribution_source:
+          type: string
+          readOnly: true
+        attribution_url:
+          description: URL of the specific page where this reading list was obtained
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        previous:
+          allOf:
+          - $ref: '#/components/schemas/ReadingListNav'
+          readOnly: true
+        next:
+          allOf:
+          - $ref: '#/components/schemas/ReadingListNav'
+          readOnly: true
+        average_rating:
+          type: number
+          format: double
+          readOnly: true
+        rating_count:
+          type: integer
+          readOnly: true
+        items_url:
+          type: string
+          description: Get the URL to the paginated items endpoint.
+          readOnly: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - attribution_source
+      - average_rating
+      - id
+      - image
+      - items_url
+      - list_type
+      - modified
+      - name
+      - next
+      - previous
+      - rating_count
+      - resource_url
+      - slug
+      - user
+    Reprint:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        issue:
+          type: string
+      required:
+      - id
+      - issue
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 25
+      required:
+      - id
+      - name
+    SeriesList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          type: string
+        year_began:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        year_end:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Year Ended
+        volume:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Volume Number
+        issue_count:
+          type: integer
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - issue_count
+      - modified
+      - series
+      - volume
+      - year_began
+    SeriesRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        sort_name:
+          type: string
+          maxLength: 255
+        volume:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Volume Number
+        series_type:
+          allOf:
+          - $ref: '#/components/schemas/SeriesType'
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        publisher:
+          allOf:
+          - $ref: '#/components/schemas/BasicPublisher'
+          readOnly: true
+        imprint:
+          allOf:
+          - $ref: '#/components/schemas/BasicImprint'
+          readOnly: true
+        year_began:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        year_end:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Year Ended
+        desc:
+          type: string
+          title: Description
+        issue_count:
+          type: integer
+          readOnly: true
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/Genre'
+          readOnly: true
+        associated:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociatedSeries'
+          readOnly: true
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - associated
+      - genres
+      - id
+      - imprint
+      - issue_count
+      - modified
+      - name
+      - publisher
+      - resource_url
+      - series_type
+      - sort_name
+      - status
+      - volume
+      - year_began
+    SeriesType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    TeamList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    TeamRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+        creators:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreatorList'
+          readOnly: true
+        universes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UniverseList'
+          readOnly: true
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - creators
+      - id
+      - modified
+      - name
+      - resource_url
+      - universes
+    UniverseList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    UniverseRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        publisher:
+          allOf:
+          - $ref: '#/components/schemas/BasicPublisher'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        designation:
+          type: string
+          maxLength: 255
+        desc:
+          type: string
+          title: Description
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - designation
+      - id
+      - modified
+      - name
+      - publisher
+      - resource_url
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - id
+      - username
+    VariantsIssue:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        price:
+          oneOf:
+          - type: string
+            format: decimal
+            pattern: ^\d+\.\d{2}$
+            example: '3.99'
+            description: Decimal string — defaults to USD (e.g. '3.99').
+          - type: object
+            properties:
+              amount:
+                type: number
+                example: 3.99
+              currency:
+                type: string
+                enum:
+                - USD
+                - GBP
+                example: GBP
+            required:
+            - amount
+            - currency
+            description: Object format for non-USD prices (e.g. GBP for UK publishers).
+          description: 'Cover price. For reads, returns the amount as a decimal string;
+            see price_currency for the currency. For writes, pass a plain decimal
+            string (defaults to USD) or {"amount": 3.99, "currency": "GBP"} for UK
+            publishers. Supported currencies: USD, GBP.'
+          nullable: true
+          readOnly: true
+        sku:
+          type: string
+          title: Distributor SKU
+          maxLength: 12
+        upc:
+          type: string
+          title: UPC Code
+          maxLength: 20
+        image:
+          type: string
+          format: uri
+          title: Variant Cover
+      required:
+      - image
+      - price
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

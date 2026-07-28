@@ -8,21 +8,18 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
 import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/notifications/notification_settings_provider.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/data/services/drive_backup_service.dart';
+import 'package:takion/src/data/common/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart'
-    show
-        AuthorizeMetronRoute,
-        MyPullsRoute;
+    show AuthorizeMetronRoute, MyPullsRoute;
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/logic/shortcut_handler.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/utils/shortcut_handler.dart';
 
 class TakionApp extends ConsumerStatefulWidget {
   const TakionApp({super.key});
@@ -31,10 +28,12 @@ class TakionApp extends ConsumerStatefulWidget {
   ConsumerState<TakionApp> createState() => _TakionAppState();
 }
 
-class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserver {
+class _TakionAppState extends ConsumerState<TakionApp>
+    with WidgetsBindingObserver {
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _metronCheckedForSession = false;
+  bool _hasSeenOnboarding = false;
 
   @override
   void initState() {
@@ -42,26 +41,34 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
     WidgetsBinding.instance.addObserver(this);
     _appRouter = AppRouter(AuthGuard(ref));
     _shortcutHandler.init();
-    final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
-    final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
     final navigator = _appRouter;
 
+    ref
+        .read(driftDatabaseProvider)
+        .settingsDao
+        .getBool('has_seen_onboarding')
+        .then((seen) {
+          if (!mounted) return;
+          setState(() => _hasSeenOnboarding = seen);
+        });
+
     _shortcutHandler.navigateNamed = (route) {
-      if (!hasSeen) return;
+      if (!_hasSeenOnboarding) return;
       navigator.push(route);
     };
 
     NotificationService.instance.onNavigateToMyPulls = () {
-      if (!hasSeen) return;
+      if (!_hasSeenOnboarding) return;
       navigator.push(const MyPullsRoute());
     };
+    NotificationService.instance.checkPendingNotificationLaunch();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       _runMetronConnectionCheckIfNeeded();
-      _reconcileSubscriptionPullsOnSessionStart();
+      await _reconcileSubscriptionPullsOnSessionStart();
       _runDriveAutoSyncIfEnabled();
-      _scheduleWeeklyPullNotification();
+      await _scheduleWeeklyPullNotification();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -72,34 +79,46 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
   }
 
   void _maybeEnableShortcuts() {
-    final box = ref.read(hiveServiceProvider).getBoxIfOpen('settings_box');
-    final hasSeen = box?.get('has_seen_onboarding', defaultValue: false) == true;
-    if (hasSeen) {
-      ShortcutHandler.enableShortcuts();
-    }
+    ref
+        .read(driftDatabaseProvider)
+        .settingsDao
+        .getBool('has_seen_onboarding')
+        .then((seen) {
+          if (seen) {
+            ShortcutHandler.enableShortcuts();
+          }
+        });
   }
 
   Future<void> _reconcileSubscriptionPullsOnSessionStart() async {
     final authState = ref.read(authStateProvider).value;
     if (authState != AuthStatus.authenticated) return;
 
+    final service = ref.read(metronAccountServiceProvider);
+    if (!await service.getConnection()) return;
+
     try {
       await ref.read(subscriptionPullReconcilerProvider).reconcile();
     } catch (error) {
       if (!mounted) return;
-      TakionAlerts.safeError(context, error, userMessage: 'Background pull reconciliation failed');
+      TakionAlerts.safeError(
+        context,
+        error,
+        userMessage: 'Background pull reconciliation failed',
+      );
     }
   }
 
   Future<void> _runDriveAutoSyncIfEnabled() async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    final syncNotifier = ref.read(driveSyncProvider.notifier);
+    await syncNotifier.ensureInitialized();
     final syncState = ref.read(driveSyncProvider);
     if (!syncState.enabled) {
       AppLogger.info('Drive auto sync skipped: disabled');
       return;
     }
-    final driveService = ref.read(driveBackupServiceProvider);
-    final syncNotifier = ref.read(driveSyncProvider.notifier);
-    final container = ProviderScope.containerOf(context, listen: false);
+    final driveService = ref.read(driveSyncServiceProvider);
     final account = await driveService.signInSilently();
     if (account == null) {
       AppLogger.info('Drive auto sync skipped: no account');
@@ -108,12 +127,9 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
     AppLogger.info('Drive auto sync triggered');
     syncNotifier.setSyncing(true);
     try {
-      await driveService.uploadBackup(
-        lastSyncTime: syncState.lastSync,
-      );
+      await driveService.triggerSync();
       await syncNotifier.updateLastSync();
-      invalidateCacheBackedProviders((p) => container.invalidate(p));
-      await Future<void>.delayed(Duration.zero);
+      invalidateCacheBackedProvidersBatched((p) => container.invalidate(p));
       AppLogger.info('Drive auto sync completed');
     } catch (e) {
       AppLogger.warning('Background sync failed', error: e);
@@ -123,18 +139,7 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
   }
 
   Future<void> _scheduleWeeklyPullNotification() async {
-    final enabled = ref.read(notificationsEnabledProvider).value ?? false;
-    if (!enabled) {
-      await NotificationService.instance.cancel();
-      return;
-    }
-    final day = ref.read(notificationDayProvider).value ?? NotificationDay.wednesday;
-    final count = ref.read(currentWeekPullsCountProvider);
-    if (count > 0) {
-      await NotificationService.instance.scheduleWeekly(count, day);
-    } else {
-      await NotificationService.instance.cancel();
-    }
+    await scheduleWeeklyPullNotification(ref);
   }
 
   Future<void> _runMetronConnectionCheckIfNeeded() async {
@@ -147,18 +152,21 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
     final service = ref.read(metronAccountServiceProvider);
     final hasStoredConnection = await service.getConnection();
 
-    if (!mounted || hasStoredConnection == null) {
+    if (!mounted || !hasStoredConnection) {
       return;
     }
 
-    AppLogger.info('Metron session check: stored connection found for ${hasStoredConnection.username}');
+    AppLogger.info('Metron session check: stored connection found');
     final status = await service.validateStoredConnection();
 
     if (!mounted) return;
 
     if (status == MetronConnectionStatus.invalid) {
-      AppLogger.warning('Metron session check: invalid credentials for ${hasStoredConnection.username}, disconnecting');
+      AppLogger.warning(
+        'Metron session check: invalid credentials, disconnecting',
+      );
       await service.disconnect();
+      ref.invalidate(authStateProvider);
       if (!mounted) return;
 
       TakionAlerts.error(
@@ -167,7 +175,7 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
       );
       _appRouter.replaceAll([const AuthorizeMetronRoute()]);
     } else {
-      AppLogger.info('Metron session check: status=$status for ${hasStoredConnection.username}');
+      AppLogger.info('Metron session check: status=$status');
     }
   }
 
@@ -179,6 +187,14 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
     final isOffline =
         connectivityState.asData?.value == AppConnectivityStatus.offline;
 
+    if (_hasSeenOnboarding) {
+      ref.listen(currentWeekPullsProvider, (previous, next) {
+        if (next.hasValue && mounted) {
+          _scheduleWeeklyPullNotification();
+        }
+      });
+    }
+
     ref.listen(authStateProvider, (previous, next) {
       if (!next.isLoading && previous?.value != next.value) {
         _appRouter.reevaluateGuards();
@@ -187,9 +203,21 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
         if (current == AuthStatus.authenticated) {
           _metronCheckedForSession = false;
           _runMetronConnectionCheckIfNeeded();
-          _reconcileSubscriptionPullsOnSessionStart();
+          _reconcileSubscriptionPullsOnSessionStart().then(
+            (_) => _scheduleWeeklyPullNotification(),
+          );
         } else if (current == AuthStatus.unauthenticated) {
           _metronCheckedForSession = false;
+          if (previous?.value == AuthStatus.authenticated &&
+              _hasSeenOnboarding &&
+              mounted) {
+            AppLogger.warning(
+              'Session expired - redirecting to authorize screen',
+            );
+            Future.microtask(
+              () => _appRouter.replaceAll([const AuthorizeMetronRoute()]),
+            );
+          }
         }
       }
     });
@@ -199,7 +227,8 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
           themeMode: ThemeMode.system,
           darkIsTrueBlack: false,
         );
-    final accentScheme = ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
+    final accentScheme =
+        ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
     return MaterialApp.router(
       title: 'Takion',
       theme: AppThemes.light(accentScheme: accentScheme),
@@ -210,15 +239,11 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
       themeMode: themeSettings.themeMode,
       debugShowCheckedModeBanner: false,
       routerConfig: _appRouter.config(
-        navigatorObservers: () => [
-          TalkerRouteObserver(talker),
-        ],
+        navigatorObservers: () => [TalkerRouteObserver(talker)],
       ),
       builder: (context, child) {
         final bannerColor = Theme.of(context).colorScheme.errorContainer;
-        final bannerTextColor = Theme.of(
-          context,
-        ).colorScheme.onErrorContainer;
+        final bannerTextColor = Theme.of(context).colorScheme.onErrorContainer;
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value:
@@ -265,12 +290,7 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
                             key: const ValueKey('offline-banner'),
                             child: Container(
                               width: double.infinity,
-                              margin: const EdgeInsets.fromLTRB(
-                                12,
-                                8,
-                                12,
-                                0,
-                              ),
+                              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 8,
@@ -294,18 +314,14 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
                                       style: Theme.of(context)
                                           .textTheme
                                           .labelLarge
-                                          ?.copyWith(
-                                            color: bannerTextColor,
-                                          ),
+                                          ?.copyWith(color: bannerTextColor),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           )
-                        : const SizedBox.shrink(
-                            key: ValueKey('offline-none'),
-                          ),
+                        : const SizedBox.shrink(key: ValueKey('offline-none')),
                   ),
                 ),
               ),
@@ -319,6 +335,10 @@ class _TakionAppState extends ConsumerState<TakionApp> with WidgetsBindingObserv
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     AppLogger.debug('App lifecycle state: $state');
+    if (state == AppLifecycleState.resumed && mounted) {
+      _scheduleWeeklyPullNotification();
+      ref.read(driftDatabaseProvider).apiCacheDao.deleteStaleEntries();
+    }
   }
 
   @override

@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/reading_history_provider.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 enum HistoryFilter { day, week, month, year }
 
@@ -129,7 +129,14 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
                           id: issue?.id,
                           name: issue?.series?.name ?? 'Unknown',
                           number: issue?.number ?? '',
-                          series: null,
+                          series: issue?.series != null
+                              ? Series(
+                                  id: issue!.series!.id ?? 0,
+                                  name: issue!.series!.name,
+                                  volume: issue!.series!.volume,
+                                  yearBegan: issue!.series!.yearBegan,
+                                )
+                              : null,
                           coverDate: issue?.coverDate,
                           storeDate: issue?.storeDate,
                           image: issue?.image,

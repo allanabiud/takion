@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/core/notifications/notification_service.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 
 enum NotificationDay {
-  tuesday('Tuesday', DateTime.tuesday),
-  wednesday('Wednesday', DateTime.wednesday),
-  thursday('Thursday', DateTime.thursday);
+  tuesday('Before Release Day', DateTime.tuesday),
+  wednesday('Release Day', DateTime.wednesday),
+  thursday('After Release Day', DateTime.thursday);
 
   const NotificationDay(this.label, this.dartWeekday);
   final String label;
@@ -13,42 +15,37 @@ enum NotificationDay {
 
 final notificationsEnabledProvider =
     AsyncNotifierProvider<NotificationsEnabledNotifier, bool>(
-  NotificationsEnabledNotifier.new,
-);
+      NotificationsEnabledNotifier.new,
+    );
 
 class NotificationsEnabledNotifier extends AsyncNotifier<bool> {
-  static const _boxName = 'settings_box';
   static const _key = 'weekly_pull_notifications_enabled';
 
   @override
   Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    return (box.get(_key, defaultValue: false) as bool?) ?? false;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    return await dao.getBool(_key);
   }
 
   Future<void> setEnabled(bool enabled) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, enabled);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setBool(_key, enabled);
     state = AsyncValue.data(enabled);
   }
 }
 
 final notificationDayProvider =
     AsyncNotifierProvider<NotificationDayNotifier, NotificationDay>(
-  NotificationDayNotifier.new,
-);
+      NotificationDayNotifier.new,
+    );
 
 class NotificationDayNotifier extends AsyncNotifier<NotificationDay> {
-  static const _boxName = 'settings_box';
   static const _key = 'weekly_pull_notification_day';
 
   @override
   Future<NotificationDay> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final raw = box.get(_key, defaultValue: 'wednesday') as String? ?? 'wednesday';
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final raw = await dao.getString(_key) ?? 'wednesday';
     return switch (raw) {
       'tuesday' => NotificationDay.tuesday,
       'thursday' => NotificationDay.thursday,
@@ -57,14 +54,28 @@ class NotificationDayNotifier extends AsyncNotifier<NotificationDay> {
   }
 
   Future<void> setDay(NotificationDay day) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
     final raw = switch (day) {
       NotificationDay.tuesday => 'tuesday',
       NotificationDay.wednesday => 'wednesday',
       NotificationDay.thursday => 'thursday',
     };
-    await box.put(_key, raw);
+    await dao.setString(_key, raw);
     state = AsyncValue.data(day);
   }
+}
+
+/// Rebuild the one recurring reminder from the current settings and pull list.
+/// This must await the providers: reading their synchronous values during app
+/// startup observes their loading defaults and used to cancel the reminder.
+Future<void> scheduleWeeklyPullNotification(dynamic ref) async {
+  final enabled = await ref.read(notificationsEnabledProvider.future);
+  if (!enabled) {
+    await NotificationService.instance.cancel();
+    return;
+  }
+
+  final day = await ref.read(notificationDayProvider.future);
+  final pulls = await ref.read(currentWeekPullsProvider.future);
+  await NotificationService.instance.scheduleWeekly(pulls.length, day);
 }

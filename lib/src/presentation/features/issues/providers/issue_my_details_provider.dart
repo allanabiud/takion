@@ -1,10 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_cache_helpers.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 class IssueMyDetailsData {
@@ -14,18 +11,16 @@ class IssueMyDetailsData {
   final List<LibraryReadLog> readLogs;
 }
 
-final issueMyDetailsProvider = FutureProvider.autoDispose.family<IssueMyDetailsData, int>((
-  ref,
-  issueId,
-) async {
-  final libraryRepository = ref.read(libraryRepositoryProvider);
-  final item = await libraryRepository.getItemByIssueId(issueId);
-  final logs = await libraryRepository.getReadLogsByIssueId(issueId);
-  return IssueMyDetailsData(item: item, readLogs: logs);
-});
+final issueMyDetailsProvider = FutureProvider.autoDispose
+    .family<IssueMyDetailsData, int>((ref, issueId) async {
+      final libraryRepository = ref.read(libraryRepositoryProvider);
+      final item = await libraryRepository.getItemByIssueId(issueId);
+      final logs = await libraryRepository.getReadLogsByIssueId(issueId);
+      return IssueMyDetailsData(item: item, readLogs: logs);
+    });
 
-final issueMyDetailsControllerProvider =
-    NotifierProvider.autoDispose.family<IssueMyDetailsController, AsyncValue<void>, int>(
+final issueMyDetailsControllerProvider = NotifierProvider.autoDispose
+    .family<IssueMyDetailsController, AsyncValue<void>, int>(
       IssueMyDetailsController.new,
     );
 
@@ -73,35 +68,40 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         final wasCollected =
             existing?.ownershipStatus == LibraryOwnershipStatus.owned;
         final wasRead = existing?.isRead ?? false;
-        final wasRating = existing?.rating;
 
         Future<void> recordEvents() async {
           final now = DateTime.now().toUtc();
-          final catalogRepository = ref.read(catalogRepositoryProvider);
           final imageCache = ref.read(entityImageCacheProvider);
           String? imageUrl;
           String seriesName = 'Unknown Series';
-          String issueNumber = '';
+          String issueNumber = '#$_issueId';
           try {
-            String? cachedUrl;
-            try {
-              cachedUrl = await imageCache.get('issue', _issueId);
-            } catch (_) {}
+            final cachedUrl = await imageCache.get('issue', _issueId);
+            if (cachedUrl != null && cachedUrl.isNotEmpty) {
+              imageUrl = cachedUrl;
+            }
+          } catch (_) {}
+          try {
+            final catalogRepository = ref.read(catalogRepositoryProvider);
             final details = await catalogRepository.getIssueDetails(_issueId);
-            seriesName = details.series?.name ?? 'Unknown Series';
-            issueNumber = details.number;
-            imageUrl = cachedUrl ?? details.image;
+            seriesName = details.series?.name ?? seriesName;
+            issueNumber = details.number.isNotEmpty
+                ? details.number
+                : issueNumber;
+            imageUrl ??= details.image;
             if (details.image != null && details.image!.isNotEmpty) {
-              await imageCache.set('issue', _issueId, details.image!);
+              try {
+                await imageCache.set('issue', _issueId, details.image!);
+              } catch (_) {}
             }
           } catch (_) {}
 
-          if (isCollected != wasCollected) {
+          if (isCollected && !wasCollected) {
             await activityRepository.addEvent(
               LibraryActivityEvent(
-                id: 'act-${isCollected ? 'col' : 'ucol'}-$_issueId-${now.microsecondsSinceEpoch}',
+                id: 'act-col-$_issueId-${now.microsecondsSinceEpoch}',
                 userId: 'local-user',
-                type: isCollected ? ActivityEventType.collected : ActivityEventType.uncollected,
+                type: ActivityEventType.collected,
                 issueId: _issueId,
                 seriesId: seriesId,
                 seriesName: seriesName,
@@ -112,36 +112,18 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             );
           }
 
-          if (isRead != wasRead) {
+          if (isRead && !wasRead) {
             await activityRepository.addEvent(
               LibraryActivityEvent(
-                id: 'act-${isRead ? 'read' : 'unrd'}-$_issueId-${now.microsecondsSinceEpoch}',
+                id: 'act-read-$_issueId-${now.microsecondsSinceEpoch}',
                 userId: 'local-user',
-                type: isRead ? ActivityEventType.read : ActivityEventType.unread,
+                type: ActivityEventType.read,
                 issueId: _issueId,
                 seriesId: seriesId,
                 seriesName: seriesName,
                 issueNumber: issueNumber,
                 imageUrl: imageUrl,
                 timestamp: now,
-              ),
-            );
-          }
-
-          final effectiveRating = isRead ? rating : null;
-          if (effectiveRating != null && effectiveRating > 0 && effectiveRating != wasRating) {
-            await activityRepository.addEvent(
-              LibraryActivityEvent(
-                id: 'act-rat-$_issueId-${now.microsecondsSinceEpoch}',
-                userId: 'local-user',
-                type: ActivityEventType.rated,
-                issueId: _issueId,
-                seriesId: seriesId,
-                seriesName: seriesName,
-                issueNumber: issueNumber,
-                imageUrl: imageUrl,
-                timestamp: now,
-                metadata: {'rating': effectiveRating},
               ),
             );
           }
@@ -152,8 +134,6 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
           await recordEvents();
-          ref.read(collectionStatusCacheProvider.notifier).removeIssue(_issueId);
-          await invalidateLibraryItemsLocalCache(ref);
         } else {
           final now = DateTime.now().toUtc();
           final resolvedRating = isRead ? rating : null;
@@ -185,18 +165,7 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           }
 
           await recordEvents();
-
-          ref.read(collectionStatusCacheProvider.notifier).updateIssue(
-            _issueId,
-            IssueCollectionStatus(
-              isCollected: isCollected,
-              isWishlisted: existing?.ownershipStatus == LibraryOwnershipStatus.wishlist,
-              isRead: isRead,
-              rating: resolvedRating,
-            ),
-          );
         }
-        await invalidateLibraryItemsLocalCache(ref);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();
@@ -213,7 +182,9 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         final libraryRepository = ref.read(libraryRepositoryProvider);
         final item = await libraryRepository.getItemByIssueId(_issueId);
         if (item == null) {
-          throw StateError('Add the issue to your library before logging reads.');
+          throw StateError(
+            'Add the issue to your library before logging reads.',
+          );
         }
 
         final normalizedReadAt = readAt.toUtc();
@@ -240,20 +211,28 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         );
 
         final activityRepository = ref.read(activityRepositoryProvider);
-        final catalogRepository = ref.read(catalogRepositoryProvider);
         final imageCache = ref.read(entityImageCacheProvider);
         String? imageUrl;
         String seriesName = 'Unknown Series';
-        String issueNumber = '';
+        String issueNumber = '#$_issueId';
         try {
-          String? cachedUrl;
-          try { cachedUrl = await imageCache.get('issue', _issueId); } catch (_) {}
+          final cachedUrl = await imageCache.get('issue', _issueId);
+          if (cachedUrl != null && cachedUrl.isNotEmpty) {
+            imageUrl = cachedUrl;
+          }
+        } catch (_) {}
+        try {
+          final catalogRepository = ref.read(catalogRepositoryProvider);
           final details = await catalogRepository.getIssueDetails(_issueId);
-          seriesName = details.series?.name ?? 'Unknown Series';
-          issueNumber = details.number;
-          imageUrl = cachedUrl ?? details.image;
+          seriesName = details.series?.name ?? seriesName;
+          issueNumber = details.number.isNotEmpty
+              ? details.number
+              : issueNumber;
+          imageUrl ??= details.image;
           if (details.image != null && details.image!.isNotEmpty) {
-            await imageCache.set('issue', _issueId, details.image!);
+            try {
+              await imageCache.set('issue', _issueId, details.image!);
+            } catch (_) {}
           }
         } catch (_) {}
         await activityRepository.addEvent(
@@ -270,16 +249,6 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           ),
         );
 
-        ref.read(collectionStatusCacheProvider.notifier).updateIssue(
-          _issueId,
-          IssueCollectionStatus(
-            isCollected: item.ownershipStatus == LibraryOwnershipStatus.owned,
-            isWishlisted: item.ownershipStatus == LibraryOwnershipStatus.wishlist,
-            isRead: true,
-            rating: item.rating,
-          ),
-        );
-        await invalidateLibraryItemsLocalCache(ref);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();
@@ -328,7 +297,6 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           notes: item.notes,
           acquiredOn: item.acquiredOn,
         );
-        await invalidateLibraryItemsLocalCache(ref);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();

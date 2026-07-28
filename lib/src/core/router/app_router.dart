@@ -83,6 +83,11 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: TeamIssuesRoute.page,
+      path: '/team/:teamId/issues',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: ArcDetailsRoute.page,
       path: '/arc/:arcId',
       guards: [authGuard],

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/domain/common/string_extensions.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 class IssueCard extends ConsumerWidget {
   final int? issueId;
@@ -23,6 +22,8 @@ class IssueCard extends ConsumerWidget {
   final ItemRole? role;
   final bool compact;
   final int? seriesId;
+  final String? seriesName;
+  final String? issueNumber;
 
   const IssueCard({
     super.key,
@@ -39,6 +40,8 @@ class IssueCard extends ConsumerWidget {
     this.role,
     this.compact = false,
     this.seriesId,
+    this.seriesName,
+    this.issueNumber,
   });
 
   @override
@@ -48,13 +51,13 @@ class IssueCard extends ConsumerWidget {
         issueId != null &&
         ref.watch(favoriteIssueIdsProvider).asData?.value.contains(issueId!) ==
             true;
-    final showReadTickOverlay =
-        ref.watch(showReadIssueTickOverlayProvider).value ?? false;
     final id = issueId;
-    final providerStatus = id == null
+    final hasExplicitStatus =
+        isCollected != null && isWishlisted != null && isRead != null;
+    final providerStatus = id == null || hasExplicitStatus
         ? null
         : ref.watch(issueCollectionStatusProvider(id));
-    final pullEntryAsync = id == null
+    final pullEntryAsync = id == null || isPulled != null
         ? null
         : ref.watch(issuePullListEntryProvider(id));
 
@@ -63,22 +66,26 @@ class IssueCard extends ConsumerWidget {
     final effectiveIsWishlisted =
         isWishlisted ?? providerStatus?.isWishlisted ?? false;
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
-    final effectiveIsPulled =
-        isPulled ?? pullEntryAsync?.asData?.value != null;
+    final effectiveIsPulled = isPulled ?? pullEntryAsync?.asData?.value != null;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth =
-        width.isInfinite ? null : (width * devicePixelRatio).round();
+    final cacheWidth = width.isInfinite
+        ? null
+        : (width * devicePixelRatio).round();
 
-    final effectiveOnLongPress = onLongPress ??
+    final effectiveOnLongPress =
+        onLongPress ??
         (issueId != null
             ? () => showScrobbleSheet(
-                  context: context,
-                  ref: ref,
-                  issueId: issueId!,
-                  sheetTitle: title,
-                  seriesId: seriesId,
-                )
+                context: context,
+                ref: ref,
+                issueId: issueId!,
+                sheetTitle: title,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                imageUrl: imageUrl,
+              )
             : null);
 
     return SizedBox(
@@ -95,11 +102,11 @@ class IssueCard extends ConsumerWidget {
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                    EntityCover(
+                  EntityCover(
                     imageUrl: imageUrl,
                     placeholderLabel: initials(title),
                     isFavorite: isFavorite,
-                    isRead: effectiveIsRead && showReadTickOverlay,
+                    isRead: effectiveIsRead,
                     role: role,
                     cacheWidth: cacheWidth,
                   ),

@@ -2,19 +2,22 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class CharacterIssuesScreen extends ConsumerStatefulWidget {
-  const CharacterIssuesScreen({super.key, @pathParam required this.characterId});
+  const CharacterIssuesScreen({
+    super.key,
+    @pathParam required this.characterId,
+  });
 
   final int characterId;
 
@@ -60,14 +63,18 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
     final body = issuesAsync.when(
       loading: () {
         if (_lastPage != null) {
-          return _buildContent(context, ref, _lastPage!, sortOption,
-              isLoading: true);
+          return _buildContent(
+            context,
+            ref,
+            _lastPage!,
+            sortOption,
+            isLoading: true,
+          );
         }
         return const AsyncStatePanel.loading();
       },
-      error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load issues',
-      ),
+      error: (error, _) =>
+          AsyncStatePanel.error(errorMessage: 'Failed to load issues'),
       data: (issuePage) =>
           _buildContent(context, ref, issuePage, sortOption, isLoading: false),
     );
@@ -123,11 +130,9 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
     );
   }
 
-  bool get _pageHasPrevious =>
-      _lastPage?.hasPrevious ?? false;
+  bool get _pageHasPrevious => _lastPage?.hasPrevious ?? false;
 
-  bool get _pageHasNext =>
-      _lastPage?.hasNext ?? false;
+  bool get _pageHasNext => _lastPage?.hasNext ?? false;
 
   Widget _buildContent(
     BuildContext context,
@@ -158,10 +163,7 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const VerticalDivider(
-                          width: 1,
-                          thickness: 1,
-                        ),
+                        const VerticalDivider(width: 1, thickness: 1),
                         TextButton.icon(
                           onPressed: isLoading
                               ? null
@@ -202,20 +204,17 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
                 ),
               )
             : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final issue = sortedIssues[index];
-                    return Opacity(
-                      opacity: isLoading ? 0.6 : 1.0,
-                      child: IssueListTile(
-                        issue: issue,
-                        isFirst: index == 0,
-                        isLast: index == sortedIssues.length - 1,
-                      ),
-                    );
-                  },
-                  childCount: sortedIssues.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final issue = sortedIssues[index];
+                  return Opacity(
+                    opacity: isLoading ? 0.6 : 1.0,
+                    child: IssueListTile(
+                      issue: issue,
+                      isFirst: index == 0,
+                      isLast: index == sortedIssues.length - 1,
+                    ),
+                  );
+                }, childCount: sortedIssues.length),
               ),
       ],
     );
@@ -233,11 +232,7 @@ class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) =>
-      Container(
-        color: Theme.of(context).colorScheme.surface,
-        child: child,
-      );
+  ) => Container(color: Theme.of(context).colorScheme.surface, child: child);
 
   @override
   double get maxExtent => isLoading ? 74.0 : 56.0;

@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/data/common/drift/database.dart';
+import 'package:takion/src/domain/entities.dart';
 
 const String homeTrendingCacheKey = 'home:series_suggestions';
 const String homeTrendingMetaKey = 'home:series_suggestions';
@@ -8,49 +11,55 @@ const String homeBecauseYouPulledCacheKey = 'home:because_you_pulled';
 const String homeBecauseYouPulledMetaKey = 'home:because_you_pulled';
 
 final homeContentCacheProvider = Provider<HomeContentCache>((ref) {
-  return HomeContentCache(ref.read(hiveServiceProvider));
+  return HomeContentCache(ref.read(driftDatabaseProvider));
 });
 
 class HomeContentCache {
-  HomeContentCache(this._hiveService);
+  HomeContentCache(this._db);
 
-  static const _homeContentBox = 'home_content_box';
-  static const _cacheMetaBox = 'cache_meta_box';
-  final HiveService _hiveService;
+  static const _homeContentPrefix = 'home_content:';
+  final AppDatabase _db;
 
   Future<DateTime?> getCachedAt(String metaKey) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
-    final epoch = metaBox.get(metaKey);
-    if (epoch == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(epoch);
+    final row = await _db.apiCacheDao.get(metaKey);
+    return row?.cachedAt;
   }
 
   Future<void> writeCachedAtNow(String metaKey) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
-    await metaBox.put(metaKey, DateTime.now().millisecondsSinceEpoch);
+    await _db.apiCacheDao.put(
+      cacheKey: metaKey,
+      entityType: 'home_content_meta',
+      payload: '',
+    );
   }
 
   Future<void> deleteCachedAt(String metaKey) async {
-    final metaBox = await _hiveService.openBox<int>(_cacheMetaBox);
-    await metaBox.delete(metaKey);
+    await _db.apiCacheDao.deleteByKey(metaKey);
   }
 
   Future<List<Map<String, dynamic>>?> readJsonList(String key) async {
-    final box = await _hiveService.openBox<dynamic>(_homeContentBox);
-    final value = box.get(key);
-    if (value is! List) return null;
-    return value
-        .whereType<Map>()
-        .map((item) => item.cast<String, dynamic>())
-        .toList();
+    final row = await _db.apiCacheDao.get('$_homeContentPrefix$key');
+    if (row == null) return null;
+    try {
+      final decoded = jsonDecode(row.payload) as List;
+      return decoded
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> writeJsonList(
     String key,
     List<Map<String, dynamic>> value,
   ) async {
-    final box = await _hiveService.openBox<dynamic>(_homeContentBox);
-    await box.put(key, value);
+    await _db.apiCacheDao.put(
+      cacheKey: '$_homeContentPrefix$key',
+      entityType: 'home_content',
+      payload: jsonEncode(value),
+    );
   }
 }
 

@@ -2,10 +2,11 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/data/dto/dto.dart';
+import 'package:takion/src/core/network/dio_client.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
@@ -36,7 +37,6 @@ import 'package:takion/src/presentation/features/teams/providers/team_details_pr
 import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
@@ -62,6 +62,65 @@ void invalidateReleaseProviders(void Function(dynamic provider) invalidate) {
 void invalidateCacheBackedProviders(
   void Function(dynamic provider) invalidate,
 ) {
+  _invalidateBatch(invalidate);
+}
+
+void invalidateCacheBackedProvidersBatched(
+  void Function(dynamic provider) invalidate,
+) {
+  invalidateReleaseProviders(invalidate);
+  invalidate(homeTrendingProvider);
+  invalidate(continueReadingSuggestionsProvider);
+  invalidate(currentWeekPullsProvider);
+  invalidate(currentWeekPullsCountProvider);
+  invalidate(becauseYouPulledIssuesProvider);
+
+  Future.microtask(() {
+    invalidate(collectionIssueStatusMapProvider);
+    invalidate(allLibraryItemsProvider);
+    invalidate(libraryInsightsProvider);
+    invalidate(issuePullListEntryProvider);
+    invalidate(issueDetailsProvider);
+    invalidate(pullListEntriesForWeekProvider);
+    invalidate(pullsIssuesForWeekProvider);
+
+    Future.microtask(() {
+      invalidate(seriesDetailsProvider);
+      invalidate(seriesIssueListProvider);
+      invalidate(seriesListProvider);
+      invalidate(currentSeriesListProvider);
+      invalidate(seriesSearchResultsProvider);
+      invalidate(readingSuggestionProvider);
+      invalidate(readingSuggestionIssueProvider);
+      invalidate(rateSuggestionProvider);
+      invalidate(rateSuggestionIssueProvider);
+      invalidate(activeSubscriptionsProvider);
+      invalidate(subscribedSeriesListProvider);
+      invalidate(subscribedSeriesPageProvider);
+      invalidate(seriesSubscriptionProvider);
+
+      Future.microtask(() {
+        invalidate(issueSearchResultsProvider);
+        invalidate(characterDetailsProvider);
+        invalidate(characterSearchResultsProvider);
+        invalidate(characterIssueListProvider);
+        invalidate(characterDetailsIssuesProvider);
+        invalidate(creatorDetailsProvider);
+        invalidate(creatorSearchResultsProvider);
+        invalidate(universeDetailsProvider);
+        invalidate(universeSearchResultsProvider);
+        invalidate(imprintDetailsProvider);
+        invalidate(imprintSearchResultsProvider);
+        invalidate(teamDetailsProvider);
+        invalidate(teamSearchResultsProvider);
+        invalidate(publisherDetailsProvider);
+        invalidate(publisherSearchResultsProvider);
+      });
+    });
+  });
+}
+
+void _invalidateBatch(void Function(dynamic provider) invalidate) {
   invalidateReleaseProviders(invalidate);
   invalidate(issueDetailsProvider);
   invalidate(issueSearchResultsProvider);
@@ -103,11 +162,6 @@ void invalidateCacheBackedProviders(
   invalidate(teamSearchResultsProvider);
   invalidate(publisherDetailsProvider);
   invalidate(publisherSearchResultsProvider);
-  invalidate(favoriteSeriesListProvider);
-  invalidate(favoriteIssuesListProvider);
-  invalidate(favoriteReadingListsListProvider);
-  invalidate(favoriteCharactersListProvider);
-  invalidate(favoriteCreatorsListProvider);
 }
 
 @riverpod
@@ -138,17 +192,20 @@ class SettingsNotifier extends _$SettingsNotifier {
   }
 
   Future<Set<DateTime>> _syncTargetWeeks() async {
-    final hive = ref.read(hiveServiceProvider);
+    final dao = ref.read(driftDatabaseProvider).apiCacheDao;
     final selectedWeek = ref.read(selectedWeekProvider);
     final nowWeek = _weekStart(DateTime.now());
     final selectedWeekStart = _weekStart(selectedWeek);
 
-    final weeklyBox = await hive.openBox<List>('weekly_releases_box');
-    final focBox = await hive.openBox<List>('foc_releases_box');
+    final weeklyEntries = await dao.getByPrefix('weekly_releases:');
+    final focEntries = await dao.getByPrefix('foc_releases:');
+
     final cachedWeeks = {
-      ...weeklyBox.keys,
-      ...focBox.keys,
-    }.map(_parseWeekKey).whereType<DateTime>().map(_weekStart).toSet();
+      for (final entry in weeklyEntries)
+        _parseWeekKey(entry.cacheKey.substring('weekly_releases:'.length)),
+      for (final entry in focEntries)
+        _parseWeekKey(entry.cacheKey.substring('foc_releases:'.length)),
+    }.whereType<DateTime>().map(_weekStart).toSet();
 
     return {...cachedWeeks, nowWeek, selectedWeekStart};
   }
@@ -175,7 +232,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   int? _parseSeriesListPageKey(Object? key) {
     if (key is! String) return null;
-    final match = RegExp(r'^series_list:p(\d+):l(\d+)$').firstMatch(key);
+    final match = RegExp(r'^series_list:p(\d+):l(\d+)').firstMatch(key);
     final page = int.tryParse(match?.group(1) ?? '');
     if (page == null || page <= 0) return null;
     return page;
@@ -204,8 +261,12 @@ class SettingsNotifier extends _$SettingsNotifier {
     return !policy.isFresh(cachedAt, now);
   }
 
-  Future<int> _refreshCatalogCaches({required bool quick}) async {
-    final hive = ref.read(hiveServiceProvider);
+  Future<int> _refreshCatalogCaches({
+    required bool quick,
+    DateTime? lastSyncTimestamp,
+  }) async {
+    final db = ref.read(driftDatabaseProvider);
+    final dao = db.apiCacheDao;
     final repository = ref.read(catalogRepositoryProvider);
     final localDataSource = ref.read(metronLocalDataSourceProvider);
     final now = DateTime.now();
@@ -245,18 +306,14 @@ class SettingsNotifier extends _$SettingsNotifier {
       }
     }
 
-    final issueDetailsBox = await hive.openBox<IssueDetailsDto>(
-      'issue_details_box',
-    );
-    for (final key in issueDetailsBox.keys) {
-      if (key is! int || key <= 0) continue;
+    final issueDetailsEntries = await dao.getByPrefix('issue_details:');
+    for (final entry in issueDetailsEntries) {
+      final keyStr = entry.cacheKey.substring('issue_details:'.length);
+      final key = int.tryParse(keyStr);
+      if (key == null || key <= 0) continue;
       if (quick) {
-        final cachedAt = await localDataSource.getIssueDetailsCachedAt(key);
-        if (_isStaleOrMissing(
-          cachedAt: cachedAt,
-          policy: MetronCachePolicies.issueDetails,
-          now: now,
-        )) {
+        final issue = await db.metronEntityDao.getIssue(key);
+        if (issue == null || !issue.isFullyHydrated) {
           await repository.getIssueDetails(key, forceRefresh: true);
           synced++;
           await _throttle();
@@ -268,16 +325,14 @@ class SettingsNotifier extends _$SettingsNotifier {
       }
     }
 
-    final seriesDetailsBox = await hive.openBox<Map>('series_details_box');
-    for (final key in seriesDetailsBox.keys) {
-      if (key is! int || key <= 0) continue;
+    final seriesDetailsEntries = await dao.getByPrefix('series_details:');
+    for (final entry in seriesDetailsEntries) {
+      final keyStr = entry.cacheKey.substring('series_details:'.length);
+      final key = int.tryParse(keyStr);
+      if (key == null || key <= 0) continue;
       if (quick) {
-        final cachedAt = await localDataSource.getSeriesDetailsCachedAt(key);
-        if (_isStaleOrMissing(
-          cachedAt: cachedAt,
-          policy: MetronCachePolicies.seriesDetails,
-          now: now,
-        )) {
+        final series = await db.metronEntityDao.getSeries(key);
+        if (series == null || !series.isFullyHydrated) {
           await repository.getSeriesDetails(key, forceRefresh: true);
           synced++;
           await _throttle();
@@ -289,20 +344,63 @@ class SettingsNotifier extends _$SettingsNotifier {
       }
     }
 
-    final seriesListBox = await hive.openBox<List>('series_list_box');
-    for (final key in seriesListBox.keys) {
-      final page = _parseSeriesListPageKey(key);
-      if (page == null) continue;
-      if (quick) {
-        final cachedAt = await localDataSource.getSeriesListResultsCachedAt(
-          page: page,
-          limit: metronDefaultPageSize,
-        );
-        if (_isStaleOrMissing(
-          cachedAt: cachedAt,
-          policy: MetronCachePolicies.searchResults,
-          now: now,
-        )) {
+    final useIncremental = quick && lastSyncTimestamp != null;
+
+    if (useIncremental) {
+      {
+        var page = 1;
+        while (true) {
+          final result = await repository.getSeriesList(
+            page: page,
+            limit: metronDefaultPageSize,
+            modifiedGt: lastSyncTimestamp,
+            forceRefresh: true,
+          );
+          synced++;
+          await _throttle();
+          if (!result.hasNext) break;
+          page++;
+        }
+      }
+      {
+        var page = 1;
+        while (true) {
+          final result = await repository.getIssueList(
+            page: page,
+            limit: metronDefaultPageSize,
+            modifiedGt: lastSyncTimestamp,
+            forceRefresh: true,
+          );
+          synced++;
+          await _throttle();
+          if (result.next == null) break;
+          page++;
+        }
+      }
+    } else {
+      final seriesListEntries = await dao.getByPrefix('series_list:');
+      for (final entry in seriesListEntries) {
+        final page = _parseSeriesListPageKey(entry.cacheKey);
+        if (page == null) continue;
+        if (quick) {
+          final cachedAt = await localDataSource.getSeriesListResultsCachedAt(
+            page: page,
+            limit: metronDefaultPageSize,
+          );
+          if (_isStaleOrMissing(
+            cachedAt: cachedAt,
+            policy: MetronCachePolicies.searchResults,
+            now: now,
+          )) {
+            await repository.getSeriesList(
+              page: page,
+              limit: metronDefaultPageSize,
+              forceRefresh: true,
+            );
+            synced++;
+            await _throttle();
+          }
+        } else {
           await repository.getSeriesList(
             page: page,
             limit: metronDefaultPageSize,
@@ -311,32 +409,33 @@ class SettingsNotifier extends _$SettingsNotifier {
           synced++;
           await _throttle();
         }
-      } else {
-        await repository.getSeriesList(
-          page: page,
-          limit: metronDefaultPageSize,
-          forceRefresh: true,
-        );
-        synced++;
-        await _throttle();
       }
-    }
 
-    final issueSearchBox = await hive.openBox<List>('issue_search_box');
-    for (final key in issueSearchBox.keys) {
-      final parsed = _parseSearchKey(key);
-      if (parsed == null) continue;
-      if (quick) {
-        final cachedAt = await localDataSource.getIssueSearchResultsCachedAt(
-          parsed.query,
-          page: parsed.page,
-          limit: metronDefaultPageSize,
-        );
-        if (_isStaleOrMissing(
-          cachedAt: cachedAt,
-          policy: MetronCachePolicies.searchResults,
-          now: now,
-        )) {
+      final issueSearchEntries = await dao.getByPrefix('issue_search:');
+      for (final entry in issueSearchEntries) {
+        final parsed = _parseSearchKey(entry.cacheKey);
+        if (parsed == null) continue;
+        if (quick) {
+          final cachedAt = await localDataSource.getIssueSearchResultsCachedAt(
+            parsed.query,
+            page: parsed.page,
+            limit: metronDefaultPageSize,
+          );
+          if (_isStaleOrMissing(
+            cachedAt: cachedAt,
+            policy: MetronCachePolicies.searchResults,
+            now: now,
+          )) {
+            await repository.searchIssues(
+              parsed.query,
+              page: parsed.page,
+              limit: metronDefaultPageSize,
+              forceRefresh: true,
+            );
+            synced++;
+            await _throttle();
+          }
+        } else {
           await repository.searchIssues(
             parsed.query,
             page: parsed.page,
@@ -346,33 +445,33 @@ class SettingsNotifier extends _$SettingsNotifier {
           synced++;
           await _throttle();
         }
-      } else {
-        await repository.searchIssues(
-          parsed.query,
-          page: parsed.page,
-          limit: metronDefaultPageSize,
-          forceRefresh: true,
-        );
-        synced++;
-        await _throttle();
       }
-    }
 
-    final seriesSearchBox = await hive.openBox<List>('series_search_box');
-    for (final key in seriesSearchBox.keys) {
-      final parsed = _parseSearchKey(key);
-      if (parsed == null) continue;
-      if (quick) {
-        final cachedAt = await localDataSource.getSeriesSearchResultsCachedAt(
-          parsed.query,
-          page: parsed.page,
-          limit: metronDefaultPageSize,
-        );
-        if (_isStaleOrMissing(
-          cachedAt: cachedAt,
-          policy: MetronCachePolicies.searchResults,
-          now: now,
-        )) {
+      final seriesSearchEntries = await dao.getByPrefix('series_search:');
+      for (final entry in seriesSearchEntries) {
+        final parsed = _parseSearchKey(entry.cacheKey);
+        if (parsed == null) continue;
+        if (quick) {
+          final cachedAt = await localDataSource.getSeriesSearchResultsCachedAt(
+            parsed.query,
+            page: parsed.page,
+            limit: metronDefaultPageSize,
+          );
+          if (_isStaleOrMissing(
+            cachedAt: cachedAt,
+            policy: MetronCachePolicies.searchResults,
+            now: now,
+          )) {
+            await repository.searchSeries(
+              parsed.query,
+              page: parsed.page,
+              limit: metronDefaultPageSize,
+              forceRefresh: true,
+            );
+            synced++;
+            await _throttle();
+          }
+        } else {
           await repository.searchSeries(
             parsed.query,
             page: parsed.page,
@@ -382,23 +481,12 @@ class SettingsNotifier extends _$SettingsNotifier {
           synced++;
           await _throttle();
         }
-      } else {
-        await repository.searchSeries(
-          parsed.query,
-          page: parsed.page,
-          limit: metronDefaultPageSize,
-          forceRefresh: true,
-        );
-        synced++;
-        await _throttle();
       }
     }
 
-    final seriesIssueListBox = await hive.openBox<List>(
-      'series_issue_list_box',
-    );
-    for (final key in seriesIssueListBox.keys) {
-      final parsed = _parseSeriesIssueListKey(key);
+    final seriesIssueListEntries = await dao.getByPrefix('series_issue_list:');
+    for (final entry in seriesIssueListEntries) {
+      final parsed = _parseSeriesIssueListKey(entry.cacheKey);
       if (parsed == null) continue;
       if (quick) {
         final cachedAt = await localDataSource
@@ -437,20 +525,19 @@ class SettingsNotifier extends _$SettingsNotifier {
   }
 
   Future<void> _refreshLocalData({required bool quick}) async {
-    final pullRepo = ref.read(pullListRepositoryProvider);
     final reconciler = ref.read(subscriptionPullReconcilerProvider);
-    final fromDate = _weekStart(DateTime.now());
-    await pullRepo.regenerateFromSubscriptions(
-      fromDate: quick ? fromDate : fromDate.subtract(const Duration(days: 365)),
-      toDate: quick ? null : fromDate.add(const Duration(days: 365 * 2)),
-    );
     await reconciler.reconcile(force: true);
     _invalidateCacheBackedProviders();
-    await Future.wait([
-      ref.read(allLibraryItemsProvider.future),
-      ref.read(activeSubscriptionsProvider.future),
-      ref.read(currentWeekPullsProvider.future),
-    ]);
+    for (final provider in <dynamic>[
+      allLibraryItemsProvider,
+      activeSubscriptionsProvider,
+      currentWeekPullsProvider,
+    ]) {
+      ref
+          .read(provider.future)
+          .timeout(const Duration(seconds: 10))
+          .catchError((_) {});
+    }
   }
 
   Future<void> refreshAllCatalogData() async {
@@ -495,8 +582,25 @@ class SettingsNotifier extends _$SettingsNotifier {
     );
 
     try {
-      final synced = await _refreshCatalogCaches(quick: true);
+      final settingsDao = ref.read(driftDatabaseProvider).settingsDao;
+      final lastSyncStr = await settingsDao.getString(
+        'stale_refresh_last_sync',
+      );
+      final lastSyncTimestamp = lastSyncStr != null
+          ? DateTime.tryParse(lastSyncStr)
+          : null;
+
+      final synced = await _refreshCatalogCaches(
+        quick: true,
+        lastSyncTimestamp: lastSyncTimestamp,
+      );
       await _refreshLocalData(quick: true);
+
+      await settingsDao.setString(
+        'stale_refresh_last_sync',
+        DateTime.now().toUtc().toIso8601String(),
+      );
+
       _invalidateCacheBackedProviders();
       AppLogger.info(
         'Stale catalog refresh completed ($synced stale/missing cache slice(s) refreshed)',
@@ -522,10 +626,13 @@ class SettingsNotifier extends _$SettingsNotifier {
       isBusy: true,
       statusMessage: 'Clearing local cache and metadata...',
     );
-    final hive = ref.read(hiveServiceProvider);
 
     try {
-      await hive.clearLocalCache();
+      final db = ref.read(driftDatabaseProvider);
+      await db.apiCacheDao.clearAll();
+      await db.imageCacheDao.clearAll();
+      final cacheHeaderStore = ref.read(cacheHeaderStoreProvider);
+      await cacheHeaderStore.clear(db);
       _invalidateCacheBackedProviders();
       state = state.copyWith(
         isBusy: false,
@@ -551,15 +658,12 @@ final collectionDefaultFormatProvider =
 
 class CollectionDefaultFormatNotifier
     extends AsyncNotifier<CollectionDefaultFormat> {
-  static const _boxName = 'settings_box';
   static const _key = 'collection_default_format';
 
   @override
   Future<CollectionDefaultFormat> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final raw =
-        (box.get(_key, defaultValue: 'digital') as String?) ?? 'digital';
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final raw = await dao.getString(_key) ?? 'digital';
 
     switch (raw) {
       case 'print':
@@ -573,14 +677,13 @@ class CollectionDefaultFormatNotifier
   }
 
   Future<void> setDefaultFormat(CollectionDefaultFormat format) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
     final value = switch (format) {
       CollectionDefaultFormat.print => 'print',
       CollectionDefaultFormat.digital => 'digital',
       CollectionDefaultFormat.both => 'both',
     };
-    await box.put(_key, value);
+    await dao.setString(_key, value);
     state = AsyncValue.data(format);
   }
 }
@@ -591,20 +694,17 @@ final autoCollectOnReadProvider =
     );
 
 class AutoCollectOnReadNotifier extends AsyncNotifier<bool> {
-  static const _boxName = 'settings_box';
   static const _key = 'auto_collect_on_read';
 
   @override
   Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    return (box.get(_key, defaultValue: false) as bool?) ?? false;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    return dao.getBool(_key);
   }
 
   Future<void> setEnabled(bool enabled) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, enabled);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setBool(_key, enabled);
     state = AsyncValue.data(enabled);
   }
 }
@@ -615,20 +715,17 @@ final autoPullToCollectionProvider =
     );
 
 class AutoPullToCollectionNotifier extends AsyncNotifier<bool> {
-  static const _boxName = 'settings_box';
   static const _key = 'auto_pull_to_collection';
 
   @override
   Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    return (box.get(_key, defaultValue: false) as bool?) ?? false;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    return dao.getBool(_key);
   }
 
   Future<void> setEnabled(bool enabled) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, enabled);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setBool(_key, enabled);
     state = AsyncValue.data(enabled);
   }
 }
@@ -639,20 +736,17 @@ final showReadIssueTickOverlayProvider =
     );
 
 class ShowReadIssueTickOverlayNotifier extends AsyncNotifier<bool> {
-  static const _boxName = 'settings_box';
   static const _key = 'show_read_issue_tick_overlay';
 
   @override
   Future<bool> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    return (box.get(_key, defaultValue: false) as bool?) ?? false;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    return dao.getBool(_key);
   }
 
   Future<void> setEnabled(bool enabled) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, enabled);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setBool(_key, enabled);
     state = AsyncValue.data(enabled);
   }
 }
@@ -663,33 +757,35 @@ final accentSchemeProvider =
     );
 
 class AccentSchemeNotifier extends AsyncNotifier<FlexScheme> {
-  static const _boxName = 'settings_box';
   static const _key = 'accent_scheme';
 
   @override
   Future<FlexScheme> build() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    final raw = box.get(_key, defaultValue: FlexScheme.green.index) as int;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final raw = await dao.getInt(_key, defaultValue: FlexScheme.green.index);
     return FlexScheme.values.length > raw
         ? FlexScheme.values[raw]
         : FlexScheme.green;
   }
 
   Future<void> setScheme(FlexScheme scheme) async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox(_boxName);
-    await box.put(_key, scheme.index);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setInt(_key, scheme.index);
     state = AsyncValue.data(scheme);
   }
 }
 
+Future<int> _dbFileSize() async {
+  final dir = await getApplicationDocumentsDirectory();
+  final file = File('${dir.path}/takion.sqlite');
+  if (!await file.exists()) return 0;
+  return await file.length();
+}
+
 final cacheSizeProvider = FutureProvider<int>((ref) async {
-  final hive = ref.read(hiveServiceProvider);
-  return hive.cacheSize();
+  return _dbFileSize();
 });
 
 final imageCacheSizeProvider = FutureProvider<int>((ref) async {
-  final hive = ref.read(hiveServiceProvider);
-  return hive.imageCacheSize();
+  return _dbFileSize();
 });

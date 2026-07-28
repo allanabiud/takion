@@ -1,33 +1,58 @@
-import 'package:hive_ce/hive.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/data/common/drift/database.dart';
 
 class CacheHeaderStore {
-  static const _boxName = 'cache_headers_box';
+  final Map<String, String> _cache = {};
 
-  Box<String>? _box;
-
-  Future<void> init(HiveService hive) async {
-    _box = await hive.openBox<String>(_boxName);
+  Future<void> init(AppDatabase db) async {
+    final rows = await db.apiCacheDao.getByPrefix('cache_headers:');
+    for (final row in rows) {
+      _cache[row.cacheKey] = row.payload;
+    }
   }
 
-  Box<String> get _b => _box!;
+  String _etagKey(String url) => 'cache_headers:$url:etag';
+  String _lmKey(String url) => 'cache_headers:$url:lm';
 
-  String? _etagKey(String url) => '$url:etag';
-  String? _lmKey(String url) => '$url:lm';
-
-  Future<void> store(String url, {String? etag, String? lastModified}) async {
-    if (etag != null) await _b.put(_etagKey(url), etag);
-    if (lastModified != null) await _b.put(_lmKey(url), lastModified);
+  Future<void> store(
+    AppDatabase db,
+    String url, {
+    String? etag,
+    String? lastModified,
+  }) async {
+    if (etag != null) {
+      _cache[_etagKey(url)] = etag;
+      await db.apiCacheDao.put(
+        cacheKey: _etagKey(url),
+        entityType: 'cache_header',
+        payload: etag,
+      );
+    }
+    if (lastModified != null) {
+      _cache[_lmKey(url)] = lastModified;
+      await db.apiCacheDao.put(
+        cacheKey: _lmKey(url),
+        entityType: 'cache_header',
+        payload: lastModified,
+      );
+    }
   }
 
-  String? getEtag(String url) => _b.get(_etagKey(url));
+  String? getEtag(String url) => _cache[_etagKey(url)];
 
-  String? getLastModified(String url) => _b.get(_lmKey(url));
+  String? getLastModified(String url) => _cache[_lmKey(url)];
 
-  Future<void> remove(String url) async {
-    await _b.delete(_etagKey(url));
-    await _b.delete(_lmKey(url));
+  Future<void> remove(AppDatabase db, String url) async {
+    _cache.remove(_etagKey(url));
+    _cache.remove(_lmKey(url));
+    await db.apiCacheDao.deleteByKey(_etagKey(url));
+    await db.apiCacheDao.deleteByKey(_lmKey(url));
   }
 
-  Future<void> clear() async => _b.clear();
+  Future<void> clear(AppDatabase db) async {
+    _cache.clear();
+    final rows = await db.apiCacheDao.getByPrefix('cache_headers:');
+    for (final row in rows) {
+      await db.apiCacheDao.deleteByKey(row.cacheKey);
+    }
+  }
 }

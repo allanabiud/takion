@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 
@@ -14,11 +14,9 @@ final randomReadingListProvider = Provider<ReadingList?>((ref) {
 
       final statusMap = statusMapAsync.value;
 
-      // Filter out empty and completed lists
       final relevantLists = lists.where((list) {
         if (list.items.isEmpty) return false;
 
-        // Check if list is completed using effective status
         bool allRead = true;
         for (final item in list.items) {
           bool effectiveIsRead = item.isRead;

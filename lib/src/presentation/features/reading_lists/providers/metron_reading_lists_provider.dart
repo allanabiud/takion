@@ -1,46 +1,47 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 final metronReadingListsProvider =
-    FutureProvider.family<List<MetronReadingList>, MetronReadingListFilter>(
-      (ref, filter) async {
-        final repository = ref.read(metronRepositoryProvider);
-        final page = await repository.searchReadingLists(
-          page: filter.page,
-          name: filter.name,
-          listType: filter.listType,
-          attributionSource: filter.attributionSource,
-          publisher: filter.publisher,
-        );
-        return page.results;
-      },
-    );
+    FutureProvider.family<List<MetronReadingList>, MetronReadingListFilter>((
+      ref,
+      filter,
+    ) async {
+      final repository = ref.read(metronRepositoryProvider);
+      final page = await repository.searchReadingLists(
+        page: filter.page,
+        name: filter.name,
+        listType: filter.listType,
+        attributionSource: filter.attributionSource,
+        publisher: filter.publisher,
+      );
+      return page.results;
+    });
 
-final metronReadingListBrowseProvider = FutureProvider.family<
-    BrowsePagedData<MetronReadingList>,
-    MetronReadingListFilter>(
-  (ref, filter) async {
-    final repository = ref.read(metronRepositoryProvider);
-    final page = await repository.searchReadingLists(
-      page: filter.page,
-      name: filter.name,
-      listType: filter.listType,
-      attributionSource: filter.attributionSource,
-      publisher: filter.publisher,
-    );
-    return BrowsePagedData(
-      results: page.results,
-      count: page.count,
-      currentPage: filter.page,
-      hasPrevious: page.hasPrevious,
-      hasNext: page.hasNext,
-      previousPage: page.previousPage,
-      nextPage: page.nextPage,
-    );
-  },
-);
+final metronReadingListBrowseProvider =
+    FutureProvider.family<
+      BrowsePagedData<MetronReadingList>,
+      MetronReadingListFilter
+    >((ref, filter) async {
+      final repository = ref.read(metronRepositoryProvider);
+      final page = await repository.searchReadingLists(
+        page: filter.page,
+        name: filter.name,
+        listType: filter.listType,
+        attributionSource: filter.attributionSource,
+        publisher: filter.publisher,
+      );
+      return BrowsePagedData(
+        results: page.results,
+        count: page.count,
+        currentPage: filter.page,
+        hasPrevious: page.hasPrevious,
+        hasNext: page.hasNext,
+        previousPage: page.previousPage,
+        nextPage: page.nextPage,
+      );
+    });
 
 class MetronReadingListFilter {
   const MetronReadingListFilter({
@@ -98,14 +99,12 @@ class MetronReadingListFilter {
 }
 
 final metronReadingListDetailProvider =
-    FutureProvider.family<MetronReadingListDetailData, int>(
-      (ref, id) async {
-        final repository = ref.read(metronRepositoryProvider);
-        final detail = await repository.getReadingListDetail(id);
-        final items = await repository.getReadingListItems(id);
-        return MetronReadingListDetailData(detail: detail, items: items);
-      },
-    );
+    FutureProvider.family<MetronReadingListDetailData, int>((ref, id) async {
+      final repository = ref.read(metronRepositoryProvider);
+      final detail = await repository.getReadingListDetail(id);
+      final items = await repository.getReadingListItems(id);
+      return MetronReadingListDetailData(detail: detail, items: items);
+    });
 
 class MetronReadingListDetailData {
   const MetronReadingListDetailData({
@@ -117,7 +116,8 @@ class MetronReadingListDetailData {
   final List<MetronReadingListItem> items;
 }
 
-class MetronListPreviewItemsNotifier extends Notifier<Map<int, List<ReadingListItem>>> {
+class MetronListPreviewItemsNotifier
+    extends Notifier<Map<int, List<ReadingListItem>>> {
   @override
   Map<int, List<ReadingListItem>> build() => const {};
 
@@ -126,4 +126,8 @@ class MetronListPreviewItemsNotifier extends Notifier<Map<int, List<ReadingListI
   }
 }
 
-final metronListPreviewItemsProvider = NotifierProvider<MetronListPreviewItemsNotifier, Map<int, List<ReadingListItem>>>(MetronListPreviewItemsNotifier.new);
+final metronListPreviewItemsProvider =
+    NotifierProvider<
+      MetronListPreviewItemsNotifier,
+      Map<int, List<ReadingListItem>>
+    >(MetronListPreviewItemsNotifier.new);

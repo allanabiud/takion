@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
 class CreatorDetailsScreen extends ConsumerStatefulWidget {
@@ -27,8 +27,7 @@ class CreatorDetailsScreen extends ConsumerStatefulWidget {
       _CreatorDetailsScreenState();
 }
 
-class _CreatorDetailsScreenState
-    extends ConsumerState<CreatorDetailsScreen> {
+class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen> {
   Uri? _resourceUri(CreatorDetails details) {
     final resourceUrl = details.resourceUrl?.trim();
     if (resourceUrl == null || resourceUrl.isEmpty) return null;
@@ -67,9 +66,6 @@ class _CreatorDetailsScreenState
 
       await repository.toggleCreatorFavorite(widget.creatorId);
 
-      ref.invalidate(isCreatorFavoriteProvider(widget.creatorId));
-      ref.invalidate(favoriteCreatorsListProvider);
-
       if (mounted) {
         final added = !isFavorite;
         (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
@@ -79,8 +75,6 @@ class _CreatorDetailsScreenState
           actionLabel: 'Undo',
           onUndo: () async {
             await repository.toggleCreatorFavorite(widget.creatorId);
-            ref.invalidate(isCreatorFavoriteProvider(widget.creatorId));
-            ref.invalidate(favoriteCreatorsListProvider);
           },
         );
       }
@@ -194,9 +188,9 @@ class _CreatorInfoCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Last modified: $modifiedValue',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           ),
         ],
       ],
@@ -209,10 +203,14 @@ class _CreatorInfoCard extends StatelessWidget {
       entries.add(
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -226,6 +224,7 @@ class _CreatorInfoCard extends StatelessWidget {
         ),
       );
     }
+
     addEntry('Metron', '${details.id}');
     if (details.cvId != null) addEntry('CV', '${details.cvId}');
     if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
@@ -235,11 +234,7 @@ class _CreatorInfoCard extends StatelessWidget {
       children: [
         const SectionHeader(title: 'DATABASE IDS'),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: entries,
-        ),
+        Wrap(spacing: 6, runSpacing: 6, children: entries),
       ],
     );
   }

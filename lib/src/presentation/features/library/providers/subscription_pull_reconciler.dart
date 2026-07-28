@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 DateTime _weekStart(DateTime date) {
@@ -14,7 +13,6 @@ DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 class SubscriptionPullReconciler {
   SubscriptionPullReconciler(this.ref);
 
-  static const _settingsBoxName = 'settings_box';
   static const _lastRunEpochKey = 'subscription_pull_reconcile_last_run_ms';
   static const _throttleWindow = Duration(hours: 12);
   static const _subscriptionPageSize = 200;
@@ -31,18 +29,20 @@ class SubscriptionPullReconciler {
     required int? onlySeriesId,
   }) async {
     if (force || onlySeriesId != null) return true;
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox<dynamic>(_settingsBoxName);
-    final lastRunEpoch = box.get(_lastRunEpochKey) as int?;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final lastRunEpochStr = await dao.getString(_lastRunEpochKey);
+    final lastRunEpoch = int.tryParse(lastRunEpochStr ?? '');
     if (lastRunEpoch == null) return true;
     final lastRun = DateTime.fromMillisecondsSinceEpoch(lastRunEpoch);
     return DateTime.now().difference(lastRun) >= _throttleWindow;
   }
 
   Future<void> _recordRun() async {
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox<dynamic>(_settingsBoxName);
-    await box.put(_lastRunEpochKey, DateTime.now().millisecondsSinceEpoch);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setString(
+      _lastRunEpochKey,
+      DateTime.now().millisecondsSinceEpoch.toString(),
+    );
   }
 
   Future<List<SeriesSubscription>> _listAllActiveSubscriptions() async {
@@ -92,9 +92,9 @@ class SubscriptionPullReconciler {
       return const ReconcileResult(upserted: 0, issueIds: []);
     }
 
-    final hive = ref.read(hiveServiceProvider);
-    final box = await hive.openBox<dynamic>(_settingsBoxName);
-    final lastRunEpoch = box.get(_lastRunEpochKey) as int?;
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final lastRunEpochStr = await dao.getString(_lastRunEpochKey);
+    final lastRunEpoch = int.tryParse(lastRunEpochStr ?? '');
     final lastRun = lastRunEpoch != null
         ? DateTime.fromMillisecondsSinceEpoch(lastRunEpoch)
         : null;

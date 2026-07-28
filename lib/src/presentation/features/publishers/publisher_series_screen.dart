@@ -2,24 +2,28 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class PublisherSeriesScreen extends ConsumerStatefulWidget {
-  const PublisherSeriesScreen({super.key, @pathParam required this.publisherId});
+  const PublisherSeriesScreen({
+    super.key,
+    @pathParam required this.publisherId,
+  });
 
   final int publisherId;
 
   @override
-  ConsumerState<PublisherSeriesScreen> createState() => _PublisherSeriesScreenState();
+  ConsumerState<PublisherSeriesScreen> createState() =>
+      _PublisherSeriesScreenState();
 }
 
 class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
@@ -40,11 +44,11 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
   @override
   Widget build(BuildContext context) {
     final sortOption = ref.watch(
-      sortPreferenceForContextProvider(
-        SortPreferenceContext.publisherSeries,
-      ),
+      sortPreferenceForContextProvider(SortPreferenceContext.publisherSeries),
     );
-    final detailsAsync = ref.watch(publisherDetailsProvider(widget.publisherId));
+    final detailsAsync = ref.watch(
+      publisherDetailsProvider(widget.publisherId),
+    );
     final args = PublisherSeriesListArgs(
       publisherId: widget.publisherId,
       page: _page,
@@ -55,20 +59,26 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
 
     if (seriesAsync.hasValue) {
       _lastPage = seriesAsync.value;
-      _totalPages = ((seriesAsync.value!.count - 1) ~/ metronDefaultPageSize) + 1;
+      _totalPages =
+          ((seriesAsync.value!.count - 1) ~/ metronDefaultPageSize) + 1;
     }
 
     final body = seriesAsync.when(
       loading: () {
         if (_lastPage != null) {
-          return _buildContent(context, _lastPage!, sortOption, isLoading: true);
+          return _buildContent(
+            context,
+            _lastPage!,
+            sortOption,
+            isLoading: true,
+          );
         }
         return const AsyncStatePanel.loading();
       },
-      error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load series',
-      ),
-      data: (seriesPage) => _buildContent(context, seriesPage, sortOption, isLoading: false),
+      error: (error, _) =>
+          AsyncStatePanel.error(errorMessage: 'Failed to load series'),
+      data: (seriesPage) =>
+          _buildContent(context, seriesPage, sortOption, isLoading: false),
     );
 
     return Scaffold(
@@ -152,11 +162,11 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
                     onSortTap: isLoading
                         ? null
                         : () => showSortBottomSheet(
-                              context,
-                              ref,
-                              SortPreferenceContext.publisherSeries,
-                              seriesSortLabel,
-                            ),
+                            context,
+                            ref,
+                            SortPreferenceContext.publisherSeries,
+                            seriesSortLabel,
+                          ),
                   ),
                   if (isLoading)
                     const Padding(
@@ -184,20 +194,17 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
                 ),
               )
             : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final series = results[index];
-                    return Opacity(
-                      opacity: isLoading ? 0.6 : 1.0,
-                      child: SeriesListTile(
-                        series: series,
-                        isFirst: index == 0,
-                        isLast: index == results.length - 1,
-                      ),
-                    );
-                  },
-                  childCount: results.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final series = results[index];
+                  return Opacity(
+                    opacity: isLoading ? 0.6 : 1.0,
+                    child: SeriesListTile(
+                      series: series,
+                      isFirst: index == 0,
+                      isLast: index == results.length - 1,
+                    ),
+                  );
+                }, childCount: results.length),
               ),
       ],
     );

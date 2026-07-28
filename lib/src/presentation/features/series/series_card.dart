@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/domain/common/string_extensions.dart';
 
 class SeriesCard extends ConsumerWidget {
   final SeriesList series;
@@ -41,8 +41,9 @@ class SeriesCard extends ConsumerWidget {
     final coverImage = imageUrl ?? cachedImage;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth =
-        width.isInfinite ? null : (width * devicePixelRatio).round();
+    final cacheWidth = width.isInfinite
+        ? null
+        : (width * devicePixelRatio).round();
 
     return SizedBox(
       width: width,

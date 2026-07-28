@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
 
 @RoutePage()
@@ -77,11 +77,16 @@ class _PublisherDetailsScreenState
       heroWidth: 260,
       heroHeight: 260,
       initialChildSize: 0.55,
-      sheetContentBuilder: (context, d, ref) => _buildPublisherSheetSlivers(d, context, ref),
+      sheetContentBuilder: (context, d, ref) =>
+          _buildPublisherSheetSlivers(d, context, ref),
     );
   }
 
-  Iterable<Widget> _buildPublisherSheetSlivers(PublisherDetails details, BuildContext context, WidgetRef ref) sync* {
+  Iterable<Widget> _buildPublisherSheetSlivers(
+    PublisherDetails details,
+    BuildContext context,
+    WidgetRef ref,
+  ) sync* {
     final description = details.desc?.trim();
     final hasDescription = description != null && description.isNotEmpty;
     if (hasDescription) {
@@ -132,7 +137,11 @@ class _PublisherSeriesSection extends ConsumerWidget {
                   itemCount: 4,
                   itemBuilder: (context, index) => const Padding(
                     padding: EdgeInsets.only(right: 12),
-                    child: SkeletonBox(width: 120, height: 250, borderRadius: 8),
+                    child: SkeletonBox(
+                      width: 120,
+                      height: 250,
+                      borderRadius: 8,
+                    ),
                   ),
                 ),
               ),
@@ -213,20 +222,20 @@ class _PublisherInfoSection extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Last modified: $modifiedValue',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           ),
         ],
       ],
     );
   }
 
-    String? _modifiedValue() {
-      final modified = details.modified;
-      if (modified == null) return null;
-      return DateFormatter.isoDateTime(modified);
-    }
+  String? _modifiedValue() {
+    final modified = details.modified;
+    if (modified == null) return null;
+    return DateFormatter.isoDateTime(modified);
+  }
 
   Widget _buildDatabaseIdsSection(BuildContext context) {
     final entries = <Widget>[];
@@ -234,10 +243,14 @@ class _PublisherInfoSection extends StatelessWidget {
       entries.add(
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -261,11 +274,7 @@ class _PublisherInfoSection extends StatelessWidget {
       children: [
         const SectionHeader(title: 'DATABASE IDS'),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: entries,
-        ),
+        Wrap(spacing: 6, runSpacing: 6, children: entries),
       ],
     );
   }

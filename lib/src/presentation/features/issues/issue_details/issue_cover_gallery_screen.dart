@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 @RoutePage()
 class IssueCoverGalleryScreen extends StatefulWidget {
@@ -42,8 +42,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
   @override
   void initState() {
     super.initState();
-    final maxIndex =
-        widget.imageUrls.isEmpty ? 0 : widget.imageUrls.length - 1;
+    final maxIndex = widget.imageUrls.isEmpty ? 0 : widget.imageUrls.length - 1;
     _currentIndex = widget.initialIndex.clamp(0, maxIndex);
     _pageController = PageController(initialPage: _currentIndex);
   }
@@ -82,8 +81,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
     final title = widget.title ?? 'issue_cover';
     final titlePart = _safeFileComponent(title);
     final labelPart = _safeFileComponent(label);
-    final extension =
-        _fileExtensionFromUrl(widget.imageUrls[_currentIndex]);
+    final extension = _fileExtensionFromUrl(widget.imageUrls[_currentIndex]);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final base = [
       if (titlePart.isNotEmpty) titlePart,
@@ -275,8 +273,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
                     alignment: WrapAlignment.center,
                     spacing: 6,
                     runSpacing: 6,
-                    children: List.generate(
-                        widget.imageUrls.length, (index) {
+                    children: List.generate(widget.imageUrls.length, (index) {
                       final isSelected = _currentIndex == index;
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 180),

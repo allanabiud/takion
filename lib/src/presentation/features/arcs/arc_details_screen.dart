@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -128,13 +128,13 @@ class _ArcIssuesSection extends ConsumerWidget {
             const SectionHeader(title: 'Issues'),
             const SizedBox(height: 12),
             SizedBox(
-              height: 250,
+              height: 280,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 4,
                 itemBuilder: (context, index) => const Padding(
                   padding: EdgeInsets.only(right: 12),
-                  child: SkeletonBox(width: 140, height: 250, borderRadius: 8),
+                  child: ShimmerWidget(child: IssueCardSkeleton(width: 140)),
                 ),
               ),
             ),
@@ -172,6 +172,8 @@ class _ArcIssuesSection extends ConsumerWidget {
                     title:
                         '${issue.series?.name ?? issue.name} #${issue.number}',
                     seriesId: issue.series?.id,
+                    seriesName: issue.series?.name,
+                    issueNumber: issue.number,
                     compact: true,
                     onTap: issueId == null
                         ? null

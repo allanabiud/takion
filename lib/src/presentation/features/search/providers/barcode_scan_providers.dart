@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 
 class ScannedIssueState {
   final int issueId;
@@ -32,5 +32,5 @@ class ScannedIssuesNotifier extends Notifier<List<ScannedIssueState>> {
 
 final scannedIssueIdsProvider =
     NotifierProvider<ScannedIssuesNotifier, List<ScannedIssueState>>(
-  ScannedIssuesNotifier.new,
-);
+      ScannedIssuesNotifier.new,
+    );

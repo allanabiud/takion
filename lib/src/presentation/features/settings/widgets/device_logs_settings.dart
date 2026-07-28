@@ -9,8 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/logging/talker_setup.dart';
 import 'package:talker/talker.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/takion_bottom_sheet.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 
 void showDeviceLogs(BuildContext context, WidgetRef ref) {

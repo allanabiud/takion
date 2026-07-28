@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
@@ -34,6 +35,7 @@ Future<List<R>> mapWithConcurrency<T, R>(
 
 CollectionItem toCollectionItem(
   LibraryItem item,
+  int? seriesId,
   String? seriesName,
   int? seriesVolume,
   int? seriesYearBegan,
@@ -49,6 +51,7 @@ CollectionItem toCollectionItem(
       id: item.metronIssueId,
       number: issueNumber,
       series: CollectionIssueSeriesRef(
+        id: seriesId,
         name: (seriesName != null && seriesName.trim().isNotEmpty)
             ? seriesName.trim()
             : '',
@@ -75,14 +78,18 @@ CollectionItem toCollectionItem(
 }
 
 Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
-  final localDataSource = ref.read(metronLocalDataSourceProvider);
+  final db = ref.read(driftDatabaseProvider);
   final repo = ref.read(libraryRepositoryProvider);
 
   try {
-    final details = await localDataSource.getIssueDetails(item.metronIssueId);
-    if (details != null) {
-      if (item.pricePaid == null && details.price != null) {
-        final coverPrice = double.tryParse(details.price!);
+    final issue = await db.metronEntityDao.getIssue(item.metronIssueId);
+    if (issue != null) {
+      MetronSery? series;
+      if (issue.seriesId != null) {
+        series = await db.metronEntityDao.getSeries(issue.seriesId!);
+      }
+      if (item.pricePaid == null && issue.price != null) {
+        final coverPrice = double.tryParse(issue.price!);
         if (coverPrice != null) {
           await repo.updateItemPricePaid(item.metronIssueId, coverPrice);
           try {
@@ -92,18 +99,15 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
       }
       return toCollectionItem(
         item,
-        details.series?.name,
-        details.series?.volume,
-        details.series?.yearBegan,
-        details.number,
-        details.image,
-        details.coverDate != null
-            ? DateTime.tryParse(details.coverDate!)
-            : null,
-        details.storeDate != null
-            ? DateTime.tryParse(details.storeDate!)
-            : null,
-        details.modified != null ? DateTime.tryParse(details.modified!) : null,
+        series?.id ?? (item.metronSeriesId > 0 ? item.metronSeriesId : null),
+        series?.name,
+        series?.volume,
+        series?.yearBegan,
+        issue.number,
+        issue.imageUrl,
+        issue.coverDate != null ? DateTime.tryParse(issue.coverDate!) : null,
+        issue.storeDate != null ? DateTime.tryParse(issue.storeDate!) : null,
+        issue.modified != null ? DateTime.tryParse(issue.modified!) : null,
       );
     }
   } catch (e) {
@@ -111,33 +115,55 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
       'Failed to hydrate library item from issue details',
       error: e,
     );
-    // Fall through to series details lookup
   }
 
+  String? seriesName;
+  int? seriesVolume;
+  int? seriesYearBegan;
+
   try {
-    final seriesDetails = await localDataSource.getSeriesDetails(
+    final seriesDetails = await db.metronEntityDao.getSeries(
       item.metronSeriesId,
     );
     if (seriesDetails != null) {
-      return toCollectionItem(
-        item,
-        seriesDetails.name,
-        seriesDetails.volume,
-        seriesDetails.yearBegan,
-        '',
-        null,
-        null,
-        null,
-        null,
-      );
+      seriesName = seriesDetails.name;
+      seriesVolume = seriesDetails.volume;
+      seriesYearBegan = seriesDetails.yearBegan;
     }
   } catch (e) {
     AppLogger.warning(
-      'Failed to hydrate library item from series details',
+      'Failed to hydrate library item from local series details',
       error: e,
     );
-    // Fall through to fallback
   }
 
-  return toCollectionItem(item, null, null, null, '', null, null, null, null);
+  if ((seriesName == null || seriesName.trim().isEmpty) &&
+      item.metronSeriesId > 0) {
+    try {
+      final remoteSeries = await ref
+          .read(metronRepositoryProvider)
+          .getSeriesDetails(item.metronSeriesId);
+      seriesName = remoteSeries.name;
+      seriesVolume = remoteSeries.volume;
+      seriesYearBegan = remoteSeries.yearBegan;
+    } catch (e) {
+      AppLogger.warning(
+        'Failed to fetch remote series details for hydration',
+        error: e,
+      );
+    }
+  }
+
+  return toCollectionItem(
+    item,
+    item.metronSeriesId > 0 ? item.metronSeriesId : null,
+    seriesName,
+    seriesVolume,
+    seriesYearBegan,
+    '',
+    null,
+    null,
+    null,
+    null,
+  );
 }

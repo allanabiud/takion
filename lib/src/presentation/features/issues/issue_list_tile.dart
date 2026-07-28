@@ -5,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities/entities.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/domain/common/string_extensions.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
@@ -119,7 +119,11 @@ class IssueListTile extends ConsumerWidget {
                 issueId: effectiveIssue.id!,
                 sheetTitle: issueTitle,
                 seriesId: effectiveIssue.series?.id,
-                releaseDate: effectiveIssue.storeDate ?? effectiveIssue.coverDate,
+                releaseDate:
+                    effectiveIssue.storeDate ?? effectiveIssue.coverDate,
+                seriesName: effectiveIssue.series?.name,
+                issueNumber: effectiveIssue.number,
+                imageUrl: effectiveIssue.image,
               )
             : null);
 
@@ -137,7 +141,11 @@ class IssueListTile extends ConsumerWidget {
     final effectiveRating = rating ?? providerStatus?.rating;
     final isFavorite =
         effectiveIssue.id != null &&
-        ref.watch(favoriteIssueIdsProvider).asData?.value.contains(effectiveIssue.id!) ==
+        ref
+                .watch(favoriteIssueIdsProvider)
+                .asData
+                ?.value
+                .contains(effectiveIssue.id!) ==
             true;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
@@ -186,7 +194,9 @@ class IssueListTile extends ConsumerWidget {
                       errorWidget: (context, url, error) => Container(
                         width: imageWidth,
                         height: imageHeight,
-                        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.8),
                         child: Center(
                           child: Text(
                             initials(issueTitle),
@@ -202,7 +212,9 @@ class IssueListTile extends ConsumerWidget {
                   : Container(
                       width: imageWidth,
                       height: imageHeight,
-                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.8),
                       child: Center(
                         child: Text(
                           initials(issueTitle),
@@ -273,9 +285,7 @@ class IssueListTile extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
-                            DateFormatter.comicDate(
-                              effectiveIssue.storeDate!,
-                            ),
+                            DateFormatter.comicDate(effectiveIssue.storeDate!),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
@@ -293,10 +303,10 @@ class IssueListTile extends ConsumerWidget {
                             ),
                             if (isFavorite) ...[
                               const SizedBox(width: 8),
-                              const Icon(
+                              Icon(
                                 Icons.favorite,
                                 size: 16,
-                                color: Colors.red,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ],
                             const Spacer(),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 class AddToReadingListBottomSheet extends ConsumerStatefulWidget {
   final String targetId;
@@ -89,30 +89,25 @@ class _AddToReadingListBottomSheetState
       ref.invalidate(readingListsProvider);
       if (mounted) {
         if (addedCount == 0 && skippedCount > 0) {
-          TakionAlerts.info(
-            context,
-            'Already in all selected lists',
-          );
+          TakionAlerts.info(context, 'Already in all selected lists');
           Navigator.of(context).pop();
           return;
         }
 
         if (skippedCount > 0) {
-          TakionAlerts.success(
-            context,
-            'Added to $addedCount List(s)',
-          );
+          TakionAlerts.success(context, 'Added to $addedCount List(s)');
         } else {
-          TakionAlerts.success(
-            context,
-            'Added to Reading List(s)',
-          );
+          TakionAlerts.success(context, 'Added to Reading List(s)');
         }
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.safeError(context, e, userMessage: 'Failed to add to reading list');
+        TakionAlerts.safeError(
+          context,
+          e,
+          userMessage: 'Failed to add to reading list',
+        );
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);
@@ -131,8 +126,16 @@ class _AddToReadingListBottomSheetState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         readingListsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Text(TakionAlerts.cleanError(err, fallback: 'Failed to add to reading list')),
+          loading: () => const SizedBox(
+            height: 200,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (err, stack) => Text(
+            TakionAlerts.cleanError(
+              err,
+              fallback: 'Failed to add to reading list',
+            ),
+          ),
           data: (lists) {
             final contentTypeLists = lists
                 .where((list) => list.contentType == contentType)
@@ -238,10 +241,7 @@ class _AddToReadingListBottomSheetState
                         alreadyExists: alreadyExists,
                         onTap: () {
                           if (alreadyExists) {
-                            TakionAlerts.info(
-                              context,
-                              'Already in this list',
-                            );
+                            TakionAlerts.info(context, 'Already in this list');
                             return;
                           }
                           setState(() {
@@ -261,8 +261,9 @@ class _AddToReadingListBottomSheetState
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed:
-                        _isAdding || _selectedListIds.isEmpty ? null : _addItems,
+                    onPressed: _isAdding || _selectedListIds.isEmpty
+                        ? null
+                        : _addItems,
                     child: _isAdding
                         ? const SizedBox(
                             width: 20,

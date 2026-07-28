@@ -2,11 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
-import 'package:takion/src/presentation/logic/string_extensions.dart';
+import 'package:takion/src/domain/common/string_extensions.dart';
 
 class ReadingListCover extends ConsumerWidget {
   final ReadingList list;
@@ -47,7 +47,11 @@ class ReadingListCover extends ConsumerWidget {
             left: 0,
             child: items.length >= 2
                 ? _buildSideCover(
-                    context, ref, items[items.length >= 3 ? 2 : 1], listInitials)
+                    context,
+                    ref,
+                    items[items.length >= 3 ? 2 : 1],
+                    listInitials,
+                  )
                 : _buildPlaceholder(context, listInitials),
           ),
           Positioned(
@@ -150,12 +154,7 @@ class ReadingListCover extends ConsumerWidget {
 
     if (item.isSeries) {
       final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
-      final coverAsync = ref.watch(
-        seriesCoverImageProvider((
-          seriesId: id,
-          allowRemoteFetch: allowRemoteCoverFetch,
-        )),
-      );
+      final coverAsync = ref.watch(seriesCoverImageProvider(id));
 
       return coverAsync.when(
         data: (imageUrl) {
@@ -164,10 +163,8 @@ class ReadingListCover extends ConsumerWidget {
           }
           return _buildItemIcon(context, listInitials);
         },
-        loading: () =>
-            _buildItemIcon(context, listInitials),
-        error: (_, _) =>
-            _buildItemIcon(context, listInitials),
+        loading: () => _buildItemIcon(context, listInitials),
+        error: (_, _) => _buildItemIcon(context, listInitials),
       );
     }
 
@@ -193,10 +190,8 @@ class ReadingListCover extends ConsumerWidget {
         }
         return _buildItemIcon(context, listInitials);
       },
-      loading: () =>
-          _buildItemIcon(context, listInitials),
-      error: (_, _) =>
-          _buildItemIcon(context, listInitials),
+      loading: () => _buildItemIcon(context, listInitials),
+      error: (_, _) => _buildItemIcon(context, listInitials),
     );
   }
 
@@ -208,8 +203,7 @@ class ReadingListCover extends ConsumerWidget {
         fit: BoxFit.cover,
         placeholder: (context, url) =>
             const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        errorWidget: (context, url, error) =>
-            _buildItemIcon(context, ''),
+        errorWidget: (context, url, error) => _buildItemIcon(context, ''),
       ),
     );
   }
@@ -219,7 +213,9 @@ class ReadingListCover extends ConsumerWidget {
       width: width * 0.85,
       height: height * 0.9,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Theme.of(context).dividerColor, width: 1),
       ),

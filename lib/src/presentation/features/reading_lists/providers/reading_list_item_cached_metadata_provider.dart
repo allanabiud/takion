@@ -6,15 +6,16 @@ final readingListItemCachedMetadataProvider =
       ref,
       args,
     ) async {
-      final localDataSource = ref.read(metronLocalDataSourceProvider);
+      final db = ref.read(driftDatabaseProvider);
+      final mapper = ref.read(entityMapperProvider);
       final id = int.tryParse(args.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
       if (id <= 0) return null;
 
       if (args.isSeries) {
-        final dto = await localDataSource.getSeriesDetails(id);
-        return dto?.toEntity();
+        final series = await db.metronEntityDao.getSeries(id);
+        return series != null ? await mapper.seriesToEntity(series) : null;
       }
 
-      final dto = await localDataSource.getIssueDetails(id);
-      return dto?.toEntity();
+      final issue = await db.metronEntityDao.getIssue(id);
+      return issue != null ? await mapper.issueToEntity(issue) : null;
     });

@@ -1,9 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/hive_service.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
 
 const kSearchBarHeroTag = 'discover-search-bar-hero';
 
-enum SearchTarget { series, issues, characters, creators, universes, imprints, teams, publishers, arcs }
+enum SearchTarget {
+  series,
+  issues,
+  characters,
+  creators,
+  universes,
+  imprints,
+  teams,
+  publishers,
+  arcs,
+}
 
 class SearchState {
   const SearchState({
@@ -23,7 +33,6 @@ class SearchState {
 }
 
 class SearchStateNotifier extends Notifier<SearchState> {
-  static const _settingsBoxName = 'settings_box';
   static const _historyKey = 'search_history';
   static const _targetKey = 'search_target';
 
@@ -39,32 +48,27 @@ class SearchStateNotifier extends Notifier<SearchState> {
   }
 
   Future<void> _hydrateFromStorage() async {
-    final hive = ref.read(hiveServiceProvider);
-    final settingsBox = await hive.openBox<dynamic>(_settingsBoxName);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final rawHistory = await dao.getString(_historyKey);
+    final history = rawHistory?.split(',') ?? <String>[];
+    final cleanHistory = history
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
 
-    final rawHistory = settingsBox.get(_historyKey);
-    final history = rawHistory is List
-        ? rawHistory
-              .whereType<String>()
-              .map((item) => item.trim())
-              .where((item) => item.isNotEmpty)
-              .toList()
-        : <String>[];
-
-    final rawTarget = settingsBox.get(_targetKey);
-    final targetIndex = rawTarget is int ? rawTarget : 0;
+    final rawTarget = await dao.getString(_targetKey);
+    final targetIndex = int.tryParse(rawTarget ?? '') ?? 0;
     final target = SearchTarget.values.elementAt(
       targetIndex.clamp(0, SearchTarget.values.length - 1),
     );
 
-    state = state.copyWith(target: target, history: history);
+    state = state.copyWith(target: target, history: cleanHistory);
   }
 
   Future<void> _persist() async {
-    final hive = ref.read(hiveServiceProvider);
-    final settingsBox = await hive.openBox<dynamic>(_settingsBoxName);
-    await settingsBox.put(_historyKey, state.history);
-    await settingsBox.put(_targetKey, state.target.index);
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setString(_historyKey, state.history.join(','));
+    await dao.setString(_targetKey, state.target.index.toString());
   }
 
   void setTarget(SearchTarget target) {

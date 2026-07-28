@@ -20,7 +20,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const settings = InitializationSettings(android: androidSettings);
 
     try {
@@ -28,9 +30,37 @@ class NotificationService {
         settings,
         onDidReceiveNotificationResponse: _onNotificationResponse,
       );
+
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (android != null) {
+        const channel = AndroidNotificationChannel(
+          _channelId,
+          _channelName,
+          description: 'Weekly summary of your comic pulls',
+          importance: Importance.defaultImportance,
+        );
+        await android.createNotificationChannel(channel);
+      }
+
       AppLogger.info('Notification service initialized');
     } catch (e) {
       AppLogger.warning('Notification service init failed', error: e);
+    }
+  }
+
+  Future<void> checkPendingNotificationLaunch() async {
+    try {
+      final details = await _plugin.getNotificationAppLaunchDetails();
+      if (details != null &&
+          details.didNotificationLaunchApp &&
+          details.notificationResponse != null) {
+        _onNotificationResponse(details.notificationResponse!);
+      }
+    } catch (e) {
+      AppLogger.debug('Pending notification launch check skipped: $e');
     }
   }
 
@@ -48,14 +78,29 @@ class NotificationService {
     if (daysUntil < 0 || (daysUntil == 0 && now.hour >= 20)) {
       daysUntil += 7;
     }
-    return tz.TZDateTime(tz.local, now.year, now.month, now.day + daysUntil, 20);
+    final targetDate = now.add(Duration(days: daysUntil));
+    return tz.TZDateTime(
+      tz.local,
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+      20,
+      0,
+    );
   }
 
   Future<void> scheduleWeekly(int count, NotificationDay day) async {
     await cancel();
 
+    if (count <= 0) {
+      AppLogger.info('No pulls this week; weekly pull notification cancelled');
+      return;
+    }
+
     final scheduledDate = _nextDayAt8PM(day);
-    AppLogger.info('Scheduling weekly pull notification: $count pulls on $day at ${_formatTime(scheduledDate)}');
+    AppLogger.info(
+      'Scheduling weekly pull notification: $count pulls on ${day.name} at ${_formatTime(scheduledDate)} (${scheduledDate.location.name})',
+    );
 
     const androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -66,40 +111,75 @@ class NotificationService {
     );
     const details = NotificationDetails(android: androidDetails);
 
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    final canScheduleExactly =
+        await android?.canScheduleExactNotifications() ?? false;
+
     try {
       await _plugin.zonedSchedule(
         _notificationId,
         'Weekly Pull Summary',
-        'You have $count pulls this week',
+        count == 1
+            ? 'You have 1 pull this week'
+            : 'You have $count pulls this week',
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: canScheduleExactly
+            ? AndroidScheduleMode.exactAllowWhileIdle
+            : AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
       );
-      AppLogger.info('Weekly pull notification scheduled successfully');
+      AppLogger.info(
+        'Weekly pull notification scheduled successfully for $scheduledDate',
+      );
     } catch (e) {
-      AppLogger.warning('Failed to schedule weekly pull notification', error: e);
+      AppLogger.warning(
+        'Failed to schedule weekly pull notification',
+        error: e,
+      );
     }
   }
 
   Future<bool> requestPermissions() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       return (await android.requestNotificationsPermission()) ?? true;
     }
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       return (await ios.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      )) ?? true;
+            alert: true,
+            badge: true,
+            sound: true,
+          )) ??
+          true;
     }
     return true;
+  }
+
+  /// Android 14+ requires the user's explicit approval for exact 8 PM alarms.
+  Future<void> requestExactAlarmPermission() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android == null) return;
+    final canScheduleExactly =
+        await android.canScheduleExactNotifications() ?? false;
+    if (!canScheduleExactly) {
+      await android.requestExactAlarmsPermission();
+    }
   }
 
   Future<void> cancel() async {

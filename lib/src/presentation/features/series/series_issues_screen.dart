@@ -1,18 +1,16 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities/entities.dart';
+import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/presentation/common/async_state_panel.dart';
-import 'package:takion/src/presentation/common/empty_content_state.dart';
-import 'package:takion/src/presentation/common/takion_alerts.dart';
-import 'package:takion/src/presentation/components/components.dart';
+import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
-import 'package:takion/src/presentation/logic/content_sorting.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 
@@ -32,11 +30,15 @@ class SeriesIssueBulkCandidate {
     required this.issueId,
     required this.orderIndex,
     required this.issueNumber,
+    this.imageUrl,
+    this.storeDate,
   });
 
   final int issueId;
   final int orderIndex;
   final String issueNumber;
+  final String? imageUrl;
+  final DateTime? storeDate;
 }
 
 @RoutePage()
@@ -69,10 +71,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
       ),
     );
     final detailsAsync = ref.watch(seriesDetailsProvider(widget.seriesId));
-    final args = SeriesIssueListArgs(
-      seriesId: widget.seriesId,
-      page: _page,
-    );
+    final args = SeriesIssueListArgs(seriesId: widget.seriesId, page: _page);
     final issuesAsync = ref.watch(seriesIssueListProvider(args));
     final isLoading = issuesAsync.isLoading;
     final seriesName = detailsAsync.asData?.value.name ?? '';
@@ -87,14 +86,18 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     final body = issuesAsync.when(
       loading: () {
         if (_lastPage != null) {
-          return _buildContent(context, ref, _lastPage!, sortOption,
-              isLoading: true);
+          return _buildContent(
+            context,
+            ref,
+            _lastPage!,
+            sortOption,
+            isLoading: true,
+          );
         }
         return const AsyncStatePanel.loading();
       },
-      error: (error, _) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load issues',
-      ),
+      error: (error, _) =>
+          AsyncStatePanel.error(errorMessage: 'Failed to load issues'),
       data: (issuePage) =>
           _buildContent(context, ref, issuePage, sortOption, isLoading: false),
     );
@@ -160,11 +163,9 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     );
   }
 
-  bool get _pageHasPrevious =>
-      _lastPage?.hasPrevious ?? false;
+  bool get _pageHasPrevious => _lastPage?.hasPrevious ?? false;
 
-  bool get _pageHasNext =>
-      _lastPage?.hasNext ?? false;
+  bool get _pageHasNext => _lastPage?.hasNext ?? false;
 
   Widget _buildContent(
     BuildContext context,
@@ -195,10 +196,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const VerticalDivider(
-                          width: 1,
-                          thickness: 1,
-                        ),
+                        const VerticalDivider(width: 1, thickness: 1),
                         TextButton.icon(
                           onPressed: isLoading
                               ? null
@@ -206,8 +204,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
                                   showSortBottomSheet(
                                     context,
                                     ref,
-                                    SortPreferenceContext
-                                        .seriesDetailsIssues,
+                                    SortPreferenceContext.seriesDetailsIssues,
                                     issueSortLabel,
                                   );
                                 },
@@ -243,20 +240,17 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
                 ),
               )
             : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final issue = sortedIssues[index];
-                    return Opacity(
-                      opacity: isLoading ? 0.6 : 1.0,
-                      child: IssueListTile(
-                        issue: issue,
-                        isFirst: index == 0,
-                        isLast: index == sortedIssues.length - 1,
-                      ),
-                    );
-                  },
-                  childCount: sortedIssues.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final issue = sortedIssues[index];
+                  return Opacity(
+                    opacity: isLoading ? 0.6 : 1.0,
+                    child: IssueListTile(
+                      issue: issue,
+                      isFirst: index == 0,
+                      isLast: index == sortedIssues.length - 1,
+                    ),
+                  );
+                }, childCount: sortedIssues.length),
               ),
       ],
     );
@@ -299,6 +293,8 @@ Future<List<SeriesIssueBulkCandidate>> allSeriesIssues(
             issueId: issueId,
             orderIndex: orderIndex,
             issueNumber: issue.number,
+            storeDate: issue.storeDate,
+            imageUrl: issue.image,
           ),
         );
         orderIndex++;
@@ -335,6 +331,7 @@ Future<void> applySeriesIssueBulkAction({
   required BuildContext context,
   required WidgetRef ref,
   required int seriesId,
+  required String seriesName,
   required SeriesIssueBulkOperation operation,
   required SeriesIssueSelectionMode selectionMode,
   required List<SeriesIssueBulkCandidate> issues,
@@ -344,42 +341,31 @@ Future<void> applySeriesIssueBulkAction({
 }) async {
   try {
     final libraryRepository = ref.read(libraryRepositoryProvider);
-    final catalogRepository = ref.read(catalogRepositoryProvider);
     final activityRepository = ref.read(activityRepositoryProvider);
     final imageCache = ref.read(entityImageCacheProvider);
+    final existingItems = await libraryRepository.getItemsBySeriesId(seriesId);
+    final existingByIssueId = {
+      for (final e in existingItems) e.metronIssueId: e,
+    };
     var affected = 0;
     final affectedIssueIds = <int>{};
+    final now = DateTime.now().toUtc();
 
-    Future<_ResolvedIssueMeta> resolveMeta(int id, String fallbackNumber) async {
-      String? cachedUrl;
-      try { cachedUrl = await imageCache.get('issue', id); } catch (_) {}
-      if (cachedUrl != null && cachedUrl.isNotEmpty) {
-        return _ResolvedIssueMeta(seriesName: '', issueNumber: fallbackNumber, imageUrl: cachedUrl);
-      }
-      try {
-        final details = await catalogRepository.getIssueDetails(id);
-        if (details.image != null && details.image!.isNotEmpty) {
-          await imageCache.set('issue', id, details.image!);
-        }
-        return _ResolvedIssueMeta(
-          seriesName: details.series?.name ?? 'Unknown Series',
-          issueNumber: details.number,
-          imageUrl: details.image,
-        );
-      } catch (_) {
-        return _ResolvedIssueMeta(seriesName: 'Unknown Series', issueNumber: fallbackNumber, imageUrl: null);
-      }
-    }
+    final itemsToUpsert = <LibraryItem>[];
+    final eventsToAdd = <LibraryActivityEvent>[];
+    final readLogsToAdd = <LibraryReadLog>[];
+    final issueIdsToDelete = <int>[];
+    final readLogItemIdsToDelete = <String>[];
+    final imageCacheEntries = <int, String>{};
 
     for (final issue in issues) {
       final issueId = issue.issueId;
-      final existing = await libraryRepository.getItemByIssueId(issueId);
+      final existing = existingByIssueId[issueId];
       final isCollected =
           existing?.ownershipStatus == LibraryOwnershipStatus.owned;
       final isRead = existing?.isRead ?? false;
 
-      final matchesSelection =
-          selectionMode == SeriesIssueSelectionMode.range
+      final matchesSelection = selectionMode == SeriesIssueSelectionMode.range
           ? (startOrderIndex != null &&
                 endOrderIndex != null &&
                 issue.orderIndex >= startOrderIndex &&
@@ -391,151 +377,164 @@ Future<void> applySeriesIssueBulkAction({
                   isRead: isRead,
                 ));
       if (!matchesSelection) continue;
-      final now = DateTime.now().toUtc();
 
       if (operation == SeriesIssueBulkOperation.addToCollection) {
         if (isCollected) continue;
-        await libraryRepository.upsertItem(
-          metronIssueId: issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus: LibraryOwnershipStatus.owned,
-          isRead: existing?.isRead ?? false,
-          rating: existing?.rating,
-          purchaseDate: existing?.purchaseDate,
-          pricePaid: existing?.pricePaid,
-          quantityOwned: existing?.quantityOwned ?? 1,
-          format: existing?.format ?? LibraryItemFormat.print,
-          firstReadAt: existing?.firstReadAt,
-          conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? now,
-          notes: existing?.notes,
+        itemsToUpsert.add(
+          LibraryItem(
+            id: existing?.id ?? 'lib-$issueId',
+            userId: 'local-user',
+            metronIssueId: issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: LibraryOwnershipStatus.owned,
+            isRead: existing?.isRead ?? false,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: existing?.firstReadAt,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? now,
+            notes: existing?.notes,
+            createdAt: existing?.createdAt != null ? existing!.createdAt : now,
+            updatedAt: now,
+          ),
         );
-        final meta = await resolveMeta(issueId, issue.issueNumber);
-        await activityRepository.addEvent(
+        eventsToAdd.add(
           LibraryActivityEvent(
             id: 'act-col-$issueId-${now.microsecondsSinceEpoch}',
             userId: 'local-user',
             type: ActivityEventType.collected,
             issueId: issueId,
             seriesId: seriesId,
-            seriesName: meta.seriesName,
-            issueNumber: meta.issueNumber,
-            imageUrl: meta.imageUrl,
+            seriesName: seriesName,
+            issueNumber: issue.issueNumber,
+            imageUrl: issue.imageUrl,
             timestamp: now,
           ),
         );
-        affected++;
+        if (issue.imageUrl != null && issue.imageUrl!.isNotEmpty) {
+          imageCacheEntries[issueId] = issue.imageUrl!;
+        }
         affectedIssueIds.add(issueId);
+        affected++;
         continue;
       }
 
       if (operation == SeriesIssueBulkOperation.removeFromCollection) {
         if (!isCollected) continue;
-        await libraryRepository.deleteItemByIssueId(issueId);
-        final meta = await resolveMeta(issueId, issue.issueNumber);
-        await activityRepository.addEvent(
-          LibraryActivityEvent(
-            id: 'act-ucol-$issueId-${now.microsecondsSinceEpoch}',
-            userId: 'local-user',
-            type: ActivityEventType.uncollected,
-            issueId: issueId,
-            seriesId: seriesId,
-            seriesName: meta.seriesName,
-            issueNumber: meta.issueNumber,
-            imageUrl: meta.imageUrl,
-            timestamp: now,
-          ),
-        );
-        affected++;
+        issueIdsToDelete.add(issueId);
         affectedIssueIds.add(issueId);
+        affected++;
         continue;
       }
 
       if (operation == SeriesIssueBulkOperation.markAsRead) {
         if (isRead) continue;
-        await libraryRepository.upsertItem(
-          metronIssueId: issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus:
-              existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
-          isRead: true,
-          rating: existing?.rating,
-          purchaseDate: existing?.purchaseDate,
-          pricePaid: existing?.pricePaid,
-          quantityOwned: existing?.quantityOwned ?? 1,
-          format: existing?.format ?? LibraryItemFormat.print,
-          firstReadAt: existing?.firstReadAt ?? now,
-          conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? now,
-          notes: existing?.notes,
+        final ownershipStatus =
+            existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned;
+        itemsToUpsert.add(
+          LibraryItem(
+            id: existing?.id ?? 'lib-$issueId',
+            userId: 'local-user',
+            metronIssueId: issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: ownershipStatus,
+            isRead: true,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: existing?.firstReadAt ?? now,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? now,
+            notes: existing?.notes,
+            createdAt: existing?.createdAt != null ? existing!.createdAt : now,
+            updatedAt: now,
+          ),
         );
-        await libraryRepository.addReadLog(
-          metronIssueId: issueId,
-          readAt: now,
+        readLogsToAdd.add(
+          LibraryReadLog(
+            id: 'read-$issueId-${now.microsecondsSinceEpoch}',
+            userId: 'local-user',
+            collectionItemId: 'lib-$issueId',
+            readAt: now,
+            createdAt: now,
+          ),
         );
-        final meta = await resolveMeta(issueId, issue.issueNumber);
-        await activityRepository.addEvent(
+        eventsToAdd.add(
           LibraryActivityEvent(
             id: 'act-read-$issueId-${now.microsecondsSinceEpoch}',
             userId: 'local-user',
             type: ActivityEventType.read,
             issueId: issueId,
             seriesId: seriesId,
-            seriesName: meta.seriesName,
-            issueNumber: meta.issueNumber,
-            imageUrl: meta.imageUrl,
+            seriesName: seriesName,
+            issueNumber: issue.issueNumber,
+            imageUrl: issue.imageUrl,
             timestamp: now,
           ),
         );
-        affected++;
+        if (issue.imageUrl != null && issue.imageUrl!.isNotEmpty) {
+          imageCacheEntries[issueId] = issue.imageUrl!;
+        }
         affectedIssueIds.add(issueId);
+        affected++;
         continue;
       }
 
       if (operation == SeriesIssueBulkOperation.markAsUnread) {
         if (!isRead) continue;
-        await libraryRepository.upsertItem(
-          metronIssueId: issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus:
-              existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
-          isRead: false,
-          rating: existing?.rating,
-          purchaseDate: existing?.purchaseDate,
-          pricePaid: existing?.pricePaid,
-          quantityOwned: existing?.quantityOwned ?? 1,
-          format: existing?.format ?? LibraryItemFormat.print,
-          firstReadAt: null,
-          conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? now,
-          notes: existing?.notes,
-        );
-        final logs = await libraryRepository.getReadLogsByIssueId(issueId);
-        for (final log in logs) {
-          await libraryRepository.deleteReadLogById(log.id);
-        }
-        final meta = await resolveMeta(issueId, issue.issueNumber);
-        await activityRepository.addEvent(
-          LibraryActivityEvent(
-            id: 'act-unrd-$issueId-${now.microsecondsSinceEpoch}',
+        final ownershipStatus =
+            existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned;
+        itemsToUpsert.add(
+          LibraryItem(
+            id: existing?.id ?? 'lib-$issueId',
             userId: 'local-user',
-            type: ActivityEventType.unread,
-            issueId: issueId,
-            seriesId: seriesId,
-            seriesName: meta.seriesName,
-            issueNumber: meta.issueNumber,
-            imageUrl: meta.imageUrl,
-            timestamp: now,
+            metronIssueId: issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: ownershipStatus,
+            isRead: false,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: null,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? now,
+            notes: existing?.notes,
+            createdAt: existing?.createdAt != null ? existing!.createdAt : now,
+            updatedAt: now,
           ),
         );
-        affected++;
+        readLogItemIdsToDelete.add('lib-$issueId');
         affectedIssueIds.add(issueId);
+        affected++;
       }
     }
 
-    ref.invalidate(allLibraryItemsProvider);
-    for (final issueId in affectedIssueIds) {
-      ref.invalidate(issueCollectionStatusProvider(issueId));
+    if (imageCacheEntries.isNotEmpty) {
+      await imageCache.setMany('issue', imageCacheEntries);
+    }
+    if (itemsToUpsert.isNotEmpty) {
+      await libraryRepository.batchUpsertItems(seriesId, itemsToUpsert);
+    }
+    if (eventsToAdd.isNotEmpty) {
+      await activityRepository.batchAddEvents(eventsToAdd);
+    }
+    if (readLogsToAdd.isNotEmpty) {
+      await libraryRepository.batchAddReadLogs(readLogsToAdd);
+    }
+    if (issueIdsToDelete.isNotEmpty) {
+      await libraryRepository.batchDeleteItemsByIssueId(issueIdsToDelete);
+    }
+    if (readLogItemIdsToDelete.isNotEmpty) {
+      await libraryRepository.batchDeleteReadLogsByItemIds(
+        readLogItemIdsToDelete,
+      );
     }
 
     if (context.mounted) {
@@ -551,23 +550,20 @@ Future<void> applySeriesIssueBulkAction({
     }
   } catch (error) {
     if (context.mounted) {
-      TakionAlerts.safeError(context, error, userMessage: 'Failed to apply series issue action');
+      TakionAlerts.safeError(
+        context,
+        error,
+        userMessage: 'Failed to apply series issue action',
+      );
     }
   }
 }
 
-class _ResolvedIssueMeta {
-  const _ResolvedIssueMeta({
-    required this.seriesName,
-    required this.issueNumber,
-    this.imageUrl,
-  });
-  final String seriesName;
-  final String issueNumber;
-  final String? imageUrl;
-}
-
-int? _findClosestIssueIndex(List<SeriesIssueBulkCandidate> issues, String input, {int? startAfter}) {
+int? _findClosestIssueIndex(
+  List<SeriesIssueBulkCandidate> issues,
+  String input, {
+  int? startAfter,
+}) {
   final query = input.trim();
   if (query.isEmpty) return null;
 
@@ -631,11 +627,9 @@ Future<void> showSeriesIssueBulkActionsSheet({
               });
             });
           }
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: CircularProgressIndicator(),
-            ),
+          return SizedBox(
+            height: 400,
+            child: const Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -688,10 +682,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                 SeriesIssueSubset.unread,
               ];
             case SeriesIssueBulkOperation.removeFromCollection:
-              return const [
-                SeriesIssueSubset.all,
-                SeriesIssueSubset.collected,
-              ];
+              return const [SeriesIssueSubset.all, SeriesIssueSubset.collected];
             case SeriesIssueBulkOperation.markAsRead:
               return const [
                 SeriesIssueSubset.all,
@@ -736,9 +727,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                 },
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: SeriesIssueBulkOperation.values.map((
-                    operation,
-                  ) {
+                  children: SeriesIssueBulkOperation.values.map((operation) {
                     return RadioListTile<SeriesIssueBulkOperation>(
                       title: Text(operationLabel(operation)),
                       value: operation,
@@ -782,10 +771,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
               ),
               const SizedBox(height: 12),
               if (selectedMode == SeriesIssueSelectionMode.predefined) ...[
-                Text(
-                  'Apply to',
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
+                Text('Apply to', style: Theme.of(context).textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -795,9 +781,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                         (value) => ChoiceChip(
                           label: Text(
                             subsetLabel(value),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           selected: value == selectedSubset,
                           shape: const StadiumBorder(),
@@ -818,7 +802,9 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Column(
@@ -840,7 +826,9 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                       useManualRange = !useManualRange;
                                     });
                                   },
-                            child: Text(useManualRange ? 'Use Slider' : 'Use Inputs'),
+                            child: Text(
+                              useManualRange ? 'Use Slider' : 'Use Inputs',
+                            ),
                           ),
                         ],
                       ),
@@ -858,7 +846,11 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                 enabled: !isApplying,
                                 onChanged: (v) {
                                   if (v.isEmpty) return;
-                                  final idx = _findClosestIssueIndex(issues, v, startAfter: null);
+                                  final idx = _findClosestIssueIndex(
+                                    issues,
+                                    v,
+                                    startAfter: null,
+                                  );
                                   if (idx != null && idx + 1 <= selectedEnd) {
                                     setModalState(() {
                                       selectedRange = RangeValues(
@@ -882,7 +874,11 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                 enabled: !isApplying,
                                 onChanged: (v) {
                                   if (v.isEmpty) return;
-                                  final idx = _findClosestIssueIndex(issues, v, startAfter: selectedStart - 1);
+                                  final idx = _findClosestIssueIndex(
+                                    issues,
+                                    v,
+                                    startAfter: selectedStart - 1,
+                                  );
                                   if (idx != null && idx + 1 <= totalIssues) {
                                     setModalState(() {
                                       selectedRange = RangeValues(
@@ -947,24 +943,25 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                 context: context,
                                 ref: ref,
                                 seriesId: seriesId,
+                                seriesName: seriesName,
                                 operation: selectedOperation,
                                 selectionMode: selectedMode,
                                 issues: issues,
                                 subset:
                                     selectedMode ==
-                                            SeriesIssueSelectionMode.predefined
-                                        ? selectedSubset
-                                        : null,
+                                        SeriesIssueSelectionMode.predefined
+                                    ? selectedSubset
+                                    : null,
                                 startOrderIndex:
                                     selectedMode ==
-                                            SeriesIssueSelectionMode.range
-                                        ? selectedStart
-                                        : null,
+                                        SeriesIssueSelectionMode.range
+                                    ? selectedStart
+                                    : null,
                                 endOrderIndex:
                                     selectedMode ==
-                                            SeriesIssueSelectionMode.range
-                                        ? selectedEnd
-                                        : null,
+                                        SeriesIssueSelectionMode.range
+                                    ? selectedEnd
+                                    : null,
                               );
                             } finally {
                               if (context.mounted) {
@@ -1003,11 +1000,7 @@ class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) =>
-      Container(
-        color: Theme.of(context).colorScheme.surface,
-        child: child,
-      );
+  ) => Container(color: Theme.of(context).colorScheme.surface, child: child);
 
   @override
   double get maxExtent => isLoading ? 74.0 : 56.0;
