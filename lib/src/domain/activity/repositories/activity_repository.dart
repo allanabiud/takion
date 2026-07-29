@@ -19,4 +19,9 @@ abstract class ActivityRepository {
   Stream<List<LibraryActivityEvent>> watchBySeriesId(int seriesId);
 
   Future<int> count({ActivityEventType? typeFilter});
+
+  Future<void> deleteEventsByIssueIds(
+    List<int> issueIds, {
+    ActivityEventType? type,
+  });
 }

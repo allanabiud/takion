@@ -3,16 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/create_or_import_local_reading_list_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
-class AddToReadingListBottomSheet extends ConsumerStatefulWidget {
+class AddToLocalReadingListBottomSheet extends ConsumerStatefulWidget {
   final String targetId;
   final bool isSeries;
 
-  const AddToReadingListBottomSheet({
+  const AddToLocalReadingListBottomSheet({
     super.key,
     required this.targetId,
     required this.isSeries,
@@ -26,7 +26,7 @@ class AddToReadingListBottomSheet extends ConsumerStatefulWidget {
     return TakionBottomSheet.show<void>(
       context: context,
       title: 'Add to reading list',
-      child: AddToReadingListBottomSheet(
+      child: AddToLocalReadingListBottomSheet(
         targetId: targetId,
         isSeries: isSeries,
       ),
@@ -34,12 +34,12 @@ class AddToReadingListBottomSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<AddToReadingListBottomSheet> createState() =>
-      _AddToReadingListBottomSheetState();
+  ConsumerState<AddToLocalReadingListBottomSheet> createState() =>
+      _AddToLocalReadingListBottomSheetState();
 }
 
-class _AddToReadingListBottomSheetState
-    extends ConsumerState<AddToReadingListBottomSheet> {
+class _AddToLocalReadingListBottomSheetState
+    extends ConsumerState<AddToLocalReadingListBottomSheet> {
   String _searchQuery = '';
   final Set<String> _selectedListIds = {};
   bool _isAdding = false;
@@ -60,7 +60,7 @@ class _AddToReadingListBottomSheetState
   Future<void> _addItems() async {
     setState(() => _isAdding = true);
     try {
-      final repository = ref.read(readingListRepositoryProvider);
+      final repository = ref.read(localReadingListRepositoryProvider);
       int addedCount = 0;
       int skippedCount = 0;
 
@@ -76,7 +76,7 @@ class _AddToReadingListBottomSheetState
 
         await repository.addItemToList(
           listId,
-          ReadingListItem(
+          LocalReadingListItem(
             targetId: _normalizedTargetId,
             isSeries: widget.isSeries,
             role: ItemRole.standard,
@@ -86,7 +86,7 @@ class _AddToReadingListBottomSheetState
         addedCount++;
       }
 
-      ref.invalidate(readingListsProvider);
+      ref.invalidate(localReadingListsProvider);
       if (mounted) {
         if (addedCount == 0 && skippedCount > 0) {
           TakionAlerts.info(context, 'Already in all selected lists');
@@ -116,7 +116,7 @@ class _AddToReadingListBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    final readingListsAsync = ref.watch(readingListsProvider);
+    final readingListsAsync = ref.watch(localReadingListsProvider);
     final contentType = widget.isSeries
         ? ListContentType.series
         : ListContentType.issue;
@@ -171,7 +171,7 @@ class _AddToReadingListBottomSheetState
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: () {
-                          CreateOrImportReadingListSheet.showCreateOnly(
+                          CreateOrImportLocalReadingListSheet.showCreateOnly(
                             context,
                             initialContentType: contentType,
                           );

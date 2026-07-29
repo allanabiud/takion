@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
@@ -8,14 +7,24 @@ import 'package:takion/src/presentation/features/library/activity_log_group.dart
 import 'package:takion/src/presentation/features/library/providers/library_activity_provider.dart';
 import 'package:takion/src/presentation/features/library/widgets/activity_log_group_tile.dart';
 
-class ActivityLogView extends ConsumerWidget {
+class ActivityLogView extends ConsumerStatefulWidget {
   final ActivityEventType? typeFilter;
 
   const ActivityLogView({super.key, required this.typeFilter});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activityAsync = ref.watch(recentActivityProvider(typeFilter));
+  ConsumerState<ActivityLogView> createState() => _ActivityLogViewState();
+}
+
+class _ActivityLogViewState extends ConsumerState<ActivityLogView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final activityAsync = ref.watch(recentActivityProvider(widget.typeFilter));
 
     return activityAsync.when(
       loading: () => const AsyncStatePanel.loading(),
@@ -33,104 +42,23 @@ class ActivityLogView extends ConsumerWidget {
 
         final groups = groupActivityEvents(events);
 
-        final flatItems = <_ActivityLogItem>[];
-        for (int i = 0; i < groups.length; i++) {
-          final group = groups[i];
-
-          final isNewDate = i == 0 || groups[i].date != groups[i - 1].date;
-          if (isNewDate) {
-            flatItems.add(_ActivityLogItem.header(group.date));
-          }
-
-          final isFirstInDate = isNewDate;
-          final isLastInDate =
-              i == groups.length - 1 || groups[i + 1].date != group.date;
-
-          flatItems.add(
-            _ActivityLogItem.group(
-              group: group,
-              isFirst: isFirstInDate,
-              isLast: isLastInDate,
-            ),
-          );
-        }
-
         return RefreshIndicator(
           onRefresh: () async =>
-              ref.invalidate(recentActivityProvider(typeFilter)),
+              ref.invalidate(recentActivityProvider(widget.typeFilter)),
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: flatItems.length,
+            itemCount: groups.length,
             itemBuilder: (context, index) {
-              final item = flatItems[index];
-              if (item.isHeader) {
-                return _buildHeader(context, item.date!);
-              } else {
-                return ActivityLogGroupTile(
-                  group: item.group!,
-                  isFirst: item.isFirst,
-                  isLast: item.isLast,
-                );
-              }
+              return ActivityLogGroupTile(
+                group: groups[index],
+                isFirst: index == 0,
+                isLast: index == groups.length - 1,
+              );
             },
           ),
         );
       },
     );
   }
-
-  Widget _buildHeader(BuildContext context, DateTime date) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: 20.0,
-        right: 16.0,
-        top: 16.0,
-        bottom: 8.0,
-      ),
-      child: Text(
-        _formatDateHeader(date),
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  String _formatDateHeader(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final eventDate = DateTime(date.year, date.month, date.day);
-
-    if (eventDate == today) {
-      return 'Today';
-    } else if (eventDate == yesterday) {
-      return 'Yesterday';
-    } else {
-      return DateFormat('MMMM d, yyyy').format(date);
-    }
-  }
-}
-
-class _ActivityLogItem {
-  final DateTime? date;
-  final ActivityLogGroup? group;
-  final bool isFirst;
-  final bool isLast;
-
-  _ActivityLogItem.header(this.date)
-    : group = null,
-      isFirst = false,
-      isLast = false;
-
-  _ActivityLogItem.group({
-    required this.group,
-    required this.isFirst,
-    required this.isLast,
-  }) : date = null;
-
-  bool get isHeader => date != null;
 }

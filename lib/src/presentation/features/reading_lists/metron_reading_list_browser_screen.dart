@@ -5,7 +5,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 
 @RoutePage()
@@ -70,8 +70,9 @@ class _MetronReadingListBrowserScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final async = ref.watch(metronReadingListBrowseProvider(_filter));
-    final importedListsAsync = ref.watch(readingListsProvider);
-    final importedLists = importedListsAsync.value ?? const <ReadingList>[];
+    final importedListsAsync = ref.watch(localReadingListsProvider);
+    final importedLists =
+        importedListsAsync.value ?? const <LocalReadingList>[];
     final previewItemsMap = ref.watch(metronListPreviewItemsProvider);
 
     return BrowsePagedListScreen<MetronReadingList>(
@@ -194,15 +195,26 @@ class _MetronReadingListBrowserScreenState
         ],
       ),
       itemBuilder: (context, list, index, total) {
-        final localList = importedLists.cast<ReadingList?>().firstWhere(
+        final localList = importedLists.cast<LocalReadingList?>().firstWhere(
           (l) => l?.metronSourceId == list.id,
           orElse: () => null,
         );
 
-        final previewItems = previewItemsMap[list.id] ?? const [];
+        final previewItems =
+            previewItemsMap[list.id]
+                ?.map(
+                  (item) => LocalReadingListItem(
+                    targetId: 'issue-${item.issueId}',
+                    isSeries: false,
+                    role: ItemRole.standard,
+                    isRead: false,
+                  ),
+                )
+                .toList() ??
+            const [];
         final displayList =
             localList ??
-            ReadingList(
+            LocalReadingList(
               id: 'metron-${list.id}',
               title: list.name,
               description: '',

@@ -10,6 +10,7 @@ import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class ArcDetailsScreen extends ConsumerStatefulWidget {
@@ -56,6 +57,28 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
     }
   }
 
+  Future<void> _refreshArcData(ArcDetails details) async {
+    try {
+      final newDetails = await ref
+          .read(catalogRepositoryProvider)
+          .getArcDetails(details.id, forceRefresh: true);
+      final currentDetails = ref
+          .read(arcDetailsProvider(details.id))
+          .asData
+          ?.value;
+      if (currentDetails != newDetails) {
+        ref.invalidate(arcDetailsProvider(details.id));
+      }
+      if (mounted) {
+        TakionAlerts.success(context, 'Arc details refreshed');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to refresh arc details');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(arcDetailsProvider(widget.arcId));
@@ -67,6 +90,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'arc-image-${d.id}',
       toTitle: (d) => d.name,
+      onRefresh: (d) => _refreshArcData(d),
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       initialChildSize: 0.55,

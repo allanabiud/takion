@@ -13,7 +13,7 @@ final readingListSharingServiceProvider = Provider(
 );
 
 class ReadingListSharingService {
-  Future<void> shareReadingList(ReadingList list) async {
+  Future<void> shareReadingList(LocalReadingList list) async {
     final json = jsonEncode(list.toJson());
     final tempDir = await getTemporaryDirectory();
     final fileName =
@@ -31,7 +31,7 @@ class ReadingListSharingService {
     );
   }
 
-  Future<ReadingList?> importReadingList() async {
+  Future<LocalReadingList?> importReadingList() async {
     final result = await FilePicker.pickFiles(
       type: FileType.any, // .takion might not be recognized, so any for now
     );
@@ -41,7 +41,7 @@ class ReadingListSharingService {
       final content = await file.readAsString();
       try {
         final json = jsonDecode(content) as Map<String, dynamic>;
-        final list = ReadingList.fromJson(json);
+        final list = LocalReadingList.fromJson(json);
 
         // Use the original ID if it exists to allow duplicate detection,
         // but reset timestamps for the local collection.

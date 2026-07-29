@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
-import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/presentation/features/library/widgets/streak_calendar_widget.dart';
+import 'package:takion/src/presentation/features/library/widgets/stats_skeleton.dart';
 import 'package:takion/src/presentation/features/library/widgets/reading_goal_card.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
@@ -37,13 +39,24 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      setState(() {
+        _isSearching = false;
+        _searchController.clear();
+      });
+    }
   }
 
   @override
@@ -86,14 +99,14 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
         ),
         actions: _tabController.index == 0
             ? (_isSearching
-                ? null
-                : [
-                    IconButton(
-                      tooltip: 'Search',
-                      onPressed: () => setState(() => _isSearching = true),
-                      icon: const Icon(Icons.search),
-                    ),
-                  ])
+                  ? null
+                  : [
+                      IconButton(
+                        tooltip: 'Search',
+                        onPressed: () => setState(() => _isSearching = true),
+                        icon: const Icon(Icons.search),
+                      ),
+                    ])
             : null,
       ),
       body: TabBarView(
@@ -115,10 +128,7 @@ class _ReadBrowseTab extends ConsumerWidget {
   final bool isSearching;
   final String searchQuery;
 
-  const _ReadBrowseTab({
-    required this.isSearching,
-    required this.searchQuery,
-  });
+  const _ReadBrowseTab({required this.isSearching, required this.searchQuery});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -154,10 +164,8 @@ class _ReadBrowseTab extends ConsumerWidget {
         final query = searchQuery.toLowerCase().trim();
         final filtered = isSearching && query.isNotEmpty
             ? sortedResults
-                .where(
-                  (s) => s.name.toLowerCase().contains(query),
-                )
-                .toList()
+                  .where((s) => s.name.toLowerCase().contains(query))
+                  .toList()
             : sortedResults;
         if (filtered.isEmpty) {
           return RefreshIndicator(
@@ -230,23 +238,18 @@ class _ReadStatsTab extends ConsumerStatefulWidget {
   ConsumerState<_ReadStatsTab> createState() => _ReadStatsTabState();
 }
 
-class _ReadStatsTabState extends ConsumerState<_ReadStatsTab> {
+class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
+    with AutomaticKeepAliveClientMixin {
   LibraryFilter _filter = LibraryFilter.month;
-  LibraryInsights? _cachedInsights;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
-    final insightsAsync = ref.watch(libraryInsightsProvider(_filter));
-
-    if (insightsAsync.hasValue) {
-      _cachedInsights = insightsAsync.value;
-    }
-
-    final theme = Theme.of(context);
-    final insights = insightsAsync.asData?.value ?? _cachedInsights;
-
+    super.build(context);
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(libraryInsightsProvider(_filter)),
+      onRefresh: () async => ref.invalidate(libraryBasicStatsProvider(_filter)),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(0, 12, 0, 48),
@@ -269,9 +272,7 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab> {
                       ),
                       selected: _filter == f,
                       onSelected: (selected) {
-                        if (selected) {
-                          setState(() => _filter = f);
-                        }
+                        if (selected) setState(() => _filter = f);
                       },
                       shape: const StadiumBorder(),
                       showCheckmark: true,
@@ -280,200 +281,379 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab> {
                 }).toList(),
               ),
             ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: KeyedSubtree(
-                key: ValueKey(_filter),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    if (insightsAsync.hasError)
-                      AsyncStatePanel.error(
-                        errorMessage: 'Failed to load stats',
-                      )
-                    else if (insightsAsync.isLoading && _cachedInsights == null)
-                      const AsyncStatePanel.loading()
-                    else if (insights != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.menu_book,
-                                    value: '${insights.readsInPeriod}',
-                                    label: 'Read',
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.percent,
-                                    value:
-                                        '${insights.readPercent.toStringAsFixed(0)}%',
-                                    label: 'Read %',
-                                    color: theme.colorScheme.secondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.star_half,
-                                    value: insights.averageRating > 0
-                                        ? insights.averageRating
-                                              .toStringAsFixed(1)
-                                        : '--',
-                                    label: 'Rating',
-                                    color: theme.colorScheme.tertiary,
-                                  ),
-                                ),
-                                const Spacer(),
-                              ],
-                            ),
-                            if (insights.readingTrends.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              SectionHeader(title: 'READING TRENDS'),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 200,
-                                child: ReadingTrendChart(
-                                  data: insights.readingTrends,
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 24),
-                            const StreakCalendarWidget(),
-                            const SizedBox(height: 24),
-                            ReadingGoalCard(filter: _filter),
-                            const SizedBox(height: 24),
-                            SectionHeader(title: 'READING INSIGHTS'),
-                            const SizedBox(height: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InsightRow(
-                                  label: 'Current Streak',
-                                  value: '${insights.streakDays} Days',
-                                  icon: Icons.local_fire_department,
-                                  iconColor: Colors.orange,
-                                ),
-                                if (insights.averageRating > 0) ...[
-                                  const SizedBox(height: 16),
-                                  InsightRow(
-                                    label: 'Avg Rating',
-                                    value: insights.averageRating
-                                        .toStringAsFixed(2),
-                                    icon: Icons.star,
-                                    iconColor: Colors.amber,
-                                  ),
-                                ],
-                                if (insights.mostReadSeries != null) ...[
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(
-                                        Icons.collections_bookmark_outlined,
-                                        color: theme.colorScheme.primary,
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Text(
-                                          'Most-Read Series',
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                              ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxWidth: 180,
-                                        ),
-                                        child: Text(
-                                          insights.mostReadSeriesYear != null &&
-                                                  insights.mostReadSeriesYear! >
-                                                      0
-                                              ? '${insights.mostReadSeries} (${insights.mostReadSeriesYear})'
-                                              : insights.mostReadSeries!,
-                                          textAlign: TextAlign.right,
-                                          maxLines: 2,
-                                          softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                            if (insights.recentlyFinished.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              SectionHeader(title: 'RECENTLY FINISHED'),
-                              const SizedBox(height: 8),
-                              ...insights.recentlyFinished.map(
-                                (item) => IssueListTile(
-                                  issue: IssueList(
-                                    id: item.issue?.id ?? 0,
-                                    name:
-                                        item.issue?.series?.name ??
-                                        item.issue?.number ??
-                                        '',
-                                    number: item.issue?.number ?? '',
-                                    series: item.issue?.series != null
-                                        ? Series(
-                                            id: item.issue?.series?.id ?? 0,
-                                            name: item.issue!.series!.name,
-                                            volume: item.issue!.series!.volume,
-                                            yearBegan:
-                                                item.issue!.series!.yearBegan,
-                                          )
-                                        : null,
-                                    image: item.issue?.image,
-                                    coverDate: item.issue?.coverDate,
-                                    storeDate: item.issue?.storeDate,
-                                    modified: null,
-                                  ),
-                                  isCollected: item.quantity > 0,
-                                  isRead: item.isRead,
-                                  rating: item.rating,
-                                  onTap: item.issue?.id != null
-                                      ? () => context.pushRoute(
-                                          IssueDetailsRoute(
-                                            issueId: item.issue!.id,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+            const SizedBox(height: 16),
+            _ReadStatsCards(filter: _filter),
+            const SizedBox(height: 24),
+            _ReadTrendsChart(filter: _filter),
+            const SizedBox(height: 24),
+            const StreakCalendarWidget(),
+            const SizedBox(height: 24),
+            ReadingGoalCard(filter: _filter),
+            const SizedBox(height: 24),
+            _ReadInsightsList(filter: _filter),
+            const SizedBox(height: 24),
+            _ReadRecentlyFinishedSection(filter: _filter),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadStatsCards extends ConsumerWidget {
+  final LibraryFilter filter;
+
+  const _ReadStatsCards({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(libraryBasicStatsProvider(filter));
+    final theme = Theme.of(context);
+
+    return statsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(child: SkeletonBox(height: 80)),
+                  SizedBox(width: 8),
+                  Expanded(child: SkeletonBox(height: 80)),
+                ],
               ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: SkeletonBox(height: 80)),
+                  SizedBox(width: 8),
+                  Expanded(child: SkeletonBox(height: 80)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (stats) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    icon: Icons.menu_book,
+                    value: '${stats.readsInPeriod}',
+                    label: 'Read',
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: StatCard(
+                    icon: Icons.percent,
+                    value: '${stats.readPercent.toStringAsFixed(0)}%',
+                    label: 'Read %',
+                    color: theme.colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    icon: Icons.star_half,
+                    value: stats.averageRating > 0
+                        ? stats.averageRating.toStringAsFixed(1)
+                        : '--',
+                    label: 'Rating',
+                    color: theme.colorScheme.tertiary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: StatCard(
+                    icon: Icons.local_fire_department,
+                    value: '${stats.streakDays}',
+                    label: 'Day Streak',
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ReadTrendsChart extends ConsumerWidget {
+  final LibraryFilter filter;
+
+  const _ReadTrendsChart({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trendsAsync = ref.watch(libraryReadingTrendsProvider(filter));
+
+    return trendsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(),
+              SizedBox(height: 12),
+              SkeletonBox(height: 200),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (trends) {
+        if (trends.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(title: 'READING TRENDS'),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                height: 200,
+                child: ReadingTrendChart(data: trends),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ReadInsightsList extends ConsumerWidget {
+  final LibraryFilter filter;
+
+  const _ReadInsightsList({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(libraryBasicStatsProvider(filter));
+    final theme = Theme.of(context);
+
+    return statsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(),
+              SizedBox(height: 12),
+              _InsightRowSkeleton(),
+              _InsightRowSkeleton(),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (stats) {
+        final hasInsights =
+            stats.averageRating > 0 || stats.mostReadSeries != null;
+        if (!hasInsights) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(title: 'READING INSIGHTS'),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (stats.averageRating > 0) ...[
+                    InsightRow(
+                      label: 'Avg Rating',
+                      value: stats.averageRating.toStringAsFixed(2),
+                      icon: Icons.star,
+                      iconColor: Colors.amber,
+                    ),
+                  ],
+                  if (stats.mostReadSeries != null) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.collections_bookmark_outlined,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Most-Read Series',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            stats.mostReadSeriesYear != null &&
+                                    stats.mostReadSeriesYear! > 0
+                                ? '${stats.mostReadSeries} (${stats.mostReadSeriesYear})'
+                                : stats.mostReadSeries!,
+                            textAlign: TextAlign.right,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _InsightRowSkeleton extends StatelessWidget {
+  const _InsightRowSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          SkeletonBox(width: 24, height: 24),
+          SizedBox(width: 16),
+          Expanded(child: SkeletonBox(height: 16)),
+          SizedBox(width: 12),
+          SkeletonBox(width: 60, height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadRecentlyFinishedSection extends ConsumerWidget {
+  final LibraryFilter filter;
+
+  const _ReadRecentlyFinishedSection({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final finishedAsync = ref.watch(libraryRecentlyFinishedProvider(filter));
+
+    return finishedAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(),
+              SizedBox(height: 8),
+              _ReadRecentIssueSkeleton(),
+              _ReadRecentIssueSkeleton(),
+              _ReadRecentIssueSkeleton(),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(title: 'RECENTLY FINISHED'),
+            ),
+            const SizedBox(height: 8),
+            ...items.map(
+              (item) => IssueListTile(
+                issue: IssueList(
+                  id: item.issue?.id ?? 0,
+                  name: item.issue?.series?.name ?? item.issue?.number ?? '',
+                  number: item.issue?.number ?? '',
+                  series: item.issue?.series != null
+                      ? Series(
+                          id: item.issue!.series!.id,
+                          name: item.issue!.series!.name,
+                          volume: item.issue!.series!.volume,
+                          yearBegan: item.issue!.series!.yearBegan,
+                        )
+                      : null,
+                  image: item.issue?.image,
+                  coverDate: item.issue?.coverDate,
+                  storeDate: item.issue?.storeDate,
+                  modified: null,
+                ),
+                isCollected: item.quantity > 0,
+                isRead: item.isRead,
+                rating: item.rating,
+                onTap: item.issue?.id != null
+                    ? () => context.pushRoute(
+                        IssueDetailsRoute(issueId: item.issue!.id),
+                      )
+                    : null,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ReadRecentIssueSkeleton extends StatelessWidget {
+  const _ReadRecentIssueSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SkeletonBox(width: 60, height: 88),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(height: 16),
+                const SizedBox(height: 6),
+                SkeletonBox(width: 100, height: 14),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

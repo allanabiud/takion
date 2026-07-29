@@ -157,6 +157,12 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getCharacterDetails(characterId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _characterRowToEntity(characterId);
+      }
       await _upsertCharacterDetails(dto);
       return _characterRowToEntity(characterId);
     } catch (e) {

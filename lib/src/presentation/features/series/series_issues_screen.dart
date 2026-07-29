@@ -537,6 +537,21 @@ Future<void> applySeriesIssueBulkAction({
       );
     }
 
+    if (operation == SeriesIssueBulkOperation.removeFromCollection &&
+        issueIdsToDelete.isNotEmpty) {
+      await activityRepository.deleteEventsByIssueIds(
+        issueIdsToDelete,
+        type: ActivityEventType.collected,
+      );
+    }
+    if (operation == SeriesIssueBulkOperation.markAsUnread &&
+        affectedIssueIds.isNotEmpty) {
+      await activityRepository.deleteEventsByIssueIds(
+        affectedIssueIds.toList(),
+        type: ActivityEventType.read,
+      );
+    }
+
     if (context.mounted) {
       final actionText = switch (operation) {
         SeriesIssueBulkOperation.addToCollection => 'Added to Collection',

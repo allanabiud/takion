@@ -53,7 +53,14 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> upsert(LibraryItemsCompanion entry) async {
-    await into(attachedDatabase.libraryItems).insertOnConflictUpdate(entry);
+    await transaction(() async {
+      await into(attachedDatabase.libraryItems).insertOnConflictUpdate(entry);
+      if (entry.id.present) {
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:library_items:${entry.id.value}',
+        );
+      }
+    });
   }
 
   Future<void> deleteById(String id) async {
@@ -111,6 +118,13 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     await batch((b) {
       b.insertAllOnConflictUpdate(attachedDatabase.libraryItems, entries);
     });
+    for (final entry in entries) {
+      if (entry.id.present) {
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:library_items:${entry.id.value}',
+        );
+      }
+    }
   }
 
   Future<void> batchDeleteByIds(List<String> ids) async {

@@ -157,6 +157,12 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getTeamDetails(teamId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _teamRowToEntity(teamId);
+      }
       await _upsertTeamDetails(dto);
       return _teamRowToEntity(teamId);
     } catch (e) {

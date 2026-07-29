@@ -30,9 +30,12 @@ class MainScreenState extends ConsumerState<MainScreen>
   bool _overlayVisible = false;
 
   void openSearch() {
-    if (_overlayVisible) return;
-    setState(() => _overlayVisible = true);
+    if (_overlayVisible && _animController.status == AnimationStatus.completed) {
+      return;
+    }
+    _overlayVisible = true;
     _animController.forward();
+    setState(() {});
   }
 
   void _dismissSearch([VoidCallback? onComplete]) {
@@ -185,7 +188,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                             ],
                           ),
                         ),
-                        LinearProgressIndicator(
+                        const LinearProgressIndicator(
                           minHeight: 2,
                           backgroundColor: Colors.transparent,
                         ),

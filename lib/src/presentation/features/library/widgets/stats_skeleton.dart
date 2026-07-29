@@ -1,30 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
-class StatCardSkeleton extends StatelessWidget {
-  const StatCardSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          SkeletonBox(width: 36, height: 36, borderRadius: 18),
-          const SizedBox(height: 8),
-          SkeletonBox(width: 60, height: 20, borderRadius: 4),
-          const SizedBox(height: 2),
-          SkeletonBox(width: 80, height: 12, borderRadius: 4),
-        ],
-      ),
-    );
-  }
-}
-
 class SectionHeaderSkeleton extends StatelessWidget {
   const SectionHeaderSkeleton({super.key, this.showChevron = false});
 

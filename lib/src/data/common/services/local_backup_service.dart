@@ -2,17 +2,19 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/data/common/drift/database.dart';
 import 'package:takion/src/data/common/services/drive_backup_service.dart';
 
 final localBackupServiceProvider = Provider<LocalBackupService>((ref) {
-  final driveService = ref.watch(driveSyncServiceProvider);
-  return LocalBackupService(driveService);
+  final db = ref.watch(driftDatabaseProvider);
+  return LocalBackupService(db);
 });
 
 class LocalBackupService {
   final DriveSyncService _driveSyncService;
 
-  LocalBackupService(this._driveSyncService);
+  LocalBackupService(AppDatabase db) : _driveSyncService = DriveSyncService(db);
 
   Future<Uint8List> exportBackupData() async {
     final delta = await _driveSyncService.extractDelta(null);

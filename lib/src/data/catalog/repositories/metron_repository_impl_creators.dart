@@ -157,6 +157,12 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getCreatorDetails(creatorId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _creatorRowToEntity(cached);
+      }
       await _upsertCreatorDetails(dto);
       return _creatorRowToEntity(
         await _metronEntityDao.getCreator(creatorId) ??

@@ -9,7 +9,7 @@ import 'package:takion/src/presentation/features/series/providers/series_cover_p
 import 'package:takion/src/domain/common/string_extensions.dart';
 
 class ReadingListCover extends ConsumerWidget {
-  final ReadingList list;
+  final LocalReadingList list;
   final double width;
   final double height;
   final double peekOffset;
@@ -94,7 +94,7 @@ class ReadingListCover extends ConsumerWidget {
   Widget _buildSideCover(
     BuildContext context,
     WidgetRef ref,
-    ReadingListItem item,
+    LocalReadingListItem item,
     String listInitials,
   ) {
     return Container(
@@ -109,7 +109,7 @@ class ReadingListCover extends ConsumerWidget {
     );
   }
 
-  String? _coverImageFromCache(WidgetRef ref, ReadingListItem item) {
+  String? _coverImageFromCache(WidgetRef ref, LocalReadingListItem item) {
     final id = int.tryParse(item.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
     if (id <= 0) return null;
     final cache = ref.read(entityImageCacheProvider);
@@ -117,7 +117,7 @@ class ReadingListCover extends ConsumerWidget {
     return cache.getCached(type, id);
   }
 
-  String? _cachedItemImageUrl(WidgetRef ref, ReadingListItem item) {
+  String? _cachedItemImageUrl(WidgetRef ref, LocalReadingListItem item) {
     final cachedAsync = ref.watch(
       readingListItemCachedMetadataProvider((
         targetId: item.targetId,
@@ -139,7 +139,7 @@ class ReadingListCover extends ConsumerWidget {
   Widget _buildCoverImage(
     BuildContext context,
     WidgetRef ref,
-    ReadingListItem item,
+    LocalReadingListItem item,
     String listInitials,
   ) {
     final cachedImage = _coverImageFromCache(ref, item);

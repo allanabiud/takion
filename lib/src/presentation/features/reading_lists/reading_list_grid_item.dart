@@ -14,7 +14,7 @@ import 'package:takion/src/presentation/features/issues/providers/issue_collecti
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 
 class ReadingListGridItem extends ConsumerWidget {
-  final ReadingListItem item;
+  final LocalReadingListItem item;
   final VoidCallback onTap;
   final bool isEditing;
   final bool isSelected;

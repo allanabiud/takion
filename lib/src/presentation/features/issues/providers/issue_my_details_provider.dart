@@ -110,6 +110,10 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
                 timestamp: now,
               ),
             );
+          } else if (!isCollected && wasCollected) {
+            await activityRepository.deleteEventsByIssueIds([
+              _issueId,
+            ], type: ActivityEventType.collected);
           }
 
           if (isRead && !wasRead) {
@@ -126,6 +130,10 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
                 timestamp: now,
               ),
             );
+          } else if (!isRead && wasRead) {
+            await activityRepository.deleteEventsByIssueIds([
+              _issueId,
+            ], type: ActivityEventType.read);
           }
         }
 
@@ -297,6 +305,14 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           notes: item.notes,
           acquiredOn: item.acquiredOn,
         );
+
+        if (remainingLogs.isEmpty) {
+          final activityRepository = ref.read(activityRepositoryProvider);
+          await activityRepository.deleteEventsByIssueIds([
+            _issueId,
+          ], type: ActivityEventType.read);
+        }
+
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();

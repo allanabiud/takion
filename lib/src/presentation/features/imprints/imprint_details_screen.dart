@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/imprints/providers/imprint_deta
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class ImprintDetailsScreen extends ConsumerStatefulWidget {
@@ -56,6 +57,28 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen> {
     }
   }
 
+  Future<void> _refreshImprintData(ImprintDetails details) async {
+    try {
+      final newDetails = await ref
+          .read(catalogRepositoryProvider)
+          .getImprintDetails(details.id, forceRefresh: true);
+      final currentDetails = ref
+          .read(imprintDetailsProvider(details.id))
+          .asData
+          ?.value;
+      if (currentDetails != newDetails) {
+        ref.invalidate(imprintDetailsProvider(details.id));
+      }
+      if (mounted) {
+        TakionAlerts.success(context, 'Imprint details refreshed');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to refresh imprint details');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(imprintDetailsProvider(widget.imprintId));
@@ -67,6 +90,7 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen> {
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'imprint-image-${d.id}',
       toTitle: (d) => d.name,
+      onRefresh: (d) => _refreshImprintData(d),
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       heroWidth: 250,

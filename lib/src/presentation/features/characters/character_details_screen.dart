@@ -139,6 +139,27 @@ class _CharacterDetailsScreenState
       toHeroTag: (d) => 'character-image-${d.id}',
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.alias,
+      onRefresh: (d) async {
+        try {
+          final newDetails = await ref
+              .read(catalogRepositoryProvider)
+              .getCharacterDetails(d.id, forceRefresh: true);
+          final currentDetails = ref
+              .read(characterDetailsProvider(d.id))
+              .asData
+              ?.value;
+          if (currentDetails != newDetails) {
+            ref.invalidate(characterDetailsProvider(d.id));
+          }
+          if (context.mounted) {
+            TakionAlerts.success(context, 'Character details refreshed');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.error(context, 'Failed to refresh character details');
+          }
+        }
+      },
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       circular: true,

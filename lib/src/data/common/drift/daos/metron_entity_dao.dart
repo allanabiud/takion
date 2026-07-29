@@ -338,6 +338,17 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
+  Future<List<MetronReadingListItem>> getMetronReadingListItems(
+    int listId,
+  ) async {
+    return (select(attachedDatabase.metronReadingListItems)
+          ..where((t) => t.listId.equals(listId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.order, mode: OrderingMode.asc),
+          ]))
+        .get();
+  }
+
   // ── Batch Stub Upserts ─────────────────────────────────────────────────
 
   Future<void> upsertIssueStub(

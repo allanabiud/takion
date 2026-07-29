@@ -4,16 +4,16 @@ import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:uuid/uuid.dart';
 
 enum _CreateOrImportMode { create, import }
 
-class CreateOrImportReadingListSheet extends ConsumerStatefulWidget {
+class CreateOrImportLocalReadingListSheet extends ConsumerStatefulWidget {
   final ListContentType? initialContentType;
   final bool showModeToggle;
 
-  const CreateOrImportReadingListSheet({
+  const CreateOrImportLocalReadingListSheet({
     super.key,
     this.initialContentType,
     this.showModeToggle = true,
@@ -23,7 +23,7 @@ class CreateOrImportReadingListSheet extends ConsumerStatefulWidget {
     return TakionBottomSheet.show<void>(
       context: context,
       title: 'Create/Import Reading List',
-      child: CreateOrImportReadingListSheet(showModeToggle: true),
+      child: CreateOrImportLocalReadingListSheet(showModeToggle: true),
     );
   }
 
@@ -34,7 +34,7 @@ class CreateOrImportReadingListSheet extends ConsumerStatefulWidget {
     return TakionBottomSheet.show<void>(
       context: context,
       title: 'Create Reading List',
-      child: CreateOrImportReadingListSheet(
+      child: CreateOrImportLocalReadingListSheet(
         showModeToggle: false,
         initialContentType: initialContentType,
       ),
@@ -42,12 +42,12 @@ class CreateOrImportReadingListSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<CreateOrImportReadingListSheet> createState() =>
-      _CreateOrImportReadingListSheetState();
+  ConsumerState<CreateOrImportLocalReadingListSheet> createState() =>
+      _CreateOrImportLocalReadingListSheetState();
 }
 
-class _CreateOrImportReadingListSheetState
-    extends ConsumerState<CreateOrImportReadingListSheet> {
+class _CreateOrImportLocalReadingListSheetState
+    extends ConsumerState<CreateOrImportLocalReadingListSheet> {
   _CreateOrImportMode _mode = _CreateOrImportMode.create;
 
   final _formKey = GlobalKey<FormState>();
@@ -72,7 +72,7 @@ class _CreateOrImportReadingListSheetState
   void _submitCreate() {
     if (!_formKey.currentState!.validate()) return;
 
-    final newList = ReadingList(
+    final newList = LocalReadingList(
       id: const Uuid().v4(),
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
@@ -83,7 +83,7 @@ class _CreateOrImportReadingListSheetState
       items: [],
     );
 
-    ref.read(readingListsProvider.notifier).addList(newList);
+    ref.read(localReadingListsProvider.notifier).addList(newList);
     TakionAlerts.success(context, 'Reading List Created');
     Navigator.pop(context);
   }
@@ -93,14 +93,14 @@ class _CreateOrImportReadingListSheetState
         .read(readingListSharingServiceProvider)
         .importReadingList();
     if (list != null) {
-      final existingLists = ref.read(readingListsProvider).value ?? [];
+      final existingLists = ref.read(localReadingListsProvider).value ?? [];
       if (existingLists.any((l) => l.id == list.id)) {
         if (mounted) {
           TakionAlerts.error(context, 'Reading list already exists');
         }
         return;
       }
-      await ref.read(readingListsProvider.notifier).addList(list);
+      await ref.read(localReadingListsProvider.notifier).addList(list);
       if (mounted) {
         TakionAlerts.success(context, 'Reading List Imported');
         Navigator.pop(context);

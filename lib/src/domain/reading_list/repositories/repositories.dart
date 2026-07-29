@@ -1,1 +1,1 @@
-export 'reading_list_repository.dart';
+export 'local_reading_list_repository.dart';

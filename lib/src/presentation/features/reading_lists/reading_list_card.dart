@@ -7,7 +7,7 @@ import 'package:takion/src/presentation/features/library/providers/favorites_pro
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 
 class ReadingListCard extends ConsumerWidget {
-  final ReadingList list;
+  final LocalReadingList list;
   final VoidCallback onTap;
   final bool? isSelected;
   final bool alreadyExists;

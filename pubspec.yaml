@@ -47,6 +47,7 @@ dependencies:
   flutter_svg: ^2.0.17
   talker: ^5.1.19
   talker_flutter: ^5.1.19
+  heatmap_calendar_plus: ^2.3.0
 
 
 dev_dependencies:

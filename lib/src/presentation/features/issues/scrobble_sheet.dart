@@ -11,7 +11,7 @@ import 'package:takion/src/presentation/features/library/providers/pulls_provide
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/domain/entities.dart';
@@ -446,7 +446,7 @@ Future<void> showScrobbleSheet({
                   leading: const Icon(Icons.playlist_add),
                   title: const Text('Add to Reading List'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AddToReadingListBottomSheet.show(
+                  onTap: () => AddToLocalReadingListBottomSheet.show(
                     context: callerContext,
                     targetId: 'issue-$issueId',
                     isSeries: false,

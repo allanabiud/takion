@@ -157,6 +157,12 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getUniverseDetails(universeId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _universeRowToEntity(cached);
+      }
       await _upsertUniverseDetails(dto);
       return _universeRowToEntity(
         await _metronEntityDao.getUniverse(universeId) ??

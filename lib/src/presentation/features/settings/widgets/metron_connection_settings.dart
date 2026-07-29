@@ -8,7 +8,6 @@ import 'package:takion/src/presentation/features/settings/providers/metron_accou
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/rate_limit_status_provider.dart';
 import 'package:takion/src/presentation/providers/auth_provider.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
@@ -48,26 +47,7 @@ class _MetronConnectionContentState
   Widget build(BuildContext context) {
     final metronConnectionAsync = ref.watch(metronConnectionProvider);
     final isConnected = metronConnectionAsync.value == true;
-    final appSettings = ref.watch(settingsProvider);
     final theme = Theme.of(context);
-
-    ref.listen<AppSettings>(settingsProvider, (previous, next) {
-      if (!context.mounted) return;
-      final justFinishedSync = (previous?.isBusy ?? false) && !next.isBusy;
-      if (!justFinishedSync) return;
-
-      final message = next.statusMessage?.trim();
-      if (message == null || message.isEmpty) return;
-
-      final normalized = message.toLowerCase();
-      if (normalized.contains('failed')) {
-        TakionAlerts.error(context, message);
-        return;
-      }
-      if (normalized.contains('completed')) {
-        TakionAlerts.success(context, message);
-      }
-    });
 
     ref.listen(metronConnectionProvider, (previous, next) {
       if (next.value == false) {
@@ -103,75 +83,46 @@ class _MetronConnectionContentState
                 ),
               ),
               const SizedBox(height: 12),
-              buildMetronAccountCard(
-                context: context,
-                isConnected: isConnected,
-                maskedToken: _maskedToken ?? '',
-                onConnect: () {
-                  Navigator.of(context).pop();
-                  context.pushRoute(const AuthorizeMetronRoute());
-                },
-                onDisconnect: () => disconnectMetronAccount(context, ref),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOutCubic,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 450),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween<double>(
+                          begin: 0.95,
+                          end: 1.0,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: buildMetronAccountCard(
+                    key: ValueKey('metron_card_$isConnected'),
+                    context: context,
+                    isConnected: isConnected,
+                    maskedToken: _maskedToken ?? '',
+                    onConnect: () {
+                      Navigator.of(context).pop();
+                      context.pushRoute(const AuthorizeMetronRoute());
+                    },
+                    onDisconnect: () => disconnectMetronAccount(context, ref),
+                  ),
+                ),
               ),
             ],
           ),
           if (isConnected) ...[
             const SizedBox(height: 16),
             const _ApiUsageCard(),
-            const SizedBox(height: 16),
-            _buildDataSection(context, ref, isConnected, appSettings),
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildDataSection(
-    BuildContext context,
-    WidgetRef ref,
-    bool isConnected,
-    AppSettings appSettings,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildSettingsGroup(context, 'Data', [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            enabled: isConnected && !appSettings.isBusy,
-            leading: Icon(
-              Icons.downloading_rounded,
-              color: isConnected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline,
-            ),
-            title: const Text(
-              'Refresh Stale',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              !isConnected
-                  ? 'Connect Metron account to refresh'
-                  : appSettings.isBusy
-                  ? 'Refresh running...'
-                  : 'Re-fetch only data modified on Metron since last fetch',
-            ),
-            trailing: appSettings.isBusy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.chevron_right_rounded),
-            onTap: !isConnected || appSettings.isBusy
-                ? null
-                : () => ref
-                      .read(settingsProvider.notifier)
-                      .refreshStaleCatalogData(),
-          ),
-        ]),
-      ],
     );
   }
 }
@@ -187,9 +138,9 @@ class _ApiUsageCard extends ConsumerWidget {
     final ratio = used / state.sustainedLimit;
     final progressColor = switch (state.sustainedRemaining /
         state.sustainedLimit) {
-      > 0.5 => Colors.green,
-      > 0.2 => Colors.orange,
-      _ => Colors.red,
+      > 0.5 => theme.colorScheme.primary,
+      > 0.2 => theme.colorScheme.tertiary,
+      _ => theme.colorScheme.error,
     };
 
     return buildSettingsGroup(context, 'API Usage', [

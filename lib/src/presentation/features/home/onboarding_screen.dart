@@ -826,43 +826,63 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       subtitle: isConnected
           ? 'Your Metron account is linked.'
           : 'Enter your Metron API token to fetch comic data.',
-      content: isConnected
-          ? buildMetronAccountCard(
-              context: context,
-              isConnected: isConnected,
-              maskedToken: _maskedToken ?? '',
-              onConnect: _connectMetronAccount,
-              onDisconnect: () async {
-                await ref.read(metronAccountServiceProvider).disconnect();
-                setState(() => _maskedToken = null);
-                ref.invalidate(metronConnectionProvider);
-                ref.invalidate(authStateProvider);
-                _tokenController.clear();
-              },
-            )
-          : SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _tokenController,
-                    autofillHints: const [AutofillHints.password],
-                    decoration: const InputDecoration(
-                      labelText: 'Metron API Token',
-                      prefixIcon: Icon(Icons.key),
-                    ),
-                    obscureText: true,
-                    textInputAction: TextInputAction.done,
-                    enabled: !_isConnectingMetron,
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: isOffline ? null : _showApiKeyHelp,
-                    child: const Text('Don\'t have a Metron API Key?'),
-                  ),
-                ],
+      content: AnimatedSize(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 450),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.94, end: 1.0).animate(animation),
+                child: child,
               ),
-            ),
+            );
+          },
+          child: isConnected
+              ? buildMetronAccountCard(
+                  key: const ValueKey('metron_connected_card'),
+                  context: context,
+                  isConnected: isConnected,
+                  maskedToken: _maskedToken ?? '',
+                  onConnect: _connectMetronAccount,
+                  onDisconnect: () async {
+                    await ref.read(metronAccountServiceProvider).disconnect();
+                    setState(() => _maskedToken = null);
+                    ref.invalidate(metronConnectionProvider);
+                    ref.invalidate(authStateProvider);
+                    _tokenController.clear();
+                  },
+                )
+              : SingleChildScrollView(
+                  key: const ValueKey('metron_input_form'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: _tokenController,
+                        autofillHints: const [AutofillHints.password],
+                        decoration: const InputDecoration(
+                          labelText: 'Metron API Token',
+                          prefixIcon: Icon(Icons.key),
+                        ),
+                        obscureText: true,
+                        textInputAction: TextInputAction.done,
+                        enabled: !_isConnectingMetron,
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: isOffline ? null : _showApiKeyHelp,
+                        child: const Text('Don\'t have a Metron API Key?'),
+                      ),
+                    ],
+                  ),
+                ),
+        ),
+      ),
       buttons: [
         SizedBox(
           width: double.infinity,

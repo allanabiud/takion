@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 
 class ReadingTrendChart extends StatelessWidget {
   const ReadingTrendChart({super.key, required this.data});

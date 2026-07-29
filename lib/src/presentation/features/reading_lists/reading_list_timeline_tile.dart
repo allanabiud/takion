@@ -9,9 +9,9 @@ import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:timelines_plus/timelines_plus.dart';
 
 class ReadingListTimelineTile extends ConsumerWidget {
-  final ReadingList list;
+  final LocalReadingList list;
   final int index;
-  final ReadingListItem item;
+  final LocalReadingListItem item;
   final Color roleColor;
   final bool isEditing;
   final bool isSelected;

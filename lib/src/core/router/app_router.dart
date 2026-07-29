@@ -158,17 +158,17 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
-      page: ReadingListsRoute.page,
+      page: LocalReadingListsRoute.page,
       path: '/my-comics/reading-lists',
       guards: [authGuard],
     ),
     AutoRoute(
-      page: ReadingListDetailsRoute.page,
+      page: LocalReadingListDetailsRoute.page,
       path: '/my-comics/reading-lists/:listId',
       guards: [authGuard],
     ),
     AutoRoute(
-      page: ReadingListEditRoute.page,
+      page: LocalReadingListEditRoute.page,
       path: '/my-comics/reading-lists/:listId/edit',
       guards: [authGuard],
     ),

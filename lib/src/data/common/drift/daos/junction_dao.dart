@@ -184,6 +184,12 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     });
   }
 
+  Future<void> clearMetronReadingListItems(int listId) async {
+    await (delete(
+      attachedDatabase.metronReadingListItems,
+    )..where((t) => t.listId.equals(listId))).go();
+  }
+
   Future<List<IssueCharacter>> getIssueCharacters(int issueId) async {
     return (select(attachedDatabase.issueCharacters)
           ..where((t) => t.issueId.equals(issueId))

@@ -37,13 +37,18 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
         );
       });
     } else {
-      await into(attachedDatabase.favoriteSeries).insert(
-        FavoriteSeriesCompanion(
-          metronSeriesId: Value(metronSeriesId),
-          createdAt: Value(DateTime.now().toUtc().toIso8601String()),
-          updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
-        ),
-      );
+      await transaction(() async {
+        await into(attachedDatabase.favoriteSeries).insert(
+          FavoriteSeriesCompanion(
+            metronSeriesId: Value(metronSeriesId),
+            createdAt: Value(DateTime.now().toUtc().toIso8601String()),
+            updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+          ),
+        );
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:favorite_series:$metronSeriesId',
+        );
+      });
     }
   }
 
@@ -80,13 +85,18 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
         );
       });
     } else {
-      await into(attachedDatabase.favoriteIssues).insert(
-        FavoriteIssuesCompanion(
-          metronIssueId: Value(metronIssueId),
-          createdAt: Value(DateTime.now().toUtc().toIso8601String()),
-          updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
-        ),
-      );
+      await transaction(() async {
+        await into(attachedDatabase.favoriteIssues).insert(
+          FavoriteIssuesCompanion(
+            metronIssueId: Value(metronIssueId),
+            createdAt: Value(DateTime.now().toUtc().toIso8601String()),
+            updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+          ),
+        );
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:favorite_issues:$metronIssueId',
+        );
+      });
     }
   }
 
@@ -119,13 +129,18 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
         );
       });
     } else {
-      await into(attachedDatabase.favoriteCharacters).insert(
-        FavoriteCharactersCompanion(
-          metronCharacterId: Value(metronCharacterId),
-          createdAt: Value(DateTime.now().toUtc().toIso8601String()),
-          updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
-        ),
-      );
+      await transaction(() async {
+        await into(attachedDatabase.favoriteCharacters).insert(
+          FavoriteCharactersCompanion(
+            metronCharacterId: Value(metronCharacterId),
+            createdAt: Value(DateTime.now().toUtc().toIso8601String()),
+            updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+          ),
+        );
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:favorite_characters:$metronCharacterId',
+        );
+      });
     }
   }
 
@@ -156,13 +171,18 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
         );
       });
     } else {
-      await into(attachedDatabase.favoriteCreators).insert(
-        FavoriteCreatorsCompanion(
-          metronCreatorId: Value(metronCreatorId),
-          createdAt: Value(DateTime.now().toUtc().toIso8601String()),
-          updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
-        ),
-      );
+      await transaction(() async {
+        await into(attachedDatabase.favoriteCreators).insert(
+          FavoriteCreatorsCompanion(
+            metronCreatorId: Value(metronCreatorId),
+            createdAt: Value(DateTime.now().toUtc().toIso8601String()),
+            updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+          ),
+        );
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:favorite_creators:$metronCreatorId',
+        );
+      });
     }
   }
 
@@ -195,13 +215,18 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
         );
       });
     } else {
-      await into(attachedDatabase.favoriteReadingLists).insert(
-        FavoriteReadingListsCompanion(
-          readingListId: Value(readingListId),
-          createdAt: Value(DateTime.now().toUtc().toIso8601String()),
-          updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
-        ),
-      );
+      await transaction(() async {
+        await into(attachedDatabase.favoriteReadingLists).insert(
+          FavoriteReadingListsCompanion(
+            readingListId: Value(readingListId),
+            createdAt: Value(DateTime.now().toUtc().toIso8601String()),
+            updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+          ),
+        );
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:favorite_reading_lists:$readingListId',
+        );
+      });
     }
   }
 }

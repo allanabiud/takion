@@ -260,7 +260,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     final cachedJson = await _localDataSource.getCachedSeriesDetailsResponse(
       seriesId,
     );
-    if (cachedJson != null) {
+    if (cachedJson != null && !forceRefresh) {
       final cachedAt = await _localDataSource.getCachedSeriesDetailsCachedAt(
         seriesId,
       );
@@ -287,6 +287,10 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
           final cachedJson = await _localDataSource
               .getCachedSeriesDetailsResponse(seriesId);
           if (cachedJson != null) {
+            await _localDataSource.cacheSeriesDetailsResponse(
+              seriesId,
+              cachedJson,
+            );
             final dto = SeriesDetailsDto.fromJson(cachedJson);
             await _upsertSeriesDetails(dto);
             _indexSeriesName(dto.name);
@@ -303,6 +307,12 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         }
         final data = response.data as Map<String, dynamic>;
         final dto = SeriesDetailsDto.fromJson(data);
+        if (cached != null &&
+            cached.modified != null &&
+            dto.modified != null &&
+            cached.modified == dto.modified) {
+          return _seriesRowToEntity(cached);
+        }
         await _upsertSeriesDetails(dto);
         await _localDataSource.cacheSeriesDetailsResponse(seriesId, data);
         _indexSeriesName(dto.name);
@@ -314,6 +324,12 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       );
       if (cachedJson != null) {
         final dto = SeriesDetailsDto.fromJson(cachedJson);
+        if (cached != null &&
+            cached.modified != null &&
+            dto.modified != null &&
+            cached.modified == dto.modified) {
+          return _seriesRowToEntity(cached);
+        }
         await _upsertSeriesDetails(dto);
         _indexSeriesName(dto.name);
         return dto.toEntity();

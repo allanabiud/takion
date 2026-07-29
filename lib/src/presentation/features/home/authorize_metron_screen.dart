@@ -281,38 +281,68 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                     ],
                   ),
                 ),
-              if (isConnected) ...[
-                buildMetronAccountCard(
-                  context: context,
-                  isConnected: isConnected,
-                  maskedToken: _maskedToken ?? '',
-                  onConnect: _connectMetronAccount,
-                  onDisconnect: () async {
-                    await ref.read(metronAccountServiceProvider).disconnect();
-                    setState(() => _maskedToken = null);
-                    ref.invalidate(metronConnectionProvider);
-                    ref.invalidate(authStateProvider);
-                    _tokenController.clear();
+              AnimatedSize(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOutCubic,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 450),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween<double>(
+                          begin: 0.94,
+                          end: 1.0,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
                   },
+                  child: isConnected
+                      ? buildMetronAccountCard(
+                          key: const ValueKey('metron_connected_card'),
+                          context: context,
+                          isConnected: isConnected,
+                          maskedToken: _maskedToken ?? '',
+                          onConnect: _connectMetronAccount,
+                          onDisconnect: () async {
+                            await ref
+                                .read(metronAccountServiceProvider)
+                                .disconnect();
+                            setState(() => _maskedToken = null);
+                            ref.invalidate(metronConnectionProvider);
+                            ref.invalidate(authStateProvider);
+                            _tokenController.clear();
+                          },
+                        )
+                      : Column(
+                          key: const ValueKey('metron_input_form'),
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _tokenController,
+                              autofillHints: const [AutofillHints.password],
+                              decoration: const InputDecoration(
+                                labelText: 'Metron API Token',
+                                prefixIcon: Icon(Icons.key),
+                              ),
+                              obscureText: true,
+                              textInputAction: TextInputAction.done,
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: isOffline ? null : _showApiKeyHelp,
+                              child: const Text(
+                                'Don\'t have a Metron API Key?',
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
-              ] else ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _tokenController,
-                  autofillHints: const [AutofillHints.password],
-                  decoration: const InputDecoration(
-                    labelText: 'Metron API Token',
-                    prefixIcon: Icon(Icons.key),
-                  ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: isOffline ? null : _showApiKeyHelp,
-                  child: const Text('Don\'t have a Metron API Key?'),
-                ),
-              ],
+              ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,

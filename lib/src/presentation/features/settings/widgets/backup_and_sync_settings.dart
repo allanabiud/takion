@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -268,8 +271,14 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
         fileName: 'takion_backup_$dateStr.tkbk',
         bytes: bytes,
       );
-      if (result != null && mounted) {
-        TakionAlerts.success(context, 'Backup saved successfully');
+      if (result != null) {
+        final outputFile = File(result);
+        if (!await outputFile.exists() || (await outputFile.length()) == 0) {
+          await outputFile.writeAsBytes(bytes);
+        }
+        if (mounted) {
+          TakionAlerts.success(context, 'Backup saved successfully');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -317,7 +326,10 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
       }
 
       final file = result.files.single;
-      final bytes = await file.readAsBytes();
+      Uint8List bytes = await file.readAsBytes();
+      if (bytes.isEmpty) {
+        throw StateError('Unable to read content from selected backup file');
+      }
 
       final service = ref.read(localBackupServiceProvider);
       await service.importBackupData(bytes);

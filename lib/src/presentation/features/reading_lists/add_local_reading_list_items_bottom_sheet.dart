@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
-class AddReadingListItemsBottomSheet extends ConsumerStatefulWidget {
-  final ReadingList list;
+class AddLocalReadingListItemsBottomSheet extends ConsumerStatefulWidget {
+  final LocalReadingList list;
 
-  const AddReadingListItemsBottomSheet({super.key, required this.list});
+  const AddLocalReadingListItemsBottomSheet({super.key, required this.list});
 
-  static Future<void> show(BuildContext context, ReadingList list) {
+  static Future<void> show(BuildContext context, LocalReadingList list) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -21,19 +21,19 @@ class AddReadingListItemsBottomSheet extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) => AddReadingListItemsBottomSheet(list: list),
+      builder: (context) => AddLocalReadingListItemsBottomSheet(list: list),
     );
   }
 
   @override
-  ConsumerState<AddReadingListItemsBottomSheet> createState() =>
-      _AddReadingListItemsBottomSheetState();
+  ConsumerState<AddLocalReadingListItemsBottomSheet> createState() =>
+      _AddLocalReadingListItemsBottomSheetState();
 }
 
 enum _AddStep { selection, configuration }
 
-class _AddReadingListItemsBottomSheetState
-    extends ConsumerState<AddReadingListItemsBottomSheet> {
+class _AddLocalReadingListItemsBottomSheetState
+    extends ConsumerState<AddLocalReadingListItemsBottomSheet> {
   final _searchController = TextEditingController();
   String _query = '';
   SeriesList? _selectedSeries;
@@ -63,13 +63,13 @@ class _AddReadingListItemsBottomSheetState
     setState(() => _isAdding = true);
 
     try {
-      final itemsToAdd = <ReadingListItem>[];
-      final repository = ref.read(readingListRepositoryProvider);
+      final itemsToAdd = <LocalReadingListItem>[];
+      final repository = ref.read(localReadingListRepositoryProvider);
       final metronRepo = ref.read(metronRepositoryProvider);
 
       if (widget.list.contentType == ListContentType.series) {
         itemsToAdd.add(
-          ReadingListItem(
+          LocalReadingListItem(
             targetId: 'series-${_selectedSeries!.id}',
             isSeries: true,
             role: _selectedRole,
@@ -95,7 +95,7 @@ class _AddReadingListItemsBottomSheetState
         if (_addAllIssues) {
           for (final issue in allIssues) {
             itemsToAdd.add(
-              ReadingListItem(
+              LocalReadingListItem(
                 targetId: 'issue-${issue.id}',
                 isSeries: false,
                 role: _selectedRole,
@@ -110,7 +110,7 @@ class _AddReadingListItemsBottomSheetState
           for (int i = 0; i < allIssues.length; i++) {
             if (i >= start && i <= end) {
               itemsToAdd.add(
-                ReadingListItem(
+                LocalReadingListItem(
                   targetId: 'issue-${allIssues[i].id}',
                   isSeries: false,
                   role: _selectedRole,
@@ -131,6 +131,7 @@ class _AddReadingListItemsBottomSheetState
               targetId: _normalizeTargetId(item.targetId, item.isSeries),
             ),
           )
+          .whereType<LocalReadingListItem>()
           .where((i) => !existingIds.contains(i.targetId))
           .toList();
 
@@ -146,8 +147,8 @@ class _AddReadingListItemsBottomSheetState
 
       await repository.addItemsToList(widget.list.id, newItems);
 
-      ref.invalidate(readingListsProvider);
-      ref.invalidate(readingListDetailsProvider(widget.list.id));
+      ref.invalidate(localReadingListsProvider);
+      ref.invalidate(localReadingListDetailsProvider(widget.list.id));
 
       if (mounted) {
         if (skippedCount > 0) {

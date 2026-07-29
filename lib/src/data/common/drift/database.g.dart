@@ -6033,6 +6033,28 @@ class $MetronIssuesTable extends MetronIssues
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _variantsJsonMeta = const VerificationMeta(
+    'variantsJson',
+  );
+  @override
+  late final GeneratedColumn<String> variantsJson = GeneratedColumn<String>(
+    'variants_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reprintsJsonMeta = const VerificationMeta(
+    'reprintsJson',
+  );
+  @override
+  late final GeneratedColumn<String> reprintsJson = GeneratedColumn<String>(
+    'reprints_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isFullyHydratedMeta = const VerificationMeta(
     'isFullyHydrated',
   );
@@ -6070,6 +6092,8 @@ class $MetronIssuesTable extends MetronIssues
     gcdId,
     resourceUrl,
     modified,
+    variantsJson,
+    reprintsJson,
     isFullyHydrated,
   ];
   @override
@@ -6212,6 +6236,24 @@ class $MetronIssuesTable extends MetronIssues
         modified.isAcceptableOrUnknown(data['modified']!, _modifiedMeta),
       );
     }
+    if (data.containsKey('variants_json')) {
+      context.handle(
+        _variantsJsonMeta,
+        variantsJson.isAcceptableOrUnknown(
+          data['variants_json']!,
+          _variantsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reprints_json')) {
+      context.handle(
+        _reprintsJsonMeta,
+        reprintsJson.isAcceptableOrUnknown(
+          data['reprints_json']!,
+          _reprintsJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_fully_hydrated')) {
       context.handle(
         _isFullyHydratedMeta,
@@ -6310,6 +6352,14 @@ class $MetronIssuesTable extends MetronIssues
         DriftSqlType.string,
         data['${effectivePrefix}modified'],
       ),
+      variantsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}variants_json'],
+      ),
+      reprintsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reprints_json'],
+      ),
       isFullyHydrated: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_fully_hydrated'],
@@ -6344,6 +6394,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
   final int? gcdId;
   final String? resourceUrl;
   final String? modified;
+  final String? variantsJson;
+  final String? reprintsJson;
   final bool isFullyHydrated;
   const MetronIssue({
     required this.id,
@@ -6366,6 +6418,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     this.gcdId,
     this.resourceUrl,
     this.modified,
+    this.variantsJson,
+    this.reprintsJson,
     required this.isFullyHydrated,
   });
   @override
@@ -6427,6 +6481,12 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     if (!nullToAbsent || modified != null) {
       map['modified'] = Variable<String>(modified);
     }
+    if (!nullToAbsent || variantsJson != null) {
+      map['variants_json'] = Variable<String>(variantsJson);
+    }
+    if (!nullToAbsent || reprintsJson != null) {
+      map['reprints_json'] = Variable<String>(reprintsJson);
+    }
     map['is_fully_hydrated'] = Variable<bool>(isFullyHydrated);
     return map;
   }
@@ -6481,6 +6541,12 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
       modified: modified == null && nullToAbsent
           ? const Value.absent()
           : Value(modified),
+      variantsJson: variantsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(variantsJson),
+      reprintsJson: reprintsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reprintsJson),
       isFullyHydrated: Value(isFullyHydrated),
     );
   }
@@ -6511,6 +6577,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
       gcdId: serializer.fromJson<int?>(json['gcdId']),
       resourceUrl: serializer.fromJson<String?>(json['resourceUrl']),
       modified: serializer.fromJson<String?>(json['modified']),
+      variantsJson: serializer.fromJson<String?>(json['variantsJson']),
+      reprintsJson: serializer.fromJson<String?>(json['reprintsJson']),
       isFullyHydrated: serializer.fromJson<bool>(json['isFullyHydrated']),
     );
   }
@@ -6538,6 +6606,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
       'gcdId': serializer.toJson<int?>(gcdId),
       'resourceUrl': serializer.toJson<String?>(resourceUrl),
       'modified': serializer.toJson<String?>(modified),
+      'variantsJson': serializer.toJson<String?>(variantsJson),
+      'reprintsJson': serializer.toJson<String?>(reprintsJson),
       'isFullyHydrated': serializer.toJson<bool>(isFullyHydrated),
     };
   }
@@ -6563,6 +6633,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     Value<int?> gcdId = const Value.absent(),
     Value<String?> resourceUrl = const Value.absent(),
     Value<String?> modified = const Value.absent(),
+    Value<String?> variantsJson = const Value.absent(),
+    Value<String?> reprintsJson = const Value.absent(),
     bool? isFullyHydrated,
   }) => MetronIssue(
     id: id ?? this.id,
@@ -6585,6 +6657,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     gcdId: gcdId.present ? gcdId.value : this.gcdId,
     resourceUrl: resourceUrl.present ? resourceUrl.value : this.resourceUrl,
     modified: modified.present ? modified.value : this.modified,
+    variantsJson: variantsJson.present ? variantsJson.value : this.variantsJson,
+    reprintsJson: reprintsJson.present ? reprintsJson.value : this.reprintsJson,
     isFullyHydrated: isFullyHydrated ?? this.isFullyHydrated,
   );
   MetronIssue copyWithCompanion(MetronIssuesCompanion data) {
@@ -6615,6 +6689,12 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
           ? data.resourceUrl.value
           : this.resourceUrl,
       modified: data.modified.present ? data.modified.value : this.modified,
+      variantsJson: data.variantsJson.present
+          ? data.variantsJson.value
+          : this.variantsJson,
+      reprintsJson: data.reprintsJson.present
+          ? data.reprintsJson.value
+          : this.reprintsJson,
       isFullyHydrated: data.isFullyHydrated.present
           ? data.isFullyHydrated.value
           : this.isFullyHydrated,
@@ -6644,6 +6724,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
           ..write('gcdId: $gcdId, ')
           ..write('resourceUrl: $resourceUrl, ')
           ..write('modified: $modified, ')
+          ..write('variantsJson: $variantsJson, ')
+          ..write('reprintsJson: $reprintsJson, ')
           ..write('isFullyHydrated: $isFullyHydrated')
           ..write(')'))
         .toString();
@@ -6671,6 +6753,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     gcdId,
     resourceUrl,
     modified,
+    variantsJson,
+    reprintsJson,
     isFullyHydrated,
   ]);
   @override
@@ -6697,6 +6781,8 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
           other.gcdId == this.gcdId &&
           other.resourceUrl == this.resourceUrl &&
           other.modified == this.modified &&
+          other.variantsJson == this.variantsJson &&
+          other.reprintsJson == this.reprintsJson &&
           other.isFullyHydrated == this.isFullyHydrated);
 }
 
@@ -6721,6 +6807,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
   final Value<int?> gcdId;
   final Value<String?> resourceUrl;
   final Value<String?> modified;
+  final Value<String?> variantsJson;
+  final Value<String?> reprintsJson;
   final Value<bool> isFullyHydrated;
   const MetronIssuesCompanion({
     this.id = const Value.absent(),
@@ -6743,6 +6831,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     this.gcdId = const Value.absent(),
     this.resourceUrl = const Value.absent(),
     this.modified = const Value.absent(),
+    this.variantsJson = const Value.absent(),
+    this.reprintsJson = const Value.absent(),
     this.isFullyHydrated = const Value.absent(),
   });
   MetronIssuesCompanion.insert({
@@ -6766,6 +6856,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     this.gcdId = const Value.absent(),
     this.resourceUrl = const Value.absent(),
     this.modified = const Value.absent(),
+    this.variantsJson = const Value.absent(),
+    this.reprintsJson = const Value.absent(),
     this.isFullyHydrated = const Value.absent(),
   }) : number = Value(number);
   static Insertable<MetronIssue> custom({
@@ -6789,6 +6881,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     Expression<int>? gcdId,
     Expression<String>? resourceUrl,
     Expression<String>? modified,
+    Expression<String>? variantsJson,
+    Expression<String>? reprintsJson,
     Expression<bool>? isFullyHydrated,
   }) {
     return RawValuesInsertable({
@@ -6812,6 +6906,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
       if (gcdId != null) 'gcd_id': gcdId,
       if (resourceUrl != null) 'resource_url': resourceUrl,
       if (modified != null) 'modified': modified,
+      if (variantsJson != null) 'variants_json': variantsJson,
+      if (reprintsJson != null) 'reprints_json': reprintsJson,
       if (isFullyHydrated != null) 'is_fully_hydrated': isFullyHydrated,
     });
   }
@@ -6837,6 +6933,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     Value<int?>? gcdId,
     Value<String?>? resourceUrl,
     Value<String?>? modified,
+    Value<String?>? variantsJson,
+    Value<String?>? reprintsJson,
     Value<bool>? isFullyHydrated,
   }) {
     return MetronIssuesCompanion(
@@ -6860,6 +6958,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
       gcdId: gcdId ?? this.gcdId,
       resourceUrl: resourceUrl ?? this.resourceUrl,
       modified: modified ?? this.modified,
+      variantsJson: variantsJson ?? this.variantsJson,
+      reprintsJson: reprintsJson ?? this.reprintsJson,
       isFullyHydrated: isFullyHydrated ?? this.isFullyHydrated,
     );
   }
@@ -6927,6 +7027,12 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     if (modified.present) {
       map['modified'] = Variable<String>(modified.value);
     }
+    if (variantsJson.present) {
+      map['variants_json'] = Variable<String>(variantsJson.value);
+    }
+    if (reprintsJson.present) {
+      map['reprints_json'] = Variable<String>(reprintsJson.value);
+    }
     if (isFullyHydrated.present) {
       map['is_fully_hydrated'] = Variable<bool>(isFullyHydrated.value);
     }
@@ -6956,6 +7062,8 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
           ..write('gcdId: $gcdId, ')
           ..write('resourceUrl: $resourceUrl, ')
           ..write('modified: $modified, ')
+          ..write('variantsJson: $variantsJson, ')
+          ..write('reprintsJson: $reprintsJson, ')
           ..write('isFullyHydrated: $isFullyHydrated')
           ..write(')'))
         .toString();
@@ -18661,6 +18769,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_lib_series',
     'CREATE INDEX idx_lib_series ON library_items (metron_series_id)',
   );
+  late final Index idxLibRead = Index(
+    'idx_lib_read',
+    'CREATE INDEX idx_lib_read ON library_items (is_read)',
+  );
+  late final Index idxLibStatus = Index(
+    'idx_lib_status',
+    'CREATE INDEX idx_lib_status ON library_items (ownership_status)',
+  );
   late final Index idxReadlogItem = Index(
     'idx_readlog_item',
     'CREATE INDEX idx_readlog_item ON library_read_logs (collection_item_id)',
@@ -18680,6 +18796,30 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxSubSeries = Index(
     'idx_sub_series',
     'CREATE INDEX idx_sub_series ON series_subscriptions (metron_series_id)',
+  );
+  late final Index idxMetronIssuesSeries = Index(
+    'idx_metron_issues_series',
+    'CREATE INDEX idx_metron_issues_series ON metron_issues (series_id)',
+  );
+  late final Index idxIssueCreatorsCreator = Index(
+    'idx_issue_creators_creator',
+    'CREATE INDEX idx_issue_creators_creator ON issue_creators (creator_id)',
+  );
+  late final Index idxIssueCharactersCharacter = Index(
+    'idx_issue_characters_character',
+    'CREATE INDEX idx_issue_characters_character ON issue_characters (character_id)',
+  );
+  late final Index idxIssueArcsArc = Index(
+    'idx_issue_arcs_arc',
+    'CREATE INDEX idx_issue_arcs_arc ON issue_arcs (arc_id)',
+  );
+  late final Index idxIssueTeamsTeam = Index(
+    'idx_issue_teams_team',
+    'CREATE INDEX idx_issue_teams_team ON issue_teams (team_id)',
+  );
+  late final Index idxIssueUniversesUniverse = Index(
+    'idx_issue_universes_universe',
+    'CREATE INDEX idx_issue_universes_universe ON issue_universes (universe_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -18731,11 +18871,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncMeta,
     idxLibIssue,
     idxLibSeries,
+    idxLibRead,
+    idxLibStatus,
     idxReadlogItem,
     idxPullIssue,
     idxPullSeries,
     idxPullRelease,
     idxSubSeries,
+    idxMetronIssuesSeries,
+    idxIssueCreatorsCreator,
+    idxIssueCharactersCharacter,
+    idxIssueArcsArc,
+    idxIssueTeamsTeam,
+    idxIssueUniversesUniverse,
   ];
 }
 
@@ -21785,6 +21933,8 @@ typedef $$MetronIssuesTableCreateCompanionBuilder =
       Value<int?> gcdId,
       Value<String?> resourceUrl,
       Value<String?> modified,
+      Value<String?> variantsJson,
+      Value<String?> reprintsJson,
       Value<bool> isFullyHydrated,
     });
 typedef $$MetronIssuesTableUpdateCompanionBuilder =
@@ -21809,6 +21959,8 @@ typedef $$MetronIssuesTableUpdateCompanionBuilder =
       Value<int?> gcdId,
       Value<String?> resourceUrl,
       Value<String?> modified,
+      Value<String?> variantsJson,
+      Value<String?> reprintsJson,
       Value<bool> isFullyHydrated,
     });
 
@@ -21918,6 +22070,16 @@ class $$MetronIssuesTableFilterComposer
 
   ColumnFilters<String> get modified => $composableBuilder(
     column: $table.modified,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get variantsJson => $composableBuilder(
+    column: $table.variantsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reprintsJson => $composableBuilder(
+    column: $table.reprintsJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22036,6 +22198,16 @@ class $$MetronIssuesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get variantsJson => $composableBuilder(
+    column: $table.variantsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reprintsJson => $composableBuilder(
+    column: $table.reprintsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isFullyHydrated => $composableBuilder(
     column: $table.isFullyHydrated,
     builder: (column) => ColumnOrderings(column),
@@ -22117,6 +22289,16 @@ class $$MetronIssuesTableAnnotationComposer
   GeneratedColumn<String> get modified =>
       $composableBuilder(column: $table.modified, builder: (column) => column);
 
+  GeneratedColumn<String> get variantsJson => $composableBuilder(
+    column: $table.variantsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reprintsJson => $composableBuilder(
+    column: $table.reprintsJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isFullyHydrated => $composableBuilder(
     column: $table.isFullyHydrated,
     builder: (column) => column,
@@ -22174,6 +22356,8 @@ class $$MetronIssuesTableTableManager
                 Value<int?> gcdId = const Value.absent(),
                 Value<String?> resourceUrl = const Value.absent(),
                 Value<String?> modified = const Value.absent(),
+                Value<String?> variantsJson = const Value.absent(),
+                Value<String?> reprintsJson = const Value.absent(),
                 Value<bool> isFullyHydrated = const Value.absent(),
               }) => MetronIssuesCompanion(
                 id: id,
@@ -22196,6 +22380,8 @@ class $$MetronIssuesTableTableManager
                 gcdId: gcdId,
                 resourceUrl: resourceUrl,
                 modified: modified,
+                variantsJson: variantsJson,
+                reprintsJson: reprintsJson,
                 isFullyHydrated: isFullyHydrated,
               ),
           createCompanionCallback:
@@ -22220,6 +22406,8 @@ class $$MetronIssuesTableTableManager
                 Value<int?> gcdId = const Value.absent(),
                 Value<String?> resourceUrl = const Value.absent(),
                 Value<String?> modified = const Value.absent(),
+                Value<String?> variantsJson = const Value.absent(),
+                Value<String?> reprintsJson = const Value.absent(),
                 Value<bool> isFullyHydrated = const Value.absent(),
               }) => MetronIssuesCompanion.insert(
                 id: id,
@@ -22242,6 +22430,8 @@ class $$MetronIssuesTableTableManager
                 gcdId: gcdId,
                 resourceUrl: resourceUrl,
                 modified: modified,
+                variantsJson: variantsJson,
+                reprintsJson: reprintsJson,
                 isFullyHydrated: isFullyHydrated,
               ),
           withReferenceMapper: (p0) => p0

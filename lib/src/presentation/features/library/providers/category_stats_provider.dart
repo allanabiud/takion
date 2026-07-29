@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 enum CategoryType { owned, read, wishlist }

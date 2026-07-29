@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
-class ReadingListDetailsSheetHeader extends StatefulWidget {
-  final ReadingList list;
+class LocalReadingListDetailsSheetHeader extends StatefulWidget {
+  final LocalReadingList list;
   final MetronReadingListDetail? metronDetail;
   final double progress;
   final int readCount;
   final int totalCount;
   final Widget actions;
 
-  const ReadingListDetailsSheetHeader({
+  const LocalReadingListDetailsSheetHeader({
     super.key,
     required this.list,
     this.metronDetail,
@@ -21,12 +21,12 @@ class ReadingListDetailsSheetHeader extends StatefulWidget {
   });
 
   @override
-  State<ReadingListDetailsSheetHeader> createState() =>
-      _ReadingListDetailsSheetHeaderState();
+  State<LocalReadingListDetailsSheetHeader> createState() =>
+      _LocalReadingListDetailsSheetHeaderState();
 }
 
-class _ReadingListDetailsSheetHeaderState
-    extends State<ReadingListDetailsSheetHeader> {
+class _LocalReadingListDetailsSheetHeaderState
+    extends State<LocalReadingListDetailsSheetHeader> {
   bool _isDescriptionExpanded = false;
 
   @override
@@ -173,7 +173,7 @@ class _ReadingListDetailsSheetHeaderState
     );
   }
 
-  Widget _buildLocalMetronBadges(ReadingList list, ThemeData theme) {
+  Widget _buildLocalMetronBadges(LocalReadingList list, ThemeData theme) {
     final badges = <String>[];
     final source = list.metronAttributionSource?.trim();
     final type = list.metronListType?.trim();

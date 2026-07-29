@@ -23,6 +23,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.toSubtitle,
     this.toHeaderExtra,
     this.toTrailingHeaderAction,
+    this.onRefresh,
     this.onShare,
     this.onOpenInBrowser,
     this.appBarTrailingAction,
@@ -46,6 +47,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final String? Function(T data)? toSubtitle;
   final Widget? Function(T data)? toHeaderExtra;
   final Widget? Function(T data)? toTrailingHeaderAction;
+  final void Function(T data)? onRefresh;
   final void Function(T data)? onShare;
   final void Function(T data)? onOpenInBrowser;
   final Widget Function(T data)? appBarTrailingAction;
@@ -313,6 +315,9 @@ class DetailScreenShell<T> extends ConsumerWidget {
                         appBarTrailingAction!(data)
                       else
                         EntityDetailActions(
+                          onRefresh: onRefresh != null
+                              ? () => onRefresh!(data)
+                              : null,
                           onShare: onShare != null
                               ? () => onShare!(data)
                               : null,

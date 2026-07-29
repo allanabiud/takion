@@ -118,8 +118,18 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           if (existing != null) {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
+          await _recordActivityEvents(
+            seriesId: seriesId,
+            wasCollected: wasCollected,
+            isCollected: false,
+            wasWishlisted: wasWishlisted,
+            isWishlisted: false,
+            wasRead: wasRead,
+            isRead: false,
+            wasRating: existing?.rating,
+            isRating: null,
+          );
           AppLogger.info('Scrobble: deleted item for issue #$_issueId');
-          // Removal activity events intentionally not recorded
           ref.invalidate(collectionStatsProvider);
           ref.invalidate(categoryInsightsProvider);
           ref.invalidate(issueMyDetailsProvider(_issueId));
@@ -230,6 +240,30 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           timestamp: DateTime.now().toUtc(),
         ),
       );
+    } else if (!isCollected && wasCollected) {
+      await repository.deleteEventsByIssueIds([
+        _issueId,
+      ], type: ActivityEventType.collected);
+    }
+
+    if (isWishlisted && !wasWishlisted) {
+      await repository.addEvent(
+        LibraryActivityEvent(
+          id: 'act-wsh-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
+          userId: 'local-user',
+          type: ActivityEventType.wishlisted,
+          issueId: _issueId,
+          seriesId: seriesId,
+          seriesName: metadata.seriesName,
+          issueNumber: metadata.issueNumber,
+          imageUrl: metadata.imageUrl,
+          timestamp: DateTime.now().toUtc(),
+        ),
+      );
+    } else if (!isWishlisted && wasWishlisted) {
+      await repository.deleteEventsByIssueIds([
+        _issueId,
+      ], type: ActivityEventType.wishlisted);
     }
 
     if (isRead && !wasRead) {
@@ -246,6 +280,10 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           timestamp: DateTime.now().toUtc(),
         ),
       );
+    } else if (!isRead && wasRead) {
+      await repository.deleteEventsByIssueIds([
+        _issueId,
+      ], type: ActivityEventType.read);
     }
   }
 
@@ -262,6 +300,27 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           imageUrl = await ref
               .read(entityImageCacheProvider)
               .get('issue', _issueId);
+        } catch (_) {}
+      }
+
+      if (imageUrl == null ||
+          imageUrl.isEmpty ||
+          seriesName == 'Unknown Series') {
+        try {
+          final catalogRepository = ref.read(catalogRepositoryProvider);
+          final details = await catalogRepository.getIssueDetails(_issueId);
+          seriesName = details.series?.name ?? seriesName;
+          if (details.number.isNotEmpty) {
+            issueNumber = details.number;
+          }
+          imageUrl ??= details.image;
+          if (details.image != null && details.image!.isNotEmpty) {
+            try {
+              await ref
+                  .read(entityImageCacheProvider)
+                  .set('issue', _issueId, details.image!);
+            } catch (_) {}
+          }
         } catch (_) {}
       }
 

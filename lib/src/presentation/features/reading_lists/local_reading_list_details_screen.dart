@@ -8,12 +8,12 @@ import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_reading_list_items_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/add_local_reading_list_items_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_details_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
@@ -24,24 +24,24 @@ import 'package:takion/src/presentation/features/reading_lists/reading_list_time
 import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
-class ReadingListDetailsScreen extends ConsumerStatefulWidget {
+class LocalReadingListDetailsScreen extends ConsumerStatefulWidget {
   final String listId;
 
-  const ReadingListDetailsScreen({
+  const LocalReadingListDetailsScreen({
     super.key,
     @PathParam('listId') required this.listId,
   });
 
   @override
-  ConsumerState<ReadingListDetailsScreen> createState() =>
-      _ReadingListDetailsScreenState();
+  ConsumerState<LocalReadingListDetailsScreen> createState() =>
+      _LocalReadingListDetailsScreenState();
 }
 
 enum _ReadingListDetailsMenuAction { edit, share, delete }
 
-class _ReadingListDetailsScreenState
-    extends ConsumerState<ReadingListDetailsScreen> {
-  void _openReadingListItemDetails(ReadingListItem item) {
+class _LocalReadingListDetailsScreenState
+    extends ConsumerState<LocalReadingListDetailsScreen> {
+  void _openLocalReadingListItemDetails(LocalReadingListItem item) {
     final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
     final id = int.tryParse(idString);
     if (id == null || id <= 0) return;
@@ -56,7 +56,7 @@ class _ReadingListDetailsScreenState
   Future<void> _toggleFavorite(
     BuildContext context,
     WidgetRef ref,
-    ReadingList list,
+    LocalReadingList list,
   ) async {
     try {
       final repository = ref.read(favoritesRepositoryProvider);
@@ -81,7 +81,10 @@ class _ReadingListDetailsScreenState
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, ReadingList list) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    LocalReadingList list,
+  ) async {
     final isMetron = list.metronSourceId != null;
     final titleText = isMetron ? 'Remove from Library' : 'Delete Reading List';
     final contentText = isMetron
@@ -116,7 +119,7 @@ class _ReadingListDetailsScreenState
     );
 
     if (confirmed == true) {
-      ref.read(readingListsProvider.notifier).deleteList(list.id);
+      ref.read(localReadingListsProvider.notifier).deleteList(list.id);
       if (context.mounted) {
         TakionAlerts.success(context, successText);
         context.router.pop();
@@ -124,7 +127,7 @@ class _ReadingListDetailsScreenState
     }
   }
 
-  Widget _buildActionRow(ReadingList list) {
+  Widget _buildActionRow(LocalReadingList list) {
     final theme = Theme.of(context);
     final isMetron = list.metronSourceId != null;
     final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
@@ -150,7 +153,7 @@ class _ReadingListDetailsScreenState
             ),
             onPressed: isMetron
                 ? () => _confirmDelete(context, list)
-                : () => AddReadingListItemsBottomSheet.show(context, list),
+                : () => AddLocalReadingListItemsBottomSheet.show(context, list),
             icon: Icon(isMetron ? Icons.delete_outline : Icons.add, size: 22),
             label: Text(isMetron ? 'Remove' : 'Add Items'),
           ),
@@ -205,7 +208,7 @@ class _ReadingListDetailsScreenState
     );
   }
 
-  Widget _buildHeader(ReadingList list) {
+  Widget _buildHeader(LocalReadingList list) {
     final theme = Theme.of(context);
 
     String? firstCoverUrl = list.metronImageUrl;
@@ -280,7 +283,7 @@ class _ReadingListDetailsScreenState
                     switch (action) {
                       case _ReadingListDetailsMenuAction.edit:
                         context.pushRoute(
-                          ReadingListEditRoute(listId: widget.listId),
+                          LocalReadingListEditRoute(listId: widget.listId),
                         );
                       case _ReadingListDetailsMenuAction.share:
                         ref
@@ -343,7 +346,7 @@ class _ReadingListDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final listValue = ref.watch(readingListDetailsProvider(widget.listId));
+    final listValue = ref.watch(localReadingListDetailsProvider(widget.listId));
     final theme = Theme.of(context);
 
     return listValue.when(
@@ -538,8 +541,8 @@ class _ReadingListDetailsScreenState
 
   Widget _buildOrderedSheet(
     BuildContext context,
-    ReadingList list,
-    List<ReadingListItem> items,
+    LocalReadingList list,
+    List<LocalReadingListItem> items,
     double progress,
     int readCount,
     int totalCount,
@@ -550,7 +553,7 @@ class _ReadingListDetailsScreenState
         controller: scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: ReadingListDetailsSheetHeader(
+            child: LocalReadingListDetailsSheetHeader(
               list: list,
               progress: progress,
               readCount: readCount,
@@ -573,7 +576,7 @@ class _ReadingListDetailsScreenState
       controller: scrollController,
       slivers: [
         SliverToBoxAdapter(
-          child: ReadingListDetailsSheetHeader(
+          child: LocalReadingListDetailsSheetHeader(
             list: list,
             progress: progress,
             readCount: readCount,
@@ -613,8 +616,8 @@ class _ReadingListDetailsScreenState
 
   Widget _buildUnorderedSheet(
     BuildContext context,
-    ReadingList list,
-    List<ReadingListItem> items,
+    LocalReadingList list,
+    List<LocalReadingListItem> items,
     ScrollController scrollController, {
     required double progress,
     required int readCount,
@@ -625,7 +628,7 @@ class _ReadingListDetailsScreenState
         controller: scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: ReadingListDetailsSheetHeader(
+            child: LocalReadingListDetailsSheetHeader(
               list: list,
               progress: progress,
               readCount: readCount,
@@ -648,7 +651,7 @@ class _ReadingListDetailsScreenState
       controller: scrollController,
       slivers: [
         SliverToBoxAdapter(
-          child: ReadingListDetailsSheetHeader(
+          child: LocalReadingListDetailsSheetHeader(
             list: list,
             progress: progress,
             readCount: readCount,
@@ -669,7 +672,7 @@ class _ReadingListDetailsScreenState
               final item = items[index];
               return ReadingListGridItem(
                 item: item,
-                onTap: () => _openReadingListItemDetails(item),
+                onTap: () => _openLocalReadingListItemDetails(item),
                 isEditing: false,
                 isSelected: false,
                 allowRemoteHydration: true,

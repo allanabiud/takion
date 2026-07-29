@@ -5,9 +5,10 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/domain/entities.dart';
@@ -40,13 +41,24 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      setState(() {
+        _isSearching = false;
+        _searchController.clear();
+      });
+    }
   }
 
   @override
@@ -89,14 +101,14 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
         ),
         actions: _tabController.index == 0
             ? (_isSearching
-                ? null
-                : [
-                    IconButton(
-                      tooltip: 'Search',
-                      onPressed: () => setState(() => _isSearching = true),
-                      icon: const Icon(Icons.search),
-                    ),
-                  ])
+                  ? null
+                  : [
+                      IconButton(
+                        tooltip: 'Search',
+                        onPressed: () => setState(() => _isSearching = true),
+                        icon: const Icon(Icons.search),
+                      ),
+                    ])
             : null,
       ),
       body: TabBarView(
@@ -158,10 +170,8 @@ class _MyComicsBrowseTab extends ConsumerWidget {
         final query = searchQuery.toLowerCase().trim();
         final filtered = isSearching && query.isNotEmpty
             ? sortedResults
-                .where(
-                  (s) => s.name.toLowerCase().contains(query),
-                )
-                .toList()
+                  .where((s) => s.name.toLowerCase().contains(query))
+                  .toList()
             : sortedResults;
         if (filtered.isEmpty) {
           return RefreshIndicator(
@@ -234,25 +244,20 @@ class _MyComicsStatsTab extends ConsumerStatefulWidget {
   ConsumerState<_MyComicsStatsTab> createState() => _MyComicsStatsTabState();
 }
 
-class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
+class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab>
+    with AutomaticKeepAliveClientMixin {
   LibraryFilter _filter = LibraryFilter.month;
-  LibraryInsights? _cachedInsights;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
-    final insightsAsync = ref.watch(libraryInsightsProvider(_filter));
-    final collectionStatsAsync = ref.watch(collectionStatsProvider);
-    final theme = Theme.of(context);
-
-    if (insightsAsync.hasValue) {
-      _cachedInsights = insightsAsync.value;
-    }
-
-    final insights = insightsAsync.asData?.value ?? _cachedInsights;
-
+    super.build(context);
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(libraryInsightsProvider(_filter));
+        ref.invalidate(libraryBasicStatsProvider(_filter));
+        ref.invalidate(libraryEntityStatsProvider);
         ref.invalidate(collectionStatsProvider);
       },
       child: SingleChildScrollView(
@@ -277,9 +282,7 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                       ),
                       selected: _filter == f,
                       onSelected: (selected) {
-                        if (selected) {
-                          setState(() => _filter = f);
-                        }
+                        if (selected) setState(() => _filter = f);
                       },
                       shape: const StadiumBorder(),
                       showCheckmark: true,
@@ -288,246 +291,423 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab> {
                 }).toList(),
               ),
             ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: KeyedSubtree(
-                key: ValueKey(_filter),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    if (insightsAsync.hasError)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 64.0,
-                            horizontal: 16.0,
-                          ),
-                          child: Text(
-                            TakionAlerts.cleanError(
-                              insightsAsync.error!,
-                              fallback: 'Failed to load stats',
-                            ),
-                            style: theme.textTheme.bodyMedium,
+            const SizedBox(height: 16),
+            _StatsOverviewCards(filter: _filter),
+            const SizedBox(height: 24),
+            _TopPublishersSection(),
+            const SizedBox(height: 24),
+            _TopCharactersSection(),
+            const SizedBox(height: 24),
+            _TopCreatorsSection(),
+            const SizedBox(height: 24),
+            _RecentlyFinishedSection(filter: _filter),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatsOverviewCards extends ConsumerWidget {
+  final LibraryFilter filter;
+
+  const _StatsOverviewCards({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(filter));
+    final collectionStatsAsync = ref.watch(collectionStatsProvider);
+    final theme = Theme.of(context);
+
+    return basicStatsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(child: SkeletonBox(height: 80)),
+                  SizedBox(width: 8),
+                  Expanded(child: SkeletonBox(height: 80)),
+                ],
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: SkeletonBox(height: 80)),
+                  SizedBox(width: 8),
+                  Expanded(child: SkeletonBox(height: 80)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (stats) {
+        final value = collectionStatsAsync.asData?.value.totalValue ?? r'$0.00';
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: StatCard(
+                      icon: Icons.inventory_2,
+                      value: '${stats.totalOwned}',
+                      label: 'Comics',
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: StatCard(
+                      icon: Icons.shopping_bag_outlined,
+                      value: '${stats.pullsInPeriod}',
+                      label: 'Pulls',
+                      color: theme.colorScheme.secondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: StatCard(
+                      icon: Icons.notifications_outlined,
+                      value: '${stats.subscriptionsCount}',
+                      label: 'Subscriptions',
+                      color: theme.colorScheme.tertiary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: StatCard(
+                      icon: Icons.account_balance_wallet_outlined,
+                      value: value,
+                      label: 'Value',
+                      color: theme.colorScheme.tertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TopPublishersSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entityStatsAsync = ref.watch(libraryEntityStatsProvider);
+
+    return entityStatsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(),
+              SizedBox(height: 12),
+              _PublisherBarSkeleton(),
+              _PublisherBarSkeleton(),
+              _PublisherBarSkeleton(),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (entityStats) {
+        if (entityStats.topPublishers.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(title: 'TOP PUBLISHERS'),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: StatBarTable(items: entityStats.topPublishers),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PublisherBarSkeleton extends StatelessWidget {
+  const _PublisherBarSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          SkeletonBox(width: 100, height: 14),
+          const SizedBox(width: 12),
+          const Expanded(child: SkeletonBox(height: 18)),
+          const SizedBox(width: 8),
+          SkeletonBox(width: 32, height: 14),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopCharactersSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entityStatsAsync = ref.watch(libraryEntityStatsProvider);
+
+    return entityStatsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(showChevron: true),
+              SizedBox(height: 8),
+              _EntityTileSkeleton(),
+              _EntityTileSkeleton(),
+              _EntityTileSkeleton(),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (entityStats) {
+        if (entityStats.topCharacters.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(
+                title: 'TOP CHARACTERS',
+                onViewAll: entityStats.allCharacters.length > 5
+                    ? () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TopCharactersScreen(
+                            characters: entityStats.allCharacters,
                           ),
                         ),
                       )
-                    else if (insightsAsync.isLoading && _cachedInsights == null)
-                      ShimmerWidget(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: const [
-                                  Expanded(child: StatCardSkeleton()),
-                                  SizedBox(width: 8),
-                                  Expanded(child: StatCardSkeleton()),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: const [
-                                  Expanded(child: StatCardSkeleton()),
-                                  SizedBox(width: 8),
-                                  Expanded(child: StatCardSkeleton()),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              const SectionHeaderSkeleton(),
-                              const SizedBox(height: 12),
-                              const StatBarTableSkeleton(),
-                              const SizedBox(height: 24),
-                              const SectionHeaderSkeleton(showChevron: true),
-                              const SizedBox(height: 8),
-                              ...List.generate(
-                                5,
-                                (index) =>
-                                    TopEntityTileSkeleton(isLast: index == 4),
-                              ),
-                              const SizedBox(height: 24),
-                              const SectionHeaderSkeleton(showChevron: true),
-                              const SizedBox(height: 8),
-                              ...List.generate(
-                                5,
-                                (index) =>
-                                    TopEntityTileSkeleton(isLast: index == 4),
-                              ),
-                              const SizedBox(height: 24),
-                              const SectionHeaderSkeleton(),
-                              const SizedBox(height: 8),
-                              ...List.generate(
-                                3,
-                                (index) => const IssueListTileSkeleton(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else if (insights != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.inventory_2,
-                                    value: '${insights.totalOwned}',
-                                    label: 'Comics',
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.shopping_bag_outlined,
-                                    value: '${insights.pullsInPeriod}',
-                                    label: 'Pulls',
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.notifications_outlined,
-                                    value: '${insights.subscriptionsCount}',
-                                    label: 'Subscriptions',
-                                    color: theme.colorScheme.error,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: StatCard(
-                                    icon: Icons.account_balance_wallet_outlined,
-                                    value:
-                                        collectionStatsAsync
-                                            .asData
-                                            ?.value
-                                            .totalValue ??
-                                        '\$0.00',
-                                    label: 'Value',
-                                    color: theme.colorScheme.tertiary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (insights.topPublishers.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              SectionHeader(title: 'TOP PUBLISHERS'),
-                              const SizedBox(height: 12),
-                              StatBarTable(items: insights.topPublishers),
-                            ],
-                            if (insights.topCharacters.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              SectionHeader(
-                                title: 'TOP CHARACTERS',
-                                onViewAll: insights.allCharacters.length > 5
-                                    ? () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => TopCharactersScreen(
-                                            characters: insights.allCharacters,
-                                          ),
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(height: 8),
-                              ...insights.topCharacters.asMap().entries.map(
-                                (entry) => TopEntityTile(
-                                  index: entry.key,
-                                  entity: entry.value,
-                                  isCharacter: true,
-                                  isLast:
-                                      entry.key ==
-                                          insights.topCharacters.length - 1 &&
-                                      insights.allCharacters.length <= 5,
-                                ),
-                              ),
-                            ],
-                            if (insights.topCreators.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              SectionHeader(
-                                title: 'TOP CREATORS',
-                                onViewAll: insights.allCreators.length > 5
-                                    ? () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => TopCreatorsScreen(
-                                            creators: insights.allCreators,
-                                          ),
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(height: 8),
-                              ...insights.topCreators.asMap().entries.map(
-                                (entry) => TopEntityTile(
-                                  index: entry.key,
-                                  entity: entry.value,
-                                  isCharacter: false,
-                                  isLast:
-                                      entry.key ==
-                                          insights.topCreators.length - 1 &&
-                                      insights.allCreators.length <= 5,
-                                ),
-                              ),
-                            ],
-                            if (insights.recentlyFinished.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              SectionHeader(title: 'RECENTLY FINISHED'),
-                              const SizedBox(height: 8),
-                              ...insights.recentlyFinished.map(
-                                (item) => IssueListTile(
-                                  issue: IssueList(
-                                    id: item.issue?.id ?? 0,
-                                    name:
-                                        item.issue?.series?.name ??
-                                        item.issue?.number ??
-                                        '',
-                                    number: item.issue?.number ?? '',
-                                    series: item.issue?.series != null
-                                        ? Series(
-                                            id: item.issue?.series?.id ?? 0,
-                                            name: item.issue!.series!.name,
-                                            volume: item.issue!.series!.volume,
-                                            yearBegan:
-                                                item.issue!.series!.yearBegan,
-                                          )
-                                        : null,
-                                    image: item.issue?.image,
-                                    coverDate: item.issue?.coverDate,
-                                    storeDate: item.issue?.storeDate,
-                                    modified: null,
-                                  ),
-                                  isCollected: item.quantity > 0,
-                                  isRead: item.isRead,
-                                  rating: item.rating,
-                                  onTap: item.issue?.id != null
-                                      ? () => context.pushRoute(
-                                          IssueDetailsRoute(
-                                            issueId: item.issue!.id,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...entityStats.topCharacters.asMap().entries.map(
+              (entry) => TopEntityTile(
+                index: entry.key,
+                entity: entry.value,
+                isCharacter: true,
+                isLast:
+                    entry.key == entityStats.topCharacters.length - 1 &&
+                    entityStats.allCharacters.length <= 5,
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _TopCreatorsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entityStatsAsync = ref.watch(libraryEntityStatsProvider);
+
+    return entityStatsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(showChevron: true),
+              SizedBox(height: 8),
+              _EntityTileSkeleton(),
+              _EntityTileSkeleton(),
+              _EntityTileSkeleton(),
+            ],
+          ),
         ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (entityStats) {
+        if (entityStats.topCreators.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(
+                title: 'TOP CREATORS',
+                onViewAll: entityStats.allCreators.length > 5
+                    ? () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TopCreatorsScreen(
+                            creators: entityStats.allCreators,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...entityStats.topCreators.asMap().entries.map(
+              (entry) => TopEntityTile(
+                index: entry.key,
+                entity: entry.value,
+                isCharacter: false,
+                isLast:
+                    entry.key == entityStats.topCreators.length - 1 &&
+                    entityStats.allCreators.length <= 5,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _EntityTileSkeleton extends StatelessWidget {
+  const _EntityTileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SkeletonBox(width: 28, height: 20),
+          const SizedBox(width: 8),
+          SkeletonBox(width: 44, height: 44, borderRadius: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(height: 16),
+                const SizedBox(height: 4),
+                SkeletonBox(width: 80, height: 12),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentlyFinishedSection extends ConsumerWidget {
+  final LibraryFilter filter;
+
+  const _RecentlyFinishedSection({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final finishedAsync = ref.watch(libraryRecentlyFinishedProvider(filter));
+
+    return finishedAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: ShimmerWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeaderSkeleton(),
+              SizedBox(height: 8),
+              _RecentIssueSkeleton(),
+              _RecentIssueSkeleton(),
+              _RecentIssueSkeleton(),
+            ],
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SectionHeader(title: 'RECENTLY FINISHED'),
+            ),
+            const SizedBox(height: 8),
+            ...items.map(
+              (item) => IssueListTile(
+                issue: IssueList(
+                  id: item.issue?.id ?? 0,
+                  name: item.issue?.series?.name ?? item.issue?.number ?? '',
+                  number: item.issue?.number ?? '',
+                  series: item.issue?.series != null
+                      ? Series(
+                          id: item.issue!.series!.id,
+                          name: item.issue!.series!.name,
+                          volume: item.issue!.series!.volume,
+                          yearBegan: item.issue!.series!.yearBegan,
+                        )
+                      : null,
+                  image: item.issue?.image,
+                  coverDate: item.issue?.coverDate,
+                  storeDate: item.issue?.storeDate,
+                  modified: null,
+                ),
+                isCollected: item.quantity > 0,
+                isRead: item.isRead,
+                rating: item.rating,
+                onTap: item.issue?.id != null
+                    ? () => context.pushRoute(
+                        IssueDetailsRoute(issueId: item.issue!.id),
+                      )
+                    : null,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RecentIssueSkeleton extends StatelessWidget {
+  const _RecentIssueSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SkeletonBox(width: 60, height: 88),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(height: 16),
+                const SizedBox(height: 6),
+                SkeletonBox(width: 100, height: 14),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

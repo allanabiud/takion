@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:takion/src/core/cache/cache_header_store.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/logging/talker_setup.dart';
@@ -22,6 +23,8 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   };
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting();
 
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 

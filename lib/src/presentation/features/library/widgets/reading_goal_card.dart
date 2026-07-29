@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_insights_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class ReadingGoalCard extends ConsumerWidget {
@@ -12,7 +13,7 @@ class ReadingGoalCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goalAsync = ref.watch(readingGoalProvider);
-    final insightsAsync = ref.watch(libraryInsightsProvider(filter));
+    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(filter));
 
     return goalAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -20,11 +21,11 @@ class ReadingGoalCard extends ConsumerWidget {
       data: (goal) {
         if (goal == null) return const SizedBox.shrink();
 
-        return insightsAsync.when(
+        return basicStatsAsync.when(
           loading: () => const SizedBox.shrink(),
           error: (_, _) => const SizedBox.shrink(),
-          data: (insights) {
-            final progress = insights.readsInPeriod;
+          data: (stats) {
+            final progress = stats.readsInPeriod;
             final target = goal.target;
             final percent = target > 0
                 ? (progress / target).clamp(0.0, 1.0)

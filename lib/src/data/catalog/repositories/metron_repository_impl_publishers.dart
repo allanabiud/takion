@@ -157,6 +157,12 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getPublisherDetails(publisherId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _publisherRowToEntity(cached);
+      }
       await _upsertPublisherDetails(dto);
       return _publisherRowToEntity(
         await _metronEntityDao.getPublisher(publisherId) ??

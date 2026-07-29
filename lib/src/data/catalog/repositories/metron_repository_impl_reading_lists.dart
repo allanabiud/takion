@@ -33,11 +33,111 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     int id, {
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getReadingListDetail(id);
-    return dto.toEntity();
+    final cached = await _metronEntityDao.getMetronReadingList(id);
+
+    if (!forceRefresh && cached != null && cached.isFullyHydrated) {
+      return MetronReadingListDetail(
+        id: cached.id,
+        name: cached.name,
+        slug: cached.slug,
+        desc: cached.description,
+        image: cached.imageUrl,
+        listType: cached.listType,
+        isPrivate: cached.isPrivate ?? false,
+        attributionSource: cached.attributionSource,
+        attributionUrl: cached.attributionUrl,
+        averageRating: cached.averageRating,
+        ratingCount: cached.ratingCount ?? 0,
+        itemsUrl: cached.itemsUrl,
+        resourceUrl: cached.resourceUrl,
+        userId: cached.userId,
+        username: null,
+        modified: cached.modified != null
+            ? DateTime.tryParse(cached.modified!)
+            : null,
+      );
+    }
+
+    try {
+      final dto = await _remoteDataSource.getReadingListDetail(id);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return MetronReadingListDetail(
+          id: cached.id,
+          name: cached.name,
+          slug: cached.slug,
+          desc: cached.description,
+          image: cached.imageUrl,
+          listType: cached.listType,
+          isPrivate: cached.isPrivate ?? false,
+          attributionSource: cached.attributionSource,
+          attributionUrl: cached.attributionUrl,
+          averageRating: cached.averageRating,
+          ratingCount: cached.ratingCount ?? 0,
+          itemsUrl: cached.itemsUrl,
+          resourceUrl: cached.resourceUrl,
+          userId: cached.userId,
+          username: null,
+          modified: cached.modified != null
+              ? DateTime.tryParse(cached.modified!)
+              : null,
+        );
+      }
+      await _metronEntityDao.upsertMetronReadingList(
+        MetronReadingListsCompanion(
+          id: Value(dto.id),
+          name: Value(dto.name),
+          slug: Value(dto.slug),
+          userId: Value(dto.userId),
+          description: Value(dto.desc),
+          imageUrl: Value(dto.image),
+          listType: Value(dto.listType),
+          isPrivate: Value(dto.isPrivate),
+          attributionSource: Value(dto.attributionSource),
+          attributionUrl: Value(dto.attributionUrl),
+          averageRating: Value(dto.averageRating),
+          ratingCount: Value(dto.ratingCount),
+          itemsUrl: Value(dto.itemsUrl),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          isFullyHydrated: const Value(true),
+        ),
+      );
+      return dto.toEntity();
+    } catch (e) {
+      AppLogger.error('Failed to fetch reading list detail', error: e);
+      if (cached != null) {
+        return MetronReadingListDetail(
+          id: cached.id,
+          name: cached.name,
+          slug: cached.slug,
+          desc: cached.description,
+          image: cached.imageUrl,
+          listType: cached.listType,
+          isPrivate: cached.isPrivate ?? false,
+          attributionSource: cached.attributionSource,
+          attributionUrl: cached.attributionUrl,
+          averageRating: cached.averageRating,
+          ratingCount: cached.ratingCount ?? 0,
+          itemsUrl: cached.itemsUrl,
+          resourceUrl: cached.resourceUrl,
+          userId: cached.userId,
+          username: null,
+          modified: cached.modified != null
+              ? DateTime.tryParse(cached.modified!)
+              : null,
+        );
+      }
+      rethrow;
+    }
   }
 
-  Future<List<MetronReadingListItem>> getReadingListItems(int id) async {
+  Future<List<MetronReadingListItem>> getReadingListItems(
+    int id, {
+    bool forceRefresh = false,
+  }) async {
     final allItems = <MetronReadingListItem>[];
     Uri? nextUrl;
 

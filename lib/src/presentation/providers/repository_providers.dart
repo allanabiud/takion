@@ -5,7 +5,7 @@ import 'package:takion/src/core/storage/drift_database_provider.dart';
 export 'package:takion/src/core/storage/drift_database_provider.dart';
 import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
 import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/reading_list/repositories/reading_list_local_data_source.dart';
+import 'package:takion/src/data/reading_list/repositories/local_reading_list_local_data_source.dart';
 import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart';
 import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
 import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
@@ -95,9 +95,11 @@ final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
   return LocalFavoritesRepository(db);
 });
 
-final readingListRepositoryProvider = Provider<ReadingListRepository>((ref) {
-  return ref.watch(readingListLocalDataSourceProvider);
-});
+final localReadingListRepositoryProvider = Provider<LocalReadingListRepository>(
+  (ref) {
+    return ref.watch(localReadingListLocalDataSourceProvider);
+  },
+);
 
 final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);

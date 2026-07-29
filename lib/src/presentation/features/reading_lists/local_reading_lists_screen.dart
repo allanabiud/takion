@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/create_or_import_reading_list_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/create_or_import_local_reading_list_sheet.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
@@ -13,14 +13,16 @@ import 'package:takion/src/presentation/features/reading_lists/reading_list_card
 enum _ReadingListFilter { all, local, metron }
 
 @RoutePage()
-class ReadingListsScreen extends ConsumerStatefulWidget {
-  const ReadingListsScreen({super.key});
+class LocalReadingListsScreen extends ConsumerStatefulWidget {
+  const LocalReadingListsScreen({super.key});
 
   @override
-  ConsumerState<ReadingListsScreen> createState() => _ReadingListsScreenState();
+  ConsumerState<LocalReadingListsScreen> createState() =>
+      _LocalReadingListsScreenState();
 }
 
-class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
+class _LocalReadingListsScreenState
+    extends ConsumerState<LocalReadingListsScreen> {
   bool _isSearching = false;
   _ReadingListFilter _filter = _ReadingListFilter.all;
   final TextEditingController _searchController = TextEditingController();
@@ -33,7 +35,7 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final listsAsync = ref.watch(readingListsProvider);
+    final listsAsync = ref.watch(localReadingListsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -77,10 +79,10 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
         data: (lists) {
           final query = _searchController.text.toLowerCase().trim();
           final matchQuery = _isSearching && query.isNotEmpty
-              ? (ReadingList l) =>
+              ? (LocalReadingList l) =>
                     l.title.toLowerCase().contains(query) ||
                     l.description.toLowerCase().contains(query)
-              : (ReadingList l) => true;
+              : (LocalReadingList l) => true;
 
           final filtered = lists.where((l) {
             if (!matchQuery(l)) return false;
@@ -138,7 +140,9 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                   list: list,
                   flat: true,
                   onTap: () {
-                    context.pushRoute(ReadingListDetailsRoute(listId: list.id));
+                    context.pushRoute(
+                      LocalReadingListDetailsRoute(listId: list.id),
+                    );
                   },
                 );
               },
@@ -191,7 +195,7 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => CreateOrImportReadingListSheet.show(context),
+        onPressed: () => CreateOrImportLocalReadingListSheet.show(context),
         child: const Icon(Icons.add),
       ),
     );

@@ -7,7 +7,7 @@ import 'package:takion/src/presentation/features/library/providers/collection_su
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/random_reading_list_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
 
@@ -113,14 +113,14 @@ class LibraryScreen extends ConsumerWidget {
                   icon: Icons.list_alt_outlined,
                   label: 'Reading Lists',
                   value: ref
-                      .watch(readingListsProvider)
+                      .watch(localReadingListsProvider)
                       .when(
                         data: (lists) => lists.length.toString(),
                         loading: () => '--',
                         error: (_, _) => '!',
                       ),
                   onTap: () {
-                    context.pushRoute(const ReadingListsRoute());
+                    context.pushRoute(const LocalReadingListsRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -228,7 +228,7 @@ class LibraryScreen extends ConsumerWidget {
                       flat: true,
                       onTap: () {
                         context.pushRoute(
-                          ReadingListDetailsRoute(listId: suggestion.id),
+                          LocalReadingListDetailsRoute(listId: suggestion.id),
                         );
                       },
                     ),

@@ -12,12 +12,12 @@
 import 'package:auto_route/auto_route.dart' as _i46;
 import 'package:collection/collection.dart' as _i48;
 import 'package:flutter/material.dart' as _i47;
-import 'package:takion/src/presentation/shared/widgets/image_preview_screen.dart'
-    as _i13;
 import 'package:takion/src/presentation/features/arcs/arc_details_screen.dart'
     as _i2;
 import 'package:takion/src/presentation/features/arcs/arc_issues_screen.dart'
     as _i3;
+import 'package:takion/src/presentation/features/browse/browse_screens.dart'
+    as _i1;
 import 'package:takion/src/presentation/features/characters/character_details_screen.dart'
     as _i6;
 import 'package:takion/src/presentation/features/characters/character_issues_screen.dart'
@@ -27,9 +27,9 @@ import 'package:takion/src/presentation/features/creators/creator_details_screen
 import 'package:takion/src/presentation/features/home/authorize_metron_screen.dart'
     as _i4;
 import 'package:takion/src/presentation/features/home/home_screen.dart' as _i12;
-import 'package:takion/src/presentation/features/home/main_screen.dart' as _i19;
+import 'package:takion/src/presentation/features/home/main_screen.dart' as _i22;
 import 'package:takion/src/presentation/features/home/onboarding_screen.dart'
-    as _i25;
+    as _i28;
 import 'package:takion/src/presentation/features/imprints/imprint_details_screen.dart'
     as _i14;
 import 'package:takion/src/presentation/features/issues/issue_details/issue_cover_gallery_screen.dart'
@@ -43,13 +43,13 @@ import 'package:takion/src/presentation/features/library/favorites_screen.dart'
 import 'package:takion/src/presentation/features/library/library_screen.dart'
     as _i17;
 import 'package:takion/src/presentation/features/library/my_comics_screen.dart'
-    as _i22;
+    as _i25;
 import 'package:takion/src/presentation/features/library/my_pulls_screen.dart'
-    as _i23;
+    as _i26;
 import 'package:takion/src/presentation/features/library/read_screen.dart'
-    as _i28;
+    as _i31;
 import 'package:takion/src/presentation/features/library/reading_history_screen.dart'
-    as _i29;
+    as _i32;
 import 'package:takion/src/presentation/features/library/subscriptions_screen.dart'
     as _i38;
 import 'package:takion/src/presentation/features/library/unrated_screen.dart'
@@ -58,26 +58,24 @@ import 'package:takion/src/presentation/features/library/unread_screen.dart'
     as _i43;
 import 'package:takion/src/presentation/features/library/wishlist_screen.dart'
     as _i45;
-import 'package:takion/src/presentation/features/browse/browse_screens.dart'
-    as _i1;
 import 'package:takion/src/presentation/features/publishers/publisher_details_screen.dart'
-    as _i26;
+    as _i29;
 import 'package:takion/src/presentation/features/publishers/publisher_series_screen.dart'
-    as _i27;
-import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_browser_screen.dart'
-    as _i20;
-import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_detail_screen.dart'
-    as _i21;
-import 'package:takion/src/presentation/features/reading_lists/reading_list_details_screen.dart'
     as _i30;
-import 'package:takion/src/presentation/features/reading_lists/reading_list_edit_screen.dart'
-    as _i31;
-import 'package:takion/src/presentation/features/reading_lists/reading_lists_screen.dart'
-    as _i32;
+import 'package:takion/src/presentation/features/reading_lists/local_reading_list_details_screen.dart'
+    as _i19;
+import 'package:takion/src/presentation/features/reading_lists/local_reading_list_edit_screen.dart'
+    as _i20;
+import 'package:takion/src/presentation/features/reading_lists/local_reading_lists_screen.dart'
+    as _i21;
+import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_browser_screen.dart'
+    as _i23;
+import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_detail_screen.dart'
+    as _i24;
 import 'package:takion/src/presentation/features/releases/foc_releases_screen.dart'
     as _i11;
 import 'package:takion/src/presentation/features/releases/new_first_issues_screen.dart'
-    as _i24;
+    as _i27;
 import 'package:takion/src/presentation/features/releases/releases_screen.dart'
     as _i33;
 import 'package:takion/src/presentation/features/releases/weekly_releases_screen.dart'
@@ -100,6 +98,8 @@ import 'package:takion/src/presentation/features/teams/team_issues_screen.dart'
     as _i40;
 import 'package:takion/src/presentation/features/universes/universe_details_screen.dart'
     as _i41;
+import 'package:takion/src/presentation/shared/widgets/image_preview_screen.dart'
+    as _i13;
 
 /// generated route for
 /// [_i1.ArcBrowseScreen]
@@ -1001,7 +1001,137 @@ class LibrarySeriesRouteArgs {
 }
 
 /// generated route for
-/// [_i19.MainScreen]
+/// [_i19.LocalReadingListDetailsScreen]
+class LocalReadingListDetailsRoute
+    extends _i46.PageRouteInfo<LocalReadingListDetailsRouteArgs> {
+  LocalReadingListDetailsRoute({
+    _i47.Key? key,
+    required String listId,
+    List<_i46.PageRouteInfo>? children,
+  }) : super(
+         LocalReadingListDetailsRoute.name,
+         args: LocalReadingListDetailsRouteArgs(key: key, listId: listId),
+         rawPathParams: {'listId': listId},
+         initialChildren: children,
+       );
+
+  static const String name = 'LocalReadingListDetailsRoute';
+
+  static _i46.PageInfo page = _i46.PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<LocalReadingListDetailsRouteArgs>(
+        orElse: () => LocalReadingListDetailsRouteArgs(
+          listId: pathParams.getString('listId'),
+        ),
+      );
+      return _i19.LocalReadingListDetailsScreen(
+        key: args.key,
+        listId: args.listId,
+      );
+    },
+  );
+}
+
+class LocalReadingListDetailsRouteArgs {
+  const LocalReadingListDetailsRouteArgs({this.key, required this.listId});
+
+  final _i47.Key? key;
+
+  final String listId;
+
+  @override
+  String toString() {
+    return 'LocalReadingListDetailsRouteArgs{key: $key, listId: $listId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! LocalReadingListDetailsRouteArgs) return false;
+    return key == other.key && listId == other.listId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ listId.hashCode;
+}
+
+/// generated route for
+/// [_i20.LocalReadingListEditScreen]
+class LocalReadingListEditRoute
+    extends _i46.PageRouteInfo<LocalReadingListEditRouteArgs> {
+  LocalReadingListEditRoute({
+    _i47.Key? key,
+    required String listId,
+    List<_i46.PageRouteInfo>? children,
+  }) : super(
+         LocalReadingListEditRoute.name,
+         args: LocalReadingListEditRouteArgs(key: key, listId: listId),
+         rawPathParams: {'listId': listId},
+         initialChildren: children,
+       );
+
+  static const String name = 'LocalReadingListEditRoute';
+
+  static _i46.PageInfo page = _i46.PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<LocalReadingListEditRouteArgs>(
+        orElse: () => LocalReadingListEditRouteArgs(
+          listId: pathParams.getString('listId'),
+        ),
+      );
+      return _i20.LocalReadingListEditScreen(
+        key: args.key,
+        listId: args.listId,
+      );
+    },
+  );
+}
+
+class LocalReadingListEditRouteArgs {
+  const LocalReadingListEditRouteArgs({this.key, required this.listId});
+
+  final _i47.Key? key;
+
+  final String listId;
+
+  @override
+  String toString() {
+    return 'LocalReadingListEditRouteArgs{key: $key, listId: $listId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! LocalReadingListEditRouteArgs) return false;
+    return key == other.key && listId == other.listId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ listId.hashCode;
+}
+
+/// generated route for
+/// [_i21.LocalReadingListsScreen]
+class LocalReadingListsRoute extends _i46.PageRouteInfo<void> {
+  const LocalReadingListsRoute({List<_i46.PageRouteInfo>? children})
+    : super(LocalReadingListsRoute.name, initialChildren: children);
+
+  static const String name = 'LocalReadingListsRoute';
+
+  static _i46.PageInfo page = _i46.PageInfo(
+    name,
+    builder: (data) {
+      return const _i21.LocalReadingListsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [_i22.MainScreen]
 class MainRoute extends _i46.PageRouteInfo<void> {
   const MainRoute({List<_i46.PageRouteInfo>? children})
     : super(MainRoute.name, initialChildren: children);
@@ -1011,13 +1141,13 @@ class MainRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i19.MainScreen();
+      return const _i22.MainScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i20.MetronReadingListBrowserScreen]
+/// [_i23.MetronReadingListBrowserScreen]
 class MetronReadingListBrowserRoute extends _i46.PageRouteInfo<void> {
   const MetronReadingListBrowserRoute({List<_i46.PageRouteInfo>? children})
     : super(MetronReadingListBrowserRoute.name, initialChildren: children);
@@ -1027,13 +1157,13 @@ class MetronReadingListBrowserRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i20.MetronReadingListBrowserScreen();
+      return const _i23.MetronReadingListBrowserScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i21.MetronReadingListDetailScreen]
+/// [_i24.MetronReadingListDetailScreen]
 class MetronReadingListDetailRoute
     extends _i46.PageRouteInfo<MetronReadingListDetailRouteArgs> {
   MetronReadingListDetailRoute({
@@ -1057,7 +1187,7 @@ class MetronReadingListDetailRoute
         orElse: () =>
             MetronReadingListDetailRouteArgs(id: pathParams.getInt('id')),
       );
-      return _i21.MetronReadingListDetailScreen(key: args.key, id: args.id);
+      return _i24.MetronReadingListDetailScreen(key: args.key, id: args.id);
     },
   );
 }
@@ -1086,7 +1216,7 @@ class MetronReadingListDetailRouteArgs {
 }
 
 /// generated route for
-/// [_i22.MyComicsScreen]
+/// [_i25.MyComicsScreen]
 class MyComicsRoute extends _i46.PageRouteInfo<void> {
   const MyComicsRoute({List<_i46.PageRouteInfo>? children})
     : super(MyComicsRoute.name, initialChildren: children);
@@ -1096,13 +1226,13 @@ class MyComicsRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i22.MyComicsScreen();
+      return const _i25.MyComicsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i23.MyPullsScreen]
+/// [_i26.MyPullsScreen]
 class MyPullsRoute extends _i46.PageRouteInfo<void> {
   const MyPullsRoute({List<_i46.PageRouteInfo>? children})
     : super(MyPullsRoute.name, initialChildren: children);
@@ -1112,13 +1242,13 @@ class MyPullsRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i23.MyPullsScreen();
+      return const _i26.MyPullsScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i24.NewFirstIssuesScreen]
+/// [_i27.NewFirstIssuesScreen]
 class NewFirstIssuesRoute extends _i46.PageRouteInfo<void> {
   const NewFirstIssuesRoute({List<_i46.PageRouteInfo>? children})
     : super(NewFirstIssuesRoute.name, initialChildren: children);
@@ -1128,13 +1258,13 @@ class NewFirstIssuesRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i24.NewFirstIssuesScreen();
+      return const _i27.NewFirstIssuesScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i25.OnboardingScreen]
+/// [_i28.OnboardingScreen]
 class OnboardingRoute extends _i46.PageRouteInfo<void> {
   const OnboardingRoute({List<_i46.PageRouteInfo>? children})
     : super(OnboardingRoute.name, initialChildren: children);
@@ -1144,7 +1274,7 @@ class OnboardingRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i25.OnboardingScreen();
+      return const _i28.OnboardingScreen();
     },
   );
 }
@@ -1166,7 +1296,7 @@ class PublisherBrowseRoute extends _i46.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i26.PublisherDetailsScreen]
+/// [_i29.PublisherDetailsScreen]
 class PublisherDetailsRoute
     extends _i46.PageRouteInfo<PublisherDetailsRouteArgs> {
   PublisherDetailsRoute({
@@ -1196,7 +1326,7 @@ class PublisherDetailsRoute
           publisherId: pathParams.getInt('publisherId'),
         ),
       );
-      return _i26.PublisherDetailsScreen(
+      return _i29.PublisherDetailsScreen(
         key: args.key,
         publisherId: args.publisherId,
         initialImageUrl: args.initialImageUrl,
@@ -1238,7 +1368,7 @@ class PublisherDetailsRouteArgs {
 }
 
 /// generated route for
-/// [_i27.PublisherSeriesScreen]
+/// [_i30.PublisherSeriesScreen]
 class PublisherSeriesRoute
     extends _i46.PageRouteInfo<PublisherSeriesRouteArgs> {
   PublisherSeriesRoute({
@@ -1263,7 +1393,7 @@ class PublisherSeriesRoute
           publisherId: pathParams.getInt('publisherId'),
         ),
       );
-      return _i27.PublisherSeriesScreen(
+      return _i30.PublisherSeriesScreen(
         key: args.key,
         publisherId: args.publisherId,
       );
@@ -1295,7 +1425,7 @@ class PublisherSeriesRouteArgs {
 }
 
 /// generated route for
-/// [_i28.ReadScreen]
+/// [_i31.ReadScreen]
 class ReadRoute extends _i46.PageRouteInfo<void> {
   const ReadRoute({List<_i46.PageRouteInfo>? children})
     : super(ReadRoute.name, initialChildren: children);
@@ -1305,13 +1435,13 @@ class ReadRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i28.ReadScreen();
+      return const _i31.ReadScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i29.ReadingHistoryScreen]
+/// [_i32.ReadingHistoryScreen]
 class ReadingHistoryRoute extends _i46.PageRouteInfo<void> {
   const ReadingHistoryRoute({List<_i46.PageRouteInfo>? children})
     : super(ReadingHistoryRoute.name, initialChildren: children);
@@ -1321,129 +1451,7 @@ class ReadingHistoryRoute extends _i46.PageRouteInfo<void> {
   static _i46.PageInfo page = _i46.PageInfo(
     name,
     builder: (data) {
-      return const _i29.ReadingHistoryScreen();
-    },
-  );
-}
-
-/// generated route for
-/// [_i30.ReadingListDetailsScreen]
-class ReadingListDetailsRoute
-    extends _i46.PageRouteInfo<ReadingListDetailsRouteArgs> {
-  ReadingListDetailsRoute({
-    _i47.Key? key,
-    required String listId,
-    List<_i46.PageRouteInfo>? children,
-  }) : super(
-         ReadingListDetailsRoute.name,
-         args: ReadingListDetailsRouteArgs(key: key, listId: listId),
-         rawPathParams: {'listId': listId},
-         initialChildren: children,
-       );
-
-  static const String name = 'ReadingListDetailsRoute';
-
-  static _i46.PageInfo page = _i46.PageInfo(
-    name,
-    builder: (data) {
-      final pathParams = data.inheritedPathParams;
-      final args = data.argsAs<ReadingListDetailsRouteArgs>(
-        orElse: () =>
-            ReadingListDetailsRouteArgs(listId: pathParams.getString('listId')),
-      );
-      return _i30.ReadingListDetailsScreen(key: args.key, listId: args.listId);
-    },
-  );
-}
-
-class ReadingListDetailsRouteArgs {
-  const ReadingListDetailsRouteArgs({this.key, required this.listId});
-
-  final _i47.Key? key;
-
-  final String listId;
-
-  @override
-  String toString() {
-    return 'ReadingListDetailsRouteArgs{key: $key, listId: $listId}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! ReadingListDetailsRouteArgs) return false;
-    return key == other.key && listId == other.listId;
-  }
-
-  @override
-  int get hashCode => key.hashCode ^ listId.hashCode;
-}
-
-/// generated route for
-/// [_i31.ReadingListEditScreen]
-class ReadingListEditRoute
-    extends _i46.PageRouteInfo<ReadingListEditRouteArgs> {
-  ReadingListEditRoute({
-    _i47.Key? key,
-    required String listId,
-    List<_i46.PageRouteInfo>? children,
-  }) : super(
-         ReadingListEditRoute.name,
-         args: ReadingListEditRouteArgs(key: key, listId: listId),
-         rawPathParams: {'listId': listId},
-         initialChildren: children,
-       );
-
-  static const String name = 'ReadingListEditRoute';
-
-  static _i46.PageInfo page = _i46.PageInfo(
-    name,
-    builder: (data) {
-      final pathParams = data.inheritedPathParams;
-      final args = data.argsAs<ReadingListEditRouteArgs>(
-        orElse: () =>
-            ReadingListEditRouteArgs(listId: pathParams.getString('listId')),
-      );
-      return _i31.ReadingListEditScreen(key: args.key, listId: args.listId);
-    },
-  );
-}
-
-class ReadingListEditRouteArgs {
-  const ReadingListEditRouteArgs({this.key, required this.listId});
-
-  final _i47.Key? key;
-
-  final String listId;
-
-  @override
-  String toString() {
-    return 'ReadingListEditRouteArgs{key: $key, listId: $listId}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! ReadingListEditRouteArgs) return false;
-    return key == other.key && listId == other.listId;
-  }
-
-  @override
-  int get hashCode => key.hashCode ^ listId.hashCode;
-}
-
-/// generated route for
-/// [_i32.ReadingListsScreen]
-class ReadingListsRoute extends _i46.PageRouteInfo<void> {
-  const ReadingListsRoute({List<_i46.PageRouteInfo>? children})
-    : super(ReadingListsRoute.name, initialChildren: children);
-
-  static const String name = 'ReadingListsRoute';
-
-  static _i46.PageInfo page = _i46.PageInfo(
-    name,
-    builder: (data) {
-      return const _i32.ReadingListsScreen();
+      return const _i32.ReadingHistoryScreen();
     },
   );
 }

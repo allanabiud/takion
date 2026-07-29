@@ -114,4 +114,15 @@ class LocalActivityRepository implements ActivityRepository {
     if (typeFilter == null) return all.length;
     return all.where((d) => d.eventType == typeFilter.name).length;
   }
+
+  @override
+  Future<void> deleteEventsByIssueIds(
+    List<int> issueIds, {
+    ActivityEventType? type,
+  }) async {
+    await _database.activityDao.deleteByIssueIds(
+      issueIds,
+      eventType: type?.name,
+    );
+  }
 }

@@ -4,7 +4,7 @@ import 'package:takion/src/presentation/features/issues/providers/issue_collecti
 import 'package:takion/src/presentation/providers/providers.dart';
 
 final readingListItemEffectiveReadStatusProvider = Provider.autoDispose
-    .family<AsyncValue<bool>, ReadingListItem>((ref, item) {
+    .family<AsyncValue<bool>, LocalReadingListItem>((ref, item) {
       final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
       final id = int.tryParse(idString) ?? 0;
 
@@ -27,7 +27,7 @@ final readingListItemEffectiveReadStatusProvider = Provider.autoDispose
 final readingListEffectiveStatusProvider = Provider.autoDispose
     .family<
       AsyncValue<({int readCount, int totalCount, double progress})>,
-      ReadingList
+      LocalReadingList
     >((ref, list) {
       final itemsStatuses = list.items
           .map(

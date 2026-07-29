@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/universes/providers/universe_de
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class UniverseDetailsScreen extends ConsumerStatefulWidget {
@@ -56,6 +57,28 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
     }
   }
 
+  Future<void> _refreshUniverseData(UniverseDetails details) async {
+    try {
+      final newDetails = await ref
+          .read(catalogRepositoryProvider)
+          .getUniverseDetails(details.id, forceRefresh: true);
+      final currentDetails = ref
+          .read(universeDetailsProvider(details.id))
+          .asData
+          ?.value;
+      if (currentDetails != newDetails) {
+        ref.invalidate(universeDetailsProvider(details.id));
+      }
+      if (mounted) {
+        TakionAlerts.success(context, 'Universe details refreshed');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to refresh universe details');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(universeDetailsProvider(widget.universeId));
@@ -68,6 +91,7 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
       toHeroTag: (d) => 'universe-image-${d.id}',
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.designation,
+      onRefresh: (d) => _refreshUniverseData(d),
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       heroWidth: 300,

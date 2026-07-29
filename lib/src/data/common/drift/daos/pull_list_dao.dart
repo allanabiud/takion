@@ -41,6 +41,13 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
     await batch((b) {
       b.insertAllOnConflictUpdate(attachedDatabase.pullListEntries, entries);
     });
+    for (final entry in entries) {
+      if (entry.id.present) {
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:pull_list_entries:${entry.id.value}',
+        );
+      }
+    }
   }
 
   Stream<List<PullListEntry>> watchAll() {
@@ -67,7 +74,16 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> upsert(PullListEntriesCompanion entry) async {
-    await into(attachedDatabase.pullListEntries).insertOnConflictUpdate(entry);
+    await transaction(() async {
+      await into(
+        attachedDatabase.pullListEntries,
+      ).insertOnConflictUpdate(entry);
+      if (entry.id.present) {
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:pull_list_entries:${entry.id.value}',
+        );
+      }
+    });
   }
 
   Future<void> deleteBySeriesId(int metronSeriesId) async {

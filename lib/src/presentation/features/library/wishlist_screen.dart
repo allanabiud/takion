@@ -30,13 +30,24 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_onTabChanged);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      setState(() {
+        _isSearching = false;
+        _searchController.clear();
+      });
+    }
   }
 
   @override
@@ -78,14 +89,14 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
         ),
         actions: _tabController.index == 0
             ? (_isSearching
-                ? null
-                : [
-                    IconButton(
-                      tooltip: 'Search',
-                      onPressed: () => setState(() => _isSearching = true),
-                      icon: const Icon(Icons.search),
-                    ),
-                  ])
+                  ? null
+                  : [
+                      IconButton(
+                        tooltip: 'Search',
+                        onPressed: () => setState(() => _isSearching = true),
+                        icon: const Icon(Icons.search),
+                      ),
+                    ])
             : null,
       ),
       body: TabBarView(
@@ -102,7 +113,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
   }
 }
 
-class _WishlistBrowseTab extends ConsumerWidget {
+class _WishlistBrowseTab extends ConsumerStatefulWidget {
   final bool isSearching;
   final String searchQuery;
 
@@ -112,7 +123,17 @@ class _WishlistBrowseTab extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_WishlistBrowseTab> createState() => _WishlistBrowseTabState();
+}
+
+class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final seriesAsync = ref.watch(wishlistSeriesProvider);
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryWishlist),
@@ -142,13 +163,11 @@ class _WishlistBrowseTab extends ConsumerWidget {
         final categoryCounts = <int, int>{
           for (final e in mapped) e.series.id: e.categoryCount,
         };
-        final query = searchQuery.toLowerCase().trim();
-        final filtered = isSearching && query.isNotEmpty
+        final query = widget.searchQuery.toLowerCase().trim();
+        final filtered = widget.isSearching && query.isNotEmpty
             ? sortedResults
-                .where(
-                  (s) => s.name.toLowerCase().contains(query),
-                )
-                .toList()
+                  .where((s) => s.name.toLowerCase().contains(query))
+                  .toList()
             : sortedResults;
         if (filtered.isEmpty) {
           return RefreshIndicator(

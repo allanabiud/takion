@@ -8,30 +8,29 @@ import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/domain/repositories.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
-final readingListLocalDataSourceProvider = Provider<ReadingListRepository>((
-  ref,
-) {
-  return ReadingListLocalDataSource(ref.read(driftDatabaseProvider));
-});
+final localReadingListLocalDataSourceProvider =
+    Provider<LocalReadingListRepository>((ref) {
+      return LocalReadingListLocalDataSource(ref.read(driftDatabaseProvider));
+    });
 
-class ReadingListLocalDataSource implements ReadingListRepository {
+class LocalReadingListLocalDataSource implements LocalReadingListRepository {
   final db.AppDatabase _database;
 
-  ReadingListLocalDataSource(this._database);
+  LocalReadingListLocalDataSource(this._database);
 
-  ReadingList _toDomain(db.ReadingList d) {
-    List<ReadingListItem> items;
+  LocalReadingList _toDomain(db.ReadingList d) {
+    List<LocalReadingListItem> items;
     try {
       final decoded = jsonDecode(d.itemsJson) as List<dynamic>;
       items = decoded
-          .map((e) => ReadingListItem.fromJson(e as Map<String, dynamic>))
+          .map((e) => LocalReadingListItem.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
       AppLogger.warning('Failed to decode reading list items', error: e);
-      items = <ReadingListItem>[];
+      items = <LocalReadingListItem>[];
     }
 
-    return ReadingList(
+    return LocalReadingList(
       id: d.id,
       title: d.title,
       description: d.description,
@@ -54,7 +53,7 @@ class ReadingListLocalDataSource implements ReadingListRepository {
   }
 
   @override
-  Future<void> createList(ReadingList list) async {
+  Future<void> createList(LocalReadingList list) async {
     await _database.readingListDao.upsertList(
       db.ReadingListsCompanion(
         id: Value(list.id),
@@ -78,7 +77,7 @@ class ReadingListLocalDataSource implements ReadingListRepository {
   }
 
   @override
-  Future<void> updateList(ReadingList list) async {
+  Future<void> updateList(LocalReadingList list) async {
     await createList(list);
   }
 
@@ -88,22 +87,22 @@ class ReadingListLocalDataSource implements ReadingListRepository {
   }
 
   @override
-  Future<List<ReadingList>> getAllLists() async {
+  Future<List<LocalReadingList>> getAllLists() async {
     final rows = await _database.readingListDao.watchAll().first;
     return rows.map(_toDomain).toList();
   }
 
   @override
-  Future<ReadingList?> getListById(String id) async {
+  Future<LocalReadingList?> getListById(String id) async {
     final d = await _database.readingListDao.getById(id);
     return d != null ? _toDomain(d) : null;
   }
 
   @override
-  Future<void> addItemToList(String listId, ReadingListItem item) async {
+  Future<void> addItemToList(String listId, LocalReadingListItem item) async {
     final list = await getListById(listId);
     if (list == null) return;
-    final items = List<ReadingListItem>.from(list.items)..add(item);
+    final items = List<LocalReadingListItem>.from(list.items)..add(item);
     final updated = list.copyWith(items: items, updatedAt: DateTime.now());
     await updateList(updated);
   }
@@ -111,11 +110,12 @@ class ReadingListLocalDataSource implements ReadingListRepository {
   @override
   Future<void> addItemsToList(
     String listId,
-    List<ReadingListItem> items,
+    List<LocalReadingListItem> items,
   ) async {
     final list = await getListById(listId);
     if (list == null) return;
-    final updatedItems = List<ReadingListItem>.from(list.items)..addAll(items);
+    final updatedItems = List<LocalReadingListItem>.from(list.items)
+      ..addAll(items);
     final updated = list.copyWith(
       items: updatedItems,
       updatedAt: DateTime.now(),
@@ -142,7 +142,7 @@ class ReadingListLocalDataSource implements ReadingListRepository {
   }
 
   @override
-  Future<ReadingList?> findByMetronSourceId(int metronSourceId) async {
+  Future<LocalReadingList?> findByMetronSourceId(int metronSourceId) async {
     final all = await getAllLists();
     try {
       return all.firstWhere((list) => list.metronSourceId == metronSourceId);

@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'reading_list.dart';
+part of 'local_reading_list.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,22 +13,22 @@ part of 'reading_list.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$ReadingListItem {
+mixin _$LocalReadingListItem {
 
  String get targetId; bool get isSeries; ItemRole get role; bool get isRead;
-/// Create a copy of ReadingListItem
+/// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$ReadingListItemCopyWith<ReadingListItem> get copyWith => _$ReadingListItemCopyWithImpl<ReadingListItem>(this as ReadingListItem, _$identity);
+$LocalReadingListItemCopyWith<LocalReadingListItem> get copyWith => _$LocalReadingListItemCopyWithImpl<LocalReadingListItem>(this as LocalReadingListItem, _$identity);
 
-  /// Serializes this ReadingListItem to a JSON map.
+  /// Serializes this LocalReadingListItem to a JSON map.
   Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -37,15 +37,15 @@ int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead);
 
 @override
 String toString() {
-  return 'ReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead)';
+  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $ReadingListItemCopyWith<$Res>  {
-  factory $ReadingListItemCopyWith(ReadingListItem value, $Res Function(ReadingListItem) _then) = _$ReadingListItemCopyWithImpl;
+abstract mixin class $LocalReadingListItemCopyWith<$Res>  {
+  factory $LocalReadingListItemCopyWith(LocalReadingListItem value, $Res Function(LocalReadingListItem) _then) = _$LocalReadingListItemCopyWithImpl;
 @useResult
 $Res call({
  String targetId, bool isSeries, ItemRole role, bool isRead
@@ -56,14 +56,14 @@ $Res call({
 
 }
 /// @nodoc
-class _$ReadingListItemCopyWithImpl<$Res>
-    implements $ReadingListItemCopyWith<$Res> {
-  _$ReadingListItemCopyWithImpl(this._self, this._then);
+class _$LocalReadingListItemCopyWithImpl<$Res>
+    implements $LocalReadingListItemCopyWith<$Res> {
+  _$LocalReadingListItemCopyWithImpl(this._self, this._then);
 
-  final ReadingListItem _self;
-  final $Res Function(ReadingListItem) _then;
+  final LocalReadingListItem _self;
+  final $Res Function(LocalReadingListItem) _then;
 
-/// Create a copy of ReadingListItem
+/// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,}) {
   return _then(_self.copyWith(
@@ -78,8 +78,8 @@ as bool,
 }
 
 
-/// Adds pattern-matching-related methods to [ReadingListItem].
-extension ReadingListItemPatterns on ReadingListItem {
+/// Adds pattern-matching-related methods to [LocalReadingListItem].
+extension LocalReadingListItemPatterns on LocalReadingListItem {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -92,10 +92,10 @@ extension ReadingListItemPatterns on ReadingListItem {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReadingListItem value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LocalReadingListItem value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _ReadingListItem() when $default != null:
+case _LocalReadingListItem() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -114,10 +114,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReadingListItem value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LocalReadingListItem value)  $default,){
 final _that = this;
 switch (_that) {
-case _ReadingListItem():
+case _LocalReadingListItem():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -135,10 +135,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReadingListItem value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LocalReadingListItem value)?  $default,){
 final _that = this;
 switch (_that) {
-case _ReadingListItem() when $default != null:
+case _LocalReadingListItem() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -158,7 +158,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _ReadingListItem() when $default != null:
+case _LocalReadingListItem() when $default != null:
 return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
   return orElse();
 
@@ -179,7 +179,7 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead)  $default,) {final _that = this;
 switch (_that) {
-case _ReadingListItem():
+case _LocalReadingListItem():
 return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
   throw StateError('Unexpected subclass');
 
@@ -199,7 +199,7 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead)?  $default,) {final _that = this;
 switch (_that) {
-case _ReadingListItem() when $default != null:
+case _LocalReadingListItem() when $default != null:
 return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
   return null;
 
@@ -211,29 +211,29 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _ReadingListItem implements ReadingListItem {
-  const _ReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead});
-  factory _ReadingListItem.fromJson(Map<String, dynamic> json) => _$ReadingListItemFromJson(json);
+class _LocalReadingListItem implements LocalReadingListItem {
+  const _LocalReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead});
+  factory _LocalReadingListItem.fromJson(Map<String, dynamic> json) => _$LocalReadingListItemFromJson(json);
 
 @override final  String targetId;
 @override final  bool isSeries;
 @override final  ItemRole role;
 @override final  bool isRead;
 
-/// Create a copy of ReadingListItem
+/// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$ReadingListItemCopyWith<_ReadingListItem> get copyWith => __$ReadingListItemCopyWithImpl<_ReadingListItem>(this, _$identity);
+_$LocalReadingListItemCopyWith<_LocalReadingListItem> get copyWith => __$LocalReadingListItemCopyWithImpl<_LocalReadingListItem>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
-  return _$ReadingListItemToJson(this, );
+  return _$LocalReadingListItemToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -242,15 +242,15 @@ int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead);
 
 @override
 String toString() {
-  return 'ReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead)';
+  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$ReadingListItemCopyWith<$Res> implements $ReadingListItemCopyWith<$Res> {
-  factory _$ReadingListItemCopyWith(_ReadingListItem value, $Res Function(_ReadingListItem) _then) = __$ReadingListItemCopyWithImpl;
+abstract mixin class _$LocalReadingListItemCopyWith<$Res> implements $LocalReadingListItemCopyWith<$Res> {
+  factory _$LocalReadingListItemCopyWith(_LocalReadingListItem value, $Res Function(_LocalReadingListItem) _then) = __$LocalReadingListItemCopyWithImpl;
 @override @useResult
 $Res call({
  String targetId, bool isSeries, ItemRole role, bool isRead
@@ -261,17 +261,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$ReadingListItemCopyWithImpl<$Res>
-    implements _$ReadingListItemCopyWith<$Res> {
-  __$ReadingListItemCopyWithImpl(this._self, this._then);
+class __$LocalReadingListItemCopyWithImpl<$Res>
+    implements _$LocalReadingListItemCopyWith<$Res> {
+  __$LocalReadingListItemCopyWithImpl(this._self, this._then);
 
-  final _ReadingListItem _self;
-  final $Res Function(_ReadingListItem) _then;
+  final _LocalReadingListItem _self;
+  final $Res Function(_LocalReadingListItem) _then;
 
-/// Create a copy of ReadingListItem
+/// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,}) {
-  return _then(_ReadingListItem(
+  return _then(_LocalReadingListItem(
 targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
 as String,isSeries: null == isSeries ? _self.isSeries : isSeries // ignore: cast_nullable_to_non_nullable
 as bool,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
@@ -285,22 +285,22 @@ as bool,
 
 
 /// @nodoc
-mixin _$ReadingList {
+mixin _$LocalReadingList {
 
- String get id; String get title; String get description; bool get isOrdered; ListContentType get contentType; DateTime get createdAt; DateTime get updatedAt; List<ReadingListItem> get items; int? get metronSourceId; String? get metronAttributionSource; String? get metronAttributionUrl; String? get metronImageUrl; String? get metronListType; DateTime? get lastSyncedAt;
-/// Create a copy of ReadingList
+ String get id; String get title; String get description; bool get isOrdered; ListContentType get contentType; DateTime get createdAt; DateTime get updatedAt; List<LocalReadingListItem> get items; int? get metronSourceId; String? get metronAttributionSource; String? get metronAttributionUrl; String? get metronImageUrl; String? get metronListType; DateTime? get lastSyncedAt;
+/// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$ReadingListCopyWith<ReadingList> get copyWith => _$ReadingListCopyWithImpl<ReadingList>(this as ReadingList, _$identity);
+$LocalReadingListCopyWith<LocalReadingList> get copyWith => _$LocalReadingListCopyWithImpl<LocalReadingList>(this as LocalReadingList, _$identity);
 
-  /// Serializes this ReadingList to a JSON map.
+  /// Serializes this LocalReadingList to a JSON map.
   Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -309,18 +309,18 @@ int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,conte
 
 @override
 String toString() {
-  return 'ReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
+  return 'LocalReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $ReadingListCopyWith<$Res>  {
-  factory $ReadingListCopyWith(ReadingList value, $Res Function(ReadingList) _then) = _$ReadingListCopyWithImpl;
+abstract mixin class $LocalReadingListCopyWith<$Res>  {
+  factory $LocalReadingListCopyWith(LocalReadingList value, $Res Function(LocalReadingList) _then) = _$LocalReadingListCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<ReadingListItem> items, int? metronSourceId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt
+ String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<LocalReadingListItem> items, int? metronSourceId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt
 });
 
 
@@ -328,14 +328,14 @@ $Res call({
 
 }
 /// @nodoc
-class _$ReadingListCopyWithImpl<$Res>
-    implements $ReadingListCopyWith<$Res> {
-  _$ReadingListCopyWithImpl(this._self, this._then);
+class _$LocalReadingListCopyWithImpl<$Res>
+    implements $LocalReadingListCopyWith<$Res> {
+  _$LocalReadingListCopyWithImpl(this._self, this._then);
 
-  final ReadingList _self;
-  final $Res Function(ReadingList) _then;
+  final LocalReadingList _self;
+  final $Res Function(LocalReadingList) _then;
 
-/// Create a copy of ReadingList
+/// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,}) {
   return _then(_self.copyWith(
@@ -347,7 +347,7 @@ as bool,contentType: null == contentType ? _self.contentType : contentType // ig
 as ListContentType,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<ReadingListItem>,metronSourceId: freezed == metronSourceId ? _self.metronSourceId : metronSourceId // ignore: cast_nullable_to_non_nullable
+as List<LocalReadingListItem>,metronSourceId: freezed == metronSourceId ? _self.metronSourceId : metronSourceId // ignore: cast_nullable_to_non_nullable
 as int?,metronAttributionSource: freezed == metronAttributionSource ? _self.metronAttributionSource : metronAttributionSource // ignore: cast_nullable_to_non_nullable
 as String?,metronAttributionUrl: freezed == metronAttributionUrl ? _self.metronAttributionUrl : metronAttributionUrl // ignore: cast_nullable_to_non_nullable
 as String?,metronImageUrl: freezed == metronImageUrl ? _self.metronImageUrl : metronImageUrl // ignore: cast_nullable_to_non_nullable
@@ -360,8 +360,8 @@ as DateTime?,
 }
 
 
-/// Adds pattern-matching-related methods to [ReadingList].
-extension ReadingListPatterns on ReadingList {
+/// Adds pattern-matching-related methods to [LocalReadingList].
+extension LocalReadingListPatterns on LocalReadingList {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -374,10 +374,10 @@ extension ReadingListPatterns on ReadingList {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReadingList value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LocalReadingList value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _ReadingList() when $default != null:
+case _LocalReadingList() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -396,10 +396,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReadingList value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LocalReadingList value)  $default,){
 final _that = this;
 switch (_that) {
-case _ReadingList():
+case _LocalReadingList():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -417,10 +417,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReadingList value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LocalReadingList value)?  $default,){
 final _that = this;
 switch (_that) {
-case _ReadingList() when $default != null:
+case _LocalReadingList() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -438,9 +438,9 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<ReadingListItem> items,  int? metronSourceId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _ReadingList() when $default != null:
+case _LocalReadingList() when $default != null:
 return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
   return orElse();
 
@@ -459,9 +459,9 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<ReadingListItem> items,  int? metronSourceId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)  $default,) {final _that = this;
 switch (_that) {
-case _ReadingList():
+case _LocalReadingList():
 return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
   throw StateError('Unexpected subclass');
 
@@ -479,9 +479,9 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<ReadingListItem> items,  int? metronSourceId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)?  $default,) {final _that = this;
 switch (_that) {
-case _ReadingList() when $default != null:
+case _LocalReadingList() when $default != null:
 return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
   return null;
 
@@ -493,9 +493,9 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// @nodoc
 @JsonSerializable()
 
-class _ReadingList implements ReadingList {
-  const _ReadingList({required this.id, required this.title, required this.description, required this.isOrdered, required this.contentType, required this.createdAt, required this.updatedAt, required final  List<ReadingListItem> items, this.metronSourceId, this.metronAttributionSource, this.metronAttributionUrl, this.metronImageUrl, this.metronListType, this.lastSyncedAt}): _items = items;
-  factory _ReadingList.fromJson(Map<String, dynamic> json) => _$ReadingListFromJson(json);
+class _LocalReadingList implements LocalReadingList {
+  const _LocalReadingList({required this.id, required this.title, required this.description, required this.isOrdered, required this.contentType, required this.createdAt, required this.updatedAt, required final  List<LocalReadingListItem> items, this.metronSourceId, this.metronAttributionSource, this.metronAttributionUrl, this.metronImageUrl, this.metronListType, this.lastSyncedAt}): _items = items;
+  factory _LocalReadingList.fromJson(Map<String, dynamic> json) => _$LocalReadingListFromJson(json);
 
 @override final  String id;
 @override final  String title;
@@ -504,8 +504,8 @@ class _ReadingList implements ReadingList {
 @override final  ListContentType contentType;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
- final  List<ReadingListItem> _items;
-@override List<ReadingListItem> get items {
+ final  List<LocalReadingListItem> _items;
+@override List<LocalReadingListItem> get items {
   if (_items is EqualUnmodifiableListView) return _items;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_items);
@@ -518,20 +518,20 @@ class _ReadingList implements ReadingList {
 @override final  String? metronListType;
 @override final  DateTime? lastSyncedAt;
 
-/// Create a copy of ReadingList
+/// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$ReadingListCopyWith<_ReadingList> get copyWith => __$ReadingListCopyWithImpl<_ReadingList>(this, _$identity);
+_$LocalReadingListCopyWith<_LocalReadingList> get copyWith => __$LocalReadingListCopyWithImpl<_LocalReadingList>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
-  return _$ReadingListToJson(this, );
+  return _$LocalReadingListToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -540,18 +540,18 @@ int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,conte
 
 @override
 String toString() {
-  return 'ReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
+  return 'LocalReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$ReadingListCopyWith<$Res> implements $ReadingListCopyWith<$Res> {
-  factory _$ReadingListCopyWith(_ReadingList value, $Res Function(_ReadingList) _then) = __$ReadingListCopyWithImpl;
+abstract mixin class _$LocalReadingListCopyWith<$Res> implements $LocalReadingListCopyWith<$Res> {
+  factory _$LocalReadingListCopyWith(_LocalReadingList value, $Res Function(_LocalReadingList) _then) = __$LocalReadingListCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<ReadingListItem> items, int? metronSourceId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt
+ String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<LocalReadingListItem> items, int? metronSourceId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt
 });
 
 
@@ -559,17 +559,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$ReadingListCopyWithImpl<$Res>
-    implements _$ReadingListCopyWith<$Res> {
-  __$ReadingListCopyWithImpl(this._self, this._then);
+class __$LocalReadingListCopyWithImpl<$Res>
+    implements _$LocalReadingListCopyWith<$Res> {
+  __$LocalReadingListCopyWithImpl(this._self, this._then);
 
-  final _ReadingList _self;
-  final $Res Function(_ReadingList) _then;
+  final _LocalReadingList _self;
+  final $Res Function(_LocalReadingList) _then;
 
-/// Create a copy of ReadingList
+/// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,}) {
-  return _then(_ReadingList(
+  return _then(_LocalReadingList(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
@@ -578,7 +578,7 @@ as bool,contentType: null == contentType ? _self.contentType : contentType // ig
 as ListContentType,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
-as List<ReadingListItem>,metronSourceId: freezed == metronSourceId ? _self.metronSourceId : metronSourceId // ignore: cast_nullable_to_non_nullable
+as List<LocalReadingListItem>,metronSourceId: freezed == metronSourceId ? _self.metronSourceId : metronSourceId // ignore: cast_nullable_to_non_nullable
 as int?,metronAttributionSource: freezed == metronAttributionSource ? _self.metronAttributionSource : metronAttributionSource // ignore: cast_nullable_to_non_nullable
 as String?,metronAttributionUrl: freezed == metronAttributionUrl ? _self.metronAttributionUrl : metronAttributionUrl // ignore: cast_nullable_to_non_nullable
 as String?,metronImageUrl: freezed == metronImageUrl ? _self.metronImageUrl : metronImageUrl // ignore: cast_nullable_to_non_nullable

@@ -160,6 +160,12 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getArcDetails(arcId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _arcRowToEntity(cached);
+      }
       await _upsertArcDetails(dto);
       return _arcRowToEntity(
         await _metronEntityDao.getArc(arcId) ??

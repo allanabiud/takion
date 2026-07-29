@@ -27,6 +27,8 @@ part 'database.g.dart';
 
 @TableIndex(name: 'idx_lib_issue', columns: {#metronIssueId})
 @TableIndex(name: 'idx_lib_series', columns: {#metronSeriesId})
+@TableIndex(name: 'idx_lib_read', columns: {#isRead})
+@TableIndex(name: 'idx_lib_status', columns: {#ownershipStatus})
 class LibraryItems extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -193,6 +195,7 @@ class FavoriteReadingLists extends Table {
 
 // ── Metron Entity Tables (new normalized metadata) ────────────────────────
 
+@TableIndex(name: 'idx_metron_issues_series', columns: {#seriesId})
 class MetronIssues extends Table {
   IntColumn get id => integer()();
   TextColumn get number => text()();
@@ -214,6 +217,8 @@ class MetronIssues extends Table {
   IntColumn get gcdId => integer().nullable()();
   TextColumn get resourceUrl => text().nullable()();
   TextColumn get modified => text().nullable()();
+  TextColumn get variantsJson => text().nullable()();
+  TextColumn get reprintsJson => text().nullable()();
   BoolColumn get isFullyHydrated =>
       boolean().withDefault(const Constant(false))();
 
@@ -392,6 +397,7 @@ class MetronReadingLists extends Table {
 
 // ── Junction Tables (logical references, no FK constraints) ─────────────
 
+@TableIndex(name: 'idx_issue_creators_creator', columns: {#creatorId})
 class IssueCreators extends Table {
   IntColumn get issueId => integer()();
   IntColumn get creatorId => integer()();
@@ -402,6 +408,7 @@ class IssueCreators extends Table {
   Set<Column> get primaryKey => {issueId, creatorId};
 }
 
+@TableIndex(name: 'idx_issue_characters_character', columns: {#characterId})
 class IssueCharacters extends Table {
   IntColumn get issueId => integer()();
   IntColumn get characterId => integer()();
@@ -411,6 +418,7 @@ class IssueCharacters extends Table {
   Set<Column> get primaryKey => {issueId, characterId};
 }
 
+@TableIndex(name: 'idx_issue_arcs_arc', columns: {#arcId})
 class IssueArcs extends Table {
   IntColumn get issueId => integer()();
   IntColumn get arcId => integer()();
@@ -420,6 +428,7 @@ class IssueArcs extends Table {
   Set<Column> get primaryKey => {issueId, arcId};
 }
 
+@TableIndex(name: 'idx_issue_teams_team', columns: {#teamId})
 class IssueTeams extends Table {
   IntColumn get issueId => integer()();
   IntColumn get teamId => integer()();
@@ -429,6 +438,7 @@ class IssueTeams extends Table {
   Set<Column> get primaryKey => {issueId, teamId};
 }
 
+@TableIndex(name: 'idx_issue_universes_universe', columns: {#universeId})
 class IssueUniverses extends Table {
   IntColumn get issueId => integer()();
   IntColumn get universeId => integer()();
@@ -644,7 +654,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -660,6 +670,20 @@ class AppDatabase extends _$AppDatabase {
         if (from < 2) {
           await m.createAll();
           await delete(apiCache).go();
+        }
+        if (from < 3) {
+          await m.addColumn(metronIssues, metronIssues.variantsJson);
+          await m.addColumn(metronIssues, metronIssues.reprintsJson);
+        }
+        if (from < 4) {
+          await m.createIndex(idxLibRead);
+          await m.createIndex(idxLibStatus);
+          await m.createIndex(idxMetronIssuesSeries);
+          await m.createIndex(idxIssueCreatorsCreator);
+          await m.createIndex(idxIssueCharactersCharacter);
+          await m.createIndex(idxIssueArcsArc);
+          await m.createIndex(idxIssueTeamsTeam);
+          await m.createIndex(idxIssueUniversesUniverse);
         }
       },
     );

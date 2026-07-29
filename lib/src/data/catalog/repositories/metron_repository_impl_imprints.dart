@@ -157,6 +157,12 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
 
     try {
       final dto = await _remoteDataSource.getImprintDetails(imprintId);
+      if (cached != null &&
+          cached.modified != null &&
+          dto.modified != null &&
+          cached.modified == dto.modified) {
+        return _imprintRowToEntity(cached);
+      }
       await _upsertImprintDetails(dto);
       return _imprintRowToEntity(
         await _metronEntityDao.getImprint(imprintId) ??

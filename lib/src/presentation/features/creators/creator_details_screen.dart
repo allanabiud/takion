@@ -104,6 +104,27 @@ class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen> {
       toTitle: (d) => d.name,
       toSubtitle: (d) =>
           d.alias.isNotEmpty ? d.alias.map((a) => '@$a').join(', ') : null,
+      onRefresh: (d) async {
+        try {
+          final newDetails = await ref
+              .read(catalogRepositoryProvider)
+              .getCreatorDetails(d.id, forceRefresh: true);
+          final currentDetails = ref
+              .read(creatorDetailsProvider(d.id))
+              .asData
+              ?.value;
+          if (currentDetails != newDetails) {
+            ref.invalidate(creatorDetailsProvider(d.id));
+          }
+          if (context.mounted) {
+            TakionAlerts.success(context, 'Creator details refreshed');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.error(context, 'Failed to refresh creator details');
+          }
+        }
+      },
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       circular: true,

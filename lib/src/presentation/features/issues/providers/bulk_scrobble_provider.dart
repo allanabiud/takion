@@ -159,7 +159,10 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
             if (firstLog.isNotEmpty) {
               await libraryRepository.deleteReadLogById(firstLog.first.id);
             }
-            // Unread events intentionally not recorded per user requirement
+            final activityRepository = ref.read(activityRepositoryProvider);
+            await activityRepository.deleteEventsByIssueIds([
+              issueId,
+            ], type: ActivityEventType.read);
           }
         }
       } finally {

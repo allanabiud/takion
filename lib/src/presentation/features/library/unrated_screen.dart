@@ -102,10 +102,8 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
           final query = _searchController.text.toLowerCase().trim();
           final filtered = _isSearching && query.isNotEmpty
               ? sortedResults
-                  .where(
-                    (s) => s.name.toLowerCase().contains(query),
-                  )
-                  .toList()
+                    .where((s) => s.name.toLowerCase().contains(query))
+                    .toList()
               : sortedResults;
           if (filtered.isEmpty) {
             return RefreshIndicator(

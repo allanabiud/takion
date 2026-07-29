@@ -34,4 +34,18 @@ class ActivityDao extends DatabaseAccessor<AppDatabase> {
       b.insertAll(attachedDatabase.activityEvents, entries);
     });
   }
+
+  Future<void> deleteByIssueIds(List<int> issueIds, {String? eventType}) async {
+    if (issueIds.isEmpty) return;
+    if (eventType != null) {
+      await (delete(attachedDatabase.activityEvents)
+            ..where((t) => t.issueId.isIn(issueIds))
+            ..where((t) => t.eventType.equals(eventType)))
+          .go();
+    } else {
+      await (delete(
+        attachedDatabase.activityEvents,
+      )..where((t) => t.issueId.isIn(issueIds))).go();
+    }
+  }
 }

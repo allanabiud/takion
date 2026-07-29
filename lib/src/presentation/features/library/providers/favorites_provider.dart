@@ -224,28 +224,29 @@ final favoriteReadingListsListProvider =
       );
     });
 
-final favoriteReadingListsFullListProvider = FutureProvider<List<ReadingList>>((
-  ref,
-) async {
-  final favorites = await ref.watch(favoriteReadingListsListProvider.future);
-  final repository = ref.watch(readingListRepositoryProvider);
-
-  final results = <ReadingList>[];
-  for (final fav in favorites) {
-    try {
-      final list = await repository.getListById(fav.readingListId);
-      if (list != null) {
-        results.add(list);
-      }
-    } catch (e) {
-      AppLogger.warning(
-        'Failed to load reading list favorite details',
-        error: e,
+final favoriteReadingListsFullListProvider =
+    FutureProvider<List<LocalReadingList>>((ref) async {
+      final favorites = await ref.watch(
+        favoriteReadingListsListProvider.future,
       );
-    }
-  }
-  return results;
-});
+      final repository = ref.watch(localReadingListRepositoryProvider);
+
+      final results = <LocalReadingList>[];
+      for (final fav in favorites) {
+        try {
+          final list = await repository.getListById(fav.readingListId);
+          if (list != null) {
+            results.add(list);
+          }
+        } catch (e) {
+          AppLogger.warning(
+            'Failed to load reading list favorite details',
+            error: e,
+          );
+        }
+      }
+      return results;
+    });
 
 final isReadingListFavoriteProvider = StreamProvider.family<bool, String>((
   ref,

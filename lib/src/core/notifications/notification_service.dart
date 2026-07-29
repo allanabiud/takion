@@ -29,6 +29,8 @@ class NotificationService {
       await _plugin.initialize(
         settings,
         onDidReceiveNotificationResponse: _onNotificationResponse,
+        onDidReceiveBackgroundNotificationResponse:
+            backgroundNotificationHandler,
       );
 
       final android = _plugin
@@ -40,7 +42,7 @@ class NotificationService {
           _channelId,
           _channelName,
           description: 'Weekly summary of your comic pulls',
-          importance: Importance.defaultImportance,
+          importance: Importance.high,
         );
         await android.createNotificationChannel(channel);
       }
@@ -106,8 +108,8 @@ class NotificationService {
       _channelId,
       _channelName,
       channelDescription: 'Weekly summary of your comic pulls',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.high,
+      priority: Priority.high,
     );
     const details = NotificationDetails(android: androidDetails);
 
@@ -197,4 +199,10 @@ class NotificationService {
     final period = dt.hour < 12 ? 'AM' : 'PM';
     return '$hour:$minute $period';
   }
+}
+
+@pragma('vm:entry-point')
+void backgroundNotificationHandler(NotificationResponse response) {
+  // Background isolate handler — navigation on tap is handled by
+  // checkPendingNotificationLaunch() when the app comes to foreground.
 }

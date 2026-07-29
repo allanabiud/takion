@@ -21,7 +21,7 @@ import 'package:takion/src/presentation/features/issues/issue_details/issue_my_d
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
@@ -42,6 +42,28 @@ class IssueDetailsScreen extends ConsumerStatefulWidget {
 
 class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
   late int _currentIssueId;
+
+  Future<void> _refreshIssueData() async {
+    try {
+      final newIssue = await ref
+          .read(catalogRepositoryProvider)
+          .getIssueDetails(_currentIssueId, forceRefresh: true);
+      final currentIssue = ref
+          .read(issueDetailsProvider(_currentIssueId))
+          .asData
+          ?.value;
+      if (currentIssue != newIssue) {
+        ref.invalidate(issueDetailsProvider(_currentIssueId));
+      }
+      if (mounted) {
+        TakionAlerts.success(context, 'Issue details refreshed');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to refresh issue details');
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -462,6 +484,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                         elevation: 0,
                         actions: [
                           EntityDetailActions(
+                            onRefresh: isCurrentData ? _refreshIssueData : null,
                             onShare: isCurrentData
                                 ? () => _shareResourceUrl(issue)
                                 : null,
@@ -501,7 +524,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                         : () {},
                     onAddToReadingList: isCurrentData
                         ? () {
-                            AddToReadingListBottomSheet.show(
+                            AddToLocalReadingListBottomSheet.show(
                               context: context,
                               targetId: 'issue-$_currentIssueId',
                               isSeries: false,

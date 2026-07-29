@@ -12,10 +12,10 @@ import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart'
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_timeline_tile.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_details_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
@@ -33,7 +33,7 @@ class MetronReadingListDetailScreen extends ConsumerStatefulWidget {
 
 class _MetronReadingListDetailScreenState
     extends ConsumerState<MetronReadingListDetailScreen> {
-  ReadingList? _localList;
+  LocalReadingList? _localList;
   bool _isLoadingImport = false;
 
   @override
@@ -43,7 +43,7 @@ class _MetronReadingListDetailScreenState
   }
 
   Future<void> _checkImportStatus() async {
-    final repo = ref.read(readingListRepositoryProvider);
+    final repo = ref.read(localReadingListRepositoryProvider);
     final local = await repo.findByMetronSourceId(widget.id);
     if (mounted) {
       setState(() => _localList = local);
@@ -60,7 +60,7 @@ class _MetronReadingListDetailScreenState
       final items = data.items;
 
       final readingListItems = items.map((item) {
-        return ReadingListItem(
+        return LocalReadingListItem(
           targetId: 'issue-${item.issueId}',
           isSeries: false,
           role: ItemRole.standard,
@@ -69,7 +69,7 @@ class _MetronReadingListDetailScreenState
       }).toList();
 
       final now = DateTime.now().toUtc();
-      final list = ReadingList(
+      final list = LocalReadingList(
         id: const Uuid().v4(),
         title: detail.name,
         description: detail.desc ?? '',
@@ -86,7 +86,7 @@ class _MetronReadingListDetailScreenState
         lastSyncedAt: now,
       );
 
-      await ref.read(readingListsProvider.notifier).addList(list);
+      await ref.read(localReadingListsProvider.notifier).addList(list);
 
       if (mounted) {
         TakionAlerts.success(context, 'Reading List Imported');
@@ -135,7 +135,7 @@ class _MetronReadingListDetailScreenState
 
     if (confirmed != true) return;
 
-    final repo = ref.read(readingListRepositoryProvider);
+    final repo = ref.read(localReadingListRepositoryProvider);
     await repo.deleteList(_localList!.id);
 
     if (mounted) {
@@ -182,7 +182,39 @@ class _MetronReadingListDetailScreenState
     }
   }
 
-  Widget _buildActionRow(ReadingList list, MetronReadingListDetail detail) {
+  Future<void> _refreshMetronReadingListData() async {
+    try {
+      final newDetail = await ref
+          .read(catalogRepositoryProvider)
+          .getReadingListDetail(widget.id, forceRefresh: true);
+      final newItems = await ref
+          .read(catalogRepositoryProvider)
+          .getReadingListItems(widget.id);
+      final newData = MetronReadingListDetailData(
+        detail: newDetail,
+        items: newItems,
+      );
+      final currentData = ref
+          .read(metronReadingListDetailProvider(widget.id))
+          .asData
+          ?.value;
+      if (currentData != newData) {
+        ref.invalidate(metronReadingListDetailProvider(widget.id));
+      }
+      if (mounted) {
+        TakionAlerts.success(context, 'Reading list refreshed');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to refresh reading list');
+      }
+    }
+  }
+
+  Widget _buildActionRow(
+    LocalReadingList list,
+    MetronReadingListDetail detail,
+  ) {
     final theme = Theme.of(context);
 
     return Row(
@@ -253,7 +285,7 @@ class _MetronReadingListDetailScreenState
     );
   }
 
-  Widget _buildHeader(ReadingList list, MetronReadingListDetail detail) {
+  Widget _buildHeader(LocalReadingList list, MetronReadingListDetail detail) {
     final theme = Theme.of(context);
     final firstCoverUrl = list.metronImageUrl;
 
@@ -295,6 +327,7 @@ class _MetronReadingListDetailScreenState
               elevation: 0,
               actions: [
                 EntityDetailActions(
+                  onRefresh: _refreshMetronReadingListData,
                   onShare: () => _shareResourceUrl(detail),
                   onOpenInBrowser: () => _openResourceUrlInBrowser(detail),
                 ),
@@ -331,7 +364,7 @@ class _MetronReadingListDetailScreenState
 
   Widget _buildOrderedSheet(
     BuildContext context,
-    ReadingList list,
+    LocalReadingList list,
     List<MetronReadingListItem> items,
     double progress,
     int readCount,
@@ -344,7 +377,7 @@ class _MetronReadingListDetailScreenState
         controller: scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: ReadingListDetailsSheetHeader(
+            child: LocalReadingListDetailsSheetHeader(
               list: list,
               metronDetail: detail,
               progress: progress,
@@ -368,7 +401,7 @@ class _MetronReadingListDetailScreenState
       controller: scrollController,
       slivers: [
         SliverToBoxAdapter(
-          child: ReadingListDetailsSheetHeader(
+          child: LocalReadingListDetailsSheetHeader(
             list: list,
             metronDetail: detail,
             progress: progress,
@@ -545,24 +578,11 @@ class _MetronReadingListDetailScreenState
           if (!mounted) return;
           ref
               .read(metronListPreviewItemsProvider.notifier)
-              .setPreviewItems(
-                widget.id,
-                items
-                    .take(3)
-                    .map(
-                      (item) => ReadingListItem(
-                        targetId: 'issue-${item.issueId}',
-                        isSeries: false,
-                        role: ItemRole.standard,
-                        isRead: false,
-                      ),
-                    )
-                    .toList(),
-              );
+              .setPreviewItems(widget.id, items.take(3).toList());
         });
 
         final readingListItems = items.map((item) {
-          return ReadingListItem(
+          return LocalReadingListItem(
             targetId: 'issue-${item.issueId}',
             isSeries: false,
             role: ItemRole.standard,
@@ -570,7 +590,7 @@ class _MetronReadingListDetailScreenState
           );
         }).toList();
 
-        final list = ReadingList(
+        final list = LocalReadingList(
           id: _localList?.id ?? 'temp-${widget.id}',
           title: detail.name,
           description: detail.desc ?? '',

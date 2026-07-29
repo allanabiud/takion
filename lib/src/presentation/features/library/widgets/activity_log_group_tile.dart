@@ -12,14 +12,12 @@ class ActivityLogGroupTile extends ConsumerWidget {
   final ActivityLogGroup group;
   final bool isFirst;
   final bool isLast;
-  final bool showTimestamp;
 
   const ActivityLogGroupTile({
     super.key,
     required this.group,
     required this.isFirst,
     required this.isLast,
-    this.showTimestamp = true,
   });
 
   @override
@@ -77,28 +75,15 @@ class ActivityLogGroupTile extends ConsumerWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (showTimestamp) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          size: 12,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormat(
-                            'h:mm a',
-                          ).format(group.latestTimestamp.toLocal()),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                   _buildCoverStrip(context),
+                  const SizedBox(height: 8),
+                  Text(
+                    DateFormat('MMM d, yyyy').format(group.date.toLocal()),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -109,12 +94,12 @@ class ActivityLogGroupTile extends ConsumerWidget {
   }
 
   Widget _buildCoverStrip(BuildContext context) {
-    final coverEntries = <({String url, int issueId})>[];
-    final seen = <String>{};
-    for (var i = 0; i < group.imageUrls.length; i++) {
-      final url = group.imageUrls[i];
-      if (url != null && url.isNotEmpty && seen.add(url)) {
-        coverEntries.add((url: url, issueId: group.issueIds[i]));
+    final coverEntries = <({String? url, int issueId})>[];
+    final seen = <int>{};
+    for (var i = 0; i < group.events.length; i++) {
+      final event = group.events[i];
+      if (seen.add(event.issueId)) {
+        coverEntries.add((url: event.imageUrl, issueId: event.issueId));
       }
     }
 

@@ -114,20 +114,35 @@ class MetronReadingListDetailData {
 
   final MetronReadingListDetail detail;
   final List<MetronReadingListItem> items;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! MetronReadingListDetailData) return false;
+    if (other.detail != detail) return false;
+    if (other.items.length != items.length) return false;
+    for (var i = 0; i < items.length; i++) {
+      if (other.items[i] != items[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(detail, Object.hashAll(items));
 }
 
 class MetronListPreviewItemsNotifier
-    extends Notifier<Map<int, List<ReadingListItem>>> {
+    extends Notifier<Map<int, List<MetronReadingListItem>>> {
   @override
-  Map<int, List<ReadingListItem>> build() => const {};
+  Map<int, List<MetronReadingListItem>> build() => const {};
 
-  void setPreviewItems(int listId, List<ReadingListItem> items) {
-    state = Map<int, List<ReadingListItem>>.from(state)..[listId] = items;
+  void setPreviewItems(int listId, List<MetronReadingListItem> items) {
+    state = Map<int, List<MetronReadingListItem>>.from(state)..[listId] = items;
   }
 }
 
 final metronListPreviewItemsProvider =
     NotifierProvider<
       MetronListPreviewItemsNotifier,
-      Map<int, List<ReadingListItem>>
+      Map<int, List<MetronReadingListItem>>
     >(MetronListPreviewItemsNotifier.new);

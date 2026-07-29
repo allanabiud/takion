@@ -3,8 +3,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_details_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_lists_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
@@ -13,23 +13,24 @@ import 'package:takion/src/presentation/features/issues/providers/bulk_scrobble_
 import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
-class ReadingListEditScreen extends ConsumerStatefulWidget {
+class LocalReadingListEditScreen extends ConsumerStatefulWidget {
   final String listId;
 
-  const ReadingListEditScreen({
+  const LocalReadingListEditScreen({
     super.key,
     @PathParam('listId') required this.listId,
   });
 
   @override
-  ConsumerState<ReadingListEditScreen> createState() =>
-      _ReadingListEditScreenState();
+  ConsumerState<LocalReadingListEditScreen> createState() =>
+      _LocalReadingListEditScreenState();
 }
 
-class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
+class _LocalReadingListEditScreenState
+    extends ConsumerState<LocalReadingListEditScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  List<ReadingListItem>? _editingItems;
+  List<LocalReadingListItem>? _editingItems;
   final Set<String> _selectedIds = {};
   final Set<String> _removingIds = {};
   bool _isUpdating = false;
@@ -106,7 +107,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
   }
 
   void _markSelectedRead(bool read) async {
-    final listValue = ref.read(readingListDetailsProvider(widget.listId));
+    final listValue = ref.read(localReadingListDetailsProvider(widget.listId));
     final list = listValue.value;
     if (list == null) return;
 
@@ -114,7 +115,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
 
     try {
       if (_editingItems != null) {
-        final updatedItems = List<ReadingListItem>.from(_editingItems!);
+        final updatedItems = List<LocalReadingListItem>.from(_editingItems!);
         final metronRepo = ref.read(metronRepositoryProvider);
         final allIssueIdsToUpdate = <int>{};
 
@@ -274,7 +275,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
     }
   }
 
-  Widget _buildEditHeader(ReadingList list) {
+  Widget _buildEditHeader(LocalReadingList list) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -298,7 +299,7 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final listValue = ref.watch(readingListDetailsProvider(widget.listId));
+    final listValue = ref.watch(localReadingListDetailsProvider(widget.listId));
     final theme = Theme.of(context);
 
     return listValue.when(
@@ -499,9 +500,11 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
                         updatedAt: DateTime.now(),
                       );
                       await ref
-                          .read(readingListsProvider.notifier)
+                          .read(localReadingListsProvider.notifier)
                           .updateList(updatedList);
-                      ref.invalidate(readingListDetailsProvider(widget.listId));
+                      ref.invalidate(
+                        localReadingListDetailsProvider(widget.listId),
+                      );
                       if (context.mounted) {
                         TakionAlerts.success(context, 'Changes Saved');
                         context.router.maybePop();
@@ -519,7 +522,10 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
     );
   }
 
-  Widget _buildOrderedBody(List<ReadingListItem> items, ReadingList list) {
+  Widget _buildOrderedBody(
+    List<LocalReadingListItem> items,
+    LocalReadingList list,
+  ) {
     return ReorderableListView.builder(
       header: _buildEditHeader(list),
       itemCount: items.length,
@@ -590,7 +596,10 @@ class _ReadingListEditScreenState extends ConsumerState<ReadingListEditScreen> {
     );
   }
 
-  Widget _buildUnorderedBody(List<ReadingListItem> items, ReadingList list) {
+  Widget _buildUnorderedBody(
+    List<LocalReadingListItem> items,
+    LocalReadingList list,
+  ) {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _buildEditHeader(list)),

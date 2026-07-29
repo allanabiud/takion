@@ -2,15 +2,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/domain/entities.dart';
 
-part 'reading_list_details_provider.g.dart';
+part 'local_reading_list_details_provider.g.dart';
 
 @riverpod
-Future<ReadingList?> readingListDetails(Ref ref, String listId) async {
-  return ref.read(readingListRepositoryProvider).getListById(listId);
+Future<LocalReadingList?> localReadingListDetails(
+  Ref ref,
+  String listId,
+) async {
+  return ref.read(localReadingListRepositoryProvider).getListById(listId);
 }
 
 @riverpod
-class ReadingListEditMode extends _$ReadingListEditMode {
+class LocalReadingListEditMode extends _$LocalReadingListEditMode {
   @override
   bool build(String listId) => false;
 

@@ -13,6 +13,7 @@ import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class TeamDetailsScreen extends ConsumerStatefulWidget {
@@ -59,6 +60,28 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
     }
   }
 
+  Future<void> _refreshTeamData(TeamDetails details) async {
+    try {
+      final newDetails = await ref
+          .read(catalogRepositoryProvider)
+          .getTeamDetails(details.id, forceRefresh: true);
+      final currentDetails = ref
+          .read(teamDetailsProvider(details.id))
+          .asData
+          ?.value;
+      if (currentDetails != newDetails) {
+        ref.invalidate(teamDetailsProvider(details.id));
+      }
+      if (mounted) {
+        TakionAlerts.success(context, 'Team details refreshed');
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.error(context, 'Failed to refresh team details');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(teamDetailsProvider(widget.teamId));
@@ -70,6 +93,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'team-image-${d.id}',
       toTitle: (d) => d.name,
+      onRefresh: (d) => _refreshTeamData(d),
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       initialChildSize: 0.55,

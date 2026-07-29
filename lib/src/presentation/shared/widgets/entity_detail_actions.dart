@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 
 class EntityDetailActions extends StatelessWidget {
-  const EntityDetailActions({super.key, this.onShare, this.onOpenInBrowser});
+  const EntityDetailActions({
+    super.key,
+    this.onRefresh,
+    this.onShare,
+    this.onOpenInBrowser,
+  });
 
+  final VoidCallback? onRefresh;
   final VoidCallback? onShare;
   final VoidCallback? onOpenInBrowser;
 
@@ -12,6 +18,8 @@ class EntityDetailActions extends StatelessWidget {
       tooltip: 'More options',
       onSelected: (action) {
         switch (action) {
+          case _EntityMenuAction.refresh:
+            onRefresh?.call();
           case _EntityMenuAction.share:
             onShare?.call();
           case _EntityMenuAction.openInBrowser:
@@ -19,6 +27,11 @@ class EntityDetailActions extends StatelessWidget {
         }
       },
       itemBuilder: (context) => [
+        if (onRefresh != null)
+          const PopupMenuItem(
+            value: _EntityMenuAction.refresh,
+            child: Text('Refresh'),
+          ),
         if (onShare != null)
           const PopupMenuItem(
             value: _EntityMenuAction.share,
@@ -34,7 +47,7 @@ class EntityDetailActions extends StatelessWidget {
   }
 }
 
-enum _EntityMenuAction { share, openInBrowser }
+enum _EntityMenuAction { refresh, share, openInBrowser }
 
 class FavoriteToggleButton extends StatelessWidget {
   const FavoriteToggleButton({

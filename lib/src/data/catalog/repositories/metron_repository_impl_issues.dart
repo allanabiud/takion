@@ -15,7 +15,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     final cachedJson = await _localDataSource.getCachedIssueDetailsResponse(
       issueId,
     );
-    if (cachedJson != null) {
+    if (cachedJson != null && !forceRefresh) {
       final cachedAt = await _localDataSource.getCachedIssueDetailsCachedAt(
         issueId,
       );
@@ -42,6 +42,10 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             final cachedJson = await _localDataSource
                 .getCachedIssueDetailsResponse(issueId);
             if (cachedJson != null) {
+              await _localDataSource.cacheIssueDetailsResponse(
+                issueId,
+                cachedJson,
+              );
               final dto = IssueDetailsDto.fromJson(cachedJson);
               await _upsertIssueDetails(dto);
               _indexSeriesNamesFromIssueDetails(dto);
@@ -58,6 +62,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           }
           final data = response.data as Map<String, dynamic>;
           final dto = IssueDetailsDto.fromJson(data);
+          if (cached != null &&
+              cached.modified != null &&
+              dto.modified != null &&
+              cached.modified == dto.modified) {
+            return _issueRowToEntity(cached);
+          }
           await _upsertIssueDetails(dto);
           await _localDataSource.cacheIssueDetailsResponse(issueId, data);
           _indexSeriesNamesFromIssueDetails(dto);
@@ -72,6 +82,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       );
       if (cachedJson != null) {
         final dto = IssueDetailsDto.fromJson(cachedJson);
+        if (cached != null &&
+            cached.modified != null &&
+            dto.modified != null &&
+            cached.modified == dto.modified) {
+          return _issueRowToEntity(cached);
+        }
         await _upsertIssueDetails(dto);
         _indexSeriesNamesFromIssueDetails(dto);
         return dto.toEntity();
@@ -576,6 +592,16 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         gcdId: Value(dto.gcdId),
         resourceUrl: Value(dto.resourceUrl),
         modified: Value(dto.modified),
+        variantsJson: Value(
+          dto.variants.isNotEmpty
+              ? jsonEncode(dto.variants.map((v) => v.toJson()).toList())
+              : null,
+        ),
+        reprintsJson: Value(
+          dto.reprints.isNotEmpty
+              ? jsonEncode(dto.reprints.map((r) => r.toJson()).toList())
+              : null,
+        ),
         isFullyHydrated: const Value(true),
       ),
     );
@@ -857,6 +883,24 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       arcs: arcs,
       teams: teams,
       universes: universes,
+      reprints: row.reprintsJson != null
+          ? (jsonDecode(row.reprintsJson!) as List)
+                .map(
+                  (r) => IssueDetailsReprintDto.fromJson(
+                    r as Map<String, dynamic>,
+                  ).toEntity(),
+                )
+                .toList()
+          : [],
+      variants: row.variantsJson != null
+          ? (jsonDecode(row.variantsJson!) as List)
+                .map(
+                  (v) => IssueDetailsVariantDto.fromJson(
+                    v as Map<String, dynamic>,
+                  ).toEntity(),
+                )
+                .toList()
+          : [],
       credits: credits,
     );
   }

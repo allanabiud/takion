@@ -58,9 +58,16 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> upsert(SeriesSubscriptionsCompanion entry) async {
-    await into(
-      attachedDatabase.seriesSubscriptions,
-    ).insertOnConflictUpdate(entry);
+    await transaction(() async {
+      await into(
+        attachedDatabase.seriesSubscriptions,
+      ).insertOnConflictUpdate(entry);
+      if (entry.id.present) {
+        await attachedDatabase.syncMetaDao.deleteByKey(
+          'delete:series_subscriptions:${entry.id.value}',
+        );
+      }
+    });
   }
 
   Future<void> deleteById(String id) async {

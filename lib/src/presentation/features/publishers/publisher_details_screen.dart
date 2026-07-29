@@ -11,6 +11,7 @@ import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
 class PublisherDetailsScreen extends ConsumerStatefulWidget {
@@ -72,6 +73,27 @@ class _PublisherDetailsScreenState
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'publisher-image-${d.id}',
       toTitle: (d) => d.name,
+      onRefresh: (d) async {
+        try {
+          final newDetails = await ref
+              .read(catalogRepositoryProvider)
+              .getPublisherDetails(d.id, forceRefresh: true);
+          final currentDetails = ref
+              .read(publisherDetailsProvider(d.id))
+              .asData
+              ?.value;
+          if (currentDetails != newDetails) {
+            ref.invalidate(publisherDetailsProvider(d.id));
+          }
+          if (context.mounted) {
+            TakionAlerts.success(context, 'Publisher details refreshed');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.error(context, 'Failed to refresh publisher details');
+          }
+        }
+      },
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       heroWidth: 260,

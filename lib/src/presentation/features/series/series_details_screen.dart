@@ -17,7 +17,7 @@ import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_to_reading_list_bottom_sheet.dart';
+import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -347,6 +347,28 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             ],
           ],
         );
+      },
+      onRefresh: (d) async {
+        try {
+          final newSeries = await ref
+              .read(catalogRepositoryProvider)
+              .getSeriesDetails(d.id, forceRefresh: true);
+          final currentSeries = ref
+              .read(seriesDetailsProvider(d.id))
+              .asData
+              ?.value;
+          if (currentSeries != newSeries) {
+            ref.invalidate(seriesDetailsProvider(d.id));
+            ref.invalidate(seriesFullDetailsProvider(d.id));
+          }
+          if (context.mounted) {
+            TakionAlerts.success(context, 'Series details refreshed');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.error(context, 'Failed to refresh series details');
+          }
+        }
       },
       onShare: (d) => _shareResourceUrl(d),
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
@@ -750,7 +772,7 @@ void _showSeriesMoreOptionsSheet(
           title: const Text('Add to Reading List'),
           onTap: () {
             Navigator.of(context).pop();
-            AddToReadingListBottomSheet.show(
+            AddToLocalReadingListBottomSheet.show(
               context: context,
               targetId: 'series-$seriesId',
               isSeries: true,
