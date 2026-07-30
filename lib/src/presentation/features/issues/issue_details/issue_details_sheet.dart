@@ -48,9 +48,9 @@ class IssueDetailsSheet extends StatelessWidget {
   Widget _buildTitleSubtitle(BuildContext context) {
     final theme = Theme.of(context);
     final publisher = issue.publisher;
-    final storeDate = issue.storeDate;
-    final formattedDate = storeDate != null
-        ? DateFormatter.comicDate(storeDate)
+    final dateToShow = issue.storeDate ?? issue.coverDate;
+    final formattedDate = dateToShow != null
+        ? DateFormatter.comicDate(dateToShow)
         : null;
 
     return Row(

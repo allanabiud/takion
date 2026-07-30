@@ -98,6 +98,7 @@ class TopEntityTile extends ConsumerWidget {
                           ? CachedNetworkImage(
                               imageUrl: cachedImage,
                               fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
                               placeholder: (context, url) =>
                                   _initialsAvatar(theme),
                               errorWidget: (context, url, error) =>

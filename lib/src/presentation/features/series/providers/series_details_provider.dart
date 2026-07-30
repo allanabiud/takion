@@ -32,7 +32,7 @@ final seriesFullDetailsProvider = FutureProvider.autoDispose
     .family<SeriesDetails, int>((ref, id) async {
       final series = await ref
           .watch(metronRepositoryProvider)
-          .getSeriesDetails(id, forceRefresh: true);
+          .getSeriesDetails(id);
       if (series.image != null && series.image!.trim().isNotEmpty) {
         ref.read(entityImageCacheProvider).set('series', id, series.image!);
         ref

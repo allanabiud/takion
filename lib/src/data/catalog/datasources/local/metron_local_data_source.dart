@@ -669,6 +669,55 @@ abstract class MetronLocalDataSource {
   Future<Map<String, dynamic>?> getCachedSeriesDetailsResponse(int seriesId);
   Future<DateTime?> getCachedSeriesDetailsCachedAt(int seriesId);
 
+  Future<void> cacheCharacterDetailsResponse(
+    int characterId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedCharacterDetailsResponse(int characterId);
+  Future<DateTime?> getCachedCharacterDetailsCachedAt(int characterId);
+
+  Future<void> cacheCreatorDetailsResponse(
+    int creatorId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedCreatorDetailsResponse(int creatorId);
+  Future<DateTime?> getCachedCreatorDetailsCachedAt(int creatorId);
+
+  Future<void> cacheTeamDetailsResponse(
+    int teamId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedTeamDetailsResponse(int teamId);
+  Future<DateTime?> getCachedTeamDetailsCachedAt(int teamId);
+
+  Future<void> cacheUniverseDetailsResponse(
+    int universeId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedUniverseDetailsResponse(int universeId);
+  Future<DateTime?> getCachedUniverseDetailsCachedAt(int universeId);
+
+  Future<void> cacheImprintDetailsResponse(
+    int imprintId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedImprintDetailsResponse(int imprintId);
+  Future<DateTime?> getCachedImprintDetailsCachedAt(int imprintId);
+
+  Future<void> cachePublisherDetailsResponse(
+    int publisherId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedPublisherDetailsResponse(int publisherId);
+  Future<DateTime?> getCachedPublisherDetailsCachedAt(int publisherId);
+
+  Future<void> cacheArcDetailsResponse(
+    int arcId,
+    Map<String, dynamic> json,
+  );
+  Future<Map<String, dynamic>?> getCachedArcDetailsResponse(int arcId);
+  Future<DateTime?> getCachedArcDetailsCachedAt(int arcId);
+
   Future<void> cacheArcListResults(
     List<ArcListDto> arcs, {
     required int page,
@@ -2113,6 +2162,142 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   @override
   Future<DateTime?> getCachedSeriesDetailsCachedAt(int seriesId) async {
     return _getCachedAt('series_details:$seriesId');
+  }
+
+  @override
+  Future<void> cacheCharacterDetailsResponse(
+    int characterId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('character_details:$characterId', 'character_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedCharacterDetailsResponse(
+    int characterId,
+  ) async {
+    return _getSingle('character_details:$characterId');
+  }
+
+  @override
+  Future<DateTime?> getCachedCharacterDetailsCachedAt(int characterId) async {
+    return _getCachedAt('character_details:$characterId');
+  }
+
+  @override
+  Future<void> cacheCreatorDetailsResponse(
+    int creatorId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('creator_details:$creatorId', 'creator_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedCreatorDetailsResponse(
+    int creatorId,
+  ) async {
+    return _getSingle('creator_details:$creatorId');
+  }
+
+  @override
+  Future<DateTime?> getCachedCreatorDetailsCachedAt(int creatorId) async {
+    return _getCachedAt('creator_details:$creatorId');
+  }
+
+  @override
+  Future<void> cacheTeamDetailsResponse(
+    int teamId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('team_details:$teamId', 'team_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedTeamDetailsResponse(int teamId) async {
+    return _getSingle('team_details:$teamId');
+  }
+
+  @override
+  Future<DateTime?> getCachedTeamDetailsCachedAt(int teamId) async {
+    return _getCachedAt('team_details:$teamId');
+  }
+
+  @override
+  Future<void> cacheUniverseDetailsResponse(
+    int universeId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('universe_details:$universeId', 'universe_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedUniverseDetailsResponse(
+    int universeId,
+  ) async {
+    return _getSingle('universe_details:$universeId');
+  }
+
+  @override
+  Future<DateTime?> getCachedUniverseDetailsCachedAt(int universeId) async {
+    return _getCachedAt('universe_details:$universeId');
+  }
+
+  @override
+  Future<void> cacheImprintDetailsResponse(
+    int imprintId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('imprint_details:$imprintId', 'imprint_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedImprintDetailsResponse(
+    int imprintId,
+  ) async {
+    return _getSingle('imprint_details:$imprintId');
+  }
+
+  @override
+  Future<DateTime?> getCachedImprintDetailsCachedAt(int imprintId) async {
+    return _getCachedAt('imprint_details:$imprintId');
+  }
+
+  @override
+  Future<void> cachePublisherDetailsResponse(
+    int publisherId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('publisher_details:$publisherId', 'publisher_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedPublisherDetailsResponse(
+    int publisherId,
+  ) async {
+    return _getSingle('publisher_details:$publisherId');
+  }
+
+  @override
+  Future<DateTime?> getCachedPublisherDetailsCachedAt(int publisherId) async {
+    return _getCachedAt('publisher_details:$publisherId');
+  }
+
+  @override
+  Future<void> cacheArcDetailsResponse(
+    int arcId,
+    Map<String, dynamic> json,
+  ) async {
+    await _cacheSingle('arc_details:$arcId', 'arc_details', json);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCachedArcDetailsResponse(int arcId) async {
+    return _getSingle('arc_details:$arcId');
+  }
+
+  @override
+  Future<DateTime?> getCachedArcDetailsCachedAt(int arcId) async {
+    return _getCachedAt('arc_details:$arcId');
   }
 
   // Arc List Results

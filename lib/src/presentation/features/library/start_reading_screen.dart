@@ -1,7 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/start_reading_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
@@ -10,22 +10,22 @@ import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
-class ContinueReadingScreen extends ConsumerWidget {
-  const ContinueReadingScreen({super.key});
+class StartReadingScreen extends ConsumerWidget {
+  const StartReadingScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sortOption = ref.watch(
-      sortPreferenceForContextProvider(SortPreferenceContext.continueReading),
+      sortPreferenceForContextProvider(SortPreferenceContext.startReading),
     );
-    final suggestionsAsync = ref.watch(continueReadingAllSuggestionsProvider);
+    final suggestionsAsync = ref.watch(startReadingAllSuggestionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Continue Reading')),
+      appBar: AppBar(title: const Text('Start Reading')),
       body: suggestionsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load continue reading',
+          errorMessage: 'Failed to load start reading',
         ),
         data: (items) {
           final sortedItems = sortItemsByNameAndDate(
@@ -33,13 +33,13 @@ class ContinueReadingScreen extends ConsumerWidget {
             sortOption: sortOption,
             nameOf: (item) =>
                 '${item.issue.series?.name ?? ''} #${item.issue.number}',
-            dateOf: (item) => item.lastReadAt,
+            dateOf: (item) => item.issue.storeDate ?? DateTime.now(),
           );
 
           if (sortedItems.isEmpty) {
             return const EmptyContentState(
               icon: Icons.menu_book_outlined,
-              message: 'No continue reading suggestions.',
+              message: 'No start reading suggestions.',
             );
           }
 
@@ -57,7 +57,7 @@ class ContinueReadingScreen extends ConsumerWidget {
                       onSortTap: () => showSortBottomSheet(
                         context,
                         ref,
-                        SortPreferenceContext.continueReading,
+                        SortPreferenceContext.startReading,
                         issueSortLabel,
                       ),
                     ),

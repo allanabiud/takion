@@ -263,18 +263,51 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
       return _universeRowToEntity(cached);
     }
 
+    final cachedJson =
+        await _localDataSource.getCachedUniverseDetailsResponse(universeId);
+    if (cachedJson != null && !forceRefresh) {
+      final cachedAt =
+          await _localDataSource.getCachedUniverseDetailsCachedAt(universeId);
+      final now = _now();
+      if (cachedAt != null &&
+          MetronCachePolicies.universeDetails.isFresh(cachedAt, now)) {
+        AppPerformanceMetrics.instance.recordCacheHit(
+          'universe_details_response',
+        );
+        final dto = UniverseDetailsDto.fromJson(cachedJson);
+        await _upsertUniverseDetails(dto);
+        return _universeRowToEntity(
+          await _metronEntityDao.getUniverse(universeId) ??
+              (throw StateError('Universe $universeId not found after upsert')),
+        );
+      }
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss('universe_details');
 
     try {
       final response = await _remoteDataSource.getUniverseDetails(universeId);
       if (response.statusCode == 304) {
+        final cachedJson =
+            await _localDataSource.getCachedUniverseDetailsResponse(universeId);
+        if (cachedJson != null) {
+          await _localDataSource.cacheUniverseDetailsResponse(
+            universeId,
+            cachedJson,
+          );
+          final dto = UniverseDetailsDto.fromJson(cachedJson);
+          await _upsertUniverseDetails(dto);
+          return _universeRowToEntity(
+            await _metronEntityDao.getUniverse(universeId) ??
+                (throw StateError('Universe $universeId not found after upsert')),
+          );
+        }
         return _universeRowToEntity(
           cached ?? (throw StateError('Universe $universeId not found')),
         );
       }
-      final dto = UniverseDetailsDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data as Map<String, dynamic>;
+      final dto = UniverseDetailsDto.fromJson(data);
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&
@@ -282,12 +315,23 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
         return _universeRowToEntity(cached);
       }
       await _upsertUniverseDetails(dto);
+      await _localDataSource.cacheUniverseDetailsResponse(universeId, data);
       return _universeRowToEntity(
         await _metronEntityDao.getUniverse(universeId) ??
             (throw StateError('Universe $universeId not found after upsert')),
       );
     } catch (e) {
       AppLogger.error('Failed to fetch universe details', error: e);
+      final cachedJson =
+          await _localDataSource.getCachedUniverseDetailsResponse(universeId);
+      if (cachedJson != null) {
+        final dto = UniverseDetailsDto.fromJson(cachedJson);
+        await _upsertUniverseDetails(dto);
+        return _universeRowToEntity(
+          await _metronEntityDao.getUniverse(universeId) ??
+              (throw StateError('Universe $universeId not found after upsert')),
+        );
+      }
       if (cached != null) {
         return _universeRowToEntity(cached);
       }

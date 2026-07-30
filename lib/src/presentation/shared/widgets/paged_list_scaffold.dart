@@ -45,81 +45,12 @@ class PagedListScaffold extends StatelessWidget {
       child: (isLoading && skeleton != null)
           ? skeleton!
           : (itemCount == 0 && !isLoading)
-          ? CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                if (header != null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: header,
-                    ),
-                  ),
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: EmptyContentState(
-                      icon: emptyIcon,
-                      message: emptyMessage,
-                    ),
-                  ),
-                ),
-              ],
-            )
+          ? _EmptyState(header: header, emptyIcon: emptyIcon, emptyMessage: emptyMessage)
           : (isLoading && itemCount == 0)
-          ? CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                if (header != null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: header,
-                    ),
-                  ),
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: Center(
-                      child: SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(strokeWidth: 3),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(0, header != null ? 0 : 12, 0, 12),
-              itemCount: itemCount + (header != null ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (header != null && index == 0) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: header,
-                      ),
-                      if (showInlineLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: LinearProgressIndicator(minHeight: 2),
-                        ),
-                    ],
-                  );
-                }
-
-                return itemBuilder(context, header != null ? index - 1 : index);
-              },
+          ? _LoadingEmptyState(header: header)
+          : _buildScrollableContent(
+              context,
+              showInlineLoading: showInlineLoading,
             ),
     );
 
@@ -164,4 +95,135 @@ class PagedListScaffold extends StatelessWidget {
           : null,
     );
   }
+
+  Widget _buildScrollableContent(BuildContext context, {required bool showInlineLoading}) {
+    if (header != null) {
+      return CustomScrollView(
+        slivers: [
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _PinnedHeaderDelegate(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: header,
+                  ),
+                  if (showInlineLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => itemBuilder(context, index),
+              childCount: itemCount,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 12),
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({this.header, required this.emptyIcon, required this.emptyMessage});
+
+  final Widget? header;
+  final IconData emptyIcon;
+  final String emptyMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        if (header != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: header,
+            ),
+          ),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: EmptyContentState(icon: emptyIcon, message: emptyMessage),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoadingEmptyState extends StatelessWidget {
+  const _LoadingEmptyState({this.header});
+
+  final Widget? header;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        if (header != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: header,
+            ),
+          ),
+        const SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedHeaderDelegate({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Theme.of(context).colorScheme.surface, child: child);
+  }
+
+  @override
+  double get maxExtent => 80;
+
+  @override
+  double get minExtent => 56;
+
+  @override
+  bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
 }

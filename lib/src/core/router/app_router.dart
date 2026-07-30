@@ -148,6 +148,11 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
+      page: StartReadingRoute.page,
+      path: '/start-reading',
+      guards: [authGuard],
+    ),
+    AutoRoute(
       page: WishlistRoute.page,
       path: '/my-comics/wishlist',
       guards: [authGuard],

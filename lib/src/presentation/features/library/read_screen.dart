@@ -190,50 +190,78 @@ class _ReadBrowseTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(readSeriesProvider),
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 12),
-            itemCount: filtered.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: ListHeader(
-                    count: filtered.length,
-                    unit: 'series',
-                    pluralUnit: 'series',
-                    enabled: true,
-                    sortLabel: seriesSortLabel(sortOption),
-                    onSortTap: () => showSortBottomSheet(
-                      context,
-                      ref,
-                      SortPreferenceContext.libraryRead,
-                      seriesSortLabel,
+          child: CustomScrollView(
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _PinnedListHeaderDelegate(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: ListHeader(
+                      count: filtered.length,
+                      unit: 'series',
+                      pluralUnit: 'series',
+                      enabled: true,
+                      sortLabel: seriesSortLabel(sortOption),
+                      onSortTap: () => showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.libraryRead,
+                        seriesSortLabel,
+                      ),
                     ),
                   ),
-                );
-              }
-              final summary = filtered[index - 1];
-              return SeriesListTile(
-                series: summary,
-                categoryCount: categoryCounts[summary.id],
-                categoryLabel: 'read',
-                isFirst: index == 1,
-                isLast: index == filtered.length,
-                onTap: () => context.pushRoute(
-                  LibrarySeriesRoute(
-                    seriesId: summary.id,
-                    category: 'read',
-                    seriesName: summary.name,
-                  ),
                 ),
-              );
-            },
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final summary = filtered[index];
+                    return SeriesListTile(
+                      series: summary,
+                      categoryCount: categoryCounts[summary.id],
+                      categoryLabel: 'read',
+                      isFirst: index == 0,
+                      isLast: index == filtered.length - 1,
+                      onTap: () => context.pushRoute(
+                        LibrarySeriesRoute(
+                          seriesId: summary.id,
+                          category: 'read',
+                          seriesName: summary.name,
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: filtered.length,
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
+}
+
+class _PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedListHeaderDelegate({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Theme.of(context).colorScheme.surface, child: child);
+  }
+
+  @override
+  double get maxExtent => 80;
+
+  @override
+  double get minExtent => 56;
+
+  @override
+  bool shouldRebuild(_PinnedListHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
 }
 
 class _ReadStatsTab extends ConsumerStatefulWidget {
@@ -320,8 +348,12 @@ class _ReadStatsCards extends ConsumerWidget {
     final statsAsync = ref.watch(libraryBasicStatsProvider(filter));
     final theme = Theme.of(context);
 
-    return statsAsync.when(
-      loading: () => const Padding(
+    // Use previous data during reloads/errors so stat cards never disappear.
+    final stats = statsAsync.hasValue ? statsAsync.value : null;
+
+    // Only show shimmer on the very first load when no data exists yet.
+    if (stats == null && statsAsync.isLoading) {
+      return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: ShimmerWidget(
           child: Column(
@@ -344,65 +376,62 @@ class _ReadStatsCards extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: EmptyContentState(
-          icon: Icons.bar_chart_outlined,
-          message: 'No stats available.',
-        ),
-      ),
-      data: (stats) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.menu_book,
-                    value: '${stats.readsInPeriod}',
-                    label: 'Read',
-                    color: theme.colorScheme.primary,
-                  ),
+      );
+    }
+
+    // Always render the cards – use zero stats as a fallback.
+    final displayStats = stats ?? LibraryBasicStats.zero(filter);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  icon: Icons.menu_book,
+                  value: '${displayStats.readsInPeriod}',
+                  label: 'Read',
+                  color: theme.colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.percent,
-                    value: '${stats.readPercent.toStringAsFixed(0)}%',
-                    label: 'Read %',
-                    color: theme.colorScheme.secondary,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: StatCard(
+                  icon: Icons.percent,
+                  value: '${displayStats.readPercent.toStringAsFixed(0)}%',
+                  label: 'Read %',
+                  color: theme.colorScheme.secondary,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.star_half,
-                    value: stats.averageRating > 0
-                        ? stats.averageRating.toStringAsFixed(1)
-                        : '--',
-                    label: 'Rating',
-                    color: theme.colorScheme.tertiary,
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  icon: Icons.star_half,
+                  value: displayStats.averageRating > 0
+                      ? displayStats.averageRating.toStringAsFixed(1)
+                      : '--',
+                  label: 'Rating',
+                  color: theme.colorScheme.tertiary,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.local_fire_department,
-                    value: '${stats.streakDays}',
-                    label: 'Day Streak',
-                    color: theme.colorScheme.primary,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: StatCard(
+                  icon: Icons.local_fire_department,
+                  value: '${displayStats.streakDays}',
+                  label: 'Day Streak',
+                  color: theme.colorScheme.primary,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

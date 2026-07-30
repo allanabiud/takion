@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 
@@ -9,6 +10,8 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   ref,
 ) {
   final controller = StreamController<CollectionStats>();
+  final issuePrices = <int, double>{};
+  Timer? debounce;
 
   void computeStats(List<LibraryItem> libraryItems) {
     final collectedItems = libraryItems
@@ -27,7 +30,12 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
 
     double totalValue = 0;
     for (final item in collectedItems) {
-      final unitPrice = item.pricePaid ?? 0;
+      double unitPrice;
+      if (item.pricePaid != null) {
+        unitPrice = item.pricePaid!;
+      } else {
+        unitPrice = issuePrices[item.metronIssueId] ?? 0;
+      }
       totalValue += unitPrice * item.quantityOwned;
     }
     final currencyFormat = NumberFormat('#,##0.00');
@@ -49,11 +57,41 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     }
   }
 
+  void refreshIssuePrices(List<MetronIssue> issues) {
+    final newPrices = <int, double>{};
+    for (final issue in issues) {
+      if (issue.price != null) {
+        final parsed = double.tryParse(issue.price!);
+        if (parsed != null) {
+          newPrices[issue.id] = parsed;
+        }
+      }
+    }
+    issuePrices
+      ..clear()
+      ..addAll(newPrices);
+  }
+
   ref.listen<AsyncValue<List<LibraryItem>>>(
     allLibraryItemsProvider,
     (_, next) {
       if (!next.hasValue) return;
-      computeStats(next.value!);
+      // Debounce rapid-fire emissions during bulk operations.
+      debounce?.cancel();
+      debounce = Timer(const Duration(milliseconds: 300), () {
+        computeStats(next.value!);
+      });
+    },
+  );
+
+  ref.listen<AsyncValue<List<MetronIssue>>>(
+    metronIssuesStreamProvider,
+    (_, next) {
+      if (!next.hasValue) return;
+      refreshIssuePrices(next.value!);
+      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
+        computeStats(libraryItems);
+      });
     },
   );
 
@@ -61,7 +99,17 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     computeStats(libraryItems);
   });
 
-  ref.onDispose(controller.close);
+  ref.read(metronIssuesStreamProvider).whenOrNull(data: (issues) {
+    refreshIssuePrices(issues);
+    ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
+      computeStats(libraryItems);
+    });
+  });
+
+  ref.onDispose(() {
+    debounce?.cancel();
+    controller.close();
+  });
 
   return controller.stream;
 });

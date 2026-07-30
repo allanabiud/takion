@@ -442,6 +442,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
           ? CachedNetworkImage(
               imageUrl: imageUrl!,
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
               placeholder: (context, url) => bannerPlaceholder(context, title),
               errorWidget: (context, url, error) => imageErrorPlaceholder(
                 context,

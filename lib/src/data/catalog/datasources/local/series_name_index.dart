@@ -58,6 +58,10 @@ class SeriesNameIndex {
             }
           }
         }
+        if (bestTokenScore == 0) {
+          score = 0;
+          break;
+        }
         score += bestTokenScore;
       }
 

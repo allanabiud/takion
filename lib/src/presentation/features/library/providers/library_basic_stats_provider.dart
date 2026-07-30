@@ -128,11 +128,19 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
       final pullRepository = ref.watch(pullListRepositoryProvider);
       final db = ref.watch(driftDatabaseProvider);
       final controller = StreamController<LibraryBasicStats>();
+      Timer? debounce;
 
       Future<void> emitStats(List<LibraryItem> libraryItems) async {
         try {
-          final subscriptionsFuture = ref.read(activeSubscriptionsProvider.future);
-          final subscriptions = await subscriptionsFuture;
+          // Read subscriptions defensively – if the provider is unavailable
+          // (e.g. disposed during navigation), fall back to an empty list so
+          // stats still render with a zero subscription count.
+          List<SeriesSubscription> subscriptions;
+          try {
+            subscriptions = await ref.read(activeSubscriptionsProvider.future);
+          } catch (_) {
+            subscriptions = const [];
+          }
 
           final now = DateTime.now().toLocal();
           DateTime? startDate;
@@ -184,11 +192,16 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
             return !readAt.isBefore(startDate);
           }).length;
 
-          final pullsInPeriod = (await pullRepository.listEntries(
-            fromDate: startDate,
-            toDate: endDate,
-            limit: 10000,
-          )).length;
+          int pullsInPeriod;
+          try {
+            pullsInPeriod = (await pullRepository.listEntries(
+              fromDate: startDate,
+              toDate: endDate,
+              limit: 10000,
+            )).length;
+          } catch (_) {
+            pullsInPeriod = 0;
+          }
 
           final ratings = allRead
               .map((entry) => entry.rating)
@@ -203,7 +216,13 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
               .where((id) => id > 0)
               .toSet()
               .toList();
-          final seriesMap = await db.metronEntityDao.getSeriesByIds(readSeriesIds);
+
+          Map<int, dynamic> seriesMap;
+          try {
+            seriesMap = await db.metronEntityDao.getSeriesByIds(readSeriesIds);
+          } catch (_) {
+            seriesMap = const {};
+          }
 
           final readSeries = <String, int>{};
           final readSeriesYear = <String, int?>{};
@@ -248,8 +267,10 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
             ));
           }
         } catch (e) {
+          // Never forward errors to the stream – emit zero stats so the UI
+          // always shows the stat cards rather than an empty state.
           if (!controller.isClosed) {
-            controller.addError(e);
+            controller.add(LibraryBasicStats.zero(filter));
           }
         }
       }
@@ -258,7 +279,12 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
         allLibraryItemsProvider,
         (_, next) {
           next.whenOrNull(data: (libraryItems) {
-            emitStats(libraryItems);
+            // Debounce rapid-fire emissions during bulk operations so we
+            // don't flood emitStats with concurrent async calls.
+            debounce?.cancel();
+            debounce = Timer(const Duration(milliseconds: 300), () {
+              emitStats(libraryItems);
+            });
           });
         },
       );
@@ -267,7 +293,10 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
         emitStats(libraryItems);
       });
 
-      ref.onDispose(controller.close);
+      ref.onDispose(() {
+        debounce?.cancel();
+        controller.close();
+      });
 
       return controller.stream;
     });

@@ -589,7 +589,7 @@ Future<void> applySeriesIssueBulkAction({
   }
 }
 
-int? _findClosestIssueIndex(
+int? findClosestIssueIndex(
   List<SeriesIssueBulkCandidate> issues,
   String input, {
   int? startAfter,
@@ -628,7 +628,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
   List<SeriesIssueBulkCandidate> issues = [];
   var selectedOperation = SeriesIssueBulkOperation.addToCollection;
   var selectedMode = SeriesIssueSelectionMode.predefined;
-  var selectedSubset = SeriesIssueSubset.uncollected;
+  var selectedSubset = SeriesIssueSubset.all;
   var selectedRange = const RangeValues(1, 1);
   var useManualRange = false;
   var isApplying = false;
@@ -828,15 +828,8 @@ Future<void> showSeriesIssueBulkActionsSheet({
                 ),
               ],
               if (selectedMode == SeriesIssueSelectionMode.range) ...[
-                Container(
-                  width: double.infinity,
+                Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -876,7 +869,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                 enabled: !isApplying,
                                 onChanged: (v) {
                                   if (v.isEmpty) return;
-                                  final idx = _findClosestIssueIndex(
+                                  final idx = findClosestIssueIndex(
                                     issues,
                                     v,
                                     startAfter: null,
@@ -904,7 +897,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                 enabled: !isApplying,
                                 onChanged: (v) {
                                   if (v.isEmpty) return;
-                                  final idx = _findClosestIssueIndex(
+                                  final idx = findClosestIssueIndex(
                                     issues,
                                     v,
                                     startAfter: selectedStart - 1,

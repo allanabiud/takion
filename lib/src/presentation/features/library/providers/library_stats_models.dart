@@ -48,6 +48,20 @@ class LibraryBasicStats {
   final String? mostReadSeries;
   final int? mostReadSeriesYear;
   final LibraryFilter filter;
+
+  static LibraryBasicStats zero(LibraryFilter filter) => LibraryBasicStats(
+    totalOwned: 0,
+    readPercent: 0,
+    wishlistCount: 0,
+    subscriptionsCount: 0,
+    pullsInPeriod: 0,
+    readsInPeriod: 0,
+    streakDays: 0,
+    averageRating: 0,
+    mostReadSeries: null,
+    mostReadSeriesYear: null,
+    filter: filter,
+  );
 }
 
 class LibraryEntityStats {

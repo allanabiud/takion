@@ -194,50 +194,78 @@ class _MyComicsBrowseTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(collectedSeriesProvider),
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 12),
-            itemCount: filtered.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: ListHeader(
-                    count: filtered.length,
-                    unit: 'series',
-                    pluralUnit: 'series',
-                    enabled: true,
-                    sortLabel: seriesSortLabel(sortOption),
-                    onSortTap: () => showSortBottomSheet(
-                      context,
-                      ref,
-                      SortPreferenceContext.libraryMyComics,
-                      seriesSortLabel,
+          child: CustomScrollView(
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _PinnedListHeaderDelegate(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: ListHeader(
+                      count: filtered.length,
+                      unit: 'series',
+                      pluralUnit: 'series',
+                      enabled: true,
+                      sortLabel: seriesSortLabel(sortOption),
+                      onSortTap: () => showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.libraryMyComics,
+                        seriesSortLabel,
+                      ),
                     ),
                   ),
-                );
-              }
-              final summary = filtered[index - 1];
-              return SeriesListTile(
-                series: summary,
-                categoryCount: categoryCounts[summary.id],
-                categoryLabel: 'collected',
-                isFirst: index == 1,
-                isLast: index == filtered.length,
-                onTap: () => context.pushRoute(
-                  LibrarySeriesRoute(
-                    seriesId: summary.id,
-                    category: 'collected',
-                    seriesName: summary.name,
-                  ),
                 ),
-              );
-            },
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final summary = filtered[index];
+                    return SeriesListTile(
+                      series: summary,
+                      categoryCount: categoryCounts[summary.id],
+                      categoryLabel: 'collected',
+                      isFirst: index == 0,
+                      isLast: index == filtered.length - 1,
+                      onTap: () => context.pushRoute(
+                        LibrarySeriesRoute(
+                          seriesId: summary.id,
+                          category: 'collected',
+                          seriesName: summary.name,
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: filtered.length,
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
+}
+
+class _PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedListHeaderDelegate({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Theme.of(context).colorScheme.surface, child: child);
+  }
+
+  @override
+  double get maxExtent => 80;
+
+  @override
+  double get minExtent => 56;
+
+  @override
+  bool shouldRebuild(_PinnedListHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
 }
 
 class _MyComicsStatsTab extends ConsumerStatefulWidget {
@@ -323,8 +351,12 @@ class _StatsOverviewCards extends ConsumerWidget {
     final collectionStatsAsync = ref.watch(collectionStatsProvider);
     final theme = Theme.of(context);
 
-    return basicStatsAsync.when(
-      loading: () => const Padding(
+    // Use previous data during reloads/errors so stat cards never disappear.
+    final stats = basicStatsAsync.hasValue ? basicStatsAsync.value : null;
+
+    // Only show shimmer on the very first load when no data exists yet.
+    if (stats == null && basicStatsAsync.isLoading) {
+      return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: ShimmerWidget(
           child: Column(
@@ -347,67 +379,64 @@ class _StatsOverviewCards extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: EmptyContentState(
-          icon: Icons.bar_chart_outlined,
-          message: 'No stats available.',
-        ),
-      ),
-      data: (stats) {
-        final value = collectionStatsAsync.asData?.value.totalValue ?? r'$0.00';
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
+      );
+    }
+
+    // Always render the cards – use zero stats as a fallback.
+    final displayStats = stats ?? LibraryBasicStats.zero(filter);
+    final value = collectionStatsAsync.hasValue
+        ? collectionStatsAsync.value!.totalValue
+        : r'$0.00';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.inventory_2,
-                      value: '${stats.totalOwned}',
-                      label: 'Comics',
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.shopping_bag_outlined,
-                      value: '${stats.pullsInPeriod}',
-                      label: 'Pulls',
-                      color: theme.colorScheme.secondary,
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: StatCard(
+                  icon: Icons.inventory_2,
+                  value: '${displayStats.totalOwned}',
+                  label: 'Comics',
+                  color: theme.colorScheme.primary,
+                ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.notifications_outlined,
-                      value: '${stats.subscriptionsCount}',
-                      label: 'Subscriptions',
-                      color: theme.colorScheme.tertiary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.account_balance_wallet_outlined,
-                      value: value,
-                      label: 'Value',
-                      color: theme.colorScheme.tertiary,
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: StatCard(
+                  icon: Icons.shopping_bag_outlined,
+                  value: '${displayStats.pullsInPeriod}',
+                  label: 'Pulls',
+                  color: theme.colorScheme.secondary,
+                ),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  icon: Icons.notifications_outlined,
+                  value: '${displayStats.subscriptionsCount}',
+                  label: 'Subscriptions',
+                  color: theme.colorScheme.tertiary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: StatCard(
+                  icon: Icons.account_balance_wallet_outlined,
+                  value: value,
+                  label: 'Value',
+                  color: theme.colorScheme.tertiary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

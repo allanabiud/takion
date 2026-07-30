@@ -263,6 +263,26 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       return _publisherRowToEntity(cached);
     }
 
+    final cachedJson =
+        await _localDataSource.getCachedPublisherDetailsResponse(publisherId);
+    if (cachedJson != null && !forceRefresh) {
+      final cachedAt =
+          await _localDataSource.getCachedPublisherDetailsCachedAt(publisherId);
+      final now = _now();
+      if (cachedAt != null &&
+          MetronCachePolicies.publisherDetails.isFresh(cachedAt, now)) {
+        AppPerformanceMetrics.instance.recordCacheHit(
+          'publisher_details_response',
+        );
+        final dto = PublisherDetailsDto.fromJson(cachedJson);
+        await _upsertPublisherDetails(dto);
+        return _publisherRowToEntity(
+          await _metronEntityDao.getPublisher(publisherId) ??
+              (throw StateError('Publisher $publisherId not found after upsert')),
+        );
+      }
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss('publisher_details');
 
     try {
@@ -270,13 +290,28 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
         publisherId,
       );
       if (response.statusCode == 304) {
+        final cachedJson =
+            await _localDataSource.getCachedPublisherDetailsResponse(
+          publisherId,
+        );
+        if (cachedJson != null) {
+          await _localDataSource.cachePublisherDetailsResponse(
+            publisherId,
+            cachedJson,
+          );
+          final dto = PublisherDetailsDto.fromJson(cachedJson);
+          await _upsertPublisherDetails(dto);
+          return _publisherRowToEntity(
+            await _metronEntityDao.getPublisher(publisherId) ??
+                (throw StateError('Publisher $publisherId not found after upsert')),
+          );
+        }
         return _publisherRowToEntity(
           cached ?? (throw StateError('Publisher $publisherId not found')),
         );
       }
-      final dto = PublisherDetailsDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data as Map<String, dynamic>;
+      final dto = PublisherDetailsDto.fromJson(data);
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&
@@ -284,12 +319,23 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
         return _publisherRowToEntity(cached);
       }
       await _upsertPublisherDetails(dto);
+      await _localDataSource.cachePublisherDetailsResponse(publisherId, data);
       return _publisherRowToEntity(
         await _metronEntityDao.getPublisher(publisherId) ??
             (throw StateError('Publisher $publisherId not found after upsert')),
       );
     } catch (e) {
       AppLogger.error('Failed to fetch publisher details', error: e);
+      final cachedJson =
+          await _localDataSource.getCachedPublisherDetailsResponse(publisherId);
+      if (cachedJson != null) {
+        final dto = PublisherDetailsDto.fromJson(cachedJson);
+        await _upsertPublisherDetails(dto);
+        return _publisherRowToEntity(
+          await _metronEntityDao.getPublisher(publisherId) ??
+              (throw StateError('Publisher $publisherId not found after upsert')),
+        );
+      }
       if (cached != null) {
         return _publisherRowToEntity(cached);
       }

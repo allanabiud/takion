@@ -26,6 +26,10 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
+  Stream<List<MetronIssue>> watchAllIssues() {
+    return select(attachedDatabase.metronIssues).watch();
+  }
+
   Future<void> upsertIssue(MetronIssuesCompanion companion) async {
     await into(attachedDatabase.metronIssues).insertOnConflictUpdate(companion);
     if (companion.seriesId.present && companion.seriesId.value != null) {
@@ -411,7 +415,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronCharacters,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronCharactersCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
       }
     });
@@ -426,7 +437,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronCreators,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronCreatorsCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
       }
     });
@@ -439,7 +457,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronArcs,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronArcsCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
       }
     });
@@ -452,7 +477,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronTeams,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronTeamsCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
       }
     });
@@ -467,7 +499,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronUniverses,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronUniversesCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
       }
     });
@@ -481,7 +520,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronIssues,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronIssuesCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
         if (stub.seriesId.present && stub.seriesId.value != null) {
           affectedSeriesIds.add(stub.seriesId.value!);
@@ -500,7 +546,14 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         b.insert(
           attachedDatabase.metronSeries,
           stub,
-          onConflict: DoUpdate((_) => stub),
+          onConflict: DoUpdate(
+            (old) {
+              final existing = old as MetronSeriesCompanion;
+              return stub.copyWith(
+                isFullyHydrated: Value(existing.isFullyHydrated.value),
+              );
+            },
+          ),
         );
       }
     });

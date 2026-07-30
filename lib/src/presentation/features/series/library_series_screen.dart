@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
+import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -95,7 +96,7 @@ class LibrarySeriesScreen extends ConsumerWidget {
                 ),
               ),
             if (d.issueCount != null && d.issueCount! > 0)
-              _CategoryProgressBar(
+              _CombinedCategoryHeader(
                 category: category,
                 categoryLabel: _categoryLabel,
                 seriesId: seriesId,
@@ -145,18 +146,6 @@ class LibrarySeriesScreen extends ConsumerWidget {
       sheetContentBuilder: (context, d, ref) {
         return [
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          if (category == 'unread' || category == 'unrated')
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _BulkCategoryActions(
-                  seriesId: seriesId,
-                  category: category,
-                  categoryLabel: _categoryLabel,
-                  categorySeriesAsync: categorySeriesAsync,
-                ),
-              ),
-            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -174,8 +163,8 @@ class LibrarySeriesScreen extends ConsumerWidget {
   }
 }
 
-class _CategoryProgressBar extends ConsumerWidget {
-  const _CategoryProgressBar({
+class _CombinedCategoryHeader extends ConsumerWidget {
+  const _CombinedCategoryHeader({
     required this.category,
     required this.categoryLabel,
     required this.seriesId,
@@ -190,81 +179,30 @@ class _CategoryProgressBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categorySeriesAsync = ref.watch(seriesByCategoryProvider(category));
+    final theme = Theme.of(context);
 
     return categorySeriesAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.only(top: 16),
-        child: ShimmerWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SkeletonBox(width: 120, height: 12, borderRadius: 4),
-              SizedBox(height: 10),
-              SkeletonBox(height: 8, borderRadius: 4),
-            ],
+      loading: () => Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: ShimmerWidget(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonBox(width: 120, height: 12, borderRadius: 4),
+                    const SizedBox(height: 10),
+                    SkeletonBox(height: 8, borderRadius: 4),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
       error: (_, _) => const SizedBox(height: 24),
-      data: (seriesList) {
-        final match = seriesList
-            .where((s) => s.seriesId == seriesId)
-            .firstOrNull;
-        final count = match?.categoryCount ?? 0;
-        final percent = total > 0 ? (count / total).clamp(0.0, 1.0) : 0.0;
-
-        return Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${categoryLabel.toUpperCase()}: $count / $total',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: percent,
-                  minHeight: 8,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BulkCategoryActions extends ConsumerWidget {
-  const _BulkCategoryActions({
-    required this.seriesId,
-    required this.category,
-    required this.categoryLabel,
-    required this.categorySeriesAsync,
-  });
-
-  final int seriesId;
-  final String category;
-  final String categoryLabel;
-  final AsyncValue<List<CategorySeriesSummary>> categorySeriesAsync;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return categorySeriesAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.only(bottom: 8),
-        child: ShimmerWidget(child: SkeletonBox(height: 40, borderRadius: 12)),
-      ),
-      error: (_, _) => const SizedBox.shrink(),
       data: (seriesList) {
         final match = seriesList
             .where((s) => s.seriesId == seriesId)
@@ -273,195 +211,488 @@ class _BulkCategoryActions extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
+        final count = match.categoryCount;
+        final percent = total > 0 ? (count / total).clamp(0.0, 1.0) : 0.0;
+
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(top: 16),
           child: Row(
             children: [
               Expanded(
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    if (category == 'unread') {
-                      await _markAllAsRead(context, ref, match.items);
-                    } else if (category == 'unrated') {
-                      await _showRateAllSheet(context, ref, match.items);
-                    }
-                  },
-                  icon: Icon(
-                    category == 'unread' ? Icons.done_all : Icons.star_outline,
-                  ),
-                  label: Text(
-                    category == 'unread'
-                        ? 'Mark All as Read (${match.items.length})'
-                        : 'Rate All (${match.items.length})',
-                  ),
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${categoryLabel.toUpperCase()}: $count / $total',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: percent,
+                        minHeight: 8,
+                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (category == 'unread' || category == 'unrated') ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      iconSize: 28,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      _showCategoryBulkSheet(
+                        context,
+                        ref,
+                        seriesId: seriesId,
+                        seriesName: match.seriesName,
+                        seriesYear: match.yearBegan,
+                        totalIssues: total,
+                        categoryIssues: match.items,
+                        category: category,
+                      );
+                    },
+                    child: Icon(
+                      category == 'unread'
+                          ? Icons.bookmark_added
+                          : Icons.star_outline,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );
       },
     );
   }
+}
 
-  Future<void> _markAllAsRead(
-    BuildContext context,
-    WidgetRef ref,
-    List<CollectionItem> items,
-  ) async {
-    final libraryRepository = ref.read(libraryRepositoryProvider);
-    final activityRepository = ref.read(activityRepositoryProvider);
-    var affected = 0;
-    final now = DateTime.now().toUtc();
+Future<void> _showCategoryBulkSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required int seriesId,
+  required String seriesName,
+  int? seriesYear,
+  required int totalIssues,
+  required List<CollectionItem> categoryIssues,
+  required String category,
+}) async {
+  final candidates = categoryIssues.asMap().entries.map((entry) {
+    return SeriesIssueBulkCandidate(
+      issueId: entry.value.issue?.id ?? 0,
+      orderIndex: entry.key + 1,
+      issueNumber: entry.value.issue?.number ?? '',
+      imageUrl: entry.value.issue?.image,
+      storeDate: entry.value.issue?.storeDate,
+    );
+  }).toList();
 
-    for (final item in items) {
-      final issueId = item.issue?.id;
-      if (issueId == null) continue;
-      if (item.isRead) continue;
+  final canSelectRange = candidates.length > 1;
+  var useRange = false;
+  var useManualRange = false;
+  var selectedRange = RangeValues(1, candidates.length.toDouble());
+  var selectedRating = 0;
+  var isApplying = false;
 
-      final localItem = await libraryRepository.getItemByIssueId(issueId);
-      final seriesId = localItem?.metronSeriesId ?? item.issue?.series?.id;
-      if (seriesId == null) continue;
+  await TakionBottomSheet.show<void>(
+    context: context,
+    title: seriesYear != null ? '$seriesName ($seriesYear)' : seriesName,
+    child: StatefulBuilder(
+      builder: (context, setModalState) {
+        final theme = Theme.of(context);
+        final selectedStart = selectedRange.start.round();
+        final selectedEnd = selectedRange.end.round();
+        final selectedCount = useRange
+            ? (selectedRange.end - selectedRange.start + 1).round()
+            : candidates.length;
 
-      await libraryRepository.upsertItem(
-        metronIssueId: issueId,
-        metronSeriesId: seriesId,
-        ownershipStatus:
-            localItem?.ownershipStatus ??
-            (item.quantity > 0
-                ? LibraryOwnershipStatus.owned
-                : LibraryOwnershipStatus.notOwned),
-        isRead: true,
-        rating: localItem?.rating,
-        purchaseDate: localItem?.purchaseDate,
-        pricePaid: localItem?.pricePaid,
-        quantityOwned: localItem?.quantityOwned ?? 1,
-        format: localItem?.format ?? LibraryItemFormat.print,
-        firstReadAt: localItem?.firstReadAt ?? now,
-        conditionGrade: localItem?.conditionGrade,
-        acquiredOn: localItem?.acquiredOn ?? now,
-        notes: localItem?.notes,
-      );
-      await libraryRepository.addReadLog(metronIssueId: issueId, readAt: now);
-      await activityRepository.addEvent(
-        LibraryActivityEvent(
-          id: 'act-read-$issueId-${now.microsecondsSinceEpoch}',
-          userId: 'local-user',
-          type: ActivityEventType.read,
-          issueId: issueId,
-          seriesId: seriesId,
-          seriesName: item.issue?.series?.name ?? 'Unknown Series',
-          issueNumber: item.issue?.number ?? '',
-          imageUrl: item.issue?.image,
-          timestamp: now,
-        ),
-      );
-      affected++;
-    }
+        final startIssueNumber = candidates[selectedStart - 1].issueNumber;
+        final endIssueNumber = candidates[selectedEnd - 1].issueNumber;
 
-    if (!context.mounted) return;
-    TakionAlerts.success(context, '$affected Marked as Read');
-    ref.invalidate(seriesByCategoryProvider(category));
-  }
+        String actionLabel() {
+          if (category == 'unrated') {
+            return selectedRating > 0
+                ? 'Rate $selectedCount'
+                : 'Rate All';
+          }
+          return useRange
+              ? 'Mark $selectedCount as Read'
+              : 'Mark All as Read';
+        }
 
-  Future<void> _showRateAllSheet(
-    BuildContext context,
-    WidgetRef ref,
-    List<CollectionItem> items,
-  ) async {
-    int? selectedRating;
-    await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: const EdgeInsets.all(24),
+        return SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Rate ${items.length} Issues',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              if (category == 'unrated') ...[
+                Text('Action', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Rate Issues',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      RatingPicker(
+                        selectedRating: selectedRating,
+                        enabled: !isApplying,
+                        onChanged: (rating) {
+                          setModalState(() => selectedRating = rating);
+                        },
+                        onReset: () {
+                          setModalState(() => selectedRating = 0);
+                        },
+                        iconSize: 28,
+                        resetIconEdgeInset: 0,
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Text('Action', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    'Mark as Read',
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              if (canSelectRange) ...[
+                Row(
+                  children: [
+                    Text('Selection', style: theme.textTheme.labelLarge),
+                    const Spacer(),
+                    Switch(
+                      value: useRange,
+                      onChanged: isApplying
+                          ? null
+                          : (value) {
+                              setModalState(() {
+                                useRange = value;
+                                if (!value) {
+                                  selectedRange = RangeValues(
+                                    1,
+                                    candidates.length.toDouble(),
+                                  );
+                                }
+                              });
+                            },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (useRange && canSelectRange) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Issue range: #$startIssueNumber - #$endIssueNumber',
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          TextButton(
+                            onPressed: isApplying
+                                ? null
+                                : () {
+                                    setModalState(() {
+                                      useManualRange = !useManualRange;
+                                    });
+                                  },
+                            child: Text(
+                              useManualRange ? 'Use Slider' : 'Use Inputs',
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (useManualRange)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                initialValue: startIssueNumber,
+                                decoration: const InputDecoration(
+                                  labelText: 'From issue #',
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.number,
+                                enabled: !isApplying,
+                                onChanged: (v) {
+                                  if (v.isEmpty) return;
+                                  final parsed = int.tryParse(v);
+                                  if (parsed == null) return;
+                                  final idx = findClosestIssueIndex(
+                                    candidates,
+                                    parsed.toString(),
+                                  );
+                                  if (idx != null &&
+                                      idx + 1 <= selectedEnd) {
+                                    setModalState(() {
+                                      selectedRange = RangeValues(
+                                        (idx + 1).toDouble(),
+                                        selectedRange.end,
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                initialValue: endIssueNumber,
+                                decoration: const InputDecoration(
+                                  labelText: 'To issue #',
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.number,
+                                enabled: !isApplying,
+                                onChanged: (v) {
+                                  if (v.isEmpty) return;
+                                  final parsed = int.tryParse(v);
+                                  if (parsed == null) return;
+                                  final idx = findClosestIssueIndex(
+                                    candidates,
+                                    parsed.toString(),
+                                    startAfter: selectedStart - 1,
+                                  );
+                                  if (idx != null &&
+                                      idx + 1 <= candidates.length) {
+                                    setModalState(() {
+                                      selectedRange = RangeValues(
+                                        selectedRange.start,
+                                        (idx + 1).toDouble(),
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        RangeSlider(
+                          min: 1,
+                          max: candidates.length.toDouble(),
+                          divisions: candidates.length > 1
+                              ? (candidates.length - 1).clamp(1, 100)
+                              : null,
+                          labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                          values: selectedRange,
+                          onChanged: isApplying
+                              ? null
+                              : (value) {
+                                  setModalState(() {
+                                    selectedRange = RangeValues(
+                                      value.start.roundToDouble(),
+                                      value.end.roundToDouble(),
+                                    );
+                                  });
+                                },
+                        ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Selected: #$startIssueNumber - #$endIssueNumber ($selectedStart to $selectedEnd of ${candidates.length})',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) {
-                  final rating = i + 1;
-                  return IconButton(
-                    icon: Icon(
-                      (selectedRating ?? 0) >= rating
-                          ? Icons.star
-                          : Icons.star_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 36,
+                children: [
+                  TextButton(
+                    onPressed: isApplying
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  const Spacer(),
+                  if (category == 'unrated') ...[
+                    FilledButton(
+                      onPressed: isApplying || selectedRating == 0
+                          ? null
+                          : () async {
+                              setModalState(() => isApplying = true);
+                              try {
+                                final libraryRepository = ref.read(
+                                  libraryRepositoryProvider,
+                                );
+                                var affected = 0;
+                                final now = DateTime.now().toUtc();
+
+                                final issuesToRate =
+                                    useRange && canSelectRange
+                                        ? candidates
+                                            .where(
+                                              (c) =>
+                                                  c.orderIndex >= selectedStart &&
+                                                  c.orderIndex <= selectedEnd,
+                                            )
+                                            .toList()
+                                        : candidates;
+
+                                for (final candidate in issuesToRate) {
+                                  final issueId = candidate.issueId;
+                                  if (issueId <= 0) continue;
+
+                                  final item = categoryIssues.firstWhere(
+                                    (ci) => ci.issue?.id == issueId,
+                                    orElse: () => categoryIssues[candidates.indexOf(candidate)],
+                                  );
+
+                                  if (item.rating == selectedRating) continue;
+
+                                  final localItem = await libraryRepository
+                                      .getItemByIssueId(issueId);
+                                  final itemSeriesId = localItem?.metronSeriesId ??
+                                      item.issue?.series?.id;
+                                  if (itemSeriesId == null) continue;
+
+                                  await libraryRepository.upsertItem(
+                                    metronIssueId: issueId,
+                                    metronSeriesId: itemSeriesId,
+                                    ownershipStatus:
+                                        localItem?.ownershipStatus ??
+                                            LibraryOwnershipStatus.notOwned,
+                                    isRead: localItem?.isRead ?? item.isRead,
+                                    rating: selectedRating,
+                                    purchaseDate: localItem?.purchaseDate,
+                                    pricePaid: localItem?.pricePaid,
+                                    quantityOwned: localItem?.quantityOwned ?? 1,
+                                    format: localItem?.format ??
+                                        LibraryItemFormat.print,
+                                    firstReadAt: localItem?.firstReadAt,
+                                    conditionGrade: localItem?.conditionGrade,
+                                    acquiredOn: localItem?.acquiredOn ??
+                                        now,
+                                    notes: localItem?.notes,
+                                  );
+                                  affected++;
+                                }
+
+                                if (!context.mounted) return;
+                                Navigator.of(context).pop();
+                                TakionAlerts.success(
+                                  context,
+                                  '$affected Issues Rated',
+                                );
+                                ref.invalidate(
+                                  seriesByCategoryProvider(category),
+                                );
+                              } catch (e) {
+                                if (context.mounted) {
+                                  setModalState(() => isApplying = false);
+                                }
+                              }
+                            },
+                      child: isApplying
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(actionLabel()),
                     ),
-                    onPressed: () =>
-                        setModalState(() => selectedRating = rating),
-                  );
-                }),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: selectedRating == null
-                    ? null
-                    : () async {
-                        Navigator.of(context).pop(selectedRating);
-                      },
-                child: const Text('Apply'),
+                  ] else ...[
+                    FilledButton(
+                      onPressed: isApplying
+                          ? null
+                          : () async {
+                              setModalState(() => isApplying = true);
+                              try {
+                                await applySeriesIssueBulkAction(
+                                  context: context,
+                                  ref: ref,
+                                  seriesId: seriesId,
+                                  seriesName: seriesName,
+                                  operation: SeriesIssueBulkOperation.markAsRead,
+                                  selectionMode: useRange && canSelectRange
+                                      ? SeriesIssueSelectionMode.range
+                                      : SeriesIssueSelectionMode.predefined,
+                                  issues: candidates,
+                                  subset: !useRange || !canSelectRange
+                                      ? SeriesIssueSubset.all
+                                      : null,
+                                  startOrderIndex: useRange && canSelectRange
+                                      ? selectedStart
+                                      : null,
+                                  endOrderIndex: useRange && canSelectRange
+                                      ? selectedEnd
+                                      : null,
+                                );
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  setModalState(() => isApplying = false);
+                                }
+                              }
+                            },
+                      child: isApplying
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(actionLabel()),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
-        ),
-      ),
-    ).then((value) => selectedRating = value);
-
-    if (selectedRating == null || !context.mounted) return;
-    await _rateAll(context, ref, items, selectedRating!);
-  }
-
-  Future<void> _rateAll(
-    BuildContext context,
-    WidgetRef ref,
-    List<CollectionItem> items,
-    int rating,
-  ) async {
-    final libraryRepository = ref.read(libraryRepositoryProvider);
-    var affected = 0;
-
-    for (final item in items) {
-      final issueId = item.issue?.id;
-      if (issueId == null) continue;
-      if (item.rating == rating) continue;
-
-      final localItem = await libraryRepository.getItemByIssueId(issueId);
-      final seriesId = localItem?.metronSeriesId ?? item.issue?.series?.id;
-      if (seriesId == null) continue;
-
-      await libraryRepository.upsertItem(
-        metronIssueId: issueId,
-        metronSeriesId: seriesId,
-        ownershipStatus:
-            localItem?.ownershipStatus ??
-            (item.quantity > 0
-                ? LibraryOwnershipStatus.owned
-                : LibraryOwnershipStatus.notOwned),
-        isRead: localItem?.isRead ?? item.isRead,
-        rating: rating,
-        purchaseDate: localItem?.purchaseDate,
-        pricePaid: localItem?.pricePaid,
-        quantityOwned: localItem?.quantityOwned ?? 1,
-        format: localItem?.format ?? LibraryItemFormat.print,
-        firstReadAt: localItem?.firstReadAt,
-        conditionGrade: localItem?.conditionGrade,
-        acquiredOn: localItem?.acquiredOn ?? DateTime.now().toUtc(),
-        notes: localItem?.notes,
-      );
-      affected++;
-    }
-
-    if (!context.mounted) return;
-    TakionAlerts.success(context, '$affected Issues Rated');
-    ref.invalidate(seriesByCategoryProvider(category));
-  }
+        );
+      },
+    ),
+  );
 }
 
 class _CategoryIssueList extends ConsumerWidget {

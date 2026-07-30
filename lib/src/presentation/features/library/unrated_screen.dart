@@ -125,49 +125,77 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
 
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(unratedSeriesProvider),
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 12),
-              itemCount: filtered.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: ListHeader(
-                      count: filtered.length,
-                      unit: 'series',
-                      pluralUnit: 'series',
-                      enabled: true,
-                      sortLabel: seriesSortLabel(sortOption),
-                      onSortTap: () => showSortBottomSheet(
-                        context,
-                        ref,
-                        SortPreferenceContext.libraryUnrated,
-                        seriesSortLabel,
+            child: CustomScrollView(
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _PinnedListHeaderDelegate(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: ListHeader(
+                        count: filtered.length,
+                        unit: 'series',
+                        pluralUnit: 'series',
+                        enabled: true,
+                        sortLabel: seriesSortLabel(sortOption),
+                        onSortTap: () => showSortBottomSheet(
+                          context,
+                          ref,
+                          SortPreferenceContext.libraryUnrated,
+                          seriesSortLabel,
+                        ),
                       ),
                     ),
-                  );
-                }
-                final summary = filtered[index - 1];
-                return SeriesListTile(
-                  series: summary,
-                  categoryCount: categoryCounts[summary.id],
-                  categoryLabel: 'unrated',
-                  isFirst: index == 1,
-                  isLast: index == filtered.length,
-                  onTap: () => context.pushRoute(
-                    LibrarySeriesRoute(
-                      seriesId: summary.id,
-                      category: 'unrated',
-                      seriesName: summary.name,
-                    ),
                   ),
-                );
-              },
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final summary = filtered[index];
+                      return SeriesListTile(
+                        series: summary,
+                        categoryCount: categoryCounts[summary.id],
+                        categoryLabel: 'unrated',
+                        isFirst: index == 0,
+                        isLast: index == filtered.length - 1,
+                        onTap: () => context.pushRoute(
+                          LibrarySeriesRoute(
+                            seriesId: summary.id,
+                            category: 'unrated',
+                            seriesName: summary.name,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: filtered.length,
+                  ),
+                ),
+              ],
             ),
           );
         },
       ),
     );
   }
+}
+
+class _PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedListHeaderDelegate({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Theme.of(context).colorScheme.surface, child: child);
+  }
+
+  @override
+  double get maxExtent => 80;
+
+  @override
+  double get minExtent => 56;
+
+  @override
+  bool shouldRebuild(_PinnedListHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
 }

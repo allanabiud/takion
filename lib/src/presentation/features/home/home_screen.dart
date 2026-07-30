@@ -8,6 +8,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/home/main_screen.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/start_reading_provider.dart';
 import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
@@ -211,6 +212,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final suggestionsAsync = ref.watch(homeTrendingProvider);
     final continueReadingAsync = ref.watch(continueReadingSuggestionsProvider);
+    final startReadingAsync = ref.watch(startReadingSuggestionsProvider);
     final thisWeekStart = _weekStart(DateTime.now());
     final nextWeekStart = thisWeekStart.add(const Duration(days: 7));
     final thisWeekReleasesAsync = ref.watch(
@@ -689,6 +691,119 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'Continue Reading',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 250,
+                      child: ListView.separated(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 3,
+                        separatorBuilder: (_, _) => SizedBox(width: 12),
+                        itemBuilder: (_, _) =>
+                            const ShimmerWidget(child: IssueCardSkeleton()),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              error: (_, _) => const SizedBox.shrink(),
+            ),
+            startReadingAsync.when(
+              data: (items) {
+                if (items.isEmpty) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: InkWell(
+                        onTap: () {
+                          context.pushRoute(const StartReadingRoute());
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Start Reading',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const Icon(Icons.chevron_right),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 250,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          final issue = item.issue;
+                          final issueId = issue.id;
+                          final collectionStatus = issueId == null
+                              ? null
+                              : ref.watch(
+                                  issueCollectionStatusProvider(issueId),
+                                );
+                          final pullEntry = issueId == null
+                              ? null
+                              : ref.watch(issuePullListEntryProvider(issueId));
+
+                          return IssueCard(
+                            issueId: issueId,
+                            imageUrl: issue.image,
+                            title:
+                                '${issue.series?.name ?? 'Issue'} #${issue.number}',
+                            seriesId: issue.series?.id,
+                            seriesName: issue.series?.name,
+                            issueNumber: issue.number,
+                            isCollected: collectionStatus?.isCollected ?? false,
+                            isWishlisted:
+                                collectionStatus?.isWishlisted ?? false,
+                            isRead: collectionStatus?.isRead ?? false,
+                            isPulled: pullEntry?.asData?.value != null,
+                            onTap: issueId == null
+                                ? null
+                                : () => context.pushRoute(
+                                    IssueDetailsRoute(
+                                      issueId: issueId,
+                                      initialImageUrl: issue.image,
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                );
+              },
+              loading: () => SizedBox(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Start Reading',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,

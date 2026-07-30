@@ -25,6 +25,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   SeriesListPage? _lastPage;
   int _coverFetchLimit = seriesCoverFetchBudgetPerSession;
   bool _coverLimitUpdateScheduled = false;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   void _resetCoverFetchLimit() {
     _coverFetchLimit = seriesCoverFetchBudgetPerSession;
@@ -54,18 +56,52 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.subscriptions),
     );
     final pageAsync = ref.watch(subscribedSeriesPageProvider(_page));
+    final query = _searchController.text.toLowerCase().trim();
 
     if (pageAsync.hasValue) {
       _lastPage = pageAsync.value;
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Subscriptions')),
+      appBar: AppBar(
+        titleSpacing: _isSearching ? 0 : null,
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  hintText: 'Search series...',
+                  border: InputBorder.none,
+                  isDense: true,
+                  filled: false,
+                  suffixIcon: Icon(
+                    Icons.search,
+                  ),
+                ),
+              )
+            : const Text('Subscriptions'),
+        actions: _isSearching
+            ? null
+            : [
+                IconButton(
+                  tooltip: 'Search',
+                  onPressed: () => setState(() => _isSearching = true),
+                  icon: const Icon(Icons.search),
+                ),
+              ],
+      ),
       body: pageAsync.when(
         loading: () {
           if (_lastPage != null) {
@@ -75,9 +111,25 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         },
         error: (error, _) =>
             AsyncStatePanel.error(errorMessage: 'Failed to load subscriptions'),
-        data: (pageData) =>
-            _buildContent(pageData, sortOption, isLoading: false),
+        data: (pageData) {
+          final filtered = _filteredPage(pageData, query);
+          return _buildContent(filtered, sortOption, isLoading: false);
+        },
       ),
+    );
+  }
+
+  SeriesListPage _filteredPage(SeriesListPage page, String query) {
+    if (query.isEmpty) return page;
+    final filteredResults = page.results
+        .where((s) => s.name.toLowerCase().contains(query))
+        .toList();
+    return SeriesListPage(
+      count: filteredResults.length,
+      next: null,
+      previous: page.previous,
+      results: filteredResults,
+      currentPage: _page,
     );
   }
 
@@ -104,7 +156,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
       hasNext: pageData.hasNext,
       isLoading: isLoading,
       header: ListHeader(
-        count: pageData.count,
+        count: sortedResults.length,
         unit: 'series',
         pluralUnit: 'series',
         enabled: !isLoading,

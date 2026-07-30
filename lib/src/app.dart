@@ -133,7 +133,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
       await driveService.triggerSync();
       await syncNotifier.updateLastSync();
       syncNotifier.clearError();
-      invalidateCacheBackedProvidersBatched((p) => container.invalidate(p));
+      invalidateCacheBackedProvidersForAutoSync((p) => container.invalidate(p));
       AppLogger.info('Drive auto sync completed');
     } catch (e) {
       AppLogger.warning('Background sync failed', error: e);

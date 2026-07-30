@@ -263,16 +263,51 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       return _creatorRowToEntity(cached);
     }
 
+    final cachedJson =
+        await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
+    if (cachedJson != null && !forceRefresh) {
+      final cachedAt =
+          await _localDataSource.getCachedCreatorDetailsCachedAt(creatorId);
+      final now = _now();
+      if (cachedAt != null &&
+          MetronCachePolicies.creatorDetails.isFresh(cachedAt, now)) {
+        AppPerformanceMetrics.instance.recordCacheHit(
+          'creator_details_response',
+        );
+        final dto = CreatorDetailsDto.fromJson(cachedJson);
+        await _upsertCreatorDetails(dto);
+        return _creatorRowToEntity(
+          await _metronEntityDao.getCreator(creatorId) ??
+              (throw StateError('Creator $creatorId not found after upsert')),
+        );
+      }
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss('creator_details');
 
     try {
       final response = await _remoteDataSource.getCreatorDetails(creatorId);
       if (response.statusCode == 304) {
-        return _creatorRowToEntity(cached ?? (throw StateError('Creator $creatorId not found')));
+        final cachedJson =
+            await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
+        if (cachedJson != null) {
+          await _localDataSource.cacheCreatorDetailsResponse(
+            creatorId,
+            cachedJson,
+          );
+          final dto = CreatorDetailsDto.fromJson(cachedJson);
+          await _upsertCreatorDetails(dto);
+          return _creatorRowToEntity(
+            await _metronEntityDao.getCreator(creatorId) ??
+                (throw StateError('Creator $creatorId not found')),
+          );
+        }
+        return _creatorRowToEntity(
+          cached ?? (throw StateError('Creator $creatorId not found')),
+        );
       }
-      final dto = CreatorDetailsDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data as Map<String, dynamic>;
+      final dto = CreatorDetailsDto.fromJson(data);
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&
@@ -280,12 +315,23 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
         return _creatorRowToEntity(cached);
       }
       await _upsertCreatorDetails(dto);
+      await _localDataSource.cacheCreatorDetailsResponse(creatorId, data);
       return _creatorRowToEntity(
         await _metronEntityDao.getCreator(creatorId) ??
             (throw StateError('Creator $creatorId not found after upsert')),
       );
     } catch (e) {
       AppLogger.error('Failed to fetch creator details', error: e);
+      final cachedJson =
+          await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
+      if (cachedJson != null) {
+        final dto = CreatorDetailsDto.fromJson(cachedJson);
+        await _upsertCreatorDetails(dto);
+        return _creatorRowToEntity(
+          await _metronEntityDao.getCreator(creatorId) ??
+              (throw StateError('Creator $creatorId not found after upsert')),
+        );
+      }
       if (cached != null) {
         return _creatorRowToEntity(cached);
       }

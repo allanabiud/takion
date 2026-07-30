@@ -263,16 +263,42 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       return _teamRowToEntity(teamId);
     }
 
+    final cachedJson =
+        await _localDataSource.getCachedTeamDetailsResponse(teamId);
+    if (cachedJson != null && !forceRefresh) {
+      final cachedAt =
+          await _localDataSource.getCachedTeamDetailsCachedAt(teamId);
+      final now = _now();
+      if (cachedAt != null &&
+          MetronCachePolicies.teamDetails.isFresh(cachedAt, now)) {
+        AppPerformanceMetrics.instance.recordCacheHit(
+          'team_details_response',
+        );
+        final dto = TeamDetailsDto.fromJson(cachedJson);
+        await _upsertTeamDetails(dto);
+        return _teamRowToEntity(teamId);
+      }
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss('team_details');
 
     try {
       final response = await _remoteDataSource.getTeamDetails(teamId);
       if (response.statusCode == 304) {
-        return _teamRowToEntity(teamId);
-      }
-      final dto = TeamDetailsDto.fromJson(
-        response.data as Map<String, dynamic>,
+        final cachedJson =
+            await _localDataSource.getCachedTeamDetailsResponse(teamId);
+        if (cachedJson != null) {
+          await _localDataSource.cacheTeamDetailsResponse(teamId, cachedJson);
+          final dto = TeamDetailsDto.fromJson(cachedJson);
+          await _upsertTeamDetails(dto);
+          return _teamRowToEntity(teamId);
+        }
+      return _teamRowToEntity(
+        cached != null ? teamId : (throw StateError('Team $teamId not found')),
       );
+      }
+      final data = response.data as Map<String, dynamic>;
+      final dto = TeamDetailsDto.fromJson(data);
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&
@@ -280,9 +306,17 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
         return _teamRowToEntity(teamId);
       }
       await _upsertTeamDetails(dto);
+      await _localDataSource.cacheTeamDetailsResponse(teamId, data);
       return _teamRowToEntity(teamId);
     } catch (e) {
       AppLogger.error('Failed to fetch team details', error: e);
+      final cachedJson =
+          await _localDataSource.getCachedTeamDetailsResponse(teamId);
+      if (cachedJson != null) {
+        final dto = TeamDetailsDto.fromJson(cachedJson);
+        await _upsertTeamDetails(dto);
+        return _teamRowToEntity(teamId);
+      }
       if (cached != null) {
         return _teamRowToEntity(teamId);
       }

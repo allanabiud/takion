@@ -140,57 +140,36 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
           ),
         ]),
         if (syncState.enabled) ...[
-          if (syncState.lastError != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Sync Error',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color:
-                                Theme.of(context).colorScheme.onErrorContainer,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          syncState.lastError!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color:
-                                Theme.of(context).colorScheme.onErrorContainer,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
           const SizedBox(height: 16),
           buildSettingsGroup(context, 'Synchronization Settings', [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: syncState.isSyncing
+                  ? RotationTransition(
+                      turns: _syncRotation,
+                      child: Icon(
+                        Icons.sync,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    )
+                  : Icon(
+                      Icons.sync,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              title: Text(
+                syncState.isSyncing ? 'Syncing...' : 'Sync Now',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                syncState.isSyncing
+                    ? 'Please wait'
+                    : syncState.lastSync != null
+                    ? 'Last sync: ${DateFormatter.relativeShort(syncState.lastSync!)}'
+                    : 'Never synced',
+              ),
+              onTap: syncState.isSyncing ? null : () => _syncNow(),
+            ),
+            const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Column(
@@ -228,34 +207,6 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                   ),
                 ],
               ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: syncState.isSyncing
-                  ? RotationTransition(
-                      turns: _syncRotation,
-                      child: Icon(
-                        Icons.sync,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    )
-                  : Icon(
-                      Icons.sync,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              title: Text(
-                syncState.isSyncing ? 'Syncing...' : 'Sync Now',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                syncState.isSyncing
-                    ? 'Please wait'
-                    : syncState.lastSync != null
-                    ? 'Last sync: ${DateFormatter.relativeShort(syncState.lastSync!)}'
-                    : 'Never synced',
-              ),
-              onTap: syncState.isSyncing ? null : () => _syncNow(),
             ),
             const Divider(height: 1),
             ListTile(

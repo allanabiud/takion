@@ -85,6 +85,13 @@ final libraryItemsStreamProvider = StreamProvider<List<LibraryItem>>((ref) {
       .map((rows) => rows.map(_driftItemToDomain).toList());
 });
 
+final metronIssuesStreamProvider = StreamProvider.autoDispose<List<db.MetronIssue>>((ref) {
+  return ref
+      .watch(driftDatabaseProvider)
+      .metronEntityDao
+      .watchAllIssues();
+});
+
 final collectionItemsProvider = FutureProvider.family<CollectionItemsPage, int>(
   (ref, page) {
     return _loadCollectionPage(ref, page);

@@ -62,7 +62,7 @@ void invalidateCacheBackedProviders(
   _invalidateBatch(invalidate);
 }
 
-void invalidateCacheBackedProvidersBatched(
+void invalidateCacheBackedProvidersForAutoSync(
   void Function(dynamic provider) invalidate,
 ) {
   invalidateReleaseProviders(invalidate);
@@ -87,7 +87,6 @@ void invalidateCacheBackedProvidersBatched(
     invalidate(pullsIssuesForWeekProvider);
 
     Future.microtask(() {
-      invalidate(seriesDetailsProvider);
       invalidate(seriesIssueListProvider);
       invalidate(seriesListProvider);
       invalidate(currentSeriesListProvider);
@@ -103,23 +102,23 @@ void invalidateCacheBackedProvidersBatched(
 
       Future.microtask(() {
         invalidate(issueSearchProvider);
-        invalidate(characterDetailsProvider);
         invalidate(characterSearchProvider);
         invalidate(characterIssueListProvider);
         invalidate(characterDetailsIssuesProvider);
-        invalidate(creatorDetailsProvider);
         invalidate(creatorSearchProvider);
-        invalidate(universeDetailsProvider);
         invalidate(universeSearchProvider);
-        invalidate(imprintDetailsProvider);
         invalidate(imprintSearchProvider);
-        invalidate(teamDetailsProvider);
         invalidate(teamSearchProvider);
-        invalidate(publisherDetailsProvider);
         invalidate(publisherSearchProvider);
       });
     });
   });
+}
+
+void invalidateCacheBackedProvidersBatched(
+  void Function(dynamic provider) invalidate,
+) {
+  _invalidateBatch(invalidate);
 }
 
 void _invalidateBatch(void Function(dynamic provider) invalidate) {

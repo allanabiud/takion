@@ -263,6 +263,23 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
       return _characterRowToEntity(characterId);
     }
 
+    final cachedJson =
+        await _localDataSource.getCachedCharacterDetailsResponse(characterId);
+    if (cachedJson != null && !forceRefresh) {
+      final cachedAt =
+          await _localDataSource.getCachedCharacterDetailsCachedAt(characterId);
+      final now = _now();
+      if (cachedAt != null &&
+          MetronCachePolicies.characterDetails.isFresh(cachedAt, now)) {
+        AppPerformanceMetrics.instance.recordCacheHit(
+          'character_details_response',
+        );
+        final dto = CharacterDetailsDto.fromJson(cachedJson);
+        await _upsertCharacterDetails(dto);
+        return _characterRowToEntity(characterId);
+      }
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss('character_details');
 
     try {
@@ -270,11 +287,30 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
         characterId,
       );
       if (response.statusCode == 304) {
-        return _characterRowToEntity(characterId);
+        final cachedJson =
+            await _localDataSource.getCachedCharacterDetailsResponse(
+          characterId,
+        );
+        if (cachedJson != null) {
+          await _localDataSource.cacheCharacterDetailsResponse(
+            characterId,
+            cachedJson,
+          );
+          final dto = CharacterDetailsDto.fromJson(cachedJson);
+          await _upsertCharacterDetails(dto);
+          return _characterRowToEntity(characterId);
+        }
+        if (cached != null) {
+          return _characterRowToEntity(characterId);
+        }
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: '304 Not Modified and no cached data available',
+        );
       }
-      final dto = CharacterDetailsDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data as Map<String, dynamic>;
+      final dto = CharacterDetailsDto.fromJson(data);
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&
@@ -282,9 +318,25 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
         return _characterRowToEntity(characterId);
       }
       await _upsertCharacterDetails(dto);
+      await _localDataSource.cacheCharacterDetailsResponse(characterId, data);
       return _characterRowToEntity(characterId);
     } catch (e) {
       AppLogger.error('Failed to fetch character details', error: e);
+      final cachedJson =
+          await _localDataSource.getCachedCharacterDetailsResponse(
+        characterId,
+      );
+      if (cachedJson != null) {
+        final dto = CharacterDetailsDto.fromJson(cachedJson);
+        if (cached != null &&
+            cached.modified != null &&
+            dto.modified != null &&
+            cached.modified == cached.modified) {
+          return _characterRowToEntity(characterId);
+        }
+        await _upsertCharacterDetails(dto);
+        return _characterRowToEntity(characterId);
+      }
       if (cached != null) {
         return _characterRowToEntity(characterId);
       }

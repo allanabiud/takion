@@ -263,18 +263,51 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       return _imprintRowToEntity(cached);
     }
 
+    final cachedJson =
+        await _localDataSource.getCachedImprintDetailsResponse(imprintId);
+    if (cachedJson != null && !forceRefresh) {
+      final cachedAt =
+          await _localDataSource.getCachedImprintDetailsCachedAt(imprintId);
+      final now = _now();
+      if (cachedAt != null &&
+          MetronCachePolicies.imprintDetails.isFresh(cachedAt, now)) {
+        AppPerformanceMetrics.instance.recordCacheHit(
+          'imprint_details_response',
+        );
+        final dto = ImprintDetailsDto.fromJson(cachedJson);
+        await _upsertImprintDetails(dto);
+        return _imprintRowToEntity(
+          await _metronEntityDao.getImprint(imprintId) ??
+              (throw StateError('Imprint $imprintId not found after upsert')),
+        );
+      }
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss('imprint_details');
 
     try {
       final response = await _remoteDataSource.getImprintDetails(imprintId);
       if (response.statusCode == 304) {
+        final cachedJson =
+            await _localDataSource.getCachedImprintDetailsResponse(imprintId);
+        if (cachedJson != null) {
+          await _localDataSource.cacheImprintDetailsResponse(
+            imprintId,
+            cachedJson,
+          );
+          final dto = ImprintDetailsDto.fromJson(cachedJson);
+          await _upsertImprintDetails(dto);
+          return _imprintRowToEntity(
+            await _metronEntityDao.getImprint(imprintId) ??
+                (throw StateError('Imprint $imprintId not found after upsert')),
+          );
+        }
         return _imprintRowToEntity(
           cached ?? (throw StateError('Imprint $imprintId not found')),
         );
       }
-      final dto = ImprintDetailsDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data as Map<String, dynamic>;
+      final dto = ImprintDetailsDto.fromJson(data);
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&
@@ -282,12 +315,23 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
         return _imprintRowToEntity(cached);
       }
       await _upsertImprintDetails(dto);
+      await _localDataSource.cacheImprintDetailsResponse(imprintId, data);
       return _imprintRowToEntity(
         await _metronEntityDao.getImprint(imprintId) ??
             (throw StateError('Imprint $imprintId not found after upsert')),
       );
     } catch (e) {
       AppLogger.error('Failed to fetch imprint details', error: e);
+      final cachedJson =
+          await _localDataSource.getCachedImprintDetailsResponse(imprintId);
+      if (cachedJson != null) {
+        final dto = ImprintDetailsDto.fromJson(cachedJson);
+        await _upsertImprintDetails(dto);
+        return _imprintRowToEntity(
+          await _metronEntityDao.getImprint(imprintId) ??
+              (throw StateError('Imprint $imprintId not found after upsert')),
+        );
+      }
       if (cached != null) {
         return _imprintRowToEntity(cached);
       }

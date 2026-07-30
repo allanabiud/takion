@@ -7,15 +7,6 @@ import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class PagedIssueListScaffold extends StatelessWidget {
-  final String title;
-  final AsyncValue<List<IssueList>> issuesAsync;
-  final String emptyMessage;
-  final IconData emptyIcon;
-  final List<IssueList> Function(List<IssueList>) transformIssues;
-  final String Function(Object error)? errorTextBuilder;
-  final List<Widget>? appBarActions;
-  final Widget? header;
-
   const PagedIssueListScaffold({
     super.key,
     required this.title,
@@ -27,6 +18,15 @@ class PagedIssueListScaffold extends StatelessWidget {
     this.appBarActions,
     this.header,
   });
+
+  final String title;
+  final AsyncValue<List<IssueList>> issuesAsync;
+  final String emptyMessage;
+  final IconData emptyIcon;
+  final List<IssueList> Function(List<IssueList>) transformIssues;
+  final String Function(Object error)? errorTextBuilder;
+  final List<Widget>? appBarActions;
+  final Widget? header;
 
   static List<IssueList> _identity(List<IssueList> issues) => issues;
 
@@ -73,24 +73,22 @@ class PagedIssueListScaffold extends StatelessWidget {
                   );
                 }
 
+                if (header != null) {
+                  return _PinnedIssueList(
+                    header: header!,
+                    issues: visibleIssues,
+                  );
+                }
+
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 12),
-                  itemCount: visibleIssues.length + (header != null ? 1 : 0),
+                  itemCount: visibleIssues.length,
                   itemBuilder: (context, index) {
-                    if (header != null && index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: header,
-                      );
-                    }
-                    final issue =
-                        visibleIssues[header != null ? index - 1 : index];
+                    final issue = visibleIssues[index];
                     return IssueListTile(
                       issue: issue,
-                      isFirst: header != null ? index == 1 : index == 0,
-                      isLast:
-                          index ==
-                          (visibleIssues.length + (header != null ? 1 : 0) - 1),
+                      isFirst: index == 0,
+                      isLast: index == visibleIssues.length - 1,
                     );
                   },
                 );
@@ -101,4 +99,65 @@ class PagedIssueListScaffold extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PinnedIssueList extends StatelessWidget {
+  const _PinnedIssueList({
+    required this.header,
+    required this.issues,
+  });
+
+  final Widget header;
+  final List<IssueList> issues;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _PinnedHeaderDelegate(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: header,
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final issue = issues[index];
+              return IssueListTile(
+                issue: issue,
+                isFirst: index == 0,
+                isLast: index == issues.length - 1,
+              );
+            },
+            childCount: issues.length,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedHeaderDelegate({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Theme.of(context).colorScheme.surface, child: child);
+  }
+
+  @override
+  double get maxExtent => 80;
+
+  @override
+  double get minExtent => 56;
+
+  @override
+  bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
 }
