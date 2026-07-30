@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
@@ -78,7 +77,6 @@ class PeriodicSyncManager {
     try {
       await Workmanager().initialize(
         callbackDispatcher,
-        isInDebugMode: kDebugMode,
       );
       _initialized = true;
       AppLogger.info('PeriodicSyncManager initialized successfully');
@@ -97,7 +95,7 @@ class PeriodicSyncManager {
         periodicSyncTaskName,
         periodicSyncTaskName,
         frequency: interval.duration,
-        existingWorkPolicy: ExistingWorkPolicy.replace,
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
         constraints: Constraints(
           networkType: NetworkType.connected,
         ),
