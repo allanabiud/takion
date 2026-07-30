@@ -14,6 +14,10 @@ class NotificationService {
   static const _channelName = 'Weekly Pull Summary';
   static const _notificationId = 1001;
 
+  static const _syncChannelId = 'drive_sync_channel';
+  static const _syncChannelName = 'Drive Sync';
+  static const _syncNotificationId = 2001;
+
   VoidCallback? onNavigateToMyPulls;
 
   final FlutterLocalNotificationsPlugin _plugin =
@@ -45,11 +49,54 @@ class NotificationService {
           importance: Importance.high,
         );
         await android.createNotificationChannel(channel);
+
+        const syncChannel = AndroidNotificationChannel(
+          _syncChannelId,
+          _syncChannelName,
+          description: 'Notifications for Google Drive sync status',
+          importance: Importance.low,
+        );
+        await android.createNotificationChannel(syncChannel);
       }
 
       AppLogger.info('Notification service initialized');
     } catch (e) {
       AppLogger.warning('Notification service init failed', error: e);
+    }
+  }
+
+  Future<void> showSyncNotification({
+    required String title,
+    required String body,
+    bool isOngoing = false,
+  }) async {
+    final androidDetails = AndroidNotificationDetails(
+      _syncChannelId,
+      _syncChannelName,
+      channelDescription: 'Notifications for Google Drive sync status',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: isOngoing,
+      showWhen: true,
+    );
+    final details = NotificationDetails(android: androidDetails);
+    try {
+      await _plugin.show(
+        _syncNotificationId,
+        title,
+        body,
+        details,
+      );
+    } catch (e) {
+      AppLogger.warning('Failed to show sync notification', error: e);
+    }
+  }
+
+  Future<void> cancelSyncNotification() async {
+    try {
+      await _plugin.cancel(_syncNotificationId);
+    } catch (e) {
+      AppLogger.warning('Failed to cancel sync notification', error: e);
     }
   }
 

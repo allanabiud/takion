@@ -115,7 +115,7 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                     hasScrollBody: false,
                     child: EmptyContentState(
                       icon: Icons.star_border_outlined,
-                      message: 'No unrated comics yet.',
+                      message: 'No unrated comics.',
                     ),
                   ),
                 ],

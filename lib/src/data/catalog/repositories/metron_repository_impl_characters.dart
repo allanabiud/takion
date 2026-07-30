@@ -5,27 +5,137 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = nextUrl != null
-        ? await _remoteDataSource.getCharacterList(
-            nextUrl: Uri.parse(nextUrl),
-            limit: limit,
-            cancelToken: cancelToken,
-          )
-        : await _remoteDataSource.getCharacterList(
-            page: page,
-            limit: limit,
-            cancelToken: cancelToken,
-          );
-    return CharacterListPage(
-      count: dto.count,
-      next: dto.next,
-      previous: dto.previous,
-      results: dto.results.map((e) => e.toEntity()).toList(),
-      currentPage: page,
+    final cachedDtos = await _localDataSource.getCharacterListResults(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
     );
+    final cachedAt = await _localDataSource.getCharacterListResultsCachedAt(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+    final cachedMeta = await _localDataSource.getCharacterListResultsMeta(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.characterList.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getCharacterList(
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    modifiedGt: modifiedGt,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getCharacterList(
+                    page: page,
+                    limit: limit,
+                    modifiedGt: modifiedGt,
+                    cancelToken: cancelToken,
+                  );
+            await _localDataSource.cacheCharacterListResults(
+              remotePage.results,
+              page: page,
+              limit: limit,
+              modifiedGt: modifiedGt,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'character_list:${nextUrl ?? "$page"}|$modifiedGt',
+          cooldown: MetronCachePolicies.characterList.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        return CharacterListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final key = '${nextUrl ?? "$page"}|$modifiedGt|$forceRefresh';
+      return _coalesce(_characterListInFlight, key, () async {
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getCharacterList(
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                modifiedGt: modifiedGt,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getCharacterList(
+                page: page,
+                limit: limit,
+                modifiedGt: modifiedGt,
+                cancelToken: cancelToken,
+              );
+        await _localDataSource.cacheCharacterListResults(
+          remotePage.results,
+          page: page,
+          limit: limit,
+          modifiedGt: modifiedGt,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return CharacterListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return CharacterListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<int> refreshCharacterListDelta({DateTime? modifiedGt}) async {
+    var page = 1;
+    var synced = 0;
+    while (true) {
+      final result = await getCharacterList(
+        page: page,
+        limit: metronDefaultPageSize,
+        modifiedGt: modifiedGt,
+        forceRefresh: true,
+      );
+      for (final item in result.results) {
+        await getCharacterDetails(item.id, forceRefresh: true);
+        synced++;
+      }
+      if (!result.hasNext) break;
+      page++;
+    }
+    return synced;
   }
 
   Future<CharacterListPage> searchCharacters(
@@ -156,7 +266,15 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
     AppPerformanceMetrics.instance.recordCacheMiss('character_details');
 
     try {
-      final dto = await _remoteDataSource.getCharacterDetails(characterId);
+      final response = await _remoteDataSource.getCharacterDetails(
+        characterId,
+      );
+      if (response.statusCode == 304) {
+        return _characterRowToEntity(characterId);
+      }
+      final dto = CharacterDetailsDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&

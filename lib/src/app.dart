@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -110,6 +112,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
   }
 
   Future<void> _runDriveAutoSyncIfEnabled() async {
+    if (!mounted) return;
     final container = ProviderScope.containerOf(context, listen: false);
     final syncNotifier = ref.read(driveSyncProvider.notifier);
     await syncNotifier.ensureInitialized();
@@ -129,11 +132,12 @@ class _TakionAppState extends ConsumerState<TakionApp>
     try {
       await driveService.triggerSync();
       await syncNotifier.updateLastSync();
+      syncNotifier.clearError();
       invalidateCacheBackedProvidersBatched((p) => container.invalidate(p));
       AppLogger.info('Drive auto sync completed');
     } catch (e) {
       AppLogger.warning('Background sync failed', error: e);
-      // sync failure is non-critical; state resets on next launch
+      syncNotifier.setError(e.toString());
     }
     syncNotifier.setSyncing(false);
   }
@@ -338,6 +342,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
     if (state == AppLifecycleState.resumed && mounted) {
       _scheduleWeeklyPullNotification();
       ref.read(driftDatabaseProvider).apiCacheDao.deleteStaleEntries();
+      _runDriveAutoSyncIfEnabled();
     }
   }
 

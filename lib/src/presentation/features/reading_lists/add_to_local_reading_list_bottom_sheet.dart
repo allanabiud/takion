@@ -154,7 +154,7 @@ class _AddToLocalReadingListBottomSheetState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No Reading Lists yet.',
+                      'No Reading Lists.',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

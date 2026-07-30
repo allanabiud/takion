@@ -15,6 +15,8 @@ import 'package:takion/src/presentation/features/series/providers/series_details
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_list_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/because_you_pulled_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
@@ -40,8 +42,6 @@ import 'package:takion/src/core/logging/app_logger.dart';
 
 part 'settings_provider.freezed.dart';
 part 'settings_provider.g.dart';
-
-enum RefreshType { full, quick }
 
 @freezed
 abstract class AppSettings with _$AppSettings {
@@ -77,6 +77,10 @@ void invalidateCacheBackedProvidersBatched(
     invalidate(allLibraryItemsProvider);
     invalidate(libraryBasicStatsProvider);
     invalidate(libraryEntityStatsProvider);
+    invalidate(libraryReadingTrendsProvider);
+    invalidate(libraryRecentlyFinishedProvider);
+    invalidate(collectionStatsProvider);
+    invalidate(categoryInsightsProvider);
     invalidate(issuePullListEntryProvider);
     invalidate(issueDetailsProvider);
     invalidate(pullListEntriesForWeekProvider);
@@ -87,7 +91,7 @@ void invalidateCacheBackedProvidersBatched(
       invalidate(seriesIssueListProvider);
       invalidate(seriesListProvider);
       invalidate(currentSeriesListProvider);
-      invalidate(seriesSearchResultsProvider);
+      invalidate(seriesSearchProvider);
       invalidate(readingSuggestionProvider);
       invalidate(readingSuggestionIssueProvider);
       invalidate(rateSuggestionProvider);
@@ -98,21 +102,21 @@ void invalidateCacheBackedProvidersBatched(
       invalidate(seriesSubscriptionProvider);
 
       Future.microtask(() {
-        invalidate(issueSearchResultsProvider);
+        invalidate(issueSearchProvider);
         invalidate(characterDetailsProvider);
-        invalidate(characterSearchResultsProvider);
+        invalidate(characterSearchProvider);
         invalidate(characterIssueListProvider);
         invalidate(characterDetailsIssuesProvider);
         invalidate(creatorDetailsProvider);
-        invalidate(creatorSearchResultsProvider);
+        invalidate(creatorSearchProvider);
         invalidate(universeDetailsProvider);
-        invalidate(universeSearchResultsProvider);
+        invalidate(universeSearchProvider);
         invalidate(imprintDetailsProvider);
-        invalidate(imprintSearchResultsProvider);
+        invalidate(imprintSearchProvider);
         invalidate(teamDetailsProvider);
-        invalidate(teamSearchResultsProvider);
+        invalidate(teamSearchProvider);
         invalidate(publisherDetailsProvider);
-        invalidate(publisherSearchResultsProvider);
+        invalidate(publisherSearchProvider);
       });
     });
   });
@@ -121,14 +125,14 @@ void invalidateCacheBackedProvidersBatched(
 void _invalidateBatch(void Function(dynamic provider) invalidate) {
   invalidateReleaseProviders(invalidate);
   invalidate(issueDetailsProvider);
-  invalidate(issueSearchResultsProvider);
+  invalidate(issueSearchProvider);
   invalidate(collectionIssueStatusMapProvider);
   invalidate(allLibraryItemsProvider);
   invalidate(seriesDetailsProvider);
   invalidate(seriesIssueListProvider);
   invalidate(seriesListProvider);
   invalidate(currentSeriesListProvider);
-  invalidate(seriesSearchResultsProvider);
+  invalidate(seriesSearchProvider);
   invalidate(readingSuggestionProvider);
   invalidate(readingSuggestionIssueProvider);
   invalidate(rateSuggestionProvider);
@@ -147,26 +151,45 @@ void _invalidateBatch(void Function(dynamic provider) invalidate) {
   invalidate(currentWeekPullsCountProvider);
   invalidate(libraryBasicStatsProvider);
   invalidate(libraryEntityStatsProvider);
+  invalidate(libraryReadingTrendsProvider);
+  invalidate(libraryRecentlyFinishedProvider);
+  invalidate(collectionStatsProvider);
+  invalidate(categoryInsightsProvider);
   invalidate(characterDetailsProvider);
-  invalidate(characterSearchResultsProvider);
+  invalidate(characterSearchProvider);
   invalidate(characterIssueListProvider);
   invalidate(characterDetailsIssuesProvider);
   invalidate(creatorDetailsProvider);
-  invalidate(creatorSearchResultsProvider);
+  invalidate(creatorSearchProvider);
   invalidate(universeDetailsProvider);
-  invalidate(universeSearchResultsProvider);
+  invalidate(universeSearchProvider);
   invalidate(imprintDetailsProvider);
-  invalidate(imprintSearchResultsProvider);
+  invalidate(imprintSearchProvider);
   invalidate(teamDetailsProvider);
-  invalidate(teamSearchResultsProvider);
+  invalidate(teamSearchProvider);
   invalidate(publisherDetailsProvider);
-  invalidate(publisherSearchResultsProvider);
+  invalidate(publisherSearchProvider);
 }
 
 @riverpod
 class SettingsNotifier extends _$SettingsNotifier {
   @override
   AppSettings build() => const AppSettings();
+
+  Future<DateTime?> getListSyncTimestamp(String key) async {
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final raw = await dao.getString('list_sync:$key');
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> setListSyncTimestamp(String key, DateTime timestamp) async {
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setString(
+      'list_sync:$key',
+      timestamp.toUtc().toIso8601String(),
+    );
+  }
 
   void _invalidateCacheBackedProviders() {
     invalidateCacheBackedProviders((p) => ref.invalidate(p));

@@ -3,7 +3,10 @@ import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
 
 const _maxHydrationConcurrency = 4;
 
@@ -94,6 +97,11 @@ Future<CollectionItem> enrichLibraryItem(Ref ref, LibraryItem item) async {
           await repo.updateItemPricePaid(item.metronIssueId, coverPrice);
           try {
             ref.invalidate(collectionStatsProvider);
+            ref.invalidate(libraryBasicStatsProvider);
+            ref.invalidate(libraryEntityStatsProvider);
+            ref.invalidate(libraryReadingTrendsProvider);
+            ref.invalidate(libraryRecentlyFinishedProvider);
+            ref.invalidate(categoryInsightsProvider);
           } catch (_) {}
         }
       }

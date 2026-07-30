@@ -70,20 +70,20 @@ class ActivityLogGroupTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _titleForGroup(),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  _buildCoverStrip(context),
-                  const SizedBox(height: 8),
-                  Text(
                     DateFormat('MMM d, yyyy').format(group.date.toLocal()),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _titleForGroup(),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  _buildCoverStrip(context),
                 ],
               ),
             ),

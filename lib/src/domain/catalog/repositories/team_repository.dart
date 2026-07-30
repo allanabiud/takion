@@ -7,9 +7,12 @@ abstract class TeamRepository {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<int> refreshTeamListDelta({DateTime? modifiedGt});
 
   Future<TeamListPage> searchTeams(
     String query, {

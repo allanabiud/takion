@@ -5,27 +5,137 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = nextUrl != null
-        ? await _remoteDataSource.getTeamList(
-            nextUrl: Uri.parse(nextUrl),
-            limit: limit,
-            cancelToken: cancelToken,
-          )
-        : await _remoteDataSource.getTeamList(
-            page: page,
-            limit: limit,
-            cancelToken: cancelToken,
-          );
-    return TeamListPage(
-      count: dto.count,
-      next: dto.next,
-      previous: dto.previous,
-      results: dto.results.map((e) => e.toEntity()).toList(),
-      currentPage: page,
+    final cachedDtos = await _localDataSource.getTeamListResults(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
     );
+    final cachedAt = await _localDataSource.getTeamListResultsCachedAt(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+    final cachedMeta = await _localDataSource.getTeamListResultsMeta(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.teamList.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getTeamList(
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    modifiedGt: modifiedGt,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getTeamList(
+                    page: page,
+                    limit: limit,
+                    modifiedGt: modifiedGt,
+                    cancelToken: cancelToken,
+                  );
+            await _localDataSource.cacheTeamListResults(
+              remotePage.results,
+              page: page,
+              limit: limit,
+              modifiedGt: modifiedGt,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'team_list:${nextUrl ?? "$page"}|$modifiedGt',
+          cooldown: MetronCachePolicies.teamList.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        return TeamListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final key = '${nextUrl ?? "$page"}|$modifiedGt|$forceRefresh';
+      return _coalesce(_teamListInFlight, key, () async {
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getTeamList(
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                modifiedGt: modifiedGt,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getTeamList(
+                page: page,
+                limit: limit,
+                modifiedGt: modifiedGt,
+                cancelToken: cancelToken,
+              );
+        await _localDataSource.cacheTeamListResults(
+          remotePage.results,
+          page: page,
+          limit: limit,
+          modifiedGt: modifiedGt,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return TeamListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return TeamListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<int> refreshTeamListDelta({DateTime? modifiedGt}) async {
+    var page = 1;
+    var synced = 0;
+    while (true) {
+      final result = await getTeamList(
+        page: page,
+        limit: metronDefaultPageSize,
+        modifiedGt: modifiedGt,
+        forceRefresh: true,
+      );
+      for (final item in result.results) {
+        await getTeamDetails(item.id, forceRefresh: true);
+        synced++;
+      }
+      if (!result.hasNext) break;
+      page++;
+    }
+    return synced;
   }
 
   Future<TeamListPage> searchTeams(
@@ -156,7 +266,13 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     AppPerformanceMetrics.instance.recordCacheMiss('team_details');
 
     try {
-      final dto = await _remoteDataSource.getTeamDetails(teamId);
+      final response = await _remoteDataSource.getTeamDetails(teamId);
+      if (response.statusCode == 304) {
+        return _teamRowToEntity(teamId);
+      }
+      final dto = TeamDetailsDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&

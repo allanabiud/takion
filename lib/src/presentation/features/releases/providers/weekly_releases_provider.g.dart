@@ -9,13 +9,13 @@ part of 'weekly_releases_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(WeeklyReleasesNotifier)
-final weeklyReleasesProvider = WeeklyReleasesNotifierFamily._();
+@ProviderFor(WeeklyReleases)
+final weeklyReleasesProvider = WeeklyReleasesFamily._();
 
-final class WeeklyReleasesNotifierProvider
-    extends $AsyncNotifierProvider<WeeklyReleasesNotifier, List<IssueList>> {
-  WeeklyReleasesNotifierProvider._({
-    required WeeklyReleasesNotifierFamily super.from,
+final class WeeklyReleasesProvider
+    extends $AsyncNotifierProvider<WeeklyReleases, List<IssueList>> {
+  WeeklyReleasesProvider._({
+    required WeeklyReleasesFamily super.from,
     required DateTime? super.argument,
   }) : super(
          retry: null,
@@ -26,7 +26,7 @@ final class WeeklyReleasesNotifierProvider
        );
 
   @override
-  String debugGetCreateSourceHash() => _$weeklyReleasesNotifierHash();
+  String debugGetCreateSourceHash() => _$weeklyReleasesHash();
 
   @override
   String toString() {
@@ -37,12 +37,11 @@ final class WeeklyReleasesNotifierProvider
 
   @$internal
   @override
-  WeeklyReleasesNotifier create() => WeeklyReleasesNotifier();
+  WeeklyReleases create() => WeeklyReleases();
 
   @override
   bool operator ==(Object other) {
-    return other is WeeklyReleasesNotifierProvider &&
-        other.argument == argument;
+    return other is WeeklyReleasesProvider && other.argument == argument;
   }
 
   @override
@@ -51,19 +50,18 @@ final class WeeklyReleasesNotifierProvider
   }
 }
 
-String _$weeklyReleasesNotifierHash() =>
-    r'e5dcb74495a323c2798bdde27c8941fb36eb1c3a';
+String _$weeklyReleasesHash() => r'924426513005f28c10368c564f0690f86035333a';
 
-final class WeeklyReleasesNotifierFamily extends $Family
+final class WeeklyReleasesFamily extends $Family
     with
         $ClassFamilyOverride<
-          WeeklyReleasesNotifier,
+          WeeklyReleases,
           AsyncValue<List<IssueList>>,
           List<IssueList>,
           FutureOr<List<IssueList>>,
           DateTime?
         > {
-  WeeklyReleasesNotifierFamily._()
+  WeeklyReleasesFamily._()
     : super(
         retry: null,
         name: r'weeklyReleasesProvider',
@@ -72,19 +70,107 @@ final class WeeklyReleasesNotifierFamily extends $Family
         isAutoDispose: true,
       );
 
-  WeeklyReleasesNotifierProvider call([DateTime? date]) =>
-      WeeklyReleasesNotifierProvider._(argument: date, from: this);
+  WeeklyReleasesProvider call([DateTime? date]) =>
+      WeeklyReleasesProvider._(argument: date, from: this);
 
   @override
   String toString() => r'weeklyReleasesProvider';
 }
 
-abstract class _$WeeklyReleasesNotifier
-    extends $AsyncNotifier<List<IssueList>> {
+abstract class _$WeeklyReleases extends $AsyncNotifier<List<IssueList>> {
   late final _$args = ref.$arg as DateTime?;
   DateTime? get date => _$args;
 
   FutureOr<List<IssueList>> build([DateTime? date]);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<IssueList>>, List<IssueList>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<IssueList>>, List<IssueList>>,
+              AsyncValue<List<IssueList>>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, () => build(_$args));
+  }
+}
+
+@ProviderFor(FocReleases)
+final focReleasesProvider = FocReleasesFamily._();
+
+final class FocReleasesProvider
+    extends $AsyncNotifierProvider<FocReleases, List<IssueList>> {
+  FocReleasesProvider._({
+    required FocReleasesFamily super.from,
+    required DateTime super.argument,
+  }) : super(
+         retry: null,
+         name: r'focReleasesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$focReleasesHash();
+
+  @override
+  String toString() {
+    return r'focReleasesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  FocReleases create() => FocReleases();
+
+  @override
+  bool operator ==(Object other) {
+    return other is FocReleasesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$focReleasesHash() => r'd2159a35ff1e7119d7f97819844e3278f850b37c';
+
+final class FocReleasesFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          FocReleases,
+          AsyncValue<List<IssueList>>,
+          List<IssueList>,
+          FutureOr<List<IssueList>>,
+          DateTime
+        > {
+  FocReleasesFamily._()
+    : super(
+        retry: null,
+        name: r'focReleasesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  FocReleasesProvider call(DateTime date) =>
+      FocReleasesProvider._(argument: date, from: this);
+
+  @override
+  String toString() => r'focReleasesProvider';
+}
+
+abstract class _$FocReleases extends $AsyncNotifier<List<IssueList>> {
+  late final _$args = ref.$arg as DateTime;
+  DateTime get date => _$args;
+
+  FutureOr<List<IssueList>> build(DateTime date);
   @$mustCallSuper
   @override
   void runBuild() {

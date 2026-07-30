@@ -194,25 +194,25 @@ class DriveSyncService {
   }
 
   Future<String?> _getAppFolderId() async {
-    try {
-      final response = await _driveGet(
-        'https://www.googleapis.com/drive/v3/files',
-        queryParameters: {
-          'q':
-              "name='$_appFolderName' and mimeType='application/vnd.google-apps.folder' and trashed=false",
-          'fields': 'files(id,name)',
-        },
+    final response = await _driveGet(
+      'https://www.googleapis.com/drive/v3/files',
+      queryParameters: {
+        'q':
+            "name='$_appFolderName' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        'fields': 'files(id,name)',
+      },
+    );
+    if (response.statusCode == 404) return null;
+    if (response.statusCode != 200) {
+      throw StateError(
+        'Failed to get app folder ID (HTTP ${response.statusCode})',
       );
-      if (response.statusCode != 200) return null;
-      final data = response.data as Map<String, dynamic>?;
-      if (data == null) return null;
-      final files = data['files'] as List<dynamic>? ?? [];
-      if (files.isEmpty) return null;
-      return (files.first as Map<String, dynamic>)['id'] as String?;
-    } catch (e) {
-      AppLogger.warning('Failed to get app folder ID', error: e);
-      return null;
     }
+    final data = response.data as Map<String, dynamic>?;
+    if (data == null) return null;
+    final files = data['files'] as List<dynamic>? ?? [];
+    if (files.isEmpty) return null;
+    return (files.first as Map<String, dynamic>)['id'] as String?;
   }
 
   Future<String> _ensureAppFolderId() async {
@@ -253,7 +253,7 @@ class DriveSyncService {
       return (files.first as Map<String, dynamic>)['id'] as String?;
     } catch (e) {
       AppLogger.warning('Failed to find file ID for $fileName', error: e);
-      return null;
+      rethrow;
     }
   }
 
@@ -417,8 +417,25 @@ class DriveSyncService {
     return DateTime.tryParse(timestamp);
   }
 
-  Future<void> triggerSync() async {
-    AppLogger.info('Drive sync triggered');
+  Future<void> triggerSync({bool ignoreThrottle = false}) async {
+    AppLogger.info('Drive sync triggered (ignoreThrottle: $ignoreThrottle)');
+
+    if (!ignoreThrottle) {
+      final lastAttempt = await _db.syncMetaDao.get('last_sync_attempt');
+      if (lastAttempt != null) {
+        final lastAttemptTime = DateTime.tryParse(lastAttempt);
+        if (lastAttemptTime != null &&
+            DateTime.now().difference(lastAttemptTime) <
+                const Duration(minutes: 5)) {
+          AppLogger.info('Sync skipped: throttled');
+          return;
+        }
+      }
+    }
+    await _db.syncMetaDao.set(
+      'last_sync_attempt',
+      DateTime.now().toUtc().toIso8601String(),
+    );
 
     final deltaFileId = await _findFileId(_deltaFileName);
     final lastSyncTime = await getLastSyncTime();
@@ -674,23 +691,7 @@ class DriveSyncService {
       'deletes': await _getDeletesForTable('reading_lists', since),
     };
 
-    // reading_list_items
-    List<ReadingListItem> listItems;
-    if (sinceStr != null) {
-      final updatedLists = await (query(
-        _db.readingLists,
-      )..where((t) => t.updatedAt.isBiggerThan(Constant(sinceStr)))).get();
-      final updatedListIds = updatedLists.map((l) => l.id).toList();
-      if (updatedListIds.isNotEmpty) {
-        listItems = await (query(
-          _db.readingListItems,
-        )..where((t) => t.listId.isIn(updatedListIds))).get();
-      } else {
-        listItems = [];
-      }
-    } else {
-      listItems = await query(_db.readingListItems).get();
-    }
+    List<ReadingListItem> listItems = await query(_db.readingListItems).get();
     tablesData['reading_list_items'] = {
       'inserts': listItems.map((r) => r.toJson()).toList(),
       'updates': <Map<String, dynamic>>[],

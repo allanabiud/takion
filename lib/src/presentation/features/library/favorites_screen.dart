@@ -59,7 +59,7 @@ class _FavoriteSeriesTab extends ConsumerWidget {
         if (seriesList.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite series yet.',
+            message: 'No favorite series.',
           );
         }
 
@@ -97,7 +97,7 @@ class _FavoriteIssuesTab extends ConsumerWidget {
         if (issuesList.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite issues yet.',
+            message: 'No favorite issues.',
           );
         }
 
@@ -135,7 +135,7 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
         if (readingLists.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite reading lists yet.',
+            message: 'No favorite reading lists.',
           );
         }
 
@@ -176,7 +176,7 @@ class _FavoriteCreatorsTab extends ConsumerWidget {
         if (creators.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite creators yet.',
+            message: 'No favorite creators.',
           );
         }
 
@@ -215,7 +215,7 @@ class _FavoriteCharactersTab extends ConsumerWidget {
         if (characters.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite characters yet.',
+            message: 'No favorite characters.',
           );
         }
 

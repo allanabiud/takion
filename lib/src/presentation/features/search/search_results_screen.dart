@@ -20,6 +20,7 @@ import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 @RoutePage()
 class SearchResultsScreen extends ConsumerStatefulWidget {
@@ -69,59 +70,35 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
   Future<void> _forceRefreshResults() async {
     if (_isCharacterSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchCharacters(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(characterSearchResultsProvider(_currentSearchArgs));
-      await ref.read(characterSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(characterSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isCreatorSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchCreators(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(creatorSearchResultsProvider(_currentSearchArgs));
-      await ref.read(creatorSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(creatorSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isUniverseSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchUniverses(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(universeSearchResultsProvider(_currentSearchArgs));
-      await ref.read(universeSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(universeSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isImprintSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchImprints(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(imprintSearchResultsProvider(_currentSearchArgs));
-      await ref.read(imprintSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(imprintSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isTeamSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchTeams(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(teamSearchResultsProvider(_currentSearchArgs));
-      await ref.read(teamSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(teamSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isPublisherSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchPublishers(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(publisherSearchResultsProvider(_currentSearchArgs));
-      await ref.read(publisherSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(publisherSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isArcSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchArcs(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(arcSearchResultsProvider(_currentSearchArgs));
-      await ref.read(arcSearchResultsProvider(_currentSearchArgs).future);
+      await ref.read(arcSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isSeriesSearch) {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchSeries(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(seriesSearchResultsProvider(_currentSearchArgs));
-      await ref.read(seriesSearchResultsProvider(_currentSearchArgs).future);
+      try {
+        await ref.read(seriesSearchProvider(_currentSearchArgs).notifier).refresh();
+      } catch (e) {
+        if (mounted) {
+          TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+        }
+      }
     } else {
-      await ref
-          .read(metronRepositoryProvider)
-          .searchIssues(widget.query, page: _page, forceRefresh: true);
-      ref.invalidate(issueSearchResultsProvider(_currentSearchArgs));
-      await ref.read(issueSearchResultsProvider(_currentSearchArgs).future);
+      try {
+        await ref.read(issueSearchProvider(_currentSearchArgs).notifier).refresh();
+      } catch (e) {
+        if (mounted) {
+          TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+        }
+      }
     }
   }
 
@@ -743,25 +720,25 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         : SortPreferenceContext.searchIssues;
     final sortOption = ref.watch(sortPreferenceForContextProvider(sortContext));
     final universeResultsAsync = _isUniverseSearch
-        ? ref.watch(universeSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(universeSearchProvider(_currentSearchArgs))
         : null;
     final imprintResultsAsync = _isImprintSearch
-        ? ref.watch(imprintSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(imprintSearchProvider(_currentSearchArgs))
         : null;
     final teamResultsAsync = _isTeamSearch
-        ? ref.watch(teamSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(teamSearchProvider(_currentSearchArgs))
         : null;
     final publisherResultsAsync = _isPublisherSearch
-        ? ref.watch(publisherSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(publisherSearchProvider(_currentSearchArgs))
         : null;
     final arcResultsAsync = _isArcSearch
-        ? ref.watch(arcSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(arcSearchProvider(_currentSearchArgs))
         : null;
     final creatorResultsAsync = _isCreatorSearch
-        ? ref.watch(creatorSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(creatorSearchProvider(_currentSearchArgs))
         : null;
     final characterResultsAsync = _isCharacterSearch
-        ? ref.watch(characterSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(characterSearchProvider(_currentSearchArgs))
         : null;
     final issueResultsAsync =
         _isSeriesSearch ||
@@ -773,9 +750,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             _isPublisherSearch ||
             _isArcSearch
         ? null
-        : ref.watch(issueSearchResultsProvider(_currentSearchArgs));
+        : ref.watch(issueSearchProvider(_currentSearchArgs));
     final seriesResultsAsync = _isSeriesSearch
-        ? ref.watch(seriesSearchResultsProvider(_currentSearchArgs))
+        ? ref.watch(seriesSearchProvider(_currentSearchArgs))
         : null;
     final isLoading = _isCreatorSearch
         ? creatorResultsAsync?.isLoading == true

@@ -7,9 +7,12 @@ abstract class UniverseRepository {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<int> refreshUniverseListDelta({DateTime? modifiedGt});
 
   Future<UniverseListPage> searchUniverses(
     String query, {

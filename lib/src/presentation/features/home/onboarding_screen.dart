@@ -1020,27 +1020,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return PopScope(
       canPop: false,
       child: _buildPage(
-        icon: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 900),
-          curve: Curves.elasticOut,
-          builder: (context, value, child) => Transform.scale(
-            scale: value,
-            child: Transform.rotate(
-              angle: (1 - value) * -0.26,
-              child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
-            ),
-          ),
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check, size: 44, color: Colors.white),
-          ),
-        ),
+         icon: TweenAnimationBuilder<double>(
+           tween: Tween(begin: 0.0, end: 1.0),
+           duration: const Duration(milliseconds: 900),
+           curve: Curves.elasticOut,
+           builder: (context, value, child) => Transform.scale(
+             scale: value,
+             child: Transform.rotate(
+               angle: (1 - value) * -0.26,
+               child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+             ),
+           ),
+            child: Icon(Icons.verified, size: 56, color: theme.colorScheme.primary),
+         ),
         title: Text(
           'All Done!',
           style: theme.textTheme.headlineMedium?.copyWith(

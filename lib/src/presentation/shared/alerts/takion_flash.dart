@@ -12,7 +12,7 @@ class TakionFlash {
   }) {
     showFlash(
       context: context,
-      duration: Duration(seconds: onAction != null ? 3 : 2),
+      duration: Duration(seconds: onAction != null ? 2 : 1),
       builder: (context, controller) {
         final theme = Theme.of(context);
         return FlashBar(
@@ -20,6 +20,7 @@ class TakionFlash {
           behavior: FlashBehavior.floating,
           position: FlashPosition.bottom,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: color.withValues(alpha: 0.15), width: 1),
@@ -41,8 +42,8 @@ class TakionFlash {
                       style: TextButton.styleFrom(
                         foregroundColor: color,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 8,
+                          vertical: 4,
                         ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,

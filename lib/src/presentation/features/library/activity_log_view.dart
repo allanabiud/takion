@@ -35,7 +35,7 @@ class _ActivityLogViewState extends ConsumerState<ActivityLogView>
           return const Center(
             child: EmptyContentState(
               icon: Icons.history,
-              message: 'No activity yet.',
+              message: 'No activity.',
             ),
           );
         }

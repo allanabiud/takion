@@ -171,7 +171,7 @@ class _AddLocalReadingListItemsBottomSheetState
     final searchArgs = SearchArgs(query: _query, page: 1);
     final searchResults = _query.trim().isEmpty
         ? null
-        : ref.watch(seriesSearchResultsProvider(searchArgs));
+        : ref.watch(seriesSearchProvider(searchArgs));
 
     return Column(
       children: [

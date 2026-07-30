@@ -24,6 +24,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.0
   flutter_timezone: ^5.1.0
+  workmanager: ^0.5.2
 
   url_launcher: ^6.3.2
   cached_network_image: ^3.4.1

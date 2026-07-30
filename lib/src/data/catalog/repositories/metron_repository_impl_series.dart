@@ -246,6 +246,26 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     }
   }
 
+  Future<int> refreshSeriesListDelta({DateTime? modifiedGt}) async {
+    var page = 1;
+    var synced = 0;
+    while (true) {
+      final result = await getSeriesList(
+        page: page,
+        limit: metronDefaultPageSize,
+        modifiedGt: modifiedGt,
+        forceRefresh: true,
+      );
+      for (final item in result.results) {
+        await getSeriesDetails(item.id, forceRefresh: true);
+        synced++;
+      }
+      if (!result.hasNext) break;
+      page++;
+    }
+    return synced;
+  }
+
   Future<SeriesDetails> getSeriesDetails(
     int seriesId, {
     bool forceRefresh = false,

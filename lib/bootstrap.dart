@@ -16,6 +16,8 @@ import 'package:takion/src/core/network/dio_client.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:takion/src/core/sync/periodic_sync_manager.dart';
+
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   FlutterError.onError = (details) {
     talker.handle(details.exception, details.stack);
@@ -40,6 +42,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     tz.setLocalLocation(tz.getLocation('UTC'));
   }
   await NotificationService.instance.init();
+  await PeriodicSyncManager.instance.init();
 
   final db = AppDatabase();
   final cacheHeaderStore = CacheHeaderStore();

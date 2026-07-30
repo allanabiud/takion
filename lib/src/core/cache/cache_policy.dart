@@ -32,9 +32,17 @@ class MetronCachePolicies {
   static const teamSearchResults = CachePolicy(ttl: Duration(hours: 3));
   static const teamDetails = CachePolicy(ttl: Duration(days: 7));
   static const arcSearchResults = CachePolicy(ttl: Duration(hours: 3));
+  static const arcList = CachePolicy(ttl: Duration(hours: 3));
   static const arcDetails = CachePolicy(ttl: Duration(days: 7));
   static const arcIssueList = CachePolicy(ttl: Duration(hours: 24));
   static const teamIssueList = CachePolicy(ttl: Duration(hours: 24));
+  static const characterList = CachePolicy(ttl: Duration(hours: 3));
+  static const creatorList = CachePolicy(ttl: Duration(hours: 3));
+  static const imprintList = CachePolicy(ttl: Duration(hours: 3));
+  static const publisherList = CachePolicy(ttl: Duration(hours: 3));
+  static const teamList = CachePolicy(ttl: Duration(hours: 3));
+  static const universeList = CachePolicy(ttl: Duration(hours: 3));
+  static const readingList = CachePolicy(ttl: Duration(hours: 3));
 
   static DateTime _weekStart(DateTime date) {
     final offset = date.weekday % 7;

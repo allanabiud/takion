@@ -26,6 +26,8 @@ abstract class SeriesRepository {
     bool forceRefresh = false,
   });
 
+  Future<int> refreshSeriesListDelta({DateTime? modifiedGt});
+
   Future<SeriesIssueListPage> getSeriesIssueList(
     int seriesId, {
     String? nextUrl,

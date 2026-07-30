@@ -4,6 +4,7 @@ import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 
 Future<void> showEditMyDetailsSheet(
@@ -318,7 +319,7 @@ Future<void> showEditMyDetailsSheet(
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Center(
                         child: Text(
-                          'No details saved yet.',
+                          'No details saved.',
                           style: theme.textTheme.bodyMedium,
                         ),
                       ),
@@ -393,7 +394,6 @@ Widget _detailTile({
 }
 
 void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
-  final theme = Theme.of(context);
   TakionBottomSheet.show<void>(
     context: context,
     title: 'Reading History',
@@ -420,12 +420,9 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (logs.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text(
-                      'No reading history yet.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                  const EmptyContentState(
+                    icon: Icons.history_outlined,
+                    message: 'No reading history.',
                   )
                 else
                   Flexible(
@@ -463,8 +460,8 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                   width: double.infinity,
                   child: FilledButton.tonalIcon(
                     onPressed: () => showLogReadPicker(context, ref, issueId),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Log Read'),
+                    icon: const Icon(Icons.add, size: 18, weight: 700),
+                    label: const Text('Log Read', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

@@ -15,6 +15,7 @@ import 'package:takion/src/data/common/drift/database.dart'
 import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
 import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
 import 'package:takion/src/data/catalog/dto/dto.dart';
+import 'package:takion/src/data/reading_list/dto/dto.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/domain/repositories.dart';
 
@@ -50,6 +51,14 @@ mixin _RepositoryState {
   Map<String, Future<ArcListPage>> get _arcSearchInFlight;
   Map<String, Future<ArcIssueListPage>> get _arcIssueListInFlight;
   Map<String, Future<CharacterIssueListPage>> get _teamIssueListInFlight;
+  Map<String, Future<ArcListPage>> get _arcListInFlight;
+  Map<String, Future<CharacterListPage>> get _characterListInFlight;
+  Map<String, Future<CreatorListPage>> get _creatorListInFlight;
+  Map<String, Future<ImprintListPage>> get _imprintListInFlight;
+  Map<String, Future<PublisherListPage>> get _publisherListInFlight;
+  Map<String, Future<TeamListPage>> get _teamListInFlight;
+  Map<String, Future<UniverseListPage>> get _universeListInFlight;
+  Map<String, Future<MetronReadingListPage>> get _readingListInFlight;
   Map<String, DateTime> get _lastBackgroundRefresh;
   int get _backgroundRefreshCount;
   set _backgroundRefreshCount(int value);
@@ -207,6 +216,30 @@ class MetronRepositoryImpl
   @override
   final Map<String, Future<CharacterIssueListPage>> _teamIssueListInFlight =
       <String, Future<CharacterIssueListPage>>{};
+  @override
+  final Map<String, Future<ArcListPage>> _arcListInFlight =
+      <String, Future<ArcListPage>>{};
+  @override
+  final Map<String, Future<CharacterListPage>> _characterListInFlight =
+      <String, Future<CharacterListPage>>{};
+  @override
+  final Map<String, Future<CreatorListPage>> _creatorListInFlight =
+      <String, Future<CreatorListPage>>{};
+  @override
+  final Map<String, Future<ImprintListPage>> _imprintListInFlight =
+      <String, Future<ImprintListPage>>{};
+  @override
+  final Map<String, Future<PublisherListPage>> _publisherListInFlight =
+      <String, Future<PublisherListPage>>{};
+  @override
+  final Map<String, Future<TeamListPage>> _teamListInFlight =
+      <String, Future<TeamListPage>>{};
+  @override
+  final Map<String, Future<UniverseListPage>> _universeListInFlight =
+      <String, Future<UniverseListPage>>{};
+  @override
+  final Map<String, Future<MetronReadingListPage>> _readingListInFlight =
+      <String, Future<MetronReadingListPage>>{};
   @override
   final Map<String, DateTime> _lastBackgroundRefresh = {};
   @override

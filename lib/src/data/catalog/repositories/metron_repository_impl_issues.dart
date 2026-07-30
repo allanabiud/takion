@@ -332,6 +332,28 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     }
   }
 
+  Future<int> refreshIssueListDelta({DateTime? modifiedGt, String? ordering}) async {
+    var page = 1;
+    var synced = 0;
+    while (true) {
+      final result = await getIssueList(
+        page: page,
+        ordering: ordering,
+        modifiedGt: modifiedGt,
+        forceRefresh: true,
+      );
+      for (final item in result.results) {
+        if (item.id != null) {
+          await getIssueDetails(item.id!, forceRefresh: true);
+          synced++;
+        }
+      }
+      if (!result.hasNext) break;
+      page++;
+    }
+    return synced;
+  }
+
   Future<IssueSearchPage> searchIssuesByUpc(
     String upc, {
     CancelToken? cancelToken,

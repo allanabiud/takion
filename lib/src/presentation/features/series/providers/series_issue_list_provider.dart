@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+
+part 'series_issue_list_provider.g.dart';
 
 class SeriesIssueListArgs {
   const SeriesIssueListArgs({required this.seriesId, required this.page});
@@ -24,64 +28,76 @@ class SeriesIssueListArgs {
   int get hashCode => Object.hash(seriesId, page);
 }
 
-final seriesIssueListProvider = FutureProvider.autoDispose
-    .family<SeriesIssueListPage, SeriesIssueListArgs>((ref, args) async {
-      ref.keepAlive();
-      final repository = ref.watch(metronRepositoryProvider);
-      final cancelToken = CancelToken();
-      ref.onDispose(cancelToken.cancel);
+@riverpod
+class SeriesIssueList extends _$SeriesIssueList {
+  @override
+  Future<SeriesIssueListPage> build(SeriesIssueListArgs args) async {
+    final link = ref.keepAlive();
+    Timer? timer;
+    ref.onDispose(() => timer?.cancel());
 
-      final sortOption = ref.watch(
-        sortPreferenceForContextProvider(
-          SortPreferenceContext.seriesDetailsIssues,
-        ),
-      );
+    final repository = ref.watch(metronRepositoryProvider);
+    final cancelToken = CancelToken();
+    ref.onDispose(cancelToken.cancel);
 
-      final page1 = await repository.getSeriesIssueList(
-        args.seriesId,
-        page: 1,
-        limit: metronDefaultPageSize,
-        cancelToken: cancelToken,
-      );
+    final sortOption = ref.watch(
+      sortPreferenceForContextProvider(
+        SortPreferenceContext.seriesDetailsIssues,
+      ),
+    );
 
-      final totalPages = ((page1.count - 1) ~/ metronDefaultPageSize) + 1;
+    final page1 = await repository.getSeriesIssueList(
+      args.seriesId,
+      page: 1,
+      limit: metronDefaultPageSize,
+      cancelToken: cancelToken,
+    );
 
-      SeriesIssueListPage resultPage;
-      if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
-        final targetPage = totalPages - args.page + 1;
-        if (targetPage == 1) {
-          resultPage = page1;
-        } else {
-          resultPage = await repository.getSeriesIssueList(
-            args.seriesId,
-            page: targetPage,
-            limit: metronDefaultPageSize,
-            cancelToken: cancelToken,
-          );
-        }
+    final totalPages = ((page1.count - 1) ~/ metronDefaultPageSize) + 1;
+
+    SeriesIssueListPage resultPage;
+    if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
+      final targetPage = totalPages - args.page + 1;
+      if (targetPage == 1) {
+        resultPage = page1;
       } else {
-        if (args.page == 1) {
-          resultPage = page1;
-        } else {
-          resultPage = await repository.getSeriesIssueList(
-            args.seriesId,
-            page: args.page,
-            limit: metronDefaultPageSize,
-            cancelToken: cancelToken,
-          );
-        }
+        resultPage = await repository.getSeriesIssueList(
+          args.seriesId,
+          page: targetPage,
+          limit: metronDefaultPageSize,
+          cancelToken: cancelToken,
+        );
       }
+    } else {
+      if (args.page == 1) {
+        resultPage = page1;
+      } else {
+        resultPage = await repository.getSeriesIssueList(
+          args.seriesId,
+          page: args.page,
+          limit: metronDefaultPageSize,
+          cancelToken: cancelToken,
+        );
+      }
+    }
 
-      return SeriesIssueListPage(
-        count: page1.count,
-        results: resultPage.results,
-        currentPage: args.page,
-        next: args.page < totalPages
-            ? 'placeholder?page=${args.page + 1}'
-            : null,
-        previous: args.page > 1 ? 'placeholder?page=${args.page - 1}' : null,
-      );
-    });
+    timer = Timer(const Duration(minutes: 5), () => link.close());
+
+    return SeriesIssueListPage(
+      count: page1.count,
+      results: resultPage.results,
+      currentPage: args.page,
+      next: args.page < totalPages
+          ? 'placeholder?page=${args.page + 1}'
+          : null,
+      previous: args.page > 1 ? 'placeholder?page=${args.page - 1}' : null,
+    );
+  }
+
+  Future<void> refresh() async {
+    ref.invalidateSelf();
+  }
+}
 
 final seriesDetailsIssuesProvider = FutureProvider.autoDispose
     .family<SeriesIssueListPage, int>((ref, seriesId) async {

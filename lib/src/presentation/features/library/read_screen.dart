@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
+import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/presentation/features/library/widgets/streak_calendar_widget.dart';
 import 'package:takion/src/presentation/features/library/widgets/stats_skeleton.dart';
@@ -177,7 +180,7 @@ class _ReadBrowseTab extends ConsumerWidget {
                   hasScrollBody: false,
                   child: EmptyContentState(
                     icon: Icons.bookmark_added,
-                    message: 'No read comics in your collection yet.',
+                    message: 'No read comics in your collection.',
                   ),
                 ),
               ],
@@ -249,7 +252,14 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
   Widget build(BuildContext context) {
     super.build(context);
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(libraryBasicStatsProvider(_filter)),
+      onRefresh: () async {
+        ref.invalidate(libraryBasicStatsProvider(_filter));
+        ref.invalidate(libraryEntityStatsProvider);
+        ref.invalidate(libraryReadingTrendsProvider(_filter));
+        ref.invalidate(libraryRecentlyFinishedProvider(_filter));
+        ref.invalidate(collectionStatsProvider);
+        ref.invalidate(categoryInsightsProvider);
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(0, 12, 0, 48),
@@ -335,7 +345,13 @@ class _ReadStatsCards extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.bar_chart_outlined,
+          message: 'No stats available.',
+        ),
+      ),
       data: (stats) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -415,9 +431,30 @@ class _ReadTrendsChart extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.show_chart_outlined,
+          message: 'No reading trends yet.',
+        ),
+      ),
       data: (trends) {
-        if (trends.isEmpty) return const SizedBox.shrink();
+        if (trends.isEmpty) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'READING TRENDS'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.show_chart_outlined,
+                message: 'No reading trends available.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -465,11 +502,32 @@ class _ReadInsightsList extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.lightbulb_outline,
+          message: 'No insights available.',
+        ),
+      ),
       data: (stats) {
         final hasInsights =
             stats.averageRating > 0 || stats.mostReadSeries != null;
-        if (!hasInsights) return const SizedBox.shrink();
+        if (!hasInsights) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'READING INSIGHTS'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.lightbulb_outline,
+                message: 'No insights available.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -585,9 +643,30 @@ class _ReadRecentlyFinishedSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.history_outlined,
+          message: 'No recently finished reads.',
+        ),
+      ),
       data: (items) {
-        if (items.isEmpty) return const SizedBox.shrink();
+        if (items.isEmpty) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'RECENTLY FINISHED'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.history_outlined,
+                message: 'No recently finished reads.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

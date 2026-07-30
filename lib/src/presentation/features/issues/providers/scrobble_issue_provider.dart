@@ -6,6 +6,8 @@ import 'package:takion/src/presentation/features/issues/providers/issue_my_detai
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -132,6 +134,10 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           AppLogger.info('Scrobble: deleted item for issue #$_issueId');
           ref.invalidate(collectionStatsProvider);
           ref.invalidate(categoryInsightsProvider);
+          ref.invalidate(libraryBasicStatsProvider);
+          ref.invalidate(libraryEntityStatsProvider);
+          ref.invalidate(libraryReadingTrendsProvider);
+          ref.invalidate(libraryRecentlyFinishedProvider);
           ref.invalidate(issueMyDetailsProvider(_issueId));
           return;
         }

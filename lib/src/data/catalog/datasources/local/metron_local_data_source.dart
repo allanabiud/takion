@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:takion/src/data/common/drift/database.dart';
 import 'package:takion/src/data/catalog/dto/dto.dart';
+import 'package:takion/src/data/reading_list/dto/reading_list_dto.dart';
 
 dynamic _decodeJson(String input) => jsonDecode(input);
 String _encodeJson(Map<String, dynamic> input) => jsonEncode(input);
@@ -140,6 +141,70 @@ class TeamIssueListPageCacheMeta {
 
 class ArcSearchPageCacheMeta {
   const ArcSearchPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class ArcListPageCacheMeta {
+  const ArcListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class CharacterListPageCacheMeta {
+  const CharacterListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class CreatorListPageCacheMeta {
+  const CreatorListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class ImprintListPageCacheMeta {
+  const ImprintListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class PublisherListPageCacheMeta {
+  const PublisherListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class TeamListPageCacheMeta {
+  const TeamListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class UniverseListPageCacheMeta {
+  const UniverseListPageCacheMeta({required this.count, this.next, this.previous});
+
+  final int count;
+  final String? next;
+  final String? previous;
+}
+
+class ReadingListPageCacheMeta {
+  const ReadingListPageCacheMeta({required this.count, this.next, this.previous});
 
   final int count;
   final String? next;
@@ -603,6 +668,206 @@ abstract class MetronLocalDataSource {
   );
   Future<Map<String, dynamic>?> getCachedSeriesDetailsResponse(int seriesId);
   Future<DateTime?> getCachedSeriesDetailsCachedAt(int seriesId);
+
+  Future<void> cacheArcListResults(
+    List<ArcListDto> arcs, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<ArcListDto>?> getArcListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getArcListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<ArcListPageCacheMeta?> getArcListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cacheCharacterListResults(
+    List<CharacterListDto> characters, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<CharacterListDto>?> getCharacterListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getCharacterListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<CharacterListPageCacheMeta?> getCharacterListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cacheCreatorListResults(
+    List<CreatorListDto> creators, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<CreatorListDto>?> getCreatorListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getCreatorListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<CreatorListPageCacheMeta?> getCreatorListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cacheImprintListResults(
+    List<ImprintListDto> imprints, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<ImprintListDto>?> getImprintListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getImprintListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<ImprintListPageCacheMeta?> getImprintListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cachePublisherListResults(
+    List<PublisherListDto> publishers, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<PublisherListDto>?> getPublisherListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getPublisherListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<PublisherListPageCacheMeta?> getPublisherListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cacheTeamListResults(
+    List<TeamListDto> teams, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<TeamListDto>?> getTeamListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getTeamListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<TeamListPageCacheMeta?> getTeamListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cacheUniverseListResults(
+    List<UniverseListDto> universes, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<UniverseListDto>?> getUniverseListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getUniverseListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<UniverseListPageCacheMeta?> getUniverseListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+
+  Future<void> cacheReadingListResults(
+    List<ReadingListDto> readingLists, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  });
+  Future<List<ReadingListDto>?> getReadingListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<DateTime?> getReadingListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
+  Future<ReadingListPageCacheMeta?> getReadingListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  });
 }
 
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
@@ -767,6 +1032,30 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   String _getArcIssueListKey(int arcId, int page, int limit) =>
       'arc_issue_list:$arcId:p$page:l${_normalizeLimit(limit)}';
+
+  String _getArcListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'arc_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getCharacterListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'character_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getCreatorListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'creator_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getImprintListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'imprint_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getPublisherListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'publisher_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getTeamListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'team_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getUniverseListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'universe_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+
+  String _getReadingListKey(int page, int limit, {DateTime? modifiedGt}) =>
+      'reading_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
 
   // --- Implementations ---
 
@@ -1824,5 +2113,437 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   @override
   Future<DateTime?> getCachedSeriesDetailsCachedAt(int seriesId) async {
     return _getCachedAt('series_details:$seriesId');
+  }
+
+  // Arc List Results
+  @override
+  Future<void> cacheArcListResults(
+    List<ArcListDto> arcs, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('arc_list:$key', 'arc_list', arcs, (a) => a.toJson());
+    await _cacheMeta('arc_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<ArcListDto>?> getArcListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('arc_list:$key', ArcListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getArcListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('arc_list:$key');
+  }
+
+  @override
+  Future<ArcListPageCacheMeta?> getArcListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('arc_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return ArcListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Character List Results
+  @override
+  Future<void> cacheCharacterListResults(
+    List<CharacterListDto> characters, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('character_list:$key', 'character_list', characters, (c) => c.toJson());
+    await _cacheMeta('character_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<CharacterListDto>?> getCharacterListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('character_list:$key', CharacterListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getCharacterListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('character_list:$key');
+  }
+
+  @override
+  Future<CharacterListPageCacheMeta?> getCharacterListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('character_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return CharacterListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Creator List Results
+  @override
+  Future<void> cacheCreatorListResults(
+    List<CreatorListDto> creators, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('creator_list:$key', 'creator_list', creators, (c) => c.toJson());
+    await _cacheMeta('creator_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<CreatorListDto>?> getCreatorListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('creator_list:$key', CreatorListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getCreatorListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('creator_list:$key');
+  }
+
+  @override
+  Future<CreatorListPageCacheMeta?> getCreatorListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('creator_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return CreatorListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Imprint List Results
+  @override
+  Future<void> cacheImprintListResults(
+    List<ImprintListDto> imprints, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('imprint_list:$key', 'imprint_list', imprints, (i) => i.toJson());
+    await _cacheMeta('imprint_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<ImprintListDto>?> getImprintListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('imprint_list:$key', ImprintListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getImprintListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('imprint_list:$key');
+  }
+
+  @override
+  Future<ImprintListPageCacheMeta?> getImprintListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('imprint_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return ImprintListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Publisher List Results
+  @override
+  Future<void> cachePublisherListResults(
+    List<PublisherListDto> publishers, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('publisher_list:$key', 'publisher_list', publishers, (p) => p.toJson());
+    await _cacheMeta('publisher_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<PublisherListDto>?> getPublisherListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('publisher_list:$key', PublisherListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getPublisherListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('publisher_list:$key');
+  }
+
+  @override
+  Future<PublisherListPageCacheMeta?> getPublisherListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('publisher_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return PublisherListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Team List Results
+  @override
+  Future<void> cacheTeamListResults(
+    List<TeamListDto> teams, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('team_list:$key', 'team_list', teams, (t) => t.toJson());
+    await _cacheMeta('team_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<TeamListDto>?> getTeamListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('team_list:$key', TeamListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getTeamListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('team_list:$key');
+  }
+
+  @override
+  Future<TeamListPageCacheMeta?> getTeamListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('team_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return TeamListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Universe List Results
+  @override
+  Future<void> cacheUniverseListResults(
+    List<UniverseListDto> universes, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('universe_list:$key', 'universe_list', universes, (u) => u.toJson());
+    await _cacheMeta('universe_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<UniverseListDto>?> getUniverseListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('universe_list:$key', UniverseListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getUniverseListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('universe_list:$key');
+  }
+
+  @override
+  Future<UniverseListPageCacheMeta?> getUniverseListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('universe_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return UniverseListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
+  }
+
+  // Reading List Results
+  @override
+  Future<void> cacheReadingListResults(
+    List<ReadingListDto> readingLists, {
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+    required int count,
+    String? next,
+    String? previous,
+  }) async {
+    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    await _cacheList('reading_list:$key', 'reading_list', readingLists, (r) => r.toJson());
+    await _cacheMeta('reading_list:$key', count, next, previous);
+  }
+
+  @override
+  Future<List<ReadingListDto>?> getReadingListResults({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    return _getList('reading_list:$key', ReadingListDto.fromJson);
+  }
+
+  @override
+  Future<DateTime?> getReadingListResultsCachedAt({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    return _getCachedAt('reading_list:$key');
+  }
+
+  @override
+  Future<ReadingListPageCacheMeta?> getReadingListResultsMeta({
+    required int page,
+    required int limit,
+    DateTime? modifiedGt,
+  }) async {
+    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    final data = await _getMeta('reading_list:$key');
+    if (data == null) return null;
+    final count = (data['count'] as num?)?.toInt();
+    if (count == null) return null;
+    return ReadingListPageCacheMeta(
+      count: count,
+      next: data['next'] as String?,
+      previous: data['previous'] as String?,
+    );
   }
 }

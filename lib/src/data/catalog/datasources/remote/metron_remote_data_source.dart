@@ -29,6 +29,7 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
   Future<IssueSearchResponseDto> getIssueList({
@@ -51,6 +52,7 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
   Future<Response> getSeriesDetails(int seriesId);
@@ -68,6 +70,7 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
   Future<CharacterListResponseDto> searchCharacters(
@@ -77,7 +80,7 @@ abstract class MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   });
-  Future<CharacterDetailsDto> getCharacterDetails(int characterId);
+  Future<Response> getCharacterDetails(int characterId);
   Future<SeriesIssueListResponseDto> getCharacterIssueList(
     int characterId, {
     Uri? nextUrl,
@@ -90,6 +93,7 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
@@ -101,12 +105,13 @@ abstract class MetronRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<CreatorDetailsDto> getCreatorDetails(int creatorId);
+  Future<Response> getCreatorDetails(int creatorId);
 
   Future<UniverseListResponseDto> getUniverseList({
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
@@ -118,12 +123,13 @@ abstract class MetronRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<UniverseDetailsDto> getUniverseDetails(int universeId);
+  Future<Response> getUniverseDetails(int universeId);
 
   Future<ImprintListResponseDto> getImprintList({
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
@@ -135,12 +141,13 @@ abstract class MetronRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<ImprintDetailsDto> getImprintDetails(int imprintId);
+  Future<Response> getImprintDetails(int imprintId);
 
   Future<TeamListResponseDto> getTeamList({
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
@@ -152,7 +159,7 @@ abstract class MetronRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<TeamDetailsDto> getTeamDetails(int teamId);
+  Future<Response> getTeamDetails(int teamId);
   Future<SeriesIssueListResponseDto> getTeamIssueList(
     int teamId, {
     Uri? nextUrl,
@@ -164,6 +171,7 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
@@ -174,7 +182,7 @@ abstract class MetronRemoteDataSource {
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
   });
-  Future<ArcDetailsDto> getArcDetails(int arcId);
+  Future<Response> getArcDetails(int arcId);
   Future<SeriesIssueListResponseDto> getArcIssueList(
     int arcId, {
     Uri? nextUrl,
@@ -187,6 +195,7 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
@@ -198,7 +207,7 @@ abstract class MetronRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<PublisherDetailsDto> getPublisherDetails(int publisherId);
+  Future<Response> getPublisherDetails(int publisherId);
 
   Future<SeriesListResponseDto> getPublisherSeriesList(
     int publisherId, {
@@ -214,10 +223,11 @@ abstract class MetronRemoteDataSource {
     String? listType,
     String? attributionSource,
     String? publisher,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 
-  Future<ReadingListDetailDto> getReadingListDetail(int id);
+  Future<Response> getReadingListDetail(int id);
 
   Future<ReadingListItemResponseDto> getReadingListItems(
     int id, {
@@ -352,6 +362,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
     final normalized = _normalizeQuery(query);
@@ -359,11 +370,16 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       return const IssueSearchResponseDto(count: 0, results: []);
     }
 
+    final queryParameters = <String, dynamic>{'series_name': normalized, 'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
+
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'issue/',
-            queryParameters: {'series_name': normalized, 'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
 
@@ -431,6 +447,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
     final normalized = _normalizeQuery(query);
@@ -438,11 +455,16 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       return const SeriesSearchResponseDto(count: 0, results: []);
     }
 
+    final queryParameters = <String, dynamic>{'name': normalized, 'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
+
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'series/',
-            queryParameters: {'name': normalized, 'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
 
@@ -510,13 +532,18 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'character/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
 
@@ -552,9 +579,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<CharacterDetailsDto> getCharacterDetails(int characterId) async {
-    final response = await _dio.get('character/$characterId/');
-    return CharacterDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getCharacterDetails(int characterId) async {
+    return _dio.get('character/$characterId/');
   }
 
   @override
@@ -583,13 +609,18 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'creator/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
     return CreatorListResponseDto.fromJson(
@@ -624,9 +655,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<CreatorDetailsDto> getCreatorDetails(int creatorId) async {
-    final response = await _dio.get('creator/$creatorId/');
-    return CreatorDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getCreatorDetails(int creatorId) async {
+    return _dio.get('creator/$creatorId/');
   }
 
   @override
@@ -634,13 +664,18 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'universe/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
     return UniverseListResponseDto.fromJson(
@@ -675,9 +710,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<UniverseDetailsDto> getUniverseDetails(int universeId) async {
-    final response = await _dio.get('universe/$universeId/');
-    return UniverseDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getUniverseDetails(int universeId) async {
+    return _dio.get('universe/$universeId/');
   }
 
   @override
@@ -685,13 +719,18 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'imprint/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
     return ImprintListResponseDto.fromJson(
@@ -726,9 +765,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<ImprintDetailsDto> getImprintDetails(int imprintId) async {
-    final response = await _dio.get('imprint/$imprintId/');
-    return ImprintDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getImprintDetails(int imprintId) async {
+    return _dio.get('imprint/$imprintId/');
   }
 
   @override
@@ -760,22 +798,26 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'team/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
     return TeamListResponseDto.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
-  Future<TeamDetailsDto> getTeamDetails(int teamId) async {
-    final response = await _dio.get('team/$teamId/');
-    return TeamDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getTeamDetails(int teamId) async {
+    return _dio.get('team/$teamId/');
   }
 
   @override
@@ -828,22 +870,26 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'arc/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
     return ArcListResponseDto.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
-  Future<ArcDetailsDto> getArcDetails(int arcId) async {
-    final response = await _dio.get('arc/$arcId/');
-    return ArcDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getArcDetails(int arcId) async {
+    return _dio.get('arc/$arcId/');
   }
 
   @override
@@ -872,13 +918,18 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
+    }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'publisher/',
-            queryParameters: {'page': page},
+            queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
     return PublisherListResponseDto.fromJson(
@@ -913,9 +964,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<PublisherDetailsDto> getPublisherDetails(int publisherId) async {
-    final response = await _dio.get('publisher/$publisherId/');
-    return PublisherDetailsDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getPublisherDetails(int publisherId) async {
+    return _dio.get('publisher/$publisherId/');
   }
 
   @override
@@ -946,6 +996,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     String? listType,
     String? attributionSource,
     String? publisher,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
     final queryParameters = <String, dynamic>{'page': page};
@@ -960,6 +1011,9 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
     if (publisher != null && publisher.trim().isNotEmpty) {
       queryParameters['publisher'] = publisher.trim();
+    }
+    if (modifiedGt != null) {
+      queryParameters['modified_gt'] = modifiedGt.toUtc().toIso8601String();
     }
 
     final response = nextUrl != null
@@ -976,9 +1030,8 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<ReadingListDetailDto> getReadingListDetail(int id) async {
-    final response = await _dio.get('reading_list/$id/');
-    return ReadingListDetailDto.fromJson(response.data as Map<String, dynamic>);
+  Future<Response> getReadingListDetail(int id) async {
+    return _dio.get('reading_list/$id/');
   }
 
   @override

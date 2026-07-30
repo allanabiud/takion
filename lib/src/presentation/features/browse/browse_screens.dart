@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/features/browse/providers/browse_providers.dart';
 
@@ -130,7 +131,16 @@ class _CharacterBrowseScreenState extends ConsumerState<CharacterBrowseScreen> {
       title: 'Browse Characters',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(characterBrowseProvider(filter));
+        try {
+          final count = await ref.read(characterBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -185,7 +195,16 @@ class _SeriesBrowseScreenState extends ConsumerState<SeriesBrowseScreen> {
       title: 'Browse Series',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(seriesBrowseProvider(filter));
+        try {
+          final count = await ref.read(seriesBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -239,7 +258,16 @@ class _PublisherBrowseScreenState extends ConsumerState<PublisherBrowseScreen> {
       title: 'Browse Publishers',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(publisherBrowseProvider(filter));
+        try {
+          final count = await ref.read(publisherBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -298,7 +326,16 @@ class _TeamBrowseScreenState extends ConsumerState<TeamBrowseScreen> {
       title: 'Browse Teams',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(teamBrowseProvider(filter));
+        try {
+          final count = await ref.read(teamBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -353,7 +390,16 @@ class _ArcBrowseScreenState extends ConsumerState<ArcBrowseScreen> {
       title: 'Browse Story Arcs',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(arcBrowseProvider(filter));
+        try {
+          final count = await ref.read(arcBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -409,7 +455,16 @@ class _UniverseBrowseScreenState extends ConsumerState<UniverseBrowseScreen> {
       title: 'Browse Universes',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(universeBrowseProvider(filter));
+        try {
+          final count = await ref.read(universeBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -466,7 +521,16 @@ class _ImprintBrowseScreenState extends ConsumerState<ImprintBrowseScreen> {
       title: 'Browse Imprints',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(imprintBrowseProvider(filter));
+        try {
+          final count = await ref.read(imprintBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
@@ -522,7 +586,16 @@ class _CreatorBrowseScreenState extends ConsumerState<CreatorBrowseScreen> {
       title: 'Browse Creators',
       pageAsync: async,
       onRefresh: () async {
-        ref.invalidate(creatorBrowseProvider(filter));
+        try {
+          final count = await ref.read(creatorBrowseProvider(filter).notifier).refresh();
+          if (count > 0 && context.mounted) {
+            TakionAlerts.info(context, 'Updated $count items');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          }
+        }
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),

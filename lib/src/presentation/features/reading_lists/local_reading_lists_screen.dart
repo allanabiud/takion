@@ -98,7 +98,7 @@ class _LocalReadingListsScreenState
           if (isEmptyState) {
             return const EmptyContentState(
               icon: Icons.list_alt_outlined,
-              message: 'No reading lists created yet.',
+              message: 'No reading lists created.',
             );
           }
 
@@ -112,12 +112,12 @@ class _LocalReadingListsScreenState
             } else if (_filter == _ReadingListFilter.local) {
               content = const EmptyContentState(
                 icon: Icons.list_alt_outlined,
-                message: 'No local reading lists created yet.',
+                message: 'No local reading lists created.',
               );
             } else if (_filter == _ReadingListFilter.metron) {
               content = EmptyContentState(
                 icon: Icons.cloud_download_outlined,
-                message: 'No Metron reading lists imported yet.',
+                message: 'No Metron reading lists imported.',
                 actionLabel: 'Browse Metron',
                 onAction: () {
                   context.pushRoute(const MetronReadingListBrowserRoute());

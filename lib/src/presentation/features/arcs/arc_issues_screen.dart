@@ -87,7 +87,12 @@ class _ArcIssuesScreenState extends ConsumerState<ArcIssuesScreen> {
           ],
         ),
       ),
-      body: body,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(arcIssueListProvider(args));
+        },
+        child: body,
+      ),
       bottomNavigationBar: _totalPages > 1
           ? BottomAppBar(
               child: Row(

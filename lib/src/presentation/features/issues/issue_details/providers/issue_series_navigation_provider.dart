@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 class IssueSeriesNavArgs {
@@ -75,7 +76,9 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
       }
 
       final page1 = await fetchPage(1);
-      if (page1.count == 0) return const IssueSeriesNavResult();
+      if (page1.count == 0 || page1.results.isEmpty) {
+        return const IssueSeriesNavResult();
+      }
 
       final page1Issues = page1.results;
       final idx1 = findIssue(page1Issues);
@@ -83,12 +86,53 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         return buildResult(1, page1Issues, idx1, page1.count);
       }
 
-      final totalPages = ((page1.count - 1) ~/ pageSize) + 1;
+      final actualPageSize =
+          page1.results.isNotEmpty ? page1.results.length : pageSize;
+      final totalPages = ((page1.count - 1) ~/ actualPageSize) + 1;
       if (totalPages <= 1) return const IssueSeriesNavResult();
 
-      final lastOnPage1 = page1Issues.last.id;
-      if (lastOnPage1 != null && args.issueId <= lastOnPage1) {
-        return const IssueSeriesNavResult();
+      final issueDetails = ref
+          .watch(issueDetailsProvider(args.issueId))
+          .asData
+          ?.value;
+      final targetNumber = issueDetails?.number ?? '';
+      final targetDate = issueDetails?.coverDate ?? issueDetails?.storeDate;
+
+      int comparePosition(IssueList item) {
+        final itemNum = double.tryParse(
+          item.number.replaceAll(RegExp(r'[^0-9.]'), ''),
+        );
+        final targetNum = double.tryParse(
+          targetNumber.replaceAll(RegExp(r'[^0-9.]'), ''),
+        );
+
+        if (itemNum != null && targetNum != null && itemNum != targetNum) {
+          return itemNum.compareTo(targetNum);
+        }
+
+        final itemDt = item.coverDate ?? item.storeDate;
+        if (itemDt != null && targetDate != null) {
+          final cmp = itemDt.compareTo(targetDate);
+          if (cmp != 0) return cmp;
+        }
+
+        return item.number.compareTo(targetNumber);
+      }
+
+      final targetNumeric = double.tryParse(
+        targetNumber.replaceAll(RegExp(r'[^0-9.]'), ''),
+      );
+
+      if (targetNumeric != null && targetNumeric > 0) {
+        final estPage = (targetNumeric / actualPageSize).ceil().clamp(
+          2,
+          totalPages,
+        );
+        final estPageData = await fetchPage(estPage);
+        final estIdx = findIssue(estPageData.results);
+        if (estIdx != null) {
+          return buildResult(estPage, estPageData.results, estIdx, page1.count);
+        }
       }
 
       int low = 2;
@@ -103,20 +147,47 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
           continue;
         }
 
-        final firstId = issues.first.id;
-        final lastId = issues.last.id;
+        final idx = findIssue(issues);
+        if (idx != null) {
+          return buildResult(mid, issues, idx, page1.count);
+        }
 
-        if (firstId != null && args.issueId < firstId) {
+        final firstCmp = comparePosition(issues.first);
+        final lastCmp = comparePosition(issues.last);
+
+        if (firstCmp > 0) {
           high = mid - 1;
-        } else if (lastId != null && args.issueId > lastId) {
+        } else if (lastCmp < 0) {
           low = mid + 1;
         } else {
-          final idx = findIssue(issues);
-          if (idx != null) {
-            return buildResult(mid, issues, idx, pageData.count);
+          for (int pageOffset = -2; pageOffset <= 2; pageOffset++) {
+            final scanPage = mid + pageOffset;
+            if (scanPage >= 2 && scanPage <= totalPages && scanPage != mid) {
+              final scanData = await fetchPage(scanPage);
+              final scanIdx = findIssue(scanData.results);
+              if (scanIdx != null) {
+                return buildResult(
+                  scanPage,
+                  scanData.results,
+                  scanIdx,
+                  page1.count,
+                );
+              }
+            }
           }
           break;
         }
+      }
+
+      final lastPageData = await fetchPage(totalPages);
+      final lastIdx = findIssue(lastPageData.results);
+      if (lastIdx != null) {
+        return buildResult(
+          totalPages,
+          lastPageData.results,
+          lastIdx,
+          page1.count,
+        );
       }
 
       return const IssueSeriesNavResult();

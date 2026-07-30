@@ -190,7 +190,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
   Future<void> _showBulkActionsSheet() async {
     final scannedIssues = ref.read(scannedIssueIdsProvider);
     if (scannedIssues.isEmpty) {
-      TakionAlerts.info(context, 'No scanned issues yet');
+      TakionAlerts.info(context, 'No scanned issues');
       return;
     }
     final issueSeriesIds = <int, int>{};

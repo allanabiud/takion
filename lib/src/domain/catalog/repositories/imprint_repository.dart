@@ -7,9 +7,12 @@ abstract class ImprintRepository {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<int> refreshImprintListDelta({DateTime? modifiedGt});
 
   Future<ImprintListPage> searchImprints(
     String query, {

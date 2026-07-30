@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
+import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
@@ -183,7 +184,7 @@ class _MyComicsBrowseTab extends ConsumerWidget {
                   hasScrollBody: false,
                   child: EmptyContentState(
                     icon: Icons.inventory_2_outlined,
-                    message: 'No comics in your collection yet.',
+                    message: 'No comics in your collection.',
                   ),
                 ),
               ],
@@ -258,7 +259,10 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab>
       onRefresh: () async {
         ref.invalidate(libraryBasicStatsProvider(_filter));
         ref.invalidate(libraryEntityStatsProvider);
+        ref.invalidate(libraryReadingTrendsProvider(_filter));
+        ref.invalidate(libraryRecentlyFinishedProvider(_filter));
         ref.invalidate(collectionStatsProvider);
+        ref.invalidate(categoryInsightsProvider);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -344,7 +348,13 @@ class _StatsOverviewCards extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.bar_chart_outlined,
+          message: 'No stats available.',
+        ),
+      ),
       data: (stats) {
         final value = collectionStatsAsync.asData?.value.totalValue ?? r'$0.00';
         return Padding(
@@ -423,9 +433,30 @@ class _TopPublishersSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.public_off_outlined,
+          message: 'No publishers tracked.',
+        ),
+      ),
       data: (entityStats) {
-        if (entityStats.topPublishers.isEmpty) return const SizedBox.shrink();
+        if (entityStats.topPublishers.isEmpty) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'TOP PUBLISHERS'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.public_off_outlined,
+                message: 'No publishers tracked.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -486,9 +517,30 @@ class _TopCharactersSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.people_outline,
+          message: 'No characters tracked.',
+        ),
+      ),
       data: (entityStats) {
-        if (entityStats.topCharacters.isEmpty) return const SizedBox.shrink();
+        if (entityStats.topCharacters.isEmpty) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'TOP CHARACTERS'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.people_outline,
+                message: 'No characters tracked.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -546,9 +598,30 @@ class _TopCreatorsSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.draw_outlined,
+          message: 'No creators tracked.',
+        ),
+      ),
       data: (entityStats) {
-        if (entityStats.topCreators.isEmpty) return const SizedBox.shrink();
+        if (entityStats.topCreators.isEmpty) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'TOP CREATORS'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.draw_outlined,
+                message: 'No creators tracked.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -639,9 +712,30 @@ class _RecentlyFinishedSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: EmptyContentState(
+          icon: Icons.history_outlined,
+          message: 'No recently finished comics.',
+        ),
+      ),
       data: (items) {
-        if (items.isEmpty) return const SizedBox.shrink();
+        if (items.isEmpty) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: 'RECENTLY FINISHED'),
+              ),
+              SizedBox(height: 12),
+              EmptyContentState(
+                icon: Icons.history_outlined,
+                message: 'No recently finished comics.',
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

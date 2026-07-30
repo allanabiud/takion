@@ -5,27 +5,137 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = nextUrl != null
-        ? await _remoteDataSource.getCreatorList(
-            nextUrl: Uri.parse(nextUrl),
-            limit: limit,
-            cancelToken: cancelToken,
-          )
-        : await _remoteDataSource.getCreatorList(
-            page: page,
-            limit: limit,
-            cancelToken: cancelToken,
-          );
-    return CreatorListPage(
-      count: dto.count,
-      next: dto.next,
-      previous: dto.previous,
-      results: dto.results.map((e) => e.toEntity()).toList(),
-      currentPage: page,
+    final cachedDtos = await _localDataSource.getCreatorListResults(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
     );
+    final cachedAt = await _localDataSource.getCreatorListResultsCachedAt(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+    final cachedMeta = await _localDataSource.getCreatorListResultsMeta(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.creatorList.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = nextUrl != null
+                ? await _remoteDataSource.getCreatorList(
+                    nextUrl: Uri.parse(nextUrl),
+                    limit: limit,
+                    modifiedGt: modifiedGt,
+                    cancelToken: cancelToken,
+                  )
+                : await _remoteDataSource.getCreatorList(
+                    page: page,
+                    limit: limit,
+                    modifiedGt: modifiedGt,
+                    cancelToken: cancelToken,
+                  );
+            await _localDataSource.cacheCreatorListResults(
+              remotePage.results,
+              page: page,
+              limit: limit,
+              modifiedGt: modifiedGt,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'creator_list:${nextUrl ?? "$page"}|$modifiedGt',
+          cooldown: MetronCachePolicies.creatorList.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        return CreatorListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+    }
+
+    try {
+      final key = '${nextUrl ?? "$page"}|$modifiedGt|$forceRefresh';
+      return _coalesce(_creatorListInFlight, key, () async {
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.getCreatorList(
+                nextUrl: Uri.parse(nextUrl),
+                limit: limit,
+                modifiedGt: modifiedGt,
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.getCreatorList(
+                page: page,
+                limit: limit,
+                modifiedGt: modifiedGt,
+                cancelToken: cancelToken,
+              );
+        await _localDataSource.cacheCreatorListResults(
+          remotePage.results,
+          page: page,
+          limit: limit,
+          modifiedGt: modifiedGt,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return CreatorListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return CreatorListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<int> refreshCreatorListDelta({DateTime? modifiedGt}) async {
+    var page = 1;
+    var synced = 0;
+    while (true) {
+      final result = await getCreatorList(
+        page: page,
+        limit: metronDefaultPageSize,
+        modifiedGt: modifiedGt,
+        forceRefresh: true,
+      );
+      for (final item in result.results) {
+        await getCreatorDetails(item.id, forceRefresh: true);
+        synced++;
+      }
+      if (!result.hasNext) break;
+      page++;
+    }
+    return synced;
   }
 
   Future<CreatorListPage> searchCreators(
@@ -156,7 +266,13 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     AppPerformanceMetrics.instance.recordCacheMiss('creator_details');
 
     try {
-      final dto = await _remoteDataSource.getCreatorDetails(creatorId);
+      final response = await _remoteDataSource.getCreatorDetails(creatorId);
+      if (response.statusCode == 304) {
+        return _creatorRowToEntity(cached ?? (throw StateError('Creator $creatorId not found')));
+      }
+      final dto = CreatorDetailsDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&

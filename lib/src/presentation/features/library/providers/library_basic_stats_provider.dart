@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
@@ -121,176 +123,250 @@ List<ReadingTrendPoint> _computeReadingTrends(
   return trends;
 }
 
-final libraryBasicStatsProvider = FutureProvider.autoDispose
-    .family<LibraryBasicStats, LibraryFilter>((ref, filter) async {
-      ref.keepAlive();
-      final libraryItemsFuture = ref.watch(allLibraryItemsProvider.future);
-      final subscriptionsFuture = ref.watch(activeSubscriptionsProvider.future);
+final libraryBasicStatsProvider = StreamProvider.autoDispose
+    .family<LibraryBasicStats, LibraryFilter>((ref, filter) {
       final pullRepository = ref.watch(pullListRepositoryProvider);
-
-      final libraryItems = await libraryItemsFuture;
-      final subscriptions = await subscriptionsFuture;
-
-      final now = DateTime.now().toLocal();
-      DateTime? startDate;
-      DateTime? endDate;
-
-      switch (filter) {
-        case LibraryFilter.week:
-          startDate = _atStartOfWeek(now);
-          endDate = startDate.add(const Duration(days: 6));
-          break;
-        case LibraryFilter.month:
-          startDate = _atStartOfMonth(now);
-          endDate = DateTime(startDate.year, startDate.month + 1, 0);
-          break;
-        case LibraryFilter.year:
-          startDate = _atStartOfYear(now);
-          endDate = DateTime(startDate.year, 12, 31);
-          break;
-        case LibraryFilter.allTime:
-          startDate = null;
-          endDate = null;
-          break;
-      }
-
-      final owned = libraryItems
-          .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
-          .toList();
-      final allRead = libraryItems.where((item) => item.isRead).toList();
-
-      final totalOwned = owned.fold<int>(
-        0,
-        (sum, item) => sum + item.quantityOwned,
-      );
-
-      final readPercent = owned.isEmpty
-          ? 0.0
-          : ((allRead.length / owned.length) * 100).toDouble();
-
-      final wishlistCount = libraryItems
-          .where(
-            (item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist,
-          )
-          .length;
-
-      final readsInPeriod = allRead.where((item) {
-        final readAt = item.firstReadAt?.toLocal();
-        if (readAt == null) return false;
-        if (startDate == null) return true;
-        return !readAt.isBefore(startDate);
-      }).length;
-
-      final pullsInPeriod = (await pullRepository.listEntries(
-        fromDate: startDate,
-        toDate: endDate,
-        limit: 10000,
-      )).length;
-
-      final ratings = allRead
-          .map((entry) => entry.rating)
-          .whereType<int>()
-          .toList();
-      final averageRating = ratings.isEmpty
-          ? 0.0
-          : (ratings.reduce((a, b) => a + b) / ratings.length).toDouble();
-
       final db = ref.watch(driftDatabaseProvider);
-      final readSeriesIds = allRead
-          .map((item) => item.metronSeriesId)
-          .where((id) => id > 0)
-          .toSet()
-          .toList();
-      final seriesMap = await db.metronEntityDao.getSeriesByIds(readSeriesIds);
+      final controller = StreamController<LibraryBasicStats>();
 
-      final readSeries = <String, int>{};
-      final readSeriesYear = <String, int?>{};
-      for (final item in allRead) {
-        final series = seriesMap[item.metronSeriesId];
-        final seriesName = series?.name.trim();
-        if (seriesName == null || seriesName.isEmpty) continue;
-        readSeries.update(seriesName, (value) => value + 1, ifAbsent: () => 1);
-        if (!readSeriesYear.containsKey(seriesName)) {
-          readSeriesYear[seriesName] = series?.yearBegan;
+      Future<void> emitStats(List<LibraryItem> libraryItems) async {
+        try {
+          final subscriptionsFuture = ref.read(activeSubscriptionsProvider.future);
+          final subscriptions = await subscriptionsFuture;
+
+          final now = DateTime.now().toLocal();
+          DateTime? startDate;
+          DateTime? endDate;
+
+          switch (filter) {
+            case LibraryFilter.week:
+              startDate = _atStartOfWeek(now);
+              endDate = startDate.add(const Duration(days: 6));
+              break;
+            case LibraryFilter.month:
+              startDate = _atStartOfMonth(now);
+              endDate = DateTime(startDate.year, startDate.month + 1, 0);
+              break;
+            case LibraryFilter.year:
+              startDate = _atStartOfYear(now);
+              endDate = DateTime(startDate.year, 12, 31);
+              break;
+            case LibraryFilter.allTime:
+              startDate = null;
+              endDate = null;
+              break;
+          }
+
+          final owned = libraryItems
+              .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
+              .toList();
+          final allRead = libraryItems.where((item) => item.isRead).toList();
+
+          final totalOwned = owned.fold<int>(
+            0,
+            (sum, item) => sum + item.quantityOwned,
+          );
+
+          final readPercent = owned.isEmpty
+              ? 0.0
+              : ((allRead.length / owned.length) * 100).toDouble();
+
+          final wishlistCount = libraryItems
+              .where(
+                (item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist,
+              )
+              .length;
+
+          final readsInPeriod = allRead.where((item) {
+            final readAt = item.firstReadAt?.toLocal();
+            if (readAt == null) return false;
+            if (startDate == null) return true;
+            return !readAt.isBefore(startDate);
+          }).length;
+
+          final pullsInPeriod = (await pullRepository.listEntries(
+            fromDate: startDate,
+            toDate: endDate,
+            limit: 10000,
+          )).length;
+
+          final ratings = allRead
+              .map((entry) => entry.rating)
+              .whereType<int>()
+              .toList();
+          final averageRating = ratings.isEmpty
+              ? 0.0
+              : (ratings.reduce((a, b) => a + b) / ratings.length).toDouble();
+
+          final readSeriesIds = allRead
+              .map((item) => item.metronSeriesId)
+              .where((id) => id > 0)
+              .toSet()
+              .toList();
+          final seriesMap = await db.metronEntityDao.getSeriesByIds(readSeriesIds);
+
+          final readSeries = <String, int>{};
+          final readSeriesYear = <String, int?>{};
+          for (final item in allRead) {
+            final series = seriesMap[item.metronSeriesId];
+            final seriesName = series?.name.trim();
+            if (seriesName == null || seriesName.isEmpty) continue;
+            readSeries.update(seriesName, (value) => value + 1, ifAbsent: () => 1);
+            if (!readSeriesYear.containsKey(seriesName)) {
+              readSeriesYear[seriesName] = series?.yearBegan;
+            }
+          }
+          final mostReadSeriesEntry = readSeries.entries.isEmpty
+              ? null
+              : (readSeries.entries.toList()
+                      ..sort((a, b) => b.value.compareTo(a.value)))
+                    .first;
+          final mostReadSeries = mostReadSeriesEntry?.key;
+          final mostReadSeriesYear = mostReadSeriesEntry == null
+              ? null
+              : readSeriesYear[mostReadSeriesEntry.key];
+
+          final readDates = allRead
+              .map((item) => item.firstReadAt)
+              .whereType<DateTime>()
+              .map((date) => date.toLocal())
+              .toList();
+
+          if (!controller.isClosed) {
+            controller.add(LibraryBasicStats(
+              totalOwned: totalOwned,
+              readPercent: readPercent,
+              wishlistCount: wishlistCount,
+              subscriptionsCount: subscriptions.length,
+              pullsInPeriod: pullsInPeriod,
+              readsInPeriod: readsInPeriod,
+              streakDays: _streakDays(readDates),
+              averageRating: averageRating,
+              mostReadSeries: mostReadSeries,
+              mostReadSeriesYear: mostReadSeriesYear,
+              filter: filter,
+            ));
+          }
+        } catch (e) {
+          if (!controller.isClosed) {
+            controller.addError(e);
+          }
         }
       }
-      final mostReadSeriesEntry = readSeries.entries.isEmpty
-          ? null
-          : (readSeries.entries.toList()
-                  ..sort((a, b) => b.value.compareTo(a.value)))
-                .first;
-      final mostReadSeries = mostReadSeriesEntry?.key;
-      final mostReadSeriesYear = mostReadSeriesEntry == null
-          ? null
-          : readSeriesYear[mostReadSeriesEntry.key];
 
-      final readDates = allRead
-          .map((item) => item.firstReadAt)
-          .whereType<DateTime>()
-          .map((date) => date.toLocal())
-          .toList();
-
-      return LibraryBasicStats(
-        totalOwned: totalOwned,
-        readPercent: readPercent,
-        wishlistCount: wishlistCount,
-        subscriptionsCount: subscriptions.length,
-        pullsInPeriod: pullsInPeriod,
-        readsInPeriod: readsInPeriod,
-        streakDays: _streakDays(readDates),
-        averageRating: averageRating,
-        mostReadSeries: mostReadSeries,
-        mostReadSeriesYear: mostReadSeriesYear,
-        filter: filter,
+      ref.listen<AsyncValue<List<LibraryItem>>>(
+        allLibraryItemsProvider,
+        (_, next) {
+          next.whenOrNull(data: (libraryItems) {
+            emitStats(libraryItems);
+          });
+        },
       );
+
+      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
+        emitStats(libraryItems);
+      });
+
+      ref.onDispose(controller.close);
+
+      return controller.stream;
     });
 
-final libraryReadingTrendsProvider = FutureProvider.autoDispose
-    .family<List<ReadingTrendPoint>, LibraryFilter>((ref, filter) async {
-      final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-      final now = DateTime.now().toLocal();
-      DateTime? startDate;
+final libraryReadingTrendsProvider = StreamProvider.autoDispose
+    .family<List<ReadingTrendPoint>, LibraryFilter>((ref, filter) {
+      final controller = StreamController<List<ReadingTrendPoint>>();
 
-      switch (filter) {
-        case LibraryFilter.week:
-          startDate = _atStartOfWeek(now);
-          break;
-        case LibraryFilter.month:
-          startDate = _atStartOfMonth(now);
-          break;
-        case LibraryFilter.year:
-          startDate = _atStartOfYear(now);
-          break;
-        case LibraryFilter.allTime:
-          startDate = null;
-          break;
+      void computeTrends(List<LibraryItem> libraryItems) {
+        final now = DateTime.now().toLocal();
+        DateTime? startDate;
+
+        switch (filter) {
+          case LibraryFilter.week:
+            startDate = _atStartOfWeek(now);
+            break;
+          case LibraryFilter.month:
+            startDate = _atStartOfMonth(now);
+            break;
+          case LibraryFilter.year:
+            startDate = _atStartOfYear(now);
+            break;
+          case LibraryFilter.allTime:
+            startDate = null;
+            break;
+        }
+
+        final allRead = libraryItems.where((item) => item.isRead).toList();
+        final readDates = allRead
+            .map((item) => item.firstReadAt)
+            .whereType<DateTime>()
+            .map((date) => date.toLocal())
+            .toList();
+
+        if (!controller.isClosed) {
+          controller.add(_computeReadingTrends(readDates, filter, now, startDate));
+        }
       }
 
-      final allRead = libraryItems.where((item) => item.isRead).toList();
-      final readDates = allRead
-          .map((item) => item.firstReadAt)
-          .whereType<DateTime>()
-          .map((date) => date.toLocal())
-          .toList();
-
-      return _computeReadingTrends(readDates, filter, now, startDate);
-    });
-
-final libraryRecentlyFinishedProvider = FutureProvider.autoDispose
-    .family<List<CollectionItem>, LibraryFilter>((ref, filter) async {
-      final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-
-      final allReadWithDate =
-          libraryItems
-              .where((item) => item.isRead && item.firstReadAt != null)
-              .toList()
-            ..sort((a, b) => b.firstReadAt!.compareTo(a.firstReadAt!));
-
-      final recentItems = allReadWithDate.take(5).toList();
-      final enriched = await mapWithConcurrency<LibraryItem, CollectionItem>(
-        recentItems,
-        (item) => enrichLibraryItem(ref, item),
+      ref.listen<AsyncValue<List<LibraryItem>>>(
+        allLibraryItemsProvider,
+        (_, next) {
+          next.whenOrNull(data: (libraryItems) {
+            computeTrends(libraryItems);
+          });
+        },
       );
 
-      return enriched;
+      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
+        computeTrends(libraryItems);
+      });
+
+      ref.onDispose(controller.close);
+
+      return controller.stream;
+    });
+
+final libraryRecentlyFinishedProvider = StreamProvider.autoDispose
+    .family<List<CollectionItem>, LibraryFilter>((ref, filter) {
+      final controller = StreamController<List<CollectionItem>>();
+
+      Future<void> computeRecent(List<LibraryItem> libraryItems) async {
+        try {
+          final allReadWithDate =
+              libraryItems
+                  .where((item) => item.isRead && item.firstReadAt != null)
+                  .toList()
+                ..sort((a, b) => b.firstReadAt!.compareTo(a.firstReadAt!));
+
+          final recentItems = allReadWithDate.take(5).toList();
+          final enriched = await mapWithConcurrency<LibraryItem, CollectionItem>(
+            recentItems,
+            (item) => enrichLibraryItem(ref, item),
+          );
+
+          if (!controller.isClosed) {
+            controller.add(enriched);
+          }
+        } catch (e) {
+          if (!controller.isClosed) {
+            controller.addError(e);
+          }
+        }
+      }
+
+      ref.listen<AsyncValue<List<LibraryItem>>>(
+        allLibraryItemsProvider,
+        (_, next) {
+          next.whenOrNull(data: (libraryItems) {
+            computeRecent(libraryItems);
+          });
+        },
+      );
+
+      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
+        computeRecent(libraryItems);
+      });
+
+      ref.onDispose(controller.close);
+
+      return controller.stream;
     });

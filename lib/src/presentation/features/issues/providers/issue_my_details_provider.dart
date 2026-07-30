@@ -2,6 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
+import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 class IssueMyDetailsData {
@@ -175,6 +179,12 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           await recordEvents();
         }
         ref.invalidate(issueMyDetailsProvider(_issueId));
+        ref.invalidate(libraryBasicStatsProvider);
+        ref.invalidate(libraryEntityStatsProvider);
+        ref.invalidate(libraryReadingTrendsProvider);
+        ref.invalidate(libraryRecentlyFinishedProvider);
+        ref.invalidate(collectionStatsProvider);
+        ref.invalidate(categoryInsightsProvider);
       } finally {
         keepAlive.close();
       }
@@ -258,6 +268,12 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         );
 
         ref.invalidate(issueMyDetailsProvider(_issueId));
+        ref.invalidate(libraryBasicStatsProvider);
+        ref.invalidate(libraryEntityStatsProvider);
+        ref.invalidate(libraryReadingTrendsProvider);
+        ref.invalidate(libraryRecentlyFinishedProvider);
+        ref.invalidate(collectionStatsProvider);
+        ref.invalidate(categoryInsightsProvider);
       } finally {
         keepAlive.close();
       }
@@ -314,6 +330,12 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         }
 
         ref.invalidate(issueMyDetailsProvider(_issueId));
+        ref.invalidate(libraryBasicStatsProvider);
+        ref.invalidate(libraryEntityStatsProvider);
+        ref.invalidate(libraryReadingTrendsProvider);
+        ref.invalidate(libraryRecentlyFinishedProvider);
+        ref.invalidate(collectionStatsProvider);
+        ref.invalidate(categoryInsightsProvider);
       } finally {
         keepAlive.close();
       }

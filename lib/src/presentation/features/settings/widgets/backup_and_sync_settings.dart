@@ -140,8 +140,96 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
           ),
         ]),
         if (syncState.enabled) ...[
+          if (syncState.lastError != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sync Error',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color:
+                                Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          syncState.lastError!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           buildSettingsGroup(context, 'Synchronization Settings', [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Sync Interval',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<SyncInterval>(
+                      segments: const [
+                        ButtonSegment<SyncInterval>(
+                          value: SyncInterval.minutes30,
+                          label: Text('30 min'),
+                        ),
+                        ButtonSegment<SyncInterval>(
+                          value: SyncInterval.hours1,
+                          label: Text('1 hr'),
+                        ),
+                        ButtonSegment<SyncInterval>(
+                          value: SyncInterval.hours3,
+                          label: Text('3 hrs'),
+                        ),
+                      ],
+                      selected: {syncState.syncInterval},
+                      onSelectionChanged: (selected) {
+                        ref
+                            .read(driveSyncProvider.notifier)
+                            .updateSyncInterval(selected.first);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: syncState.isSyncing
@@ -357,15 +445,17 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     final syncNotifier = ref.read(driveSyncProvider.notifier);
     final container = ProviderScope.containerOf(context, listen: false);
 
+    syncNotifier.clearError();
     syncNotifier.setSyncing(true);
     try {
-      await driveService.triggerSync();
+      await driveService.triggerSync(ignoreThrottle: true);
       await syncNotifier.updateLastSync();
       invalidateCacheBackedProviders((p) => container.invalidate(p));
       await Future<void>.delayed(Duration.zero);
       if (mounted) TakionAlerts.success(context, 'Synced to Drive');
     } catch (e) {
       if (mounted) {
+        syncNotifier.setError(e.toString());
         TakionAlerts.safeError(context, e, userMessage: 'Sync failed');
       }
     } finally {

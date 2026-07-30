@@ -179,7 +179,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                   hasScrollBody: false,
                   child: EmptyContentState(
                     icon: Icons.turned_in_not,
-                    message: 'No wishlist comics yet.',
+                    message: 'No wishlist comics.',
                   ),
                 ),
               ],

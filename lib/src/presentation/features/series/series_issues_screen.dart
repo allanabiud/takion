@@ -129,7 +129,22 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
           ),
         ],
       ),
-      body: body,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          try {
+            final args = SeriesIssueListArgs(
+              seriesId: widget.seriesId,
+              page: _page,
+            );
+            await ref.read(seriesIssueListProvider(args).notifier).refresh();
+          } catch (e) {
+            if (context.mounted) {
+              TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+            }
+          }
+        },
+        child: body,
+      ),
       bottomNavigationBar: _totalPages > 1
           ? BottomAppBar(
               child: Row(

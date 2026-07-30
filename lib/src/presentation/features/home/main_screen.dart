@@ -433,7 +433,7 @@ class MainScreenState extends ConsumerState<MainScreen>
           child: state.history.isEmpty
               ? const EmptyContentState(
                   icon: Icons.history_outlined,
-                  message: 'No search history yet.',
+                  message: 'No search history.',
                 )
               : ListView.builder(
                   itemCount: state.history.length,

@@ -7,9 +7,12 @@ abstract class ArcRepository {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<int> refreshArcListDelta({DateTime? modifiedGt});
 
   Future<ArcListPage> searchArcs(
     String query, {

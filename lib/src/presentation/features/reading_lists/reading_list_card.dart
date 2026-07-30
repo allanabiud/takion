@@ -142,9 +142,9 @@ class ReadingListCard extends ConsumerWidget {
                             Text(
                               isMetronBrowse && !alreadyExists
                                   ? [
-                                      if (list.metronListType != null)
+                                      if ((list.metronListType ?? '').isNotEmpty)
                                         list.metronListType,
-                                      if (list.metronAttributionSource != null)
+                                      if ((list.metronAttributionSource ?? '').isNotEmpty)
                                         list.metronAttributionSource,
                                     ].join(' • ')
                                   : '$itemCount $unitLabel • $contentTypeLabel',

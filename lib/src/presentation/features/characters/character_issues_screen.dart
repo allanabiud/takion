@@ -96,7 +96,12 @@ class _CharacterIssuesScreenState extends ConsumerState<CharacterIssuesScreen> {
           ],
         ),
       ),
-      body: body,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(characterIssueListProvider(args));
+        },
+        child: body,
+      ),
       bottomNavigationBar: _totalPages > 1
           ? BottomAppBar(
               child: Row(

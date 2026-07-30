@@ -7,9 +7,12 @@ abstract class PublisherRepository {
     String? nextUrl,
     int page = 1,
     int limit = metronDefaultPageSize,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<int> refreshPublisherListDelta({DateTime? modifiedGt});
 
   Future<PublisherListPage> searchPublishers(
     String query, {

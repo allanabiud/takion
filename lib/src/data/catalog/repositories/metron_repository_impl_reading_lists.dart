@@ -9,24 +9,128 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     String? listType,
     String? attributionSource,
     String? publisher,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final dto = await _remoteDataSource.getReadingLists(
-      nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
+    final cachedDtos = await _localDataSource.getReadingListResults(
       page: page,
-      name: name,
-      listType: listType,
-      attributionSource: attributionSource,
-      publisher: publisher,
-      cancelToken: cancelToken,
+      limit: limit,
+      modifiedGt: modifiedGt,
     );
-    return MetronReadingListPage(
-      count: dto.count,
-      next: dto.next,
-      previous: dto.previous,
-      results: dto.results.map((e) => e.toEntity()).toList(),
+    final cachedAt = await _localDataSource.getReadingListResultsCachedAt(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
     );
+    final cachedMeta = await _localDataSource.getReadingListResultsMeta(
+      page: page,
+      limit: limit,
+      modifiedGt: modifiedGt,
+    );
+
+    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+      final isFresh =
+          cachedAt != null &&
+          MetronCachePolicies.readingList.isFresh(cachedAt, _now());
+      if (!isFresh) {
+        _refreshInBackground(
+          task: () async {
+            final remotePage = await _remoteDataSource.getReadingLists(
+              nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
+              page: page,
+              name: name,
+              listType: listType,
+              attributionSource: attributionSource,
+              publisher: publisher,
+              modifiedGt: modifiedGt,
+              cancelToken: cancelToken,
+            );
+            await _localDataSource.cacheReadingListResults(
+              remotePage.results,
+              page: page,
+              limit: limit,
+              modifiedGt: modifiedGt,
+              count: remotePage.count,
+              next: remotePage.next,
+              previous: remotePage.previous,
+            );
+          },
+          cacheKey: 'reading_list:${nextUrl ?? "$page"}|$modifiedGt',
+          cooldown: MetronCachePolicies.readingList.refreshCooldown,
+        );
+      }
+      if (cachedMeta != null) {
+        return MetronReadingListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((e) => e.toEntity()).toList(),
+        );
+      }
+    }
+
+    try {
+      final key = '${nextUrl ?? "$page"}|$modifiedGt|$forceRefresh';
+      return _coalesce(_readingListInFlight, key, () async {
+        final remotePage = await _remoteDataSource.getReadingLists(
+          nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
+          page: page,
+          name: name,
+          listType: listType,
+          attributionSource: attributionSource,
+          publisher: publisher,
+          modifiedGt: modifiedGt,
+          cancelToken: cancelToken,
+        );
+        await _localDataSource.cacheReadingListResults(
+          remotePage.results,
+          page: page,
+          limit: limit,
+          modifiedGt: modifiedGt,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return MetronReadingListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((e) => e.toEntity()).toList(),
+        );
+      }, timeout: const Duration(seconds: 30));
+    } catch (error) {
+      if (_isCancelled(error)) rethrow;
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return MetronReadingListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((e) => e.toEntity()).toList(),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<int> refreshReadingListDelta({DateTime? modifiedGt}) async {
+    var page = 1;
+    var synced = 0;
+    while (true) {
+      final result = await searchReadingLists(
+        page: page,
+        limit: metronDefaultPageSize,
+        modifiedGt: modifiedGt,
+        forceRefresh: true,
+      );
+      for (final item in result.results) {
+        await getReadingListDetail(item.id, forceRefresh: true);
+        synced++;
+      }
+      if (!result.hasNext) break;
+      page++;
+    }
+    return synced;
   }
 
   Future<MetronReadingListDetail> getReadingListDetail(
@@ -59,7 +163,35 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final dto = await _remoteDataSource.getReadingListDetail(id);
+      final response = await _remoteDataSource.getReadingListDetail(id);
+      if (response.statusCode == 304) {
+        if (cached != null) {
+          return MetronReadingListDetail(
+            id: cached.id,
+            name: cached.name,
+            slug: cached.slug,
+            desc: cached.description,
+            image: cached.imageUrl,
+            listType: cached.listType,
+            isPrivate: cached.isPrivate ?? false,
+            attributionSource: cached.attributionSource,
+            attributionUrl: cached.attributionUrl,
+            averageRating: cached.averageRating,
+            ratingCount: cached.ratingCount ?? 0,
+            itemsUrl: cached.itemsUrl,
+            resourceUrl: cached.resourceUrl,
+            userId: cached.userId,
+            username: null,
+            modified: cached.modified != null
+                ? DateTime.tryParse(cached.modified!)
+                : null,
+          );
+        }
+        throw StateError('Reading list $id not found');
+      }
+      final dto = ReadingListDetailDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
       if (cached != null &&
           cached.modified != null &&
           dto.modified != null &&

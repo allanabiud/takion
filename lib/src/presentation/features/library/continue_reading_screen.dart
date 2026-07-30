@@ -39,7 +39,7 @@ class ContinueReadingScreen extends ConsumerWidget {
           if (sortedItems.isEmpty) {
             return const EmptyContentState(
               icon: Icons.menu_book_outlined,
-              message: 'No continue reading suggestions yet.',
+              message: 'No continue reading suggestions.',
             );
           }
 
