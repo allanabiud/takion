@@ -297,7 +297,6 @@ class DriveSyncService {
       await signInSilently(reAuthenticate: true);
       return _downloadFile(fileId, isRetry: true);
     }
-    if (response.statusCode != 200) return null;
     if ((response.statusCode == 429 || response.statusCode == 403) &&
         retryCount < 3) {
       final delay = Duration(
@@ -314,6 +313,7 @@ class DriveSyncService {
         retryCount: retryCount + 1,
       );
     }
+    if (response.statusCode != 200) return null;
     return response.data as Uint8List?;
   }
 
@@ -613,23 +613,25 @@ class DriveSyncService {
 
     final query = _db.select;
 
-    Future<List<Map<String, dynamic>>> queryTableSince(
-      TableInfo<Table, dynamic> table,
-      Expression<bool> Function(dynamic t)? whereClause,
+    Future<List<Map<String, dynamic>>> queryTableSince<T extends Table, D>(
+      TableInfo<T, D> table,
+      Expression<bool> Function(T)? whereClause,
     ) async {
       final selectQuery = query(table);
       if (whereClause != null) {
         selectQuery.where(whereClause);
       }
       final rows = await selectQuery.get();
-      return rows.map<Map<String, dynamic>>((r) => r.toJson()).toList();
+      return rows
+          .map<Map<String, dynamic>>((r) => (r as DataClass).toJson())
+          .toList();
     }
 
     tablesData['library_items'] = {
       'inserts': await queryTableSince(
         _db.libraryItems,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (LibraryItems t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -640,7 +642,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.libraryReadLogs,
         (sinceStr != null)
-            ? (t) => t.createdAt.isBiggerThan(Constant(sinceStr))
+            ? (LibraryReadLogs t) =>
+                  t.createdAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -651,7 +654,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.pullListEntries,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (PullListEntries t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -662,7 +666,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.seriesSubscriptions,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (SeriesSubscriptions t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -673,7 +678,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.activityEvents,
         (sinceStr != null)
-            ? (t) => t.timestamp.isBiggerThan(Constant(sinceStr))
+            ? (ActivityEvents t) =>
+                  t.timestamp.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -684,7 +690,7 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.readingLists,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (ReadingLists t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -702,7 +708,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteSeries,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteSeries t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -713,7 +720,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteIssues,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteIssues t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -724,7 +732,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteCharacters,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteCharacters t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -735,7 +744,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteCreators,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteCreators t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -746,7 +756,8 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteReadingLists,
         (sinceStr != null)
-            ? (t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteReadingLists t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],

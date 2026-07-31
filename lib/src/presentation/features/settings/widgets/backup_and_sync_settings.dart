@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -263,33 +262,44 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
   }
 
   Widget _buildBackupSection() {
+    final theme = Theme.of(context);
     return buildSettingsGroup(context, 'Local Backup', [
       ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          Icons.backup,
-          color: Theme.of(context).colorScheme.primary,
+        leading: _isBackingUp
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            : Icon(Icons.backup, color: theme.colorScheme.primary),
+        title: Text(
+          _isBackingUp ? 'Creating Backup...' : 'Create Local Backup',
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        title: const Text(
-          'Create Local Backup',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        subtitle: Text(
+          _isBackingUp ? 'Please wait' : 'Save a .tkbk file of your data',
         ),
-        subtitle: const Text('Save a .tkbk file of your data'),
         onTap: _isBackingUp ? null : _createLocalBackup,
         enabled: !_isBackingUp,
       ),
       const Divider(height: 1),
       ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          Icons.restore_page,
-          color: Theme.of(context).colorScheme.primary,
+        leading: _isRestoring
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            : Icon(Icons.restore_page, color: theme.colorScheme.primary),
+        title: Text(
+          _isRestoring ? 'Restoring...' : 'Restore from Backup',
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        title: const Text(
-          'Restore from Backup',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        subtitle: Text(
+          _isRestoring ? 'Please wait' : 'Import data from a .tkbk file',
         ),
-        subtitle: const Text('Import data from a .tkbk file'),
         onTap: _isRestoring ? null : _restoreFromBackup,
         enabled: !_isRestoring,
       ),
@@ -310,14 +320,11 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
         fileName: 'takion_backup_$dateStr.tkbk',
         bytes: bytes,
       );
-      if (result != null) {
-        final outputFile = File(result);
-        if (!await outputFile.exists() || (await outputFile.length()) == 0) {
-          await outputFile.writeAsBytes(bytes);
-        }
-        if (mounted) {
-          TakionAlerts.success(context, 'Backup saved successfully');
-        }
+      if (result != null && mounted) {
+        // FilePicker.saveFile(bytes:) already writes the file via the system
+        // picker. On Android the returned path is a SAF handle that dart:io
+        // cannot re-open, so treat a non-null result as success.
+        TakionAlerts.success(context, 'Backup saved successfully');
       }
     } catch (e) {
       if (mounted) {

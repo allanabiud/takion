@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:takion/src/data/common/drift/database.dart';
@@ -70,5 +71,87 @@ void main() {
       () => backupService.importBackupData(bytes),
       throwsA(isA<FormatException>()),
     );
+  });
+
+  test('full round trip restores data across multiple tables', () async {
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    await db.favoriteDao.toggleCreator(808);
+    await db.favoriteDao.toggleSeries(909);
+
+    await db.into(db.libraryItems).insert(
+      LibraryItemsCompanion.insert(
+        id: 'lib-500',
+        userId: 'local-user',
+        metronIssueId: 500,
+        metronSeriesId: 9,
+        ownershipStatus: 'owned',
+        isRead: true,
+        format: 'digital',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await db.into(db.libraryReadLogs).insert(
+      LibraryReadLogsCompanion.insert(
+        id: 'log-500',
+        userId: 'local-user',
+        collectionItemId: 'lib-500',
+        readAt: now,
+        createdAt: now,
+      ),
+    );
+    await db.readingListDao.upsertList(
+      ReadingListsCompanion.insert(
+        id: 'list-1',
+        title: 'Weekly Pulls',
+        description: 'desc',
+        isOrdered: true,
+        contentType: 'series',
+        itemsJson: '[]',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await db.readingListDao.upsertItems([
+      ReadingListItemsCompanion.insert(
+        id: 'item-1',
+        listId: 'list-1',
+        targetId: 'ser-9',
+        isSeries: true,
+        role: 'main',
+        isRead: false,
+        sortOrder: 0,
+      ),
+    ]);
+    await db.into(db.activityEvents).insert(
+      ActivityEventsCompanion.insert(
+        id: 'act-1',
+        userId: 'local-user',
+        seriesId: Value(9),
+        issueId: Value(500),
+        eventType: 'read',
+        seriesName: Value('X-Men'),
+        issueNumber: Value('1'),
+        timestamp: now,
+      ),
+    );
+
+    final bytes = await backupService.exportBackupData();
+    expect(bytes, isNotEmpty);
+
+    final freshDb = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(() => freshDb.close());
+    final freshService = LocalBackupService(freshDb);
+
+    await freshService.importBackupData(bytes);
+
+    expect(await freshDb.favoriteDao.getAllCreators(), hasLength(1));
+    expect(await freshDb.favoriteDao.getAllSeries(), hasLength(1));
+    expect((await freshDb.libraryItemDao.getItems()).length, 1);
+    expect(await freshDb.readingListDao.watchAll().first, hasLength(1));
+
+    final events = await freshDb.select(freshDb.activityEvents).get();
+    expect(events, hasLength(1));
   });
 }
