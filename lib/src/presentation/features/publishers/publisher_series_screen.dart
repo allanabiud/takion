@@ -145,39 +145,33 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
       slivers: [
         SliverOverlapAbsorber(
           handle: _overlapHandle,
-          sliver: SliverPersistentHeader(
-            pinned: true,
-            delegate: _PinnedHeaderDelegate(
-              isLoading: isLoading,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ListHeader(
-                    count: seriesCount,
-                    unit: 'series',
-                    pluralUnit: 'series',
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sortLabel: seriesSortLabel(sortOption),
-                    onSortTap: isLoading
-                        ? null
-                        : () => showSortBottomSheet(
-                            context,
-                            ref,
-                            SortPreferenceContext.publisherSeries,
-                            seriesSortLabel,
-                          ),
+          sliver: PinnedListHeader(
+            isLoading: isLoading,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ListHeader(
+                  count: seriesCount,
+                  unit: 'series',
+                  pluralUnit: 'series',
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sortLabel: seriesSortLabel(sortOption),
+                  onSortTap: isLoading
+                      ? null
+                      : () => showSortBottomSheet(
+                          context,
+                          ref,
+                          SortPreferenceContext.publisherSeries,
+                          seriesSortLabel,
+                        ),
+                ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: LinearProgressIndicator(minHeight: 2),
                   ),
-                  if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: LinearProgressIndicator(minHeight: 2),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
@@ -208,46 +202,5 @@ class _PublisherSeriesScreenState extends ConsumerState<PublisherSeriesScreen> {
               ),
       ],
     );
-  }
-}
-
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({required this.isLoading, required this.child});
-
-  final bool isLoading;
-  final Widget child;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final theme = Theme.of(context);
-    final borderSide = overlapsContent
-        ? BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 1.0,
-          )
-        : BorderSide.none;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(bottom: borderSide),
-      ),
-      child: child,
-    );
-  }
-
-  @override
-  double get maxExtent => isLoading ? 60 : 50;
-
-  @override
-  double get minExtent => isLoading ? 60 : 50;
-
-  @override
-  bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) {
-    return oldDelegate.isLoading != isLoading || oldDelegate.child != child;
   }
 }

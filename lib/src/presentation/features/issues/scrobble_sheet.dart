@@ -381,57 +381,58 @@ Future<void> showScrobbleSheet({
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                RatingPicker(
-                  selectedRating: selectedRating,
-                  enabled: !isSubmitting,
-                  resetIconEdgeInset: 0,
-                  onChanged: (value) {
-                    final previousRead = markAsRead;
-                    final previousRating = selectedRating;
-                    setModalState(() {
-                      selectedRating = value;
-                      markAsRead = true;
-                    });
-                    ref
-                        .read(scrobbleIssueProvider(issueId).notifier)
-                        .scrobble(
-                          markAsRead: true,
-                          rating: value,
-                          dateRead: DateTime.now().toUtc(),
-                        )
-                        .then((_) {
-                          if (!context.mounted) return;
-                          if (ref
-                              .read(scrobbleIssueProvider(issueId))
-                              .hasError) {
-                            setModalState(() {
-                              selectedRating = previousRating;
-                              markAsRead = previousRead;
-                            });
-                          } else {
-                            TakionAlerts.libraryMarkedAsRead(context);
-                          }
-                        });
-                  },
-                  onReset: () {
-                    final previousRating = selectedRating;
-                    setModalState(() {
-                      selectedRating = 0;
-                    });
-                    ref
-                        .read(scrobbleIssueProvider(issueId).notifier)
-                        .scrobble(rating: 0)
-                        .then((_) {
-                          if (!context.mounted) return;
-                          if (ref
-                              .read(scrobbleIssueProvider(issueId))
-                              .hasError) {
-                            setModalState(() {
-                              selectedRating = previousRating;
-                            });
-                          }
-                        });
-                  },
+                Center(
+                  child: RatingPicker(
+                    selectedRating: selectedRating,
+                    enabled: !isSubmitting,
+                    onChanged: (value) {
+                      final previousRead = markAsRead;
+                      final previousRating = selectedRating;
+                      setModalState(() {
+                        selectedRating = value;
+                        markAsRead = true;
+                      });
+                      ref
+                          .read(scrobbleIssueProvider(issueId).notifier)
+                          .scrobble(
+                            markAsRead: true,
+                            rating: value,
+                            dateRead: DateTime.now().toUtc(),
+                          )
+                          .then((_) {
+                            if (!context.mounted) return;
+                            if (ref
+                                .read(scrobbleIssueProvider(issueId))
+                                .hasError) {
+                              setModalState(() {
+                                selectedRating = previousRating;
+                                markAsRead = previousRead;
+                              });
+                            } else {
+                              TakionAlerts.libraryMarkedAsRead(context);
+                            }
+                          });
+                    },
+                    onReset: () {
+                      final previousRating = selectedRating;
+                      setModalState(() {
+                        selectedRating = 0;
+                      });
+                      ref
+                          .read(scrobbleIssueProvider(issueId).notifier)
+                          .scrobble(rating: 0)
+                          .then((_) {
+                            if (!context.mounted) return;
+                            if (ref
+                                .read(scrobbleIssueProvider(issueId))
+                                .hasError) {
+                              setModalState(() {
+                                selectedRating = previousRating;
+                              });
+                            }
+                          });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 12),
                 const Divider(),
@@ -452,14 +453,23 @@ Future<void> showScrobbleSheet({
                     isSeries: false,
                   ),
                 ),
-                if (isCollected)
-                  ListTile(
-                    leading: const Icon(Icons.library_books_outlined),
-                    title: const Text('My Details'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () =>
-                        showEditMyDetailsSheet(callerContext, ref, issueId),
-                  ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: isCollected
+                      ? ListTile(
+                          leading: const Icon(Icons.library_books_outlined),
+                          title: const Text('My Details'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => showEditMyDetailsSheet(
+                            callerContext,
+                            ref,
+                            issueId,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
                 ListTile(
                   leading: isSharing
                       ? const SizedBox(

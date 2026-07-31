@@ -102,10 +102,7 @@ class PagedIssueListScaffold extends StatelessWidget {
 }
 
 class _PinnedIssueList extends StatelessWidget {
-  const _PinnedIssueList({
-    required this.header,
-    required this.issues,
-  });
+  const _PinnedIssueList({required this.header, required this.issues});
 
   final Widget header;
   final List<IssueList> issues;
@@ -114,50 +111,18 @@ class _PinnedIssueList extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _PinnedHeaderDelegate(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: header,
-            ),
-          ),
-        ),
+        PinnedListHeader(child: header),
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final issue = issues[index];
-              return IssueListTile(
-                issue: issue,
-                isFirst: index == 0,
-                isLast: index == issues.length - 1,
-              );
-            },
-            childCount: issues.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final issue = issues[index];
+            return IssueListTile(
+              issue: issue,
+              isFirst: index == 0,
+              isLast: index == issues.length - 1,
+            );
+          }, childCount: issues.length),
         ),
       ],
     );
   }
-}
-
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Theme.of(context).colorScheme.surface, child: child);
-  }
-
-  @override
-  double get maxExtent => 80;
-
-  @override
-  double get minExtent => 56;
-
-  @override
-  bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
 }

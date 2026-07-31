@@ -416,12 +416,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronCharacters,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronCharactersCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
       }
@@ -438,12 +433,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronCreators,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronCreatorsCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
       }
@@ -458,12 +448,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronArcs,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronArcsCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
       }
@@ -478,12 +463,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronTeams,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronTeamsCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
       }
@@ -500,12 +480,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronUniverses,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronUniversesCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
       }
@@ -521,12 +496,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronIssues,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronIssuesCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
         if (stub.seriesId.present && stub.seriesId.value != null) {
@@ -547,12 +517,7 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.metronSeries,
           stub,
           onConflict: DoUpdate(
-            (old) {
-              final existing = old as MetronSeriesCompanion;
-              return stub.copyWith(
-                isFullyHydrated: Value(existing.isFullyHydrated.value),
-              );
-            },
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
           ),
         );
       }

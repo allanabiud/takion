@@ -45,37 +45,28 @@ class ContinueReadingScreen extends ConsumerWidget {
 
           return CustomScrollView(
             slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _PinnedListHeaderDelegate(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: ListHeader(
-                      count: sortedItems.length,
-                      unit: 'suggestion',
-                      sortLabel: issueSortLabel(sortOption),
-                      onSortTap: () => showSortBottomSheet(
-                        context,
-                        ref,
-                        SortPreferenceContext.continueReading,
-                        issueSortLabel,
-                      ),
-                    ),
+              PinnedListHeader(
+                child: ListHeader(
+                  count: sortedItems.length,
+                  unit: 'suggestion',
+                  sortLabel: issueSortLabel(sortOption),
+                  onSortTap: () => showSortBottomSheet(
+                    context,
+                    ref,
+                    SortPreferenceContext.continueReading,
+                    issueSortLabel,
                   ),
                 ),
               ),
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = sortedItems[index];
-                    return IssueListTile(
-                      issue: item.issue,
-                      isFirst: index == 0,
-                      isLast: index == sortedItems.length - 1,
-                    );
-                  },
-                  childCount: sortedItems.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final item = sortedItems[index];
+                  return IssueListTile(
+                    issue: item.issue,
+                    isFirst: index == 0,
+                    isLast: index == sortedItems.length - 1,
+                  );
+                }, childCount: sortedItems.length),
               ),
             ],
           );
@@ -83,25 +74,4 @@ class ContinueReadingScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedListHeaderDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Theme.of(context).colorScheme.surface, child: child);
-  }
-
-  @override
-  double get maxExtent => 80;
-
-  @override
-  double get minExtent => 56;
-
-  @override
-  bool shouldRebuild(_PinnedListHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import 'package:takion/src/presentation/shared/widgets/pinned_list_header.dart';
 
 class PagedListScaffold extends StatelessWidget {
   const PagedListScaffold({
@@ -45,7 +46,11 @@ class PagedListScaffold extends StatelessWidget {
       child: (isLoading && skeleton != null)
           ? skeleton!
           : (itemCount == 0 && !isLoading)
-          ? _EmptyState(header: header, emptyIcon: emptyIcon, emptyMessage: emptyMessage)
+          ? _EmptyState(
+              header: header,
+              emptyIcon: emptyIcon,
+              emptyMessage: emptyMessage,
+            )
           : (isLoading && itemCount == 0)
           ? _LoadingEmptyState(header: header)
           : _buildScrollableContent(
@@ -96,30 +101,25 @@ class PagedListScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildScrollableContent(BuildContext context, {required bool showInlineLoading}) {
+  Widget _buildScrollableContent(
+    BuildContext context, {
+    required bool showInlineLoading,
+  }) {
     if (header != null) {
       return CustomScrollView(
         slivers: [
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _PinnedHeaderDelegate(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: header,
+          PinnedListHeader(
+            isLoading: showInlineLoading,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                header!,
+                if (showInlineLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: LinearProgressIndicator(minHeight: 2),
                   ),
-                  if (showInlineLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: LinearProgressIndicator(minHeight: 2),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
           SliverList(
@@ -142,7 +142,11 @@ class PagedListScaffold extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({this.header, required this.emptyIcon, required this.emptyMessage});
+  const _EmptyState({
+    this.header,
+    required this.emptyIcon,
+    required this.emptyMessage,
+  });
 
   final Widget? header;
   final IconData emptyIcon;
@@ -205,25 +209,4 @@ class _LoadingEmptyState extends StatelessWidget {
       ],
     );
   }
-}
-
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Theme.of(context).colorScheme.surface, child: child);
-  }
-
-  @override
-  double get maxExtent => 80;
-
-  @override
-  double get minExtent => 56;
-
-  @override
-  bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
 }

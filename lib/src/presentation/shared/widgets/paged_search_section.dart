@@ -68,23 +68,17 @@ class PagedSearchSection<T> extends ConsumerWidget {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (!isFiltering)
-                        SliverPersistentHeader(
-                          pinned: true,
-                          delegate: _PinnedListHeaderDelegate(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: totalCount,
-                                unit: 'result',
-                                pageCount: items.length,
-                                sortLabel: sortLabelFn(sortOption),
-                                onSortTap: () => showSortBottomSheet(
-                                  context,
-                                  ref,
-                                  sortContext,
-                                  sortLabelFn,
-                                ),
-                              ),
+                        PinnedListHeader(
+                          child: ListHeader(
+                            count: totalCount,
+                            unit: 'result',
+                            pageCount: items.length,
+                            sortLabel: sortLabelFn(sortOption),
+                            onSortTap: () => showSortBottomSheet(
+                              context,
+                              ref,
+                              sortContext,
+                              sortLabelFn,
                             ),
                           ),
                         ),
@@ -106,46 +100,37 @@ class PagedSearchSection<T> extends ConsumerWidget {
                   child: CustomScrollView(
                     slivers: [
                       if (!isFiltering)
-                        SliverPersistentHeader(
-                          pinned: true,
-                          delegate: _PinnedListHeaderDelegate(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: ListHeader(
-                                count: totalCount,
-                                unit: 'result',
-                                pageCount: items.length,
-                                sortLabel: sortLabelFn(sortOption),
-                                onSortTap: isLoading
-                                    ? null
-                                    : () => showSortBottomSheet(
-                                        context,
-                                        ref,
-                                        sortContext,
-                                        sortLabelFn,
-                                      ),
-                              ),
-                            ),
+                        PinnedListHeader(
+                          child: ListHeader(
+                            count: totalCount,
+                            unit: 'result',
+                            pageCount: items.length,
+                            sortLabel: sortLabelFn(sortOption),
+                            onSortTap: isLoading
+                                ? null
+                                : () => showSortBottomSheet(
+                                    context,
+                                    ref,
+                                    sortContext,
+                                    sortLabelFn,
+                                  ),
                           ),
                         ),
                       SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final item = items[index];
-                            onItemIndexed?.call(index, items.length);
-                            return Opacity(
-                              opacity: isLoading ? 0.6 : 1.0,
-                              child: itemBuilder(
-                                context,
-                                index,
-                                item,
-                                index == 0,
-                                index == items.length - 1,
-                              ),
-                            );
-                          },
-                          childCount: items.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final item = items[index];
+                          onItemIndexed?.call(index, items.length);
+                          return Opacity(
+                            opacity: isLoading ? 0.6 : 1.0,
+                            child: itemBuilder(
+                              context,
+                              index,
+                              item,
+                              index == 0,
+                              index == items.length - 1,
+                            ),
+                          );
+                        }, childCount: items.length),
                       ),
                     ],
                   ),
@@ -187,25 +172,4 @@ class PagedSearchSection<T> extends ConsumerWidget {
           : null,
     );
   }
-}
-
-class _PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedListHeaderDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Theme.of(context).colorScheme.surface, child: child);
-  }
-
-  @override
-  double get maxExtent => 80;
-
-  @override
-  double get minExtent => 56;
-
-  @override
-  bool shouldRebuild(_PinnedListHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
 }

@@ -18,6 +18,7 @@ export 'issue_card_skeleton.dart';
 export 'list_header.dart';
 export 'paged_issue_list_scaffold.dart';
 export 'paged_list_scaffold.dart';
+export 'pinned_list_header.dart';
 export 'paged_search_section.dart';
 export 'person_card.dart';
 export 'person_list_tile.dart';

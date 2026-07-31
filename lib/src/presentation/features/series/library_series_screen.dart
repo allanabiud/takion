@@ -236,7 +236,8 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                       child: LinearProgressIndicator(
                         value: percent,
                         minHeight: 8,
-                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
                       ),
                     ),
                   ],
@@ -328,13 +329,9 @@ Future<void> _showCategoryBulkSheet(
 
         String actionLabel() {
           if (category == 'unrated') {
-            return selectedRating > 0
-                ? 'Rate $selectedCount'
-                : 'Rate All';
+            return selectedRating > 0 ? 'Rate $selectedCount' : 'Rate All';
           }
-          return useRange
-              ? 'Mark $selectedCount as Read'
-              : 'Mark All as Read';
+          return useRange ? 'Mark $selectedCount as Read' : 'Mark All as Read';
         }
 
         return SingleChildScrollView(
@@ -352,25 +349,31 @@ Future<void> _showCategoryBulkSheet(
                     color: theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Rate Issues',
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      RatingPicker(
-                        selectedRating: selectedRating,
-                        enabled: !isApplying,
-                        onChanged: (rating) {
-                          setModalState(() => selectedRating = rating);
-                        },
-                        onReset: () {
-                          setModalState(() => selectedRating = 0);
-                        },
-                        iconSize: 28,
-                        resetIconEdgeInset: 0,
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          RatingPicker(
+                            selectedRating: selectedRating,
+                            enabled: !isApplying,
+                            onChanged: (rating) {
+                              setModalState(() => selectedRating = rating);
+                            },
+                            onReset: () {
+                              setModalState(() => selectedRating = 0);
+                            },
+                            iconSize: 28,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -387,8 +390,9 @@ Future<void> _showCategoryBulkSheet(
                   ),
                   child: Text(
                     'Mark as Read',
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -429,8 +433,9 @@ Future<void> _showCategoryBulkSheet(
                         children: [
                           Text(
                             'Issue range: #$startIssueNumber - #$endIssueNumber',
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           TextButton(
                             onPressed: isApplying
@@ -466,8 +471,7 @@ Future<void> _showCategoryBulkSheet(
                                     candidates,
                                     parsed.toString(),
                                   );
-                                  if (idx != null &&
-                                      idx + 1 <= selectedEnd) {
+                                  if (idx != null && idx + 1 <= selectedEnd) {
                                     setModalState(() {
                                       selectedRange = RangeValues(
                                         (idx + 1).toDouble(),
@@ -563,16 +567,15 @@ Future<void> _showCategoryBulkSheet(
                                 var affected = 0;
                                 final now = DateTime.now().toUtc();
 
-                                final issuesToRate =
-                                    useRange && canSelectRange
-                                        ? candidates
-                                            .where(
-                                              (c) =>
-                                                  c.orderIndex >= selectedStart &&
-                                                  c.orderIndex <= selectedEnd,
-                                            )
-                                            .toList()
-                                        : candidates;
+                                final issuesToRate = useRange && canSelectRange
+                                    ? candidates
+                                          .where(
+                                            (c) =>
+                                                c.orderIndex >= selectedStart &&
+                                                c.orderIndex <= selectedEnd,
+                                          )
+                                          .toList()
+                                    : candidates;
 
                                 for (final candidate in issuesToRate) {
                                   final issueId = candidate.issueId;
@@ -580,14 +583,18 @@ Future<void> _showCategoryBulkSheet(
 
                                   final item = categoryIssues.firstWhere(
                                     (ci) => ci.issue?.id == issueId,
-                                    orElse: () => categoryIssues[candidates.indexOf(candidate)],
+                                    orElse: () =>
+                                        categoryIssues[candidates.indexOf(
+                                          candidate,
+                                        )],
                                   );
 
                                   if (item.rating == selectedRating) continue;
 
                                   final localItem = await libraryRepository
                                       .getItemByIssueId(issueId);
-                                  final itemSeriesId = localItem?.metronSeriesId ??
+                                  final itemSeriesId =
+                                      localItem?.metronSeriesId ??
                                       item.issue?.series?.id;
                                   if (itemSeriesId == null) continue;
 
@@ -596,18 +603,19 @@ Future<void> _showCategoryBulkSheet(
                                     metronSeriesId: itemSeriesId,
                                     ownershipStatus:
                                         localItem?.ownershipStatus ??
-                                            LibraryOwnershipStatus.notOwned,
+                                        LibraryOwnershipStatus.notOwned,
                                     isRead: localItem?.isRead ?? item.isRead,
                                     rating: selectedRating,
                                     purchaseDate: localItem?.purchaseDate,
                                     pricePaid: localItem?.pricePaid,
-                                    quantityOwned: localItem?.quantityOwned ?? 1,
-                                    format: localItem?.format ??
+                                    quantityOwned:
+                                        localItem?.quantityOwned ?? 1,
+                                    format:
+                                        localItem?.format ??
                                         LibraryItemFormat.print,
                                     firstReadAt: localItem?.firstReadAt,
                                     conditionGrade: localItem?.conditionGrade,
-                                    acquiredOn: localItem?.acquiredOn ??
-                                        now,
+                                    acquiredOn: localItem?.acquiredOn ?? now,
                                     notes: localItem?.notes,
                                   );
                                   affected++;
@@ -632,9 +640,7 @@ Future<void> _showCategoryBulkSheet(
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(actionLabel()),
                     ),
@@ -650,7 +656,8 @@ Future<void> _showCategoryBulkSheet(
                                   ref: ref,
                                   seriesId: seriesId,
                                   seriesName: seriesName,
-                                  operation: SeriesIssueBulkOperation.markAsRead,
+                                  operation:
+                                      SeriesIssueBulkOperation.markAsRead,
                                   selectionMode: useRange && canSelectRange
                                       ? SeriesIssueSelectionMode.range
                                       : SeriesIssueSelectionMode.predefined,
@@ -678,9 +685,7 @@ Future<void> _showCategoryBulkSheet(
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(actionLabel()),
                     ),

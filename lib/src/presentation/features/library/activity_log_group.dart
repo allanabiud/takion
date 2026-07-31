@@ -26,27 +26,31 @@ class ActivityLogGroup {
   }
 }
 
+const activityGroupWindow = Duration(minutes: 5);
+
 List<ActivityLogGroup> groupActivityEvents(List<LibraryActivityEvent> events) {
   final sorted = List<LibraryActivityEvent>.from(events)
     ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-  final Map<String, ActivityLogGroup> groups = {};
+  final groups = <ActivityLogGroup>[];
 
   for (final event in sorted) {
     final local = event.timestamp.toLocal();
     final dateOnly = DateTime(local.year, local.month, local.day);
-    final key = '${dateOnly.millisecondsSinceEpoch}:${event.type.name}';
 
-    groups
-        .putIfAbsent(
-          key,
-          () => ActivityLogGroup(type: event.type, events: [], date: dateOnly),
-        )
-        .events
-        .add(event);
+    final current = groups.isEmpty ? null : groups.last;
+    if (current == null ||
+        current.type != event.type ||
+        current.date != dateOnly ||
+        current.events.last.timestamp.difference(event.timestamp) >
+            activityGroupWindow) {
+      groups.add(
+        ActivityLogGroup(type: event.type, events: [event], date: dateOnly),
+      );
+    } else {
+      current.events.add(event);
+    }
   }
 
-  final result = groups.values.toList();
-  result.sort((a, b) => b.date.compareTo(a.date));
-  return result;
+  return groups;
 }

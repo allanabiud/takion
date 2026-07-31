@@ -144,49 +144,43 @@ class _ArcIssuesScreenState extends ConsumerState<ArcIssuesScreen> {
       slivers: [
         SliverOverlapAbsorber(
           handle: _overlapHandle,
-          sliver: SliverPersistentHeader(
-            pinned: true,
-            delegate: _PinnedHeaderDelegate(
-              isLoading: isLoading,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ListHeader(
-                    count: issueCount,
-                    unit: 'issue',
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const VerticalDivider(width: 1, thickness: 1),
-                        TextButton.icon(
-                          onPressed: isLoading
-                              ? null
-                              : () {
-                                  showSortBottomSheet(
-                                    context,
-                                    ref,
-                                    SortPreferenceContext.arcIssues,
-                                    issueSortLabel,
-                                  );
-                                },
-                          icon: const Icon(Icons.swap_vert),
-                          label: Text(issueSortLabel(sortOption)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+          sliver: PinnedListHeader(
+            isLoading: isLoading,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ListHeader(
+                  count: issueCount,
+                  unit: 'issue',
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const VerticalDivider(width: 1, thickness: 1),
+                      TextButton.icon(
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                showSortBottomSheet(
+                                  context,
+                                  ref,
+                                  SortPreferenceContext.arcIssues,
+                                  issueSortLabel,
+                                );
+                              },
+                        icon: const Icon(Icons.swap_vert),
+                        label: Text(issueSortLabel(sortOption)),
                       ),
-                      child: LinearProgressIndicator(minHeight: 2),
-                    ),
-                ],
-              ),
+                    ],
+                  ),
+                ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: LinearProgressIndicator(minHeight: 2),
+                  ),
+              ],
             ),
           ),
         ),
@@ -218,28 +212,4 @@ class _ArcIssuesScreenState extends ConsumerState<ArcIssuesScreen> {
       ],
     );
   }
-}
-
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({required this.child, this.isLoading = false});
-
-  final Widget child;
-  final bool isLoading;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) => Container(color: Theme.of(context).colorScheme.surface, child: child);
-
-  @override
-  double get maxExtent => isLoading ? 74.0 : 56.0;
-
-  @override
-  double get minExtent => isLoading ? 74.0 : 56.0;
-
-  @override
-  bool shouldRebuild(_PinnedHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child || isLoading != oldDelegate.isLoading;
 }

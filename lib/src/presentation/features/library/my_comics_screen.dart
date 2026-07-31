@@ -196,48 +196,39 @@ class _MyComicsBrowseTab extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(collectedSeriesProvider),
           child: CustomScrollView(
             slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _PinnedListHeaderDelegate(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: ListHeader(
-                      count: filtered.length,
-                      unit: 'series',
-                      pluralUnit: 'series',
-                      enabled: true,
-                      sortLabel: seriesSortLabel(sortOption),
-                      onSortTap: () => showSortBottomSheet(
-                        context,
-                        ref,
-                        SortPreferenceContext.libraryMyComics,
-                        seriesSortLabel,
-                      ),
-                    ),
+              PinnedListHeader(
+                child: ListHeader(
+                  count: filtered.length,
+                  unit: 'series',
+                  pluralUnit: 'series',
+                  enabled: true,
+                  sortLabel: seriesSortLabel(sortOption),
+                  onSortTap: () => showSortBottomSheet(
+                    context,
+                    ref,
+                    SortPreferenceContext.libraryMyComics,
+                    seriesSortLabel,
                   ),
                 ),
               ),
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final summary = filtered[index];
-                    return SeriesListTile(
-                      series: summary,
-                      categoryCount: categoryCounts[summary.id],
-                      categoryLabel: 'collected',
-                      isFirst: index == 0,
-                      isLast: index == filtered.length - 1,
-                      onTap: () => context.pushRoute(
-                        LibrarySeriesRoute(
-                          seriesId: summary.id,
-                          category: 'collected',
-                          seriesName: summary.name,
-                        ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final summary = filtered[index];
+                  return SeriesListTile(
+                    series: summary,
+                    categoryCount: categoryCounts[summary.id],
+                    categoryLabel: 'collected',
+                    isFirst: index == 0,
+                    isLast: index == filtered.length - 1,
+                    onTap: () => context.pushRoute(
+                      LibrarySeriesRoute(
+                        seriesId: summary.id,
+                        category: 'collected',
+                        seriesName: summary.name,
                       ),
-                    );
-                  },
-                  childCount: filtered.length,
-                ),
+                    ),
+                  );
+                }, childCount: filtered.length),
               ),
             ],
           ),
@@ -245,27 +236,6 @@ class _MyComicsBrowseTab extends ConsumerWidget {
       },
     );
   }
-}
-
-class _PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedListHeaderDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Theme.of(context).colorScheme.surface, child: child);
-  }
-
-  @override
-  double get maxExtent => 80;
-
-  @override
-  double get minExtent => 56;
-
-  @override
-  bool shouldRebuild(_PinnedListHeaderDelegate oldDelegate) =>
-      child != oldDelegate.child;
 }
 
 class _MyComicsStatsTab extends ConsumerStatefulWidget {

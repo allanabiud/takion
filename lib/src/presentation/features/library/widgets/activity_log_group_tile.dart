@@ -70,7 +70,9 @@ class ActivityLogGroupTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    DateFormat('MMM d, yyyy').format(group.date.toLocal()),
+                    DateFormat(
+                      'h:mm a · MMM d, yyyy',
+                    ).format(group.latestTimestamp.toLocal()),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,

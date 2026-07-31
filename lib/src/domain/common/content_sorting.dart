@@ -64,7 +64,6 @@ enum SortPreferenceContext {
   releasesMyPulls,
   releasesNewFirst,
   continueReading,
-  startReading,
   subscriptions,
   searchImprints,
   searchTeams,
@@ -119,8 +118,6 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'releases_new_first';
       case SortPreferenceContext.continueReading:
         return 'continue_reading';
-      case SortPreferenceContext.startReading:
-        return 'start_reading';
       case SortPreferenceContext.subscriptions:
         return 'subscriptions';
       case SortPreferenceContext.searchImprints:
@@ -182,8 +179,6 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.continueReading:
         return ContentSortOption.dateNewest;
-      case SortPreferenceContext.startReading:
-        return ContentSortOption.nameAsc;
       case SortPreferenceContext.subscriptions:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.searchImprints:
