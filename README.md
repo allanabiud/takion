@@ -13,9 +13,9 @@
   <table>
     <tr>
       <td align="center"><img src="assets/images/screenshots/home.png" width="200" style="border-radius:16px;"/></td>
-      <td align="center"><img src="assets/images/screenshots/new_releases.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/screenshots/releases.png" width="200" style="border-radius:16px;"/></td>
       <td align="center"><img src="assets/images/screenshots/issue_details.png" width="200" style="border-radius:16px;"/></td>
-      <td align="center"><img src="assets/images/screenshots/series_details.png" width="200" style="border-radius:16px;"/></td>
+      <td align="center"><img src="assets/images/screenshots/character.png" width="200" style="border-radius:16px;"/></td>
     </tr>
   </table>
 </p>
@@ -69,42 +69,6 @@
 | **Database**         | [Drift](https://pub.dev/packages/hive_ce)               |
 | **Cloud Storage**    | [Google Drive API](https://pub.dev/packages/googleapis) |
 | **Architecture**     | Domain-Driven-Design                                    |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Prerequisites
-
-- Flutter SDK 3.x
-- Flutter-supported IDE
-- Android SDK 29+
-
-### Installation
-
-1. **Clone the repository**
-
-   ```sh
-   git clone https://github.com/allanabiud/takion.git
-   ```
-
-2. **Setup Dependencies**
-
-   ```sh
-   flutter pub get
-   ```
-
-3. **Run the project**
-   - Connect a device or start an emulator
-   - Run via IDE or `flutter run`
 
 ---
 
