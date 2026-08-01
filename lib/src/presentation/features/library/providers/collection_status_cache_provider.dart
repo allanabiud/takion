@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/core/storage/drift_database_provider.dart';
 
 Map<int, Map<String, dynamic>> _computeCollectionStatusMap(
   List<Map<String, dynamic>> itemsJson,
@@ -22,32 +22,37 @@ Map<int, Map<String, dynamic>> _computeCollectionStatusMap(
 }
 
 final collectionStatusCacheProvider =
-    FutureProvider<Map<int, IssueCollectionStatus>>((ref) async {
-      final items = await ref.watch(libraryItemsStreamProvider.future);
-      if (items.isEmpty) return const {};
+    StreamProvider<Map<int, IssueCollectionStatus>>((ref) async* {
+      final db = ref.watch(driftDatabaseProvider);
+      yield* db.libraryItemDao.watchStatusRows().asyncMap((rows) async {
+        if (rows.isEmpty) return const <int, IssueCollectionStatus>{};
 
-      final itemsJson = items
-          .map(
-            (item) => <String, dynamic>{
-              'metronIssueId': item.metronIssueId,
-              'ownershipStatus': item.ownershipStatus.name,
-              'isRead': item.isRead,
-              'rating': item.rating,
-            },
-          )
-          .toList(growable: false);
+        final itemsJson = rows
+            .map(
+              (row) => <String, dynamic>{
+                'metronIssueId': row.metronIssueId,
+                'ownershipStatus': row.ownershipStatus,
+                'isRead': row.isRead,
+                'rating': row.rating,
+              },
+            )
+            .toList(growable: false);
 
-      final resultMap = await compute(_computeCollectionStatusMap, itemsJson);
+        final resultMap = await compute(
+          _computeCollectionStatusMap,
+          itemsJson,
+        );
 
-      return resultMap.map(
-        (issueId, value) => MapEntry(
-          issueId,
-          IssueCollectionStatus(
-            isCollected: (value['isCollected'] as bool?) ?? false,
-            isWishlisted: (value['isWishlisted'] as bool?) ?? false,
-            isRead: (value['isRead'] as bool?) ?? false,
-            rating: value['rating'] as int?,
+        return resultMap.map(
+          (issueId, value) => MapEntry(
+            issueId,
+            IssueCollectionStatus(
+              isCollected: (value['isCollected'] as bool?) ?? false,
+              isWishlisted: (value['isWishlisted'] as bool?) ?? false,
+              isRead: (value['isRead'] as bool?) ?? false,
+              rating: value['rating'] as int?,
+            ),
           ),
-        ),
-      );
+        );
+      });
     });

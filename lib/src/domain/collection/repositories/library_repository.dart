@@ -48,4 +48,6 @@ abstract class LibraryRepository {
   Future<Set<int>> getOwnedIssueIds(List<int> metronIssueIds);
 
   Future<void> updateItemPricePaid(int metronIssueId, double pricePaid);
+
+  Future<void> batchUpdatePricePaid(Map<int, double> priceByIssueId);
 }

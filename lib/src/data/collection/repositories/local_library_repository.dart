@@ -368,4 +368,17 @@ class LocalLibraryRepository implements LibraryRepository {
       ),
     );
   }
+
+  @override
+  Future<void> batchUpdatePricePaid(Map<int, double> priceByIssueId) async {
+    if (priceByIssueId.isEmpty) return;
+    await _database.libraryItemDao.batchUpdatePricePaid(priceByIssueId);
+    final updatedMap = await _database.libraryItemDao.getByIssueIds(
+      priceByIssueId.keys.toList(),
+    );
+    for (final entry in updatedMap.entries) {
+      final item = _toDomain(entry.value);
+      _cache.setLibraryItem(entry.key, item);
+    }
+  }
 }

@@ -95,6 +95,7 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen> {
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       heroWidth: 250,
       heroHeight: 220,
+      heroImageAlignment: Alignment.center,
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>
           _buildImprintSheetSlivers(d, context, ref),

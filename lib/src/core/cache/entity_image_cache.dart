@@ -83,9 +83,11 @@ class EntityImageCache {
     }
 
     if (missingIds.isNotEmpty) {
+      final keys = [for (final id in missingIds) '$entityType:$id'];
+      final cachedMap = await database.imageCacheDao.getByKeys(keys);
       for (final id in missingIds) {
         final key = '$entityType:$id';
-        final cached = await database.imageCacheDao.get(key);
+        final cached = cachedMap[key];
         if (cached?.imageUrl != null) {
           _setInMemory(key, cached!.imageUrl);
           result[id] = cached.imageUrl;

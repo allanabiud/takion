@@ -83,6 +83,26 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
+  Future<List<MetronSery>> searchSeriesLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll('%', '\\%')
+        .replaceAll('_', '\\_');
+    return (select(attachedDatabase.metronSeries)
+          ..where((t) => t.name.like('%$cleanQuery%'))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+            (t) =>
+                OrderingTerm(expression: t.yearBegan, mode: OrderingMode.desc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
   Future<void> upsertSeries(MetronSeriesCompanion companion) async {
     await into(attachedDatabase.metronSeries).insertOnConflictUpdate(companion);
   }

@@ -29,6 +29,7 @@ part 'database.g.dart';
 @TableIndex(name: 'idx_lib_series', columns: {#metronSeriesId})
 @TableIndex(name: 'idx_lib_read', columns: {#isRead})
 @TableIndex(name: 'idx_lib_status', columns: {#ownershipStatus})
+@TableIndex(name: 'idx_lib_status_read', columns: {#ownershipStatus, #isRead})
 class LibraryItems extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -68,6 +69,7 @@ class LibraryReadLogs extends Table {
 @TableIndex(name: 'idx_pull_issue', columns: {#metronIssueId})
 @TableIndex(name: 'idx_pull_series', columns: {#metronSeriesId})
 @TableIndex(name: 'idx_pull_release', columns: {#releaseDate})
+@TableIndex(name: 'idx_pull_release_status', columns: {#releaseDate, #entryStatus})
 class PullListEntries extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -99,6 +101,11 @@ class SeriesSubscriptions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'idx_activity_series', columns: {#seriesId})
+@TableIndex(name: 'idx_activity_issue', columns: {#issueId})
+@TableIndex(name: 'idx_activity_event_time', columns: {#eventType, #timestamp})
+@TableIndex(name: 'idx_activity_timestamp', columns: {#timestamp})
+@TableIndex(name: 'idx_activity_series_timestamp', columns: {#seriesId, #timestamp})
 class ActivityEvents extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -135,6 +142,7 @@ class ReadingLists extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'idx_rli_list', columns: {#listId})
 class ReadingListItems extends Table {
   TextColumn get id => text()();
   TextColumn get listId => text()();
@@ -226,6 +234,7 @@ class MetronIssues extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'idx_metron_series_name', columns: {#name})
 class MetronSeries extends Table {
   IntColumn get id => integer()();
   TextColumn get name => text()();
@@ -528,6 +537,7 @@ class TeamUniverses extends Table {
   Set<Column> get primaryKey => {teamId, universeId};
 }
 
+@TableIndex(name: 'idx_mrli_list', columns: {#listId})
 class MetronReadingListItems extends Table {
   IntColumn get listId => integer()();
   IntColumn get targetId => integer()();
@@ -654,7 +664,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -662,9 +672,11 @@ class AppDatabase extends _$AppDatabase {
       beforeOpen: (details) async {
         await customStatement('PRAGMA journal_mode=WAL');
         await customStatement('PRAGMA synchronous=NORMAL');
-        await customStatement('PRAGMA cache_size=-8000');
+        await customStatement('PRAGMA cache_size=-16000');
+        await customStatement('PRAGMA mmap_size=268435456');
         await customStatement('PRAGMA busy_timeout=5000');
         await customStatement('PRAGMA temp_store=MEMORY');
+        await customStatement('PRAGMA optimize');
       },
       onUpgrade: (m, from, to) async {
         if (from < 2) {
@@ -685,6 +697,19 @@ class AppDatabase extends _$AppDatabase {
           await m.createIndex(idxIssueTeamsTeam);
           await m.createIndex(idxIssueUniversesUniverse);
         }
+        if (from < 5) {
+          await m.createIndex(idxLibStatusRead);
+          await m.createIndex(idxPullReleaseStatus);
+          await m.createIndex(idxActivitySeries);
+          await m.createIndex(idxActivityIssue);
+          await m.createIndex(idxActivityEventTime);
+          await m.createIndex(idxRliList);
+          await m.createIndex(idxMetronSeriesName);
+          await m.createIndex(idxMrliList);
+        }
+        if (from < 6) {
+          await m.createIndex(idxActivitySeriesTimestamp);
+        }
       },
     );
   }
@@ -697,7 +722,11 @@ LazyDatabase _openConnection() {
 
     await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
 
-    final db = NativeDatabase(file);
-    return db;
+    return NativeDatabase.createInBackground(
+      file,
+      logStatements: false,
+      cachePreparedStatements: true,
+      readPool: 2,
+    );
   });
 }

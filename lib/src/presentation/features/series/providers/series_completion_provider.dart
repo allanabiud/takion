@@ -1,17 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 
-final seriesOwnedCountProvider = FutureProvider.autoDispose.family<int, int>((
+final seriesOwnedCountProvider = StreamProvider.autoDispose.family<int, int>((
   ref,
   seriesId,
-) async {
-  final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-  return libraryItems
-      .where(
-        (item) =>
-            item.metronSeriesId == seriesId &&
-            item.ownershipStatus == LibraryOwnershipStatus.owned,
-      )
-      .length;
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.libraryItemDao.watchBySeriesId(seriesId).map(
+    (items) => items.where((i) => i.ownershipStatus == 'owned').length,
+  );
 });
+
+/// Parent-level lookup so a list can watch a single Map instead of one
+/// provider subscription (and one DB query) per tile.
+final seriesOwnedCountsProvider = StreamProvider.autoDispose
+    .family<Map<int, int>, List<int>>((ref, seriesIds) {
+      final db = ref.watch(driftDatabaseProvider);
+      if (seriesIds.isEmpty) {
+        return const Stream<Map<int, int>>.empty();
+      }
+      return db.libraryItemDao.watchCollected().map((items) {
+        final counts = <int, int>{};
+        for (final item in items) {
+          if (seriesIds.contains(item.metronSeriesId)) {
+            counts[item.metronSeriesId] =
+                (counts[item.metronSeriesId] ?? 0) + 1;
+          }
+        }
+        return counts;
+      });
+    });

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
+import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -80,6 +83,10 @@ Future<List<CategorySeriesSummary>> _groupWithIssueCounts(
 
 final collectedSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final collectionItems = await ref.watch(
@@ -89,47 +96,73 @@ final collectedSeriesProvider =
       final collected = collectionItems
           .where((item) => item.quantity > 0)
           .toList();
-      return _groupWithIssueCounts(dao, collected, issueToSeriesId);
+      final result = await _groupWithIssueCounts(dao, collected, issueToSeriesId);
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });
 
 final readSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(
         collectionItemsByReadStatusProvider(true).future,
       );
-      return _groupWithIssueCounts(dao, items, issueToSeriesId);
+      final result = await _groupWithIssueCounts(dao, items, issueToSeriesId);
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });
 
 final wishlistSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(wishlistCollectionItemsProvider.future);
-      return _groupWithIssueCounts(dao, items, issueToSeriesId);
+      final result = await _groupWithIssueCounts(dao, items, issueToSeriesId);
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });
 
 final unreadSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(
         collectionItemsByReadStatusProvider(false).future,
       );
-      return _groupWithIssueCounts(dao, items, issueToSeriesId);
+      final result = await _groupWithIssueCounts(dao, items, issueToSeriesId);
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });
 
 final unratedSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final dao = ref.read(metronEntityDaoProvider);
       final libraryItems = await ref.watch(allLibraryItemsProvider.future);
       final issueToSeriesId = _buildIssueToSeriesId(libraryItems);
       final items = await ref.watch(unratedCollectionItemsProvider.future);
-      return _groupWithIssueCounts(dao, items, issueToSeriesId);
+      final result = await _groupWithIssueCounts(dao, items, issueToSeriesId);
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+      return result;
     });
 
 final seriesByCategoryProvider = FutureProvider.autoDispose
@@ -149,3 +182,71 @@ final seriesByCategoryProvider = FutureProvider.autoDispose
           return Future.value(<CategorySeriesSummary>[]);
       }
     });
+
+SortPreferenceContext _sortContextForCategory(String category) {
+  switch (category) {
+    case 'collected':
+      return SortPreferenceContext.libraryMyComics;
+    case 'read':
+      return SortPreferenceContext.libraryRead;
+    case 'wishlist':
+      return SortPreferenceContext.libraryWishlist;
+    case 'unread':
+      return SortPreferenceContext.libraryUnread;
+    case 'unrated':
+      return SortPreferenceContext.libraryUnrated;
+    default:
+      return SortPreferenceContext.libraryMyComics;
+  }
+}
+
+typedef CategorySeriesView = ({List<SeriesList> series, Map<int, int> categoryCounts});
+
+CategorySeriesView _buildSeriesView(
+  List<CategorySeriesSummary> summaries,
+  ContentSortOption sortOption,
+) {
+  final mapped = summaries.map((s) {
+    return (
+      series: SeriesList(
+        id: s.seriesId,
+        name: s.seriesName,
+        volume: s.volume,
+        yearBegan: s.yearBegan,
+        issueCount: s.issueCount,
+      ),
+      categoryCount: s.categoryCount,
+    );
+  }).toList();
+  final sortedResults = sortSeries(
+    mapped.map((e) => e.series).toList(),
+    sortOption,
+  );
+  final categoryCounts = <int, int>{
+    for (final e in mapped) e.series.id: e.categoryCount,
+  };
+  return (series: sortedResults, categoryCounts: categoryCounts);
+}
+
+final sortedCategorySeriesViewProvider = FutureProvider.autoDispose
+    .family<CategorySeriesView, String>((ref, category) async {
+      final summaries =
+          await ref.watch(seriesByCategoryProvider(category).future);
+      final sortOption = ref.watch(
+        sortPreferenceForContextProvider(_sortContextForCategory(category)),
+      );
+      return _buildSeriesView(summaries, sortOption);
+    });
+
+final categorySeriesViewProvider = FutureProvider.autoDispose.family<
+    CategorySeriesView,
+    ({String category, String query})>((ref, arg) async {
+  final view =
+      await ref.watch(sortedCategorySeriesViewProvider(arg.category).future);
+  final query = arg.query.toLowerCase().trim();
+  if (query.isEmpty) return view;
+  final filtered = view.series
+      .where((s) => s.name.toLowerCase().contains(query))
+      .toList();
+  return (series: filtered, categoryCounts: view.categoryCounts);
+});

@@ -610,6 +610,26 @@ class DriveSyncService {
   Future<Map<String, dynamic>> extractDelta(DateTime? since) async {
     final sinceStr = since?.toUtc().toIso8601String();
     final tablesData = <String, Map<String, dynamic>>{};
+    final allMeta = await _db.syncMetaDao.getAll();
+
+    List<String> getDeletesForTable(String tableName) {
+      final deletes = <String>[];
+      final prefix = 'delete:$tableName:';
+      for (final entry in allMeta.entries) {
+        if (entry.key.startsWith(prefix)) {
+          final id = entry.key.substring(prefix.length);
+          if (since != null) {
+            final timestamp = DateTime.tryParse(entry.value);
+            if (timestamp != null && timestamp.isAfter(since)) {
+              deletes.add(id);
+            }
+          } else {
+            deletes.add(id);
+          }
+        }
+      }
+      return deletes;
+    }
 
     final query = _db.select;
 
@@ -635,7 +655,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('library_items', since),
+      'deletes': getDeletesForTable('library_items'),
     };
 
     tablesData['library_read_logs'] = {
@@ -647,7 +667,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('library_read_logs', since),
+      'deletes': getDeletesForTable('library_read_logs'),
     };
 
     tablesData['pull_list_entries'] = {
@@ -659,7 +679,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('pull_list_entries', since),
+      'deletes': getDeletesForTable('pull_list_entries'),
     };
 
     tablesData['series_subscriptions'] = {
@@ -671,7 +691,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('series_subscriptions', since),
+      'deletes': getDeletesForTable('series_subscriptions'),
     };
 
     tablesData['activity_events'] = {
@@ -683,7 +703,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('activity_events', since),
+      'deletes': getDeletesForTable('activity_events'),
     };
 
     tablesData['reading_lists'] = {
@@ -694,14 +714,14 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('reading_lists', since),
+      'deletes': getDeletesForTable('reading_lists'),
     };
 
     List<ReadingListItem> listItems = await query(_db.readingListItems).get();
     tablesData['reading_list_items'] = {
       'inserts': listItems.map((r) => r.toJson()).toList(),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('reading_list_items', since),
+      'deletes': getDeletesForTable('reading_list_items'),
     };
 
     tablesData['favorite_series'] = {
@@ -713,7 +733,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('favorite_series', since),
+      'deletes': getDeletesForTable('favorite_series'),
     };
 
     tablesData['favorite_issues'] = {
@@ -725,7 +745,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('favorite_issues', since),
+      'deletes': getDeletesForTable('favorite_issues'),
     };
 
     tablesData['favorite_characters'] = {
@@ -737,7 +757,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('favorite_characters', since),
+      'deletes': getDeletesForTable('favorite_characters'),
     };
 
     tablesData['favorite_creators'] = {
@@ -749,7 +769,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('favorite_creators', since),
+      'deletes': getDeletesForTable('favorite_creators'),
     };
 
     tablesData['favorite_reading_lists'] = {
@@ -761,7 +781,7 @@ class DriveSyncService {
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
-      'deletes': await _getDeletesForTable('favorite_reading_lists', since),
+      'deletes': getDeletesForTable('favorite_reading_lists'),
     };
 
     return {
@@ -771,30 +791,6 @@ class DriveSyncService {
       'toTimestamp': DateTime.now().toUtc().toIso8601String(),
       'tables': tablesData,
     };
-  }
-
-  Future<List<String>> _getDeletesForTable(
-    String tableName,
-    DateTime? since,
-  ) async {
-    final allMeta = await _db.syncMetaDao.getAll();
-    final deletes = <String>[];
-    final prefix = 'delete:$tableName:';
-
-    for (final entry in allMeta.entries) {
-      if (entry.key.startsWith(prefix)) {
-        final id = entry.key.substring(prefix.length);
-        if (since != null) {
-          final timestamp = DateTime.tryParse(entry.value);
-          if (timestamp != null && timestamp.isAfter(since)) {
-            deletes.add(id);
-          }
-        } else {
-          deletes.add(id);
-        }
-      }
-    }
-    return deletes;
   }
 
   Future<void> _pruneDeletedRows(DateTime cutoff) async {

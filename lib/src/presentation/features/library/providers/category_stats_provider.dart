@@ -5,6 +5,7 @@ import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
+import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 enum CategoryType { owned, read, wishlist }
@@ -34,6 +35,7 @@ final categoryInsightsProvider = StreamProvider.autoDispose
       final db = ref.watch(driftDatabaseProvider);
       final mapper = ref.watch(entityMapperProvider);
       final controller = StreamController<LibraryInsights>();
+      final debounced = DebouncedWorker();
 
       Future<void> computeStats(List<LibraryItem> libraryItems) async {
         try {
@@ -228,16 +230,19 @@ final categoryInsightsProvider = StreamProvider.autoDispose
         allLibraryItemsProvider,
         (_, next) {
           next.whenOrNull(data: (libraryItems) {
-            computeStats(libraryItems);
+            debounced.schedule(() => computeStats(libraryItems));
           });
         },
       );
 
       ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        computeStats(libraryItems);
+        debounced.schedule(() => computeStats(libraryItems));
       });
 
-      ref.onDispose(controller.close);
+      ref.onDispose(() {
+        debounced.cancel();
+        controller.close();
+      });
 
       return controller.stream;
     });

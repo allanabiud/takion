@@ -134,41 +134,25 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final seriesAsync = ref.watch(wishlistSeriesProvider);
+    final viewAsync = ref.watch(
+      categorySeriesViewProvider(
+        (
+          category: 'wishlist',
+          query: widget.isSearching ? widget.searchQuery : '',
+        ),
+      ),
+    );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryWishlist),
     );
 
-    return seriesAsync.when(
+    return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
       error: (error, _) =>
           AsyncStatePanel.error(errorMessage: 'Failed to load wishlist series'),
-      data: (seriesList) {
-        final mapped = seriesList.map((s) {
-          return (
-            series: SeriesList(
-              id: s.seriesId,
-              name: s.seriesName,
-              volume: s.volume,
-              yearBegan: s.yearBegan,
-              issueCount: s.issueCount,
-            ),
-            categoryCount: s.categoryCount,
-          );
-        }).toList();
-        final sortedResults = sortSeries(
-          mapped.map((e) => e.series).toList(),
-          sortOption,
-        );
-        final categoryCounts = <int, int>{
-          for (final e in mapped) e.series.id: e.categoryCount,
-        };
-        final query = widget.searchQuery.toLowerCase().trim();
-        final filtered = widget.isSearching && query.isNotEmpty
-            ? sortedResults
-                  .where((s) => s.name.toLowerCase().contains(query))
-                  .toList()
-            : sortedResults;
+      data: (view) {
+        final filtered = view.series;
+        final categoryCounts = view.categoryCounts;
         if (filtered.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(wishlistSeriesProvider),
@@ -213,6 +197,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                     series: summary,
                     categoryCount: categoryCounts[summary.id],
                     categoryLabel: 'wishlist',
+                    showProgressBar: true,
                     isFirst: index == 0,
                     isLast: index == filtered.length - 1,
                     onTap: () => context.pushRoute(

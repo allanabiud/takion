@@ -98,6 +98,7 @@ class _PublisherDetailsScreenState
       onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
       heroWidth: 260,
       heroHeight: 260,
+      heroImageAlignment: Alignment.center,
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>
           _buildPublisherSheetSlivers(d, context, ref),

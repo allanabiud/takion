@@ -24,6 +24,7 @@ class SeriesListTile extends ConsumerWidget {
   final int? categoryCount;
   final String? categoryLabel;
   final bool showProgressBar;
+  final int? ownedCount;
 
   const SeriesListTile({
     super.key,
@@ -38,7 +39,8 @@ class SeriesListTile extends ConsumerWidget {
     this.role,
     this.categoryCount,
     this.categoryLabel,
-    this.showProgressBar = true,
+    this.showProgressBar = false,
+    this.ownedCount,
   });
 
   String _formatSeriesType(String? type) {
@@ -73,18 +75,26 @@ class SeriesListTile extends ConsumerWidget {
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final isFavorite =
         ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
-    final detailsAsync = ref.watch(seriesDetailsProvider(series.id));
     final cachedIssueCountAsync = ref.watch(
       cachedSeriesIssueCountProvider(series.id),
     );
+    // Only consult the full details API (a network call) when the list opts
+    // in via allowRemoteCoverFetch; lists otherwise render from local stubs.
+    int? remoteIssueCount;
+    if (allowRemoteCoverFetch) {
+      remoteIssueCount = ref
+          .watch(seriesDetailsProvider(series.id))
+          .asData
+          ?.value
+          .issueCount;
+    }
     // Category summaries deliberately store the category count in issueCount.
     // If categoryCount is present, series.issueCount is the category count,
-    // not the series total. Try the full details API first, then fall back
-    // to the local DB cache (which has issue_count from list responses).
+    // not the series total. Prefer the local DB cache (which has issue_count
+    // from list responses); the full details API is only consulted when this
+    // tile allows remote hydration.
     final totalIssuesCount =
-        detailsAsync.asData?.value.issueCount ??
-        cachedIssueCountAsync.asData?.value ??
-        series.issueCount;
+        remoteIssueCount ?? cachedIssueCountAsync.asData?.value ?? series.issueCount;
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedImage = cache.getCached('series', series.id);
@@ -189,6 +199,7 @@ class SeriesListTile extends ConsumerWidget {
                               seriesId: series.id,
                               total: totalIssuesCount,
                               categoryCount: categoryCount,
+                              ownedCount: ownedCount,
                             ),
                           const SizedBox(height: 8),
                           Row(
@@ -277,11 +288,13 @@ class _SeriesProgressBar extends ConsumerWidget {
   final int seriesId;
   final int total;
   final int? categoryCount;
+  final int? ownedCount;
 
   const _SeriesProgressBar({
     required this.seriesId,
     required this.total,
     this.categoryCount,
+    this.ownedCount,
   });
 
   @override
@@ -318,6 +331,13 @@ class _SeriesProgressBar extends ConsumerWidget {
       );
     }
 
+    if (ownedCount != null) {
+      final owned = ownedCount!;
+      if (owned <= 0) return const SizedBox(height: 4);
+      final percent = (owned / total).clamp(0.0, 1.0);
+      return _buildProgress(context, owned, percent);
+    }
+
     final ownedAsync = ref.watch(seriesOwnedCountProvider(seriesId));
 
     return ownedAsync.when(
@@ -326,33 +346,37 @@ class _SeriesProgressBar extends ConsumerWidget {
       data: (owned) {
         if (owned == 0) return const SizedBox(height: 4);
         final percent = (owned / total).clamp(0.0, 1.0);
-        return Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: percent,
-                    minHeight: 6,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '$owned/$total',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        );
+        return _buildProgress(context, owned, percent);
       },
+    );
+  }
+
+  Widget _buildProgress(BuildContext context, int owned, double percent) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: percent,
+                minHeight: 6,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$owned/$total',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

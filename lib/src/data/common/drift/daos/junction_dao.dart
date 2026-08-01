@@ -200,6 +200,20 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
         .get();
   }
 
+  Future<Map<int, List<IssueCharacter>>> getIssueCharactersForIssues(
+    List<int> issueIds,
+  ) async {
+    if (issueIds.isEmpty) return {};
+    final rows = await (select(attachedDatabase.issueCharacters)
+          ..where((t) => t.issueId.isIn(issueIds))
+          ..orderBy([
+            (u) =>
+                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
+          ]))
+        .get();
+    return _groupByIssue(rows, (row) => row.issueId);
+  }
+
   Future<List<IssueCreator>> getIssueCreators(int issueId) async {
     return (select(attachedDatabase.issueCreators)
           ..where((t) => t.issueId.equals(issueId))
@@ -208,6 +222,20 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
                 OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
           ]))
         .get();
+  }
+
+  Future<Map<int, List<IssueCreator>>> getIssueCreatorsForIssues(
+    List<int> issueIds,
+  ) async {
+    if (issueIds.isEmpty) return {};
+    final rows = await (select(attachedDatabase.issueCreators)
+          ..where((t) => t.issueId.isIn(issueIds))
+          ..orderBy([
+            (u) =>
+                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
+          ]))
+        .get();
+    return _groupByIssue(rows, (row) => row.issueId);
   }
 
   Future<List<IssueArc>> getIssueArcs(int issueId) async {
@@ -220,6 +248,20 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
         .get();
   }
 
+  Future<Map<int, List<IssueArc>>> getIssueArcsForIssues(
+    List<int> issueIds,
+  ) async {
+    if (issueIds.isEmpty) return {};
+    final rows = await (select(attachedDatabase.issueArcs)
+          ..where((t) => t.issueId.isIn(issueIds))
+          ..orderBy([
+            (u) =>
+                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
+          ]))
+        .get();
+    return _groupByIssue(rows, (row) => row.issueId);
+  }
+
   Future<List<IssueTeam>> getIssueTeams(int issueId) async {
     return (select(attachedDatabase.issueTeams)
           ..where((t) => t.issueId.equals(issueId))
@@ -230,6 +272,20 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
         .get();
   }
 
+  Future<Map<int, List<IssueTeam>>> getIssueTeamsForIssues(
+    List<int> issueIds,
+  ) async {
+    if (issueIds.isEmpty) return {};
+    final rows = await (select(attachedDatabase.issueTeams)
+          ..where((t) => t.issueId.isIn(issueIds))
+          ..orderBy([
+            (u) =>
+                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
+          ]))
+        .get();
+    return _groupByIssue(rows, (row) => row.issueId);
+  }
+
   Future<List<IssueUniverse>> getIssueUniverses(int issueId) async {
     return (select(attachedDatabase.issueUniverses)
           ..where((t) => t.issueId.equals(issueId))
@@ -238,6 +294,31 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
                 OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
           ]))
         .get();
+  }
+
+  Future<Map<int, List<IssueUniverse>>> getIssueUniversesForIssues(
+    List<int> issueIds,
+  ) async {
+    if (issueIds.isEmpty) return {};
+    final rows = await (select(attachedDatabase.issueUniverses)
+          ..where((t) => t.issueId.isIn(issueIds))
+          ..orderBy([
+            (u) =>
+                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
+          ]))
+        .get();
+    return _groupByIssue(rows, (row) => row.issueId);
+  }
+
+  static Map<int, List<T>> _groupByIssue<T>(
+    List<T> rows,
+    int Function(T row) issueId,
+  ) {
+    final grouped = <int, List<T>>{};
+    for (final row in rows) {
+      grouped.putIfAbsent(issueId(row), () => <T>[]).add(row);
+    }
+    return grouped;
   }
 
   Future<List<CharacterCreator>> getCharacterCreators(int characterId) async {

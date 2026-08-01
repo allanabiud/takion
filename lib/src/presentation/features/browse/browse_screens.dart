@@ -1,161 +1,25 @@
-import 'dart:async';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/features/browse/providers/browse_providers.dart';
-
-class _SearchHeader extends StatefulWidget {
-  const _SearchHeader({
-    required this.controller,
-    required this.hintText,
-    required this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final String hintText;
-  final ValueChanged<String> onChanged;
-
-  @override
-  State<_SearchHeader> createState() => _SearchHeaderState();
-}
-
-class _SearchHeaderState extends State<_SearchHeader> {
-  Timer? _debounce;
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(26),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 16),
-            Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: widget.controller,
-                decoration: InputDecoration(
-                  hintText: widget.hintText,
-                  border: InputBorder.none,
-                  isDense: true,
-                  filled: false,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                style: theme.textTheme.bodyLarge,
-                onChanged: (value) {
-                  _debounce?.cancel();
-                  _debounce = Timer(const Duration(milliseconds: 400), () {
-                    widget.onChanged(value);
-                  });
-                },
-              ),
-            ),
-            if (widget.controller.text.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.clear, size: 20),
-                onPressed: () {
-                  widget.controller.clear();
-                  widget.onChanged('');
-                },
-              ),
-            const SizedBox(width: 4),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Widget _buildSearchHeader({
-  required TextEditingController controller,
-  required String hintText,
-  required VoidCallback onSearchChanged,
-}) {
-  return _SearchHeader(
-    controller: controller,
-    hintText: hintText,
-    onChanged: (_) => onSearchChanged(),
-  );
-}
-
-BrowseFilter _browseFilter({required int page, required String? query}) =>
-    BrowseFilter(
-      page: page,
-      name: query?.trim().isEmpty == true ? null : query?.trim(),
-    );
+import 'package:takion/src/presentation/features/series/series_list_tile.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
-class CharacterBrowseScreen extends ConsumerStatefulWidget {
+class CharacterBrowseScreen extends StatelessWidget {
   const CharacterBrowseScreen({super.key});
 
   @override
-  ConsumerState<CharacterBrowseScreen> createState() =>
-      _CharacterBrowseScreenState();
-}
-
-class _CharacterBrowseScreenState extends ConsumerState<CharacterBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(characterBrowseProvider(filter));
-    return BrowsePagedListScreen<CharacterList>(
+    return GenericBrowseScreen<CharacterList>(
       title: 'Browse Characters',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(characterBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(characterBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(characterBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No characters found.',
       emptyIcon: Icons.person_off,
       errorPrefix: 'Failed to load characters',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => PersonListTile(
         characterId: item.id,
         name: item.name,
@@ -169,57 +33,19 @@ class _CharacterBrowseScreenState extends ConsumerState<CharacterBrowseScreen> {
 }
 
 @RoutePage()
-class SeriesBrowseScreen extends ConsumerStatefulWidget {
+class SeriesBrowseScreen extends StatelessWidget {
   const SeriesBrowseScreen({super.key});
 
   @override
-  ConsumerState<SeriesBrowseScreen> createState() => _SeriesBrowseScreenState();
-}
-
-class _SeriesBrowseScreenState extends ConsumerState<SeriesBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(seriesBrowseProvider(filter));
-    return BrowsePagedListScreen<SeriesList>(
+    return GenericBrowseScreen<SeriesList>(
       title: 'Browse Series',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(seriesBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(seriesBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(seriesBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No series found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load series',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => SeriesListTile(
         series: item,
         isFirst: index == 0,
@@ -231,58 +57,19 @@ class _SeriesBrowseScreenState extends ConsumerState<SeriesBrowseScreen> {
 }
 
 @RoutePage()
-class PublisherBrowseScreen extends ConsumerStatefulWidget {
+class PublisherBrowseScreen extends StatelessWidget {
   const PublisherBrowseScreen({super.key});
 
   @override
-  ConsumerState<PublisherBrowseScreen> createState() =>
-      _PublisherBrowseScreenState();
-}
-
-class _PublisherBrowseScreenState extends ConsumerState<PublisherBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(publisherBrowseProvider(filter));
-    return BrowsePagedListScreen<PublisherList>(
+    return GenericBrowseScreen<PublisherList>(
       title: 'Browse Publishers',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(publisherBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(publisherBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(publisherBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No publishers found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load publishers',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => EntityListTile(
         entityType: 'publisher',
         entityId: item.id,
@@ -300,57 +87,19 @@ class _PublisherBrowseScreenState extends ConsumerState<PublisherBrowseScreen> {
 }
 
 @RoutePage()
-class TeamBrowseScreen extends ConsumerStatefulWidget {
+class TeamBrowseScreen extends StatelessWidget {
   const TeamBrowseScreen({super.key});
 
   @override
-  ConsumerState<TeamBrowseScreen> createState() => _TeamBrowseScreenState();
-}
-
-class _TeamBrowseScreenState extends ConsumerState<TeamBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(teamBrowseProvider(filter));
-    return BrowsePagedListScreen<TeamList>(
+    return GenericBrowseScreen<TeamList>(
       title: 'Browse Teams',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(teamBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(teamBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(teamBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No teams found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load teams',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => EntityListTile(
         entityType: 'team',
         entityId: item.id,
@@ -364,57 +113,19 @@ class _TeamBrowseScreenState extends ConsumerState<TeamBrowseScreen> {
 }
 
 @RoutePage()
-class ArcBrowseScreen extends ConsumerStatefulWidget {
+class ArcBrowseScreen extends StatelessWidget {
   const ArcBrowseScreen({super.key});
 
   @override
-  ConsumerState<ArcBrowseScreen> createState() => _ArcBrowseScreenState();
-}
-
-class _ArcBrowseScreenState extends ConsumerState<ArcBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(arcBrowseProvider(filter));
-    return BrowsePagedListScreen<ArcList>(
+    return GenericBrowseScreen<ArcList>(
       title: 'Browse Story Arcs',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(arcBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(arcBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(arcBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No story arcs found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load story arcs',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => EntityListTile(
         entityType: 'arc',
         entityId: item.id,
@@ -428,58 +139,19 @@ class _ArcBrowseScreenState extends ConsumerState<ArcBrowseScreen> {
 }
 
 @RoutePage()
-class UniverseBrowseScreen extends ConsumerStatefulWidget {
+class UniverseBrowseScreen extends StatelessWidget {
   const UniverseBrowseScreen({super.key});
 
   @override
-  ConsumerState<UniverseBrowseScreen> createState() =>
-      _UniverseBrowseScreenState();
-}
-
-class _UniverseBrowseScreenState extends ConsumerState<UniverseBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(universeBrowseProvider(filter));
-    return BrowsePagedListScreen<UniverseList>(
+    return GenericBrowseScreen<UniverseList>(
       title: 'Browse Universes',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(universeBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(universeBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(universeBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No universes found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load universes',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => EntityListTile(
         entityType: 'universe',
         entityId: item.id,
@@ -494,58 +166,19 @@ class _UniverseBrowseScreenState extends ConsumerState<UniverseBrowseScreen> {
 }
 
 @RoutePage()
-class ImprintBrowseScreen extends ConsumerStatefulWidget {
+class ImprintBrowseScreen extends StatelessWidget {
   const ImprintBrowseScreen({super.key});
 
   @override
-  ConsumerState<ImprintBrowseScreen> createState() =>
-      _ImprintBrowseScreenState();
-}
-
-class _ImprintBrowseScreenState extends ConsumerState<ImprintBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(imprintBrowseProvider(filter));
-    return BrowsePagedListScreen<ImprintList>(
+    return GenericBrowseScreen<ImprintList>(
       title: 'Browse Imprints',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(imprintBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(imprintBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(imprintBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No imprints found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load imprints',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => EntityListTile(
         entityType: 'imprint',
         entityId: item.id,
@@ -559,58 +192,19 @@ class _ImprintBrowseScreenState extends ConsumerState<ImprintBrowseScreen> {
 }
 
 @RoutePage()
-class CreatorBrowseScreen extends ConsumerStatefulWidget {
+class CreatorBrowseScreen extends StatelessWidget {
   const CreatorBrowseScreen({super.key});
 
   @override
-  ConsumerState<CreatorBrowseScreen> createState() =>
-      _CreatorBrowseScreenState();
-}
-
-class _CreatorBrowseScreenState extends ConsumerState<CreatorBrowseScreen> {
-  int _page = 1;
-  String? _searchQuery;
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filter = _browseFilter(page: _page, query: _searchQuery);
-    final async = ref.watch(creatorBrowseProvider(filter));
-    return BrowsePagedListScreen<CreatorList>(
+    return GenericBrowseScreen<CreatorList>(
       title: 'Browse Creators',
-      pageAsync: async,
-      onRefresh: () async {
-        try {
-          final count = await ref.read(creatorBrowseProvider(filter).notifier).refresh();
-          if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
-          }
-        }
-      },
-      onPrevious: () => setState(() => _page--),
-      onNext: () => setState(() => _page++),
+      providerBuilder: (ref, filter) => ref.watch(creatorBrowseProvider(filter)),
+      refreshNotifierGetter: (ref, filter) =>
+          ref.read(creatorBrowseProvider(filter).notifier).refresh(),
       emptyMessage: 'No creators found.',
       emptyIcon: Icons.search_off,
       errorPrefix: 'Failed to load creators',
-      header: _buildSearchHeader(
-        controller: _searchController,
-        hintText: 'Filter by name...',
-        onSearchChanged: () => setState(() {
-          _page = 1;
-          _searchQuery = _searchController.text.trim();
-          if (_searchQuery!.isEmpty) _searchQuery = null;
-        }),
-      ),
       itemBuilder: (context, item, index, total) => PersonListTile(
         characterId: item.id,
         name: item.name,

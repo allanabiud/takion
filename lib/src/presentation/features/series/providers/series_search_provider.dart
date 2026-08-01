@@ -18,7 +18,27 @@ class SeriesSearch extends _$SeriesSearch {
       return const SeriesSearchPage(results: [], count: 0, currentPage: 1);
     }
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    // 1. Instant local search from MetronEntityDao
+    final db = ref.watch(driftDatabaseProvider);
+    final localRows = await db.metronEntityDao.searchSeriesLocally(
+      args.query,
+      limit: metronDefaultPageSize,
+    );
+    final localStubs = localRows
+        .map(
+          (row) => SeriesList(
+            id: row.id,
+            name: row.name,
+            yearBegan: row.yearBegan,
+            yearEnd: row.yearEnd,
+            volume: row.volume,
+            issueCount: row.issueCount,
+          ),
+        )
+        .toList();
+
+    // Small debounce for remote API call
+    await Future.delayed(const Duration(milliseconds: 300));
 
     final link = ref.keepAlive();
     Timer? timer;
@@ -28,35 +48,63 @@ class SeriesSearch extends _$SeriesSearch {
     final cancelToken = CancelToken();
     ref.onDispose(cancelToken.cancel);
 
-    final results = await repository.searchSeries(
-      args.query,
-      page: args.page,
-      limit: metronDefaultPageSize,
-      cancelToken: cancelToken,
-    );
-
-    if (results.previousPage != null) {
-      unawaited(
-        repository.searchSeries(
-          args.query,
-          page: results.previousPage!,
-          limit: metronDefaultPageSize,
-        ),
+    try {
+      final remotePage = await repository.searchSeries(
+        args.query,
+        page: args.page,
+        limit: metronDefaultPageSize,
+        cancelToken: cancelToken,
       );
-    }
-    if (results.nextPage != null) {
-      unawaited(
-        repository.searchSeries(
-          args.query,
-          page: results.nextPage!,
-          limit: metronDefaultPageSize,
-        ),
+
+      if (remotePage.previousPage != null) {
+        unawaited(
+          repository.searchSeries(
+            args.query,
+            page: remotePage.previousPage!,
+            limit: metronDefaultPageSize,
+          ),
+        );
+      }
+      if (remotePage.nextPage != null) {
+        unawaited(
+          repository.searchSeries(
+            args.query,
+            page: remotePage.nextPage!,
+            limit: metronDefaultPageSize,
+          ),
+        );
+      }
+
+      timer = Timer(const Duration(minutes: 5), () => link.close());
+
+      // Merge local stubs and remote results without duplicates
+      final seenIds = <int>{for (final item in remotePage.results) item.id};
+      final mergedResults = [
+        ...remotePage.results,
+        for (final stub in localStubs)
+          if (!seenIds.contains(stub.id)) stub,
+      ];
+
+      return SeriesSearchPage(
+        count: remotePage.count > mergedResults.length
+            ? remotePage.count
+            : mergedResults.length,
+        results: mergedResults,
+        currentPage: args.page,
+        next: remotePage.next,
+        previous: remotePage.previous,
       );
+    } catch (_) {
+      // If remote fails or is offline, return local results
+      if (localStubs.isNotEmpty) {
+        return SeriesSearchPage(
+          count: localStubs.length,
+          results: localStubs,
+          currentPage: args.page,
+        );
+      }
+      rethrow;
     }
-
-    timer = Timer(const Duration(minutes: 5), () => link.close());
-
-    return results;
   }
 
   Future<void> refresh() async {

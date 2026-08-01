@@ -11,9 +11,105 @@ class EntityMapper {
   EntityMapper(this._entityDao, this._junctionDao);
 
   Future<IssueDetails> issueToEntity(MetronIssue row) async {
+    final lookups = await _buildLookups([row]);
+    return _issueToEntity(row, lookups);
+  }
+
+  Future<List<IssueDetails>> batchIssueToEntity(
+    List<MetronIssue> rows,
+  ) async {
+    if (rows.isEmpty) return <IssueDetails>[];
+    final lookups = await _buildLookups(rows);
+    return rows.map((row) => _issueToEntity(row, lookups)).toList();
+  }
+
+  Future<_IssueLookups> _buildLookups(List<MetronIssue> rows) async {
+    final issueIds = rows.map((r) => r.id).toList();
+    final seriesIds = <int>{};
+    final publisherIds = <int>{};
+    final imprintIds = <int>{};
+    for (final row in rows) {
+      if (row.seriesId != null) seriesIds.add(row.seriesId!);
+      if (row.publisherId != null) publisherIds.add(row.publisherId!);
+      if (row.imprintId != null) imprintIds.add(row.imprintId!);
+    }
+
+    final charactersByIssue =
+        await _junctionDao.getIssueCharactersForIssues(issueIds);
+    final arcsByIssue = await _junctionDao.getIssueArcsForIssues(issueIds);
+    final teamsByIssue = await _junctionDao.getIssueTeamsForIssues(issueIds);
+    final universesByIssue =
+        await _junctionDao.getIssueUniversesForIssues(issueIds);
+    final creatorsByIssue =
+        await _junctionDao.getIssueCreatorsForIssues(issueIds);
+
+    final characterIds = <int>{};
+    final arcIds = <int>{};
+    final teamIds = <int>{};
+    final universeIds = <int>{};
+    final creatorIds = <int>{};
+    for (final list in charactersByIssue.values) {
+      for (final j in list) {
+        characterIds.add(j.characterId);
+      }
+    }
+    for (final list in arcsByIssue.values) {
+      for (final j in list) {
+        arcIds.add(j.arcId);
+      }
+    }
+    for (final list in teamsByIssue.values) {
+      for (final j in list) {
+        teamIds.add(j.teamId);
+      }
+    }
+    for (final list in universesByIssue.values) {
+      for (final j in list) {
+        universeIds.add(j.universeId);
+      }
+    }
+    for (final list in creatorsByIssue.values) {
+      for (final j in list) {
+        creatorIds.add(j.creatorId);
+      }
+    }
+
+    final seriesById = await _entityDao.getSeriesByIds(seriesIds.toList());
+    final publisherById = await _entityDao.getPublishersByIds(
+      publisherIds.toList(),
+    );
+    final imprintById = await _entityDao.getImprintsByIds(imprintIds.toList());
+    final characterById = await _entityDao.getCharactersByIds(
+      characterIds.toList(),
+    );
+    final arcById = await _entityDao.getArcsByIds(arcIds.toList());
+    final teamById = await _entityDao.getTeamsByIds(teamIds.toList());
+    final universeById = await _entityDao.getUniversesByIds(
+      universeIds.toList(),
+    );
+    final creatorById = await _entityDao.getCreatorsByIds(creatorIds.toList());
+
+    return _IssueLookups(
+      seriesById: seriesById,
+      publisherById: publisherById,
+      imprintById: imprintById,
+      characterById: characterById,
+      arcById: arcById,
+      teamById: teamById,
+      universeById: universeById,
+      creatorById: creatorById,
+      charactersByIssue: charactersByIssue,
+      arcsByIssue: arcsByIssue,
+      teamsByIssue: teamsByIssue,
+      universesByIssue: universesByIssue,
+      creatorsByIssue: creatorsByIssue,
+    );
+  }
+
+  IssueDetails _issueToEntity(MetronIssue row, _IssueLookups lookups) {
     IssueDetailsSeries? series;
     if (row.seriesId != null) {
-      final s = await _entityDao.getSeries(row.seriesId!);
+      final s = lookups.seriesById[row.seriesId];
       if (s != null) {
         series = IssueDetailsSeries(
           id: s.id,
@@ -27,7 +123,7 @@ class EntityMapper {
 
     IssueDetailsNamedRef? publisher;
     if (row.publisherId != null) {
-      final p = await _entityDao.getPublisher(row.publisherId!);
+      final p = lookups.publisherById[row.publisherId];
       if (p != null) {
         publisher = IssueDetailsNamedRef(id: p.id, name: p.name);
       }
@@ -35,52 +131,54 @@ class EntityMapper {
 
     IssueDetailsNamedRef? imprint;
     if (row.imprintId != null) {
-      final i = await _entityDao.getImprint(row.imprintId!);
+      final i = lookups.imprintById[row.imprintId];
       if (i != null) {
         imprint = IssueDetailsNamedRef(id: i.id, name: i.name);
       }
     }
 
-    final characterJunctions = await _junctionDao.getIssueCharacters(row.id);
-    final characters = <IssueDetailsParticipation>[];
-    for (final j in characterJunctions) {
-      final c = await _entityDao.getCharacter(j.characterId);
-      characters.add(
-        IssueDetailsParticipation(id: j.characterId, name: c?.name ?? ''),
-      );
-    }
+    final characterJunctions = lookups.charactersByIssue[row.id] ?? const [];
+    final characters = <IssueDetailsParticipation>[
+      for (final j in characterJunctions)
+        IssueDetailsParticipation(
+          id: j.characterId,
+          name: lookups.characterById[j.characterId]?.name ?? '',
+        ),
+    ];
 
-    final arcJunctions = await _junctionDao.getIssueArcs(row.id);
-    final arcs = <IssueDetailsParticipation>[];
-    for (final j in arcJunctions) {
-      final a = await _entityDao.getArc(j.arcId);
-      arcs.add(IssueDetailsParticipation(id: j.arcId, name: a?.name ?? ''));
-    }
+    final arcJunctions = lookups.arcsByIssue[row.id] ?? const [];
+    final arcs = <IssueDetailsParticipation>[
+      for (final j in arcJunctions)
+        IssueDetailsParticipation(
+          id: j.arcId,
+          name: lookups.arcById[j.arcId]?.name ?? '',
+        ),
+    ];
 
-    final teamJunctions = await _junctionDao.getIssueTeams(row.id);
-    final teams = <IssueDetailsParticipation>[];
-    for (final j in teamJunctions) {
-      final t = await _entityDao.getTeam(j.teamId);
-      teams.add(IssueDetailsParticipation(id: j.teamId, name: t?.name ?? ''));
-    }
+    final teamJunctions = lookups.teamsByIssue[row.id] ?? const [];
+    final teams = <IssueDetailsParticipation>[
+      for (final j in teamJunctions)
+        IssueDetailsParticipation(
+          id: j.teamId,
+          name: lookups.teamById[j.teamId]?.name ?? '',
+        ),
+    ];
 
-    final universeJunctions = await _junctionDao.getIssueUniverses(row.id);
-    final universes = <IssueDetailsParticipation>[];
-    for (final j in universeJunctions) {
-      final u = await _entityDao.getUniverse(j.universeId);
-      universes.add(
-        IssueDetailsParticipation(id: j.universeId, name: u?.name ?? ''),
-      );
-    }
+    final universeJunctions = lookups.universesByIssue[row.id] ?? const [];
+    final universes = <IssueDetailsParticipation>[
+      for (final j in universeJunctions)
+        IssueDetailsParticipation(
+          id: j.universeId,
+          name: lookups.universeById[j.universeId]?.name ?? '',
+        ),
+    ];
 
-    final creditJunctions = await _junctionDao.getIssueCreators(row.id);
-    final credits = <IssueDetailsCredit>[];
-    for (final j in creditJunctions) {
-      final c = await _entityDao.getCreator(j.creatorId);
-      credits.add(
+    final creditJunctions = lookups.creatorsByIssue[row.id] ?? const [];
+    final credits = <IssueDetailsCredit>[
+      for (final j in creditJunctions)
         IssueDetailsCredit(
           id: j.creatorId,
-          creator: c?.name,
+          creator: lookups.creatorById[j.creatorId]?.name,
           creatorId: j.creatorId,
           roles: j.role != null
               ? j.role!
@@ -89,8 +187,7 @@ class EntityMapper {
                     .toList()
               : const [],
         ),
-      );
-    }
+    ];
 
     return IssueDetails(
       id: row.id,
@@ -311,4 +408,36 @@ class EntityMapper {
       modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
     );
   }
+}
+
+class _IssueLookups {
+  _IssueLookups({
+    required this.seriesById,
+    required this.publisherById,
+    required this.imprintById,
+    required this.characterById,
+    required this.arcById,
+    required this.teamById,
+    required this.universeById,
+    required this.creatorById,
+    required this.charactersByIssue,
+    required this.arcsByIssue,
+    required this.teamsByIssue,
+    required this.universesByIssue,
+    required this.creatorsByIssue,
+  });
+
+  final Map<int, MetronSery> seriesById;
+  final Map<int, MetronPublisher> publisherById;
+  final Map<int, MetronImprint> imprintById;
+  final Map<int, MetronCharacter> characterById;
+  final Map<int, MetronArc> arcById;
+  final Map<int, MetronTeam> teamById;
+  final Map<int, MetronUniverse> universeById;
+  final Map<int, MetronCreator> creatorById;
+  final Map<int, List<IssueCharacter>> charactersByIssue;
+  final Map<int, List<IssueArc>> arcsByIssue;
+  final Map<int, List<IssueTeam>> teamsByIssue;
+  final Map<int, List<IssueUniverse>> universesByIssue;
+  final Map<int, List<IssueCreator>> creatorsByIssue;
 }

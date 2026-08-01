@@ -6,7 +6,6 @@ import 'package:takion/src/presentation/features/library/providers/category_seri
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
@@ -31,9 +30,13 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final seriesAsync = ref.watch(unreadSeriesProvider);
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryUnread),
+    );
+    final viewAsync = ref.watch(
+      categorySeriesViewProvider(
+        (category: 'unread', query: _isSearching ? _searchController.text : ''),
+      ),
     );
 
     return Scaffold(
@@ -74,36 +77,13 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                 ),
               ],
       ),
-      body: seriesAsync.when(
+      body: viewAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) =>
             AsyncStatePanel.error(errorMessage: 'Failed to load unread series'),
-        data: (seriesList) {
-          final mapped = seriesList.map((s) {
-            return (
-              series: SeriesList(
-                id: s.seriesId,
-                name: s.seriesName,
-                volume: s.volume,
-                yearBegan: s.yearBegan,
-                issueCount: s.issueCount,
-              ),
-              categoryCount: s.categoryCount,
-            );
-          }).toList();
-          final sortedResults = sortSeries(
-            mapped.map((e) => e.series).toList(),
-            sortOption,
-          );
-          final categoryCounts = <int, int>{
-            for (final e in mapped) e.series.id: e.categoryCount,
-          };
-          final query = _searchController.text.toLowerCase().trim();
-          final filtered = _isSearching && query.isNotEmpty
-              ? sortedResults
-                    .where((s) => s.name.toLowerCase().contains(query))
-                    .toList()
-              : sortedResults;
+        data: (view) {
+          final filtered = view.series;
+          final categoryCounts = view.categoryCounts;
           if (filtered.isEmpty) {
             return RefreshIndicator(
               onRefresh: () async => ref.invalidate(unreadSeriesProvider),
@@ -148,6 +128,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                       series: summary,
                       categoryCount: categoryCounts[summary.id],
                       categoryLabel: 'unread',
+                      showProgressBar: true,
                       isFirst: index == 0,
                       isLast: index == filtered.length - 1,
                       onTap: () => context.pushRoute(

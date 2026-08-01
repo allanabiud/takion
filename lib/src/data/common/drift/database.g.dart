@@ -18777,6 +18777,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_lib_status',
     'CREATE INDEX idx_lib_status ON library_items (ownership_status)',
   );
+  late final Index idxLibStatusRead = Index(
+    'idx_lib_status_read',
+    'CREATE INDEX idx_lib_status_read ON library_items (ownership_status, is_read)',
+  );
   late final Index idxReadlogItem = Index(
     'idx_readlog_item',
     'CREATE INDEX idx_readlog_item ON library_read_logs (collection_item_id)',
@@ -18793,13 +18797,41 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_pull_release',
     'CREATE INDEX idx_pull_release ON pull_list_entries (release_date)',
   );
+  late final Index idxPullReleaseStatus = Index(
+    'idx_pull_release_status',
+    'CREATE INDEX idx_pull_release_status ON pull_list_entries (release_date, entry_status)',
+  );
   late final Index idxSubSeries = Index(
     'idx_sub_series',
     'CREATE INDEX idx_sub_series ON series_subscriptions (metron_series_id)',
   );
+  late final Index idxActivitySeries = Index(
+    'idx_activity_series',
+    'CREATE INDEX idx_activity_series ON activity_events (series_id)',
+  );
+  late final Index idxActivitySeriesTimestamp = Index(
+    'idx_activity_series_timestamp',
+    'CREATE INDEX idx_activity_series_timestamp ON activity_events (series_id, timestamp)',
+  );
+  late final Index idxActivityIssue = Index(
+    'idx_activity_issue',
+    'CREATE INDEX idx_activity_issue ON activity_events (issue_id)',
+  );
+  late final Index idxActivityEventTime = Index(
+    'idx_activity_event_time',
+    'CREATE INDEX idx_activity_event_time ON activity_events (event_type, timestamp)',
+  );
+  late final Index idxRliList = Index(
+    'idx_rli_list',
+    'CREATE INDEX idx_rli_list ON reading_list_items (list_id)',
+  );
   late final Index idxMetronIssuesSeries = Index(
     'idx_metron_issues_series',
     'CREATE INDEX idx_metron_issues_series ON metron_issues (series_id)',
+  );
+  late final Index idxMetronSeriesName = Index(
+    'idx_metron_series_name',
+    'CREATE INDEX idx_metron_series_name ON metron_series (name)',
   );
   late final Index idxIssueCreatorsCreator = Index(
     'idx_issue_creators_creator',
@@ -18820,6 +18852,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxIssueUniversesUniverse = Index(
     'idx_issue_universes_universe',
     'CREATE INDEX idx_issue_universes_universe ON issue_universes (universe_id)',
+  );
+  late final Index idxMrliList = Index(
+    'idx_mrli_list',
+    'CREATE INDEX idx_mrli_list ON metron_reading_list_items (list_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -18873,17 +18909,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxLibSeries,
     idxLibRead,
     idxLibStatus,
+    idxLibStatusRead,
     idxReadlogItem,
     idxPullIssue,
     idxPullSeries,
     idxPullRelease,
+    idxPullReleaseStatus,
     idxSubSeries,
+    idxActivitySeries,
+    idxActivitySeriesTimestamp,
+    idxActivityIssue,
+    idxActivityEventTime,
+    idxRliList,
     idxMetronIssuesSeries,
+    idxMetronSeriesName,
     idxIssueCreatorsCreator,
     idxIssueCharactersCharacter,
     idxIssueArcsArc,
     idxIssueTeamsTeam,
     idxIssueUniversesUniverse,
+    idxMrliList,
   ];
 }
 

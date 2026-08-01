@@ -5,13 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
 
 final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   ref,
 ) {
   final controller = StreamController<CollectionStats>();
   final issuePrices = <int, double>{};
-  Timer? debounce;
+  final debounced = DebouncedWorker();
 
   void computeStats(List<LibraryItem> libraryItems) {
     final collectedItems = libraryItems
@@ -77,10 +78,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     (_, next) {
       if (!next.hasValue) return;
       // Debounce rapid-fire emissions during bulk operations.
-      debounce?.cancel();
-      debounce = Timer(const Duration(milliseconds: 300), () {
-        computeStats(next.value!);
-      });
+      debounced.schedule(() => computeStats(next.value!));
     },
   );
 
@@ -107,7 +105,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   });
 
   ref.onDispose(() {
-    debounce?.cancel();
+    debounced.cancel();
     controller.close();
   });
 

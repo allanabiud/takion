@@ -1,12 +1,9 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
+import 'package:takion/src/presentation/shared/widgets/smart_entity_image.dart';
 
 class PersonCard extends ConsumerWidget {
   const PersonCard({
@@ -35,18 +32,11 @@ class PersonCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final hasSubtitle = subtitle != null && subtitle!.trim().isNotEmpty;
 
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedCharImage = characterId != null
-        ? cache.getCached('character', characterId!)
-        : null;
-    final cachedCreatorImage = creatorId != null
-        ? cache.getCached('creator', creatorId!)
-        : null;
-    final effectiveImageUrl = imageUrl ?? cachedCharImage ?? cachedCreatorImage;
-
     final hasCharacterId = characterId != null;
     final hasCreatorId = creatorId != null;
+    final entityType = hasCharacterId ? 'character' : (hasCreatorId ? 'creator' : null);
+    final entityId = characterId ?? creatorId;
+
     final isFav =
         isFavorite ||
         (hasCharacterId
@@ -82,51 +72,14 @@ class PersonCard extends ConsumerWidget {
           children: [
             Stack(
               children: [
-                ClipOval(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.8,
-                      ),
-                    ),
-                    child: effectiveImageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: effectiveImageUrl,
-                            fit: BoxFit.cover,
-                            alignment: Alignment.topCenter,
-                            filterQuality: FilterQuality.high,
-                            placeholder: (context, url) => Center(
-                              child: Text(
-                                initials(name),
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) =>
-                                imageErrorPlaceholder(
-                                  context,
-                                  url,
-                                  error,
-                                  label: initials(name),
-                                  iconSize: 24,
-                                ),
-                          )
-                        : Center(
-                            child: Text(
-                              initials(name),
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                  ),
+                SmartEntityImage(
+                  entityType: entityType,
+                  entityId: entityId,
+                  name: name,
+                  imageUrl: imageUrl,
+                  width: 80,
+                  height: 80,
+                  isCircle: true,
                 ),
                 if (isFav)
                   Positioned(

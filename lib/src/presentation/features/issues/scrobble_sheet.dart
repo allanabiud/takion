@@ -9,6 +9,7 @@ import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
 import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
@@ -89,6 +90,16 @@ Future<void> showScrobbleSheet({
 
   final callerContext = context;
 
+  // Working state lives outside the Consumer build so optimistic edits made
+  // while a scrobble is in flight aren't clobbered on every rebuild. The
+  // provider value is only adopted when a genuinely new committed status
+  // arrives (identity change) and the sheet isn't submitting.
+  var addToCollection = false;
+  var markAsRead = false;
+  var addToWishlist = false;
+  var selectedRating = 0;
+  IssueCollectionStatus? lastAdoptedStatus;
+
   TakionBottomSheet.show<void>(
     context: context,
     title: title,
@@ -116,10 +127,13 @@ Future<void> showScrobbleSheet({
         );
         final isCollected = collectionStatus?.isCollected ?? false;
 
-        var addToCollection = collectionStatus?.isCollected ?? false;
-        var markAsRead = collectionStatus?.isRead ?? false;
-        var addToWishlist = collectionStatus?.isWishlisted ?? false;
-        var selectedRating = (collectionStatus?.rating ?? 0).clamp(0, 5);
+        if (!isSubmitting && !identical(collectionStatus, lastAdoptedStatus)) {
+          lastAdoptedStatus = collectionStatus;
+          addToCollection = collectionStatus?.isCollected ?? false;
+          markAsRead = collectionStatus?.isRead ?? false;
+          addToWishlist = collectionStatus?.isWishlisted ?? false;
+          selectedRating = (collectionStatus?.rating ?? 0).clamp(0, 5);
+        }
 
         return StatefulBuilder(
           builder: (context, setModalState) {

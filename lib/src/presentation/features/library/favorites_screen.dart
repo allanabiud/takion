@@ -70,6 +70,7 @@ class _FavoriteSeriesTab extends ConsumerWidget {
             final series = seriesList[index];
             return SeriesListTile(
               series: series,
+              showProgressBar: true,
               isFirst: index == 0,
               isLast: index == seriesList.length - 1,
             );

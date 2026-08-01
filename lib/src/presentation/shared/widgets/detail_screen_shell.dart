@@ -31,6 +31,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.heroWidth = 250,
     this.heroHeight = 250,
     this.heroBorderRadius = 12,
+    this.heroImageAlignment = Alignment.topCenter,
     this.circular = false,
     this.headerHeight = 400,
     this.showHero = true,
@@ -56,6 +57,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final double heroWidth;
   final double heroHeight;
   final double heroBorderRadius;
+  final Alignment heroImageAlignment;
   final bool circular;
   final double headerHeight;
   final bool showHero;
@@ -442,7 +444,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
           ? CachedNetworkImage(
               imageUrl: imageUrl!,
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              alignment: heroImageAlignment,
               placeholder: (context, url) => bannerPlaceholder(context, title),
               errorWidget: (context, url, error) => imageErrorPlaceholder(
                 context,

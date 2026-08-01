@@ -5,6 +5,7 @@ import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 final libraryEntityStatsProvider =
@@ -12,6 +13,7 @@ final libraryEntityStatsProvider =
       final db = ref.watch(driftDatabaseProvider);
       final mapper = ref.watch(entityMapperProvider);
       final controller = StreamController<LibraryEntityStats>();
+      final debounced = DebouncedWorker();
 
       Future<void> computeStats(List<LibraryItem> libraryItems) async {
         try {
@@ -33,13 +35,11 @@ final libraryEntityStatsProvider =
           final issuesMap = await db.metronEntityDao.getIssuesByIds(
             insightIssueIds,
           );
-          final cachedDetails = <IssueDetails>[];
-          for (final issueId in insightIssueIds) {
-            final issue = issuesMap[issueId];
-            if (issue != null) {
-              cachedDetails.add(await mapper.issueToEntity(issue));
-            }
-          }
+          final issues = <MetronIssue>[
+            for (final issueId in insightIssueIds)
+              if (issuesMap[issueId] != null) issuesMap[issueId]!,
+          ];
+          final cachedDetails = await mapper.batchIssueToEntity(issues);
 
           final missingCreatorIds = <int>{};
           for (final details in cachedDetails) {
@@ -156,15 +156,18 @@ final libraryEntityStatsProvider =
         allLibraryItemsProvider,
         (_, next) {
           if (!next.hasValue) return;
-          computeStats(next.value!);
+          debounced.schedule(() => computeStats(next.value!));
         },
       );
 
       ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        computeStats(libraryItems);
+        debounced.schedule(() => computeStats(libraryItems));
       });
 
-      ref.onDispose(controller.close);
+      ref.onDispose(() {
+        debounced.cancel();
+        controller.close();
+      });
 
       return controller.stream;
     });

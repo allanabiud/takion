@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart'
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
+import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
 import 'package:takion/src/presentation/features/library/widgets/stat_card.dart';
 import 'package:takion/src/presentation/features/library/widgets/library_charts.dart';
 import 'package:takion/src/presentation/features/library/widgets/top_entity_tile.dart';
@@ -127,7 +128,7 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
   }
 }
 
-class _MyComicsBrowseTab extends ConsumerWidget {
+class _MyComicsBrowseTab extends ConsumerStatefulWidget {
   final bool isSearching;
   final String searchQuery;
 
@@ -137,43 +138,76 @@ class _MyComicsBrowseTab extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final seriesAsync = ref.watch(collectedSeriesProvider);
+  ConsumerState<_MyComicsBrowseTab> createState() =>
+      _MyComicsBrowseTabState();
+}
+
+class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab> {
+  static const _initialVisibleCount = 200;
+  static const _appendCount = 200;
+  static const _nearEndExtent = 800;
+
+  final ScrollController _scrollController = ScrollController();
+  late int _visibleCount = _initialVisibleCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - _nearEndExtent) {
+      setState(() => _visibleCount += _appendCount);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewAsync = ref.watch(
+      categorySeriesViewProvider(
+        (
+          category: 'collected',
+          query: widget.isSearching ? widget.searchQuery : '',
+        ),
+      ),
+    );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryMyComics),
     );
 
-    return seriesAsync.when(
+    ref.listen(
+      categorySeriesViewProvider(
+        (
+          category: 'collected',
+          query: widget.isSearching ? widget.searchQuery : '',
+        ),
+      ),
+      (previous, next) {
+        if (previous?.value != next.value &&
+            _visibleCount != _initialVisibleCount) {
+          _visibleCount = _initialVisibleCount;
+        }
+      },
+    );
+
+    return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
       error: (error, _) => AsyncStatePanel.error(
         errorMessage: 'Failed to load collected series',
       ),
-      data: (seriesList) {
-        final mapped = seriesList.map((s) {
-          return (
-            series: SeriesList(
-              id: s.seriesId,
-              name: s.seriesName,
-              volume: s.volume,
-              yearBegan: s.yearBegan,
-              issueCount: s.issueCount,
-            ),
-            categoryCount: s.categoryCount,
-          );
-        }).toList();
-        final sortedResults = sortSeries(
-          mapped.map((e) => e.series).toList(),
-          sortOption,
-        );
-        final categoryCounts = <int, int>{
-          for (final e in mapped) e.series.id: e.categoryCount,
-        };
-        final query = searchQuery.toLowerCase().trim();
-        final filtered = isSearching && query.isNotEmpty
-            ? sortedResults
-                  .where((s) => s.name.toLowerCase().contains(query))
-                  .toList()
-            : sortedResults;
+      data: (view) {
+        final filtered = view.series;
+        final categoryCounts = view.categoryCounts;
         if (filtered.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(collectedSeriesProvider),
@@ -192,9 +226,21 @@ class _MyComicsBrowseTab extends ConsumerWidget {
           );
         }
 
+        final visibleCount = filtered.length < _visibleCount
+            ? filtered.length
+            : _visibleCount;
+        final visible = filtered.sublist(0, visibleCount);
+        final hasMore = visibleCount < filtered.length;
+        final ownedCountsAsync = ref.watch(
+          seriesOwnedCountsProvider(
+            [for (final s in visible) s.id],
+          ),
+        );
+
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(collectedSeriesProvider),
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               PinnedListHeader(
                 child: ListHeader(
@@ -213,22 +259,38 @@ class _MyComicsBrowseTab extends ConsumerWidget {
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final summary = filtered[index];
-                  return SeriesListTile(
-                    series: summary,
-                    categoryCount: categoryCounts[summary.id],
-                    categoryLabel: 'collected',
-                    isFirst: index == 0,
-                    isLast: index == filtered.length - 1,
-                    onTap: () => context.pushRoute(
-                      LibrarySeriesRoute(
-                        seriesId: summary.id,
-                        category: 'collected',
-                        seriesName: summary.name,
+                  if (index >= visible.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  }
+                  final summary = visible[index];
+                  return RepaintBoundary(
+                    child: SeriesListTile(
+                      series: summary,
+                      categoryCount: categoryCounts[summary.id],
+                      categoryLabel: 'collected',
+                      ownedCount: ownedCountsAsync.value?[summary.id],
+                      showProgressBar: true,
+                      isFirst: index == 0,
+                      isLast: !hasMore && index == visible.length - 1,
+                      onTap: () => context.pushRoute(
+                        LibrarySeriesRoute(
+                          seriesId: summary.id,
+                          category: 'collected',
+                          seriesName: summary.name,
+                        ),
                       ),
                     ),
                   );
-                }, childCount: filtered.length),
+                }, childCount: hasMore ? visible.length + 1 : visible.length),
               ),
             ],
           ),

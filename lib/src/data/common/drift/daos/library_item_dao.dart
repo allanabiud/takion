@@ -1,6 +1,20 @@
 import 'package:drift/drift.dart';
 import 'package:takion/src/data/common/drift/database.dart';
 
+class LibraryItemStatusRow {
+  const LibraryItemStatusRow({
+    required this.metronIssueId,
+    required this.ownershipStatus,
+    required this.isRead,
+    required this.rating,
+  });
+
+  final int metronIssueId;
+  final String ownershipStatus;
+  final bool isRead;
+  final int? rating;
+}
+
 class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   LibraryItemDao(super.db);
 
@@ -24,6 +38,98 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     return query.get();
   }
 
+  Future<List<LibraryItem>> getItemsAfter({
+    String? ownershipStatus,
+    bool? isRead,
+    required String cursorUpdatedAt,
+    required String cursorId,
+    int limit = 50,
+  }) async {
+    final query = select(attachedDatabase.libraryItems);
+    if (ownershipStatus != null) {
+      query.where((t) => t.ownershipStatus.equals(ownershipStatus));
+    }
+    if (isRead != null) {
+      query.where((t) => t.isRead.equals(isRead));
+    }
+    query.where(
+      (t) => (t.updatedAt.equals(cursorUpdatedAt) &
+              t.id.isBiggerThan(Constant(cursorId))) |
+          t.updatedAt.isBiggerThan(Constant(cursorUpdatedAt)),
+    );
+    query.orderBy([
+      (t) => OrderingTerm(expression: t.updatedAt, mode: OrderingMode.asc),
+      (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
+    ]);
+    query.limit(limit);
+    return query.get();
+  }
+
+  Stream<List<LibraryItem>> watchByOwnershipStatus(String ownershipStatus) {
+    return (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.ownershipStatus.equals(ownershipStatus))).watch();
+  }
+
+  Stream<List<LibraryItem>> watchByIsRead(bool isRead) {
+    return (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.isRead.equals(isRead))).watch();
+  }
+
+  Future<List<LibraryItemStatusRow>> getStatusRows() async {
+    final query = selectOnly(attachedDatabase.libraryItems)
+      ..addColumns([
+        attachedDatabase.libraryItems.metronIssueId,
+        attachedDatabase.libraryItems.ownershipStatus,
+        attachedDatabase.libraryItems.isRead,
+        attachedDatabase.libraryItems.rating,
+      ]);
+    final rows = await query.get();
+    return [
+      for (final row in rows)
+        LibraryItemStatusRow(
+          metronIssueId: row.read(
+                attachedDatabase.libraryItems.metronIssueId,
+              ) ??
+              0,
+          ownershipStatus: row.read(
+                attachedDatabase.libraryItems.ownershipStatus,
+              ) ??
+              'notOwned',
+          isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
+          rating: row.read(attachedDatabase.libraryItems.rating),
+        ),
+    ];
+  }
+
+  Stream<List<LibraryItemStatusRow>> watchStatusRows() {
+    final query = selectOnly(attachedDatabase.libraryItems)
+      ..addColumns([
+        attachedDatabase.libraryItems.metronIssueId,
+        attachedDatabase.libraryItems.ownershipStatus,
+        attachedDatabase.libraryItems.isRead,
+        attachedDatabase.libraryItems.rating,
+      ]);
+    return query.watch().map(
+      (rows) => [
+        for (final row in rows)
+          LibraryItemStatusRow(
+            metronIssueId: row.read(
+                  attachedDatabase.libraryItems.metronIssueId,
+                ) ??
+                0,
+            ownershipStatus: row.read(
+                  attachedDatabase.libraryItems.ownershipStatus,
+                ) ??
+                'notOwned',
+            isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
+            rating: row.read(attachedDatabase.libraryItems.rating),
+          ),
+      ],
+    );
+  }
+
   Future<int> getItemCount({String? ownershipStatus}) async {
     final query = selectOnly(attachedDatabase.libraryItems)
       ..addColumns([countAll()]);
@@ -36,8 +142,60 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     return result.read(countAll()) as int;
   }
 
+  Future<int> getOwnedCountBySeries(int metronSeriesId) async {
+    final query = selectOnly(attachedDatabase.libraryItems)
+      ..addColumns([countAll()])
+      ..where(
+        attachedDatabase.libraryItems.metronSeriesId.equals(metronSeriesId) &
+            attachedDatabase.libraryItems.ownershipStatus.equals('owned'),
+      );
+    final result = await query.getSingle();
+    return result.read(countAll()) as int;
+  }
+
+  Future<Map<int, int>> getOwnedCountsBySeries(List<int> seriesIds) async {
+    if (seriesIds.isEmpty) return {};
+    final query = selectOnly(attachedDatabase.libraryItems)
+      ..addColumns([
+        attachedDatabase.libraryItems.metronSeriesId,
+        countAll(),
+      ])
+      ..where(
+        attachedDatabase.libraryItems.metronSeriesId.isIn(seriesIds) &
+            attachedDatabase.libraryItems.ownershipStatus.equals('owned'),
+      )
+      ..groupBy([attachedDatabase.libraryItems.metronSeriesId]);
+    final rows = await query.get();
+    final counts = <int, int>{};
+    for (final row in rows) {
+      final seriesId =
+          row.read(attachedDatabase.libraryItems.metronSeriesId) ?? 0;
+      if (seriesId > 0) {
+        counts[seriesId] = row.read(countAll()) as int;
+      }
+    }
+    return counts;
+  }
+
   Stream<List<LibraryItem>> watchAll() {
     return select(attachedDatabase.libraryItems).watch();
+  }
+
+  Future<Map<String, LibraryItem>> getItemsByIds(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final rows = await (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.id.isIn(ids))).get();
+    return {for (final r in rows) r.id: r};
+  }
+
+  Stream<List<LibraryItem>> watchByIssueIds(List<int> metronIssueIds) {
+    if (metronIssueIds.isEmpty) {
+      return const Stream.empty();
+    }
+    return (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.metronIssueId.isIn(metronIssueIds))).watch();
   }
 
   Stream<List<LibraryItem>> watchByIssueId(int metronIssueId) {
@@ -107,6 +265,52 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.metronSeriesId.equals(metronSeriesId))).get();
   }
 
+  Future<Map<int, LibraryItem>> getByIssueIds(List<int> metronIssueIds) async {
+    if (metronIssueIds.isEmpty) return {};
+    final rows = await (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.metronIssueId.isIn(metronIssueIds))).get();
+    return {for (final r in rows) r.metronIssueId: r};
+  }
+
+  Future<void> batchUpdatePricePaid(Map<int, double> priceByIssueId) async {
+    if (priceByIssueId.isEmpty) return;
+    final issueIds = priceByIssueId.keys.toList();
+    final existingMap = await getByIssueIds(issueIds);
+    if (existingMap.isEmpty) return;
+    final now = DateTime.now().toUtc().toIso8601String();
+    final updates = <LibraryItemsCompanion>[];
+    for (final entry in priceByIssueId.entries) {
+      final existing = existingMap[entry.key];
+      if (existing == null || existing.pricePaid != null) continue;
+      updates.add(
+        LibraryItemsCompanion(
+          id: Value(existing.id),
+          userId: Value(existing.userId),
+          metronIssueId: Value(existing.metronIssueId),
+          metronSeriesId: Value(existing.metronSeriesId),
+          ownershipStatus: Value(existing.ownershipStatus),
+          isRead: Value(existing.isRead),
+          rating: Value(existing.rating),
+          purchaseDate: Value(existing.purchaseDate),
+          pricePaid: Value(entry.value),
+          quantityOwned: Value(existing.quantityOwned),
+          format: Value(existing.format),
+          firstReadAt: Value(existing.firstReadAt),
+          conditionGrade: Value(existing.conditionGrade),
+          acquiredOn: Value(existing.acquiredOn),
+          notes: Value(existing.notes),
+          createdAt: Value(existing.createdAt),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+    if (updates.isEmpty) return;
+    await batch((b) {
+      b.insertAllOnConflictUpdate(attachedDatabase.libraryItems, updates);
+    });
+  }
+
   Stream<List<LibraryItem>> watchBySeriesId(int metronSeriesId) {
     return (select(
       attachedDatabase.libraryItems,
@@ -130,28 +334,40 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   Future<void> batchDeleteByIds(List<String> ids) async {
     if (ids.isEmpty) return;
     final now = DateTime.now().toUtc().toIso8601String();
-    await batch((b) {
-      for (final id in ids) {
-        b.deleteWhere(attachedDatabase.libraryItems, (t) => t.id.equals(id));
+    await transaction(() async {
+      await (delete(
+        attachedDatabase.libraryItems,
+      )..where((t) => t.id.isIn(ids))).go();
+      await batch((b) {
         b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
-          SyncMetaCompanion.insert(key: 'delete:library_items:$id', value: now),
+          for (final id in ids)
+            SyncMetaCompanion.insert(
+              key: 'delete:library_items:$id',
+              value: now,
+            ),
         ]);
-      }
+      });
     });
   }
 
   Future<void> batchDeleteBySeriesId(int metronSeriesId) async {
     await transaction(() async {
       final items = await getBySeriesId(metronSeriesId);
-      for (final item in items) {
-        await (delete(
-          attachedDatabase.libraryItems,
-        )..where((t) => t.id.equals(item.id))).go();
-        await attachedDatabase.syncMetaDao.set(
-          'delete:library_items:${item.id}',
-          DateTime.now().toUtc().toIso8601String(),
-        );
-      }
+      if (items.isEmpty) return;
+      final ids = items.map((item) => item.id).toList();
+      final now = DateTime.now().toUtc().toIso8601String();
+      await (delete(
+        attachedDatabase.libraryItems,
+      )..where((t) => t.id.isIn(ids))).go();
+      await batch((b) {
+        b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
+          for (final id in ids)
+            SyncMetaCompanion.insert(
+              key: 'delete:library_items:$id',
+              value: now,
+            ),
+        ]);
+      });
     });
   }
 

@@ -19,58 +19,61 @@ class RatingPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final stars = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        final starValue = index + 1;
-        return IconButton(
+    final showReset = selectedRating > 0;
+
+    Widget resetButton() {
+      return SizedBox(
+        width: iconSize,
+        height: iconSize,
+        child: IconButton(
           padding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
-          style: IconButton.styleFrom(
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
           constraints: BoxConstraints.tightFor(
             width: iconSize,
             height: iconSize,
           ),
-          iconSize: iconSize,
-          onPressed: enabled ? () => onChanged(starValue) : null,
+          iconSize: iconSize * 0.8,
+          onPressed: enabled ? onReset : null,
           icon: Icon(
-            starValue <= selectedRating ? Icons.star : Icons.star_border,
-            color: starValue <= selectedRating
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline,
+            Icons.do_not_disturb_on_outlined,
+            color: theme.colorScheme.outline,
           ),
-        );
-      }),
-    );
+        ),
+      );
+    }
 
     return SizedBox(
       height: iconSize,
-      child: Stack(
-        clipBehavior: Clip.none,
-        fit: StackFit.loose,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          stars,
-          if (selectedRating > 0)
-            Positioned(
-              left: iconSize * 5 + 6,
-              top: 0,
-              child: SizedBox(
+          // A leading slot is always reserved so the stars never shift when
+          // the reset button appears, and the button stays within the hit-test
+          // bounds (unlike the previous Stack overflow).
+          SizedBox(
+            width: iconSize,
+            height: iconSize,
+            child: showReset ? resetButton() : null,
+          ),
+          for (var starValue = 1; starValue <= 5; starValue++)
+            IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              style: IconButton.styleFrom(
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              constraints: BoxConstraints.tightFor(
                 width: iconSize,
                 height: iconSize,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(),
-                  iconSize: iconSize * 0.8,
-                  onPressed: enabled ? onReset : null,
-                  icon: Icon(
-                    Icons.do_not_disturb_on_outlined,
-                    color: theme.colorScheme.outline,
-                  ),
-                ),
+              ),
+              iconSize: iconSize,
+              onPressed: enabled ? () => onChanged(starValue) : null,
+              icon: Icon(
+                starValue <= selectedRating ? Icons.star : Icons.star_border,
+                color: starValue <= selectedRating
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
               ),
             ),
         ],

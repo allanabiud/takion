@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/features/library/providers/collection_it
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
+import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
 
 DateTime _atStartOfWeek(DateTime date) => DateTime(
   date.year,
@@ -128,7 +129,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
       final pullRepository = ref.watch(pullListRepositoryProvider);
       final db = ref.watch(driftDatabaseProvider);
       final controller = StreamController<LibraryBasicStats>();
-      Timer? debounce;
+      final debounced = DebouncedWorker();
 
       Future<void> emitStats(List<LibraryItem> libraryItems) async {
         try {
@@ -281,20 +282,17 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
           next.whenOrNull(data: (libraryItems) {
             // Debounce rapid-fire emissions during bulk operations so we
             // don't flood emitStats with concurrent async calls.
-            debounce?.cancel();
-            debounce = Timer(const Duration(milliseconds: 300), () {
-              emitStats(libraryItems);
-            });
+            debounced.schedule(() => emitStats(libraryItems));
           });
         },
       );
 
       ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        emitStats(libraryItems);
+        debounced.schedule(() => emitStats(libraryItems));
       });
 
       ref.onDispose(() {
-        debounce?.cancel();
+        debounced.cancel();
         controller.close();
       });
 
@@ -304,6 +302,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
 final libraryReadingTrendsProvider = StreamProvider.autoDispose
     .family<List<ReadingTrendPoint>, LibraryFilter>((ref, filter) {
       final controller = StreamController<List<ReadingTrendPoint>>();
+      final debounced = DebouncedWorker();
 
       void computeTrends(List<LibraryItem> libraryItems) {
         final now = DateTime.now().toLocal();
@@ -340,16 +339,19 @@ final libraryReadingTrendsProvider = StreamProvider.autoDispose
         allLibraryItemsProvider,
         (_, next) {
           next.whenOrNull(data: (libraryItems) {
-            computeTrends(libraryItems);
+            debounced.schedule(() => computeTrends(libraryItems));
           });
         },
       );
 
       ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        computeTrends(libraryItems);
+        debounced.schedule(() => computeTrends(libraryItems));
       });
 
-      ref.onDispose(controller.close);
+      ref.onDispose(() {
+        debounced.cancel();
+        controller.close();
+      });
 
       return controller.stream;
     });
@@ -357,6 +359,7 @@ final libraryReadingTrendsProvider = StreamProvider.autoDispose
 final libraryRecentlyFinishedProvider = StreamProvider.autoDispose
     .family<List<CollectionItem>, LibraryFilter>((ref, filter) {
       final controller = StreamController<List<CollectionItem>>();
+      final debounced = DebouncedWorker();
 
       Future<void> computeRecent(List<LibraryItem> libraryItems) async {
         try {
@@ -367,10 +370,7 @@ final libraryRecentlyFinishedProvider = StreamProvider.autoDispose
                 ..sort((a, b) => b.firstReadAt!.compareTo(a.firstReadAt!));
 
           final recentItems = allReadWithDate.take(5).toList();
-          final enriched = await mapWithConcurrency<LibraryItem, CollectionItem>(
-            recentItems,
-            (item) => enrichLibraryItem(ref, item),
-          );
+          final enriched = await hydrateLibraryItems(ref, recentItems);
 
           if (!controller.isClosed) {
             controller.add(enriched);
@@ -386,16 +386,19 @@ final libraryRecentlyFinishedProvider = StreamProvider.autoDispose
         allLibraryItemsProvider,
         (_, next) {
           next.whenOrNull(data: (libraryItems) {
-            computeRecent(libraryItems);
+            debounced.schedule(() => computeRecent(libraryItems));
           });
         },
       );
 
       ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        computeRecent(libraryItems);
+        debounced.schedule(() => computeRecent(libraryItems));
       });
 
-      ref.onDispose(controller.close);
+      ref.onDispose(() {
+        debounced.cancel();
+        controller.close();
+      });
 
       return controller.stream;
     });

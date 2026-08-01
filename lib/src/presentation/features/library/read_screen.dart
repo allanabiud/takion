@@ -135,41 +135,22 @@ class _ReadBrowseTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seriesAsync = ref.watch(readSeriesProvider);
+    final viewAsync = ref.watch(
+      categorySeriesViewProvider(
+        (category: 'read', query: isSearching ? searchQuery : ''),
+      ),
+    );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryRead),
     );
 
-    return seriesAsync.when(
+    return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
       error: (error, _) =>
           AsyncStatePanel.error(errorMessage: 'Failed to load read series'),
-      data: (seriesList) {
-        final mapped = seriesList.map((s) {
-          return (
-            series: SeriesList(
-              id: s.seriesId,
-              name: s.seriesName,
-              volume: s.volume,
-              yearBegan: s.yearBegan,
-              issueCount: s.issueCount,
-            ),
-            categoryCount: s.categoryCount,
-          );
-        }).toList();
-        final sortedResults = sortSeries(
-          mapped.map((e) => e.series).toList(),
-          sortOption,
-        );
-        final categoryCounts = <int, int>{
-          for (final e in mapped) e.series.id: e.categoryCount,
-        };
-        final query = searchQuery.toLowerCase().trim();
-        final filtered = isSearching && query.isNotEmpty
-            ? sortedResults
-                  .where((s) => s.name.toLowerCase().contains(query))
-                  .toList()
-            : sortedResults;
+      data: (view) {
+        final filtered = view.series;
+        final categoryCounts = view.categoryCounts;
         if (filtered.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(readSeriesProvider),
@@ -214,6 +195,7 @@ class _ReadBrowseTab extends ConsumerWidget {
                     series: summary,
                     categoryCount: categoryCounts[summary.id],
                     categoryLabel: 'read',
+                    showProgressBar: true,
                     isFirst: index == 0,
                     isLast: index == filtered.length - 1,
                     onTap: () => context.pushRoute(

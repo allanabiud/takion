@@ -10,6 +10,14 @@ class ImageCacheDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.key.equals(key))).getSingleOrNull();
   }
 
+  Future<Map<String, ImageCacheData>> getByKeys(List<String> keys) async {
+    if (keys.isEmpty) return {};
+    final rows = await (select(
+      attachedDatabase.imageCache,
+    )..where((t) => t.key.isIn(keys))).get();
+    return {for (final r in rows) r.key: r};
+  }
+
   Future<void> put(
     String key,
     String imageUrl, {

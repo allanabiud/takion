@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities.dart';
@@ -14,6 +16,10 @@ final cachedSeriesIssueCountProvider = FutureProvider.autoDispose
 /// Exposes the complete series response instead of a reduced database row.
 final seriesDetailsProvider = FutureProvider.autoDispose
     .family<SeriesDetails, int>((ref, id) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final series = await ref
           .watch(metronRepositoryProvider)
           .getSeriesDetails(id);
@@ -23,6 +29,8 @@ final seriesDetailsProvider = FutureProvider.autoDispose
             .read(entityImageVersionProvider.notifier)
             .update((value) => value + 1);
       }
+
+      timer = Timer(const Duration(minutes: 5), () => link.close());
       return series;
     });
 
@@ -30,6 +38,10 @@ final seriesDetailsProvider = FutureProvider.autoDispose
 /// dropped by the normalized cache representation.
 final seriesFullDetailsProvider = FutureProvider.autoDispose
     .family<SeriesDetails, int>((ref, id) async {
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final series = await ref
           .watch(metronRepositoryProvider)
           .getSeriesDetails(id);
@@ -39,5 +51,7 @@ final seriesFullDetailsProvider = FutureProvider.autoDispose
             .read(entityImageVersionProvider.notifier)
             .update((value) => value + 1);
       }
+
+      timer = Timer(const Duration(minutes: 5), () => link.close());
       return series;
     });
