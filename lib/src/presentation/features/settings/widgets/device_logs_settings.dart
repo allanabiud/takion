@@ -80,7 +80,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
       final content = await _buildLogContent(logLines);
       final dir = await getTemporaryDirectory();
       final fileName =
-          'takion_logs_${DateTime.now().millisecondsSinceEpoch}.txt';
+          'takion_logs_${DateTime.now().millisecondsSinceEpoch}.log';
       final file = File('${dir.path}/$fileName');
       await file.writeAsString(content);
 
@@ -167,7 +167,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                _sharing ? 'Preparing...' : 'Share as .txt file',
+                _sharing ? 'Preparing...' : 'Share as .log file',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

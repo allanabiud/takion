@@ -7,12 +7,14 @@ class SectionHeader extends StatelessWidget {
     this.count,
     this.badge,
     this.onViewAll,
+    this.isExpanded,
   });
 
   final String title;
   final int? count;
   final String? badge;
   final VoidCallback? onViewAll;
+  final bool? isExpanded;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +49,16 @@ class SectionHeader extends StatelessWidget {
         ),
         if (onViewAll != null) ...[
           const SizedBox(width: 8),
-          Icon(Icons.chevron_right, size: 28, color: theme.colorScheme.primary),
+          AnimatedRotation(
+            turns: (isExpanded ?? false) ? 0.5 : 0.0,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: Icon(
+              Icons.expand_more,
+              size: 28,
+              color: theme.colorScheme.primary,
+            ),
+          ),
         ],
       ],
     );

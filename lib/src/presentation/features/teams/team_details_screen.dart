@@ -281,17 +281,9 @@ class _TeamInfoSection extends StatelessWidget {
     final modifiedValue = _modifiedValue();
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
-    final contentItems = <InfoGridItem>[
-      InfoGridItem(label: 'Name', value: details.name),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DETAILS'),
-        const SizedBox(height: 12),
-        InfoGrid(items: contentItems),
-        const SizedBox(height: 16),
         _buildDatabaseIdsSection(context),
         if (hasModified) ...[
           const SizedBox(height: 8),

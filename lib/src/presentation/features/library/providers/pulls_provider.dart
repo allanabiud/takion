@@ -97,9 +97,11 @@ final pullListEntriesForWeekProvider = FutureProvider.autoDispose
 final pullsIssuesForWeekProvider = FutureProvider.autoDispose
     .family<List<IssueList>, DateTime>((ref, date) async {
       final weeklyIssues = await ref.watch(weeklyReleasesProvider(date).future);
+      if (!ref.mounted) return const [];
       final pullEntries = await ref.watch(
         pullListEntriesForWeekProvider(date).future,
       );
+      if (!ref.mounted) return const [];
       final issueIds = pullEntries.map((entry) => entry.metronIssueId).toSet();
 
       final repository = ref.watch(pullListRepositoryProvider);
@@ -109,6 +111,7 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
         status: PullListEntryStatus.skipped,
         limit: 500,
       );
+      if (!ref.mounted) return const [];
       final dismissedIssueIds = dismissedEntries
           .map((entry) => entry.metronIssueId)
           .toSet();
@@ -116,6 +119,7 @@ final pullsIssuesForWeekProvider = FutureProvider.autoDispose
       final activeSubscriptions = await ref.watch(
         activeSubscriptionsProvider.future,
       );
+      if (!ref.mounted) return const [];
       final subscribedSeriesIds = activeSubscriptions
           .map((s) => s.metronSeriesId)
           .toSet();

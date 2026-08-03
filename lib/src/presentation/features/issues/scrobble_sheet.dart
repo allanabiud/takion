@@ -126,6 +126,7 @@ Future<void> showScrobbleSheet({
           issueCollectionStatusProvider(issueId),
         );
         final isCollected = collectionStatus?.isCollected ?? false;
+        final isRead = collectionStatus?.isRead ?? false;
 
         if (!isSubmitting && !identical(collectionStatus, lastAdoptedStatus)) {
           lastAdoptedStatus = collectionStatus;
@@ -472,30 +473,32 @@ Future<void> showScrobbleSheet({
                   curve: Curves.easeInOut,
                   alignment: Alignment.topCenter,
                   child: isCollected
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.library_books_outlined),
-                              title: const Text('My Details'),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => showEditMyDetailsSheet(
-                                callerContext,
-                                ref,
-                                issueId,
-                              ),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.history),
-                              title: const Text('Reading History'),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => showReadingHistorySheet(
-                                callerContext,
-                                ref,
-                                issueId,
-                              ),
-                            ),
-                          ],
+                      ? ListTile(
+                          leading: const Icon(Icons.library_books_outlined),
+                          title: const Text('My Details'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => showEditMyDetailsSheet(
+                            callerContext,
+                            ref,
+                            issueId,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: isRead
+                      ? ListTile(
+                          leading: const Icon(Icons.history),
+                          title: const Text('Reading History'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => showReadingHistorySheet(
+                            callerContext,
+                            ref,
+                            issueId,
+                          ),
                         )
                       : const SizedBox.shrink(),
                 ),

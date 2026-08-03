@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
 import 'package:takion/src/presentation/features/library/activity_log_view.dart';
-import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
@@ -19,8 +18,6 @@ import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/series/series_list_tile.dart';
 import 'package:takion/src/presentation/features/library/widgets/stat_card.dart';
 import 'package:takion/src/presentation/features/library/widgets/library_charts.dart';
-import 'package:takion/src/presentation/features/library/widgets/insight_row.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 
@@ -236,9 +233,7 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
         ref.invalidate(libraryBasicStatsProvider(_filter));
         ref.invalidate(libraryEntityStatsProvider);
         ref.invalidate(libraryReadingTrendsProvider(_filter));
-        ref.invalidate(libraryRecentlyFinishedProvider(_filter));
         ref.invalidate(collectionStatsProvider);
-        ref.invalidate(categoryInsightsProvider);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -280,9 +275,7 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
             const SizedBox(height: 24),
             ReadingGoalCard(filter: _filter),
             const SizedBox(height: 24),
-            _ReadInsightsList(filter: _filter),
-            const SizedBox(height: 24),
-            _ReadRecentlyFinishedSection(filter: _filter),
+            const _ReadingHistoryTile(),
           ],
         ),
       ),
@@ -458,262 +451,51 @@ class _ReadTrendsChart extends ConsumerWidget {
   }
 }
 
-class _ReadInsightsList extends ConsumerWidget {
-  final LibraryFilter filter;
-
-  const _ReadInsightsList({required this.filter});
+class _ReadingHistoryTile extends StatelessWidget {
+  const _ReadingHistoryTile();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(libraryBasicStatsProvider(filter));
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return statsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ShimmerWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeaderSkeleton(),
-              SizedBox(height: 12),
-              _InsightRowSkeleton(),
-              _InsightRowSkeleton(),
-            ],
-          ),
-        ),
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: EmptyContentState(
-          icon: Icons.lightbulb_outline,
-          message: 'No insights available.',
-        ),
-      ),
-      data: (stats) {
-        final hasInsights =
-            stats.averageRating > 0 || stats.mostReadSeries != null;
-        if (!hasInsights) {
-          return const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SectionHeader(title: 'READING INSIGHTS'),
-              ),
-              SizedBox(height: 12),
-              EmptyContentState(
-                icon: Icons.lightbulb_outline,
-                message: 'No insights available.',
-              ),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SectionHeader(title: 'READING INSIGHTS'),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (stats.averageRating > 0) ...[
-                    InsightRow(
-                      label: 'Avg Rating',
-                      value: stats.averageRating.toStringAsFixed(2),
-                      icon: Icons.star,
-                      iconColor: Colors.amber,
-                    ),
-                  ],
-                  if (stats.mostReadSeries != null) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.collections_bookmark_outlined,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Most-Read Series',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 4,
-                          child: Text(
-                            stats.mostReadSeriesYear != null &&
-                                    stats.mostReadSeriesYear! > 0
-                                ? '${stats.mostReadSeries} (${stats.mostReadSeriesYear})'
-                                : stats.mostReadSeries!,
-                            textAlign: TextAlign.right,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _InsightRowSkeleton extends StatelessWidget {
-  const _InsightRowSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          SkeletonBox(width: 24, height: 24),
-          SizedBox(width: 16),
-          Expanded(child: SkeletonBox(height: 16)),
-          SizedBox(width: 12),
-          SkeletonBox(width: 60, height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReadRecentlyFinishedSection extends ConsumerWidget {
-  final LibraryFilter filter;
-
-  const _ReadRecentlyFinishedSection({required this.filter});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final finishedAsync = ref.watch(libraryRecentlyFinishedProvider(filter));
-
-    return finishedAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ShimmerWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeaderSkeleton(),
-              SizedBox(height: 8),
-              _ReadRecentIssueSkeleton(),
-              _ReadRecentIssueSkeleton(),
-              _ReadRecentIssueSkeleton(),
-            ],
-          ),
-        ),
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: EmptyContentState(
-          icon: Icons.history_outlined,
-          message: 'No recently finished reads.',
-        ),
-      ),
-      data: (items) {
-        if (items.isEmpty) {
-          return const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SectionHeader(title: 'RECENTLY FINISHED'),
-              ),
-              SizedBox(height: 12),
-              EmptyContentState(
-                icon: Icons.history_outlined,
-                message: 'No recently finished reads.',
-              ),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SectionHeader(title: 'RECENTLY FINISHED'),
-            ),
-            const SizedBox(height: 8),
-            ...items.map(
-              (item) => IssueListTile(
-                issue: IssueList(
-                  id: item.issue?.id ?? 0,
-                  name: item.issue?.series?.name ?? item.issue?.number ?? '',
-                  number: item.issue?.number ?? '',
-                  series: item.issue?.series != null
-                      ? Series(
-                          id: item.issue!.series!.id,
-                          name: item.issue!.series!.name,
-                          volume: item.issue!.series!.volume,
-                          yearBegan: item.issue!.series!.yearBegan,
-                        )
-                      : null,
-                  image: item.issue?.image,
-                  coverDate: item.issue?.coverDate,
-                  storeDate: item.issue?.storeDate,
-                  modified: null,
-                ),
-                isCollected: item.quantity > 0,
-                isRead: item.isRead,
-                rating: item.rating,
-                onTap: item.issue?.id != null
-                    ? () => context.pushRoute(
-                        IssueDetailsRoute(issueId: item.issue!.id),
-                      )
-                    : null,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ReadRecentIssueSkeleton extends StatelessWidget {
-  const _ReadRecentIssueSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SkeletonBox(width: 60, height: 88),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => context.pushRoute(const ReadingHistoryRoute()),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
               children: [
-                SkeletonBox(height: 16),
-                const SizedBox(height: 6),
-                SkeletonBox(width: 100, height: 14),
+                Icon(Icons.history, color: theme.colorScheme.primary),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reading History',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'View all comics you have read',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

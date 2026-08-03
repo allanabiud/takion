@@ -12,6 +12,7 @@ class AppThemes {
         interactionEffects: true,
         tintedDisabledControls: true,
         useM2StyleDividerInM3: true,
+        adaptiveAppBarScrollUnderOff: FlexAdaptive.all(),
         tabBarDividerColor: Color(0x00000000),
         tabBarIndicatorWeight: 4,
         tabBarIndicatorTopRadius: 0,

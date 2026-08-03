@@ -83,7 +83,9 @@ List<Map<String, dynamic>> _scoreTrendingEntries(Map<String, dynamic> input) {
 
 Future<List<HomeTrendingEntry>> _computeHomeTrendingEntries(Ref ref) async {
   final weeklyIssues = await ref.watch(weeklyReleasesProvider().future);
+  if (!ref.mounted) return const [];
   final pullIssues = await ref.watch(currentWeekPullsProvider.future);
+  if (!ref.mounted) return const [];
 
   if (weeklyIssues.isEmpty) return const [];
 

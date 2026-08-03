@@ -98,8 +98,11 @@ double _scoreSeries(
 
 Future<List<IssueList>> _computeBecauseYouPulledIssues(Ref ref) async {
   final weeklyIssues = await ref.watch(weeklyReleasesProvider().future);
+  if (!ref.mounted) return const [];
   final pulledIssues = await ref.watch(currentWeekPullsProvider.future);
+  if (!ref.mounted) return const [];
   final libraryItems = await ref.watch(allLibraryItemsProvider.future);
+  if (!ref.mounted) return const [];
 
   if (pulledIssues.isEmpty) return const [];
 

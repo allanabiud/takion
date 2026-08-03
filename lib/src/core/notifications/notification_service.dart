@@ -20,6 +20,10 @@ class NotificationService {
 
   VoidCallback? onNavigateToMyPulls;
 
+  int? _lastCount;
+  NotificationDay? _lastDay;
+  Future<void>? _pendingSchedule;
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
@@ -143,6 +147,28 @@ class NotificationService {
   }
 
   Future<void> scheduleWeekly(int count, NotificationDay day) async {
+    if (_lastCount == count && _lastDay == day) {
+      AppLogger.info('Weekly pull notification already scheduled; skipping');
+      return;
+    }
+    await _pendingSchedule;
+    if (_lastCount == count && _lastDay == day) {
+      AppLogger.info('Weekly pull notification already scheduled; skipping');
+      return;
+    }
+
+    final future = _doScheduleWeekly(count, day);
+    _pendingSchedule = future;
+    try {
+      await future;
+      _lastCount = count;
+      _lastDay = day;
+    } finally {
+      _pendingSchedule = null;
+    }
+  }
+
+  Future<void> _doScheduleWeekly(int count, NotificationDay day) async {
     await cancel();
 
     if (count <= 0) {
@@ -237,6 +263,8 @@ class NotificationService {
   }
 
   Future<void> cancel() async {
+    _lastCount = null;
+    _lastDay = null;
     try {
       await _plugin.cancel(_notificationId);
       AppLogger.info('Weekly pull notification cancelled');
