@@ -41,15 +41,7 @@ void callbackDispatcher() {
 
       await driveService.triggerSync(ignoreThrottle: true);
 
-      await NotificationService.instance.showSyncNotification(
-        title: 'Drive Sync Complete',
-        body: 'Your data was successfully synchronized.',
-        isOngoing: false,
-      );
-
-      Future.delayed(const Duration(seconds: 4), () {
-        NotificationService.instance.cancelSyncNotification();
-      });
+      await NotificationService.instance.cancelSyncNotification();
 
       return true;
     } catch (e) {

@@ -139,6 +139,8 @@ class IssueListTile extends ConsumerWidget {
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
+    final hasStoreDate = effectiveIssue.storeDate != null;
+    final showRoleBadge = role != null && role != ItemRole.standard;
     final isFavorite =
         effectiveIssue.id != null &&
         ref
@@ -281,12 +283,27 @@ class IssueListTile extends ConsumerWidget {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (effectiveIssue.storeDate != null)
+                      if (hasStoreDate || showRoleBadge)
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            DateFormatter.comicDate(effectiveIssue.storeDate!),
-                            style: Theme.of(context).textTheme.bodySmall,
+                          child: Row(
+                            children: [
+                              if (hasStoreDate)
+                                Expanded(
+                                  child: Text(
+                                    DateFormatter.comicDate(
+                                      effectiveIssue.storeDate!,
+                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              if (showRoleBadge) ...[
+                                if (hasStoreDate) const SizedBox(width: 8),
+                                RoleBadge(role: role!),
+                              ],
+                            ],
                           ),
                         ),
                       Padding(
@@ -327,11 +344,6 @@ class IssueListTile extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      if (role != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(children: [RoleBadge(role: role!)]),
-                        ),
                     ],
                   ),
           ),

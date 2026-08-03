@@ -65,6 +65,9 @@ class _MetronReadingListDetailScreenState
           isSeries: false,
           role: ItemRole.standard,
           isRead: false,
+          seriesName: item.seriesName,
+          seriesVolume: item.seriesVolume,
+          issueNumber: item.issueNumber,
         );
       }).toList();
 
@@ -587,6 +590,9 @@ class _MetronReadingListDetailScreenState
             isSeries: false,
             role: ItemRole.standard,
             isRead: false,
+            seriesName: item.seriesName,
+            seriesVolume: item.seriesVolume,
+            issueNumber: item.issueNumber,
           );
         }).toList();
 

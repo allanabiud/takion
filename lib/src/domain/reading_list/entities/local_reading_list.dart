@@ -14,6 +14,9 @@ abstract class LocalReadingListItem with _$LocalReadingListItem {
     required bool isSeries,
     required ItemRole role,
     required bool isRead,
+    String? seriesName,
+    int? seriesVolume,
+    String? issueNumber,
   }) = _LocalReadingListItem;
 
   factory LocalReadingListItem.fromJson(Map<String, dynamic> json) =>

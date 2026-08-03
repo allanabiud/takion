@@ -23,48 +23,43 @@ void main() {
     );
   }
 
-  testWidgets('reset icon does not shift stars and does not overlap', (
-    tester,
-  ) async {
-    await tester.pumpWidget(build(rating: 0));
-    final firstStarBefore = tester.getCenter(
-      find.byIcon(Icons.star_border).first,
-    );
-    final lastStarBefore = tester.getCenter(find.byIcon(Icons.star_border).last);
-    final starsBefore = tester.getSize(find.byType(RatingPicker));
+  testWidgets('stars are centered when no rating is set', (tester) async {
+    await tester.pumpWidget(build(rating: 0, iconSize: 40));
 
-    await tester.pumpWidget(build(rating: 3));
-    await tester.pump();
+    final picker = tester.getRect(find.byType(RatingPicker));
+    final firstStar = tester.getCenter(find.byIcon(Icons.star_border).first);
+    final lastStar = tester.getCenter(find.byIcon(Icons.star_border).last);
 
-    final firstStarAfter = tester.getCenter(find.byIcon(Icons.star).first);
-    expect(firstStarAfter, firstStarBefore);
-    expect(tester.getSize(find.byType(RatingPicker)), starsBefore);
-
-    expect(find.byIcon(Icons.do_not_disturb_on_outlined), findsOneWidget);
-    final resetCenter = tester.getCenter(
-      find.byIcon(Icons.do_not_disturb_on_outlined),
-    );
-    expect(resetCenter.dx, lessThan(firstStarBefore.dx));
-    expect(resetCenter.dx, lessThan(lastStarBefore.dx));
+    final starGroupCenter = (firstStar.dx + lastStar.dx) / 2;
+    expect(starGroupCenter, closeTo(picker.center.dx, 0.1));
   });
 
-  testWidgets('reset icon overlaps star at small iconSize when rating set',
-      (tester) async {
-    await tester.pumpWidget(build(rating: 3, iconSize: 18));
-    await tester.pump();
+  testWidgets('reset icon appears to the left of the stars when rated', (
+    tester,
+  ) async {
+    await tester.pumpWidget(build(rating: 3));
 
-    final lastStar = tester.getCenter(find.byIcon(Icons.star_border).last);
+    final firstStar = tester.getCenter(find.byIcon(Icons.star).first);
     final reset = tester.getCenter(
       find.byIcon(Icons.do_not_disturb_on_outlined),
     );
-    expect(reset.dx, lessThan(lastStar.dx));
+    expect(find.byIcon(Icons.do_not_disturb_on_outlined), findsOneWidget);
+    expect(reset.dx, lessThan(firstStar.dx));
+  });
+
+  testWidgets('stars do not shift when a rating is set', (tester) async {
+    await tester.pumpWidget(build(rating: 0, iconSize: 40));
+    final centerBefore = tester.getCenter(find.byIcon(Icons.star_border).first);
+
+    await tester.pumpWidget(build(rating: 3, iconSize: 40));
+    final centerAfter = tester.getCenter(find.byIcon(Icons.star).first);
+
+    expect(centerAfter.dx, closeTo(centerBefore.dx, 0.1));
   });
 
   testWidgets('reset icon triggers onReset when pressed', (tester) async {
     var resetCount = 0;
-    await tester.pumpWidget(
-      build(rating: 3, onReset: () => resetCount++),
-    );
+    await tester.pumpWidget(build(rating: 3, onReset: () => resetCount++));
     await tester.pump();
 
     await tester.tap(find.byIcon(Icons.do_not_disturb_on_outlined));

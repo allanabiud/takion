@@ -42,19 +42,10 @@ class RatingPicker extends StatelessWidget {
       );
     }
 
-    return SizedBox(
-      height: iconSize,
-      child: Row(
+    Widget stars() {
+      return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // A leading slot is always reserved so the stars never shift when
-          // the reset button appears, and the button stays within the hit-test
-          // bounds (unlike the previous Stack overflow).
-          SizedBox(
-            width: iconSize,
-            height: iconSize,
-            child: showReset ? resetButton() : null,
-          ),
           for (var starValue = 1; starValue <= 5; starValue++)
             IconButton(
               padding: EdgeInsets.zero,
@@ -77,7 +68,41 @@ class RatingPicker extends StatelessWidget {
               ),
             ),
         ],
-      ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth.isFinite) {
+          return SizedBox(
+            width: double.infinity,
+            height: iconSize,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                stars(),
+                if (showReset) Positioned(left: 0, child: resetButton()),
+              ],
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: iconSize,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              stars(),
+              if (showReset)
+                Positioned(
+                  left: -(iconSize + 12),
+                  child: resetButton(),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

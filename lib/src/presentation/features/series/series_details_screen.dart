@@ -169,9 +169,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
     final isFavoriteAsync = ref.watch(
       isSeriesFavoriteProvider(widget.seriesId),
     );
-    final ownedCountAsync = ref.watch(
-      seriesOwnedCountProvider(widget.seriesId),
-    );
 
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
     final isSubscriptionLoading =
@@ -336,14 +333,9 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             ),
             if (d.issueCount != null && d.issueCount! > 0) ...[
               const SizedBox(height: 12),
-              SectionHeader(
-                title: 'COLLECTION PROGRESS',
-                badge: ownedCountAsync.asData?.value != null
-                    ? '(${((ownedCountAsync.asData!.value / d.issueCount!) * 100).clamp(0, 100).toStringAsFixed(0)}%)'
-                    : null,
-              ),
+              const SectionHeader(title: 'PROGRESS'),
               const SizedBox(height: 8),
-              _SeriesCompletionCompact(seriesId: d.id, total: d.issueCount!),
+              _SeriesProgressCards(seriesId: d.id, total: d.issueCount!),
             ],
           ],
         );
@@ -484,13 +476,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _SeriesInfoCard(details: d),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -550,6 +535,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
                     ),
                 ],
               ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _SeriesInfoCard(details: d),
             ),
           ),
           if (showAssociated) ...[
@@ -798,68 +790,159 @@ void _showSeriesMoreOptionsSheet(
   );
 }
 
-class _SeriesCompletionCompact extends ConsumerWidget {
+class _SeriesProgressCards extends ConsumerWidget {
   final int seriesId;
   final int total;
 
-  const _SeriesCompletionCompact({required this.seriesId, required this.total});
+  const _SeriesProgressCards({required this.seriesId, required this.total});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ownedAsync = ref.watch(seriesOwnedCountProvider(seriesId));
-    final theme = Theme.of(context);
+    final readAsync = ref.watch(seriesReadCountProvider(seriesId));
 
-    return ownedAsync.when(
-      loading: () => const Padding(
+    final owned = ownedAsync.value;
+    final read = readAsync.value;
+    if (owned == null || read == null) {
+      if (ownedAsync.hasError || readAsync.hasError) {
+        return const SizedBox.shrink();
+      }
+      return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 4),
         child: ShimmerWidget(
           child: Row(
             children: [
-              SkeletonBox(width: 16, height: 16, borderRadius: 4),
-              SizedBox(width: 8),
-              Expanded(child: SkeletonBox(height: 8, borderRadius: 4)),
-              SizedBox(width: 8),
-              SkeletonBox(width: 40, height: 12, borderRadius: 4),
+              Expanded(child: SkeletonBox(height: 64, borderRadius: 12)),
+              SizedBox(width: 12),
+              Expanded(child: SkeletonBox(height: 64, borderRadius: 12)),
             ],
           ),
         ),
-      ),
-      error: (_, _) => const SizedBox.shrink(),
-      data: (owned) {
-        final percent = (owned / total).clamp(0.0, 1.0);
+      );
+    }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            children: [
-              Icon(
-                Icons.inventory_2_outlined,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: percent,
-                    minHeight: 8,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ProgressStatCard(
+              value: owned,
+              total: total,
+              label: 'COLLECTED',
+              icon: Icons.inventory_2,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _ProgressStatCard(
+              value: read,
+              total: total,
+              label: 'READ',
+              icon: Icons.bookmark_added,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressStatCard extends StatelessWidget {
+  final int value;
+  final int total;
+  final String label;
+  final IconData icon;
+
+  const _ProgressStatCard({
+    required this.value,
+    required this.total,
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fraction = total > 0 ? (value / total).clamp(0.0, 1.0) : 0.0;
+    final percent = (fraction * 100).round();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: Stack(
+              fit: StackFit.expand,
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: fraction,
+                  strokeWidth: 4,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                ),
+                Center(
+                  child: Icon(
+                    icon,
+                    size: 18,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '$owned/$total',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$value/$total',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' · $percent%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 9,
+                    letterSpacing: 0.6,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

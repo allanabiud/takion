@@ -43,6 +43,12 @@ class ReadingListTimelineTile extends ConsumerWidget {
     final isRead = isReadAsync.value ?? item.isRead;
     final id = int.tryParse(item.targetId.replaceAll(RegExp(r'^.*-'), '')) ?? 0;
 
+    String fallbackName([String prefix = 'Issue']) {
+      final seriesName = item.seriesName?.trim();
+      if (seriesName != null && seriesName.isNotEmpty) return seriesName;
+      return id > 0 ? '$prefix #$id' : prefix;
+    }
+
     final metadataAsync = allowRemoteHydration
         ? ref.watch(
                 readingListItemMetadataProvider((
@@ -124,8 +130,8 @@ class ReadingListTimelineTile extends ConsumerWidget {
         } else {
           issue = IssueList(
             id: id > 0 ? id : null,
-            name: id > 0 ? 'Issue #$id' : 'Issue',
-            number: '',
+            name: fallbackName(),
+            number: item.issueNumber ?? '',
             series: null,
             image: null,
             coverDate: null,
@@ -156,8 +162,8 @@ class ReadingListTimelineTile extends ConsumerWidget {
           : IssueListTile(
               issue: IssueList(
                 id: id > 0 ? id : null,
-                name: id > 0 ? 'Issue #$id' : 'Issue',
-                number: '',
+                name: fallbackName(),
+                number: item.issueNumber ?? '',
                 series: null,
                 coverDate: null,
                 storeDate: null,
@@ -183,8 +189,8 @@ class ReadingListTimelineTile extends ConsumerWidget {
           : IssueListTile(
               issue: IssueList(
                 id: id > 0 ? id : null,
-                name: id > 0 ? 'Issue #$id' : 'Issue',
-                number: '',
+                name: fallbackName(),
+                number: item.issueNumber ?? '',
                 series: null,
                 coverDate: null,
                 storeDate: null,

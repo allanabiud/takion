@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 /// A pinned, compact header bar for list screens.
 ///
-/// Wraps [child] (typically a [ListHeader]) in a pinned [SliverPersistentHeader]
-/// that vertically centers its content and is visually separated from the
-/// content below (and from any other pinned bars, such as the week picker) by
-/// a subtle bottom border.
+/// Wraps [child] (typically a [ListHeader]) in a pinned + floating
+/// [SliverPersistentHeader] that stays at the top while idle, slides away on
+/// scroll-down, and re-emerges on any scroll-up. Its background matches the
+/// scaffold so it blends seamlessly with the page behind it.
 class PinnedListHeader extends StatelessWidget {
   const PinnedListHeader({
     super.key,
@@ -20,6 +20,7 @@ class PinnedListHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverPersistentHeader(
       pinned: true,
+      floating: true,
       delegate: PinnedListHeaderDelegate(child: child, isLoading: isLoading),
     );
   }
@@ -55,14 +56,7 @@ class PinnedListHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-        ),
-      ),
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: child,
     );
   }

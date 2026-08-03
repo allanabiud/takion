@@ -18,7 +18,7 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final titleText = Text(
-      count != null ? '$title ($count)' : title,
+      (count != null ? '$title ($count)' : title).toUpperCase(),
       style: theme.textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w700,
         color: theme.colorScheme.primary,

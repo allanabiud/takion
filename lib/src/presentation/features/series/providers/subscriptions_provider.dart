@@ -46,6 +46,62 @@ final subscribedSeriesPageProvider = FutureProvider.family<SeriesListPage, int>(
   },
 );
 
+class SubscriptionSeriesCardData {
+  const SubscriptionSeriesCardData({
+    this.mostRecentIssueImage,
+    this.nextIssueDate,
+  });
+
+  final String? mostRecentIssueImage;
+  final DateTime? nextIssueDate;
+}
+
+/// Reads a subscribed series' cover and next release purely from the local
+/// cache of its issues (populated when the series details/issues are viewed).
+/// No network calls are made.
+final subscriptionSeriesCardProvider = StreamProvider.autoDispose
+    .family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
+      final dao = ref.watch(metronEntityDaoProvider);
+      return dao.watchIssuesBySeries(seriesId).map((issues) {
+        String? mostRecentImage;
+        DateTime? nextIssueDate;
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        for (final issue in issues) {
+          if (mostRecentImage == null &&
+              (issue.imageUrl?.trim().isNotEmpty ?? false)) {
+            mostRecentImage = issue.imageUrl;
+          }
+
+          DateTime? releaseDate;
+          if (issue.storeDate != null) {
+            releaseDate = DateTime.tryParse(issue.storeDate!);
+          }
+          releaseDate ??= issue.coverDate != null
+              ? DateTime.tryParse(issue.coverDate!)
+              : null;
+          if (releaseDate != null) {
+            final day = DateTime(
+              releaseDate.year,
+              releaseDate.month,
+              releaseDate.day,
+            );
+            if (!day.isBefore(today)) {
+              if (nextIssueDate == null || day.isBefore(nextIssueDate)) {
+                nextIssueDate = day;
+              }
+            }
+          }
+        }
+
+        return SubscriptionSeriesCardData(
+          mostRecentIssueImage: mostRecentImage,
+          nextIssueDate: nextIssueDate,
+        );
+      });
+    });
+
 Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {
   final db = ref.read(driftDatabaseProvider);
   final localSeries = await db.metronEntityDao.getSeries(seriesId);
@@ -62,17 +118,7 @@ Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {
     );
   }
 
-  final remoteDetails = await ref
-      .read(metronRepositoryProvider)
-      .getSeriesDetails(seriesId);
-  return SeriesList(
-    id: remoteDetails.id,
-    name: remoteDetails.name,
-    yearBegan: remoteDetails.yearBegan,
-    volume: remoteDetails.volume,
-    issueCount: remoteDetails.issueCount,
-    modified: remoteDetails.modified,
-  );
+  return _seriesListFromSubscriptionFallback(seriesId);
 }
 
 SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
@@ -87,6 +133,8 @@ SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
 Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
   final safePage = page < 1 ? 1 : page;
   final offset = (safePage - 1) * _subscriptionsPageSize;
+
+  ref.watch(activeSubscriptionsProvider);
 
   try {
     final subscriptionRepository = ref.read(subscriptionRepositoryProvider);

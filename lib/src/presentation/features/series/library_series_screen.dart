@@ -359,21 +359,15 @@ Future<void> _showCategoryBulkSheet(
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          RatingPicker(
-                            selectedRating: selectedRating,
-                            enabled: !isApplying,
-                            onChanged: (rating) {
-                              setModalState(() => selectedRating = rating);
-                            },
-                            onReset: () {
-                              setModalState(() => selectedRating = 0);
-                            },
-                            iconSize: 28,
-                          ),
-                        ],
+                      RatingPicker(
+                        selectedRating: selectedRating,
+                        enabled: !isApplying,
+                        onChanged: (rating) {
+                          setModalState(() => selectedRating = rating);
+                        },
+                        onReset: () {
+                          setModalState(() => selectedRating = 0);
+                        },
                       ),
                     ],
                   ),

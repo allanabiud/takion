@@ -208,6 +208,9 @@ class _MetronReadingListBrowserScreenState
                     isSeries: false,
                     role: ItemRole.standard,
                     isRead: false,
+                    seriesName: item.seriesName,
+                    seriesVolume: item.seriesVolume,
+                    issueNumber: item.issueNumber,
                   ),
                 )
                 .toList() ??

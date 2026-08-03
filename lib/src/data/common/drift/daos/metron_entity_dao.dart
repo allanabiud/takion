@@ -20,6 +20,42 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     return {for (final r in rows) r.id: r};
   }
 
+  Future<List<MetronIssue>> getIssuesBySeries(
+    int seriesId, {
+    int limit = 200,
+  }) {
+    return (select(attachedDatabase.metronIssues)
+          ..where((t) => t.seriesId.equals(seriesId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.coverDate,
+              mode: OrderingMode.desc,
+            ),
+            (t) =>
+                OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Stream<List<MetronIssue>> watchIssuesBySeries(
+    int seriesId, {
+    int limit = 200,
+  }) {
+    return (select(attachedDatabase.metronIssues)
+          ..where((t) => t.seriesId.equals(seriesId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.coverDate,
+              mode: OrderingMode.desc,
+            ),
+            (t) =>
+                OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+          ])
+          ..limit(limit))
+        .watch();
+  }
+
   Stream<MetronIssue?> watchIssue(int id) {
     return (select(
       attachedDatabase.metronIssues,

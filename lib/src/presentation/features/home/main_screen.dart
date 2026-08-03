@@ -117,6 +117,9 @@ class MainScreenState extends ConsumerState<MainScreen>
       builder: (context, child) {
         final tabsRouter = context.tabsRouter;
         final syncState = ref.watch(driveSyncProvider);
+        final connectivityState = ref.watch(connectivityStatusProvider);
+        final isOffline =
+            connectivityState.asData?.value == AppConnectivityStatus.offline;
 
         return PopScope(
           canPop: tabsRouter.activeIndex == 0,
@@ -163,6 +166,33 @@ class MainScreenState extends ConsumerState<MainScreen>
             bottomNavigationBar: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (isOffline)
+                  Container(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.wifi_off_outlined,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'You are offline',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onErrorContainer,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (syncState.isSyncing)
                   Container(
                     color: Theme.of(context).colorScheme.surfaceContainer,

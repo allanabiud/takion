@@ -92,7 +92,7 @@ class EntityCover extends StatelessWidget {
                             )
                           : Icon(placeholderIcon, size: iconSize),
                     ),
-              if (role != null)
+              if (role != null && role != ItemRole.standard)
                 Positioned(top: 4, left: 4, child: RoleBadge(role: role!)),
               if (isFavorite)
                 Positioned(

@@ -741,11 +741,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = Theme.of(context);
     final actions = [
       (
-        Icons.list_alt_rounded,
-        'Reading Lists',
-        () => context.pushRoute(const MetronReadingListBrowserRoute()),
-      ),
-      (
         Icons.business,
         'Publishers',
         () => context.pushRoute(const PublisherBrowseRoute()),
@@ -754,6 +749,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Icons.auto_stories,
         'Story Arcs',
         () => context.pushRoute(const ArcBrowseRoute()),
+      ),
+      (
+        Icons.list_alt_rounded,
+        'Reading Lists',
+        () => context.pushRoute(const MetronReadingListBrowserRoute()),
       ),
       (Icons.groups, 'Teams', () => context.pushRoute(const TeamBrowseRoute())),
       (

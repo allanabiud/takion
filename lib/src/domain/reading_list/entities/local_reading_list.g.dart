@@ -13,6 +13,9 @@ _LocalReadingListItem _$LocalReadingListItemFromJson(
   isSeries: json['isSeries'] as bool,
   role: $enumDecode(_$ItemRoleEnumMap, json['role']),
   isRead: json['isRead'] as bool,
+  seriesName: json['seriesName'] as String?,
+  seriesVolume: (json['seriesVolume'] as num?)?.toInt(),
+  issueNumber: json['issueNumber'] as String?,
 );
 
 Map<String, dynamic> _$LocalReadingListItemToJson(
@@ -22,6 +25,9 @@ Map<String, dynamic> _$LocalReadingListItemToJson(
   'isSeries': instance.isSeries,
   'role': _$ItemRoleEnumMap[instance.role]!,
   'isRead': instance.isRead,
+  'seriesName': instance.seriesName,
+  'seriesVolume': instance.seriesVolume,
+  'issueNumber': instance.issueNumber,
 };
 
 const _$ItemRoleEnumMap = {

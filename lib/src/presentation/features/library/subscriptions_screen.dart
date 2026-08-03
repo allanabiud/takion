@@ -3,13 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
+import 'package:takion/src/presentation/features/series/series_subscription_card.dart';
 
 @RoutePage()
 class SubscriptionsScreen extends ConsumerStatefulWidget {
@@ -23,36 +22,11 @@ class SubscriptionsScreen extends ConsumerStatefulWidget {
 class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   int _page = 1;
   SeriesListPage? _lastPage;
-  int _coverFetchLimit = seriesCoverFetchBudgetPerSession;
-  bool _coverLimitUpdateScheduled = false;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
-  void _resetCoverFetchLimit() {
-    _coverFetchLimit = seriesCoverFetchBudgetPerSession;
-    _coverLimitUpdateScheduled = false;
-  }
-
-  void _maybeExpandCoverFetchLimit({required int index, required int total}) {
-    if (index < _coverFetchLimit - 2) return;
-    if (_coverFetchLimit >= total) return;
-    if (_coverLimitUpdateScheduled) return;
-
-    _coverLimitUpdateScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _coverFetchLimit = (_coverFetchLimit + seriesCoverFetchBudgetPerSession)
-            .clamp(seriesCoverFetchBudgetPerSession, total);
-        _coverLimitUpdateScheduled = false;
-      });
-    });
-  }
-
   Future<void> _refreshPage() async {
     ref.invalidate(subscribedSeriesPageProvider(_page));
-    if (!mounted) return;
-    setState(_resetCoverFetchLimit);
   }
 
   @override
@@ -81,13 +55,22 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                 controller: _searchController,
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Search series...',
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
-                  suffixIcon: Icon(
-                    Icons.search,
+                  suffixIcon: IconButton(
+                    tooltip: 'Close search',
+                    iconSize: 28,
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _isSearching = false;
+                        _searchController.clear();
+                      });
+                    },
                   ),
                 ),
               )
@@ -173,7 +156,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         if (previousPage == null) return;
         setState(() {
           _page = previousPage;
-          _resetCoverFetchLimit();
         });
       },
       onNext: () {
@@ -181,21 +163,17 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         if (nextPage == null) return;
         setState(() {
           _page = nextPage;
-          _resetCoverFetchLimit();
         });
       },
+      gridCrossAxisCount: 2,
+      gridChildAspectRatio: 0.95,
+      bottomSpacing: 36,
       itemCount: sortedResults.length,
       itemBuilder: (context, index) {
-        _maybeExpandCoverFetchLimit(index: index, total: sortedResults.length);
         final series = sortedResults[index];
         return Opacity(
           opacity: isLoading ? 0.6 : 1.0,
-          child: SeriesListTile(
-            series: series,
-            allowRemoteCoverFetch: index < _coverFetchLimit,
-            isFirst: index == 0,
-            isLast: index == sortedResults.length - 1,
-          ),
+          child: SeriesSubscriptionCard(series: series),
         );
       },
       emptyMessage: 'No subscriptions.',
@@ -209,54 +187,34 @@ class _SubscriptionSkeletonContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 8,
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 40),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.95,
+      ),
+      itemCount: 6,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 12,
-            right: 12,
-            top: index == 0 ? 12 : 2,
-            bottom: index == 7 ? 12 : 2,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SkeletonBox(width: 90, height: 100, borderRadius: 8),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SkeletonBox(height: 16, width: double.infinity),
-                        SizedBox(height: 8),
-                        SkeletonBox(height: 14, width: 180),
-                        SizedBox(height: 12),
-                        SkeletonBox(
-                          height: 6,
-                          width: double.infinity,
-                          borderRadius: 3,
-                        ),
-                        SizedBox(height: 12),
-                        Row(
-                          children: [
-                            SkeletonBox(width: 16, height: 16, borderRadius: 4),
-                            SizedBox(width: 8),
-                            SkeletonBox(width: 16, height: 16, borderRadius: 4),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const SkeletonBox(borderRadius: 14),
+              Positioned(
+                left: 10,
+                right: 10,
+                bottom: 10,
+                child: const SkeletonBox(
+                  height: 14,
+                  width: double.infinity,
+                  borderRadius: 4,
+                ),
               ),
-            ),
+            ],
           ),
         );
       },

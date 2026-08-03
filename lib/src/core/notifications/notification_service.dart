@@ -25,7 +25,7 @@ class NotificationService {
 
   Future<void> init() async {
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@drawable/ic_notification',
     );
     const settings = InitializationSettings(android: androidSettings);
 
@@ -76,7 +76,11 @@ class NotificationService {
       channelDescription: 'Notifications for Google Drive sync status',
       importance: Importance.low,
       priority: Priority.low,
+      icon: 'ic_notification',
       ongoing: isOngoing,
+      autoCancel: !isOngoing,
+      showProgress: isOngoing,
+      indeterminate: isOngoing,
       showWhen: true,
     );
     final details = NotificationDetails(android: androidDetails);
@@ -157,6 +161,7 @@ class NotificationService {
       channelDescription: 'Weekly summary of your comic pulls',
       importance: Importance.high,
       priority: Priority.high,
+      icon: 'ic_notification',
     );
     const details = NotificationDetails(android: androidDetails);
 

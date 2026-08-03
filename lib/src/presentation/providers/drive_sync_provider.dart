@@ -4,9 +4,9 @@ import 'package:takion/src/core/storage/drift_database_provider.dart';
 import 'package:takion/src/core/sync/periodic_sync_manager.dart';
 
 enum SyncInterval {
-  minutes30(Duration(minutes: 30), '30 min'),
   hours1(Duration(hours: 1), '1 hr'),
-  hours3(Duration(hours: 3), '3 hrs');
+  hours3(Duration(hours: 3), '3 hrs'),
+  hours24(Duration(hours: 24), '24 hrs');
 
   final Duration duration;
   final String label;
@@ -15,11 +15,6 @@ enum SyncInterval {
 
   static SyncInterval fromString(String? value) {
     switch (value) {
-      case '30 min':
-      case '30m':
-      case '30_min':
-      case 'minutes30':
-        return SyncInterval.minutes30;
       case '1 hr':
       case '1h':
       case '1_hr':
@@ -30,6 +25,11 @@ enum SyncInterval {
       case '3_hrs':
       case 'hours3':
         return SyncInterval.hours3;
+      case '24 hrs':
+      case '24h':
+      case '24_hrs':
+      case 'hours24':
+        return SyncInterval.hours24;
       default:
         return SyncInterval.hours1;
     }
@@ -45,6 +45,7 @@ class DriveSyncState {
   final String? lastError;
   final DateTime? lastErrorTime;
   final SyncInterval syncInterval;
+  final bool syncIntervalEnabled;
 
   const DriveSyncState({
     this.isInitialized = false,
@@ -55,6 +56,7 @@ class DriveSyncState {
     this.lastError,
     this.lastErrorTime,
     this.syncInterval = SyncInterval.hours1,
+    this.syncIntervalEnabled = false,
   });
 
   DriveSyncState copyWith({
@@ -66,6 +68,7 @@ class DriveSyncState {
     String? lastError,
     DateTime? lastErrorTime,
     SyncInterval? syncInterval,
+    bool? syncIntervalEnabled,
   }) {
     return DriveSyncState(
       isInitialized: isInitialized ?? this.isInitialized,
@@ -76,6 +79,7 @@ class DriveSyncState {
       lastError: lastError ?? this.lastError,
       lastErrorTime: lastErrorTime ?? this.lastErrorTime,
       syncInterval: syncInterval ?? this.syncInterval,
+      syncIntervalEnabled: syncIntervalEnabled ?? this.syncIntervalEnabled,
     );
   }
 }
@@ -88,6 +92,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   static const _enabledKey = 'drive_sync_enabled';
   static const _emailKey = 'drive_sync_email';
   static const _intervalKey = 'drive_sync_interval';
+  static const _intervalEnabledKey = 'drive_sync_interval_enabled';
 
   late final Future<void> _initFuture = _loadSettings();
 
@@ -108,6 +113,10 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
     final email = await db.settingsDao.getString(_emailKey);
     final intervalRaw = await db.settingsDao.getString(_intervalKey);
     final interval = SyncInterval.fromString(intervalRaw);
+    final intervalEnabled = await db.settingsDao.getBool(
+      _intervalEnabledKey,
+      defaultValue: false,
+    );
 
     final lastSyncRaw = await db.syncMetaDao.get('last_sync_timestamp');
     DateTime? lastSync;
@@ -120,9 +129,10 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
       email: email,
       lastSync: lastSync,
       syncInterval: interval,
+      syncIntervalEnabled: intervalEnabled,
     );
 
-    if (enabled) {
+    if (enabled && intervalEnabled) {
       await PeriodicSyncManager.instance.schedulePeriodicSync(interval);
     }
   }
@@ -134,7 +144,11 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
     await db.settingsDao.setBool(_enabledKey, true);
     await db.settingsDao.setString(_emailKey, email);
     state = state.copyWith(isInitialized: true, enabled: true, email: email);
-    await PeriodicSyncManager.instance.schedulePeriodicSync(state.syncInterval);
+    if (state.syncIntervalEnabled) {
+      await PeriodicSyncManager.instance.schedulePeriodicSync(
+        state.syncInterval,
+      );
+    }
   }
 
   Future<void> disable() async {
@@ -153,8 +167,27 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
     final db = ref.read(driftDatabaseProvider);
     await db.settingsDao.setString(_intervalKey, interval.label);
     state = state.copyWith(syncInterval: interval);
-    if (state.enabled) {
+    if (state.enabled && state.syncIntervalEnabled) {
       await PeriodicSyncManager.instance.schedulePeriodicSync(interval);
+    }
+  }
+
+  Future<void> updateSyncIntervalEnabled(bool value) async {
+    await ensureInitialized();
+    AppLogger.info(
+      'Drive sync interval ${value ? 'enabled' : 'disabled'}',
+    );
+    final db = ref.read(driftDatabaseProvider);
+    await db.settingsDao.setBool(_intervalEnabledKey, value);
+    state = state.copyWith(syncIntervalEnabled: value);
+    if (state.enabled) {
+      if (value) {
+        await PeriodicSyncManager.instance.schedulePeriodicSync(
+          state.syncInterval,
+        );
+      } else {
+        await PeriodicSyncManager.instance.cancelPeriodicSync();
+      }
     }
   }
 

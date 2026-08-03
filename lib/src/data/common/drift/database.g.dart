@@ -18809,10 +18809,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_activity_series',
     'CREATE INDEX idx_activity_series ON activity_events (series_id)',
   );
-  late final Index idxActivitySeriesTimestamp = Index(
-    'idx_activity_series_timestamp',
-    'CREATE INDEX idx_activity_series_timestamp ON activity_events (series_id, timestamp)',
-  );
   late final Index idxActivityIssue = Index(
     'idx_activity_issue',
     'CREATE INDEX idx_activity_issue ON activity_events (issue_id)',
@@ -18820,6 +18816,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxActivityEventTime = Index(
     'idx_activity_event_time',
     'CREATE INDEX idx_activity_event_time ON activity_events (event_type, timestamp)',
+  );
+  late final Index idxActivityTimestamp = Index(
+    'idx_activity_timestamp',
+    'CREATE INDEX idx_activity_timestamp ON activity_events (timestamp)',
+  );
+  late final Index idxActivitySeriesTimestamp = Index(
+    'idx_activity_series_timestamp',
+    'CREATE INDEX idx_activity_series_timestamp ON activity_events (series_id, timestamp)',
   );
   late final Index idxRliList = Index(
     'idx_rli_list',
@@ -18917,9 +18921,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxPullReleaseStatus,
     idxSubSeries,
     idxActivitySeries,
-    idxActivitySeriesTimestamp,
     idxActivityIssue,
     idxActivityEventTime,
+    idxActivityTimestamp,
+    idxActivitySeriesTimestamp,
     idxRliList,
     idxMetronIssuesSeries,
     idxMetronSeriesName,

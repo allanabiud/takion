@@ -187,9 +187,6 @@ class _TakionAppState extends ConsumerState<TakionApp>
   Widget build(BuildContext context) {
     final themeAsync = ref.watch(themeProvider);
     ref.watch(authStateProvider);
-    final connectivityState = ref.watch(connectivityStatusProvider);
-    final isOffline =
-        connectivityState.asData?.value == AppConnectivityStatus.offline;
 
     if (_hasSeenOnboarding) {
       ref.listen(currentWeekPullsProvider, (previous, next) {
@@ -246,9 +243,6 @@ class _TakionAppState extends ConsumerState<TakionApp>
         navigatorObservers: () => [TalkerRouteObserver(talker)],
       ),
       builder: (context, child) {
-        final bannerColor = Theme.of(context).colorScheme.errorContainer;
-        final bannerTextColor = Theme.of(context).colorScheme.onErrorContainer;
-
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value:
               FlexColorScheme.themedSystemNavigationBar(
@@ -265,72 +259,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
                     ? Brightness.dark
                     : Brightness.light,
               ),
-          child: Stack(
-            children: [
-              child!,
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 260),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      final offsetAnimation = Tween<Offset>(
-                        begin: const Offset(0, -1),
-                        end: Offset.zero,
-                      ).animate(animation);
-
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: offsetAnimation,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: isOffline
-                        ? IgnorePointer(
-                            key: const ValueKey('offline-banner'),
-                            child: Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: bannerColor,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.wifi_off_outlined,
-                                    size: 16,
-                                    color: bannerTextColor,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'You are offline',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge
-                                          ?.copyWith(color: bannerTextColor),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(key: ValueKey('offline-none')),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          child: child!,
         );
       },
     );

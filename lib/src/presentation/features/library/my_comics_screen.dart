@@ -497,7 +497,7 @@ class _TopPublishersSection extends ConsumerWidget {
       error: (_, _) => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: EmptyContentState(
-          icon: Icons.public_off_outlined,
+          icon: Icons.business,
           message: 'No publishers tracked.',
         ),
       ),
@@ -512,7 +512,7 @@ class _TopPublishersSection extends ConsumerWidget {
               ),
               SizedBox(height: 12),
               EmptyContentState(
-                icon: Icons.public_off_outlined,
+                icon: Icons.business,
                 message: 'No publishers tracked.',
               ),
             ],
@@ -581,7 +581,7 @@ class _TopCharactersSection extends ConsumerWidget {
       error: (_, _) => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: EmptyContentState(
-          icon: Icons.people_outline,
+          icon: Icons.people,
           message: 'No characters tracked.',
         ),
       ),
@@ -596,7 +596,7 @@ class _TopCharactersSection extends ConsumerWidget {
               ),
               SizedBox(height: 12),
               EmptyContentState(
-                icon: Icons.people_outline,
+                icon: Icons.people,
                 message: 'No characters tracked.',
               ),
             ],
@@ -662,7 +662,7 @@ class _TopCreatorsSection extends ConsumerWidget {
       error: (_, _) => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: EmptyContentState(
-          icon: Icons.draw_outlined,
+          icon: Icons.person,
           message: 'No creators tracked.',
         ),
       ),
@@ -677,7 +677,7 @@ class _TopCreatorsSection extends ConsumerWidget {
               ),
               SizedBox(height: 12),
               EmptyContentState(
-                icon: Icons.draw_outlined,
+                icon: Icons.person,
                 message: 'No creators tracked.',
               ),
             ],

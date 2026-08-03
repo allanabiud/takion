@@ -169,44 +169,63 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
               onTap: syncState.isSyncing ? null : () => _syncNow(),
             ),
             const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Sync Interval',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<SyncInterval>(
-                      segments: const [
-                        ButtonSegment<SyncInterval>(
-                          value: SyncInterval.minutes30,
-                          label: Text('30 min'),
-                        ),
-                        ButtonSegment<SyncInterval>(
-                          value: SyncInterval.hours1,
-                          label: Text('1 hr'),
-                        ),
-                        ButtonSegment<SyncInterval>(
-                          value: SyncInterval.hours3,
-                          label: Text('3 hrs'),
-                        ),
-                      ],
-                      selected: {syncState.syncInterval},
-                      onSelectionChanged: (selected) {
-                        ref
-                            .read(driveSyncProvider.notifier)
-                            .updateSyncInterval(selected.first);
-                      },
-                    ),
-                  ),
-                ],
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(
+                'Automatic sync',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
+              subtitle: const Text('Schedule sync intervals'),
+              value: syncState.syncIntervalEnabled,
+              onChanged: syncState.isSyncing
+                  ? null
+                  : (value) {
+                      ref
+                          .read(driveSyncProvider.notifier)
+                          .updateSyncIntervalEnabled(value);
+                    },
             ),
+            if (syncState.syncIntervalEnabled) ...[
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sync Interval',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<SyncInterval>(
+                        segments: const [
+                          ButtonSegment<SyncInterval>(
+                            value: SyncInterval.hours1,
+                            label: Text('1 hr'),
+                          ),
+                          ButtonSegment<SyncInterval>(
+                            value: SyncInterval.hours3,
+                            label: Text('3 hrs'),
+                          ),
+                          ButtonSegment<SyncInterval>(
+                            value: SyncInterval.hours24,
+                            label: Text('24 hrs'),
+                          ),
+                        ],
+                        selected: {syncState.syncInterval},
+                        onSelectionChanged: (selected) {
+                          ref
+                              .read(driveSyncProvider.notifier)
+                              .updateSyncInterval(selected.first);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const Divider(height: 1),
             ListTile(
               contentPadding: EdgeInsets.zero,

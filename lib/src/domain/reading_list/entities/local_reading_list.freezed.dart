@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LocalReadingListItem {
 
- String get targetId; bool get isSeries; ItemRole get role; bool get isRead;
+ String get targetId; bool get isSeries; ItemRole get role; bool get isRead; String? get seriesName; int? get seriesVolume; String? get issueNumber;
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $LocalReadingListItemCopyWith<LocalReadingListItem> get copyWith => _$LocalReadi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead);
+int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber);
 
 @override
 String toString() {
-  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead)';
+  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead, seriesName: $seriesName, seriesVolume: $seriesVolume, issueNumber: $issueNumber)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $LocalReadingListItemCopyWith<$Res>  {
   factory $LocalReadingListItemCopyWith(LocalReadingListItem value, $Res Function(LocalReadingListItem) _then) = _$LocalReadingListItemCopyWithImpl;
 @useResult
 $Res call({
- String targetId, bool isSeries, ItemRole role, bool isRead
+ String targetId, bool isSeries, ItemRole role, bool isRead, String? seriesName, int? seriesVolume, String? issueNumber
 });
 
 
@@ -65,13 +65,16 @@ class _$LocalReadingListItemCopyWithImpl<$Res>
 
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,Object? seriesName = freezed,Object? seriesVolume = freezed,Object? issueNumber = freezed,}) {
   return _then(_self.copyWith(
 targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
 as String,isSeries: null == isSeries ? _self.isSeries : isSeries // ignore: cast_nullable_to_non_nullable
 as bool,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as ItemRole,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,seriesName: freezed == seriesName ? _self.seriesName : seriesName // ignore: cast_nullable_to_non_nullable
+as String?,seriesVolume: freezed == seriesVolume ? _self.seriesVolume : seriesVolume // ignore: cast_nullable_to_non_nullable
+as int?,issueNumber: freezed == issueNumber ? _self.issueNumber : issueNumber // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -156,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocalReadingListItem() when $default != null:
-return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
+return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber);case _:
   return orElse();
 
 }
@@ -177,10 +180,10 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber)  $default,) {final _that = this;
 switch (_that) {
 case _LocalReadingListItem():
-return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
+return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +200,10 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber)?  $default,) {final _that = this;
 switch (_that) {
 case _LocalReadingListItem() when $default != null:
-return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
+return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber);case _:
   return null;
 
 }
@@ -212,13 +215,16 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead);case _:
 @JsonSerializable()
 
 class _LocalReadingListItem implements LocalReadingListItem {
-  const _LocalReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead});
+  const _LocalReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead, this.seriesName, this.seriesVolume, this.issueNumber});
   factory _LocalReadingListItem.fromJson(Map<String, dynamic> json) => _$LocalReadingListItemFromJson(json);
 
 @override final  String targetId;
 @override final  bool isSeries;
 @override final  ItemRole role;
 @override final  bool isRead;
+@override final  String? seriesName;
+@override final  int? seriesVolume;
+@override final  String? issueNumber;
 
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead);
+int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber);
 
 @override
 String toString() {
-  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead)';
+  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead, seriesName: $seriesName, seriesVolume: $seriesVolume, issueNumber: $issueNumber)';
 }
 
 
@@ -253,7 +259,7 @@ abstract mixin class _$LocalReadingListItemCopyWith<$Res> implements $LocalReadi
   factory _$LocalReadingListItemCopyWith(_LocalReadingListItem value, $Res Function(_LocalReadingListItem) _then) = __$LocalReadingListItemCopyWithImpl;
 @override @useResult
 $Res call({
- String targetId, bool isSeries, ItemRole role, bool isRead
+ String targetId, bool isSeries, ItemRole role, bool isRead, String? seriesName, int? seriesVolume, String? issueNumber
 });
 
 
@@ -270,13 +276,16 @@ class __$LocalReadingListItemCopyWithImpl<$Res>
 
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,Object? seriesName = freezed,Object? seriesVolume = freezed,Object? issueNumber = freezed,}) {
   return _then(_LocalReadingListItem(
 targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
 as String,isSeries: null == isSeries ? _self.isSeries : isSeries // ignore: cast_nullable_to_non_nullable
 as bool,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as ItemRole,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,seriesName: freezed == seriesName ? _self.seriesName : seriesName // ignore: cast_nullable_to_non_nullable
+as String?,seriesVolume: freezed == seriesVolume ? _self.seriesVolume : seriesVolume // ignore: cast_nullable_to_non_nullable
+as int?,issueNumber: freezed == issueNumber ? _self.issueNumber : issueNumber // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

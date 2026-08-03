@@ -19,6 +19,9 @@ class PagedListScaffold extends StatelessWidget {
     this.header,
     this.isLoading = false,
     this.skeleton,
+    this.gridCrossAxisCount,
+    this.gridChildAspectRatio = 0.72,
+    this.bottomSpacing = 12,
   });
 
   final Future<void> Function() onRefresh;
@@ -35,6 +38,9 @@ class PagedListScaffold extends StatelessWidget {
   final Widget? header;
   final bool isLoading;
   final Widget? skeleton;
+  final int? gridCrossAxisCount;
+  final double gridChildAspectRatio;
+  final double bottomSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +111,58 @@ class PagedListScaffold extends StatelessWidget {
     BuildContext context, {
     required bool showInlineLoading,
   }) {
+    if (gridCrossAxisCount != null) {
+      final grid = SliverPadding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: gridCrossAxisCount!,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: gridChildAspectRatio,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => itemBuilder(context, index),
+            childCount: itemCount,
+          ),
+        ),
+      );
+
+      if (header != null) {
+        return CustomScrollView(
+          slivers: [
+            PinnedListHeader(
+              isLoading: showInlineLoading,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  header!,
+                  if (showInlineLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                ],
+              ),
+            ),
+            grid,
+            SliverToBoxAdapter(child: SizedBox(height: bottomSpacing)),
+          ],
+        );
+      }
+
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          grid,
+          SliverToBoxAdapter(child: SizedBox(height: bottomSpacing)),
+        ],
+      );
+    }
+
     if (header != null) {
       return CustomScrollView(
         slivers: [

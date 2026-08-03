@@ -264,7 +264,7 @@ class SeriesListTile extends ConsumerWidget {
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
                               ],
-                              if (role != null) ...[
+                              if (role != null && role != ItemRole.standard) ...[
                                 const SizedBox(width: 8),
                                 RoleBadge(role: role!),
                               ],

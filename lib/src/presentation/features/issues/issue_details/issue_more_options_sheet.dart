@@ -5,7 +5,6 @@ import 'package:takion/src/presentation/shared/widgets/components.dart';
 void showIssueMoreOptionsSheet(
   BuildContext context, {
   required int issueId,
-  required VoidCallback onNavigateToSeries,
   required VoidCallback onAddToReadingList,
   required VoidCallback onMyDetails,
   required VoidCallback onReadingHistory,
@@ -18,14 +17,6 @@ void showIssueMoreOptionsSheet(
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.view_agenda_outlined),
-              title: const Text('Go to Series'),
-              onTap: () {
-                Navigator.of(context).pop();
-                onNavigateToSeries();
-              },
-            ),
             ListTile(
               leading: const Icon(Icons.playlist_add),
               title: const Text('Add to Reading List'),

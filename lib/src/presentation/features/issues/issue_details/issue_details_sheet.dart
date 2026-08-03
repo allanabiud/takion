@@ -205,91 +205,41 @@ class IssueDetailsSheet extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          flex: 3,
+                          flex: 2,
                           child: (collectionStatus?.isCollected == true)
-                              ? FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.errorContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onErrorContainer,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    textStyle: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
+                              ? _StateActionButton(
+                                  label: 'Remove',
+                                  icon: Icons.delete_outline,
+                                  backgroundColor:
+                                      theme.colorScheme.errorContainer,
+                                  foregroundColor:
+                                      theme.colorScheme.onErrorContainer,
                                   onPressed: onShowScrobbleSheet,
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    size: 22,
-                                  ),
-                                  label: const Text('Remove'),
                                 )
                               : (collectionStatus?.isWishlisted == true)
-                              ? FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.tertiaryContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onTertiaryContainer,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    textStyle: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
+                              ? _StateActionButton(
+                                  label: 'Wishlisted',
+                                  icon: Icons.turned_in,
+                                  backgroundColor:
+                                      theme.colorScheme.tertiaryContainer,
+                                  foregroundColor:
+                                      theme.colorScheme.onTertiaryContainer,
                                   onPressed: onShowScrobbleSheet,
-                                  icon: const Icon(Icons.turned_in, size: 22),
-                                  label: const Text('Wishlisted'),
                                 )
                               : isInPullList
-                              ? FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.secondaryContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onSecondaryContainer,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    textStyle: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
+                              ? _StateActionButton(
+                                  label: 'Pulled',
+                                  icon: Icons.shopping_bag,
+                                  backgroundColor:
+                                      theme.colorScheme.secondaryContainer,
+                                  foregroundColor:
+                                      theme.colorScheme.onSecondaryContainer,
                                   onPressed: onShowScrobbleSheet,
-                                  icon: const Icon(
-                                    Icons.shopping_bag,
-                                    size: 22,
-                                  ),
-                                  label: const Text('Pulled'),
                                 )
-                              : FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    textStyle: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
+                              : _StateActionButton(
+                                  label: 'Add',
+                                  icon: Icons.add,
                                   onPressed: onShowScrobbleSheet,
-                                  icon: const Icon(Icons.add, size: 22),
-                                  label: const Text('Add'),
                                 ),
                         ),
                         const SizedBox(width: 6),
@@ -330,6 +280,32 @@ class IssueDetailsSheet extends StatelessWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           flex: 1,
+                          child: Tooltip(
+                            message: 'Go to series',
+                            child: FilledButton.tonal(
+                              style: FilledButton.styleFrom(
+                                backgroundColor:
+                                    theme.colorScheme.surfaceContainerHigh,
+                                foregroundColor:
+                                    theme.colorScheme.onSurfaceVariant,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                iconSize: 28,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: seriesId != null
+                                  ? onNavigateToSeries
+                                  : null,
+                              child: const Icon(Icons.view_agenda_outlined),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          flex: 1,
                           child: FilledButton.tonal(
                             style: FilledButton.styleFrom(
                               backgroundColor:
@@ -345,7 +321,6 @@ class IssueDetailsSheet extends StatelessWidget {
                             onPressed: () => showIssueMoreOptionsSheet(
                               context,
                               issueId: issueId,
-                              onNavigateToSeries: onNavigateToSeries,
                               onAddToReadingList: onAddToReadingList,
                               onMyDetails: onMyDetails,
                               onReadingHistory: onReadingHistory,
@@ -373,6 +348,55 @@ class IssueDetailsSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StateActionButton extends StatelessWidget {
+  const _StateActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.backgroundColor,
+    this.foregroundColor,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: foregroundColor,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        minimumSize: const Size(0, 56),
+        textStyle: theme.textTheme.titleMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
