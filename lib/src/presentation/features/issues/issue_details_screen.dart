@@ -17,11 +17,9 @@ import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
@@ -521,29 +519,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                     onToggleFavorite: isCurrentData ? toggleFavorite : () {},
                     onNavigateToSeries: isCurrentData
                         ? () => _navigateToSeries(issue)
-                        : () {},
-                    onAddToReadingList: isCurrentData
-                        ? () {
-                            AddToLocalReadingListBottomSheet.show(
-                              context: context,
-                              targetId: 'issue-$_currentIssueId',
-                              isSeries: false,
-                            );
-                          }
-                        : () {},
-                    onMyDetails: isCurrentData
-                        ? () => showEditMyDetailsSheet(
-                            context,
-                            ref,
-                            _currentIssueId,
-                          )
-                        : () {},
-                    onReadingHistory: isCurrentData
-                        ? () => showReadingHistorySheet(
-                            context,
-                            ref,
-                            _currentIssueId,
-                          )
                         : () {},
                     seriesId: isCurrentData ? seriesId : null,
                     isSubscribed: isCurrentData ? isSubscribed : false,

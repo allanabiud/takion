@@ -932,10 +932,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       ),
       subtitle: _restoreCompleted
-          ? null
+          ? 'Your data has been restored successfully.'
           : 'If you have a previous Takion backup, you can restore your data now.',
       content: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!_restoreCompleted && !_isDriveRestoring && !_isLocalRestoring)
             Column(
@@ -985,11 +986,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 SizedBox(height: 16),
                 Text('Restoring from local file...'),
               ],
-            ),
-          if (_restoreCompleted)
-            Text(
-              'Your data has been restored successfully.',
-              style: theme.textTheme.bodyLarge,
             ),
         ],
       ),

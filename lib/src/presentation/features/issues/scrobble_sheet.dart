@@ -472,15 +472,30 @@ Future<void> showScrobbleSheet({
                   curve: Curves.easeInOut,
                   alignment: Alignment.topCenter,
                   child: isCollected
-                      ? ListTile(
-                          leading: const Icon(Icons.library_books_outlined),
-                          title: const Text('My Details'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => showEditMyDetailsSheet(
-                            callerContext,
-                            ref,
-                            issueId,
-                          ),
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.library_books_outlined),
+                              title: const Text('My Details'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => showEditMyDetailsSheet(
+                                callerContext,
+                                ref,
+                                issueId,
+                              ),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.history),
+                              title: const Text('Reading History'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => showReadingHistorySheet(
+                                callerContext,
+                                ref,
+                                issueId,
+                              ),
+                            ),
+                          ],
                         )
                       : const SizedBox.shrink(),
                 ),

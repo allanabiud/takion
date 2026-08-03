@@ -5,7 +5,6 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
 import 'package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_more_options_sheet.dart';
 
 class IssueDetailsSheet extends StatelessWidget {
   const IssueDetailsSheet({
@@ -19,10 +18,7 @@ class IssueDetailsSheet extends StatelessWidget {
     required this.displayTitle,
     required this.onShowScrobbleSheet,
     required this.onToggleFavorite,
-    required this.onAddToReadingList,
     required this.onNavigateToSeries,
-    required this.onMyDetails,
-    required this.onReadingHistory,
     this.seriesId,
     this.isSubscribed,
     this.onToggleSeriesSubscription,
@@ -37,10 +33,7 @@ class IssueDetailsSheet extends StatelessWidget {
   final String displayTitle;
   final VoidCallback onShowScrobbleSheet;
   final VoidCallback onToggleFavorite;
-  final VoidCallback onAddToReadingList;
   final VoidCallback onNavigateToSeries;
-  final VoidCallback onMyDetails;
-  final VoidCallback onReadingHistory;
   final int? seriesId;
   final bool? isSubscribed;
   final VoidCallback? onToggleSeriesSubscription;
@@ -301,31 +294,6 @@ class IssueDetailsSheet extends StatelessWidget {
                                   : null,
                               child: const Icon(Icons.view_agenda_outlined),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              backgroundColor:
-                                  theme.colorScheme.surfaceContainerHigh,
-                              foregroundColor:
-                                  theme.colorScheme.onSurfaceVariant,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              iconSize: 28,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => showIssueMoreOptionsSheet(
-                              context,
-                              issueId: issueId,
-                              onAddToReadingList: onAddToReadingList,
-                              onMyDetails: onMyDetails,
-                              onReadingHistory: onReadingHistory,
-                            ),
-                            child: const Icon(Icons.more_vert),
                           ),
                         ),
                       ],
