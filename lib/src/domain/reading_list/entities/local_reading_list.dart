@@ -17,6 +17,10 @@ abstract class LocalReadingListItem with _$LocalReadingListItem {
     String? seriesName,
     int? seriesVolume,
     String? issueNumber,
+    int? seriesId,
+    int? yearBegan,
+    DateTime? coverDate,
+    DateTime? storeDate,
   }) = _LocalReadingListItem;
 
   factory LocalReadingListItem.fromJson(Map<String, dynamic> json) =>

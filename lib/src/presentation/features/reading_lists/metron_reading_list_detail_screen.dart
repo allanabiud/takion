@@ -68,6 +68,10 @@ class _MetronReadingListDetailScreenState
           seriesName: item.seriesName,
           seriesVolume: item.seriesVolume,
           issueNumber: item.issueNumber,
+          seriesId: item.seriesId,
+          yearBegan: item.yearBegan,
+          coverDate: item.coverDate,
+          storeDate: item.storeDate,
         );
       }).toList();
 
@@ -593,6 +597,10 @@ class _MetronReadingListDetailScreenState
             seriesName: item.seriesName,
             seriesVolume: item.seriesVolume,
             issueNumber: item.issueNumber,
+            seriesId: item.seriesId,
+            yearBegan: item.yearBegan,
+            coverDate: item.coverDate,
+            storeDate: item.storeDate,
           );
         }).toList();
 

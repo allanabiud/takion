@@ -117,6 +117,12 @@ class EntityMapper {
           sortName: s.sortName,
           volume: s.volume,
           yearBegan: s.yearBegan,
+          seriesType: s.seriesTypeName != null
+              ? IssueDetailsNamedRef(
+                  id: s.seriesTypeId ?? 0,
+                  name: s.seriesTypeName!,
+                )
+              : null,
         );
       }
     }
@@ -236,6 +242,12 @@ class EntityMapper {
       name: row.name,
       sortName: row.sortName,
       volume: row.volume,
+      seriesType: row.seriesTypeName != null
+          ? SeriesDetailsNamedRef(
+              id: row.seriesTypeId ?? 0,
+              name: row.seriesTypeName!,
+            )
+          : null,
       status: row.status,
       yearBegan: row.yearBegan,
       yearEnd: row.yearEnd,

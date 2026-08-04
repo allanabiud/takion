@@ -159,13 +159,9 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 syncState.isSyncing ? 'Syncing...' : 'Sync Now',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(
-                syncState.isSyncing
-                    ? 'Please wait'
-                    : syncState.lastSync != null
-                    ? 'Last sync: ${DateFormatter.relativeShort(syncState.lastSync!)}'
-                    : 'Never synced',
-              ),
+              subtitle: syncState.isSyncing
+                  ? const Text('Please wait')
+                  : _buildSyncNowSubtitle(),
               onTap: syncState.isSyncing ? null : () => _syncNow(),
             ),
             const Divider(height: 1),
@@ -267,7 +263,121 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 }
               },
             ),
+            _buildSyncDiagnosticsSection(),
           ]),
+        ],
+      ],
+    );
+  }
+
+  bool _isAuthError(String? error) {
+    if (error == null) return false;
+    final lower = error.toLowerCase();
+    return lower.contains('not signed in') ||
+        lower.contains('re-authenticate') ||
+        lower.contains('access token') ||
+        lower.contains('401');
+  }
+
+  Widget _buildSyncNowSubtitle() {
+    final theme = Theme.of(context);
+    final diagnostics = ref.watch(syncDiagnosticsProvider).value;
+    final lastSuccess = diagnostics?.lastSuccessTime;
+    final lastErrorTime = diagnostics?.lastErrorTime;
+    final hasError = lastErrorTime != null &&
+        (lastSuccess == null || lastErrorTime.isAfter(lastSuccess));
+
+    final IconData icon;
+    final Color color;
+    final String text;
+    if (hasError) {
+      icon = Icons.error_outline;
+      color = theme.colorScheme.error;
+      text = 'Last sync failed: '
+          '${DateFormatter.relativeShort(lastErrorTime)}';
+    } else if (lastSuccess != null) {
+      icon = Icons.check_circle_outline;
+      color = theme.colorScheme.primary;
+      text = 'Last successful sync: '
+          '${DateFormatter.relativeShort(lastSuccess)}';
+    } else {
+      icon = Icons.info_outline;
+      color = theme.colorScheme.onSurfaceVariant;
+      text = 'Never synced successfully';
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSyncDiagnosticsSection() {
+    final theme = Theme.of(context);
+    final diagnostics = ref.watch(syncDiagnosticsProvider).value;
+    if (diagnostics == null) return const SizedBox.shrink();
+
+    final hasError = diagnostics.lastErrorTime != null;
+    if (!hasError) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 1),
+        if (hasError) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              'Last failure '
+              '(${DateFormatter.relativeShort(diagnostics.lastErrorTime!)})'
+              '${diagnostics.lastPhase != null ? ' during ${diagnostics.lastPhase}' : ''}:',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              diagnostics.lastError ?? 'Unknown error',
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          if (diagnostics.lastErrorDetail != null &&
+              diagnostics.lastErrorDetail != diagnostics.lastError)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                diagnostics.lastErrorDetail!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (_isAuthError(diagnostics.lastError))
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.login, size: 18),
+                label: const Text('Re-authenticate Google Drive'),
+                onPressed: () async {
+                  final driveService = ref.read(driveSyncServiceProvider);
+                  final account = await driveService.signIn();
+                  if (account != null && mounted) {
+                    _syncNow();
+                  }
+                },
+              ),
+            ),
         ],
       ],
     );

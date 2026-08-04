@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LocalReadingListItem {
 
- String get targetId; bool get isSeries; ItemRole get role; bool get isRead; String? get seriesName; int? get seriesVolume; String? get issueNumber;
+ String get targetId; bool get isSeries; ItemRole get role; bool get isRead; String? get seriesName; int? get seriesVolume; String? get issueNumber; int? get seriesId; int? get yearBegan; DateTime? get coverDate; DateTime? get storeDate;
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $LocalReadingListItemCopyWith<LocalReadingListItem> get copyWith => _$LocalReadi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber)&&(identical(other.seriesId, seriesId) || other.seriesId == seriesId)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber);
+int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber,seriesId,yearBegan,coverDate,storeDate);
 
 @override
 String toString() {
-  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead, seriesName: $seriesName, seriesVolume: $seriesVolume, issueNumber: $issueNumber)';
+  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead, seriesName: $seriesName, seriesVolume: $seriesVolume, issueNumber: $issueNumber, seriesId: $seriesId, yearBegan: $yearBegan, coverDate: $coverDate, storeDate: $storeDate)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $LocalReadingListItemCopyWith<$Res>  {
   factory $LocalReadingListItemCopyWith(LocalReadingListItem value, $Res Function(LocalReadingListItem) _then) = _$LocalReadingListItemCopyWithImpl;
 @useResult
 $Res call({
- String targetId, bool isSeries, ItemRole role, bool isRead, String? seriesName, int? seriesVolume, String? issueNumber
+ String targetId, bool isSeries, ItemRole role, bool isRead, String? seriesName, int? seriesVolume, String? issueNumber, int? seriesId, int? yearBegan, DateTime? coverDate, DateTime? storeDate
 });
 
 
@@ -65,7 +65,7 @@ class _$LocalReadingListItemCopyWithImpl<$Res>
 
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,Object? seriesName = freezed,Object? seriesVolume = freezed,Object? issueNumber = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,Object? seriesName = freezed,Object? seriesVolume = freezed,Object? issueNumber = freezed,Object? seriesId = freezed,Object? yearBegan = freezed,Object? coverDate = freezed,Object? storeDate = freezed,}) {
   return _then(_self.copyWith(
 targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
 as String,isSeries: null == isSeries ? _self.isSeries : isSeries // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,11 @@ as ItemRole,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nulla
 as bool,seriesName: freezed == seriesName ? _self.seriesName : seriesName // ignore: cast_nullable_to_non_nullable
 as String?,seriesVolume: freezed == seriesVolume ? _self.seriesVolume : seriesVolume // ignore: cast_nullable_to_non_nullable
 as int?,issueNumber: freezed == issueNumber ? _self.issueNumber : issueNumber // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,seriesId: freezed == seriesId ? _self.seriesId : seriesId // ignore: cast_nullable_to_non_nullable
+as int?,yearBegan: freezed == yearBegan ? _self.yearBegan : yearBegan // ignore: cast_nullable_to_non_nullable
+as int?,coverDate: freezed == coverDate ? _self.coverDate : coverDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,storeDate: freezed == storeDate ? _self.storeDate : storeDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -159,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber,  int? seriesId,  int? yearBegan,  DateTime? coverDate,  DateTime? storeDate)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocalReadingListItem() when $default != null:
-return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber);case _:
+return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber,_that.seriesId,_that.yearBegan,_that.coverDate,_that.storeDate);case _:
   return orElse();
 
 }
@@ -180,10 +184,10 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seri
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber,  int? seriesId,  int? yearBegan,  DateTime? coverDate,  DateTime? storeDate)  $default,) {final _that = this;
 switch (_that) {
 case _LocalReadingListItem():
-return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber);case _:
+return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber,_that.seriesId,_that.yearBegan,_that.coverDate,_that.storeDate);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +204,10 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seri
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String targetId,  bool isSeries,  ItemRole role,  bool isRead,  String? seriesName,  int? seriesVolume,  String? issueNumber,  int? seriesId,  int? yearBegan,  DateTime? coverDate,  DateTime? storeDate)?  $default,) {final _that = this;
 switch (_that) {
 case _LocalReadingListItem() when $default != null:
-return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber);case _:
+return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seriesName,_that.seriesVolume,_that.issueNumber,_that.seriesId,_that.yearBegan,_that.coverDate,_that.storeDate);case _:
   return null;
 
 }
@@ -215,7 +219,7 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seri
 @JsonSerializable()
 
 class _LocalReadingListItem implements LocalReadingListItem {
-  const _LocalReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead, this.seriesName, this.seriesVolume, this.issueNumber});
+  const _LocalReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead, this.seriesName, this.seriesVolume, this.issueNumber, this.seriesId, this.yearBegan, this.coverDate, this.storeDate});
   factory _LocalReadingListItem.fromJson(Map<String, dynamic> json) => _$LocalReadingListItemFromJson(json);
 
 @override final  String targetId;
@@ -225,6 +229,10 @@ class _LocalReadingListItem implements LocalReadingListItem {
 @override final  String? seriesName;
 @override final  int? seriesVolume;
 @override final  String? issueNumber;
+@override final  int? seriesId;
+@override final  int? yearBegan;
+@override final  DateTime? coverDate;
+@override final  DateTime? storeDate;
 
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber)&&(identical(other.seriesId, seriesId) || other.seriesId == seriesId)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber);
+int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber,seriesId,yearBegan,coverDate,storeDate);
 
 @override
 String toString() {
-  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead, seriesName: $seriesName, seriesVolume: $seriesVolume, issueNumber: $issueNumber)';
+  return 'LocalReadingListItem(targetId: $targetId, isSeries: $isSeries, role: $role, isRead: $isRead, seriesName: $seriesName, seriesVolume: $seriesVolume, issueNumber: $issueNumber, seriesId: $seriesId, yearBegan: $yearBegan, coverDate: $coverDate, storeDate: $storeDate)';
 }
 
 
@@ -259,7 +267,7 @@ abstract mixin class _$LocalReadingListItemCopyWith<$Res> implements $LocalReadi
   factory _$LocalReadingListItemCopyWith(_LocalReadingListItem value, $Res Function(_LocalReadingListItem) _then) = __$LocalReadingListItemCopyWithImpl;
 @override @useResult
 $Res call({
- String targetId, bool isSeries, ItemRole role, bool isRead, String? seriesName, int? seriesVolume, String? issueNumber
+ String targetId, bool isSeries, ItemRole role, bool isRead, String? seriesName, int? seriesVolume, String? issueNumber, int? seriesId, int? yearBegan, DateTime? coverDate, DateTime? storeDate
 });
 
 
@@ -276,7 +284,7 @@ class __$LocalReadingListItemCopyWithImpl<$Res>
 
 /// Create a copy of LocalReadingListItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,Object? seriesName = freezed,Object? seriesVolume = freezed,Object? issueNumber = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? targetId = null,Object? isSeries = null,Object? role = null,Object? isRead = null,Object? seriesName = freezed,Object? seriesVolume = freezed,Object? issueNumber = freezed,Object? seriesId = freezed,Object? yearBegan = freezed,Object? coverDate = freezed,Object? storeDate = freezed,}) {
   return _then(_LocalReadingListItem(
 targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
 as String,isSeries: null == isSeries ? _self.isSeries : isSeries // ignore: cast_nullable_to_non_nullable
@@ -285,7 +293,11 @@ as ItemRole,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nulla
 as bool,seriesName: freezed == seriesName ? _self.seriesName : seriesName // ignore: cast_nullable_to_non_nullable
 as String?,seriesVolume: freezed == seriesVolume ? _self.seriesVolume : seriesVolume // ignore: cast_nullable_to_non_nullable
 as int?,issueNumber: freezed == issueNumber ? _self.issueNumber : issueNumber // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,seriesId: freezed == seriesId ? _self.seriesId : seriesId // ignore: cast_nullable_to_non_nullable
+as int?,yearBegan: freezed == yearBegan ? _self.yearBegan : yearBegan // ignore: cast_nullable_to_non_nullable
+as int?,coverDate: freezed == coverDate ? _self.coverDate : coverDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,storeDate: freezed == storeDate ? _self.storeDate : storeDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

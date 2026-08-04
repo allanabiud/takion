@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +22,7 @@ class MetronReadingListBrowserScreen extends ConsumerStatefulWidget {
 class _MetronReadingListBrowserScreenState
     extends ConsumerState<MetronReadingListBrowserScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   String? _selectedListType;
   String? _selectedAttribution;
   int _page = 1;
@@ -62,6 +65,7 @@ class _MetronReadingListBrowserScreenState
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -112,7 +116,17 @@ class _MetronReadingListBrowserScreenState
                         contentPadding: EdgeInsets.zero,
                       ),
                       style: theme.textTheme.bodyLarge,
-                      onChanged: (_) => setState(() => _page = 1),
+                      onChanged: (value) {
+                        _searchDebounce?.cancel();
+                        _searchDebounce = Timer(
+                          const Duration(milliseconds: 400),
+                          () {
+                            if (mounted) {
+                              setState(() => _page = 1);
+                            }
+                          },
+                        );
+                      },
                     ),
                   ),
                   if (_searchController.text.isNotEmpty)

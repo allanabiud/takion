@@ -25,7 +25,7 @@ class LocalBackupService {
     final decoded = utf8.decode(bytes);
     final payload = jsonDecode(decoded) as Map<String, dynamic>;
 
-    if (payload['version'] != 1) {
+    if (payload['version'] != 1 && payload['version'] != 2) {
       throw FormatException(
         'Unsupported backup format version: ${payload['version']}',
       );

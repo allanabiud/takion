@@ -17,17 +17,34 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
       page: page,
       limit: limit,
       modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
     );
     final cachedAt = await _localDataSource.getReadingListResultsCachedAt(
       page: page,
       limit: limit,
       modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
     );
     final cachedMeta = await _localDataSource.getReadingListResultsMeta(
       page: page,
       limit: limit,
       modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
     );
+    final filtersKey =
+        'n${(name ?? '').trim().toLowerCase()}'
+        ':lt${(listType ?? '').trim().toLowerCase()}'
+        ':as${(attributionSource ?? '').trim().toLowerCase()}'
+        ':pu${(publisher ?? '').trim().toLowerCase()}';
 
     if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
       final isFresh =
@@ -51,12 +68,16 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
               page: page,
               limit: limit,
               modifiedGt: modifiedGt,
+              name: name,
+              listType: listType,
+              attributionSource: attributionSource,
+              publisher: publisher,
               count: remotePage.count,
               next: remotePage.next,
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'reading_list:${nextUrl ?? "$page"}|$modifiedGt',
+          cacheKey: 'reading_list:${nextUrl ?? "$page"}|$filtersKey|$modifiedGt',
           cooldown: MetronCachePolicies.readingList.refreshCooldown,
         );
       }
@@ -71,7 +92,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = '${nextUrl ?? "$page"}|$modifiedGt|$forceRefresh';
+      final key = '${nextUrl ?? "$page"}|$filtersKey|$modifiedGt|$forceRefresh';
       return _coalesce(_readingListInFlight, key, () async {
         final remotePage = await _remoteDataSource.getReadingLists(
           nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
@@ -88,6 +109,10 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
           page: page,
           limit: limit,
           modifiedGt: modifiedGt,
+          name: name,
+          listType: listType,
+          attributionSource: attributionSource,
+          publisher: publisher,
           count: remotePage.count,
           next: remotePage.next,
           previous: remotePage.previous,

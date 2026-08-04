@@ -45,11 +45,11 @@ class PagedListScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasPagination = totalPages > 1;
-    final showInlineLoading = isLoading && itemCount > 0 && skeleton == null;
+    final showInlineLoading = isLoading && itemCount > 0;
 
     final body = RefreshIndicator(
       onRefresh: onRefresh,
-      child: (isLoading && skeleton != null)
+      child: (isLoading && itemCount == 0 && skeleton != null)
           ? skeleton!
           : (itemCount == 0 && !isLoading)
           ? _EmptyState(

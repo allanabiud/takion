@@ -151,12 +151,10 @@ class NotificationService {
       AppLogger.info('Weekly pull notification already scheduled; skipping');
       return;
     }
-    await _pendingSchedule;
-    if (_lastCount == count && _lastDay == day) {
+    if (_pendingSchedule != null) {
       AppLogger.info('Weekly pull notification already scheduled; skipping');
       return;
     }
-
     final future = _doScheduleWeekly(count, day);
     _pendingSchedule = future;
     try {
@@ -164,7 +162,9 @@ class NotificationService {
       _lastCount = count;
       _lastDay = day;
     } finally {
-      _pendingSchedule = null;
+      if (identical(_pendingSchedule, future)) {
+        _pendingSchedule = null;
+      }
     }
   }
 

@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/logging/talker_setup.dart';
+import 'package:takion/src/core/sync/sync_diagnostics.dart';
+import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:talker/talker.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart';
@@ -28,6 +30,7 @@ class _DeviceLogsBody extends ConsumerStatefulWidget {
 
 class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
   bool _previewExpanded = false;
+  bool _syncPreviewExpanded = false;
   bool _sharing = false;
   bool _copying = false;
 
@@ -61,6 +64,38 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     buffer.writeln('Generated: ${_formatTimestamp(DateTime.now())}');
     buffer.writeln('Log Entries: $historyLength');
     buffer.writeln();
+
+    final diagnostics = ref.read(syncDiagnosticsProvider).value;
+    if (diagnostics != null) {
+      buffer.writeln('--- DRIVE SYNC ---');
+      buffer.writeln(
+        'Last success: '
+        '${diagnostics.lastSuccessTime == null ? 'never' : _formatTimestamp(diagnostics.lastSuccessTime!)}',
+      );
+      if (diagnostics.lastErrorTime != null) {
+        buffer.writeln(
+          'Last failure (${_formatTimestamp(diagnostics.lastErrorTime!)})'
+          '${diagnostics.lastPhase != null ? ' during ${diagnostics.lastPhase}' : ''}: '
+          '${diagnostics.lastError ?? 'unknown'}'
+          '${diagnostics.lastErrorDetail != null ? ' (${diagnostics.lastErrorDetail})' : ''}',
+        );
+      } else {
+        buffer.writeln('Last failure: none');
+      }
+      buffer.writeln('Recent attempts:');
+      for (final entry in diagnostics.recentAttempts.take(20)) {
+        final elapsed = entry.elapsedMs == null
+            ? ''
+            : ' [${entry.elapsedMs!}ms]';
+        buffer.writeln(
+          '  ${_formatTimestamp(entry.time)} '
+          '${entry.phase} ${entry.success ? 'OK' : 'FAILED'}'
+          '${entry.success ? '' : ' ${entry.error ?? ''}'}$elapsed',
+        );
+      }
+      buffer.writeln();
+    }
+
     buffer.writeln('--- LOGS ---');
     for (final line in logLines) {
       buffer.writeln(line);
@@ -120,7 +155,6 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
   Widget build(BuildContext context) {
     final history = talker.history;
     final historyLength = history.length;
-    final logLines = _logLines;
 
     DateTime? oldest;
     DateTime? newest;
@@ -220,64 +254,8 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
               onTap: _copying ? null : _copyLogs,
             ),
           ]),
-          if (logLines.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            buildSettingsGroup(context, 'Recent Logs', [
-              InkWell(
-                onTap: () =>
-                    setState(() => _previewExpanded = !_previewExpanded),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        _previewExpanded ? 'Hide preview' : 'Show preview',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        _previewExpanded
-                            ? Icons.expand_less
-                            : Icons.expand_more,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_previewExpanded)
-                Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(maxHeight: 300),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.3,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      logLines
-                          .sublist(
-                            0,
-                            logLines.length > 50 ? 50 : logLines.length,
-                          )
-                          .join('\n'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ),
-            ]),
-          ],
+          const SizedBox(height: 16),
+          _buildRecentLogsSection(context),
         ],
       ),
     );
@@ -305,5 +283,192 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
         ],
       ),
     );
+  }
+
+  Widget _buildRecentLogsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final logLines = _logLines;
+    final diagnosticsAsync = ref.watch(syncDiagnosticsProvider);
+    final diagnostics = diagnosticsAsync.value;
+
+    return buildSettingsGroup(
+      context,
+      'Recent Logs',
+      [
+        if (diagnostics != null && diagnostics.lastErrorTime != null) ...[
+          _statRow(
+            context,
+            'Last Failure',
+            DateFormatter.relativeDetailed(diagnostics.lastErrorTime!),
+          ),
+          if (diagnostics.lastPhase != null)
+            _statRow(context, 'Failed During', diagnostics.lastPhase!),
+          if (diagnostics.lastError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 4),
+              child: Text(
+                diagnostics.lastError!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          if (diagnostics.lastErrorDetail != null &&
+              diagnostics.lastErrorDetail != diagnostics.lastError)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                diagnostics.lastErrorDetail!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          const Divider(height: 16),
+        ],
+        _buildPreviewToggle(
+          context,
+          expanded: _syncPreviewExpanded,
+          showLabel: 'Show sync preview',
+          hideLabel: 'Hide sync preview',
+          onTap: () =>
+              setState(() => _syncPreviewExpanded = !_syncPreviewExpanded),
+        ),
+        if (_syncPreviewExpanded) ...[
+          const SizedBox(height: 4),
+          _buildSyncPreview(context, diagnosticsAsync),
+        ],
+        if (logLines.isNotEmpty) ...[
+          const Divider(height: 1),
+          _buildPreviewToggle(
+            context,
+            expanded: _previewExpanded,
+            showLabel: 'Show preview',
+            hideLabel: 'Hide preview',
+            onTap: () => setState(() => _previewExpanded = !_previewExpanded),
+          ),
+          if (_previewExpanded) ...[
+            const SizedBox(height: 4),
+            _buildPreviewBody(
+              context,
+              logLines
+                  .sublist(0, logLines.length > 50 ? 50 : logLines.length)
+                  .join('\n'),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPreviewToggle(
+    BuildContext context, {
+    required bool expanded,
+    required String showLabel,
+    required String hideLabel,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Text(
+              expanded ? hideLabel : showLabel,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              expanded ? Icons.expand_less : Icons.expand_more,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPreviewBody(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxHeight: 300),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.3,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: SingleChildScrollView(
+        child: Text(
+          text,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontFamily: 'monospace',
+            fontSize: 11,
+            height: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSyncPreview(
+    BuildContext context,
+    AsyncValue<SyncDiagnostics> diagnosticsAsync,
+  ) {
+    final theme = Theme.of(context);
+    switch (diagnosticsAsync) {
+      case AsyncValue(:final value?):
+        final attempts = value.recentAttempts;
+        if (attempts.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              'No sync attempts recorded yet.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+        return _buildPreviewBody(
+          context,
+          attempts
+              .map((entry) {
+                final elapsed = entry.elapsedMs == null
+                    ? ''
+                    : ' [${entry.elapsedMs!}ms]';
+                return '${_formatTimestamp(entry.time)} ${entry.phase} '
+                    '${entry.success ? 'OK' : 'FAILED'}'
+                    '${entry.success ? '' : ' ${entry.error ?? ''}'}$elapsed';
+              })
+              .join('\n'),
+        );
+      case AsyncValue(:final error?):
+        return Text(
+          'Failed to load sync logs: $error',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.error,
+          ),
+        );
+      default:
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        );
+    }
   }
 }

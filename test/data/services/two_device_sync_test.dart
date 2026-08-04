@@ -68,4 +68,105 @@ void main() {
     await serviceB.applyDelta(deltaB);
     expect(await dbB.favoriteDao.getAllCreators(), isEmpty);
   });
+
+  test('extractDelta(since) sets fromTimestamp watermark and version 2', () async {
+    await dbA.favoriteDao.toggleCreator(801);
+    final first = await serviceA.extractDelta(null);
+    expect(first['version'], 2);
+    final since = DateTime.parse(first['toTimestamp'] as String);
+
+    await dbA.favoriteDao.toggleCreator(802);
+
+    final second = await serviceA.extractDelta(since);
+    expect(second['version'], 2);
+    expect(second['fromTimestamp'], since.toUtc().toIso8601String());
+    final inserts = (second['tables'] as Map)['favorite_creators']
+        ['inserts'] as List;
+    expect(inserts, hasLength(1));
+    expect(inserts.first['metronCreatorId'], 802);
+  });
+
+  test('applyDelta skips v2 deltas already covered by the remote watermark', () async {
+    final t1 = DateTime.now().toUtc().toIso8601String();
+    final first = {
+      'version': 2,
+      'deviceId': 'device-a',
+      'fromTimestamp': null,
+      'toTimestamp': t1,
+      'tables': {
+        'favorite_creators': {
+          'inserts': [
+            {'metronCreatorId': 701, 'createdAt': t1, 'updatedAt': t1},
+          ],
+          'updates': <Map<String, dynamic>>[],
+          'deletes': <String>[],
+        },
+      },
+    };
+    await serviceB.applyDelta(first);
+    expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
+
+    final stale = {
+      'version': 2,
+      'deviceId': 'device-a',
+      'fromTimestamp': t1,
+      'toTimestamp': t1,
+      'tables': {
+        'favorite_creators': {
+          'inserts': [
+            {'metronCreatorId': 702, 'createdAt': t1, 'updatedAt': t1},
+          ],
+          'updates': <Map<String, dynamic>>[],
+          'deletes': <String>[],
+        },
+      },
+    };
+    await serviceB.applyDelta(stale);
+    // 702 must NOT be applied: the delta is fully covered by the watermark.
+    expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
+  });
+
+  test('reading_list_items merge watermark lets remote snapshot overwrite local', () async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await dbB.into(dbB.readingListItems).insert(
+      ReadingListItemsCompanion.insert(
+        id: 'item-x',
+        listId: 'list-1',
+        targetId: 'ser-1',
+        isSeries: true,
+        role: 'main',
+        isRead: false,
+        sortOrder: 0,
+      ),
+    );
+
+    final snapshot = {
+      'version': 2,
+      'deviceId': 'device-a',
+      'toTimestamp': now,
+      'tables': {
+        'reading_list_items': {
+          'inserts': [
+            {
+              'id': 'item-x',
+              'listId': 'list-1',
+              'targetId': 'ser-1',
+              'isSeries': true,
+              'role': 'main',
+              'isRead': true,
+              'sortOrder': 5,
+            },
+          ],
+          'updates': <Map<String, dynamic>>[],
+          'deletes': <String>[],
+        },
+      },
+    };
+    await serviceB.applyDelta(snapshot);
+
+    final rows = await dbB.select(dbB.readingListItems).get();
+    expect(rows, hasLength(1));
+    expect(rows.first.isRead, isTrue);
+    expect(rows.first.sortOrder, 5);
+  });
 }

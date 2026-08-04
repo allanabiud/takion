@@ -587,6 +587,9 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           volume: Value(dto.series!.volume),
           yearBegan: Value(dto.series!.yearBegan),
           seriesTypeId: Value(dto.series!.seriesType?.id),
+          seriesTypeName: Value(
+            dto.series!.seriesType?.name,
+          ),
           isFullyHydrated: const Value(false),
         ),
       );
@@ -787,6 +790,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           sortName: s.sortName,
           volume: s.volume,
           yearBegan: s.yearBegan,
+          seriesType: s.seriesTypeName != null
+              ? IssueDetailsNamedRef(
+                  id: s.seriesTypeId ?? 0,
+                  name: s.seriesTypeName!,
+                )
+              : null,
         );
       }
     }

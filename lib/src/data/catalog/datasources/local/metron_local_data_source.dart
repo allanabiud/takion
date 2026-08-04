@@ -898,6 +898,10 @@ abstract class MetronLocalDataSource {
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
     required int count,
     String? next,
     String? previous,
@@ -906,16 +910,28 @@ abstract class MetronLocalDataSource {
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
   });
   Future<DateTime?> getReadingListResultsCachedAt({
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
   });
   Future<ReadingListPageCacheMeta?> getReadingListResultsMeta({
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
   });
 }
 
@@ -1103,8 +1119,20 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   String _getUniverseListKey(int page, int limit, {DateTime? modifiedGt}) =>
       'universe_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
 
-  String _getReadingListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'reading_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+  String _getReadingListKey(
+    int page,
+    int limit, {
+    DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
+  }) =>
+      'reading_list:${name != null ? '${_normalizeSearchQuery(name)}::' : ''}'
+      'p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}'
+      ':lt${(listType ?? '').trim().toLowerCase()}'
+      ':as${(attributionSource ?? '').trim().toLowerCase()}'
+      ':pu${(publisher ?? '').trim().toLowerCase()}';
 
   // --- Implementations ---
 
@@ -2685,11 +2713,23 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
     required int count,
     String? next,
     String? previous,
   }) async {
-    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    final key = _getReadingListKey(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
+    );
     await _cacheList('reading_list:$key', 'reading_list', readingLists, (r) => r.toJson());
     await _cacheMeta('reading_list:$key', count, next, previous);
   }
@@ -2699,8 +2739,20 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
   }) async {
-    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    final key = _getReadingListKey(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
+    );
     return _getList('reading_list:$key', ReadingListDto.fromJson);
   }
 
@@ -2709,8 +2761,20 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
   }) async {
-    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    final key = _getReadingListKey(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
+    );
     return _getCachedAt('reading_list:$key');
   }
 
@@ -2719,8 +2783,20 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int page,
     required int limit,
     DateTime? modifiedGt,
+    String? name,
+    String? listType,
+    String? attributionSource,
+    String? publisher,
   }) async {
-    final key = _getReadingListKey(page, limit, modifiedGt: modifiedGt);
+    final key = _getReadingListKey(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+      name: name,
+      listType: listType,
+      attributionSource: attributionSource,
+      publisher: publisher,
+    );
     final data = await _getMeta('reading_list:$key');
     if (data == null) return null;
     final count = (data['count'] as num?)?.toInt();

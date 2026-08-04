@@ -130,6 +130,15 @@ class ReadingListGridItem extends ConsumerWidget {
                           imageUrl = metadata.image;
                           seriesId = metadata.series?.id;
                         } else {
+                          final storedName = item.seriesName?.trim();
+                          final storedNumber = item.issueNumber?.trim();
+                          if (storedName != null && storedName.isNotEmpty) {
+                            title = storedNumber != null &&
+                                    storedNumber.isNotEmpty
+                                ? '$storedName #$storedNumber'
+                                : storedName;
+                          }
+                          seriesId = item.seriesId;
                           ref.watch(entityImageVersionProvider);
                           final cache = ref.read(entityImageCacheProvider);
                           final cachedImage = cache.getCached('issue', id);

@@ -139,7 +139,9 @@ class IssueListTile extends ConsumerWidget {
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
-    final hasStoreDate = effectiveIssue.storeDate != null;
+    final effectiveStoreDate =
+        effectiveIssue.storeDate ?? effectiveIssue.coverDate;
+    final hasStoreDate = effectiveStoreDate != null;
     final showRoleBadge = role != null && role != ItemRole.standard;
     final isFavorite =
         effectiveIssue.id != null &&
@@ -292,7 +294,7 @@ class IssueListTile extends ConsumerWidget {
                                 Expanded(
                                   child: Text(
                                     DateFormatter.comicDate(
-                                      effectiveIssue.storeDate!,
+                                      effectiveStoreDate,
                                     ),
                                     style: Theme.of(context).textTheme.bodySmall,
                                     maxLines: 1,

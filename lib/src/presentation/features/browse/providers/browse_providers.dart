@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:takion/src/domain/catalog/repositories/catalog_repository.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
 part 'browse_providers.g.dart';
 
@@ -50,6 +50,19 @@ BrowsePagedData<T> _browsePageData<T>({
   );
 }
 
+Future<int> _refreshCurrentPage(
+  Ref ref,
+  BrowseFilter filter, {
+  required Future<dynamic> Function(CatalogRepository repo) named,
+  required Future<dynamic> Function(CatalogRepository repo) list,
+}) async {
+  final repo = ref.read(metronRepositoryProvider);
+  final searchActive = filter.name != null && filter.name!.trim().isNotEmpty;
+  await (searchActive ? named(repo) : list(repo));
+  ref.invalidateSelf();
+  return 0;
+}
+
 @riverpod
 class CharacterBrowse extends _$CharacterBrowse {
   @override
@@ -68,16 +81,13 @@ class CharacterBrowse extends _$CharacterBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('character_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshCharacterListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('character_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchCharacters(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getCharacterList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -98,16 +108,13 @@ class SeriesBrowse extends _$SeriesBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('series_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshSeriesListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('series_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchSeries(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getSeriesList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -128,16 +135,13 @@ class PublisherBrowse extends _$PublisherBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('publisher_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshPublisherListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('publisher_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchPublishers(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getPublisherList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -158,16 +162,13 @@ class TeamBrowse extends _$TeamBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('team_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshTeamListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('team_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchTeams(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getTeamList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -188,16 +189,13 @@ class ArcBrowse extends _$ArcBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('arc_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshArcListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('arc_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchArcs(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getArcList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -218,16 +216,13 @@ class UniverseBrowse extends _$UniverseBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('universe_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshUniverseListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('universe_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchUniverses(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getUniverseList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -248,16 +243,13 @@ class ImprintBrowse extends _$ImprintBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('imprint_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshImprintListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('imprint_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchImprints(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getImprintList(page: filter.page, forceRefresh: true),
+  );
 }
 
 @riverpod
@@ -278,14 +270,11 @@ class CreatorBrowse extends _$CreatorBrowse {
     );
   }
 
-  Future<int> refresh({DateTime? modifiedGt}) async {
-    final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('creator_list');
-    final count = await ref.read(metronRepositoryProvider)
-        .refreshCreatorListDelta(modifiedGt: lastSync);
-    await settings.setListSyncTimestamp('creator_list', DateTime.now());
-    ref.invalidateSelf();
-    return count;
-  }
+  Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
+    ref,
+    filter,
+    named: (repo) =>
+        repo.searchCreators(filter.name!, page: filter.page, forceRefresh: true),
+    list: (repo) => repo.getCreatorList(page: filter.page, forceRefresh: true),
+  );
 }

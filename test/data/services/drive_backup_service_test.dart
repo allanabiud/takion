@@ -18,7 +18,7 @@ void main() {
 
   test('extractDelta returns empty tables for fresh database', () async {
     final delta = await syncService.extractDelta(null);
-    expect(delta['version'], equals(1));
+    expect(delta['version'], equals(2));
     expect(delta['tables'], isA<Map<String, dynamic>>());
     final tables = delta['tables'] as Map<String, dynamic>;
     expect(tables['favorite_creators']['inserts'], isEmpty);

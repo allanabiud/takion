@@ -16,6 +16,14 @@ _LocalReadingListItem _$LocalReadingListItemFromJson(
   seriesName: json['seriesName'] as String?,
   seriesVolume: (json['seriesVolume'] as num?)?.toInt(),
   issueNumber: json['issueNumber'] as String?,
+  seriesId: (json['seriesId'] as num?)?.toInt(),
+  yearBegan: (json['yearBegan'] as num?)?.toInt(),
+  coverDate: json['coverDate'] == null
+      ? null
+      : DateTime.parse(json['coverDate'] as String),
+  storeDate: json['storeDate'] == null
+      ? null
+      : DateTime.parse(json['storeDate'] as String),
 );
 
 Map<String, dynamic> _$LocalReadingListItemToJson(
@@ -28,6 +36,10 @@ Map<String, dynamic> _$LocalReadingListItemToJson(
   'seriesName': instance.seriesName,
   'seriesVolume': instance.seriesVolume,
   'issueNumber': instance.issueNumber,
+  'seriesId': instance.seriesId,
+  'yearBegan': instance.yearBegan,
+  'coverDate': instance.coverDate?.toIso8601String(),
+  'storeDate': instance.storeDate?.toIso8601String(),
 };
 
 const _$ItemRoleEnumMap = {

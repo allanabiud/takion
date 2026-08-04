@@ -13,7 +13,7 @@ void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     AppLogger.info('Workmanager background task executing: $taskName');
     WidgetsFlutterBinding.ensureInitialized();
-
+    DriveSyncService? driveService;
     try {
       final db = AppDatabase();
       final enabled = await db.settingsDao.getBool(
@@ -26,7 +26,7 @@ void callbackDispatcher() {
         return true;
       }
 
-      final driveService = DriveSyncService(db);
+      driveService = DriveSyncService(db);
       final account = await driveService.signInSilently();
       if (account == null) {
         AppLogger.info('Workmanager periodic sync skipped: user not signed in');
@@ -41,11 +41,20 @@ void callbackDispatcher() {
 
       await driveService.triggerSync(ignoreThrottle: true);
 
+      await driveService.recordSyncOutcome(phase: 'background', success: true);
+
       await NotificationService.instance.cancelSyncNotification();
 
       return true;
     } catch (e) {
       AppLogger.error('Workmanager periodic sync failed', error: e);
+      try {
+        await driveService?.recordSyncOutcome(
+          phase: 'background',
+          success: false,
+          error: e,
+        );
+      } catch (_) {}
       try {
         await NotificationService.instance.showSyncNotification(
           title: 'Drive Sync Failed',

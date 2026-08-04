@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -241,6 +242,7 @@ class MetronSeries extends Table {
   TextColumn get sortName => text().nullable()();
   IntColumn get volume => integer().nullable()();
   IntColumn get seriesTypeId => integer().nullable()();
+  TextColumn get seriesTypeName => text().nullable()();
   TextColumn get status => text().nullable()();
   IntColumn get publisherId => integer().nullable()();
   IntColumn get imprintId => integer().nullable()();
@@ -664,7 +666,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -710,8 +712,57 @@ class AppDatabase extends _$AppDatabase {
         if (from < 6) {
           await m.createIndex(idxActivitySeriesTimestamp);
         }
+        if (from < 7) {
+          await m.addColumn(metronSeries, metronSeries.seriesTypeName);
+          await _backfillSeriesTypeNames();
+        }
       },
     );
+  }
+
+  Future<void> _backfillSeriesTypeNames() async {
+    final cachedRows = await (select(apiCache)
+          ..where(
+            (t) =>
+                t.cacheKey.like('series_details:%') |
+                t.cacheKey.like('issue_details:%'),
+          ))
+        .get();
+
+    final namesById = <int, String>{};
+    for (final row in cachedRows) {
+      final payload = row.payload;
+      if (payload.isEmpty) continue;
+      try {
+        final json = jsonDecode(payload) as Map<String, dynamic>;
+        final Map<String, dynamic>? seriesType;
+        if (row.cacheKey.startsWith('series_details:')) {
+          final st = json['series_type'];
+          seriesType = st is Map<String, dynamic> ? st : null;
+        } else {
+          final series = json['series'];
+          final st = series is Map<String, dynamic> ? series['series_type'] : null;
+          seriesType = st is Map<String, dynamic> ? st : null;
+        }
+        if (seriesType != null) {
+          final id = seriesType['id'];
+          final name = seriesType['name'];
+          if (id is int && name is String && name.trim().isNotEmpty) {
+            namesById.putIfAbsent(id, () => name);
+          }
+        }
+      } catch (_) {
+        // Ignore malformed cached payloads.
+      }
+    }
+
+    for (final entry in namesById.entries) {
+      await (update(metronSeries)
+            ..where(
+              (t) => t.id.equals(entry.key) & t.seriesTypeName.isNull(),
+            ))
+          .write(MetronSeriesCompanion(seriesTypeName: Value(entry.value)));
+    }
   }
 }
 

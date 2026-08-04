@@ -5,12 +5,11 @@ import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-final cachedSeriesIssueCountProvider = FutureProvider.autoDispose
-    .family<int?, int>((ref, id) async {
+final cachedSeriesIssueCountProvider = StreamProvider.autoDispose
+    .family<int?, int>((ref, id) {
       ref.keepAlive();
       final db = ref.read(driftDatabaseProvider);
-      final row = await db.metronEntityDao.getSeries(id);
-      return row?.issueCount;
+      return db.metronEntityDao.watchSeries(id).map((row) => row?.issueCount);
     });
 
 /// Exposes the complete series response instead of a reduced database row.

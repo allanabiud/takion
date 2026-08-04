@@ -29,7 +29,7 @@ void main() {
       final jsonStr = utf8.decode(bytes);
       final map = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-      expect(map['version'], equals(1));
+      expect(map['version'], equals(2));
       final tables = map['tables'] as Map<String, dynamic>;
       final creatorInserts = tables['favorite_creators']['inserts'] as List;
 

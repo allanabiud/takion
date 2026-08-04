@@ -539,6 +539,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         sortName: Value(dto.sortName),
         volume: Value(dto.volume),
         seriesTypeId: Value(dto.seriesType?.id),
+        seriesTypeName: Value(dto.seriesType?.name),
         status: Value(dto.status),
         publisherId: Value(dto.publisher?.id),
         imprintId: Value(dto.imprint?.id),
@@ -586,6 +587,12 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       name: row.name,
       sortName: row.sortName,
       volume: row.volume,
+      seriesType: row.seriesTypeName != null
+          ? SeriesDetailsNamedRef(
+              id: row.seriesTypeId ?? 0,
+              name: row.seriesTypeName!,
+            )
+          : null,
       status: row.status,
       yearBegan: row.yearBegan,
       yearEnd: row.yearEnd,

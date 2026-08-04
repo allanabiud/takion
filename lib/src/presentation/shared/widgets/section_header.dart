@@ -49,16 +49,23 @@ class SectionHeader extends StatelessWidget {
         ),
         if (onViewAll != null) ...[
           const SizedBox(width: 8),
-          AnimatedRotation(
-            turns: (isExpanded ?? false) ? 0.5 : 0.0,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: Icon(
-              Icons.expand_more,
+          if (isExpanded == null)
+            Icon(
+              Icons.chevron_right,
               size: 28,
               color: theme.colorScheme.primary,
+            )
+          else
+            AnimatedRotation(
+              turns: isExpanded! ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              child: Icon(
+                Icons.expand_more,
+                size: 28,
+                color: theme.colorScheme.primary,
+              ),
             ),
-          ),
         ],
       ],
     );

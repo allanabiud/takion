@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -8,12 +9,21 @@ import 'package:http/http.dart' as http;
 import 'package:drift/drift.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/storage/drift_database_provider.dart';
+import 'package:takion/src/core/sync/sync_diagnostics.dart';
 import 'package:takion/src/data/common/drift/database.dart';
 
 final driveSyncServiceProvider = Provider<DriveSyncService>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   return DriveSyncService(db);
 });
+
+class _TransientDriveError implements Exception {
+  const _TransientDriveError(this.status);
+  final int? status;
+
+  @override
+  String toString() => 'HTTP ${status ?? 'unknown'}';
+}
 
 class DriveSyncService {
   static const _driveScope = 'https://www.googleapis.com/auth/drive.file';
@@ -24,6 +34,7 @@ class DriveSyncService {
   final AppDatabase _db;
   final Dio _dio;
   final GoogleSignIn _googleSignIn;
+  String? _appFolderIdCache;
 
   DriveSyncService(this._db)
     : _dio = Dio(
@@ -33,7 +44,42 @@ class DriveSyncService {
           sendTimeout: const Duration(seconds: 30),
         ),
       ),
-      _googleSignIn = GoogleSignIn(scopes: [_driveScope]);
+      _googleSignIn = GoogleSignIn(scopes: [_driveScope]) {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.extra['_start'] = DateTime.now();
+          handler.next(options);
+        },
+        onResponse: (response, handler) {
+          final start = response.requestOptions.extra['_start'] as DateTime?;
+          final ms = start == null
+              ? null
+              : DateTime.now().difference(start).inMilliseconds;
+          AppLogger.info(
+            'Drive ${response.requestOptions.method} '
+            '${response.requestOptions.uri} -> ${response.statusCode}'
+            '${ms == null ? '' : ' (${ms}ms)'}',
+          );
+          handler.next(response);
+        },
+        onError: (error, handler) {
+          final start = error.requestOptions.extra['_start'] as DateTime?;
+          final ms = start == null
+              ? null
+              : DateTime.now().difference(start).inMilliseconds;
+          AppLogger.warning(
+            'Drive ${error.requestOptions.method} '
+            '${error.requestOptions.uri} failed'
+            '${ms == null ? '' : ' (${ms}ms)'}: '
+            '${error.type} ${error.response?.statusCode}',
+            error: error,
+          );
+          handler.next(error);
+        },
+      ),
+    );
+  }
 
   GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
   bool get isSignedIn => _googleSignIn.currentUser != null;
@@ -45,6 +91,9 @@ class DriveSyncService {
   Future<GoogleSignInAccount?> signInSilently({
     bool reAuthenticate = false,
   }) async {
+    if (reAuthenticate) {
+      _appFolderIdCache = null;
+    }
     try {
       final account = await _googleSignIn.signInSilently(
         reAuthenticate: reAuthenticate,
@@ -58,6 +107,7 @@ class DriveSyncService {
   }
 
   Future<void> signOut() async {
+    _appFolderIdCache = null;
     await _googleSignIn.signOut();
   }
 
@@ -72,8 +122,10 @@ class DriveSyncService {
     try {
       auth = await user.authentication;
     } catch (e) {
+      AppLogger.warning('Google Drive authentication failed', error: e);
       user = await signInSilently(reAuthenticate: true);
       if (user == null) {
+        AppLogger.warning('Not signed in to Google Drive');
         throw StateError('Not signed in to Google Drive');
       }
       auth = await user.authentication;
@@ -89,6 +141,9 @@ class DriveSyncService {
     }
 
     if (token == null || token.isEmpty) {
+      AppLogger.warning(
+        'Google Drive access token is empty, please re-authenticate',
+      );
       throw StateError(
         'Google Drive access token is empty, please re-authenticate',
       );
@@ -96,25 +151,75 @@ class DriveSyncService {
     return token;
   }
 
+  bool _isRetryable(Object error) {
+    if (error is _TransientDriveError) return true;
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+      if (status == 429 || status == 403) return true;
+      if (status != null && status >= 500 && status < 600) return true;
+      return error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout;
+    }
+    if (error is TimeoutException) return true;
+    return false;
+  }
+
+  Future<T> _retry<T>(
+    String operation,
+    Future<T> Function() action, {
+    int maxRetries = 3,
+  }) async {
+    var attempt = 0;
+    while (true) {
+      try {
+        return await action();
+      } catch (error) {
+        if (!_isRetryable(error) || attempt >= maxRetries) rethrow;
+        final delay = Duration(
+          seconds: math.min(math.pow(2, attempt).toInt(), 60),
+        );
+        AppLogger.warning(
+          '$operation failed ($error), retrying in ${delay.inSeconds}s '
+          '(attempt ${attempt + 1})',
+          error: error,
+        );
+        await Future.delayed(delay);
+        attempt++;
+      }
+    }
+  }
+
   Future<Response> _driveGet(
     String path, {
     Map<String, dynamic>? queryParameters,
     bool isRetry = false,
-    int retryCount = 0,
   }) async {
     final token = await _getAccessToken();
-    final response = await _dio.get(
-      path,
-      queryParameters: queryParameters,
-      options: Options(
-        headers: {'Authorization': 'Bearer $token'},
-        validateStatus: (status) =>
-            status == 200 ||
-            status == 401 ||
-            status == 404 ||
-            status == 429 ||
-            status == 403,
-      ),
+    final response = await _retry(
+      'GET $path',
+      () async {
+        final response = await _dio.get(
+          path,
+          queryParameters: queryParameters,
+          options: Options(
+            headers: {'Authorization': 'Bearer $token'},
+            validateStatus: (status) =>
+                status == 200 ||
+                status == 401 ||
+                status == 404 ||
+                status == 429 ||
+                status == 403 ||
+                (status != null && status >= 500),
+          ),
+        );
+        final status = response.statusCode;
+        if (status == 429 || status == 403 || (status != null && status >= 500)) {
+          throw _TransientDriveError(status);
+        }
+        return response;
+      },
     );
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
@@ -122,23 +227,6 @@ class DriveSyncService {
       );
       await signInSilently(reAuthenticate: true);
       return _driveGet(path, queryParameters: queryParameters, isRetry: true);
-    }
-    if ((response.statusCode == 429 || response.statusCode == 403) &&
-        retryCount < 3) {
-      final delay = Duration(
-        seconds: math.min(math.pow(2, retryCount).toInt(), 60),
-      );
-      AppLogger.warning(
-        'Drive GET HTTP ${response.statusCode} for $path, '
-        'retrying in ${delay.inSeconds}s (attempt ${retryCount + 1})',
-      );
-      await Future.delayed(delay);
-      return _driveGet(
-        path,
-        queryParameters: queryParameters,
-        isRetry: isRetry,
-        retryCount: retryCount + 1,
-      );
     }
     return response;
   }
@@ -150,14 +238,32 @@ class DriveSyncService {
     bool isRetry = false,
   }) async {
     final token = await _getAccessToken();
-    final response = await _dio.post(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: Options(
-        headers: {'Authorization': 'Bearer $token'},
-        validateStatus: (status) => status != null && status < 500,
-      ),
+    final response = await _retry(
+      'POST $path',
+      () async {
+        final response = await _dio.post(
+          path,
+          data: data,
+          queryParameters: queryParameters,
+          options: Options(
+            headers: {'Authorization': 'Bearer $token'},
+            validateStatus: (status) =>
+                status == 200 ||
+                status == 201 ||
+                status == 401 ||
+                status == 404 ||
+                status == 409 ||
+                status == 429 ||
+                status == 403 ||
+                (status != null && status >= 500),
+          ),
+        );
+        final status = response.statusCode;
+        if (status == 429 || status == 403 || (status != null && status >= 500)) {
+          throw _TransientDriveError(status);
+        }
+        return response;
+      },
     );
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
@@ -176,12 +282,29 @@ class DriveSyncService {
 
   Future<Response> _driveDelete(String path, {bool isRetry = false}) async {
     final token = await _getAccessToken();
-    final response = await _dio.delete(
-      path,
-      options: Options(
-        headers: {'Authorization': 'Bearer $token'},
-        validateStatus: (status) => status != null && status < 500,
-      ),
+    final response = await _retry(
+      'DELETE $path',
+      () async {
+        final response = await _dio.delete(
+          path,
+          options: Options(
+            headers: {'Authorization': 'Bearer $token'},
+            validateStatus: (status) =>
+                status == 200 ||
+                status == 204 ||
+                status == 401 ||
+                status == 404 ||
+                status == 429 ||
+                status == 403 ||
+                (status != null && status >= 500),
+          ),
+        );
+        final status = response.statusCode;
+        if (status == 429 || status == 403 || (status != null && status >= 500)) {
+          throw _TransientDriveError(status);
+        }
+        return response;
+      },
     );
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
@@ -216,8 +339,14 @@ class DriveSyncService {
   }
 
   Future<String> _ensureAppFolderId() async {
+    final cached = _appFolderIdCache;
+    if (cached != null) return cached;
+
     final existingId = await _getAppFolderId();
-    if (existingId != null) return existingId;
+    if (existingId != null) {
+      _appFolderIdCache = existingId;
+      return existingId;
+    }
 
     final response = await _drivePost(
       'https://www.googleapis.com/drive/v3/files',
@@ -226,13 +355,28 @@ class DriveSyncService {
         'mimeType': 'application/vnd.google-apps.folder',
       },
     );
-    if (response.statusCode != 200 && response.statusCode != 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = response.data as Map<String, dynamic>;
+      final id = data['id'] as String;
+      _appFolderIdCache = id;
+      return id;
+    }
+    if (response.statusCode == 409) {
+      AppLogger.info(
+        'Folder create returned 409, fetching existing folder id',
+      );
+      final reFound = await _getAppFolderId();
+      if (reFound != null) {
+        _appFolderIdCache = reFound;
+        return reFound;
+      }
       throw StateError(
-        'Failed to create Drive folder (HTTP ${response.statusCode}): ${response.data}',
+        'Failed to create Drive folder (HTTP 409): ${response.data}',
       );
     }
-    final data = response.data as Map<String, dynamic>;
-    return data['id'] as String;
+    throw StateError(
+      'Failed to create Drive folder (HTTP ${response.statusCode}): ${response.data}',
+    );
   }
 
   Future<String?> _findFileId(String fileName) async {
@@ -273,22 +417,32 @@ class DriveSyncService {
   Future<Uint8List?> _downloadFile(
     String fileId, {
     bool isRetry = false,
-    int retryCount = 0,
   }) async {
     final token = await _getAccessToken();
-    final response = await _dio.get(
-      'https://www.googleapis.com/drive/v3/files/$fileId',
-      queryParameters: {'alt': 'media'},
-      options: Options(
-        headers: {'Authorization': 'Bearer $token'},
-        responseType: ResponseType.bytes,
-        validateStatus: (status) =>
-            status == 200 ||
-            status == 401 ||
-            status == 404 ||
-            status == 429 ||
-            status == 403,
-      ),
+    final response = await _retry(
+      'DOWNLOAD $fileId',
+      () async {
+        final response = await _dio.get(
+          'https://www.googleapis.com/drive/v3/files/$fileId',
+          queryParameters: {'alt': 'media'},
+          options: Options(
+            headers: {'Authorization': 'Bearer $token'},
+            responseType: ResponseType.bytes,
+            validateStatus: (status) =>
+                status == 200 ||
+                status == 401 ||
+                status == 404 ||
+                status == 429 ||
+                status == 403 ||
+                (status != null && status >= 500),
+          ),
+        );
+        final status = response.statusCode;
+        if (status == 429 || status == 403 || (status != null && status >= 500)) {
+          throw _TransientDriveError(status);
+        }
+        return response;
+      },
     );
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
@@ -296,22 +450,6 @@ class DriveSyncService {
       );
       await signInSilently(reAuthenticate: true);
       return _downloadFile(fileId, isRetry: true);
-    }
-    if ((response.statusCode == 429 || response.statusCode == 403) &&
-        retryCount < 3) {
-      final delay = Duration(
-        seconds: math.min(math.pow(2, retryCount).toInt(), 60),
-      );
-      AppLogger.warning(
-        'Drive download HTTP ${response.statusCode} for $fileId, '
-        'retrying in ${delay.inSeconds}s (attempt ${retryCount + 1})',
-      );
-      await Future.delayed(delay);
-      return _downloadFile(
-        fileId,
-        isRetry: isRetry,
-        retryCount: retryCount + 1,
-      );
     }
     if (response.statusCode != 200) return null;
     return response.data as Uint8List?;
@@ -321,7 +459,6 @@ class DriveSyncService {
     String fileName,
     Uint8List fileData, {
     bool isRetry = false,
-    int retryCount = 0,
   }) async {
     final token = await _getAccessToken();
     final folderId = await _ensureAppFolderId();
@@ -342,13 +479,36 @@ class DriveSyncService {
             'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
           );
 
-    final request = http.Request(existingId != null ? 'PATCH' : 'POST', uri);
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Content-Type'] = 'multipart/related; boundary=$boundary';
-    request.bodyBytes = bodyBytes;
+    final stopwatch = Stopwatch()..start();
+    final response = await _retry(
+      'UPLOAD $fileName',
+      () async {
+        final request = http.Request(existingId != null ? 'PATCH' : 'POST', uri);
+        request.headers['Authorization'] = 'Bearer $token';
+        request.headers['Content-Type'] =
+            'multipart/related; boundary=$boundary';
+        request.bodyBytes = bodyBytes;
 
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
+        final streamed = await request
+            .send()
+            .timeout(const Duration(seconds: 60));
+        final response = await http.Response.fromStream(streamed).timeout(
+          const Duration(seconds: 60),
+        );
+        AppLogger.info(
+          'Drive upload ${existingId != null ? 'PATCH' : 'POST'} $uri '
+          '-> ${response.statusCode} (${stopwatch.elapsedMilliseconds}ms, '
+          '${fileData.length} bytes)',
+        );
+        if (response.statusCode == 429 ||
+            response.statusCode == 403 ||
+            response.statusCode >= 500) {
+          throw _TransientDriveError(response.statusCode);
+        }
+        return response;
+      },
+    );
+    stopwatch.stop();
 
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
@@ -356,24 +516,6 @@ class DriveSyncService {
       );
       await signInSilently(reAuthenticate: true);
       return _uploadFile(fileName, fileData, isRetry: true);
-    }
-
-    if ((response.statusCode == 429 || response.statusCode == 403) &&
-        retryCount < 3) {
-      final delay = Duration(
-        seconds: math.min(math.pow(2, retryCount).toInt(), 60),
-      );
-      AppLogger.warning(
-        'Drive upload HTTP ${response.statusCode} for $fileName, '
-        'retrying in ${delay.inSeconds}s (attempt ${retryCount + 1})',
-      );
-      await Future.delayed(delay);
-      return _uploadFile(
-        fileName,
-        fileData,
-        isRetry: isRetry,
-        retryCount: retryCount + 1,
-      );
     }
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -417,9 +559,107 @@ class DriveSyncService {
     return DateTime.tryParse(timestamp);
   }
 
+  Future<void> _record({
+    required String phase,
+    required bool success,
+    String? error,
+    String? detail,
+    int? elapsedMs,
+  }) async {
+    try {
+      await recordSyncAttempt(
+        _db.syncMetaDao,
+        phase: phase,
+        success: success,
+        error: error,
+        detail: detail,
+        elapsedMs: elapsedMs,
+      );
+    } catch (e) {
+      AppLogger.warning('Failed to record sync attempt for $phase', error: e);
+    }
+  }
+
+  /// Public wrapper so the WorkManager background isolate (which builds its
+  /// own [DriveSyncService]) can persist sync outcomes outside [triggerSync].
+  Future<void> recordSyncOutcome({
+    required String phase,
+    required bool success,
+    Object? error,
+    int? elapsedMs,
+  }) {
+    return _record(
+      phase: phase,
+      success: success,
+      error: error?.toString(),
+      detail: error == null ? null : _describeError(error),
+      elapsedMs: elapsedMs,
+    );
+  }
+
+  String _describeError(Object error) {
+    if (error is DioException) {
+      return 'DioException(${error.type}) HTTP ${error.response?.statusCode}';
+    }
+    if (error is StateError) return 'StateError: ${error.message}';
+    if (error is FormatException) return 'FormatException: ${error.message}';
+    return '${error.runtimeType}';
+  }
+
+  Future<T> _guarded<T>(
+    String phase,
+    Future<T> Function() action,
+  ) async {
+    final stopwatch = Stopwatch()..start();
+    try {
+      final result = await action();
+      await _record(
+        phase: phase,
+        success: true,
+        elapsedMs: stopwatch.elapsedMilliseconds,
+      );
+      return result;
+    } catch (error) {
+      await _record(
+        phase: phase,
+        success: false,
+        error: error.toString(),
+        detail: _describeError(error),
+        elapsedMs: stopwatch.elapsedMilliseconds,
+      );
+      rethrow;
+    }
+  }
+
   Future<void> triggerSync({bool ignoreThrottle = false}) async {
     AppLogger.info('Drive sync triggered (ignoreThrottle: $ignoreThrottle)');
 
+    final lockRaw = await _db.syncMetaDao.get('sync_in_progress');
+    if (lockRaw != null) {
+      final lockTime = DateTime.tryParse(lockRaw);
+      final isStale = lockTime != null &&
+          DateTime.now().difference(lockTime) > const Duration(minutes: 10);
+      if (!isStale) {
+        AppLogger.info('Sync skipped: another sync is already in progress');
+        return;
+      }
+      AppLogger.warning(
+        'Stale sync lock detected, clearing before proceeding',
+      );
+    }
+    await _db.syncMetaDao.set(
+      'sync_in_progress',
+      DateTime.now().toUtc().toIso8601String(),
+    );
+
+    try {
+      await _triggerSync(ignoreThrottle: ignoreThrottle);
+    } finally {
+      await _db.syncMetaDao.deleteByKey('sync_in_progress');
+    }
+  }
+
+  Future<void> _triggerSync({required bool ignoreThrottle}) async {
     if (!ignoreThrottle) {
       final lastAttempt = await _db.syncMetaDao.get('last_sync_attempt');
       if (lastAttempt != null) {
@@ -437,27 +677,42 @@ class DriveSyncService {
       DateTime.now().toUtc().toIso8601String(),
     );
 
-    final deltaFileId = await _findFileId(_deltaFileName);
+    final deltaFileId = await _guarded('folder', () => _findFileId(_deltaFileName));
     final lastSyncTime = await getLastSyncTime();
+    final lastUploadedRaw = await _db.syncMetaDao.get('last_uploaded_timestamp');
+    final lastUploaded = lastUploadedRaw == null
+        ? null
+        : DateTime.tryParse(lastUploadedRaw);
     final localDeviceId = await _getDeviceId();
     bool remoteChangesApplied = false;
     String? remoteToTimestamp;
 
     if (deltaFileId != null) {
-      final remoteModified = await _getFileModificationTime(deltaFileId);
-      if (remoteModified != null &&
-          (lastSyncTime == null || remoteModified.isAfter(lastSyncTime))) {
+      final remoteModified = await _guarded(
+        'meta',
+        () => _getFileModificationTime(deltaFileId),
+      );
+      final remoteIsNewer =
+          remoteModified != null &&
+          (lastSyncTime == null || remoteModified.isAfter(lastSyncTime)) &&
+          (lastUploaded == null || remoteModified.isAfter(lastUploaded));
+      if (remoteIsNewer) {
         AppLogger.info(
           'Remote sync data is available, downloading and checking',
         );
-        final bytes = await _downloadFile(deltaFileId);
+        final bytes = await _guarded(
+          'download',
+          () => _downloadFile(deltaFileId),
+        );
         if (bytes != null) {
-          final payload =
-              jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-          if (payload['version'] == 1) {
+          final payload = await _guarded(
+            'parse',
+            () async => jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>,
+          );
+          if (_isSupportedVersion(payload['version'])) {
             final remoteDeviceId = payload['deviceId'] as String?;
             if (remoteDeviceId != localDeviceId) {
-              await applyDelta(payload);
+              await _guarded('apply', () => applyDelta(payload));
               remoteChangesApplied = true;
               remoteToTimestamp = payload['toTimestamp'] as String?;
             } else {
@@ -469,19 +724,27 @@ class DriveSyncService {
         }
       }
     } else {
-      final fullFileId = await _findFileId(_fullFileName);
+      final fullFileId = await _guarded(
+        'folder',
+        () => _findFileId(_fullFileName),
+      );
       if (fullFileId != null && lastSyncTime == null) {
         AppLogger.info(
           'No delta but full file exists and no local sync, downloading full',
         );
-        final bytes = await _downloadFile(fullFileId);
+        final bytes = await _guarded(
+          'download',
+          () => _downloadFile(fullFileId),
+        );
         if (bytes != null) {
-          final payload =
-              jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-          if (payload['version'] == 1) {
+          final payload = await _guarded(
+            'parse',
+            () async => jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>,
+          );
+          if (_isSupportedVersion(payload['version'])) {
             final remoteDeviceId = payload['deviceId'] as String?;
             if (remoteDeviceId != localDeviceId) {
-              await applyDelta(payload);
+              await _guarded('apply', () => applyDelta(payload));
               remoteChangesApplied = true;
               remoteToTimestamp = payload['toTimestamp'] as String?;
             } else {
@@ -494,7 +757,10 @@ class DriveSyncService {
       }
     }
 
-    final localChangesDelta = await extractDelta(lastSyncTime);
+    final localChangesDelta = await _guarded(
+      'extract',
+      () => extractDelta(lastUploaded),
+    );
 
     final tables = localChangesDelta['tables'] as Map<String, dynamic>;
     bool hasLocalChanges = false;
@@ -517,16 +783,23 @@ class DriveSyncService {
         'Uploading local sync data ($insertCount inserts, $deleteCount deletes)',
       );
 
-      final fullCumulativePayload = await extractDelta(null);
-      final jsonBytes = utf8.encode(jsonEncode(fullCumulativePayload));
+      final deltaPayload = await _guarded(
+        'extract',
+        () => extractDelta(lastUploaded),
+      );
+      final jsonBytes = utf8.encode(jsonEncode(deltaPayload));
 
-      await _uploadFile(_deltaFileName, Uint8List.fromList(jsonBytes));
+      await _guarded(
+        'upload',
+        () => _uploadFile(_deltaFileName, Uint8List.fromList(jsonBytes)),
+      );
 
-      final nowStr = fullCumulativePayload['toTimestamp'] as String;
+      final nowStr = deltaPayload['toTimestamp'] as String;
       await _db.syncMetaDao.set('last_sync_timestamp', nowStr);
+      await _db.syncMetaDao.set('last_uploaded_timestamp', nowStr);
 
       final now = DateTime.parse(nowStr);
-      await _pruneDeletedRows(now.subtract(const Duration(days: 30)));
+      await _guarded('prune', () => _pruneDeletedRows(now.subtract(const Duration(days: 30))));
     } else if (remoteChangesApplied && remoteToTimestamp != null) {
       await _db.syncMetaDao.set('last_sync_timestamp', remoteToTimestamp);
       AppLogger.info(
@@ -549,47 +822,61 @@ class DriveSyncService {
 
   Future<void> forceSync() async {
     AppLogger.info('Forcing full sync snapshot upload');
-    final delta = await extractDelta(null);
+    final delta = await _guarded('extract', () => extractDelta(null));
     final jsonBytes = utf8.encode(jsonEncode(delta));
-    await _uploadFile(_fullFileName, Uint8List.fromList(jsonBytes));
+    await _guarded(
+      'upload',
+      () => _uploadFile(_fullFileName, Uint8List.fromList(jsonBytes)),
+    );
 
-    await _uploadFile(_deltaFileName, Uint8List.fromList(jsonBytes));
+    await _guarded(
+      'upload',
+      () => _uploadFile(_deltaFileName, Uint8List.fromList(jsonBytes)),
+    );
 
     final nowStr = delta['toTimestamp'] as String;
     await _db.syncMetaDao.set('last_sync_timestamp', nowStr);
+    await _db.syncMetaDao.set('last_uploaded_timestamp', nowStr);
 
     final now = DateTime.parse(nowStr);
-    await _pruneDeletedRows(now.subtract(const Duration(days: 30)));
+    await _guarded('prune', () => _pruneDeletedRows(now.subtract(const Duration(days: 30))));
   }
 
   Future<void> restoreFromDrive() async {
     AppLogger.info('Restore from Drive started');
 
-    String? fileId = await _findFileId(_deltaFileName);
-    fileId ??= await _findFileId(_fullFileName);
+    String? fileId = await _guarded('folder', () => _findFileId(_deltaFileName));
+    fileId ??= await _guarded('folder', () => _findFileId(_fullFileName));
 
     if (fileId == null) {
       throw StateError('No sync data found on Google Drive');
     }
+    final safeFileId = fileId;
 
-    final bytes = await _downloadFile(fileId);
+    final bytes = await _guarded('download', () => _downloadFile(safeFileId));
     if (bytes == null) {
       throw StateError('Failed to download sync data');
     }
 
-    final payload = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-    if (payload['version'] != 1) {
+    final payload = await _guarded(
+      'parse',
+      () async => jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>,
+    );
+    if (!_isSupportedVersion(payload['version'])) {
       throw StateError(
         'Unsupported sync format version: ${payload['version']}',
       );
     }
 
-    await applyDelta(payload);
+    await _guarded('apply', () => applyDelta(payload));
 
     final toTimestamp = payload['toTimestamp'] ?? payload['timestamp'];
     if (toTimestamp != null) {
-      await _db.syncMetaDao.set('last_sync_timestamp', toTimestamp as String);
+      final timestamp = toTimestamp as String;
+      await _db.syncMetaDao.set('last_sync_timestamp', timestamp);
+      await _db.syncMetaDao.set('last_uploaded_timestamp', timestamp);
     }
+    await _record(phase: 'restore', success: true);
     AppLogger.info('Restore from Drive completed');
   }
 
@@ -785,7 +1072,7 @@ class DriveSyncService {
     };
 
     return {
-      'version': 1,
+      'version': 2,
       'deviceId': await _getDeviceId(),
       'fromTimestamp': sinceStr,
       'toTimestamp': DateTime.now().toUtc().toIso8601String(),
@@ -833,9 +1120,33 @@ class DriveSyncService {
   }
 
   // --- Delta Application Logic ---
+  static bool _isSupportedVersion(Object? version) =>
+      version == 1 || version == 2;
+
   Future<void> applyDelta(Map<String, dynamic> payload) async {
-    final tables = payload['tables'] as Map<String, dynamic>? ?? {};
+    final version = payload['version'];
+    final remoteDeviceId = payload['deviceId'] as String?;
+    final fromTimestamp = payload['fromTimestamp'] as String?;
     final remoteToTimestamp = payload['toTimestamp'] as String?;
+
+    // v1 payloads are full snapshots: always apply.
+    // v2 with fromTimestamp == null are full snapshots: always apply.
+    // v2 with fromTimestamp != null are real deltas: skip if already applied.
+    final isDelta = version == 2 && fromTimestamp != null;
+    if (isDelta && remoteDeviceId != null && remoteToTimestamp != null) {
+      final watermark = await _getRemoteWatermark(remoteDeviceId);
+      final wm = watermark == null ? null : DateTime.tryParse(watermark);
+      final to = DateTime.tryParse(remoteToTimestamp);
+      if (wm != null && to != null && !to.isAfter(wm)) {
+        AppLogger.info(
+          'Skipping already-applied delta from $remoteDeviceId '
+          '(to $remoteToTimestamp <= watermark $watermark)',
+        );
+        return;
+      }
+    }
+
+    final tables = payload['tables'] as Map<String, dynamic>? ?? {};
 
     await _db.transaction(() async {
       for (final tableEntry in tables.entries) {
@@ -846,6 +1157,25 @@ class DriveSyncService {
         if (!_knownTableNames.contains(tableName)) {
           AppLogger.warning('Unknown table in sync payload: $tableName');
           continue;
+        }
+
+        // Tables without per-row timestamps (reading_list_items) are gated by
+        // a per-device table watermark so the remote delta is authoritative
+        // without ever being re-applied once already handled.
+        final usesTableWatermark = tableName == 'reading_list_items';
+        if (usesTableWatermark &&
+            isDelta &&
+            remoteDeviceId != null &&
+            remoteToTimestamp != null) {
+          final watermark = await _getTableWatermark(tableName, remoteDeviceId);
+          final wm = watermark == null ? null : DateTime.tryParse(watermark);
+          final to = DateTime.tryParse(remoteToTimestamp);
+          if (wm != null && to != null && !to.isAfter(wm)) {
+            AppLogger.info(
+              'Skipping already-applied $tableName delta from $remoteDeviceId',
+            );
+            continue;
+          }
         }
 
         final inserts = tableData['inserts'] as List<dynamic>? ?? [];
@@ -882,8 +1212,56 @@ class DriveSyncService {
             );
           }
         }
+
+        if (usesTableWatermark &&
+            remoteDeviceId != null &&
+            remoteToTimestamp != null) {
+          await _advanceTableWatermark(
+            tableName,
+            remoteDeviceId,
+            remoteToTimestamp,
+          );
+        }
       }
     });
+
+    if (remoteDeviceId != null && remoteToTimestamp != null) {
+      await _advanceRemoteWatermark(remoteDeviceId, remoteToTimestamp);
+    }
+  }
+
+  Future<String?> _getRemoteWatermark(String deviceId) =>
+      _db.syncMetaDao.get('remote_watermark:$deviceId');
+
+  Future<void> _advanceRemoteWatermark(
+    String deviceId,
+    String timestamp,
+  ) async {
+    final existing = await _getRemoteWatermark(deviceId);
+    final newTs = DateTime.tryParse(timestamp);
+    final oldTs = existing == null ? null : DateTime.tryParse(existing);
+    if (newTs != null && (oldTs == null || newTs.isAfter(oldTs))) {
+      await _db.syncMetaDao.set('remote_watermark:$deviceId', timestamp);
+    }
+  }
+
+  Future<String?> _getTableWatermark(String tableName, String deviceId) =>
+      _db.syncMetaDao.get('table_watermark:$tableName:$deviceId');
+
+  Future<void> _advanceTableWatermark(
+    String tableName,
+    String deviceId,
+    String timestamp,
+  ) async {
+    final existing = await _getTableWatermark(tableName, deviceId);
+    final newTs = DateTime.tryParse(timestamp);
+    final oldTs = existing == null ? null : DateTime.tryParse(existing);
+    if (newTs != null && (oldTs == null || newTs.isAfter(oldTs))) {
+      await _db.syncMetaDao.set(
+        'table_watermark:$tableName:$deviceId',
+        timestamp,
+      );
+    }
   }
 
   static const _knownTableNames = [
@@ -1070,17 +1448,6 @@ class DriveSyncService {
             }
           }
         }
-      }
-    } else {
-      // No timestamp field (e.g. reading_list_items) — local wins if exists
-      final existing = await _db
-          .customSelect(
-            'SELECT $pkSqlName FROM $tableName WHERE $pkSqlName = ?',
-            variables: [Variable(pkValue)],
-          )
-          .getSingleOrNull();
-      if (existing != null) {
-        return;
       }
     }
 

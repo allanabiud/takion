@@ -606,7 +606,7 @@ class _LocalReadingListDetailsScreenState
               item: item,
               roleColor: roleColor,
               isEditing: false,
-              allowRemoteHydration: true,
+              allowRemoteHydration: !_hasStoredDisplayData(item),
             );
           }, childCount: items.length),
         ),
@@ -675,7 +675,7 @@ class _LocalReadingListDetailsScreenState
                 onTap: () => _openLocalReadingListItemDetails(item),
                 isEditing: false,
                 isSelected: false,
-                allowRemoteHydration: true,
+                allowRemoteHydration: !_hasStoredDisplayData(item),
                 onRemove: null,
               );
             }, childCount: items.length),
@@ -683,6 +683,11 @@ class _LocalReadingListDetailsScreenState
         ),
       ],
     );
+  }
+
+  bool _hasStoredDisplayData(LocalReadingListItem item) {
+    return item.seriesName?.trim().isNotEmpty == true ||
+        item.issueNumber?.trim().isNotEmpty == true;
   }
 
   Color _getRoleColor(BuildContext context, ItemRole role) {

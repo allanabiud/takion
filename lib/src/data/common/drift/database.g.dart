@@ -7125,6 +7125,17 @@ class $MetronSeriesTable extends MetronSeries
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _seriesTypeNameMeta = const VerificationMeta(
+    'seriesTypeName',
+  );
+  @override
+  late final GeneratedColumn<String> seriesTypeName = GeneratedColumn<String>(
+    'series_type_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -7273,6 +7284,7 @@ class $MetronSeriesTable extends MetronSeries
     sortName,
     volume,
     seriesTypeId,
+    seriesTypeName,
     status,
     publisherId,
     imprintId,
@@ -7328,6 +7340,15 @@ class $MetronSeriesTable extends MetronSeries
         seriesTypeId.isAcceptableOrUnknown(
           data['series_type_id']!,
           _seriesTypeIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('series_type_name')) {
+      context.handle(
+        _seriesTypeNameMeta,
+        seriesTypeName.isAcceptableOrUnknown(
+          data['series_type_name']!,
+          _seriesTypeNameMeta,
         ),
       );
     }
@@ -7453,6 +7474,10 @@ class $MetronSeriesTable extends MetronSeries
         DriftSqlType.int,
         data['${effectivePrefix}series_type_id'],
       ),
+      seriesTypeName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}series_type_name'],
+      ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -7520,6 +7545,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
   final String? sortName;
   final int? volume;
   final int? seriesTypeId;
+  final String? seriesTypeName;
   final String? status;
   final int? publisherId;
   final int? imprintId;
@@ -7539,6 +7565,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
     this.sortName,
     this.volume,
     this.seriesTypeId,
+    this.seriesTypeName,
     this.status,
     this.publisherId,
     this.imprintId,
@@ -7566,6 +7593,9 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
     }
     if (!nullToAbsent || seriesTypeId != null) {
       map['series_type_id'] = Variable<int>(seriesTypeId);
+    }
+    if (!nullToAbsent || seriesTypeName != null) {
+      map['series_type_name'] = Variable<String>(seriesTypeName);
     }
     if (!nullToAbsent || status != null) {
       map['status'] = Variable<String>(status);
@@ -7620,6 +7650,9 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
       seriesTypeId: seriesTypeId == null && nullToAbsent
           ? const Value.absent()
           : Value(seriesTypeId),
+      seriesTypeName: seriesTypeName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seriesTypeName),
       status: status == null && nullToAbsent
           ? const Value.absent()
           : Value(status),
@@ -7669,6 +7702,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
       sortName: serializer.fromJson<String?>(json['sortName']),
       volume: serializer.fromJson<int?>(json['volume']),
       seriesTypeId: serializer.fromJson<int?>(json['seriesTypeId']),
+      seriesTypeName: serializer.fromJson<String?>(json['seriesTypeName']),
       status: serializer.fromJson<String?>(json['status']),
       publisherId: serializer.fromJson<int?>(json['publisherId']),
       imprintId: serializer.fromJson<int?>(json['imprintId']),
@@ -7693,6 +7727,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
       'sortName': serializer.toJson<String?>(sortName),
       'volume': serializer.toJson<int?>(volume),
       'seriesTypeId': serializer.toJson<int?>(seriesTypeId),
+      'seriesTypeName': serializer.toJson<String?>(seriesTypeName),
       'status': serializer.toJson<String?>(status),
       'publisherId': serializer.toJson<int?>(publisherId),
       'imprintId': serializer.toJson<int?>(imprintId),
@@ -7715,6 +7750,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
     Value<String?> sortName = const Value.absent(),
     Value<int?> volume = const Value.absent(),
     Value<int?> seriesTypeId = const Value.absent(),
+    Value<String?> seriesTypeName = const Value.absent(),
     Value<String?> status = const Value.absent(),
     Value<int?> publisherId = const Value.absent(),
     Value<int?> imprintId = const Value.absent(),
@@ -7734,6 +7770,9 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
     sortName: sortName.present ? sortName.value : this.sortName,
     volume: volume.present ? volume.value : this.volume,
     seriesTypeId: seriesTypeId.present ? seriesTypeId.value : this.seriesTypeId,
+    seriesTypeName: seriesTypeName.present
+        ? seriesTypeName.value
+        : this.seriesTypeName,
     status: status.present ? status.value : this.status,
     publisherId: publisherId.present ? publisherId.value : this.publisherId,
     imprintId: imprintId.present ? imprintId.value : this.imprintId,
@@ -7759,6 +7798,9 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
       seriesTypeId: data.seriesTypeId.present
           ? data.seriesTypeId.value
           : this.seriesTypeId,
+      seriesTypeName: data.seriesTypeName.present
+          ? data.seriesTypeName.value
+          : this.seriesTypeName,
       status: data.status.present ? data.status.value : this.status,
       publisherId: data.publisherId.present
           ? data.publisherId.value
@@ -7795,6 +7837,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
           ..write('sortName: $sortName, ')
           ..write('volume: $volume, ')
           ..write('seriesTypeId: $seriesTypeId, ')
+          ..write('seriesTypeName: $seriesTypeName, ')
           ..write('status: $status, ')
           ..write('publisherId: $publisherId, ')
           ..write('imprintId: $imprintId, ')
@@ -7819,6 +7862,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
     sortName,
     volume,
     seriesTypeId,
+    seriesTypeName,
     status,
     publisherId,
     imprintId,
@@ -7842,6 +7886,7 @@ class MetronSery extends DataClass implements Insertable<MetronSery> {
           other.sortName == this.sortName &&
           other.volume == this.volume &&
           other.seriesTypeId == this.seriesTypeId &&
+          other.seriesTypeName == this.seriesTypeName &&
           other.status == this.status &&
           other.publisherId == this.publisherId &&
           other.imprintId == this.imprintId &&
@@ -7863,6 +7908,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
   final Value<String?> sortName;
   final Value<int?> volume;
   final Value<int?> seriesTypeId;
+  final Value<String?> seriesTypeName;
   final Value<String?> status;
   final Value<int?> publisherId;
   final Value<int?> imprintId;
@@ -7882,6 +7928,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
     this.sortName = const Value.absent(),
     this.volume = const Value.absent(),
     this.seriesTypeId = const Value.absent(),
+    this.seriesTypeName = const Value.absent(),
     this.status = const Value.absent(),
     this.publisherId = const Value.absent(),
     this.imprintId = const Value.absent(),
@@ -7902,6 +7949,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
     this.sortName = const Value.absent(),
     this.volume = const Value.absent(),
     this.seriesTypeId = const Value.absent(),
+    this.seriesTypeName = const Value.absent(),
     this.status = const Value.absent(),
     this.publisherId = const Value.absent(),
     this.imprintId = const Value.absent(),
@@ -7922,6 +7970,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
     Expression<String>? sortName,
     Expression<int>? volume,
     Expression<int>? seriesTypeId,
+    Expression<String>? seriesTypeName,
     Expression<String>? status,
     Expression<int>? publisherId,
     Expression<int>? imprintId,
@@ -7942,6 +7991,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
       if (sortName != null) 'sort_name': sortName,
       if (volume != null) 'volume': volume,
       if (seriesTypeId != null) 'series_type_id': seriesTypeId,
+      if (seriesTypeName != null) 'series_type_name': seriesTypeName,
       if (status != null) 'status': status,
       if (publisherId != null) 'publisher_id': publisherId,
       if (imprintId != null) 'imprint_id': imprintId,
@@ -7964,6 +8014,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
     Value<String?>? sortName,
     Value<int?>? volume,
     Value<int?>? seriesTypeId,
+    Value<String?>? seriesTypeName,
     Value<String?>? status,
     Value<int?>? publisherId,
     Value<int?>? imprintId,
@@ -7984,6 +8035,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
       sortName: sortName ?? this.sortName,
       volume: volume ?? this.volume,
       seriesTypeId: seriesTypeId ?? this.seriesTypeId,
+      seriesTypeName: seriesTypeName ?? this.seriesTypeName,
       status: status ?? this.status,
       publisherId: publisherId ?? this.publisherId,
       imprintId: imprintId ?? this.imprintId,
@@ -8017,6 +8069,9 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
     }
     if (seriesTypeId.present) {
       map['series_type_id'] = Variable<int>(seriesTypeId.value);
+    }
+    if (seriesTypeName.present) {
+      map['series_type_name'] = Variable<String>(seriesTypeName.value);
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
@@ -8068,6 +8123,7 @@ class MetronSeriesCompanion extends UpdateCompanion<MetronSery> {
           ..write('sortName: $sortName, ')
           ..write('volume: $volume, ')
           ..write('seriesTypeId: $seriesTypeId, ')
+          ..write('seriesTypeName: $seriesTypeName, ')
           ..write('status: $status, ')
           ..write('publisherId: $publisherId, ')
           ..write('imprintId: $imprintId, ')
@@ -22516,6 +22572,7 @@ typedef $$MetronSeriesTableCreateCompanionBuilder =
       Value<String?> sortName,
       Value<int?> volume,
       Value<int?> seriesTypeId,
+      Value<String?> seriesTypeName,
       Value<String?> status,
       Value<int?> publisherId,
       Value<int?> imprintId,
@@ -22537,6 +22594,7 @@ typedef $$MetronSeriesTableUpdateCompanionBuilder =
       Value<String?> sortName,
       Value<int?> volume,
       Value<int?> seriesTypeId,
+      Value<String?> seriesTypeName,
       Value<String?> status,
       Value<int?> publisherId,
       Value<int?> imprintId,
@@ -22583,6 +22641,11 @@ class $$MetronSeriesTableFilterComposer
 
   ColumnFilters<int> get seriesTypeId => $composableBuilder(
     column: $table.seriesTypeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get seriesTypeName => $composableBuilder(
+    column: $table.seriesTypeName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22686,6 +22749,11 @@ class $$MetronSeriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get seriesTypeName => $composableBuilder(
+    column: $table.seriesTypeName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -22778,6 +22846,11 @@ class $$MetronSeriesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get seriesTypeName => $composableBuilder(
+    column: $table.seriesTypeName,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
@@ -22866,6 +22939,7 @@ class $$MetronSeriesTableTableManager
                 Value<String?> sortName = const Value.absent(),
                 Value<int?> volume = const Value.absent(),
                 Value<int?> seriesTypeId = const Value.absent(),
+                Value<String?> seriesTypeName = const Value.absent(),
                 Value<String?> status = const Value.absent(),
                 Value<int?> publisherId = const Value.absent(),
                 Value<int?> imprintId = const Value.absent(),
@@ -22885,6 +22959,7 @@ class $$MetronSeriesTableTableManager
                 sortName: sortName,
                 volume: volume,
                 seriesTypeId: seriesTypeId,
+                seriesTypeName: seriesTypeName,
                 status: status,
                 publisherId: publisherId,
                 imprintId: imprintId,
@@ -22906,6 +22981,7 @@ class $$MetronSeriesTableTableManager
                 Value<String?> sortName = const Value.absent(),
                 Value<int?> volume = const Value.absent(),
                 Value<int?> seriesTypeId = const Value.absent(),
+                Value<String?> seriesTypeName = const Value.absent(),
                 Value<String?> status = const Value.absent(),
                 Value<int?> publisherId = const Value.absent(),
                 Value<int?> imprintId = const Value.absent(),
@@ -22925,6 +23001,7 @@ class $$MetronSeriesTableTableManager
                 sortName: sortName,
                 volume: volume,
                 seriesTypeId: seriesTypeId,
+                seriesTypeName: seriesTypeName,
                 status: status,
                 publisherId: publisherId,
                 imprintId: imprintId,

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/storage/drift_database_provider.dart';
 import 'package:takion/src/core/sync/periodic_sync_manager.dart';
+import 'package:takion/src/core/sync/sync_diagnostics.dart';
 
 enum SyncInterval {
   hours1(Duration(hours: 1), '1 hr'),
@@ -87,6 +88,11 @@ class DriveSyncState {
 final driveSyncProvider = NotifierProvider<DriveSyncNotifier, DriveSyncState>(
   DriveSyncNotifier.new,
 );
+
+final syncDiagnosticsProvider = FutureProvider<SyncDiagnostics>((ref) async {
+  final db = ref.watch(driftDatabaseProvider);
+  return loadSyncDiagnostics(db.syncMetaDao);
+});
 
 class DriveSyncNotifier extends Notifier<DriveSyncState> {
   static const _enabledKey = 'drive_sync_enabled';
@@ -201,6 +207,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
       lastSync = DateTime.tryParse(lastSyncRaw);
     }
     state = state.copyWith(isInitialized: true, lastSync: lastSync);
+    ref.invalidate(syncDiagnosticsProvider);
   }
 
   void setSyncing(bool value) {
@@ -211,9 +218,11 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   void setError(String error) {
     AppLogger.error('Drive sync error', error: error);
     state = state.copyWith(lastError: error, lastErrorTime: DateTime.now());
+    ref.invalidate(syncDiagnosticsProvider);
   }
 
   void clearError() {
     state = state.copyWith(lastError: null, lastErrorTime: null);
+    ref.invalidate(syncDiagnosticsProvider);
   }
 }

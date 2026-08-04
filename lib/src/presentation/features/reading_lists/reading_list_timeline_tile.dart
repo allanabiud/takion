@@ -49,6 +49,29 @@ class ReadingListTimelineTile extends ConsumerWidget {
       return id > 0 ? '$prefix #$id' : prefix;
     }
 
+    IssueList fallbackIssue([int? withId]) {
+      final effectiveId = withId ?? id;
+      final seriesName = item.seriesName?.trim();
+      return IssueList(
+        id: effectiveId > 0 ? effectiveId : null,
+        name: fallbackName(),
+        number: item.issueNumber ?? '',
+        series:
+            item.seriesId != null && seriesName != null && seriesName.isNotEmpty
+            ? Series(
+                id: item.seriesId!,
+                name: seriesName,
+                volume: item.seriesVolume,
+                yearBegan: item.yearBegan,
+              )
+            : null,
+        image: null,
+        coverDate: item.coverDate,
+        storeDate: item.storeDate,
+        modified: null,
+      );
+    }
+
     final metadataAsync = allowRemoteHydration
         ? ref.watch(
                 readingListItemMetadataProvider((
@@ -128,16 +151,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
             modified: cachedMetadata.modified,
           );
         } else {
-          issue = IssueList(
-            id: id > 0 ? id : null,
-            name: fallbackName(),
-            number: item.issueNumber ?? '',
-            series: null,
-            image: null,
-            coverDate: null,
-            storeDate: null,
-            modified: null,
-          );
+          issue = fallbackIssue(id);
         }
 
         return IssueListTile(
@@ -160,16 +174,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
               isRead: isRead,
             )
           : IssueListTile(
-              issue: IssueList(
-                id: id > 0 ? id : null,
-                name: fallbackName(),
-                number: item.issueNumber ?? '',
-                series: null,
-                coverDate: null,
-                storeDate: null,
-                image: null,
-                modified: null,
-              ),
+              issue: fallbackIssue(id),
               horizontalPadding: 0,
               role: item.role,
               allowRemoteHydration: false,
@@ -187,16 +192,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
               isRead: isRead,
             )
           : IssueListTile(
-              issue: IssueList(
-                id: id > 0 ? id : null,
-                name: fallbackName(),
-                number: item.issueNumber ?? '',
-                series: null,
-                coverDate: null,
-                storeDate: null,
-                image: null,
-                modified: null,
-              ),
+              issue: fallbackIssue(id),
               horizontalPadding: 0,
               role: item.role,
               allowRemoteHydration: false,
