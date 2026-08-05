@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
+import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/metron_account_provider.dart';
@@ -43,7 +44,8 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
     if (!mounted || !context.mounted || !hasConnection) return;
 
     _didAutoRedirect = true;
-    context.router.replaceAll([const MainRoute()]);
+    await context.router.replaceAll([const MainRoute()]);
+    NotificationService.instance.tryNavigateToMyPulls();
   }
 
   @override
@@ -84,7 +86,8 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
       if (!mounted) return;
       _tokenController.clear();
       _didAutoRedirect = true;
-      context.router.replaceAll([const MainRoute()]);
+      await context.router.replaceAll([const MainRoute()]);
+      NotificationService.instance.tryNavigateToMyPulls();
     } catch (error) {
       if (!mounted || !context.mounted) return;
       AppLogger.error('Metron connect exception', error: error);

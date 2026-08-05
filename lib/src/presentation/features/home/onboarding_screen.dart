@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:takion/src/core/network/metron_account_service.dart';
+import 'package:takion/src/core/notifications/notification_service.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/metron_connected_state.dart';
@@ -73,7 +74,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (!mounted) return;
 
       if (hasConnection) {
-        context.router.replaceAll([const MainRoute()]);
+        await context.router.replaceAll([const MainRoute()]);
+        NotificationService.instance.tryNavigateToMyPulls();
       } else {
         context.router.replace(const AuthorizeMetronRoute());
       }
@@ -331,7 +333,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await settingsDao.setBool(_seenOnboardingKey, true);
     ShortcutHandler.enableShortcuts();
     if (!mounted || !context.mounted) return;
-    context.router.replaceAll([const MainRoute()]);
+    await context.router.replaceAll([const MainRoute()]);
+    NotificationService.instance.tryNavigateToMyPulls();
   }
 
   Future<void> _restoreFromDrive() async {

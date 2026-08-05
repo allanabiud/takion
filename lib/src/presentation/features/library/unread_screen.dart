@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,11 +23,25 @@ class UnreadScreen extends ConsumerStatefulWidget {
 class _UnreadScreenState extends ConsumerState<UnreadScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounceTimer;
+  String _debouncedSearchQuery = '';
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        setState(() {
+          _debouncedSearchQuery = query;
+        });
+      }
+    });
   }
 
   @override
@@ -35,7 +51,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
     );
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
-        (category: 'unread', query: _isSearching ? _searchController.text : ''),
+        (category: 'unread', query: _isSearching ? _debouncedSearchQuery : ''),
       ),
     );
 
@@ -46,7 +62,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                onChanged: (_) => setState(() {}),
+                onChanged: _onSearchChanged,
                 decoration: InputDecoration(
                   hintText: 'Search series...',
                   border: InputBorder.none,
@@ -58,8 +74,10 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
                     onPressed: () {
+                      _searchDebounceTimer?.cancel();
                       setState(() {
                         _isSearching = false;
+                        _debouncedSearchQuery = '';
                         _searchController.clear();
                       });
                     },

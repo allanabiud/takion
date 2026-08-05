@@ -44,6 +44,14 @@ final favoriteSeriesListProvider = StreamProvider<List<FavoriteSeries>>((ref) {
   return dao.watchAllSeries().map((rows) => rows.map(_seriesToDomain).toList());
 });
 
+final favoriteSeriesIdsSetProvider = Provider<Set<int>>((ref) {
+  final favoritesAsync = ref.watch(favoriteSeriesListProvider);
+  return favoritesAsync.maybeWhen(
+    data: (list) => list.map((f) => f.metronSeriesId).toSet(),
+    orElse: () => const <int>{},
+  );
+});
+
 final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
   ref,
 ) async {

@@ -14,7 +14,7 @@ import 'package:takion/src/data/common/services/drive_backup_service.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/router/app_router.dart';
 import 'package:takion/src/core/router/app_router.gr.dart'
-    show AuthorizeMetronRoute, MyPullsRoute;
+    show AuthorizeMetronRoute, MyPullsRoute, OnboardingRoute;
 import 'package:takion/src/core/router/auth_guard.dart';
 import 'package:takion/src/core/theme/app_theme.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
@@ -52,6 +52,9 @@ class _TakionAppState extends ConsumerState<TakionApp>
         .then((seen) {
           if (!mounted) return;
           setState(() => _hasSeenOnboarding = seen);
+          if (seen) {
+            NotificationService.instance.tryNavigateToMyPulls();
+          }
         });
 
     _shortcutHandler.navigateNamed = (route) {
@@ -60,8 +63,19 @@ class _TakionAppState extends ConsumerState<TakionApp>
     };
 
     NotificationService.instance.onNavigateToMyPulls = () {
-      if (!_hasSeenOnboarding) return;
+      try {
+        final currentRouteName = _appRouter.current.name;
+        if (currentRouteName == OnboardingRoute.name) {
+          return false;
+        }
+        if (currentRouteName == MyPullsRoute.name) {
+          return true;
+        }
+      } catch (_) {
+        return false;
+      }
       navigator.push(const MyPullsRoute());
+      return true;
     };
     NotificationService.instance.checkPendingNotificationLaunch();
 
@@ -76,6 +90,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
         if (!mounted) return;
         _shortcutHandler.checkPending();
         _maybeEnableShortcuts();
+        NotificationService.instance.tryNavigateToMyPulls();
       });
     });
   }

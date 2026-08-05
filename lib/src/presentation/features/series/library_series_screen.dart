@@ -7,6 +7,7 @@ import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
 import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
+import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
@@ -145,10 +146,10 @@ class LibrarySeriesScreen extends ConsumerWidget {
       ],
       sheetContentBuilder: (context, d, ref) {
         return [
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: _CategoryIssueList(
                 seriesId: seriesId,
                 category: category,
@@ -207,7 +208,7 @@ class _CombinedCategoryHeader extends ConsumerWidget {
         final match = seriesList
             .where((s) => s.seriesId == seriesId)
             .firstOrNull;
-        if (match == null || match.items.isEmpty) {
+        if (match == null || match.categoryCount == 0) {
           return const SizedBox.shrink();
         }
 
@@ -257,7 +258,22 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      final allItems = await ref.read(
+                        allCollectionItemsProvider.future,
+                      );
+                      final categoryIssues = allItems.where((ci) {
+                        if (ci.issue?.series?.id != seriesId) return false;
+                        if (category == 'unread') return ci.isRead == false;
+                        if (category == 'unrated') return ci.rating == null;
+                        if (category == 'collected') return ci.quantity > 0;
+                        if (category == 'read') return ci.isRead == true;
+                        if (category == 'wishlist') return ci.quantity == 0;
+                        return true;
+                      }).toList();
+
+                      if (!context.mounted) return;
+
                       _showCategoryBulkSheet(
                         context,
                         ref,
@@ -265,7 +281,7 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                         seriesName: match.seriesName,
                         seriesYear: match.yearBegan,
                         totalIssues: total,
-                        categoryIssues: match.items,
+                        categoryIssues: categoryIssues,
                         category: category,
                       );
                     },
@@ -312,10 +328,14 @@ Future<void> _showCategoryBulkSheet(
   var selectedRating = 0;
   var isApplying = false;
 
-  await TakionBottomSheet.show<void>(
+  await showModalBottomSheet<void>(
     context: context,
-    title: seriesYear != null ? '$seriesName ($seriesYear)' : seriesName,
-    child: StatefulBuilder(
+    isScrollControlled: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (modalContext) => StatefulBuilder(
       builder: (context, setModalState) {
         final theme = Theme.of(context);
         final selectedStart = selectedRange.start.round();
@@ -323,9 +343,6 @@ Future<void> _showCategoryBulkSheet(
         final selectedCount = useRange
             ? (selectedRange.end - selectedRange.start + 1).round()
             : candidates.length;
-
-        final startIssueNumber = candidates[selectedStart - 1].issueNumber;
-        final endIssueNumber = candidates[selectedEnd - 1].issueNumber;
 
         String actionLabel() {
           if (category == 'unrated') {
@@ -391,19 +408,18 @@ Future<void> _showCategoryBulkSheet(
                 ),
               ],
               const SizedBox(height: 16),
-              if (canSelectRange) ...[
-                Row(
-                  children: [
-                    Text('Selection', style: theme.textTheme.labelLarge),
-                    const Spacer(),
-                    Switch(
-                      value: useRange,
-                      onChanged: isApplying
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Apply To', style: theme.textTheme.labelLarge),
+                  if (canSelectRange)
+                    TextButton(
+                      onPressed: isApplying
                           ? null
-                          : (value) {
+                          : () {
                               setModalState(() {
-                                useRange = value;
-                                if (!value) {
+                                useRange = !useRange;
+                                if (!useRange) {
                                   selectedRange = RangeValues(
                                     1,
                                     candidates.length.toDouble(),
@@ -411,14 +427,23 @@ Future<void> _showCategoryBulkSheet(
                                 }
                               });
                             },
+                      child: Text(useRange ? 'Select All' : 'Select Range'),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-              if (useRange && canSelectRange) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (!useRange)
+                Text(
+                  'All ${candidates.length} issues in this series',
+                  style: theme.textTheme.bodyMedium,
+                )
+              else ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -426,8 +451,8 @@ Future<void> _showCategoryBulkSheet(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Issue range: #$startIssueNumber - #$endIssueNumber',
-                            style: theme.textTheme.bodyMedium?.copyWith(
+                            'Issue Range',
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -440,7 +465,7 @@ Future<void> _showCategoryBulkSheet(
                                     });
                                   },
                             child: Text(
-                              useManualRange ? 'Use Slider' : 'Use Inputs',
+                              useManualRange ? 'Use Slider' : 'Manual Entry',
                             ),
                           ),
                         ],
@@ -449,61 +474,68 @@ Future<void> _showCategoryBulkSheet(
                         Row(
                           children: [
                             Expanded(
-                              child: TextFormField(
-                                initialValue: startIssueNumber,
+                              child: DropdownButtonFormField<int>(
+                                initialValue: selectedStart,
                                 decoration: const InputDecoration(
-                                  labelText: 'From issue #',
+                                  labelText: 'From',
                                   isDense: true,
                                 ),
-                                keyboardType: TextInputType.number,
-                                enabled: !isApplying,
-                                onChanged: (v) {
-                                  if (v.isEmpty) return;
-                                  final parsed = int.tryParse(v);
-                                  if (parsed == null) return;
-                                  final idx = findClosestIssueIndex(
-                                    candidates,
-                                    parsed.toString(),
-                                  );
-                                  if (idx != null && idx + 1 <= selectedEnd) {
-                                    setModalState(() {
-                                      selectedRange = RangeValues(
-                                        (idx + 1).toDouble(),
-                                        selectedRange.end,
-                                      );
-                                    });
-                                  }
+                                items: [
+                                  for (
+                                    var idx = 0;
+                                    idx < candidates.length;
+                                    idx++
+                                  )
+                                    DropdownMenuItem(
+                                      value: idx + 1,
+                                      child: Text(
+                                        '#${candidates[idx].issueNumber}',
+                                      ),
+                                    ),
+                                ],
+                                onChanged: (val) {
+                                  if (val == null) return;
+                                  setModalState(() {
+                                    selectedRange = RangeValues(
+                                      val.toDouble(),
+                                      selectedRange.end.clamp(
+                                        val.toDouble(),
+                                        candidates.length.toDouble(),
+                                      ),
+                                    );
+                                  });
                                 },
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: TextFormField(
-                                initialValue: endIssueNumber,
+                              child: DropdownButtonFormField<int>(
+                                initialValue: selectedEnd,
                                 decoration: const InputDecoration(
-                                  labelText: 'To issue #',
+                                  labelText: 'To',
                                   isDense: true,
                                 ),
-                                keyboardType: TextInputType.number,
-                                enabled: !isApplying,
-                                onChanged: (v) {
-                                  if (v.isEmpty) return;
-                                  final parsed = int.tryParse(v);
-                                  if (parsed == null) return;
-                                  final idx = findClosestIssueIndex(
-                                    candidates,
-                                    parsed.toString(),
-                                    startAfter: selectedStart - 1,
-                                  );
-                                  if (idx != null &&
-                                      idx + 1 <= candidates.length) {
-                                    setModalState(() {
-                                      selectedRange = RangeValues(
-                                        selectedRange.start,
-                                        (idx + 1).toDouble(),
-                                      );
-                                    });
-                                  }
+                                items: [
+                                  for (
+                                    var idx = selectedStart - 1;
+                                    idx < candidates.length;
+                                    idx++
+                                  )
+                                    DropdownMenuItem(
+                                      value: idx + 1,
+                                      child: Text(
+                                        '#${candidates[idx].issueNumber}',
+                                      ),
+                                    ),
+                                ],
+                                onChanged: (val) {
+                                  if (val == null) return;
+                                  setModalState(() {
+                                    selectedRange = RangeValues(
+                                      selectedRange.start,
+                                      val.toDouble(),
+                                    );
+                                  });
                                 },
                               ),
                             ),
@@ -529,11 +561,6 @@ Future<void> _showCategoryBulkSheet(
                                   });
                                 },
                         ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Selected: #$startIssueNumber - #$endIssueNumber ($selectedStart to $selectedEnd of ${candidates.length})',
-                        style: theme.textTheme.bodySmall,
-                      ),
                     ],
                   ),
                 ),
@@ -577,10 +604,7 @@ Future<void> _showCategoryBulkSheet(
 
                                   final item = categoryIssues.firstWhere(
                                     (ci) => ci.issue?.id == issueId,
-                                    orElse: () =>
-                                        categoryIssues[candidates.indexOf(
-                                          candidate,
-                                        )],
+                                    orElse: () => categoryIssues.first,
                                   );
 
                                   if (item.rating == selectedRating) continue;
@@ -709,7 +733,9 @@ class _CategoryIssueList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return categorySeriesAsync.when(
+    final allItemsAsync = ref.watch(allCollectionItemsProvider);
+
+    return allItemsAsync.when(
       loading: () => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -727,14 +753,21 @@ class _CategoryIssueList extends ConsumerWidget {
           ),
         ],
       ),
-      error: (error, _) => Text('Failed to load issues'),
-      data: (seriesList) {
-        final match = seriesList
-            .where((s) => s.seriesId == seriesId)
-            .firstOrNull;
-        if (match == null || match.items.isEmpty) {
+      error: (error, _) => const Text('Failed to load issues'),
+      data: (allItems) {
+        final categoryItems = allItems.where((ci) {
+          if (ci.issue?.series?.id != seriesId) return false;
+          if (category == 'unread') return ci.isRead == false;
+          if (category == 'unrated') return ci.rating == null;
+          if (category == 'collected') return ci.quantity > 0;
+          if (category == 'read') return ci.isRead == true;
+          if (category == 'wishlist') return ci.quantity == 0;
+          return true;
+        }).toList();
+
+        if (categoryItems.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.only(top: 24),
+            padding: const EdgeInsets.only(top: 12, bottom: 12),
             child: Center(
               child: Text(
                 'No $categoryLabel issues in this series.',
@@ -749,17 +782,18 @@ class _CategoryIssueList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SectionHeader(title: 'ISSUES', badge: '(${match.items.length})'),
+            SectionHeader(title: 'ISSUES', badge: '(${categoryItems.length})'),
             const SizedBox(height: 8),
-            ...match.items.map((item) {
-              final index = match.items.indexOf(item);
+            ...categoryItems.map((item) {
+              final index = categoryItems.indexOf(item);
               return IssueListTile(
                 issue: item.toIssueList(),
                 isFirst: index == 0,
-                isLast: index == match.items.length - 1,
+                isLast: index == categoryItems.length - 1,
                 isCollected: item.quantity > 0,
                 isRead: item.isRead,
                 rating: item.rating,
+                horizontalPadding: 4,
               );
             }),
           ],

@@ -376,25 +376,27 @@ class IssueListTile extends ConsumerWidget {
       );
     }
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: horizontalPadding,
-        right: horizontalPadding,
-        top: isFirst ? 12 : 2,
-        bottom: isLast ? 12 : 0,
-      ),
-      child: Column(
-        children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: effectiveOnTap,
-              onLongPress: effectiveOnLongPress,
-              child: tileContent,
+    return RepaintBoundary(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: horizontalPadding,
+          right: horizontalPadding,
+          top: isFirst ? 12 : 2,
+          bottom: isLast ? 12 : 0,
+        ),
+        child: Column(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: effectiveOnTap,
+                onLongPress: effectiveOnLongPress,
+                child: tileContent,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

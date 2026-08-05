@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -18,7 +17,10 @@ class NotificationService {
   static const _syncChannelName = 'Drive Sync';
   static const _syncNotificationId = 2001;
 
-  VoidCallback? onNavigateToMyPulls;
+  bool Function()? onNavigateToMyPulls;
+
+  bool _pendingNavigateToMyPulls = false;
+  bool get hasPendingMyPullsNavigation => _pendingNavigateToMyPulls;
 
   int? _lastCount;
   NotificationDay? _lastDay;
@@ -121,7 +123,24 @@ class NotificationService {
         NotificationResponseType.selectedNotification) {
       return;
     }
-    onNavigateToMyPulls?.call();
+    if (response.payload == 'my_pulls' ||
+        response.payload == null ||
+        response.payload!.isEmpty) {
+      _pendingNavigateToMyPulls = true;
+      tryNavigateToMyPulls();
+    }
+  }
+
+  bool tryNavigateToMyPulls() {
+    if (!_pendingNavigateToMyPulls) return false;
+    if (onNavigateToMyPulls != null) {
+      final handled = onNavigateToMyPulls!();
+      if (handled) {
+        _pendingNavigateToMyPulls = false;
+        return true;
+      }
+    }
+    return false;
   }
 
   tz.TZDateTime _nextDayAt8PM(NotificationDay day) {
@@ -202,6 +221,7 @@ class NotificationService {
             : 'You have $count pulls this week',
         scheduledDate,
         details,
+        payload: 'my_pulls',
         androidScheduleMode: canScheduleExactly
             ? AndroidScheduleMode.exactAllowWhileIdle
             : AndroidScheduleMode.inexactAllowWhileIdle,

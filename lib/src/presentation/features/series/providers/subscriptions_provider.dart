@@ -33,6 +33,14 @@ final activeSubscriptionsCountProvider = Provider<int>((ref) {
   );
 });
 
+final subscribedSeriesIdsSetProvider = Provider.autoDispose<Set<int>>((ref) {
+  final activeAsync = ref.watch(activeSubscriptionsProvider);
+  return activeAsync.maybeWhen(
+    data: (subscriptions) => subscriptions.map((s) => s.metronSeriesId).toSet(),
+    orElse: () => const <int>{},
+  );
+});
+
 final subscribedSeriesListProvider =
     FutureProvider.autoDispose<List<SeriesList>>((ref) async {
       return ref

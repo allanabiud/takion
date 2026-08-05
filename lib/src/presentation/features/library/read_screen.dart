@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +36,8 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   late final TabController _tabController;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounceTimer;
+  String _debouncedSearchQuery = '';
 
   @override
   void initState() {
@@ -44,6 +48,7 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
@@ -52,11 +57,24 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
+      _searchDebounceTimer?.cancel();
       setState(() {
         _isSearching = false;
+        _debouncedSearchQuery = '';
         _searchController.clear();
       });
     }
+  }
+
+  void _onSearchChanged(String query) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        setState(() {
+          _debouncedSearchQuery = query;
+        });
+      }
+    });
   }
 
   @override
@@ -68,7 +86,7 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                onChanged: (_) => setState(() {}),
+                onChanged: _onSearchChanged,
                 decoration: InputDecoration(
                   hintText: 'Search series...',
                   border: InputBorder.none,
@@ -80,8 +98,10 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
                     onPressed: () {
+                      _searchDebounceTimer?.cancel();
                       setState(() {
                         _isSearching = false;
+                        _debouncedSearchQuery = '';
                         _searchController.clear();
                       });
                     },
@@ -114,7 +134,7 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
         children: [
           _ReadBrowseTab(
             isSearching: _isSearching,
-            searchQuery: _searchController.text,
+            searchQuery: _debouncedSearchQuery,
           ),
           const ActivityLogView(typeFilter: ActivityEventType.read),
           _ReadStatsTab(),

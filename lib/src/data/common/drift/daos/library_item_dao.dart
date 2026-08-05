@@ -15,8 +15,91 @@ class LibraryItemStatusRow {
   final int? rating;
 }
 
+class SeriesSummaryDataRow {
+  const SeriesSummaryDataRow({
+    required this.seriesId,
+    required this.seriesName,
+    this.volume,
+    this.yearBegan,
+    this.issueCount,
+    required this.categoryCount,
+  });
+
+  final int seriesId;
+  final String seriesName;
+  final int? volume;
+  final int? yearBegan;
+  final int? issueCount;
+  final int categoryCount;
+}
+
 class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   LibraryItemDao(super.db);
+
+  Future<List<SeriesSummaryDataRow>> getSeriesSummariesByCategory({
+    String? ownershipStatus,
+    bool? isRead,
+    bool? isUnrated,
+  }) async {
+    final countCol = attachedDatabase.libraryItems.id.count();
+    final query = selectOnly(attachedDatabase.libraryItems)
+      ..addColumns([
+        attachedDatabase.libraryItems.metronSeriesId,
+        countCol,
+        attachedDatabase.metronSeries.name,
+        attachedDatabase.metronSeries.volume,
+        attachedDatabase.metronSeries.yearBegan,
+        attachedDatabase.metronSeries.issueCount,
+      ])
+      ..join([
+        leftOuterJoin(
+          attachedDatabase.metronSeries,
+          attachedDatabase.metronSeries.id.equalsExp(
+            attachedDatabase.libraryItems.metronSeriesId,
+          ),
+        ),
+      ]);
+
+    if (ownershipStatus != null) {
+      query.where(
+        attachedDatabase.libraryItems.ownershipStatus.equals(ownershipStatus),
+      );
+    }
+    if (isRead != null) {
+      query.where(attachedDatabase.libraryItems.isRead.equals(isRead));
+    }
+    if (isUnrated == true) {
+      query.where(attachedDatabase.libraryItems.rating.isNull());
+    }
+
+    query.where(
+      attachedDatabase.libraryItems.metronSeriesId.isBiggerThanValue(0),
+    );
+    query.groupBy([attachedDatabase.libraryItems.metronSeriesId]);
+
+    final rows = await query.get();
+
+    return rows.map((row) {
+      final seriesId =
+          row.read(attachedDatabase.libraryItems.metronSeriesId) ?? 0;
+      final name = row.read(attachedDatabase.metronSeries.name);
+      final vol = row.read(attachedDatabase.metronSeries.volume);
+      final year = row.read(attachedDatabase.metronSeries.yearBegan);
+      final totalIssues = row.read(attachedDatabase.metronSeries.issueCount);
+      final catCount = row.read(countCol) ?? 0;
+
+      return SeriesSummaryDataRow(
+        seriesId: seriesId,
+        seriesName: (name != null && name.isNotEmpty)
+            ? name
+            : 'Series $seriesId',
+        volume: vol,
+        yearBegan: year,
+        issueCount: totalIssues,
+        categoryCount: catCount,
+      );
+    }).toList();
+  }
 
   Future<List<LibraryItem>> getItems({
     String? ownershipStatus,
