@@ -66,19 +66,11 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
             children: [
               const SectionHeader(title: 'READING ACTIVITY'),
               const SizedBox(height: 12),
-              _buildHeader(
-                theme,
-                currentMonth,
-                earliestMonth,
-              ),
+              _buildHeader(theme, currentMonth, earliestMonth),
               const SizedBox(height: 8),
               _buildWeekdayLabels(theme),
               const SizedBox(height: 6),
-              _buildGrid(
-                theme,
-                activity,
-                today,
-              ),
+              _buildGrid(theme, activity, today),
             ],
           ),
         );
@@ -135,9 +127,9 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
     final languageCode = Localizations.localeOf(context).languageCode;
     return Row(
       children: List.generate(7, (index) {
-        final day = DateFormat.E(languageCode).format(
-          DateTime(2021, 1, 3 + index),
-        );
+        final day = DateFormat.E(
+          languageCode,
+        ).format(DateTime(2021, 1, 3 + index));
         return Expanded(
           child: Text(
             day,
@@ -185,9 +177,11 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
                           firstGridDay.month,
                           firstGridDay.day + row + col,
                         ),
-                        isInMonth: row + col >= leadingEmpty &&
+                        isInMonth:
+                            row + col >= leadingEmpty &&
                             row + col < leadingEmpty + daysInMonth,
-                        count: activity[DateTime(
+                        count:
+                            activity[DateTime(
                               firstGridDay.year,
                               firstGridDay.month,
                               firstGridDay.day + row + col,
@@ -206,8 +200,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
 
   Widget _buildCell(
     ThemeData theme,
-    DateTime date,
-    {
+    DateTime date, {
     required bool isInMonth,
     required int count,
     required DateTime today,
@@ -265,8 +258,8 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
   void _onDayTap(DateTime date, int count) {
     final formatted = DateFormatter.comicDate(date);
     final message = count > 0
-        ? '$formatted — $count issue${count == 1 ? '' : 's'} read'
-        : '$formatted — No reads';
+        ? '$formatted - $count issue${count == 1 ? '' : 's'} read'
+        : '$formatted - No reads';
     TakionAlerts.info(context, message);
   }
 }
