@@ -11,4 +11,5 @@ abstract class LocalReadingListRepository {
   Future<void> removeItemFromList(String listId, String targetId);
   Future<bool> isItemInList(String listId, String targetId);
   Future<LocalReadingList?> findByMetronSourceId(int metronSourceId);
+  Future<LocalReadingList?> findByMetronArcId(int metronArcId);
 }

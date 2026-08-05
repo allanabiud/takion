@@ -3255,6 +3255,17 @@ class $ReadingListsTable extends ReadingLists
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _metronArcIdMeta = const VerificationMeta(
+    'metronArcId',
+  );
+  @override
+  late final GeneratedColumn<int> metronArcId = GeneratedColumn<int>(
+    'metron_arc_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _metronAttributionSourceMeta =
       const VerificationMeta('metronAttributionSource');
   @override
@@ -3341,6 +3352,7 @@ class $ReadingListsTable extends ReadingLists
     contentType,
     itemsJson,
     metronSourceId,
+    metronArcId,
     metronAttributionSource,
     metronAttributionUrl,
     metronImageUrl,
@@ -3418,6 +3430,15 @@ class $ReadingListsTable extends ReadingLists
         metronSourceId.isAcceptableOrUnknown(
           data['metron_source_id']!,
           _metronSourceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('metron_arc_id')) {
+      context.handle(
+        _metronArcIdMeta,
+        metronArcId.isAcceptableOrUnknown(
+          data['metron_arc_id']!,
+          _metronArcIdMeta,
         ),
       );
     }
@@ -3519,6 +3540,10 @@ class $ReadingListsTable extends ReadingLists
         DriftSqlType.int,
         data['${effectivePrefix}metron_source_id'],
       ),
+      metronArcId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}metron_arc_id'],
+      ),
       metronAttributionSource: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}metron_attribution_source'],
@@ -3564,6 +3589,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
   final String contentType;
   final String itemsJson;
   final int? metronSourceId;
+  final int? metronArcId;
   final String? metronAttributionSource;
   final String? metronAttributionUrl;
   final String? metronImageUrl;
@@ -3579,6 +3605,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
     required this.contentType,
     required this.itemsJson,
     this.metronSourceId,
+    this.metronArcId,
     this.metronAttributionSource,
     this.metronAttributionUrl,
     this.metronImageUrl,
@@ -3598,6 +3625,9 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
     map['items_json'] = Variable<String>(itemsJson);
     if (!nullToAbsent || metronSourceId != null) {
       map['metron_source_id'] = Variable<int>(metronSourceId);
+    }
+    if (!nullToAbsent || metronArcId != null) {
+      map['metron_arc_id'] = Variable<int>(metronArcId);
     }
     if (!nullToAbsent || metronAttributionSource != null) {
       map['metron_attribution_source'] = Variable<String>(
@@ -3632,6 +3662,9 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
       metronSourceId: metronSourceId == null && nullToAbsent
           ? const Value.absent()
           : Value(metronSourceId),
+      metronArcId: metronArcId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metronArcId),
       metronAttributionSource: metronAttributionSource == null && nullToAbsent
           ? const Value.absent()
           : Value(metronAttributionSource),
@@ -3665,6 +3698,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
       contentType: serializer.fromJson<String>(json['contentType']),
       itemsJson: serializer.fromJson<String>(json['itemsJson']),
       metronSourceId: serializer.fromJson<int?>(json['metronSourceId']),
+      metronArcId: serializer.fromJson<int?>(json['metronArcId']),
       metronAttributionSource: serializer.fromJson<String?>(
         json['metronAttributionSource'],
       ),
@@ -3689,6 +3723,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
       'contentType': serializer.toJson<String>(contentType),
       'itemsJson': serializer.toJson<String>(itemsJson),
       'metronSourceId': serializer.toJson<int?>(metronSourceId),
+      'metronArcId': serializer.toJson<int?>(metronArcId),
       'metronAttributionSource': serializer.toJson<String?>(
         metronAttributionSource,
       ),
@@ -3709,6 +3744,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
     String? contentType,
     String? itemsJson,
     Value<int?> metronSourceId = const Value.absent(),
+    Value<int?> metronArcId = const Value.absent(),
     Value<String?> metronAttributionSource = const Value.absent(),
     Value<String?> metronAttributionUrl = const Value.absent(),
     Value<String?> metronImageUrl = const Value.absent(),
@@ -3726,6 +3762,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
     metronSourceId: metronSourceId.present
         ? metronSourceId.value
         : this.metronSourceId,
+    metronArcId: metronArcId.present ? metronArcId.value : this.metronArcId,
     metronAttributionSource: metronAttributionSource.present
         ? metronAttributionSource.value
         : this.metronAttributionSource,
@@ -3757,6 +3794,9 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
       metronSourceId: data.metronSourceId.present
           ? data.metronSourceId.value
           : this.metronSourceId,
+      metronArcId: data.metronArcId.present
+          ? data.metronArcId.value
+          : this.metronArcId,
       metronAttributionSource: data.metronAttributionSource.present
           ? data.metronAttributionSource.value
           : this.metronAttributionSource,
@@ -3787,6 +3827,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
           ..write('contentType: $contentType, ')
           ..write('itemsJson: $itemsJson, ')
           ..write('metronSourceId: $metronSourceId, ')
+          ..write('metronArcId: $metronArcId, ')
           ..write('metronAttributionSource: $metronAttributionSource, ')
           ..write('metronAttributionUrl: $metronAttributionUrl, ')
           ..write('metronImageUrl: $metronImageUrl, ')
@@ -3807,6 +3848,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
     contentType,
     itemsJson,
     metronSourceId,
+    metronArcId,
     metronAttributionSource,
     metronAttributionUrl,
     metronImageUrl,
@@ -3826,6 +3868,7 @@ class ReadingList extends DataClass implements Insertable<ReadingList> {
           other.contentType == this.contentType &&
           other.itemsJson == this.itemsJson &&
           other.metronSourceId == this.metronSourceId &&
+          other.metronArcId == this.metronArcId &&
           other.metronAttributionSource == this.metronAttributionSource &&
           other.metronAttributionUrl == this.metronAttributionUrl &&
           other.metronImageUrl == this.metronImageUrl &&
@@ -3843,6 +3886,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
   final Value<String> contentType;
   final Value<String> itemsJson;
   final Value<int?> metronSourceId;
+  final Value<int?> metronArcId;
   final Value<String?> metronAttributionSource;
   final Value<String?> metronAttributionUrl;
   final Value<String?> metronImageUrl;
@@ -3859,6 +3903,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
     this.contentType = const Value.absent(),
     this.itemsJson = const Value.absent(),
     this.metronSourceId = const Value.absent(),
+    this.metronArcId = const Value.absent(),
     this.metronAttributionSource = const Value.absent(),
     this.metronAttributionUrl = const Value.absent(),
     this.metronImageUrl = const Value.absent(),
@@ -3876,6 +3921,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
     required String contentType,
     required String itemsJson,
     this.metronSourceId = const Value.absent(),
+    this.metronArcId = const Value.absent(),
     this.metronAttributionSource = const Value.absent(),
     this.metronAttributionUrl = const Value.absent(),
     this.metronImageUrl = const Value.absent(),
@@ -3900,6 +3946,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
     Expression<String>? contentType,
     Expression<String>? itemsJson,
     Expression<int>? metronSourceId,
+    Expression<int>? metronArcId,
     Expression<String>? metronAttributionSource,
     Expression<String>? metronAttributionUrl,
     Expression<String>? metronImageUrl,
@@ -3917,6 +3964,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
       if (contentType != null) 'content_type': contentType,
       if (itemsJson != null) 'items_json': itemsJson,
       if (metronSourceId != null) 'metron_source_id': metronSourceId,
+      if (metronArcId != null) 'metron_arc_id': metronArcId,
       if (metronAttributionSource != null)
         'metron_attribution_source': metronAttributionSource,
       if (metronAttributionUrl != null)
@@ -3938,6 +3986,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
     Value<String>? contentType,
     Value<String>? itemsJson,
     Value<int?>? metronSourceId,
+    Value<int?>? metronArcId,
     Value<String?>? metronAttributionSource,
     Value<String?>? metronAttributionUrl,
     Value<String?>? metronImageUrl,
@@ -3955,6 +4004,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
       contentType: contentType ?? this.contentType,
       itemsJson: itemsJson ?? this.itemsJson,
       metronSourceId: metronSourceId ?? this.metronSourceId,
+      metronArcId: metronArcId ?? this.metronArcId,
       metronAttributionSource:
           metronAttributionSource ?? this.metronAttributionSource,
       metronAttributionUrl: metronAttributionUrl ?? this.metronAttributionUrl,
@@ -3990,6 +4040,9 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
     }
     if (metronSourceId.present) {
       map['metron_source_id'] = Variable<int>(metronSourceId.value);
+    }
+    if (metronArcId.present) {
+      map['metron_arc_id'] = Variable<int>(metronArcId.value);
     }
     if (metronAttributionSource.present) {
       map['metron_attribution_source'] = Variable<String>(
@@ -4032,6 +4085,7 @@ class ReadingListsCompanion extends UpdateCompanion<ReadingList> {
           ..write('contentType: $contentType, ')
           ..write('itemsJson: $itemsJson, ')
           ..write('metronSourceId: $metronSourceId, ')
+          ..write('metronArcId: $metronArcId, ')
           ..write('metronAttributionSource: $metronAttributionSource, ')
           ..write('metronAttributionUrl: $metronAttributionUrl, ')
           ..write('metronImageUrl: $metronImageUrl, ')
@@ -20665,6 +20719,7 @@ typedef $$ReadingListsTableCreateCompanionBuilder =
       required String contentType,
       required String itemsJson,
       Value<int?> metronSourceId,
+      Value<int?> metronArcId,
       Value<String?> metronAttributionSource,
       Value<String?> metronAttributionUrl,
       Value<String?> metronImageUrl,
@@ -20683,6 +20738,7 @@ typedef $$ReadingListsTableUpdateCompanionBuilder =
       Value<String> contentType,
       Value<String> itemsJson,
       Value<int?> metronSourceId,
+      Value<int?> metronArcId,
       Value<String?> metronAttributionSource,
       Value<String?> metronAttributionUrl,
       Value<String?> metronImageUrl,
@@ -20734,6 +20790,11 @@ class $$ReadingListsTableFilterComposer
 
   ColumnFilters<int> get metronSourceId => $composableBuilder(
     column: $table.metronSourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get metronArcId => $composableBuilder(
+    column: $table.metronArcId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20817,6 +20878,11 @@ class $$ReadingListsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get metronArcId => $composableBuilder(
+    column: $table.metronArcId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get metronAttributionSource => $composableBuilder(
     column: $table.metronAttributionSource,
     builder: (column) => ColumnOrderings(column),
@@ -20886,6 +20952,11 @@ class $$ReadingListsTableAnnotationComposer
 
   GeneratedColumn<int> get metronSourceId => $composableBuilder(
     column: $table.metronSourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get metronArcId => $composableBuilder(
+    column: $table.metronArcId,
     builder: (column) => column,
   );
 
@@ -20959,6 +21030,7 @@ class $$ReadingListsTableTableManager
                 Value<String> contentType = const Value.absent(),
                 Value<String> itemsJson = const Value.absent(),
                 Value<int?> metronSourceId = const Value.absent(),
+                Value<int?> metronArcId = const Value.absent(),
                 Value<String?> metronAttributionSource = const Value.absent(),
                 Value<String?> metronAttributionUrl = const Value.absent(),
                 Value<String?> metronImageUrl = const Value.absent(),
@@ -20975,6 +21047,7 @@ class $$ReadingListsTableTableManager
                 contentType: contentType,
                 itemsJson: itemsJson,
                 metronSourceId: metronSourceId,
+                metronArcId: metronArcId,
                 metronAttributionSource: metronAttributionSource,
                 metronAttributionUrl: metronAttributionUrl,
                 metronImageUrl: metronImageUrl,
@@ -20993,6 +21066,7 @@ class $$ReadingListsTableTableManager
                 required String contentType,
                 required String itemsJson,
                 Value<int?> metronSourceId = const Value.absent(),
+                Value<int?> metronArcId = const Value.absent(),
                 Value<String?> metronAttributionSource = const Value.absent(),
                 Value<String?> metronAttributionUrl = const Value.absent(),
                 Value<String?> metronImageUrl = const Value.absent(),
@@ -21009,6 +21083,7 @@ class $$ReadingListsTableTableManager
                 contentType: contentType,
                 itemsJson: itemsJson,
                 metronSourceId: metronSourceId,
+                metronArcId: metronArcId,
                 metronAttributionSource: metronAttributionSource,
                 metronAttributionUrl: metronAttributionUrl,
                 metronImageUrl: metronImageUrl,

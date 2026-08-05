@@ -127,7 +127,7 @@ class _LocalReadingListDetailsSheetHeaderState
       return _buildMetronBadges(detail, theme);
     }
 
-    if (list.metronSourceId != null) {
+    if (list.isMetronImported) {
       return _buildLocalMetronBadges(list, theme);
     }
 

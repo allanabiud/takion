@@ -42,6 +42,7 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
       updatedAt: DateTime.parse(d.updatedAt),
       items: items,
       metronSourceId: d.metronSourceId,
+      metronArcId: d.metronArcId,
       metronAttributionSource: d.metronAttributionSource,
       metronAttributionUrl: d.metronAttributionUrl,
       metronImageUrl: d.metronImageUrl,
@@ -65,6 +66,7 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
           jsonEncode(list.items.map((i) => i.toJson()).toList()),
         ),
         metronSourceId: Value(list.metronSourceId),
+        metronArcId: Value(list.metronArcId),
         metronAttributionSource: Value(list.metronAttributionSource),
         metronAttributionUrl: Value(list.metronAttributionUrl),
         metronImageUrl: Value(list.metronImageUrl),
@@ -180,6 +182,16 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
     final all = await getAllLists();
     try {
       return all.firstWhere((list) => list.metronSourceId == metronSourceId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<LocalReadingList?> findByMetronArcId(int metronArcId) async {
+    final all = await getAllLists();
+    try {
+      return all.firstWhere((list) => list.metronArcId == metronArcId);
     } catch (_) {
       return null;
     }

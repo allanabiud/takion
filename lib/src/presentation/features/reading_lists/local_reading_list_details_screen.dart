@@ -85,7 +85,7 @@ class _LocalReadingListDetailsScreenState
     BuildContext context,
     LocalReadingList list,
   ) async {
-    final isMetron = list.metronSourceId != null;
+    final isMetron = list.isMetronImported;
     final titleText = isMetron ? 'Remove from Library' : 'Delete Reading List';
     final contentText = isMetron
         ? 'Are you sure you want to remove "${list.title}" from your library?'
@@ -129,7 +129,7 @@ class _LocalReadingListDetailsScreenState
 
   Widget _buildActionRow(LocalReadingList list) {
     final theme = Theme.of(context);
-    final isMetron = list.metronSourceId != null;
+    final isMetron = list.isMetronImported;
     final isFavoriteAsync = ref.watch(isReadingListFavoriteProvider(list.id));
     final isFavorite = isFavoriteAsync.value ?? false;
 
@@ -294,7 +294,7 @@ class _LocalReadingListDetailsScreenState
                     }
                   },
                   itemBuilder: (context) => [
-                    if (list.metronSourceId == null)
+                    if (!list.isMetronImported)
                       const PopupMenuItem(
                         value: _ReadingListDetailsMenuAction.edit,
                         child: Text('Edit'),
@@ -306,7 +306,7 @@ class _LocalReadingListDetailsScreenState
                     PopupMenuItem(
                       value: _ReadingListDetailsMenuAction.delete,
                       child: Text(
-                        list.metronSourceId != null
+                        list.isMetronImported
                             ? 'Remove from Library'
                             : 'Delete',
                       ),

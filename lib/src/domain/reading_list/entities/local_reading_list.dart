@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:takion/src/domain/catalog/entities/entities.dart';
+
 part 'local_reading_list.freezed.dart';
 part 'local_reading_list.g.dart';
 
@@ -39,6 +41,7 @@ abstract class LocalReadingList with _$LocalReadingList {
     required DateTime updatedAt,
     required List<LocalReadingListItem> items,
     int? metronSourceId,
+    int? metronArcId,
     String? metronAttributionSource,
     String? metronAttributionUrl,
     String? metronImageUrl,
@@ -48,4 +51,24 @@ abstract class LocalReadingList with _$LocalReadingList {
 
   factory LocalReadingList.fromJson(Map<String, dynamic> json) =>
       _$LocalReadingListFromJson(json);
+}
+
+extension LocalReadingListExtensions on LocalReadingList {
+  bool get isMetronImported => metronSourceId != null || metronArcId != null;
+}
+
+LocalReadingListItem localReadingListItemFromIssueList(IssueList issue) {
+  return LocalReadingListItem(
+    targetId: 'issue-${issue.id}',
+    isSeries: false,
+    role: ItemRole.standard,
+    isRead: false,
+    seriesName: issue.series?.name ?? issue.name,
+    seriesVolume: issue.series?.volume,
+    issueNumber: issue.number,
+    seriesId: issue.series?.id,
+    yearBegan: issue.series?.yearBegan,
+    coverDate: issue.coverDate,
+    storeDate: issue.storeDate,
+  );
 }

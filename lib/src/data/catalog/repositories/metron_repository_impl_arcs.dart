@@ -392,6 +392,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
               next: remotePage.next,
               previous: remotePage.previous,
             );
+            _upsertIssueListStubs(remotePage.results);
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
           cacheKey: nextUrl ?? 'arc_issue_list:$arcId:$page',
@@ -434,6 +435,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           next: remotePage.next,
           previous: remotePage.previous,
         );
+        _upsertIssueListStubs(remotePage.results);
         _indexSeriesNamesFromIssueList(remotePage.results);
         return ArcIssueListPage(
           count: remotePage.count,
@@ -456,6 +458,31 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       }
       rethrow;
     }
+  }
+
+  Future<List<IssueList>> getArcIssueListAll(
+    int arcId, {
+    bool forceRefresh = false,
+  }) async {
+    final allIssues = <IssueList>[];
+    Uri? nextUrl;
+
+    while (true) {
+      final page = await _remoteDataSource.getArcIssueList(
+        arcId,
+        nextUrl: nextUrl,
+        limit: metronDefaultPageSize,
+      );
+      _upsertIssueListStubs(page.results);
+      _indexSeriesNamesFromIssueList(page.results);
+      for (final dto in page.results) {
+        allIssues.add(dto.toEntity());
+      }
+      if (page.next == null) break;
+      nextUrl = Uri.parse(page.next!);
+    }
+
+    return allIssues;
   }
 
   Future<void> _upsertArcDetails(ArcDetailsDto dto) async {

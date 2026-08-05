@@ -33,4 +33,9 @@ abstract class ArcRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
+
+  Future<List<IssueList>> getArcIssueListAll(
+    int arcId, {
+    bool forceRefresh = false,
+  });
 }

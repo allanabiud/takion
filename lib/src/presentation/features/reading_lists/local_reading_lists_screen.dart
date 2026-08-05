@@ -88,8 +88,8 @@ class _LocalReadingListsScreenState
             if (!matchQuery(l)) return false;
             return switch (_filter) {
               _ReadingListFilter.all => true,
-              _ReadingListFilter.local => l.metronSourceId == null,
-              _ReadingListFilter.metron => l.metronSourceId != null,
+              _ReadingListFilter.local => !l.isMetronImported,
+              _ReadingListFilter.metron => l.isMetronImported,
             };
           }).toList();
 
@@ -121,6 +121,10 @@ class _LocalReadingListsScreenState
                 actionLabel: 'Browse Metron',
                 onAction: () {
                   context.pushRoute(const MetronReadingListBrowserRoute());
+                },
+                secondaryActionLabel: 'Browse Arcs',
+                onSecondaryAction: () {
+                  context.pushRoute(const ArcBrowseRoute());
                 },
               );
             } else {

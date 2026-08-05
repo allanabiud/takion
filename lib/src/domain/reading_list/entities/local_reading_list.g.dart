@@ -63,6 +63,7 @@ _LocalReadingList _$LocalReadingListFromJson(Map<String, dynamic> json) =>
           .map((e) => LocalReadingListItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       metronSourceId: (json['metronSourceId'] as num?)?.toInt(),
+      metronArcId: (json['metronArcId'] as num?)?.toInt(),
       metronAttributionSource: json['metronAttributionSource'] as String?,
       metronAttributionUrl: json['metronAttributionUrl'] as String?,
       metronImageUrl: json['metronImageUrl'] as String?,
@@ -83,6 +84,7 @@ Map<String, dynamic> _$LocalReadingListToJson(_LocalReadingList instance) =>
       'updatedAt': instance.updatedAt.toIso8601String(),
       'items': instance.items,
       'metronSourceId': instance.metronSourceId,
+      'metronArcId': instance.metronArcId,
       'metronAttributionSource': instance.metronAttributionSource,
       'metronAttributionUrl': instance.metronAttributionUrl,
       'metronImageUrl': instance.metronImageUrl,

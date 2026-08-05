@@ -131,6 +131,7 @@ class ReadingLists extends Table {
   TextColumn get contentType => text()();
   TextColumn get itemsJson => text()();
   IntColumn get metronSourceId => integer().nullable()();
+  IntColumn get metronArcId => integer().nullable()();
   TextColumn get metronAttributionSource => text().nullable()();
   TextColumn get metronAttributionUrl => text().nullable()();
   TextColumn get metronImageUrl => text().nullable()();
@@ -668,7 +669,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -723,6 +724,9 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(readingListItems, readingListItems.updatedAt);
           await _backfillReadingListItemTimestamps();
           await syncMetaDao.deleteByKey('last_uploaded_timestamp');
+        }
+        if (from < 9) {
+          await m.addColumn(readingLists, readingLists.metronArcId);
         }
       },
     );
