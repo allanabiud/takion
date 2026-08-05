@@ -25,7 +25,6 @@ abstract class IssueListDto with _$IssueListDto {
   const IssueListDto._();
 
   IssueList toEntity() {
-    // Changed to IssueList
     return IssueList(
       id: id,
       name: issueName ?? '${series?.name ?? 'IssueList'} #$number',

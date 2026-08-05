@@ -6,9 +6,9 @@ final seriesOwnedCountProvider = StreamProvider.autoDispose.family<int, int>((
   seriesId,
 ) {
   final db = ref.watch(driftDatabaseProvider);
-  return db.libraryItemDao.watchBySeriesId(seriesId).map(
-    (items) => items.where((i) => i.ownershipStatus == 'owned').length,
-  );
+  return db.libraryItemDao
+      .watchBySeriesId(seriesId)
+      .map((items) => items.where((i) => i.ownershipStatus == 'owned').length);
 });
 
 final seriesReadCountProvider = StreamProvider.autoDispose.family<int, int>((
@@ -16,13 +16,12 @@ final seriesReadCountProvider = StreamProvider.autoDispose.family<int, int>((
   seriesId,
 ) {
   final db = ref.watch(driftDatabaseProvider);
-  return db.libraryItemDao.watchBySeriesId(seriesId).map(
-    (items) => items.where((i) => i.isRead).length,
-  );
+  return db.libraryItemDao
+      .watchBySeriesId(seriesId)
+      .map((items) => items.where((i) => i.isRead).length);
 });
 
-/// Parent-level lookup so a list can watch a single Map instead of one
-/// provider subscription (and one DB query) per tile.
+/// Parent-level lookup so a list watches one Map instead of one provider/DB query per tile.
 final seriesOwnedCountsProvider = StreamProvider.autoDispose
     .family<Map<int, int>, List<int>>((ref, seriesIds) {
       final db = ref.watch(driftDatabaseProvider);

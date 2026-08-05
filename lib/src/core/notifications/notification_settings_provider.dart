@@ -65,9 +65,7 @@ class NotificationDayNotifier extends AsyncNotifier<NotificationDay> {
   }
 }
 
-/// Rebuild the one recurring reminder from the current settings and pull list.
-/// This must await the providers: reading their synchronous values during app
-/// startup observes their loading defaults and used to cancel the reminder.
+/// Rebuilds the recurring reminder; awaiting avoids reading provider loading defaults at startup.
 Future<void> scheduleWeeklyPullNotification(dynamic ref) async {
   final enabled = await ref.read(notificationsEnabledProvider.future);
   if (!enabled) {

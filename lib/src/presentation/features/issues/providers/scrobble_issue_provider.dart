@@ -11,8 +11,7 @@ import 'package:takion/src/presentation/features/library/providers/library_entit
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-/// Lightweight metadata passed from the UI layer so the scrobble controller
-/// doesn't need to fetch full issue details from the network.
+/// Lightweight metadata from the UI so the scrobble controller avoids a full details fetch.
 class ScrobbleIssueContext {
   const ScrobbleIssueContext({
     this.seriesId,
@@ -98,7 +97,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         final targetIsRead =
             markAsRead ?? (dateRead != null || (existing?.isRead ?? false));
 
-        // Honor Auto-Collect on Read setting
+        // Honor Auto-Collect on Read setting.
         var targetIsCollected = addToCollection ?? wasCollected;
         if (targetIsRead && !targetIsCollected) {
           final autoCollectSetting = ref

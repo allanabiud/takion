@@ -197,30 +197,27 @@ class DriveSyncService {
     bool isRetry = false,
   }) async {
     final token = await _getAccessToken();
-    final response = await _retry(
-      'GET $path',
-      () async {
-        final response = await _dio.get(
-          path,
-          queryParameters: queryParameters,
-          options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            validateStatus: (status) =>
-                status == 200 ||
-                status == 401 ||
-                status == 404 ||
-                status == 429 ||
-                status == 403 ||
-                (status != null && status >= 500),
-          ),
-        );
-        final status = response.statusCode;
-        if (status == 429 || status == 403 || (status != null && status >= 500)) {
-          throw _TransientDriveError(status);
-        }
-        return response;
-      },
-    );
+    final response = await _retry('GET $path', () async {
+      final response = await _dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) =>
+              status == 200 ||
+              status == 401 ||
+              status == 404 ||
+              status == 429 ||
+              status == 403 ||
+              (status != null && status >= 500),
+        ),
+      );
+      final status = response.statusCode;
+      if (status == 429 || status == 403 || (status != null && status >= 500)) {
+        throw _TransientDriveError(status);
+      }
+      return response;
+    });
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
         'Drive GET request returned 401, attempting silent token refresh...',
@@ -238,33 +235,30 @@ class DriveSyncService {
     bool isRetry = false,
   }) async {
     final token = await _getAccessToken();
-    final response = await _retry(
-      'POST $path',
-      () async {
-        final response = await _dio.post(
-          path,
-          data: data,
-          queryParameters: queryParameters,
-          options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            validateStatus: (status) =>
-                status == 200 ||
-                status == 201 ||
-                status == 401 ||
-                status == 404 ||
-                status == 409 ||
-                status == 429 ||
-                status == 403 ||
-                (status != null && status >= 500),
-          ),
-        );
-        final status = response.statusCode;
-        if (status == 429 || status == 403 || (status != null && status >= 500)) {
-          throw _TransientDriveError(status);
-        }
-        return response;
-      },
-    );
+    final response = await _retry('POST $path', () async {
+      final response = await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) =>
+              status == 200 ||
+              status == 201 ||
+              status == 401 ||
+              status == 404 ||
+              status == 409 ||
+              status == 429 ||
+              status == 403 ||
+              (status != null && status >= 500),
+        ),
+      );
+      final status = response.statusCode;
+      if (status == 429 || status == 403 || (status != null && status >= 500)) {
+        throw _TransientDriveError(status);
+      }
+      return response;
+    });
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
         'Drive POST request returned 401, attempting silent token refresh...',
@@ -282,30 +276,27 @@ class DriveSyncService {
 
   Future<Response> _driveDelete(String path, {bool isRetry = false}) async {
     final token = await _getAccessToken();
-    final response = await _retry(
-      'DELETE $path',
-      () async {
-        final response = await _dio.delete(
-          path,
-          options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            validateStatus: (status) =>
-                status == 200 ||
-                status == 204 ||
-                status == 401 ||
-                status == 404 ||
-                status == 429 ||
-                status == 403 ||
-                (status != null && status >= 500),
-          ),
-        );
-        final status = response.statusCode;
-        if (status == 429 || status == 403 || (status != null && status >= 500)) {
-          throw _TransientDriveError(status);
-        }
-        return response;
-      },
-    );
+    final response = await _retry('DELETE $path', () async {
+      final response = await _dio.delete(
+        path,
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) =>
+              status == 200 ||
+              status == 204 ||
+              status == 401 ||
+              status == 404 ||
+              status == 429 ||
+              status == 403 ||
+              (status != null && status >= 500),
+        ),
+      );
+      final status = response.statusCode;
+      if (status == 429 || status == 403 || (status != null && status >= 500)) {
+        throw _TransientDriveError(status);
+      }
+      return response;
+    });
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
         'Drive DELETE request returned 401, attempting silent token refresh...',
@@ -362,9 +353,7 @@ class DriveSyncService {
       return id;
     }
     if (response.statusCode == 409) {
-      AppLogger.info(
-        'Folder create returned 409, fetching existing folder id',
-      );
+      AppLogger.info('Folder create returned 409, fetching existing folder id');
       final reFound = await _getAppFolderId();
       if (reFound != null) {
         _appFolderIdCache = reFound;
@@ -419,31 +408,28 @@ class DriveSyncService {
     bool isRetry = false,
   }) async {
     final token = await _getAccessToken();
-    final response = await _retry(
-      'DOWNLOAD $fileId',
-      () async {
-        final response = await _dio.get(
-          'https://www.googleapis.com/drive/v3/files/$fileId',
-          queryParameters: {'alt': 'media'},
-          options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            responseType: ResponseType.bytes,
-            validateStatus: (status) =>
-                status == 200 ||
-                status == 401 ||
-                status == 404 ||
-                status == 429 ||
-                status == 403 ||
-                (status != null && status >= 500),
-          ),
-        );
-        final status = response.statusCode;
-        if (status == 429 || status == 403 || (status != null && status >= 500)) {
-          throw _TransientDriveError(status);
-        }
-        return response;
-      },
-    );
+    final response = await _retry('DOWNLOAD $fileId', () async {
+      final response = await _dio.get(
+        'https://www.googleapis.com/drive/v3/files/$fileId',
+        queryParameters: {'alt': 'media'},
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          responseType: ResponseType.bytes,
+          validateStatus: (status) =>
+              status == 200 ||
+              status == 401 ||
+              status == 404 ||
+              status == 429 ||
+              status == 403 ||
+              (status != null && status >= 500),
+        ),
+      );
+      final status = response.statusCode;
+      if (status == 429 || status == 403 || (status != null && status >= 500)) {
+        throw _TransientDriveError(status);
+      }
+      return response;
+    });
     if (response.statusCode == 401 && !isRetry) {
       AppLogger.info(
         'Drive download returned 401, attempting silent token refresh...',
@@ -480,34 +466,30 @@ class DriveSyncService {
           );
 
     final stopwatch = Stopwatch()..start();
-    final response = await _retry(
-      'UPLOAD $fileName',
-      () async {
-        final request = http.Request(existingId != null ? 'PATCH' : 'POST', uri);
-        request.headers['Authorization'] = 'Bearer $token';
-        request.headers['Content-Type'] =
-            'multipart/related; boundary=$boundary';
-        request.bodyBytes = bodyBytes;
+    final response = await _retry('UPLOAD $fileName', () async {
+      final request = http.Request(existingId != null ? 'PATCH' : 'POST', uri);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Content-Type'] = 'multipart/related; boundary=$boundary';
+      request.bodyBytes = bodyBytes;
 
-        final streamed = await request
-            .send()
-            .timeout(const Duration(seconds: 60));
-        final response = await http.Response.fromStream(streamed).timeout(
-          const Duration(seconds: 60),
-        );
-        AppLogger.info(
-          'Drive upload ${existingId != null ? 'PATCH' : 'POST'} $uri '
-          '-> ${response.statusCode} (${stopwatch.elapsedMilliseconds}ms, '
-          '${fileData.length} bytes)',
-        );
-        if (response.statusCode == 429 ||
-            response.statusCode == 403 ||
-            response.statusCode >= 500) {
-          throw _TransientDriveError(response.statusCode);
-        }
-        return response;
-      },
-    );
+      final streamed = await request.send().timeout(
+        const Duration(seconds: 60),
+      );
+      final response = await http.Response.fromStream(
+        streamed,
+      ).timeout(const Duration(seconds: 60));
+      AppLogger.info(
+        'Drive upload ${existingId != null ? 'PATCH' : 'POST'} $uri '
+        '-> ${response.statusCode} (${stopwatch.elapsedMilliseconds}ms, '
+        '${fileData.length} bytes)',
+      );
+      if (response.statusCode == 429 ||
+          response.statusCode == 403 ||
+          response.statusCode >= 500) {
+        throw _TransientDriveError(response.statusCode);
+      }
+      return response;
+    });
     stopwatch.stop();
 
     if (response.statusCode == 401 && !isRetry) {
@@ -580,8 +562,7 @@ class DriveSyncService {
     }
   }
 
-  /// Public wrapper so the WorkManager background isolate (which builds its
-  /// own [DriveSyncService]) can persist sync outcomes outside [triggerSync].
+  /// Public wrapper so the WorkManager background isolate can persist sync outcomes outside [triggerSync].
   Future<void> recordSyncOutcome({
     required String phase,
     required bool success,
@@ -606,10 +587,7 @@ class DriveSyncService {
     return '${error.runtimeType}';
   }
 
-  Future<T> _guarded<T>(
-    String phase,
-    Future<T> Function() action,
-  ) async {
+  Future<T> _guarded<T>(String phase, Future<T> Function() action) async {
     final stopwatch = Stopwatch()..start();
     try {
       final result = await action();
@@ -637,15 +615,14 @@ class DriveSyncService {
     final lockRaw = await _db.syncMetaDao.get('sync_in_progress');
     if (lockRaw != null) {
       final lockTime = DateTime.tryParse(lockRaw);
-      final isStale = lockTime != null &&
+      final isStale =
+          lockTime != null &&
           DateTime.now().difference(lockTime) > const Duration(minutes: 10);
       if (!isStale) {
         AppLogger.info('Sync skipped: another sync is already in progress');
         return;
       }
-      AppLogger.warning(
-        'Stale sync lock detected, clearing before proceeding',
-      );
+      AppLogger.warning('Stale sync lock detected, clearing before proceeding');
     }
     await _db.syncMetaDao.set(
       'sync_in_progress',
@@ -677,9 +654,14 @@ class DriveSyncService {
       DateTime.now().toUtc().toIso8601String(),
     );
 
-    final deltaFileId = await _guarded('folder', () => _findFileId(_deltaFileName));
+    final deltaFileId = await _guarded(
+      'folder',
+      () => _findFileId(_deltaFileName),
+    );
     final lastSyncTime = await getLastSyncTime();
-    final lastUploadedRaw = await _db.syncMetaDao.get('last_uploaded_timestamp');
+    final lastUploadedRaw = await _db.syncMetaDao.get(
+      'last_uploaded_timestamp',
+    );
     final lastUploaded = lastUploadedRaw == null
         ? null
         : DateTime.tryParse(lastUploadedRaw);
@@ -799,7 +781,10 @@ class DriveSyncService {
       await _db.syncMetaDao.set('last_uploaded_timestamp', nowStr);
 
       final now = DateTime.parse(nowStr);
-      await _guarded('prune', () => _pruneDeletedRows(now.subtract(const Duration(days: 30))));
+      await _guarded(
+        'prune',
+        () => _pruneDeletedRows(now.subtract(const Duration(days: 30))),
+      );
     } else if (remoteChangesApplied && remoteToTimestamp != null) {
       await _db.syncMetaDao.set('last_sync_timestamp', remoteToTimestamp);
       AppLogger.info(
@@ -839,13 +824,19 @@ class DriveSyncService {
     await _db.syncMetaDao.set('last_uploaded_timestamp', nowStr);
 
     final now = DateTime.parse(nowStr);
-    await _guarded('prune', () => _pruneDeletedRows(now.subtract(const Duration(days: 30))));
+    await _guarded(
+      'prune',
+      () => _pruneDeletedRows(now.subtract(const Duration(days: 30))),
+    );
   }
 
   Future<void> restoreFromDrive() async {
     AppLogger.info('Restore from Drive started');
 
-    String? fileId = await _guarded('folder', () => _findFileId(_deltaFileName));
+    String? fileId = await _guarded(
+      'folder',
+      () => _findFileId(_deltaFileName),
+    );
     fileId ??= await _guarded('folder', () => _findFileId(_fullFileName));
 
     if (fileId == null) {
@@ -985,8 +976,7 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.activityEvents,
         (sinceStr != null)
-            ? (ActivityEvents t) =>
-                  t.timestamp.isBiggerThan(Constant(sinceStr))
+            ? (ActivityEvents t) => t.timestamp.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -1004,9 +994,14 @@ class DriveSyncService {
       'deletes': getDeletesForTable('reading_lists'),
     };
 
-    List<ReadingListItem> listItems = await query(_db.readingListItems).get();
     tablesData['reading_list_items'] = {
-      'inserts': listItems.map((r) => r.toJson()).toList(),
+      'inserts': await queryTableSince(
+        _db.readingListItems,
+        (sinceStr != null)
+            ? (ReadingListItems t) =>
+                  t.updatedAt.isBiggerThan(Constant(sinceStr))
+            : null,
+      ),
       'updates': <Map<String, dynamic>>[],
       'deletes': getDeletesForTable('reading_list_items'),
     };
@@ -1015,8 +1010,7 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteSeries,
         (sinceStr != null)
-            ? (FavoriteSeries t) =>
-                  t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteSeries t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -1027,8 +1021,7 @@ class DriveSyncService {
       'inserts': await queryTableSince(
         _db.favoriteIssues,
         (sinceStr != null)
-            ? (FavoriteIssues t) =>
-                  t.updatedAt.isBiggerThan(Constant(sinceStr))
+            ? (FavoriteIssues t) => t.updatedAt.isBiggerThan(Constant(sinceStr))
             : null,
       ),
       'updates': <Map<String, dynamic>>[],
@@ -1129,9 +1122,7 @@ class DriveSyncService {
     final fromTimestamp = payload['fromTimestamp'] as String?;
     final remoteToTimestamp = payload['toTimestamp'] as String?;
 
-    // v1 payloads are full snapshots: always apply.
-    // v2 with fromTimestamp == null are full snapshots: always apply.
-    // v2 with fromTimestamp != null are real deltas: skip if already applied.
+    // v1 and v2-null-fromTimestamp are full snapshots (always apply); real deltas are skipped if already applied.
     final isDelta = version == 2 && fromTimestamp != null;
     if (isDelta && remoteDeviceId != null && remoteToTimestamp != null) {
       final watermark = await _getRemoteWatermark(remoteDeviceId);
@@ -1153,29 +1144,10 @@ class DriveSyncService {
         final tableName = tableEntry.key;
         final tableData = tableEntry.value as Map<String, dynamic>;
 
-        // Skip unknown tables gracefully
+        // Skip unknown tables gracefully.
         if (!_knownTableNames.contains(tableName)) {
           AppLogger.warning('Unknown table in sync payload: $tableName');
           continue;
-        }
-
-        // Tables without per-row timestamps (reading_list_items) are gated by
-        // a per-device table watermark so the remote delta is authoritative
-        // without ever being re-applied once already handled.
-        final usesTableWatermark = tableName == 'reading_list_items';
-        if (usesTableWatermark &&
-            isDelta &&
-            remoteDeviceId != null &&
-            remoteToTimestamp != null) {
-          final watermark = await _getTableWatermark(tableName, remoteDeviceId);
-          final wm = watermark == null ? null : DateTime.tryParse(watermark);
-          final to = DateTime.tryParse(remoteToTimestamp);
-          if (wm != null && to != null && !to.isAfter(wm)) {
-            AppLogger.info(
-              'Skipping already-applied $tableName delta from $remoteDeviceId',
-            );
-            continue;
-          }
         }
 
         final inserts = tableData['inserts'] as List<dynamic>? ?? [];
@@ -1212,16 +1184,6 @@ class DriveSyncService {
             );
           }
         }
-
-        if (usesTableWatermark &&
-            remoteDeviceId != null &&
-            remoteToTimestamp != null) {
-          await _advanceTableWatermark(
-            tableName,
-            remoteDeviceId,
-            remoteToTimestamp,
-          );
-        }
       }
     });
 
@@ -1242,25 +1204,6 @@ class DriveSyncService {
     final oldTs = existing == null ? null : DateTime.tryParse(existing);
     if (newTs != null && (oldTs == null || newTs.isAfter(oldTs))) {
       await _db.syncMetaDao.set('remote_watermark:$deviceId', timestamp);
-    }
-  }
-
-  Future<String?> _getTableWatermark(String tableName, String deviceId) =>
-      _db.syncMetaDao.get('table_watermark:$tableName:$deviceId');
-
-  Future<void> _advanceTableWatermark(
-    String tableName,
-    String deviceId,
-    String timestamp,
-  ) async {
-    final existing = await _getTableWatermark(tableName, deviceId);
-    final newTs = DateTime.tryParse(timestamp);
-    final oldTs = existing == null ? null : DateTime.tryParse(existing);
-    if (newTs != null && (oldTs == null || newTs.isAfter(oldTs))) {
-      await _db.syncMetaDao.set(
-        'table_watermark:$tableName:$deviceId',
-        timestamp,
-      );
     }
   }
 
@@ -1386,6 +1329,7 @@ class DriveSyncService {
       case 'activity_events':
         return 'timestamp';
       case 'reading_list_items':
+        return 'updatedAt';
       default:
         return null;
     }
@@ -1443,7 +1387,7 @@ class DriveSyncService {
           if (localTs != null && remoteTs != null) {
             if (remoteTs.isBefore(localTs) ||
                 remoteTs.isAtSameMomentAs(localTs)) {
-              // Local is newer or same — skip remote row (LWW)
+              // Local is newer or equal — skip remote row (LWW).
               return;
             }
           }
@@ -1479,8 +1423,7 @@ class DriveSyncService {
       parsedPk = int.tryParse(pkValue) ?? pkValue;
     }
 
-    // Timestamp guard: if the local row has a newer timestamp than the
-    // remote snapshot, skip the delete (local re-insert wins over stale delete).
+    // Skip the delete if the local row is newer than the remote snapshot.
     if (remoteToTimestamp != null) {
       final tsFieldName = _getTimestampFieldName(tableName);
       if (tsFieldName != null) {
@@ -1502,7 +1445,7 @@ class DriveSyncService {
           if (localTs != null &&
               remoteTs != null &&
               localTs.isAfter(remoteTs)) {
-            // Local row has a newer timestamp — keep it
+            // Local row is newer — keep it.
             return;
           }
         }

@@ -33,7 +33,7 @@ class ReadingListSharingService {
 
   Future<LocalReadingList?> importReadingList() async {
     final result = await FilePicker.pickFiles(
-      type: FileType.any, // .takion might not be recognized, so any for now
+      type: FileType.any, // .takion may not be a recognized extension.
     );
 
     if (result != null && result.files.single.path != null) {
@@ -43,8 +43,7 @@ class ReadingListSharingService {
         final json = jsonDecode(content) as Map<String, dynamic>;
         final list = LocalReadingList.fromJson(json);
 
-        // Use the original ID if it exists to allow duplicate detection,
-        // but reset timestamps for the local collection.
+        // Keep the original ID for duplicate detection but reset timestamps.
         return list.copyWith(
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

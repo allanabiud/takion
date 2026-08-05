@@ -284,7 +284,8 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     final diagnostics = ref.watch(syncDiagnosticsProvider).value;
     final lastSuccess = diagnostics?.lastSuccessTime;
     final lastErrorTime = diagnostics?.lastErrorTime;
-    final hasError = lastErrorTime != null &&
+    final hasError =
+        lastErrorTime != null &&
         (lastSuccess == null || lastErrorTime.isAfter(lastSuccess));
 
     final IconData icon;
@@ -293,12 +294,14 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     if (hasError) {
       icon = Icons.error_outline;
       color = theme.colorScheme.error;
-      text = 'Last sync failed: '
+      text =
+          'Last sync failed: '
           '${DateFormatter.relativeShort(lastErrorTime)}';
     } else if (lastSuccess != null) {
       icon = Icons.check_circle_outline;
       color = theme.colorScheme.primary;
-      text = 'Last successful sync: '
+      text =
+          'Last successful sync: '
           '${DateFormatter.relativeShort(lastSuccess)}';
     } else {
       icon = Icons.info_outline;
@@ -443,9 +446,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
         bytes: bytes,
       );
       if (result != null && mounted) {
-        // FilePicker.saveFile(bytes:) already writes the file via the system
-        // picker. On Android the returned path is a SAF handle that dart:io
-        // cannot re-open, so treat a non-null result as success.
+        // FilePicker already wrote the file; the Android path is a SAF handle dart:io can't re-open, so treat non-null as success.
         TakionAlerts.success(context, 'Backup saved successfully');
       }
     } catch (e) {

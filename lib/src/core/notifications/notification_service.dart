@@ -89,12 +89,7 @@ class NotificationService {
     );
     final details = NotificationDetails(android: androidDetails);
     try {
-      await _plugin.show(
-        _syncNotificationId,
-        title,
-        body,
-        details,
-      );
+      await _plugin.show(_syncNotificationId, title, body, details);
     } catch (e) {
       AppLogger.warning('Failed to show sync notification', error: e);
     }
@@ -248,7 +243,7 @@ class NotificationService {
     return true;
   }
 
-  /// Android 14+ requires the user's explicit approval for exact 8 PM alarms.
+  /// Android 14+ requires explicit user approval for exact alarms.
   Future<void> requestExactAlarmPermission() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
@@ -283,6 +278,5 @@ class NotificationService {
 
 @pragma('vm:entry-point')
 void backgroundNotificationHandler(NotificationResponse response) {
-  // Background isolate handler — navigation on tap is handled by
-  // checkPendingNotificationLaunch() when the app comes to foreground.
+  // Navigation on tap is handled by checkPendingNotificationLaunch() on foreground.
 }

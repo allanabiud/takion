@@ -20,8 +20,7 @@ class DebouncedWorker {
     try {
       await task();
     } catch (_) {
-      // Swallow errors from the wrapped task; providers handle their own
-      // error emission.
+      // Swallow errors; providers emit their own.
     } finally {
       if (generation == _generation) {
         _generation++;

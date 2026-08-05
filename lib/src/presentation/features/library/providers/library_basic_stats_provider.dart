@@ -133,9 +133,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
 
       Future<void> emitStats(List<LibraryItem> libraryItems) async {
         try {
-          // Read subscriptions defensively – if the provider is unavailable
-          // (e.g. disposed during navigation), fall back to an empty list so
-          // stats still render with a zero subscription count.
+          // Fall back to empty subscriptions if the provider is unavailable (e.g. disposed mid-navigation).
           List<SeriesSubscription> subscriptions;
           try {
             subscriptions = await ref.read(activeSubscriptionsProvider.future);
@@ -167,7 +165,9 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
           }
 
           final owned = libraryItems
-              .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
+              .where(
+                (item) => item.ownershipStatus == LibraryOwnershipStatus.owned,
+              )
               .toList();
           final allRead = libraryItems.where((item) => item.isRead).toList();
 
@@ -182,7 +182,8 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
 
           final wishlistCount = libraryItems
               .where(
-                (item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist,
+                (item) =>
+                    item.ownershipStatus == LibraryOwnershipStatus.wishlist,
               )
               .length;
 
@@ -231,7 +232,11 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
             final series = seriesMap[item.metronSeriesId];
             final seriesName = series?.name.trim();
             if (seriesName == null || seriesName.isEmpty) continue;
-            readSeries.update(seriesName, (value) => value + 1, ifAbsent: () => 1);
+            readSeries.update(
+              seriesName,
+              (value) => value + 1,
+              ifAbsent: () => 1,
+            );
             if (!readSeriesYear.containsKey(seriesName)) {
               readSeriesYear[seriesName] = series?.yearBegan;
             }
@@ -253,43 +258,49 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
               .toList();
 
           if (!controller.isClosed) {
-            controller.add(LibraryBasicStats(
-              totalOwned: totalOwned,
-              readPercent: readPercent,
-              wishlistCount: wishlistCount,
-              subscriptionsCount: subscriptions.length,
-              pullsInPeriod: pullsInPeriod,
-              readsInPeriod: readsInPeriod,
-              streakDays: _streakDays(readDates),
-              averageRating: averageRating,
-              mostReadSeries: mostReadSeries,
-              mostReadSeriesYear: mostReadSeriesYear,
-              filter: filter,
-            ));
+            controller.add(
+              LibraryBasicStats(
+                totalOwned: totalOwned,
+                readPercent: readPercent,
+                wishlistCount: wishlistCount,
+                subscriptionsCount: subscriptions.length,
+                pullsInPeriod: pullsInPeriod,
+                readsInPeriod: readsInPeriod,
+                streakDays: _streakDays(readDates),
+                averageRating: averageRating,
+                mostReadSeries: mostReadSeries,
+                mostReadSeriesYear: mostReadSeriesYear,
+                filter: filter,
+              ),
+            );
           }
         } catch (e) {
-          // Never forward errors to the stream – emit zero stats so the UI
-          // always shows the stat cards rather than an empty state.
+          // Never forward errors to the stream – emit zero stats so cards stay visible.
           if (!controller.isClosed) {
             controller.add(LibraryBasicStats.zero(filter));
           }
         }
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(
-        allLibraryItemsProvider,
-        (_, next) {
-          next.whenOrNull(data: (libraryItems) {
-            // Debounce rapid-fire emissions during bulk operations so we
-            // don't flood emitStats with concurrent async calls.
+      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
+        _,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (libraryItems) {
+            // Debounce rapid-fire emissions from bulk operations.
             debounced.schedule(() => emitStats(libraryItems));
-          });
-        },
-      );
-
-      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        debounced.schedule(() => emitStats(libraryItems));
+          },
+        );
       });
+
+      ref
+          .read(allLibraryItemsProvider)
+          .whenOrNull(
+            data: (libraryItems) {
+              debounced.schedule(() => emitStats(libraryItems));
+            },
+          );
 
       ref.onDispose(() {
         debounced.cancel();
@@ -331,22 +342,30 @@ final libraryReadingTrendsProvider = StreamProvider.autoDispose
             .toList();
 
         if (!controller.isClosed) {
-          controller.add(_computeReadingTrends(readDates, filter, now, startDate));
+          controller.add(
+            _computeReadingTrends(readDates, filter, now, startDate),
+          );
         }
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(
-        allLibraryItemsProvider,
-        (_, next) {
-          next.whenOrNull(data: (libraryItems) {
+      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
+        _,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (libraryItems) {
             debounced.schedule(() => computeTrends(libraryItems));
-          });
-        },
-      );
-
-      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        debounced.schedule(() => computeTrends(libraryItems));
+          },
+        );
       });
+
+      ref
+          .read(allLibraryItemsProvider)
+          .whenOrNull(
+            data: (libraryItems) {
+              debounced.schedule(() => computeTrends(libraryItems));
+            },
+          );
 
       ref.onDispose(() {
         debounced.cancel();
@@ -382,18 +401,24 @@ final libraryRecentlyFinishedProvider = StreamProvider.autoDispose
         }
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(
-        allLibraryItemsProvider,
-        (_, next) {
-          next.whenOrNull(data: (libraryItems) {
+      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
+        _,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (libraryItems) {
             debounced.schedule(() => computeRecent(libraryItems));
-          });
-        },
-      );
-
-      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        debounced.schedule(() => computeRecent(libraryItems));
+          },
+        );
       });
+
+      ref
+          .read(allLibraryItemsProvider)
+          .whenOrNull(
+            data: (libraryItems) {
+              debounced.schedule(() => computeRecent(libraryItems));
+            },
+          );
 
       ref.onDispose(() {
         debounced.cancel();

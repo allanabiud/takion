@@ -56,9 +56,7 @@ class SubscriptionSeriesCardData {
   final DateTime? nextIssueDate;
 }
 
-/// Reads a subscribed series' cover and next release purely from the local
-/// cache of its issues (populated when the series details/issues are viewed).
-/// No network calls are made.
+/// Reads a subscription's cover and next release purely from the local cache (no network).
 final subscriptionSeriesCardProvider = StreamProvider.autoDispose
     .family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
       final dao = ref.watch(metronEntityDaoProvider);

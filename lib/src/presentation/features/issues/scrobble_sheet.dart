@@ -68,9 +68,7 @@ Future<void> showScrobbleSheet({
 }) async {
   final title = sheetTitle ?? 'Issue #$issueId';
 
-  // Series id is supplied by the caller from the issue-list data (which always
-  // includes the series), so the Subscribe tile can render immediately without
-  // fetching full issue details.
+  // Series id comes from issue-list data (which always includes it), so the Subscribe tile needs no full details fetch.
   final resolvedSeriesId = seriesId;
 
   var isPulling = false;
@@ -90,10 +88,7 @@ Future<void> showScrobbleSheet({
 
   final callerContext = context;
 
-  // Working state lives outside the Consumer build so optimistic edits made
-  // while a scrobble is in flight aren't clobbered on every rebuild. The
-  // provider value is only adopted when a genuinely new committed status
-  // arrives (identity change) and the sheet isn't submitting.
+  // Optimistic edits live outside the Consumer build so they survive rebuilds; provider values are adopted only on committed status changes.
   var addToCollection = false;
   var markAsRead = false;
   var addToWishlist = false;

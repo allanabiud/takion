@@ -4,7 +4,6 @@ import 'package:takion/bootstrap.dart';
 import 'package:takion/src/app.dart';
 import 'package:takion/src/core/logging/talker_setup.dart';
 
-/// The entry point for the application.
 void main() async {
   runZonedGuarded(
     () async {

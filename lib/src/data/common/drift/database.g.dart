@@ -4126,6 +4126,28 @@ class $ReadingListItemsTable extends ReadingListItems
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4135,6 +4157,8 @@ class $ReadingListItemsTable extends ReadingListItems
     role,
     isRead,
     sortOrder,
+    createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4201,6 +4225,18 @@ class $ReadingListItemsTable extends ReadingListItems
     } else if (isInserting) {
       context.missing(_sortOrderMeta);
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -4238,6 +4274,14 @@ class $ReadingListItemsTable extends ReadingListItems
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -4255,6 +4299,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
   final String role;
   final bool isRead;
   final int sortOrder;
+  final String? createdAt;
+  final String? updatedAt;
   const ReadingListItem({
     required this.id,
     required this.listId,
@@ -4263,6 +4309,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
     required this.role,
     required this.isRead,
     required this.sortOrder,
+    this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4274,6 +4322,12 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
     map['role'] = Variable<String>(role);
     map['is_read'] = Variable<bool>(isRead);
     map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<String>(updatedAt);
+    }
     return map;
   }
 
@@ -4286,6 +4340,12 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
       role: Value(role),
       isRead: Value(isRead),
       sortOrder: Value(sortOrder),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -4302,6 +4362,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
       role: serializer.fromJson<String>(json['role']),
       isRead: serializer.fromJson<bool>(json['isRead']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<String?>(json['createdAt']),
+      updatedAt: serializer.fromJson<String?>(json['updatedAt']),
     );
   }
   @override
@@ -4315,6 +4377,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
       'role': serializer.toJson<String>(role),
       'isRead': serializer.toJson<bool>(isRead),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<String?>(createdAt),
+      'updatedAt': serializer.toJson<String?>(updatedAt),
     };
   }
 
@@ -4326,6 +4390,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
     String? role,
     bool? isRead,
     int? sortOrder,
+    Value<String?> createdAt = const Value.absent(),
+    Value<String?> updatedAt = const Value.absent(),
   }) => ReadingListItem(
     id: id ?? this.id,
     listId: listId ?? this.listId,
@@ -4334,6 +4400,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
     role: role ?? this.role,
     isRead: isRead ?? this.isRead,
     sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   ReadingListItem copyWithCompanion(ReadingListItemsCompanion data) {
     return ReadingListItem(
@@ -4344,6 +4412,8 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
       role: data.role.present ? data.role.value : this.role,
       isRead: data.isRead.present ? data.isRead.value : this.isRead,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -4356,14 +4426,25 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
           ..write('isSeries: $isSeries, ')
           ..write('role: $role, ')
           ..write('isRead: $isRead, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, listId, targetId, isSeries, role, isRead, sortOrder);
+  int get hashCode => Object.hash(
+    id,
+    listId,
+    targetId,
+    isSeries,
+    role,
+    isRead,
+    sortOrder,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4374,7 +4455,9 @@ class ReadingListItem extends DataClass implements Insertable<ReadingListItem> {
           other.isSeries == this.isSeries &&
           other.role == this.role &&
           other.isRead == this.isRead &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
@@ -4385,6 +4468,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
   final Value<String> role;
   final Value<bool> isRead;
   final Value<int> sortOrder;
+  final Value<String?> createdAt;
+  final Value<String?> updatedAt;
   final Value<int> rowid;
   const ReadingListItemsCompanion({
     this.id = const Value.absent(),
@@ -4394,6 +4479,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
     this.role = const Value.absent(),
     this.isRead = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ReadingListItemsCompanion.insert({
@@ -4404,6 +4491,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
     required String role,
     required bool isRead,
     required int sortOrder,
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        listId = Value(listId),
@@ -4420,6 +4509,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
     Expression<String>? role,
     Expression<bool>? isRead,
     Expression<int>? sortOrder,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4430,6 +4521,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
       if (role != null) 'role': role,
       if (isRead != null) 'is_read': isRead,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4442,6 +4535,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
     Value<String>? role,
     Value<bool>? isRead,
     Value<int>? sortOrder,
+    Value<String?>? createdAt,
+    Value<String?>? updatedAt,
     Value<int>? rowid,
   }) {
     return ReadingListItemsCompanion(
@@ -4452,6 +4547,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
       role: role ?? this.role,
       isRead: isRead ?? this.isRead,
       sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4480,6 +4577,12 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4496,6 +4599,8 @@ class ReadingListItemsCompanion extends UpdateCompanion<ReadingListItem> {
           ..write('role: $role, ')
           ..write('isRead: $isRead, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -20947,6 +21052,8 @@ typedef $$ReadingListItemsTableCreateCompanionBuilder =
       required String role,
       required bool isRead,
       required int sortOrder,
+      Value<String?> createdAt,
+      Value<String?> updatedAt,
       Value<int> rowid,
     });
 typedef $$ReadingListItemsTableUpdateCompanionBuilder =
@@ -20958,6 +21065,8 @@ typedef $$ReadingListItemsTableUpdateCompanionBuilder =
       Value<String> role,
       Value<bool> isRead,
       Value<int> sortOrder,
+      Value<String?> createdAt,
+      Value<String?> updatedAt,
       Value<int> rowid,
     });
 
@@ -21002,6 +21111,16 @@ class $$ReadingListItemsTableFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -21049,6 +21168,16 @@ class $$ReadingListItemsTableOrderingComposer
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReadingListItemsTableAnnotationComposer
@@ -21080,6 +21209,12 @@ class $$ReadingListItemsTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$ReadingListItemsTableTableManager
@@ -21126,6 +21261,8 @@ class $$ReadingListItemsTableTableManager
                 Value<String> role = const Value.absent(),
                 Value<bool> isRead = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReadingListItemsCompanion(
                 id: id,
@@ -21135,6 +21272,8 @@ class $$ReadingListItemsTableTableManager
                 role: role,
                 isRead: isRead,
                 sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -21146,6 +21285,8 @@ class $$ReadingListItemsTableTableManager
                 required String role,
                 required bool isRead,
                 required int sortOrder,
+                Value<String?> createdAt = const Value.absent(),
+                Value<String?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReadingListItemsCompanion.insert(
                 id: id,
@@ -21155,6 +21296,8 @@ class $$ReadingListItemsTableTableManager
                 role: role,
                 isRead: isRead,
                 sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

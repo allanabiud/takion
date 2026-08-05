@@ -76,47 +76,46 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-             // Header Row: Brand Icon & Status
-             Padding(
-               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-               child: Row(
-                 children: [
-                   Container(
-                     width: 38,
-                     height: 38,
-                     decoration: BoxDecoration(
-                       color: isConnected
-                           ? primaryColor.withValues(alpha: 0.15)
-                           : theme.colorScheme.surfaceContainerHighest,
-                       shape: BoxShape.circle,
-                     ),
-                     child: Icon(
-                       LucideIcons.atom,
-                       size: 20,
-                       color: isConnected
-                           ? primaryColor
-                           : theme.colorScheme.onSurfaceVariant,
-                     ),
-                   ),
-                   const SizedBox(width: 12),
-                   Text(
-                     isConnected ? 'Connected' : 'Disconnected',
-                     style: theme.textTheme.bodyLarge?.copyWith(
-                       color: isConnected
-                           ? primaryColor
-                           : theme.colorScheme.error,
-                       fontWeight: FontWeight.w600,
-                     ),
-                   ),
-                 ],
-               ),
-             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: isConnected
+                          ? primaryColor.withValues(alpha: 0.15)
+                          : theme.colorScheme.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      LucideIcons.atom,
+                      size: 20,
+                      color: isConnected
+                          ? primaryColor
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    isConnected ? 'Connected' : 'Disconnected',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: isConnected
+                          ? primaryColor
+                          : theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
             Divider(
               height: 1,
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
-            // API Key Row (display only, no copy)
+            // API Key row (display only, no copy).
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
@@ -161,7 +160,6 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
               height: 1,
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
-            // Action Footer
             Material(
               color: Colors.transparent,
               child: InkWell(

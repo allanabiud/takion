@@ -78,8 +78,7 @@ class SeriesListTile extends ConsumerWidget {
     final cachedIssueCountAsync = ref.watch(
       cachedSeriesIssueCountProvider(series.id),
     );
-    // Only consult the full details API (a network call) when the list opts
-    // in via allowRemoteCoverFetch; lists otherwise render from local stubs.
+    // Only fetch full details (a network call) when the tile opts in via allowRemoteCoverFetch.
     int? remoteIssueCount;
     if (allowRemoteCoverFetch) {
       remoteIssueCount = ref
@@ -88,13 +87,11 @@ class SeriesListTile extends ConsumerWidget {
           ?.value
           .issueCount;
     }
-    // Category summaries deliberately store the category count in issueCount.
-    // If categoryCount is present, series.issueCount is the category count,
-    // not the series total. Prefer the local DB cache (which has issue_count
-    // from list responses); the full details API is only consulted when this
-    // tile allows remote hydration.
+    // Category summaries store the category count in issueCount; prefer the local DB cache, which has the real total from list responses.
     final totalIssuesCount =
-        remoteIssueCount ?? cachedIssueCountAsync.asData?.value ?? series.issueCount;
+        remoteIssueCount ??
+        cachedIssueCountAsync.asData?.value ??
+        series.issueCount;
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedImage = cache.getCached('series', series.id);
@@ -148,7 +145,6 @@ class SeriesListTile extends ConsumerWidget {
                   children: [
                     heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
                     const SizedBox(width: 12),
-                    // Text Content
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +260,8 @@ class SeriesListTile extends ConsumerWidget {
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
                               ],
-                              if (role != null && role != ItemRole.standard) ...[
+                              if (role != null &&
+                                  role != ItemRole.standard) ...[
                                 const SizedBox(width: 8),
                                 RoleBadge(role: role!),
                               ],

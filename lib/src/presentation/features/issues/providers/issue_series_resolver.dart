@@ -2,14 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-/// Resolves the Metron series ID for an issue using local data and network fallback.
-///
-/// Falls through five tiers:
-///   1. Use [existingSeriesId] (from the library item or caller-supplied context).
-///   2. Look up the pull-list entry for this issue in the local DB.
-///   3. Look up the library item for this issue in the local DB.
-///   4. Look up the issue in the Drift metron_issues table.
-///   5. Fetch issue details from Metron API (network fallback).
+/// Resolves a Metron series ID via five tiers: existing ID, pull list, library, local DB, then network.
 Future<int?> resolveIssueSeriesId(
   Ref ref,
   int issueId, {

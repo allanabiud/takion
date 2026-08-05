@@ -5,8 +5,7 @@ import 'package:takion/src/presentation/features/issues/providers/issue_series_r
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
 
-/// Lightweight metadata for a single issue so the bulk scrobble controller
-/// doesn't need to fetch full issue details from the network.
+/// Lightweight metadata from the UI so the bulk scrobble controller avoids a full details fetch.
 class BulkScrobbleIssueContext {
   const BulkScrobbleIssueContext({
     this.seriesId,
@@ -100,8 +99,7 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
 
           final targetIsRead =
               markAsRead ?? (dateRead != null || (existing?.isRead ?? false));
-          final targetIsCollected =
-              wasCollected; // Keep existing collection status
+          final targetIsCollected = wasCollected; // Keep existing status.
           final targetIsWishlisted = targetIsCollected ? false : wasWishlisted;
           final wasRead = existing?.isRead ?? false;
 

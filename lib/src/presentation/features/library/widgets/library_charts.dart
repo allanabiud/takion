@@ -278,7 +278,6 @@ class PublisherDistributionChart extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   final name = publishers[index].key;
-                  // Shorten name if too long
                   final displayName = name.length > 10
                       ? '${name.substring(0, 8)}..'
                       : name;

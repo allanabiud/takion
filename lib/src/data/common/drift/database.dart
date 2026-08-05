@@ -152,6 +152,8 @@ class ReadingListItems extends Table {
   TextColumn get role => text()();
   BoolColumn get isRead => boolean()();
   IntColumn get sortOrder => integer()();
+  TextColumn get createdAt => text().nullable()();
+  TextColumn get updatedAt => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -666,7 +668,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -716,6 +718,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(metronSeries, metronSeries.seriesTypeName);
           await _backfillSeriesTypeNames();
         }
+        if (from < 8) {
+          await m.addColumn(readingListItems, readingListItems.createdAt);
+          await m.addColumn(readingListItems, readingListItems.updatedAt);
+          await _backfillReadingListItemTimestamps();
+          await syncMetaDao.deleteByKey('last_uploaded_timestamp');
+        }
       },
     );
   }
@@ -762,6 +770,23 @@ class AppDatabase extends _$AppDatabase {
               (t) => t.id.equals(entry.key) & t.seriesTypeName.isNull(),
             ))
           .write(MetronSeriesCompanion(seriesTypeName: Value(entry.value)));
+    }
+  }
+
+  Future<void> _backfillReadingListItemTimestamps() async {
+    final lists = await (select(readingLists)).get();
+    final listUpdatedAt = {for (final l in lists) l.id: l.updatedAt};
+    final fallback = DateTime.now().toUtc().toIso8601String();
+    final items = await (select(readingListItems)).get();
+    for (final item in items) {
+      final ts = listUpdatedAt[item.listId] ?? fallback;
+      await (update(readingListItems)..where((t) => t.id.equals(item.id)))
+          .write(
+        ReadingListItemsCompanion(
+          createdAt: Value(ts),
+          updatedAt: Value(ts),
+        ),
+      );
     }
   }
 }

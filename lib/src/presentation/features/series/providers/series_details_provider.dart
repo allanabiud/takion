@@ -33,8 +33,7 @@ final seriesDetailsProvider = FutureProvider.autoDispose
       return series;
     });
 
-/// Used by the detail screen, where associated series and genres must not be
-/// dropped by the normalized cache representation.
+/// Full response for the detail screen, where associated series/genres must not be dropped by normalization.
 final seriesFullDetailsProvider = FutureProvider.autoDispose
     .family<SeriesDetails, int>((ref, id) async {
       final link = ref.keepAlive();

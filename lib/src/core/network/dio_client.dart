@@ -30,11 +30,10 @@ final dioProvider = Provider<Dio>((ref) {
   );
   dio.transformer = BackgroundTransformer();
 
-  // Rate limiter should be early in the chain (shared via provider)
+  // Rate limiter early in the chain, shared via provider.
   final rateLimitInterceptor = ref.read(rateLimitInterceptorProvider);
   dio.interceptors.add(rateLimitInterceptor);
 
-  // Conditional request interceptor
   final headerStore = ref.read(cacheHeaderStoreProvider);
   final db = ref.read(driftDatabaseProvider);
   dio.interceptors.add(ConditionalRequestInterceptor(headerStore, db));

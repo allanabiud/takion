@@ -54,7 +54,7 @@ LibraryItem _pickStableUnreadSuggestion(List<LibraryItem> items) {
     );
   }
 
-  // Keep only the first unread issue per series (by lowest metronIssueId)
+  // First unread issue per series, by lowest metronIssueId.
   final earliestBySeries = <int, LibraryItem>{};
   for (final item in unread) {
     final existing = earliestBySeries[item.metronSeriesId];

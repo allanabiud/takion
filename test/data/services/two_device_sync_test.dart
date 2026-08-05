@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:takion/src/data/common/drift/database.dart';
@@ -126,7 +127,11 @@ void main() {
     expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
   });
 
-  test('reading_list_items merge watermark lets remote snapshot overwrite local', () async {
+  test('reading_list_items remote row overwrites local when its updatedAt is newer', () async {
+    final past = DateTime.now()
+        .toUtc()
+        .subtract(const Duration(hours: 1))
+        .toIso8601String();
     final now = DateTime.now().toUtc().toIso8601String();
     await dbB.into(dbB.readingListItems).insert(
       ReadingListItemsCompanion.insert(
@@ -137,6 +142,8 @@ void main() {
         role: 'main',
         isRead: false,
         sortOrder: 0,
+        createdAt: Value(past),
+        updatedAt: Value(past),
       ),
     );
 
@@ -155,6 +162,8 @@ void main() {
               'role': 'main',
               'isRead': true,
               'sortOrder': 5,
+              'createdAt': now,
+              'updatedAt': now,
             },
           ],
           'updates': <Map<String, dynamic>>[],
@@ -168,5 +177,66 @@ void main() {
     expect(rows, hasLength(1));
     expect(rows.first.isRead, isTrue);
     expect(rows.first.sortOrder, 5);
+  });
+
+  test('extractDelta(since) omits unchanged reading_list_items', () async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await dbA.into(dbA.readingListItems).insert(
+      ReadingListItemsCompanion.insert(
+        id: 'item-1',
+        listId: 'list-1',
+        targetId: 'ser-1',
+        isSeries: true,
+        role: 'main',
+        isRead: false,
+        sortOrder: 0,
+        createdAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+
+    final full = await serviceA.extractDelta(null);
+    expect(
+      ((full['tables'] as Map)['reading_list_items']['inserts'] as List),
+      hasLength(1),
+    );
+
+    final since = DateTime.parse(full['toTimestamp'] as String);
+    final delta = await serviceA.extractDelta(since);
+    expect(
+      ((delta['tables'] as Map)['reading_list_items']['inserts'] as List),
+      isEmpty,
+    );
+  });
+
+  test('reading_list_items delete propagates to the other device', () async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await dbA.into(dbA.readingListItems).insert(
+      ReadingListItemsCompanion.insert(
+        id: 'item-del',
+        listId: 'list-1',
+        targetId: 'ser-1',
+        isSeries: true,
+        role: 'main',
+        isRead: false,
+        sortOrder: 0,
+        createdAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    final deltaA = await serviceA.extractDelta(null);
+    await serviceB.applyDelta(deltaA);
+    expect(await dbB.select(dbB.readingListItems).get(), hasLength(1));
+
+    await dbA.syncMetaDao.set(
+      'delete:reading_list_items:item-del',
+      DateTime.now().toUtc().toIso8601String(),
+    );
+    await dbA.delete(dbA.readingListItems).go();
+
+    final deltaB = await serviceA.extractDelta(null);
+    await serviceB.applyDelta(deltaB);
+
+    expect(await dbB.select(dbB.readingListItems).get(), isEmpty);
   });
 }

@@ -3,8 +3,7 @@ import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
-/// Detail responses contain fields that are not represented by the normalized
-/// entity tables (notably variants and reprints), so expose the full response.
+/// Full response, since normalized tables drop fields like variants and reprints.
 final issueDetailsProvider = FutureProvider.autoDispose
     .family<IssueDetails, int>((ref, id) async {
       final issue = await ref

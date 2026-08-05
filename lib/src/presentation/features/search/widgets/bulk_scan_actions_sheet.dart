@@ -288,7 +288,6 @@ Future<void> _applyBulkActions(
             await libraryRepo.addReadLog(metronIssueId: issueId, readAt: now);
           }
 
-          // Log activity events
           final activityRepo = ref.read(activityRepositoryProvider);
           final imageCache = ref.read(entityImageCacheProvider);
           String seriesName = 'Unknown Series';

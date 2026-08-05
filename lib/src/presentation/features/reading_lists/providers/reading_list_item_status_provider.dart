@@ -15,7 +15,7 @@ final readingListItemEffectiveReadStatusProvider = Provider.autoDispose
         return statusAsync.when(
           data: (statusMap) {
             final status = statusMap[id];
-            // If we have library data, use it. If not in library, it's not read.
+            // Absent from library means not read.
             return AsyncValue.data(status?.isRead ?? false);
           },
           loading: () => AsyncValue.data(item.isRead),
@@ -69,7 +69,7 @@ final seriesAllIssuesReadProvider = FutureProvider.autoDispose
     .family<bool, int>((ref, seriesId) async {
       final metronRepo = ref.read(metronRepositoryProvider);
 
-      // Fetch all pages of issues for the series
+      // Fetch all issues for the series across pages.
       final allIssues = <int>[];
       int currentPage = 1;
       bool hasNext = true;
@@ -84,7 +84,7 @@ final seriesAllIssuesReadProvider = FutureProvider.autoDispose
         }
         hasNext = page.next != null;
         currentPage++;
-        if (currentPage > 20) break; // Safety break
+        if (currentPage > 20) break; // Safety cap.
       }
 
       if (allIssues.isEmpty) return false;

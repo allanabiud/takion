@@ -54,7 +54,7 @@ final class CharacterBrowseProvider
   }
 }
 
-String _$characterBrowseHash() => r'436e3add9cc170d7808dc9910245fab3726e5627';
+String _$characterBrowseHash() => r'b2aa9ce4dd77aa9e2f6c35ddee658ea594b327ef';
 
 final class CharacterBrowseFamily extends $Family
     with
@@ -152,7 +152,7 @@ final class SeriesBrowseProvider
   }
 }
 
-String _$seriesBrowseHash() => r'cbc006b45cb9cbd4cc13480a23f6a92c21059b06';
+String _$seriesBrowseHash() => r'4bf05a34278e7cb7811d441a0656c8c025b8ad0d';
 
 final class SeriesBrowseFamily extends $Family
     with
@@ -254,7 +254,7 @@ final class PublisherBrowseProvider
   }
 }
 
-String _$publisherBrowseHash() => r'e37150966b382c3db22468c7f4164f7d17368473';
+String _$publisherBrowseHash() => r'a7a7dec0fd243b259390887935d8eb78c3aaca35';
 
 final class PublisherBrowseFamily extends $Family
     with
@@ -352,7 +352,7 @@ final class TeamBrowseProvider
   }
 }
 
-String _$teamBrowseHash() => r'7403725b096b8355b0d82149e0792fadc5c25cd4';
+String _$teamBrowseHash() => r'336d11ad6a64883eee22514d5d80ecad7c08b7a2';
 
 final class TeamBrowseFamily extends $Family
     with
@@ -449,7 +449,7 @@ final class ArcBrowseProvider
   }
 }
 
-String _$arcBrowseHash() => r'4330fc08b92f6bcc7dc254dbefe5003e5039e49b';
+String _$arcBrowseHash() => r'a171abf5034f9690c37e9c09b030cdeba77ba11d';
 
 final class ArcBrowseFamily extends $Family
     with
@@ -547,7 +547,7 @@ final class UniverseBrowseProvider
   }
 }
 
-String _$universeBrowseHash() => r'60d4989c3aadfd244fa114fce8ed82c2ac2d7771';
+String _$universeBrowseHash() => r'97269b6e0b96e472fd8d0f10fcbe06af4049952f';
 
 final class UniverseBrowseFamily extends $Family
     with
@@ -646,7 +646,7 @@ final class ImprintBrowseProvider
   }
 }
 
-String _$imprintBrowseHash() => r'4e00f3a3757073deb66d30f1651cbaa75251e01e';
+String _$imprintBrowseHash() => r'b0bc59a98ff3146836b56a3171f2aad8166f6239';
 
 final class ImprintBrowseFamily extends $Family
     with
@@ -745,7 +745,7 @@ final class CreatorBrowseProvider
   }
 }
 
-String _$creatorBrowseHash() => r'1a69b07534ed96eb1accc6c9c19a118491fd4217';
+String _$creatorBrowseHash() => r'dd0bf1ff1f5414ab58a18494be4e453bf89430c6';
 
 final class CreatorBrowseFamily extends $Family
     with

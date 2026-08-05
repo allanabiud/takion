@@ -74,6 +74,40 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
         updatedAt: Value(list.updatedAt.toIso8601String()),
       ),
     );
+    await _reconcileReadingListItems(list);
+  }
+
+  Future<void> _reconcileReadingListItems(LocalReadingList list) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    final currentTargets = {for (final item in list.items) item.targetId};
+    final companions = <db.ReadingListItemsCompanion>[
+      for (var i = 0; i < list.items.length; i++)
+        db.ReadingListItemsCompanion(
+          id: Value('${list.id}:${list.items[i].targetId}'),
+          listId: Value(list.id),
+          targetId: Value(list.items[i].targetId),
+          isSeries: Value(list.items[i].isSeries),
+          role: Value(list.items[i].role.name),
+          isRead: Value(list.items[i].isRead),
+          sortOrder: Value(i),
+        ),
+    ];
+    await _database.readingListDao.upsertItems(companions);
+
+    final existingRows = await (_database.select(_database.readingListItems)
+          ..where((t) => t.listId.equals(list.id)))
+        .get();
+    for (final row in existingRows) {
+      if (!currentTargets.contains(row.targetId)) {
+        await _database.syncMetaDao.set(
+          'delete:reading_list_items:${row.id}',
+          now,
+        );
+        await (_database.delete(_database.readingListItems)
+              ..where((t) => t.id.equals(row.id)))
+            .go();
+      }
+    }
   }
 
   @override

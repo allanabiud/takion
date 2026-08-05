@@ -10,7 +10,7 @@ class WeekPickerBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDate = ref.watch(selectedWeekProvider);
 
-    // Calculate start of week (Sunday)
+    // Start of week (Sunday).
     final offset = selectedDate.weekday % 7;
     final startOfWeek = DateTime(
       selectedDate.year,
@@ -18,7 +18,7 @@ class WeekPickerBar extends ConsumerWidget {
       selectedDate.day,
     ).subtract(Duration(days: offset));
 
-    // Calculate New Comic Book Day (Wednesday = Sunday + 3 days)
+    // New Comic Book Day (Wednesday).
     final wednesday = startOfWeek.add(const Duration(days: 3));
     final dateString = DateFormatter.comicDate(wednesday);
 

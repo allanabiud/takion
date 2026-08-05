@@ -26,18 +26,16 @@ final randomReadingListProvider = Provider<LocalReadingList?>((ref) {
             final id = int.tryParse(idString) ?? 0;
             if (id > 0) {
               if (statusMap != null) {
-                // If we have the status map, use it.
-                // If not in library (status == null), it's unread (false).
+                // Not in library (status == null) means unread.
                 final status = statusMap[id];
                 effectiveIsRead = status?.isRead ?? false;
               } else {
-                // If status map is still loading, fallback to internal state
+                // Status map still loading, fallback to internal state.
                 effectiveIsRead = item.isRead;
               }
             }
           }
-          // Note: For series items, we still use item.isRead for now to avoid
-          // complex async lookups in this sync provider.
+          // Series items use item.isRead to avoid async lookups here.
 
           if (!effectiveIsRead) {
             allRead = false;

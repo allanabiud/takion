@@ -39,33 +39,34 @@ void main() {
   });
 
   group('watchStatusRows', () {
-    test('emits initial rows and re-emits when a library item changes', () async {
-      final emissions = <List<LibraryItemStatusRow>>[];
-      final sub = db.libraryItemDao.watchStatusRows().listen(emissions.add);
+    test(
+      'emits initial rows and re-emits when a library item changes',
+      () async {
+        final emissions = <List<LibraryItemStatusRow>>[];
+        final sub = db.libraryItemDao.watchStatusRows().listen(emissions.add);
 
-      await db.libraryItemDao.batchUpsert([_item(issueId: 42)]);
-      await db.libraryItemDao.batchUpsert([
-        _item(issueId: 42, ownershipStatus: 'owned', isRead: true),
-      ]);
+        await db.libraryItemDao.batchUpsert([_item(issueId: 42)]);
+        await db.libraryItemDao.batchUpsert([
+          _item(issueId: 42, ownershipStatus: 'owned', isRead: true),
+        ]);
 
-      await pumpEventQueue();
-      await sub.cancel();
+        await pumpEventQueue();
+        await sub.cancel();
 
-      expect(emissions, isNotEmpty);
-      final latest = emissions.last;
-      expect(latest, hasLength(1));
-      expect(latest.first.metronIssueId, 42);
-      expect(latest.first.ownershipStatus, 'owned');
-      expect(latest.first.isRead, isTrue);
-    });
+        expect(emissions, isNotEmpty);
+        final latest = emissions.last;
+        expect(latest, hasLength(1));
+        expect(latest.first.metronIssueId, 42);
+        expect(latest.first.ownershipStatus, 'owned');
+        expect(latest.first.isRead, isTrue);
+      },
+    );
   });
 
   group('collectionStatusCacheProvider', () {
     test('reflects library mutations without manual invalidation', () async {
       final container = ProviderContainer(
-        overrides: [
-          driftDatabaseProvider.overrideWithValue(db),
-        ],
+        overrides: [driftDatabaseProvider.overrideWithValue(db)],
       );
       addTearDown(container.dispose);
 
@@ -76,17 +77,14 @@ void main() {
 
       await db.libraryItemDao.batchUpsert([_item(issueId: 7)]);
 
-      final before = await container.read(
-        collectionStatusCacheProvider.future,
-      );
+      final before = await container.read(collectionStatusCacheProvider.future);
       expect(before[7]?.isCollected, isFalse);
 
       await db.libraryItemDao.batchUpsert([
         _item(issueId: 7, ownershipStatus: 'owned'),
       ]);
 
-      // Wait for the DB stream emission to propagate through the provider,
-      // including the async isolate-based status map computation.
+      // Wait for the DB stream to propagate through the provider, including the async status-map computation.
       final deadline = DateTime.now().add(const Duration(seconds: 5));
       while (DateTime.now().isBefore(deadline)) {
         await pumpEventQueue();

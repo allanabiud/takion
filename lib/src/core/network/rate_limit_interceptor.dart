@@ -102,8 +102,7 @@ class RateLimitInterceptor extends Interceptor {
     return int.tryParse(value);
   }
 
-  // Returns null if budget was consumed and the request may proceed,
-  // or a Duration to wait before retrying (caller waits outside the lock).
+  // Returns null if the budget allows the request, or a Duration to wait before retrying.
   Future<Duration?> _tryConsumeMinuteBudget() {
     return _lock.synchronized<Duration?>(() async {
       final now = DateTime.now();
@@ -135,20 +134,20 @@ class RateLimitInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
-      // Check sustained (daily) budget first
+      // Check sustained (daily) budget first.
       final sustainedWait = state.sustainedWaitDuration;
       if (sustainedWait != null) {
         await Future.delayed(sustainedWait);
       }
 
-      // Check burst (minute) budget
+      // Check burst (minute) budget.
       while (true) {
         final wait = await _tryConsumeMinuteBudget();
         if (wait == null) break;
         await Future.delayed(wait);
       }
 
-      // Optimistic decrement for the request about to be made
+      // Optimistic decrement for the upcoming request.
       _sustainedRemaining = max(0, _sustainedRemaining - 1);
       _burstRemaining = max(0, _burstRemaining - 1);
       _notify();

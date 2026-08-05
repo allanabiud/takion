@@ -192,9 +192,7 @@ class SubscriptionPullReconciler {
           }
           final nextPage = issuePage.nextPage;
           if (nextPage == null) break;
-          // Ordered by -store_date (newest first). Once we hit a page with
-          // no in-window issues and at least one issue before the window,
-          // all subsequent pages will be older still — safe to break.
+          // Pages are newest-first; once none are in-window, all later pages are older still.
           if (!pageHasInWindow && anyBeforeWindow) break;
           nextUrl = issuePage.next;
         }

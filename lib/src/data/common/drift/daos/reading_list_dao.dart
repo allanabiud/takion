@@ -27,10 +27,29 @@ class ReadingListDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> upsertItems(List<ReadingListItemsCompanion> entries) async {
+    if (entries.isEmpty) return;
+    final now = DateTime.now().toUtc().toIso8601String();
+    final existingIds = (await (select(attachedDatabase.readingListItems)
+          ..where((t) => t.id.isIn(entries.map((e) => e.id.value)))
+          ..limit(entries.length))
+        .get())
+        .map((r) => r.id)
+        .toSet();
+
+    final stamped = entries.map((e) {
+      final isNew = !existingIds.contains(e.id.value);
+      return e.copyWith(
+        updatedAt: Value(now),
+        createdAt: isNew
+            ? Value(e.createdAt.present ? e.createdAt.value : now)
+            : e.createdAt,
+      );
+    }).toList();
+
     await batch((batch) {
       batch.insertAllOnConflictUpdate(
         attachedDatabase.readingListItems,
-        entries,
+        stamped,
       );
     });
   }
