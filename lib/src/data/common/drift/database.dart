@@ -16,6 +16,7 @@ import 'daos/reading_list_dao.dart';
 import 'daos/favorite_dao.dart';
 import 'daos/api_cache_dao.dart';
 import 'daos/image_cache_dao.dart';
+import 'daos/superhero_character_cache_dao.dart';
 import 'daos/settings_dao.dart';
 import 'daos/series_name_dao.dart';
 import 'daos/sync_meta_dao.dart';
@@ -577,6 +578,18 @@ class ImageCache extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+class SuperheroCharacterCache extends Table {
+  IntColumn get metronCharacterId => integer()();
+  IntColumn get superheroId => integer()();
+  TextColumn get superheroName => text()();
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get powerstatsJson => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {metronCharacterId};
+}
+
 class AppSettings extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();
@@ -643,6 +656,7 @@ class SyncMeta extends Table {
     MetronReadingListItems,
     ApiCache,
     ImageCache,
+    SuperheroCharacterCache,
     AppSettings,
     SeriesNameIndex,
     SyncMeta,
@@ -662,6 +676,8 @@ class AppDatabase extends _$AppDatabase {
   late final FavoriteDao favoriteDao = FavoriteDao(this);
   late final ApiCacheDao apiCacheDao = ApiCacheDao(this);
   late final ImageCacheDao imageCacheDao = ImageCacheDao(this);
+  late final SuperheroCharacterCacheDao superheroCharacterCacheDao =
+      SuperheroCharacterCacheDao(this);
   late final SettingsDao settingsDao = SettingsDao(this);
   late final SeriesNameDao seriesNameDao = SeriesNameDao(this);
   late final SyncMetaDao syncMetaDao = SyncMetaDao(this);
@@ -669,7 +685,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration {
@@ -727,6 +743,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 9) {
           await m.addColumn(readingLists, readingLists.metronArcId);
+        }
+        if (from < 10) {
+          await m.createTable(superheroCharacterCache);
         }
       },
     );

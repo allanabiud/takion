@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/settings/widgets/data_storage_s
 import 'package:takion/src/presentation/features/settings/widgets/about_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/notification_settings.dart';
 import 'package:takion/src/presentation/features/settings/widgets/performance_metrics_settings.dart';
+import 'package:takion/src/presentation/features/settings/widgets/integrations_settings.dart';
 
 @RoutePage()
 class SettingsScreen extends ConsumerWidget {
@@ -78,6 +79,12 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Data & Storage',
             subtitle: 'Cache and data management',
             onTap: () => showDataStorageSettings(context, ref),
+          ),
+          SettingsNavTile(
+            icon: Icons.extension_outlined,
+            title: 'Integrations',
+            subtitle: 'Third-party data sources',
+            onTap: () => showIntegrationsSettings(context, ref),
           ),
           if (debugEnabled) ...[
             const SizedBox(height: 16),

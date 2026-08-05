@@ -8,6 +8,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
+import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/domain/common/string_extensions.dart';
 
 class DetailScreenShell<T> extends ConsumerWidget {
@@ -18,6 +19,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     required this.entityType,
     this.initialChildSize = 0.55,
     required this.toImageUrl,
+    this.toFallbackImageUrl,
     required this.toHeroTag,
     required this.toTitle,
     this.toSubtitle,
@@ -36,6 +38,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.headerHeight = 400,
     this.showHero = true,
     this.headerBackground,
+    this.imageHeaders,
   });
 
   final AsyncValue<T> asyncValue;
@@ -43,6 +46,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final String entityType;
   final double initialChildSize;
   final String? Function(T data) toImageUrl;
+  final String? Function(T data)? toFallbackImageUrl;
   final String Function(T data) toHeroTag;
   final String Function(T data) toTitle;
   final String? Function(T data)? toSubtitle;
@@ -63,6 +67,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final bool showHero;
   final Iterable<Widget> Function(BuildContext context, T data)?
   headerBackground;
+  final Map<String, String>? imageHeaders;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -219,6 +224,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     final theme = Theme.of(context);
     final scaffoldBg = theme.colorScheme.surface;
     final imageUrl = toImageUrl(data);
+    final fallbackImageUrl = toFallbackImageUrl?.call(data);
     final heroTag = toHeroTag(data);
     final title = toTitle(data);
     final subtitle = toSubtitle?.call(data);
@@ -240,9 +246,11 @@ class DetailScreenShell<T> extends ConsumerWidget {
                   if (hasImage)
                     ImageFiltered(
                       imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: CachedNetworkImage(
+                      child: _CachedImageWithFallback(
                         imageUrl: imageUrl,
+                        fallbackImageUrl: fallbackImageUrl,
                         fit: BoxFit.cover,
+                        httpHeaders: imageHeaders,
                         placeholder: (context, url) => ColoredBox(
                           color: theme.colorScheme.surfaceContainerHighest,
                         ),
@@ -436,23 +444,21 @@ class DetailScreenShell<T> extends ConsumerWidget {
     bool hasImage,
   ) {
     final imageUrl = hasImage ? toImageUrl(data) : null;
+    final fallbackImageUrl = toFallbackImageUrl?.call(data);
 
     final child = SizedBox(
       width: heroWidth,
       height: heroHeight,
       child: hasImage
-          ? CachedNetworkImage(
+          ? _CachedImageWithFallback(
               imageUrl: imageUrl!,
+              fallbackImageUrl: fallbackImageUrl,
               fit: BoxFit.cover,
               alignment: heroImageAlignment,
+              httpHeaders: imageHeaders,
               placeholder: (context, url) => bannerPlaceholder(context, title),
-              errorWidget: (context, url, error) => imageErrorPlaceholder(
-                context,
-                url,
-                error,
-                label: title,
-                iconSize: 48,
-              ),
+              errorWidget: (context, url, error) =>
+                  bannerPlaceholder(context, title),
             )
           : bannerPlaceholder(context, title),
     );
@@ -481,6 +487,61 @@ class DetailScreenShell<T> extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CachedImageWithFallback extends StatelessWidget {
+  const _CachedImageWithFallback({
+    required this.imageUrl,
+    this.fallbackImageUrl,
+    this.fit,
+    this.alignment,
+    this.httpHeaders,
+    required this.placeholder,
+    required this.errorWidget,
+  });
+
+  final String imageUrl;
+  final String? fallbackImageUrl;
+  final BoxFit? fit;
+  final Alignment? alignment;
+  final Map<String, String>? httpHeaders;
+  final Widget Function(BuildContext context, String url) placeholder;
+  final Widget Function(BuildContext context, String url, Object error)
+  errorWidget;
+
+  @override
+  Widget build(BuildContext context) {
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: fit,
+      alignment: alignment ?? Alignment.center,
+      httpHeaders: httpHeaders,
+      placeholder: placeholder,
+      errorWidget: (context, url, error) {
+        AppLogger.warning(
+          'SuperHero/Primary character image failed to load for URL: $url',
+          error: error,
+        );
+        final fallback = fallbackImageUrl;
+        if (fallback == null || fallback.isEmpty) {
+          return errorWidget(context, url, error);
+        }
+        return CachedNetworkImage(
+          imageUrl: fallback,
+          fit: fit,
+          alignment: alignment ?? Alignment.center,
+          placeholder: placeholder,
+          errorWidget: (context, fallbackUrl, fallbackError) {
+            AppLogger.warning(
+              'Fallback character image also failed to load for URL: $fallbackUrl',
+              error: fallbackError,
+            );
+            return errorWidget(context, fallbackUrl, fallbackError);
+          },
+        );
+      },
     );
   }
 }

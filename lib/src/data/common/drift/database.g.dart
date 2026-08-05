@@ -18251,6 +18251,444 @@ class ImageCacheCompanion extends UpdateCompanion<ImageCacheData> {
   }
 }
 
+class $SuperheroCharacterCacheTable extends SuperheroCharacterCache
+    with TableInfo<$SuperheroCharacterCacheTable, SuperheroCharacterCacheData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SuperheroCharacterCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _metronCharacterIdMeta = const VerificationMeta(
+    'metronCharacterId',
+  );
+  @override
+  late final GeneratedColumn<int> metronCharacterId = GeneratedColumn<int>(
+    'metron_character_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _superheroIdMeta = const VerificationMeta(
+    'superheroId',
+  );
+  @override
+  late final GeneratedColumn<int> superheroId = GeneratedColumn<int>(
+    'superhero_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _superheroNameMeta = const VerificationMeta(
+    'superheroName',
+  );
+  @override
+  late final GeneratedColumn<String> superheroName = GeneratedColumn<String>(
+    'superhero_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _powerstatsJsonMeta = const VerificationMeta(
+    'powerstatsJson',
+  );
+  @override
+  late final GeneratedColumn<String> powerstatsJson = GeneratedColumn<String>(
+    'powerstats_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    metronCharacterId,
+    superheroId,
+    superheroName,
+    imageUrl,
+    powerstatsJson,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'superhero_character_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SuperheroCharacterCacheData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('metron_character_id')) {
+      context.handle(
+        _metronCharacterIdMeta,
+        metronCharacterId.isAcceptableOrUnknown(
+          data['metron_character_id']!,
+          _metronCharacterIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('superhero_id')) {
+      context.handle(
+        _superheroIdMeta,
+        superheroId.isAcceptableOrUnknown(
+          data['superhero_id']!,
+          _superheroIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_superheroIdMeta);
+    }
+    if (data.containsKey('superhero_name')) {
+      context.handle(
+        _superheroNameMeta,
+        superheroName.isAcceptableOrUnknown(
+          data['superhero_name']!,
+          _superheroNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_superheroNameMeta);
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
+    if (data.containsKey('powerstats_json')) {
+      context.handle(
+        _powerstatsJsonMeta,
+        powerstatsJson.isAcceptableOrUnknown(
+          data['powerstats_json']!,
+          _powerstatsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {metronCharacterId};
+  @override
+  SuperheroCharacterCacheData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SuperheroCharacterCacheData(
+      metronCharacterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}metron_character_id'],
+      )!,
+      superheroId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}superhero_id'],
+      )!,
+      superheroName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}superhero_name'],
+      )!,
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
+      powerstatsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}powerstats_json'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SuperheroCharacterCacheTable createAlias(String alias) {
+    return $SuperheroCharacterCacheTable(attachedDatabase, alias);
+  }
+}
+
+class SuperheroCharacterCacheData extends DataClass
+    implements Insertable<SuperheroCharacterCacheData> {
+  final int metronCharacterId;
+  final int superheroId;
+  final String superheroName;
+  final String? imageUrl;
+  final String? powerstatsJson;
+  final DateTime updatedAt;
+  const SuperheroCharacterCacheData({
+    required this.metronCharacterId,
+    required this.superheroId,
+    required this.superheroName,
+    this.imageUrl,
+    this.powerstatsJson,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['metron_character_id'] = Variable<int>(metronCharacterId);
+    map['superhero_id'] = Variable<int>(superheroId);
+    map['superhero_name'] = Variable<String>(superheroName);
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || powerstatsJson != null) {
+      map['powerstats_json'] = Variable<String>(powerstatsJson);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SuperheroCharacterCacheCompanion toCompanion(bool nullToAbsent) {
+    return SuperheroCharacterCacheCompanion(
+      metronCharacterId: Value(metronCharacterId),
+      superheroId: Value(superheroId),
+      superheroName: Value(superheroName),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      powerstatsJson: powerstatsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(powerstatsJson),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SuperheroCharacterCacheData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SuperheroCharacterCacheData(
+      metronCharacterId: serializer.fromJson<int>(json['metronCharacterId']),
+      superheroId: serializer.fromJson<int>(json['superheroId']),
+      superheroName: serializer.fromJson<String>(json['superheroName']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      powerstatsJson: serializer.fromJson<String?>(json['powerstatsJson']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'metronCharacterId': serializer.toJson<int>(metronCharacterId),
+      'superheroId': serializer.toJson<int>(superheroId),
+      'superheroName': serializer.toJson<String>(superheroName),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'powerstatsJson': serializer.toJson<String?>(powerstatsJson),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SuperheroCharacterCacheData copyWith({
+    int? metronCharacterId,
+    int? superheroId,
+    String? superheroName,
+    Value<String?> imageUrl = const Value.absent(),
+    Value<String?> powerstatsJson = const Value.absent(),
+    DateTime? updatedAt,
+  }) => SuperheroCharacterCacheData(
+    metronCharacterId: metronCharacterId ?? this.metronCharacterId,
+    superheroId: superheroId ?? this.superheroId,
+    superheroName: superheroName ?? this.superheroName,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    powerstatsJson: powerstatsJson.present
+        ? powerstatsJson.value
+        : this.powerstatsJson,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SuperheroCharacterCacheData copyWithCompanion(
+    SuperheroCharacterCacheCompanion data,
+  ) {
+    return SuperheroCharacterCacheData(
+      metronCharacterId: data.metronCharacterId.present
+          ? data.metronCharacterId.value
+          : this.metronCharacterId,
+      superheroId: data.superheroId.present
+          ? data.superheroId.value
+          : this.superheroId,
+      superheroName: data.superheroName.present
+          ? data.superheroName.value
+          : this.superheroName,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      powerstatsJson: data.powerstatsJson.present
+          ? data.powerstatsJson.value
+          : this.powerstatsJson,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SuperheroCharacterCacheData(')
+          ..write('metronCharacterId: $metronCharacterId, ')
+          ..write('superheroId: $superheroId, ')
+          ..write('superheroName: $superheroName, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('powerstatsJson: $powerstatsJson, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    metronCharacterId,
+    superheroId,
+    superheroName,
+    imageUrl,
+    powerstatsJson,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SuperheroCharacterCacheData &&
+          other.metronCharacterId == this.metronCharacterId &&
+          other.superheroId == this.superheroId &&
+          other.superheroName == this.superheroName &&
+          other.imageUrl == this.imageUrl &&
+          other.powerstatsJson == this.powerstatsJson &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SuperheroCharacterCacheCompanion
+    extends UpdateCompanion<SuperheroCharacterCacheData> {
+  final Value<int> metronCharacterId;
+  final Value<int> superheroId;
+  final Value<String> superheroName;
+  final Value<String?> imageUrl;
+  final Value<String?> powerstatsJson;
+  final Value<DateTime> updatedAt;
+  const SuperheroCharacterCacheCompanion({
+    this.metronCharacterId = const Value.absent(),
+    this.superheroId = const Value.absent(),
+    this.superheroName = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.powerstatsJson = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SuperheroCharacterCacheCompanion.insert({
+    this.metronCharacterId = const Value.absent(),
+    required int superheroId,
+    required String superheroName,
+    this.imageUrl = const Value.absent(),
+    this.powerstatsJson = const Value.absent(),
+    required DateTime updatedAt,
+  }) : superheroId = Value(superheroId),
+       superheroName = Value(superheroName),
+       updatedAt = Value(updatedAt);
+  static Insertable<SuperheroCharacterCacheData> custom({
+    Expression<int>? metronCharacterId,
+    Expression<int>? superheroId,
+    Expression<String>? superheroName,
+    Expression<String>? imageUrl,
+    Expression<String>? powerstatsJson,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (metronCharacterId != null) 'metron_character_id': metronCharacterId,
+      if (superheroId != null) 'superhero_id': superheroId,
+      if (superheroName != null) 'superhero_name': superheroName,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (powerstatsJson != null) 'powerstats_json': powerstatsJson,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SuperheroCharacterCacheCompanion copyWith({
+    Value<int>? metronCharacterId,
+    Value<int>? superheroId,
+    Value<String>? superheroName,
+    Value<String?>? imageUrl,
+    Value<String?>? powerstatsJson,
+    Value<DateTime>? updatedAt,
+  }) {
+    return SuperheroCharacterCacheCompanion(
+      metronCharacterId: metronCharacterId ?? this.metronCharacterId,
+      superheroId: superheroId ?? this.superheroId,
+      superheroName: superheroName ?? this.superheroName,
+      imageUrl: imageUrl ?? this.imageUrl,
+      powerstatsJson: powerstatsJson ?? this.powerstatsJson,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (metronCharacterId.present) {
+      map['metron_character_id'] = Variable<int>(metronCharacterId.value);
+    }
+    if (superheroId.present) {
+      map['superhero_id'] = Variable<int>(superheroId.value);
+    }
+    if (superheroName.present) {
+      map['superhero_name'] = Variable<String>(superheroName.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (powerstatsJson.present) {
+      map['powerstats_json'] = Variable<String>(powerstatsJson.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SuperheroCharacterCacheCompanion(')
+          ..write('metronCharacterId: $metronCharacterId, ')
+          ..write('superheroId: $superheroId, ')
+          ..write('superheroName: $superheroName, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('powerstatsJson: $powerstatsJson, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSetting> {
   @override
@@ -18971,6 +19409,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $MetronReadingListItemsTable(this);
   late final $ApiCacheTable apiCache = $ApiCacheTable(this);
   late final $ImageCacheTable imageCache = $ImageCacheTable(this);
+  late final $SuperheroCharacterCacheTable superheroCharacterCache =
+      $SuperheroCharacterCacheTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $SeriesNameIndexTable seriesNameIndex = $SeriesNameIndexTable(
     this,
@@ -19121,6 +19561,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     metronReadingListItems,
     apiCache,
     imageCache,
+    superheroCharacterCache,
     appSettings,
     seriesNameIndex,
     syncMeta,
@@ -28734,6 +29175,246 @@ typedef $$ImageCacheTableProcessedTableManager =
       ImageCacheData,
       PrefetchHooks Function()
     >;
+typedef $$SuperheroCharacterCacheTableCreateCompanionBuilder =
+    SuperheroCharacterCacheCompanion Function({
+      Value<int> metronCharacterId,
+      required int superheroId,
+      required String superheroName,
+      Value<String?> imageUrl,
+      Value<String?> powerstatsJson,
+      required DateTime updatedAt,
+    });
+typedef $$SuperheroCharacterCacheTableUpdateCompanionBuilder =
+    SuperheroCharacterCacheCompanion Function({
+      Value<int> metronCharacterId,
+      Value<int> superheroId,
+      Value<String> superheroName,
+      Value<String?> imageUrl,
+      Value<String?> powerstatsJson,
+      Value<DateTime> updatedAt,
+    });
+
+class $$SuperheroCharacterCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $SuperheroCharacterCacheTable> {
+  $$SuperheroCharacterCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get metronCharacterId => $composableBuilder(
+    column: $table.metronCharacterId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get superheroId => $composableBuilder(
+    column: $table.superheroId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get superheroName => $composableBuilder(
+    column: $table.superheroName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get powerstatsJson => $composableBuilder(
+    column: $table.powerstatsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SuperheroCharacterCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $SuperheroCharacterCacheTable> {
+  $$SuperheroCharacterCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get metronCharacterId => $composableBuilder(
+    column: $table.metronCharacterId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get superheroId => $composableBuilder(
+    column: $table.superheroId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get superheroName => $composableBuilder(
+    column: $table.superheroName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get powerstatsJson => $composableBuilder(
+    column: $table.powerstatsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SuperheroCharacterCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SuperheroCharacterCacheTable> {
+  $$SuperheroCharacterCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get metronCharacterId => $composableBuilder(
+    column: $table.metronCharacterId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get superheroId => $composableBuilder(
+    column: $table.superheroId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get superheroName => $composableBuilder(
+    column: $table.superheroName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get powerstatsJson => $composableBuilder(
+    column: $table.powerstatsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SuperheroCharacterCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SuperheroCharacterCacheTable,
+          SuperheroCharacterCacheData,
+          $$SuperheroCharacterCacheTableFilterComposer,
+          $$SuperheroCharacterCacheTableOrderingComposer,
+          $$SuperheroCharacterCacheTableAnnotationComposer,
+          $$SuperheroCharacterCacheTableCreateCompanionBuilder,
+          $$SuperheroCharacterCacheTableUpdateCompanionBuilder,
+          (
+            SuperheroCharacterCacheData,
+            BaseReferences<
+              _$AppDatabase,
+              $SuperheroCharacterCacheTable,
+              SuperheroCharacterCacheData
+            >,
+          ),
+          SuperheroCharacterCacheData,
+          PrefetchHooks Function()
+        > {
+  $$SuperheroCharacterCacheTableTableManager(
+    _$AppDatabase db,
+    $SuperheroCharacterCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SuperheroCharacterCacheTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SuperheroCharacterCacheTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SuperheroCharacterCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> metronCharacterId = const Value.absent(),
+                Value<int> superheroId = const Value.absent(),
+                Value<String> superheroName = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<String?> powerstatsJson = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SuperheroCharacterCacheCompanion(
+                metronCharacterId: metronCharacterId,
+                superheroId: superheroId,
+                superheroName: superheroName,
+                imageUrl: imageUrl,
+                powerstatsJson: powerstatsJson,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> metronCharacterId = const Value.absent(),
+                required int superheroId,
+                required String superheroName,
+                Value<String?> imageUrl = const Value.absent(),
+                Value<String?> powerstatsJson = const Value.absent(),
+                required DateTime updatedAt,
+              }) => SuperheroCharacterCacheCompanion.insert(
+                metronCharacterId: metronCharacterId,
+                superheroId: superheroId,
+                superheroName: superheroName,
+                imageUrl: imageUrl,
+                powerstatsJson: powerstatsJson,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SuperheroCharacterCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SuperheroCharacterCacheTable,
+      SuperheroCharacterCacheData,
+      $$SuperheroCharacterCacheTableFilterComposer,
+      $$SuperheroCharacterCacheTableOrderingComposer,
+      $$SuperheroCharacterCacheTableAnnotationComposer,
+      $$SuperheroCharacterCacheTableCreateCompanionBuilder,
+      $$SuperheroCharacterCacheTableUpdateCompanionBuilder,
+      (
+        SuperheroCharacterCacheData,
+        BaseReferences<
+          _$AppDatabase,
+          $SuperheroCharacterCacheTable,
+          SuperheroCharacterCacheData
+        >,
+      ),
+      SuperheroCharacterCacheData,
+      PrefetchHooks Function()
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String key,
@@ -29256,6 +29937,11 @@ class $AppDatabaseManager {
       $$ApiCacheTableTableManager(_db, _db.apiCache);
   $$ImageCacheTableTableManager get imageCache =>
       $$ImageCacheTableTableManager(_db, _db.imageCache);
+  $$SuperheroCharacterCacheTableTableManager get superheroCharacterCache =>
+      $$SuperheroCharacterCacheTableTableManager(
+        _db,
+        _db.superheroCharacterCache,
+      );
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$SeriesNameIndexTableTableManager get seriesNameIndex =>

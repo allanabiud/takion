@@ -8,6 +8,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
+import 'package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
@@ -114,6 +115,13 @@ class _CharacterDetailsScreenState
     final detailsAsync = ref.watch(
       characterDetailsProvider(widget.characterId),
     );
+    final superheroAsync = ref.watch(
+      superheroCharacterProvider(widget.characterId),
+    );
+    final usePowerstats =
+        ref.watch(superheroUsePowerstatsProvider).value ?? false;
+    final superhero = superheroAsync.asData?.value;
+    final isSuperHeroLoading = superheroAsync.isLoading;
     final isFavoriteAsync = ref.watch(
       isCharacterFavoriteProvider(widget.characterId),
     );
@@ -136,6 +144,7 @@ class _CharacterDetailsScreenState
       initialChildSize: 0.60,
       headerHeight: 350,
       toImageUrl: (d) => d.image,
+      toFallbackImageUrl: (d) => null,
       toHeroTag: (d) => 'character-image-${d.id}',
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.alias,
@@ -273,6 +282,20 @@ class _CharacterDetailsScreenState
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _CharacterCreatorsCard(creators: data.creators),
+              ),
+            ),
+          ],
+          if (usePowerstats &&
+              (isSuperHeroLoading || superhero?.powerstats != null)) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: isSuperHeroLoading
+                    ? const ShimmerWidget(
+                        child: SkeletonBox(borderRadius: 16, height: 340),
+                      )
+                    : PowerStatsRadarCard(powerstats: superhero!.powerstats!),
               ),
             ),
           ],

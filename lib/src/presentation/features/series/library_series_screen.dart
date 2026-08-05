@@ -146,10 +146,10 @@ class LibrarySeriesScreen extends ConsumerWidget {
       ],
       sheetContentBuilder: (context, d, ref) {
         return [
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _CategoryIssueList(
                 seriesId: seriesId,
                 category: category,
