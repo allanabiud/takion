@@ -2,7 +2,7 @@ name: takion
 description: "Android app for Metron-powered comic pull-list and collection tracking."
 publish_to: 'none'
 
-version: 1.0.0
+version: 1.1.0
 
 environment:
   sdk: ^3.11.0
@@ -15,7 +15,6 @@ dependencies:
   riverpod_annotation: ^4.0.2
   dio: ^5.9.1
   path_provider: ^2.1.5
-  json_annotation: ^4.11.0
   freezed_annotation: ^3.1.0
   drift: ^2.23.0
   sqlite3_flutter_libs: ^0.5.15
@@ -48,7 +47,6 @@ dependencies:
   flutter_svg: ^2.0.17
   talker: ^5.1.19
   talker_flutter: ^5.1.19
-  heatmap_calendar_plus: ^2.3.0
 
 
 dev_dependencies:

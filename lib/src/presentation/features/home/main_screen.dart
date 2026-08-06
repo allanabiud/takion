@@ -472,22 +472,34 @@ class MainScreenState extends ConsumerState<MainScreen>
                     return ListTile(
                       leading: const Icon(Icons.history),
                       title: Text(item),
-                      trailing: IconButton(
-                        tooltip: 'Delete from history',
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () {
-                          ref
-                              .read(searchStateProvider.notifier)
-                              .removeHistory(item);
-                        },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Fill search field',
+                            icon: const Icon(Icons.north_west),
+                            onPressed: () {
+                              _searchController.text = item;
+                              _searchController.selection = TextSelection.fromPosition(
+                                TextPosition(offset: _searchController.text.length),
+                              );
+                              _searchFocusNode.requestFocus();
+                            },
+                          ),
+                          IconButton(
+                            tooltip: 'Delete from history',
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () {
+                              ref
+                                  .read(searchStateProvider.notifier)
+                                  .removeHistory(item);
+                            },
+                          ),
+                        ],
                       ),
                       onTap: () {
                         _searchController.text = item;
-                        _searchController
-                            .selection = TextSelection.fromPosition(
-                          TextPosition(offset: _searchController.text.length),
-                        );
-                        _searchFocusNode.requestFocus();
+                        _submitSearch();
                       },
                     );
                   },

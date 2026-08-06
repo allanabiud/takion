@@ -245,22 +245,8 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    if (android != null) {
-      return (await android.requestNotificationsPermission()) ?? true;
-    }
-    final ios = _plugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >();
-    if (ios != null) {
-      return (await ios.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          )) ??
-          true;
-    }
-    return true;
+    if (android == null) return true;
+    return (await android.requestNotificationsPermission()) ?? true;
   }
 
   /// Android 14+ requires explicit user approval for exact alarms.

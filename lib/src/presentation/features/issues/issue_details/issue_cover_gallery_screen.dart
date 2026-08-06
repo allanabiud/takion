@@ -95,17 +95,15 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
     setState(() => _isDownloading = true);
 
     try {
-      if (Platform.isAndroid) {
-        final status = await Permission.storage.request();
-        if (status.isPermanentlyDenied) {
-          if (!mounted) return;
-          TakionAlerts.error(
-            context,
-            'Storage permission is required to save images. Please enable it in settings.',
-          );
-          openAppSettings();
-          return;
-        }
+      final status = await Permission.storage.request();
+      if (status.isPermanentlyDenied) {
+        if (!mounted) return;
+        TakionAlerts.error(
+          context,
+          'Storage permission is required to save images. Please enable it in settings.',
+        );
+        openAppSettings();
+        return;
       }
 
       final hasAccess = await Gal.hasAccess();

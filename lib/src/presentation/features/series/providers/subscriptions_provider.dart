@@ -3,6 +3,7 @@ import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/constants/pagination.dart';
+import 'package:takion/src/data/common/drift/database.dart' hide SeriesSubscription;
 
 const _subscriptionsPageSize = metronDefaultPageSize;
 
@@ -58,16 +59,27 @@ class SubscriptionSeriesCardData {
   const SubscriptionSeriesCardData({
     this.mostRecentIssueImage,
     this.nextIssueDate,
+    this.seriesName,
   });
 
   final String? mostRecentIssueImage;
   final DateTime? nextIssueDate;
+  final String? seriesName;
 }
 
-/// Reads a subscription's cover and next release purely from the local cache (no network).
+final seriesStreamProvider = StreamProvider.autoDispose
+    .family<MetronSery?, int>((ref, seriesId) {
+      final dao = ref.watch(metronEntityDaoProvider);
+      return dao.watchSeries(seriesId);
+    });
+
+/// Reads a subscription's cover, series name, and next release purely from the local cache (no network).
 final subscriptionSeriesCardProvider = StreamProvider.autoDispose
     .family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
       final dao = ref.watch(metronEntityDaoProvider);
+      final seriesAsync = ref.watch(seriesStreamProvider(seriesId));
+      final seriesName = seriesAsync.value?.name;
+
       return dao.watchIssuesBySeries(seriesId).map((issues) {
         String? mostRecentImage;
         DateTime? nextIssueDate;
@@ -104,6 +116,7 @@ final subscriptionSeriesCardProvider = StreamProvider.autoDispose
         return SubscriptionSeriesCardData(
           mostRecentIssueImage: mostRecentImage,
           nextIssueDate: nextIssueDate,
+          seriesName: seriesName,
         );
       });
     });

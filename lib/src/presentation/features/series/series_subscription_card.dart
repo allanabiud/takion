@@ -20,6 +20,10 @@ class SeriesSubscriptionCard extends ConsumerWidget {
     final cardDataAsync = ref.watch(subscriptionSeriesCardProvider(series.id));
     final mostRecentImage = cardDataAsync.value?.mostRecentIssueImage;
     final nextIssueDate = cardDataAsync.value?.nextIssueDate;
+    final displayName =
+        (cardDataAsync.value?.seriesName?.trim().isNotEmpty ?? false)
+            ? cardDataAsync.value!.seriesName!
+            : series.name;
 
     final effectiveOnTap =
         onTap ??
@@ -40,7 +44,7 @@ class SeriesSubscriptionCard extends ConsumerWidget {
             return Stack(
               fit: StackFit.expand,
               children: [
-                _buildCover(theme, mostRecentImage, cacheWidth),
+                _buildCover(theme, mostRecentImage, cacheWidth, displayName),
                 IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -70,7 +74,7 @@ class SeriesSubscriptionCard extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(10),
                     child: Text(
-                      series.name,
+                      displayName,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -94,6 +98,7 @@ class SeriesSubscriptionCard extends ConsumerWidget {
     ThemeData theme,
     String? mostRecentImage,
     int cacheWidth,
+    String displayName,
   ) {
     final hasImage = mostRecentImage != null && mostRecentImage.isNotEmpty;
     return Positioned.fill(
@@ -103,21 +108,21 @@ class SeriesSubscriptionCard extends ConsumerWidget {
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
               memCacheWidth: cacheWidth,
-              placeholder: (context, url) => _buildPlaceholder(theme),
-              errorWidget: (context, url, error) => _buildPlaceholder(theme),
+              placeholder: (context, url) => _buildPlaceholder(theme, displayName),
+              errorWidget: (context, url, error) => _buildPlaceholder(theme, displayName),
             )
-          : _buildPlaceholder(theme),
+          : _buildPlaceholder(theme, displayName),
     );
   }
 
-  Widget _buildPlaceholder(ThemeData theme) {
+  Widget _buildPlaceholder(ThemeData theme, String displayName) {
     return Container(
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            initials(series.name),
+            initials(displayName),
             style: TextStyle(
               color: theme.colorScheme.primary,
               fontSize: 28,

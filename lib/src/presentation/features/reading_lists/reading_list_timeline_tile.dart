@@ -113,9 +113,11 @@ class ReadingListTimelineTile extends ConsumerWidget {
           } else {
             series = SeriesList(
               id: id,
-              name: id > 0 ? 'Series #$id' : 'Series',
-              yearBegan: null,
-              volume: null,
+              name: item.seriesName?.trim().isNotEmpty == true
+                  ? item.seriesName!
+                  : (id > 0 ? 'Series #$id' : 'Series'),
+              yearBegan: item.yearBegan,
+              volume: item.seriesVolume,
             );
           }
 
@@ -146,8 +148,8 @@ class ReadingListTimelineTile extends ConsumerWidget {
             number: cachedMetadata.number,
             series: series,
             image: cachedMetadata.image,
-            coverDate: cachedMetadata.coverDate,
-            storeDate: cachedMetadata.storeDate,
+            coverDate: cachedMetadata.coverDate ?? item.coverDate,
+            storeDate: cachedMetadata.storeDate ?? item.storeDate,
             modified: cachedMetadata.modified,
           );
         } else {
@@ -165,9 +167,11 @@ class ReadingListTimelineTile extends ConsumerWidget {
           ? SeriesListTile(
               series: SeriesList(
                 id: id,
-                name: id > 0 ? 'Series #$id' : 'Series',
-                yearBegan: null,
-                volume: null,
+                name: item.seriesName?.trim().isNotEmpty == true
+                    ? item.seriesName!
+                    : (id > 0 ? 'Series #$id' : 'Series'),
+                yearBegan: item.yearBegan,
+                volume: item.seriesVolume,
               ),
               horizontalPadding: 0,
               role: item.role,
@@ -183,9 +187,11 @@ class ReadingListTimelineTile extends ConsumerWidget {
           ? SeriesListTile(
               series: SeriesList(
                 id: id,
-                name: id > 0 ? 'Series #$id' : 'Series',
-                yearBegan: null,
-                volume: null,
+                name: item.seriesName?.trim().isNotEmpty == true
+                    ? item.seriesName!
+                    : (id > 0 ? 'Series #$id' : 'Series'),
+                yearBegan: item.yearBegan,
+                volume: item.seriesVolume,
               ),
               horizontalPadding: 0,
               role: item.role,

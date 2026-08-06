@@ -32,16 +32,15 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final corrected = await _correctSearchQuery(query);
             final remotePage = nextUrl != null
                 ? await _remoteDataSource.searchSeries(
-                    corrected,
+                    query,
                     nextUrl: Uri.parse(nextUrl),
                     limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.searchSeries(
-                    corrected,
+                    query,
                     page: page,
                     limit: limit,
                     cancelToken: cancelToken,
@@ -76,16 +75,15 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final corrected = await _correctSearchQuery(query);
       final remotePage = nextUrl != null
           ? await _remoteDataSource.searchSeries(
-              corrected,
+              query,
               nextUrl: Uri.parse(nextUrl),
               limit: limit,
               cancelToken: cancelToken,
             )
           : await _remoteDataSource.searchSeries(
-              corrected,
+              query,
               page: page,
               limit: limit,
               cancelToken: cancelToken,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
+import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
 import 'package:timelines_plus/timelines_plus.dart';
 
 class MetronReadingListTimelineTile extends ConsumerWidget {
@@ -34,24 +35,64 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
 
     final seriesName = item.seriesName?.trim();
     final issueNumber = item.issueNumber?.trim();
-    final issue = IssueList(
-      id: item.issueId,
-      name: seriesName != null && seriesName.isNotEmpty ? seriesName : 'Issue',
-      number: issueNumber ?? '',
-      series:
-          item.seriesId != null && seriesName != null && seriesName.isNotEmpty
-          ? Series(
-              id: item.seriesId!,
-              name: seriesName,
-              volume: item.seriesVolume,
-              yearBegan: null,
-            )
-          : null,
-      coverDate: item.coverDate,
-      storeDate: item.storeDate,
-      image: null,
-      modified: null,
+
+    final cachedMetadataAsync = ref.watch(
+      readingListItemCachedMetadataProvider((
+        targetId: 'issue-${item.issueId}',
+        isSeries: false,
+      )),
     );
+    final cachedIssue = cachedMetadataAsync.value is IssueDetails
+        ? cachedMetadataAsync.value as IssueDetails
+        : null;
+
+    final issue = cachedIssue != null
+        ? IssueList(
+            id: cachedIssue.id,
+            name: cachedIssue.series?.name.trim().isNotEmpty == true
+                ? cachedIssue.series!.name
+                : (seriesName != null && seriesName.isNotEmpty ? seriesName : 'Issue'),
+            number: cachedIssue.number.isNotEmpty == true
+                ? cachedIssue.number
+                : (issueNumber ?? ''),
+            series: cachedIssue.series == null
+                ? (item.seriesId != null && seriesName != null && seriesName.isNotEmpty
+                    ? Series(
+                        id: item.seriesId!,
+                        name: seriesName,
+                        volume: item.seriesVolume,
+                        yearBegan: null,
+                      )
+                    : null)
+                : Series(
+                    id: cachedIssue.series!.id,
+                    name: cachedIssue.series!.name,
+                    volume: cachedIssue.series!.volume,
+                    yearBegan: cachedIssue.series!.yearBegan,
+                  ),
+            coverDate: cachedIssue.coverDate ?? item.coverDate,
+            storeDate: cachedIssue.storeDate ?? item.storeDate,
+            image: cachedIssue.image,
+            modified: cachedIssue.modified,
+          )
+        : IssueList(
+            id: item.issueId,
+            name: seriesName != null && seriesName.isNotEmpty ? seriesName : 'Issue',
+            number: issueNumber ?? '',
+            series:
+                item.seriesId != null && seriesName != null && seriesName.isNotEmpty
+                ? Series(
+                    id: item.seriesId!,
+                    name: seriesName,
+                    volume: item.seriesVolume,
+                    yearBegan: null,
+                  )
+                : null,
+            coverDate: item.coverDate,
+            storeDate: item.storeDate,
+            image: null,
+            modified: null,
+          );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

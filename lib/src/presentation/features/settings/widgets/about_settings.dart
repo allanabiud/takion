@@ -18,6 +18,14 @@ Future<void> launchGitHubRepo(BuildContext context) async {
   }
 }
 
+Future<void> launchKoFi(BuildContext context) async {
+  final url = Uri.parse('https://ko-fi.com/allanabiud');
+  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+    if (!context.mounted) return;
+    TakionAlerts.couldNotOpenInBrowser(context, 'Ko-fi page');
+  }
+}
+
 void showAboutSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
@@ -176,6 +184,16 @@ class _AboutBody extends ConsumerWidget {
                   icon: const Icon(Icons.open_in_new),
                 ),
               ],
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.coffee_outlined),
+              title: const Text(
+                'Support Developer',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text('Buy me a coffee on Ko-fi'),
+              onTap: () => launchKoFi(context),
             ),
           ]),
           const SizedBox(height: 24),

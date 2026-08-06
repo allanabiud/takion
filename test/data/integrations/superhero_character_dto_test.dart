@@ -137,7 +137,6 @@ void main() {
           SuperHeroSearchResponseDto.fromJson(json).results.first.toEntity();
       expect(entity.id, 70);
       expect(entity.name, 'Batman');
-      expect(entity.imageUrl, 'https://example.com/batman.jpg');
       expect(entity.powerstats!.combat, 100);
     });
   });

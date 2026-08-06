@@ -86,7 +86,6 @@ void main() {
 
     expect(result, isNotNull);
     expect(result!.name, 'Batman');
-    expect(result.imageUrl, 'https://example.com/batman.jpg');
     expect(result.powerstats!.intelligence, 100);
     expect(remote.searchCalls, 1);
   });

@@ -131,9 +131,8 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       if (!isFresh) {
         _refreshInBackground(
           task: () async {
-            final corrected = await _correctSearchQuery(query);
             final remotePage = await _remoteDataSource.searchIssues(
-              corrected,
+              query,
               nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
               page: page,
               limit: limit,
@@ -169,9 +168,8 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final corrected = await _correctSearchQuery(query);
       final remotePage = await _remoteDataSource.searchIssues(
-        corrected,
+        query,
         nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
         page: page,
         limit: limit,
