@@ -151,49 +151,44 @@ class _AboutBody extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           buildSettingsGroup(context, 'Developer', [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                radius: 20,
+                backgroundImage: const CachedNetworkImageProvider(
+                  'https://avatars.githubusercontent.com/u/66108188?s=96&v=4',
+                ),
+              ),
+              title: const Text(
+                'allanabiud',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text('Creator and maintainer'),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage: const CachedNetworkImageProvider(
-                    'https://avatars.githubusercontent.com/u/66108188?s=96&v=4',
+                Expanded(
+                  child: _DeveloperAction(
+                    icon: Icons.code,
+                    label: 'GitHub',
+                    subtitle: 'View profile',
+                    onTap: () => launchUrl(
+                      Uri.parse('https://github.com/allanabiud'),
+                      mode: LaunchMode.externalApplication,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'allanabiud',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'Creator and maintainer',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                  child: _DeveloperAction(
+                    icon: Icons.coffee_outlined,
+                    label: 'Support',
+                    subtitle: 'Buy me a coffee',
+                    onTap: () => launchKoFi(context),
                   ),
                 ),
-                IconButton(
-                  onPressed: () =>
-                      launchUrl(Uri.parse('https://github.com/allanabiud')),
-                  icon: const Icon(Icons.open_in_new),
-                ),
               ],
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.coffee_outlined),
-              title: const Text(
-                'Support Developer',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text('Buy me a coffee on Ko-fi'),
-              onTap: () => launchKoFi(context),
             ),
           ]),
           const SizedBox(height: 24),
@@ -210,6 +205,55 @@ class _AboutBody extends ConsumerWidget {
             ),
           ]),
         ],
+      ),
+    );
+  }
+}
+
+class _DeveloperAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _DeveloperAction({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      color: colorScheme.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: colorScheme.primary),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

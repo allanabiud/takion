@@ -31,7 +31,18 @@ part 'metron_repository_impl_publishers.dart';
 part 'metron_repository_impl_arcs.dart';
 part 'metron_repository_impl_reading_lists.dart';
 
-// ignore_for_file: unused_element
+Map<String, dynamic> _asMap(dynamic data) {
+  if (data is Map<String, dynamic>) return data;
+  if (data is Map) return Map<String, dynamic>.from(data);
+  if (data is String) {
+    try {
+      final decoded = jsonDecode(data);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+  }
+  return <String, dynamic>{};
+}
 
 mixin _RepositoryState {
   MetronRemoteDataSource get _remoteDataSource;
@@ -59,10 +70,6 @@ mixin _RepositoryState {
   Map<String, Future<TeamListPage>> get _teamListInFlight;
   Map<String, Future<UniverseListPage>> get _universeListInFlight;
   Map<String, Future<MetronReadingListPage>> get _readingListInFlight;
-  Map<String, DateTime> get _lastBackgroundRefresh;
-  int get _backgroundRefreshCount;
-  set _backgroundRefreshCount(int value);
-  SeriesNameIndex get _seriesNameIndex;
 
   Future<T> _coalesce<T>(
     Map<String, Future<T>> inFlight,
@@ -79,7 +86,6 @@ mixin _RepositoryState {
   void _indexSeriesName(String name);
   void _indexSeriesNamesFromIssueList(Iterable<IssueListDto> issues);
   void _indexSeriesNamesFromIssueDetails(IssueDetailsDto issue);
-  Future<String> _correctSearchQuery(String query);
   Future<T> _fetchWithConditional<T>({
     required Future<Response> fetch,
     required Future<T> Function() cached,
@@ -240,12 +246,9 @@ class MetronRepositoryImpl
   @override
   final Map<String, Future<MetronReadingListPage>> _readingListInFlight =
       <String, Future<MetronReadingListPage>>{};
-  @override
   final Map<String, DateTime> _lastBackgroundRefresh = {};
-  @override
   int _backgroundRefreshCount = 0;
   static const int _maxConcurrentBackgroundRefreshes = 3;
-  @override
   final SeriesNameIndex _seriesNameIndex;
 
   MetronRepositoryImpl(
@@ -341,21 +344,6 @@ class MetronRepositoryImpl
     if (series != null && series.name.trim().isNotEmpty) {
       _indexSeriesName(series.name);
     }
-  }
-
-  @override
-  Future<String> _correctSearchQuery(String query) async {
-    final stripped = query.replaceAll(RegExp(r'\d+$'), '').trim();
-    if (stripped.isNotEmpty) {
-      final corrected = await _seriesNameIndex.fuzzyMatch(stripped);
-      if (corrected != null) {
-        final suffix = query.substring(stripped.length);
-        return '$corrected$suffix';
-      }
-    }
-    final corrected = await _seriesNameIndex.fuzzyMatch(query);
-    if (corrected != null) return corrected;
-    return query;
   }
 
   @override

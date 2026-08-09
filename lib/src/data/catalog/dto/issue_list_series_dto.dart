@@ -13,8 +13,14 @@ abstract class IssueListSeriesDto with _$IssueListSeriesDto {
     int? id,
   }) = _IssueListSeriesDto;
 
-  factory IssueListSeriesDto.fromJson(Map<String, dynamic> json) =>
-      _$IssueListSeriesDtoFromJson(json);
+  factory IssueListSeriesDto.fromJson(Map<String, dynamic> json) {
+    return IssueListSeriesDto(
+      name: json['name']?.toString() ?? '',
+      volume: (json['volume'] as num?)?.toInt() ?? 1,
+      yearBegan: (json['year_began'] as num?)?.toInt() ?? 0,
+      id: (json['id'] as num?)?.toInt(),
+    );
+  }
 
   const IssueListSeriesDto._();
 

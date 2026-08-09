@@ -43,16 +43,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
 
   Future<void> _refreshIssueData() async {
     try {
-      final newIssue = await ref
+      await ref
           .read(catalogRepositoryProvider)
           .getIssueDetails(_currentIssueId, forceRefresh: true);
-      final currentIssue = ref
-          .read(issueDetailsProvider(_currentIssueId))
-          .asData
-          ?.value;
-      if (currentIssue != newIssue) {
-        ref.invalidate(issueDetailsProvider(_currentIssueId));
-      }
+      ref.invalidate(issueDetailsProvider(_currentIssueId));
       if (mounted) {
         TakionAlerts.success(context, 'Issue details refreshed');
       }

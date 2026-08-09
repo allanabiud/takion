@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/presentation/features/series/providers/subscription_cards_hydrater.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
@@ -42,6 +45,15 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     );
     final pageAsync = ref.watch(subscribedSeriesPageProvider(_page));
     final query = _searchController.text.toLowerCase().trim();
+
+    ref.listen(subscribedSeriesPageProvider(_page), (previous, next) {
+      final page = next.value;
+      if (page == null) return;
+      final seriesIds = page.results.map((s) => s.id).toList(growable: false);
+      final hydrater = ref.read(subscriptionCardsHydraterProvider);
+      unawaited(hydrater.hydrate(seriesIds));
+      unawaited(hydrater.warmCoverImages(context, seriesIds));
+    });
 
     if (pageAsync.hasValue) {
       _lastPage = pageAsync.value;

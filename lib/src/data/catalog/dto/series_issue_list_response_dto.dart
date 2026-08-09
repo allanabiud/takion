@@ -17,15 +17,15 @@ class SeriesIssueListResponseDto {
     final rawResults = json['results'];
     final results = rawResults is List
         ? rawResults
-              .whereType<Map<String, dynamic>>()
-              .map(IssueListDto.fromJson)
+              .whereType<Map>()
+              .map((e) => IssueListDto.fromJson(Map<String, dynamic>.from(e)))
               .toList()
         : <IssueListDto>[];
 
     return SeriesIssueListResponseDto(
       count: (json['count'] as num?)?.toInt() ?? results.length,
-      next: json['next'] as String?,
-      previous: json['previous'] as String?,
+      next: json['next']?.toString(),
+      previous: json['previous']?.toString(),
       results: results,
     );
   }

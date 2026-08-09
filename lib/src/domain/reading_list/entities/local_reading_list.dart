@@ -25,8 +25,30 @@ abstract class LocalReadingListItem with _$LocalReadingListItem {
     DateTime? storeDate,
   }) = _LocalReadingListItem;
 
-  factory LocalReadingListItem.fromJson(Map<String, dynamic> json) =>
-      _$LocalReadingListItemFromJson(json);
+  factory LocalReadingListItem.fromJson(Map<String, dynamic> json) {
+    return LocalReadingListItem(
+      targetId: json['targetId']?.toString() ?? '',
+      isSeries: json['isSeries'] as bool? ?? false,
+      role: json['role'] != null
+          ? ItemRole.values.firstWhere(
+              (e) => e.name == json['role'],
+              orElse: () => ItemRole.standard,
+            )
+          : ItemRole.standard,
+      isRead: json['isRead'] as bool? ?? false,
+      seriesName: json['seriesName']?.toString(),
+      seriesVolume: (json['seriesVolume'] as num?)?.toInt(),
+      issueNumber: json['issueNumber']?.toString(),
+      seriesId: (json['seriesId'] as num?)?.toInt(),
+      yearBegan: (json['yearBegan'] as num?)?.toInt(),
+      coverDate: json['coverDate'] != null
+          ? DateTime.tryParse(json['coverDate'].toString())
+          : null,
+      storeDate: json['storeDate'] != null
+          ? DateTime.tryParse(json['storeDate'].toString())
+          : null,
+    );
+  }
 }
 
 @freezed
@@ -49,8 +71,44 @@ abstract class LocalReadingList with _$LocalReadingList {
     DateTime? lastSyncedAt,
   }) = _LocalReadingList;
 
-  factory LocalReadingList.fromJson(Map<String, dynamic> json) =>
-      _$LocalReadingListFromJson(json);
+  factory LocalReadingList.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    final items = rawItems is List
+        ? rawItems
+              .whereType<Map>()
+              .map((e) => LocalReadingListItem.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+        : <LocalReadingListItem>[];
+
+    return LocalReadingList(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      isOrdered: json['isOrdered'] as bool? ?? true,
+      contentType: json['contentType'] != null
+          ? ListContentType.values.firstWhere(
+              (e) => e.name == json['contentType'],
+              orElse: () => ListContentType.issue,
+            )
+          : ListContentType.issue,
+      createdAt: json['createdAt'] != null
+          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      items: items,
+      metronSourceId: (json['metronSourceId'] as num?)?.toInt(),
+      metronArcId: (json['metronArcId'] as num?)?.toInt(),
+      metronAttributionSource: json['metronAttributionSource']?.toString(),
+      metronAttributionUrl: json['metronAttributionUrl']?.toString(),
+      metronImageUrl: json['metronImageUrl']?.toString(),
+      metronListType: json['metronListType']?.toString(),
+      lastSyncedAt: json['lastSyncedAt'] != null
+          ? DateTime.tryParse(json['lastSyncedAt'].toString())
+          : null,
+    );
+  }
 }
 
 extension LocalReadingListExtensions on LocalReadingList {

@@ -21,10 +21,15 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
   LocalReadingList _toDomain(db.ReadingList d) {
     List<LocalReadingListItem> items;
     try {
-      final decoded = jsonDecode(d.itemsJson) as List<dynamic>;
-      items = decoded
-          .map((e) => LocalReadingListItem.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final decoded = jsonDecode(d.itemsJson);
+      if (decoded is List) {
+        items = decoded
+            .whereType<Map>()
+            .map((e) => LocalReadingListItem.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      } else {
+        items = <LocalReadingListItem>[];
+      }
     } catch (e) {
       AppLogger.warning('Failed to decode reading list items', error: e);
       items = <LocalReadingListItem>[];

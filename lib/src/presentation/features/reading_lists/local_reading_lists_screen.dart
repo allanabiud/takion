@@ -93,17 +93,13 @@ class _LocalReadingListsScreenState
             };
           }).toList();
 
-          final isEmptyState = lists.isEmpty;
-
-          if (isEmptyState) {
-            return const EmptyContentState(
+          final Widget content;
+          if (lists.isEmpty) {
+            content = const EmptyContentState(
               icon: Icons.list_alt_outlined,
               message: 'No reading lists created.',
             );
-          }
-
-          final Widget content;
-          if (filtered.isEmpty) {
+          } else if (filtered.isEmpty) {
             if (_isSearching) {
               content = EmptyContentState(
                 icon: Icons.search_off,

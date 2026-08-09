@@ -106,7 +106,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Get a Metron API Key'),
+        title: const Text('Get a Metron API Token'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,7 +339,7 @@ class _AuthorizeMetronScreenState extends ConsumerState<AuthorizeMetronScreen> {
                             TextButton(
                               onPressed: isOffline ? null : _showApiKeyHelp,
                               child: const Text(
-                                'Don\'t have a Metron API Key?',
+                                'Don\'t have a Metron API Token?',
                               ),
                             ),
                           ],

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/data/catalog/dto/dto.dart';
@@ -253,6 +254,19 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters: queryParameters,
       cancelToken: cancelToken,
     );
+  }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    if (data is String) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) return decoded;
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    return <String, dynamic>{};
   }
 
   String _normalizeQuery(String query) {
@@ -884,7 +898,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
             queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
-    return ArcListResponseDto.fromJson(response.data as Map<String, dynamic>);
+    return ArcListResponseDto.fromJson(_asMap(response.data));
   }
 
   @override
@@ -909,7 +923,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
           );
 
     return SeriesIssueListResponseDto.fromJson(
-      response.data as Map<String, dynamic>,
+      _asMap(response.data),
     );
   }
 

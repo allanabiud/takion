@@ -33,52 +33,63 @@ class DriveSyncService {
 
   final AppDatabase _db;
   final Dio _dio;
+  final http.Client _httpClient;
   final GoogleSignIn _googleSignIn;
+  final Future<String> Function()? _accessTokenProvider;
   String? _appFolderIdCache;
 
-  DriveSyncService(this._db)
-    : _dio = Dio(
-        BaseOptions(
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
+  DriveSyncService(
+    this._db, {
+    Dio? dio,
+    http.Client? httpClient,
+    Future<String> Function()? accessTokenProvider,
+  }) : _dio = dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 30),
+              sendTimeout: const Duration(seconds: 30),
+            ),
+          ),
+       _httpClient = httpClient ?? http.Client(),
+       _googleSignIn = GoogleSignIn(scopes: [_driveScope]),
+       _accessTokenProvider = accessTokenProvider {
+    if (dio == null) {
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            options.extra['_start'] = DateTime.now();
+            handler.next(options);
+          },
+          onResponse: (response, handler) {
+            final start = response.requestOptions.extra['_start'] as DateTime?;
+            final ms = start == null
+                ? null
+                : DateTime.now().difference(start).inMilliseconds;
+            AppLogger.info(
+              'Drive ${response.requestOptions.method} '
+              '${response.requestOptions.uri} -> ${response.statusCode}'
+              '${ms == null ? '' : ' (${ms}ms)'}',
+            );
+            handler.next(response);
+          },
+          onError: (error, handler) {
+            final start = error.requestOptions.extra['_start'] as DateTime?;
+            final ms = start == null
+                ? null
+                : DateTime.now().difference(start).inMilliseconds;
+            AppLogger.warning(
+              'Drive ${error.requestOptions.method} '
+              '${error.requestOptions.uri} failed'
+              '${ms == null ? '' : ' (${ms}ms)'}: '
+              '${error.type} ${error.response?.statusCode}',
+              error: error,
+            );
+            handler.next(error);
+          },
         ),
-      ),
-      _googleSignIn = GoogleSignIn(scopes: [_driveScope]) {
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          options.extra['_start'] = DateTime.now();
-          handler.next(options);
-        },
-        onResponse: (response, handler) {
-          final start = response.requestOptions.extra['_start'] as DateTime?;
-          final ms = start == null
-              ? null
-              : DateTime.now().difference(start).inMilliseconds;
-          AppLogger.info(
-            'Drive ${response.requestOptions.method} '
-            '${response.requestOptions.uri} -> ${response.statusCode}'
-            '${ms == null ? '' : ' (${ms}ms)'}',
-          );
-          handler.next(response);
-        },
-        onError: (error, handler) {
-          final start = error.requestOptions.extra['_start'] as DateTime?;
-          final ms = start == null
-              ? null
-              : DateTime.now().difference(start).inMilliseconds;
-          AppLogger.warning(
-            'Drive ${error.requestOptions.method} '
-            '${error.requestOptions.uri} failed'
-            '${ms == null ? '' : ' (${ms}ms)'}: '
-            '${error.type} ${error.response?.statusCode}',
-            error: error,
-          );
-          handler.next(error);
-        },
-      ),
-    );
+      );
+    }
   }
 
   GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
@@ -112,6 +123,9 @@ class DriveSyncService {
   }
 
   Future<String> _getAccessToken() async {
+    final provider = _accessTokenProvider;
+    if (provider != null) return provider();
+
     var user = _googleSignIn.currentUser;
     user ??= await signInSilently();
     if (user == null) {
@@ -472,7 +486,7 @@ class DriveSyncService {
       request.headers['Content-Type'] = 'multipart/related; boundary=$boundary';
       request.bodyBytes = bodyBytes;
 
-      final streamed = await request.send().timeout(
+      final streamed = await _httpClient.send(request).timeout(
         const Duration(seconds: 60),
       );
       final response = await http.Response.fromStream(
@@ -669,14 +683,28 @@ class DriveSyncService {
     bool remoteChangesApplied = false;
     String? remoteToTimestamp;
 
-    if (deltaFileId != null) {
+    if (lastSyncTime == null) {
+      // First sync on this device: always prefer the complete full snapshot.
+      final fullFileId = await _guarded(
+        'folder',
+        () => _findFileId(_fullFileName),
+      );
+      if (fullFileId != null) {
+        AppLogger.info('First sync: downloading full snapshot');
+        remoteToTimestamp = await _applyRemoteFile(fullFileId, localDeviceId);
+        remoteChangesApplied = remoteToTimestamp != null;
+      } else {
+        // No full snapshot exists yet — this device seeds Drive below.
+        AppLogger.info('First sync: no full snapshot found, will seed Drive');
+      }
+    } else if (deltaFileId != null) {
       final remoteModified = await _guarded(
         'meta',
         () => _getFileModificationTime(deltaFileId),
       );
       final remoteIsNewer =
           remoteModified != null &&
-          (lastSyncTime == null || remoteModified.isAfter(lastSyncTime)) &&
+          remoteModified.isAfter(lastSyncTime) &&
           (lastUploaded == null || remoteModified.isAfter(lastUploaded));
       if (remoteIsNewer) {
         AppLogger.info(
@@ -694,44 +722,45 @@ class DriveSyncService {
           if (_isSupportedVersion(payload['version'])) {
             final remoteDeviceId = payload['deviceId'] as String?;
             if (remoteDeviceId != localDeviceId) {
-              await _guarded('apply', () => applyDelta(payload));
-              remoteChangesApplied = true;
-              remoteToTimestamp = payload['toTimestamp'] as String?;
+              final fromTimestamp = payload['fromTimestamp'] as String?;
+              final fromTs = fromTimestamp == null
+                  ? null
+                  : DateTime.tryParse(fromTimestamp);
+              final hasGap = fromTs != null && fromTs.isAfter(lastSyncTime);
+              if (hasGap) {
+                // The delta file only holds the last sync's changes; the local
+                // device missed intermediate deltas, so fall back to the
+                // always-current full snapshot.
+                AppLogger.info(
+                  'Delta gap detected (from $fromTimestamp, local lastSync '
+                  '$lastSyncTime); downloading full snapshot instead',
+                );
+                final fullFileId = await _guarded(
+                  'folder',
+                  () => _findFileId(_fullFileName),
+                );
+                if (fullFileId != null) {
+                  remoteToTimestamp = await _applyRemoteFile(
+                    fullFileId,
+                    localDeviceId,
+                  );
+                  remoteChangesApplied = remoteToTimestamp != null;
+                } else {
+                  AppLogger.warning(
+                    'Gap detected but no full snapshot found; applying delta anyway',
+                  );
+                  await _guarded('apply', () => applyDelta(payload));
+                  remoteChangesApplied = true;
+                  remoteToTimestamp = payload['toTimestamp'] as String?;
+                }
+              } else {
+                await _guarded('apply', () => applyDelta(payload));
+                remoteChangesApplied = true;
+                remoteToTimestamp = payload['toTimestamp'] as String?;
+              }
             } else {
               AppLogger.info(
                 'Remote sync file was created by this device ($localDeviceId); skipping remote apply',
-              );
-            }
-          }
-        }
-      }
-    } else {
-      final fullFileId = await _guarded(
-        'folder',
-        () => _findFileId(_fullFileName),
-      );
-      if (fullFileId != null && lastSyncTime == null) {
-        AppLogger.info(
-          'No delta but full file exists and no local sync, downloading full',
-        );
-        final bytes = await _guarded(
-          'download',
-          () => _downloadFile(fullFileId),
-        );
-        if (bytes != null) {
-          final payload = await _guarded(
-            'parse',
-            () async => jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>,
-          );
-          if (_isSupportedVersion(payload['version'])) {
-            final remoteDeviceId = payload['deviceId'] as String?;
-            if (remoteDeviceId != localDeviceId) {
-              await _guarded('apply', () => applyDelta(payload));
-              remoteChangesApplied = true;
-              remoteToTimestamp = payload['toTimestamp'] as String?;
-            } else {
-              AppLogger.info(
-                'Full sync file was created by this device; skipping remote apply',
               );
             }
           }
@@ -765,10 +794,7 @@ class DriveSyncService {
         'Uploading local sync data ($insertCount inserts, $deleteCount deletes)',
       );
 
-      final deltaPayload = await _guarded(
-        'extract',
-        () => extractDelta(lastUploaded),
-      );
+      final deltaPayload = localChangesDelta;
       final jsonBytes = utf8.encode(jsonEncode(deltaPayload));
 
       await _guarded(
@@ -793,6 +819,51 @@ class DriveSyncService {
     } else {
       AppLogger.info('No changes to sync');
     }
+
+    // Keep the full snapshot on Drive current so it always holds the complete
+    // dataset (missing snapshot, local changes, or applied remote changes).
+    final fullFileId = await _guarded(
+      'folder',
+      () => _findFileId(_fullFileName),
+    );
+    if (fullFileId == null || hasLocalChanges || remoteChangesApplied) {
+      AppLogger.info('Refreshing full snapshot on Drive');
+      final fullPayload = await _guarded('extract', () => extractDelta(null));
+      final jsonBytes = utf8.encode(jsonEncode(fullPayload));
+      await _guarded(
+        'upload',
+        () => _uploadFile(_fullFileName, Uint8List.fromList(jsonBytes)),
+      );
+    }
+  }
+
+  /// Downloads and applies a remote snapshot/delta file, returning the
+  /// payload's [toTimestamp] if it was applied, or null if it was skipped.
+  Future<String?> _applyRemoteFile(
+    String fileId,
+    String localDeviceId,
+  ) async {
+    final bytes = await _guarded('download', () => _downloadFile(fileId));
+    if (bytes == null) return null;
+    final payload = await _guarded(
+      'parse',
+      () async => jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>,
+    );
+    if (!_isSupportedVersion(payload['version'])) {
+      AppLogger.warning(
+        'Skipping unsupported sync format version: ${payload['version']}',
+      );
+      return null;
+    }
+    final remoteDeviceId = payload['deviceId'] as String?;
+    if (remoteDeviceId == localDeviceId) {
+      AppLogger.info(
+        'Remote sync file was created by this device ($localDeviceId); skipping remote apply',
+      );
+      return null;
+    }
+    await _guarded('apply', () => applyDelta(payload));
+    return payload['toTimestamp'] as String?;
   }
 
   int _countChanges(Map<String, dynamic> delta, String kind) {
@@ -835,9 +906,8 @@ class DriveSyncService {
 
     String? fileId = await _guarded(
       'folder',
-      () => _findFileId(_deltaFileName),
+      () => _findFileId(_fullFileName),
     );
-    fileId ??= await _guarded('folder', () => _findFileId(_fullFileName));
 
     if (fileId == null) {
       throw StateError('No sync data found on Google Drive');
@@ -1385,9 +1455,9 @@ class DriveSyncService {
           final localTs = DateTime.tryParse(localTsVal);
           final remoteTs = DateTime.tryParse(remoteTsVal);
           if (localTs != null && remoteTs != null) {
-            if (remoteTs.isBefore(localTs) ||
-                remoteTs.isAtSameMomentAs(localTs)) {
-              // Local is newer or equal — skip remote row (LWW).
+            if (remoteTs.isBefore(localTs)) {
+              // Local is strictly newer — keep it (LWW). Equal timestamps
+              // resolve in favor of the remote row.
               return;
             }
           }

@@ -40,7 +40,9 @@ class ReadingListSharingService {
       final file = File(result.files.single.path!);
       final content = await file.readAsString();
       try {
-        final json = jsonDecode(content) as Map<String, dynamic>;
+        final decoded = jsonDecode(content);
+        if (decoded is! Map) return null;
+        final json = Map<String, dynamic>.from(decoded);
         final list = LocalReadingList.fromJson(json);
 
         // Keep the original ID for duplicate detection but reset timestamps.

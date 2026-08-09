@@ -216,4 +216,53 @@ void main() {
 
     expect(await db.select(db.readingListItems).get(), isEmpty);
   });
+
+  test('applyDelta applies remote row when timestamps are equal (LWW tie-break)', () async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.into(db.readingListItems).insert(
+      ReadingListItemsCompanion.insert(
+        id: 'list-1:ser-1',
+        listId: 'list-1',
+        targetId: 'ser-1',
+        isSeries: true,
+        role: 'main',
+        isRead: false,
+        sortOrder: 1,
+        createdAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+
+    final payload = {
+      'version': 2,
+      'deviceId': 'remote-device-123',
+      'toTimestamp': now,
+      'tables': {
+        'reading_list_items': {
+          'inserts': [
+            {
+              'id': 'list-1:ser-1',
+              'listId': 'list-1',
+              'targetId': 'ser-1',
+              'isSeries': true,
+              'role': 'main',
+              'isRead': true,
+              'sortOrder': 5,
+              'createdAt': now,
+              'updatedAt': now,
+            },
+          ],
+          'updates': <Map<String, dynamic>>[],
+          'deletes': <String>[],
+        },
+      },
+    };
+
+    await syncService.applyDelta(payload);
+
+    final rows = await db.select(db.readingListItems).get();
+    expect(rows, hasLength(1));
+    expect(rows.first.isRead, isTrue);
+    expect(rows.first.sortOrder, 5);
+  });
 }

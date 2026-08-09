@@ -137,7 +137,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Get a Metron API Key'),
+        title: const Text('Get a Metron API Token'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -879,7 +879,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: isOffline ? null : _showApiKeyHelp,
-                        child: const Text('Don\'t have a Metron API Key?'),
+                        child: const Text('Don\'t have a Metron API Token?'),
                       ),
                     ],
                   ),
@@ -1019,19 +1019,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return PopScope(
       canPop: false,
       child: _buildPage(
-         icon: TweenAnimationBuilder<double>(
-           tween: Tween(begin: 0.0, end: 1.0),
-           duration: const Duration(milliseconds: 900),
-           curve: Curves.elasticOut,
-           builder: (context, value, child) => Transform.scale(
-             scale: value,
-             child: Transform.rotate(
-               angle: (1 - value) * -0.26,
-               child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
-             ),
-           ),
-            child: Icon(Icons.verified, size: 56, color: theme.colorScheme.primary),
-         ),
+        icon: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 900),
+          curve: Curves.elasticOut,
+          builder: (context, value, child) => Transform.scale(
+            scale: value,
+            child: Transform.rotate(
+              angle: (1 - value) * -0.26,
+              child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+            ),
+          ),
+          child: Icon(
+            Icons.verified,
+            size: 56,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         title: Text(
           'All Done!',
           style: theme.textTheme.headlineMedium?.copyWith(

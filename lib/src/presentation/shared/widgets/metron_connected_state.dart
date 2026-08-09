@@ -79,9 +79,7 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
               Text(
                 isConnected ? 'Connected' : 'Disconnected',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: isConnected
-                      ? primaryColor
-                      : theme.colorScheme.error,
+                  color: isConnected ? primaryColor : theme.colorScheme.error,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -92,7 +90,6 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
           height: 1,
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
         ),
-        // API Key row (display only, no copy).
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
           child: Row(
@@ -104,7 +101,7 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
               ),
               const SizedBox(width: 8),
               Text(
-                'API Key',
+                'API Token',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
@@ -143,19 +140,14 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
             borderRadius: BorderRadius.circular(12),
             onTap: isConnected ? widget.onDisconnect : widget.onConnect,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 12,
-                horizontal: 8,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     isConnected ? LucideIcons.unlink : LucideIcons.link,
                     size: 16,
-                    color: isConnected
-                        ? theme.colorScheme.error
-                        : primaryColor,
+                    color: isConnected ? theme.colorScheme.error : primaryColor,
                   ),
                   const SizedBox(width: 8),
                   Text(

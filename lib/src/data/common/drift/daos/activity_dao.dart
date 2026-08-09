@@ -37,15 +37,35 @@ class ActivityDao extends DatabaseAccessor<AppDatabase> {
 
   Future<void> deleteByIssueIds(List<int> issueIds, {String? eventType}) async {
     if (issueIds.isEmpty) return;
-    if (eventType != null) {
-      await (delete(attachedDatabase.activityEvents)
-            ..where((t) => t.issueId.isIn(issueIds))
-            ..where((t) => t.eventType.equals(eventType)))
-          .go();
-    } else {
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    final rows = await (select(attachedDatabase.activityEvents)
+          ..where(
+            (t) {
+              final expr = t.issueId.isIn(issueIds);
+              if (eventType != null) {
+                return expr & t.eventType.equals(eventType);
+              }
+              return expr;
+            },
+          ))
+        .get();
+    if (rows.isEmpty) return;
+
+    final ids = rows.map((r) => r.id).toList();
+    await transaction(() async {
       await (delete(
         attachedDatabase.activityEvents,
-      )..where((t) => t.issueId.isIn(issueIds))).go();
-    }
+      )..where((t) => t.id.isIn(ids))).go();
+      await batch((b) {
+        b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
+          for (final id in ids)
+            SyncMetaCompanion.insert(
+              key: 'delete:activity_events:$id',
+              value: now,
+            ),
+        ]);
+      });
+    });
   }
 }

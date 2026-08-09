@@ -71,6 +71,7 @@ CollectionItem toCollectionItem(
     quantity: item.ownershipStatus == LibraryOwnershipStatus.owned
         ? item.quantityOwned
         : 0,
+    bookFormat: item.format.name,
     grade: item.conditionGrade == null
         ? null
         : double.tryParse(item.conditionGrade!.trim()),
@@ -79,6 +80,11 @@ CollectionItem toCollectionItem(
     readCount: item.isRead ? 1 : 0,
     rating: item.rating,
     modified: item.updatedAt,
+    ownershipStatus: item.ownershipStatus,
+    pricePaid: item.pricePaid,
+    firstReadAt: item.firstReadAt,
+    acquiredOn: item.acquiredOn,
+    notes: item.notes,
   );
 }
 

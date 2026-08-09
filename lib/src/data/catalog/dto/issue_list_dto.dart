@@ -19,8 +19,38 @@ abstract class IssueListDto with _$IssueListDto {
     @JsonKey(name: 'cover_hash') String? coverHash,
   }) = _IssueListDto;
 
-  factory IssueListDto.fromJson(Map<String, dynamic> json) =>
-      _$IssueListDtoFromJson(json);
+  factory IssueListDto.fromJson(Map<String, dynamic> json) {
+    IssueListSeriesDto? parseSeries(dynamic s) {
+      if (s == null) return null;
+      if (s is Map<String, dynamic>) return IssueListSeriesDto.fromJson(s);
+      if (s is Map) return IssueListSeriesDto.fromJson(Map<String, dynamic>.from(s));
+      if (s is String && s.trim().isNotEmpty) {
+        return IssueListSeriesDto(name: s.trim(), volume: 1, yearBegan: 0);
+      }
+      return null;
+    }
+
+    String? parseIssueName(dynamic issue) {
+      if (issue == null) return null;
+      if (issue is String) return issue;
+      if (issue is Map) {
+        return issue['name']?.toString() ?? issue['issue']?.toString();
+      }
+      return issue.toString();
+    }
+
+    return IssueListDto(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      number: json['number']?.toString() ?? '',
+      series: parseSeries(json['series']),
+      coverDate: json['cover_date']?.toString(),
+      storeDate: json['store_date']?.toString(),
+      image: json['image']?.toString(),
+      issueName: parseIssueName(json['issue']),
+      modified: json['modified']?.toString(),
+      coverHash: json['cover_hash']?.toString(),
+    );
+  }
 
   const IssueListDto._();
 

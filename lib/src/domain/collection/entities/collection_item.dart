@@ -1,3 +1,5 @@
+import 'library_item.dart';
+
 class CollectionUserRef {
   const CollectionUserRef({required this.id, required this.username});
 
@@ -62,6 +64,11 @@ class CollectionItem {
     required this.readCount,
     this.rating,
     this.modified,
+    this.ownershipStatus,
+    this.pricePaid,
+    this.firstReadAt,
+    this.acquiredOn,
+    this.notes,
   });
 
   final int id;
@@ -77,4 +84,9 @@ class CollectionItem {
   final int readCount;
   final int? rating;
   final DateTime? modified;
+  final LibraryOwnershipStatus? ownershipStatus;
+  final double? pricePaid;
+  final DateTime? firstReadAt;
+  final DateTime? acquiredOn;
+  final String? notes;
 }

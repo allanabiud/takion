@@ -312,7 +312,9 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       }
       final data = response.data as Map<String, dynamic>;
       final dto = PublisherDetailsDto.fromJson(data);
-      if (cached != null &&
+      if (!forceRefresh &&
+          cached != null &&
+          cached.isFullyHydrated &&
           cached.modified != null &&
           dto.modified != null &&
           cached.modified == dto.modified) {

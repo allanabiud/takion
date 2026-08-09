@@ -326,7 +326,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          _isBackingUp ? 'Please wait' : 'Save a .tkbk file of your data',
+          _isBackingUp ? 'Please wait' : 'Save a .tkbak file of your data',
         ),
         onTap: _isBackingUp ? null : _createLocalBackup,
         enabled: !_isBackingUp,
@@ -346,7 +346,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          _isRestoring ? 'Please wait' : 'Import data from a .tkbk file',
+          _isRestoring ? 'Please wait' : 'Import data from a .tkbak file',
         ),
         onTap: _isRestoring ? null : _restoreFromBackup,
         enabled: !_isRestoring,
@@ -365,7 +365,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
           '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
       final result = await FilePicker.saveFile(
-        fileName: 'takion_backup_$dateStr.tkbk',
+        fileName: 'takion_backup_$dateStr.tkbak',
         bytes: bytes,
       );
       if (result != null && mounted) {
