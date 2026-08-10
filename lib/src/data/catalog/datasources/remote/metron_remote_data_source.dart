@@ -10,8 +10,14 @@ abstract class MetronRemoteDataSource {
     Map<String, dynamic>? queryParameters,
     CancelToken? cancelToken,
   });
-  Future<Response> getWeeklyReleasesForDate(DateTime date);
-  Future<Response> getFocReleasesForDate(DateTime date);
+  Future<Response> getWeeklyReleasesForDate(
+    DateTime date, {
+    CancelToken? cancelToken,
+  });
+  Future<Response> getFocReleasesForDate(
+    DateTime date, {
+    CancelToken? cancelToken,
+  });
   Future<Response> getIssueDetails(int issueId);
   Future<IssueSearchResponseDto> searchIssuesByUpc(
     String upc, {
@@ -278,7 +284,10 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   }
 
   @override
-  Future<Response> getWeeklyReleasesForDate(DateTime date) async {
+  Future<Response> getWeeklyReleasesForDate(
+    DateTime date, {
+    CancelToken? cancelToken,
+  }) async {
     final offset = date.weekday % 7;
     final startOfWeek = DateTime(
       date.year,
@@ -296,11 +305,15 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
         'store_date_range_after': formatDate(startOfWeek),
         'store_date_range_before': formatDate(endOfWeek),
       },
+      cancelToken: cancelToken,
     );
   }
 
   @override
-  Future<Response> getFocReleasesForDate(DateTime date) async {
+  Future<Response> getFocReleasesForDate(
+    DateTime date, {
+    CancelToken? cancelToken,
+  }) async {
     final offset = date.weekday % 7;
     final startOfWeek = DateTime(
       date.year,
@@ -318,6 +331,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
         'foc_date_range_after': formatDate(startOfWeek),
         'foc_date_range_before': formatDate(endOfWeek),
       },
+      cancelToken: cancelToken,
     );
   }
 

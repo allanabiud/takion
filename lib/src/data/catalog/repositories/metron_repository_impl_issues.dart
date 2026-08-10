@@ -240,7 +240,10 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       limit: limit,
     );
 
-    if (!forceRefresh && cachedDtos != null && cachedDtos.isNotEmpty) {
+    if (!forceRefresh &&
+        nextUrl == null &&
+        cachedDtos != null &&
+        cachedDtos.isNotEmpty) {
       final isFresh =
           cachedAt != null &&
           MetronCachePolicies.searchResults.isFresh(cachedAt, _now());
@@ -300,16 +303,18 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           limit: limit,
           cancelToken: cancelToken,
         );
-        await _localDataSource.cacheIssueListResults(
-          remotePage.results,
-          page: page,
-          ordering: ordering,
-          modifiedGt: modifiedGt,
-          limit: limit,
-          count: remotePage.count,
-          next: remotePage.next,
-          previous: remotePage.previous,
-        );
+        if (nextUrl == null) {
+          await _localDataSource.cacheIssueListResults(
+            remotePage.results,
+            page: page,
+            ordering: ordering,
+            modifiedGt: modifiedGt,
+            limit: limit,
+            count: remotePage.count,
+            next: remotePage.next,
+            previous: remotePage.previous,
+          );
+        }
         _upsertIssueListStubs(remotePage.results);
         return IssueSearchPage(
           count: remotePage.count,
@@ -321,7 +326,10 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
       if (_isCancelled(error)) rethrow;
-      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+      if (nextUrl == null &&
+          cachedDtos != null &&
+          cachedDtos.isNotEmpty &&
+          cachedMeta != null) {
         return IssueSearchPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -334,26 +342,31 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshIssueListDelta({DateTime? modifiedGt, String? ordering}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getIssueList(
-        page: page,
-        ordering: ordering,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        if (item.id != null) {
-          await getIssueDetails(item.id!, forceRefresh: true);
-          synced++;
+  Future<int> refreshIssueListDelta({DateTime? modifiedGt, String? ordering}) {
+    return runZoned(
+      () async {
+        var page = 1;
+        var synced = 0;
+        while (true) {
+          final result = await getIssueList(
+            page: page,
+            ordering: ordering,
+            modifiedGt: modifiedGt,
+            forceRefresh: true,
+          );
+          for (final item in result.results) {
+            if (item.id != null) {
+              await getIssueDetails(item.id!, forceRefresh: true);
+              synced++;
+            }
+          }
+          if (!result.hasNext) break;
+          page++;
         }
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
+        return synced;
+      },
+      zoneValues: {backgroundZoneKey: true},
+    );
   }
 
   Future<IssueSearchPage> searchIssuesByUpc(

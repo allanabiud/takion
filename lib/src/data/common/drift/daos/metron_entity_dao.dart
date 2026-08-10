@@ -546,23 +546,27 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   Future<void> upsertIssueStubsBatch(List<MetronIssuesCompanion> stubs) async {
     if (stubs.isEmpty) return;
     final affectedSeriesIds = <int>{};
-    await batch((b) {
-      for (final stub in stubs) {
-        b.insert(
-          attachedDatabase.metronIssues,
-          stub,
-          onConflict: DoUpdate(
-            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
-          ),
-        );
-        if (stub.seriesId.present && stub.seriesId.value != null) {
-          affectedSeriesIds.add(stub.seriesId.value!);
+    for (final stub in stubs) {
+      if (stub.seriesId.present && stub.seriesId.value != null) {
+        affectedSeriesIds.add(stub.seriesId.value!);
+      }
+    }
+    await transaction(() async {
+      await batch((b) {
+        for (final stub in stubs) {
+          b.insert(
+            attachedDatabase.metronIssues,
+            stub,
+            onConflict: DoUpdate(
+              (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
+            ),
+          );
         }
+      });
+      for (final seriesId in affectedSeriesIds) {
+        await _recomputeSeriesCoverIfNeeded(seriesId);
       }
     });
-    for (final seriesId in affectedSeriesIds) {
-      await _recomputeSeriesCoverIfNeeded(seriesId);
-    }
   }
 
   Future<void> upsertSeriesStubsBatch(List<MetronSeriesCompanion> stubs) async {

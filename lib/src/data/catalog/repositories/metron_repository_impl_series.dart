@@ -244,24 +244,29 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshSeriesListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getSeriesList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getSeriesDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
+  Future<int> refreshSeriesListDelta({DateTime? modifiedGt}) {
+    return runZoned(
+      () async {
+        var page = 1;
+        var synced = 0;
+        while (true) {
+          final result = await getSeriesList(
+            page: page,
+            limit: metronDefaultPageSize,
+            modifiedGt: modifiedGt,
+            forceRefresh: true,
+          );
+          for (final item in result.results) {
+            await getSeriesDetails(item.id, forceRefresh: true);
+            synced++;
+          }
+          if (!result.hasNext) break;
+          page++;
+        }
+        return synced;
+      },
+      zoneValues: {backgroundZoneKey: true},
+    );
   }
 
   Future<SeriesDetails> getSeriesDetails(

@@ -4,6 +4,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
   Future<List<IssueList>> getWeeklyReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,
+    CancelToken? cancelToken,
   }) async {
     final cachedDtos = await _localDataSource.getWeeklyReleases(date);
     final cachedAt = await _localDataSource.getWeeklyReleasesCachedAt(date);
@@ -48,7 +49,10 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
       final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
       return _coalesce(_weeklyInFlight, key, () async {
         return _fetchWithConditional<List<IssueList>>(
-          fetch: _remoteDataSource.getWeeklyReleasesForDate(date),
+          fetch: _remoteDataSource.getWeeklyReleasesForDate(
+            date,
+            cancelToken: cancelToken,
+          ),
           cached: () async {
             final dtos = await _localDataSource.getWeeklyReleases(date) ?? [];
             return dtos.map((e) => e.toEntity()).toList();
@@ -81,6 +85,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
   Future<List<IssueList>> getFocReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,
+    CancelToken? cancelToken,
   }) async {
     final cachedDtos = await _localDataSource.getFocReleases(date);
     final cachedAt = await _localDataSource.getFocReleasesCachedAt(date);
@@ -123,7 +128,10 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
       final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
       return _coalesce(_focReleasesInFlight, key, () async {
         return _fetchWithConditional<List<IssueList>>(
-          fetch: _remoteDataSource.getFocReleasesForDate(date),
+          fetch: _remoteDataSource.getFocReleasesForDate(
+            date,
+            cancelToken: cancelToken,
+          ),
           cached: () async {
             final dtos = await _localDataSource.getFocReleases(date) ?? [];
             return dtos.map((e) => e.toEntity()).toList();

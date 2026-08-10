@@ -6,11 +6,13 @@ abstract class IssueRepository {
   Future<List<IssueList>> getWeeklyReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,
+    CancelToken? cancelToken,
   });
 
   Future<List<IssueList>> getFocReleasesForDate(
     DateTime date, {
     bool forceRefresh = false,
+    CancelToken? cancelToken,
   });
 
   Future<IssueDetails> getIssueDetails(

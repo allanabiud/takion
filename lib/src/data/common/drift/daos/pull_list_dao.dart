@@ -50,6 +50,44 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
     }
   }
 
+  /// Upserts pull list entries originating from an active subscription.
+  /// Preserves the existing status and createdAt of entries that already exist.
+  Future<void> upsertSubscriptionEntries(
+    List<({int metronSeriesId, int metronIssueId, DateTime? releaseDate})>
+    entries,
+  ) async {
+    if (entries.isEmpty) return;
+    const localUserId = 'local-user';
+    final now = DateTime.now().toUtc();
+    final companions = <PullListEntriesCompanion>[];
+
+    for (final item in entries) {
+      final existing = await getByIssueId(item.metronIssueId);
+      final id = existing?.id ?? 'pull-${item.metronIssueId}';
+      final createdAt = existing != null
+          ? existing.createdAt
+          : now.toIso8601String();
+      final status = existing != null ? existing.entryStatus : 'upcoming';
+
+      companions.add(
+        PullListEntriesCompanion(
+          id: Value(id),
+          userId: const Value(localUserId),
+          metronIssueId: Value(item.metronIssueId),
+          metronSeriesId: Value(item.metronSeriesId),
+          entryStatus: Value(status),
+          releaseDate: Value(item.releaseDate),
+          source: const Value('subscription'),
+          generatedAt: Value(now.toIso8601String()),
+          createdAt: Value(createdAt),
+          updatedAt: Value(now.toIso8601String()),
+        ),
+      );
+    }
+
+    await batchUpsert(companions);
+  }
+
   Stream<List<PullListEntry>> watchAll() {
     return select(attachedDatabase.pullListEntries).watch();
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/domain/entities.dart';
@@ -13,12 +14,17 @@ class WeeklyReleases extends _$WeeklyReleases {
     final link = ref.keepAlive();
     Timer? timer;
     ref.onDispose(() => timer?.cancel());
+    final cancelToken = CancelToken();
+    ref.onDispose(cancelToken.cancel);
 
     final targetDate = date ?? DateTime.now();
     final repository = ref.watch(catalogRepositoryProvider);
     final result = await AppPerformanceMetrics.instance.trackProvider(
       'weeklyReleasesProvider',
-      () => repository.getWeeklyReleasesForDate(targetDate),
+      () => repository.getWeeklyReleasesForDate(
+        targetDate,
+        cancelToken: cancelToken,
+      ),
     );
 
     timer = Timer(const Duration(minutes: 5), () => link.close());
@@ -36,6 +42,7 @@ class WeeklyReleases extends _$WeeklyReleases {
       return repository.getWeeklyReleasesForDate(
         targetDate,
         forceRefresh: true,
+        cancelToken: CancelToken(),
       );
     });
     state = newState;
@@ -49,9 +56,14 @@ class FocReleases extends _$FocReleases {
     final link = ref.keepAlive();
     Timer? timer;
     ref.onDispose(() => timer?.cancel());
+    final cancelToken = CancelToken();
+    ref.onDispose(cancelToken.cancel);
 
     final repository = ref.watch(catalogRepositoryProvider);
-    final result = await repository.getFocReleasesForDate(date);
+    final result = await repository.getFocReleasesForDate(
+      date,
+      cancelToken: cancelToken,
+    );
 
     timer = Timer(const Duration(minutes: 5), () => link.close());
     return result;
@@ -68,6 +80,7 @@ class FocReleases extends _$FocReleases {
       return repository.getFocReleasesForDate(
         date,
         forceRefresh: true,
+        cancelToken: CancelToken(),
       );
     });
     state = newState;

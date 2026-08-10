@@ -217,35 +217,6 @@ class LocalPullListRepository implements PullListRepository {
     entries,
   ) async {
     if (entries.isEmpty) return;
-    final now = DateTime.now().toUtc();
-    final companions = <db.PullListEntriesCompanion>[];
-
-    for (final item in entries) {
-      final existing = await _database.pullListDao.getByIssueId(
-        item.metronIssueId,
-      );
-      final id = existing?.id ?? _idForIssue(item.metronIssueId);
-      final createdAt = existing != null
-          ? existing.createdAt
-          : now.toIso8601String();
-      final status = existing != null ? existing.entryStatus : 'upcoming';
-
-      companions.add(
-        db.PullListEntriesCompanion(
-          id: Value(id),
-          userId: const Value(_localUserId),
-          metronIssueId: Value(item.metronIssueId),
-          metronSeriesId: Value(item.metronSeriesId),
-          entryStatus: Value(status),
-          releaseDate: Value(item.releaseDate),
-          source: const Value('subscription'),
-          generatedAt: Value(now.toIso8601String()),
-          createdAt: Value(createdAt),
-          updatedAt: Value(now.toIso8601String()),
-        ),
-      );
-    }
-
-    await _database.pullListDao.batchUpsert(companions);
+    await _database.pullListDao.upsertSubscriptionEntries(entries);
   }
 }

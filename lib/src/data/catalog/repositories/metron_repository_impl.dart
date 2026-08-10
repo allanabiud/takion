@@ -6,6 +6,8 @@ import 'package:drift/drift.dart';
 import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/core/cache/cache_policy.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/core/network/rate_limit_interceptor.dart'
+    show backgroundZoneKey;
 import 'package:takion/src/core/performance/performance_metrics.dart';
 import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
 import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
@@ -138,6 +140,56 @@ mixin _RepositoryState {
     if (seriesStubs.isNotEmpty) {
       unawaited(_metronEntityDao.upsertSeriesStubsBatch(seriesStubs));
     }
+    _autoAddPullListEntries(dtos);
+  }
+
+  /// Automatically adds pull list entries for issues belonging to a series the
+  /// user is subscribed to with auto-add-to-pull-list enabled. Runs whenever
+  /// issue data is ingested from Metron so new issues appear as "pulled" across
+  /// the app without waiting for the throttled reconciler.
+  void _autoAddPullListEntries(Iterable<IssueListDto> dtos) {
+    final seriesIds = dtos.map((d) => d.series?.id).whereType<int>().toSet();
+    if (seriesIds.isEmpty) return;
+    unawaited(_autoAddPullListEntriesAsync(dtos, seriesIds));
+  }
+
+  Future<void> _autoAddPullListEntriesAsync(
+    Iterable<IssueListDto> dtos,
+    Set<int> seriesIds,
+  ) async {
+    try {
+      final database = _metronEntityDao.attachedDatabase;
+      final subscriptions = await database.subscriptionDao.getBySeriesIds(
+        seriesIds.toList(),
+      );
+      if (subscriptions.isEmpty) return;
+      final autoAddSeriesIds = subscriptions
+          .where((s) => s.isActive && s.autoAddPull)
+          .map((s) => s.metronSeriesId)
+          .toSet();
+      if (autoAddSeriesIds.isEmpty) return;
+
+      final entries =
+          <({int metronSeriesId, int metronIssueId, DateTime? releaseDate})>[];
+      for (final dto in dtos) {
+        final seriesId = dto.series?.id;
+        if (seriesId == null) continue;
+        if (!autoAddSeriesIds.contains(seriesId)) continue;
+        final rawRelease = dto.storeDate ?? dto.coverDate;
+        final releaseDate = rawRelease != null
+            ? DateTime.tryParse(rawRelease)
+            : null;
+        entries.add((
+          metronSeriesId: seriesId,
+          metronIssueId: dto.id,
+          releaseDate: releaseDate,
+        ));
+      }
+      if (entries.isEmpty) return;
+      await database.pullListDao.upsertSubscriptionEntries(entries);
+    } catch (e) {
+      AppLogger.debug('Auto-add pull list entries failed', error: e);
+    }
   }
 
   void _upsertSeriesListStubs(Iterable<SeriesListDto> dtos) {
@@ -248,7 +300,7 @@ class MetronRepositoryImpl
       <String, Future<MetronReadingListPage>>{};
   final Map<String, DateTime> _lastBackgroundRefresh = {};
   int _backgroundRefreshCount = 0;
-  static const int _maxConcurrentBackgroundRefreshes = 3;
+  static const int _maxConcurrentBackgroundRefreshes = 2;
   final SeriesNameIndex _seriesNameIndex;
 
   MetronRepositoryImpl(
@@ -316,7 +368,7 @@ class MetronRepositoryImpl
             .whenComplete(() {
               _backgroundRefreshCount--;
             }),
-        zoneValues: {#opencode_background: true},
+        zoneValues: {backgroundZoneKey: true},
       ),
     );
   }

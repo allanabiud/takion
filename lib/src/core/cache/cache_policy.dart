@@ -1,7 +1,7 @@
 class CachePolicy {
   const CachePolicy({
     required this.ttl,
-    this.refreshCooldown = const Duration(seconds: 30),
+    this.refreshCooldown = const Duration(seconds: 60),
   });
 
   final Duration ttl;

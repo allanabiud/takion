@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
@@ -16,6 +17,9 @@ class ReleasesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(subscriptionPullReconcilerProvider).browseReconcile();
+    });
     final currentIssuesAsync = ref.watch(weeklyReleasesProvider());
     final pullsCountAsync = ref.watch(currentWeekPullsCountProvider);
     final pullsAsync = ref.watch(currentWeekPullsProvider);

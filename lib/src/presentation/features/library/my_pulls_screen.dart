@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
 import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
@@ -182,6 +183,9 @@ class MyPullsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(subscriptionPullReconcilerProvider).browseReconcile();
+    });
     final selectedDate = ref.watch(selectedWeekProvider);
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.releasesMyPulls),

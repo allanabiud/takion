@@ -14,7 +14,9 @@ class SubscriptionPullReconciler {
   SubscriptionPullReconciler(this.ref);
 
   static const _lastRunEpochKey = 'subscription_pull_reconcile_last_run_ms';
+  static const _browseRunEpochKey = 'subscription_pull_reconcile_browse_last_run_ms';
   static const _throttleWindow = Duration(hours: 12);
+  static const _browseCooldown = Duration(minutes: 30);
   static const _subscriptionPageSize = 200;
   static const _upsertBatchSize = 250;
 
@@ -45,6 +47,14 @@ class SubscriptionPullReconciler {
     );
   }
 
+  Future<void> _recordBrowseRun() async {
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    await dao.setString(
+      _browseRunEpochKey,
+      DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+  }
+
   Future<List<SeriesSubscription>> _listAllActiveSubscriptions() async {
     final subscriptionRepository = ref.read(subscriptionRepositoryProvider);
     final subscriptions = <SeriesSubscription>[];
@@ -63,13 +73,37 @@ class SubscriptionPullReconciler {
     return subscriptions;
   }
 
+  /// Reconciles subscriptions into the pull list. Throttled to
+  /// [_throttleWindow] unless [force] or a specific [onlySeriesId] is given.
   Future<ReconcileResult> reconcile({
     bool force = false,
     int? onlySeriesId,
   }) async {
     final runNow = await _shouldRun(force: force, onlySeriesId: onlySeriesId);
     if (!runNow) return const ReconcileResult(upserted: 0, issueIds: []);
+    return _runReconcile(onlySeriesId: onlySeriesId);
+  }
 
+  /// Reconciles subscriptions into the pull list while the user is browsing
+  /// releases/pulls. Gated by its own shorter cooldown so newly-added future
+  /// issues are pulled promptly without waiting for the next session start.
+  Future<ReconcileResult> browseReconcile() async {
+    final dao = ref.read(driftDatabaseProvider).settingsDao;
+    final lastBrowseEpochStr = await dao.getString(_browseRunEpochKey);
+    final lastBrowseEpoch = int.tryParse(lastBrowseEpochStr ?? '');
+    if (lastBrowseEpoch != null &&
+        DateTime.now()
+                .difference(
+                  DateTime.fromMillisecondsSinceEpoch(lastBrowseEpoch),
+                ) <
+            _browseCooldown) {
+      return const ReconcileResult(upserted: 0, issueIds: []);
+    }
+    await _recordBrowseRun();
+    return _runReconcile(onlySeriesId: null);
+  }
+
+  Future<ReconcileResult> _runReconcile({int? onlySeriesId}) async {
     final metronRepository = ref.read(metronRepositoryProvider);
     final pullListRepository = ref.read(pullListRepositoryProvider);
     final fromDate = _weekStart(DateTime.now());
@@ -120,66 +154,28 @@ class SubscriptionPullReconciler {
       batch.clear();
     }
 
-    if (useDelta) {
-      String? nextUrl;
-      final subscriptionSeriesIds = seriesIds.toSet();
-      while (true) {
-        final issuePage = await metronRepository.getIssueList(
-          nextUrl: nextUrl,
-          modifiedGt: lastRun,
-        );
-        for (final issue in issuePage.results) {
-          final issueId = issue.id;
-          final seriesId = issue.series?.id;
-          if (issueId == null || seriesId == null) continue;
-          if (!subscriptionSeriesIds.contains(seriesId)) continue;
-          if (uniqueIssueIds.contains(issueId)) continue;
-          final releaseDate = issue.storeDate ?? issue.coverDate;
-          if (releaseDate == null) continue;
-          final releaseDay = _dateOnly(releaseDate);
-          if (releaseDay.isBefore(fromDate) || releaseDay.isAfter(toDate)) {
-            continue;
-          }
-          uniqueIssueIds.add(issueId);
-          batch.add((
-            metronSeriesId: seriesId,
-            metronIssueId: issueId,
-            releaseDate: releaseDay,
-          ));
-          if (batch.length >= _upsertBatchSize) {
-            await flushBatch();
-          }
-        }
-        nextUrl = issuePage.next;
-        if (nextUrl == null) break;
-      }
-    } else {
-      for (final seriesId in seriesIds) {
+    try {
+      if (useDelta) {
         String? nextUrl;
+        String? prevNextUrl;
+        final subscriptionSeriesIds = seriesIds.toSet();
         while (true) {
-          final issuePage = await metronRepository.getSeriesIssueList(
-            seriesId,
+          final issuePage = await metronRepository.getIssueList(
             nextUrl: nextUrl,
-            ordering: '-store_date',
-            storeDateGte: fromDate,
-            storeDateLte: toDate,
+            modifiedGt: lastRun,
           );
-          var pageHasInWindow = false;
-          var anyBeforeWindow = false;
           for (final issue in issuePage.results) {
             final issueId = issue.id;
-            if (issueId == null || uniqueIssueIds.contains(issueId)) continue;
+            final seriesId = issue.series?.id;
+            if (issueId == null || seriesId == null) continue;
+            if (!subscriptionSeriesIds.contains(seriesId)) continue;
+            if (uniqueIssueIds.contains(issueId)) continue;
             final releaseDate = issue.storeDate ?? issue.coverDate;
             if (releaseDate == null) continue;
             final releaseDay = _dateOnly(releaseDate);
-            if (releaseDay.isBefore(fromDate)) {
-              anyBeforeWindow = true;
+            if (releaseDay.isBefore(fromDate) || releaseDay.isAfter(toDate)) {
               continue;
             }
-            if (releaseDay.isAfter(toDate)) {
-              continue;
-            }
-            pageHasInWindow = true;
             uniqueIssueIds.add(issueId);
             batch.add((
               metronSeriesId: seriesId,
@@ -190,16 +186,63 @@ class SubscriptionPullReconciler {
               await flushBatch();
             }
           }
-          final nextPage = issuePage.nextPage;
-          if (nextPage == null) break;
-          // Pages are newest-first; once none are in-window, all later pages are older still.
-          if (!pageHasInWindow && anyBeforeWindow) break;
           nextUrl = issuePage.next;
+          if (nextUrl == null) break;
+          if (nextUrl == prevNextUrl) break;
+          prevNextUrl = nextUrl;
+        }
+      } else {
+        for (final seriesId in seriesIds) {
+          String? nextUrl;
+          String? prevNextUrl;
+          while (true) {
+            final issuePage = await metronRepository.getSeriesIssueList(
+              seriesId,
+              nextUrl: nextUrl,
+              ordering: '-store_date',
+              storeDateGte: fromDate,
+              storeDateLte: toDate,
+            );
+            var pageHasInWindow = false;
+            var anyBeforeWindow = false;
+            for (final issue in issuePage.results) {
+              final issueId = issue.id;
+              if (issueId == null || uniqueIssueIds.contains(issueId)) continue;
+              final releaseDate = issue.storeDate ?? issue.coverDate;
+              if (releaseDate == null) continue;
+              final releaseDay = _dateOnly(releaseDate);
+              if (releaseDay.isBefore(fromDate)) {
+                anyBeforeWindow = true;
+                continue;
+              }
+              if (releaseDay.isAfter(toDate)) {
+                continue;
+              }
+              pageHasInWindow = true;
+              uniqueIssueIds.add(issueId);
+              batch.add((
+                metronSeriesId: seriesId,
+                metronIssueId: issueId,
+                releaseDate: releaseDay,
+              ));
+              if (batch.length >= _upsertBatchSize) {
+                await flushBatch();
+              }
+            }
+            final nextPage = issuePage.nextPage;
+            if (nextPage == null) break;
+            // Pages are newest-first; once none are in-window, all later pages are older still.
+            if (!pageHasInWindow && anyBeforeWindow) break;
+            nextUrl = issuePage.next;
+            if (nextUrl == prevNextUrl) break;
+            prevNextUrl = nextUrl;
+          }
         }
       }
+    } finally {
+      await flushBatch();
     }
 
-    await flushBatch();
     if (onlySeriesId == null) {
       await _recordRun();
     }

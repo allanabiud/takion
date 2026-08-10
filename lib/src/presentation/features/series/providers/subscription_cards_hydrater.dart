@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
+import 'package:takion/src/core/network/dio_client.dart';
+import 'package:takion/src/core/network/request_priority.dart'
+    show backgroundZoneKey;
 import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -11,6 +16,7 @@ class SubscriptionCardsHydrater {
 
   static const _maxHydrationConcurrency = 4;
   static const _issueFetchLimit = 200;
+  static const _minBurstRemainingToHydrate = 5;
 
   final Ref ref;
 
@@ -19,6 +25,8 @@ class SubscriptionCardsHydrater {
 
     final status = ref.read(connectivityStatusProvider).value;
     if (status == AppConnectivityStatus.offline) return;
+
+    if (!_hasBudget()) return;
 
     final dao = ref.read(metronEntityDaoProvider);
     final repository = ref.read(metronRepositoryProvider);
@@ -33,25 +41,34 @@ class SubscriptionCardsHydrater {
     }
     if (missingIds.isEmpty) return;
 
-    await mapWithConcurrency(
-      missingIds,
-      (seriesId) async {
-        try {
-          await repository.getSeriesDetails(seriesId);
-          await repository.getSeriesIssueList(
-            seriesId,
-            page: 1,
-            limit: _issueFetchLimit,
-          );
-        } catch (e) {
-          AppLogger.warning(
-            'Failed to hydrate subscription card for series $seriesId',
-            error: e,
-          );
-        }
-      },
-      maxConcurrency: _maxHydrationConcurrency,
-    );
+    await _runInBackground(() => mapWithConcurrency(
+          missingIds,
+          (seriesId) async {
+            try {
+              await repository.getSeriesDetails(seriesId);
+              await repository.getSeriesIssueList(
+                seriesId,
+                page: 1,
+                limit: _issueFetchLimit,
+              );
+            } catch (e) {
+              AppLogger.warning(
+                'Failed to hydrate subscription card for series $seriesId',
+                error: e,
+              );
+            }
+          },
+          maxConcurrency: _maxHydrationConcurrency,
+        ));
+  }
+
+  bool _hasBudget() {
+    final interceptor = ref.read(rateLimitInterceptorProvider);
+    return interceptor.state.burstRemaining >= _minBurstRemainingToHydrate;
+  }
+
+  Future<T> _runInBackground<T>(Future<T> Function() task) {
+    return runZoned(() => task(), zoneValues: {backgroundZoneKey: true});
   }
 
   Future<void> warmCoverImages(
