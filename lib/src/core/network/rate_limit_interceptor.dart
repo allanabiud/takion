@@ -18,8 +18,8 @@ class RateLimitInterceptor extends Interceptor {
     MetronRequestScheduler? scheduler,
   }) : _scheduler = scheduler ??
            MetronRequestScheduler(
-             maxRequestsPerMinute: maxRequestsPerMinute ?? 18,
-             fallbackDailyLimit: fallbackDailyLimit ?? 4800,
+             maxRequestsPerMinute: maxRequestsPerMinute ?? 20,
+             fallbackDailyLimit: fallbackDailyLimit ?? 5000,
              reservedForeground: reservedForeground ?? 3,
            );
 

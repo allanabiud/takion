@@ -25,10 +25,10 @@ class RateLimitState {
   final int burstReset;
 
   const RateLimitState({
-    this.sustainedLimit = 4800,
-    this.sustainedRemaining = 4800,
+    this.sustainedLimit = 5000,
+    this.sustainedRemaining = 5000,
     this.sustainedReset = 0,
-    this.burstRemaining = 18,
+    this.burstRemaining = 20,
     this.burstReset = 0,
   });
 
@@ -70,8 +70,8 @@ class _ScheduledRequest {
 /// dropped.
 class MetronRequestScheduler {
   MetronRequestScheduler({
-    this.maxRequestsPerMinute = 18,
-    this.fallbackDailyLimit = 4800,
+    this.maxRequestsPerMinute = 20,
+    this.fallbackDailyLimit = 5000,
     this.reservedForeground = 3,
     this.maxConcurrent = 8,
     this.backgroundMaxWait = const Duration(seconds: 30),
@@ -98,10 +98,10 @@ class MetronRequestScheduler {
     Queue<_ScheduledRequest>(),
   ];
 
-  int _sustainedLimit = 4800;
-  int _sustainedRemaining = 4800;
+  int _sustainedLimit = 5000;
+  int _sustainedRemaining = 5000;
   int _sustainedReset = 0;
-  int _burstRemaining = 18;
+  int _burstRemaining = 20;
   int _burstReset = 0;
 
   int _activeRequests = 0;
