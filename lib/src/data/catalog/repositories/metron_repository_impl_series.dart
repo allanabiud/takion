@@ -36,13 +36,11 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
                 ? await _remoteDataSource.searchSeries(
                     query,
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.searchSeries(
                     query,
                     page: page,
-                    limit: limit,
                     cancelToken: cancelToken,
                   );
             await _localDataSource.cacheSeriesSearchResults(
@@ -75,39 +73,40 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = nextUrl != null
-          ? await _remoteDataSource.searchSeries(
-              query,
-              nextUrl: Uri.parse(nextUrl),
-              limit: limit,
-              cancelToken: cancelToken,
-            )
-          : await _remoteDataSource.searchSeries(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
-      await _localDataSource.cacheSeriesSearchResults(
-        query,
-        remotePage.results,
-        page: page,
-        limit: limit,
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-      );
-      _upsertSeriesListStubs(remotePage.results);
-      for (final dto in remotePage.results) {
-        if (dto.series.trim().isNotEmpty) _indexSeriesName(dto.series);
-      }
-      return SeriesSearchPage(
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
-        currentPage: page,
-      );
+      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      return _coalesce(_seriesSearchInFlight, key, () async {
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.searchSeries(
+                query,
+                nextUrl: Uri.parse(nextUrl),
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.searchSeries(
+                query,
+                page: page,
+                cancelToken: cancelToken,
+              );
+        await _localDataSource.cacheSeriesSearchResults(
+          query,
+          remotePage.results,
+          page: page,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        _upsertSeriesListStubs(remotePage.results);
+        for (final dto in remotePage.results) {
+          if (dto.series.trim().isNotEmpty) _indexSeriesName(dto.series);
+        }
+        return SeriesSearchPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
     } catch (error) {
       if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
@@ -157,13 +156,11 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
             final remotePage = nextUrl != null
                 ? await _remoteDataSource.getSeriesList(
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.getSeriesList(
                     page: page,
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   );
@@ -201,13 +198,11 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getSeriesList(
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getSeriesList(
                 page: page,
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               );
@@ -380,24 +375,30 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   }) async {
-    final hasFilters =
-        ordering != null || storeDateGte != null || storeDateLte != null;
-
-    if (!forceRefresh && !hasFilters) {
+    if (!forceRefresh) {
       final cachedDtos = await _localDataSource.getSeriesIssueListResults(
         seriesId,
         page: page,
         limit: limit,
+        ordering: ordering,
+        storeDateGte: storeDateGte,
+        storeDateLte: storeDateLte,
       );
       final cachedAt = await _localDataSource.getSeriesIssueListResultsCachedAt(
         seriesId,
         page: page,
         limit: limit,
+        ordering: ordering,
+        storeDateGte: storeDateGte,
+        storeDateLte: storeDateLte,
       );
       final cachedMeta = await _localDataSource.getSeriesIssueListResultsMeta(
         seriesId,
         page: page,
         limit: limit,
+        ordering: ordering,
+        storeDateGte: storeDateGte,
+        storeDateLte: storeDateLte,
       );
 
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
@@ -411,13 +412,11 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
                   ? await _remoteDataSource.getSeriesIssueList(
                       seriesId,
                       nextUrl: Uri.parse(nextUrl),
-                      limit: limit,
                       cancelToken: cancelToken,
                     )
                   : await _remoteDataSource.getSeriesIssueList(
                       seriesId,
                       page: page,
-                      limit: limit,
                       cancelToken: cancelToken,
                     );
               await _localDataSource.cacheSeriesIssueListResults(
@@ -428,6 +427,9 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
                 count: remotePage.count,
                 next: remotePage.next,
                 previous: remotePage.previous,
+                ordering: ordering,
+                storeDateGte: storeDateGte,
+                storeDateLte: storeDateLte,
               );
               _upsertIssueListStubs(remotePage.results);
               _indexSeriesNamesFromIssueList(remotePage.results);
@@ -456,7 +458,6 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
             ? await _remoteDataSource.getSeriesIssueList(
                 seriesId,
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 ordering: ordering,
                 storeDateGte: storeDateGte,
                 storeDateLte: storeDateLte,
@@ -465,25 +466,25 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
             : await _remoteDataSource.getSeriesIssueList(
                 seriesId,
                 page: page,
-                limit: limit,
                 ordering: ordering,
                 storeDateGte: storeDateGte,
                 storeDateLte: storeDateLte,
                 cancelToken: cancelToken,
               );
-        if (!hasFilters) {
-          await _localDataSource.cacheSeriesIssueListResults(
-            seriesId,
-            remotePage.results,
-            page: page,
-            limit: limit,
-            count: remotePage.count,
-            next: remotePage.next,
-            previous: remotePage.previous,
-          );
-          _upsertIssueListStubs(remotePage.results);
-          _indexSeriesNamesFromIssueList(remotePage.results);
-        }
+        await _localDataSource.cacheSeriesIssueListResults(
+          seriesId,
+          remotePage.results,
+          page: page,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          ordering: ordering,
+          storeDateGte: storeDateGte,
+          storeDateLte: storeDateLte,
+        );
+        _upsertIssueListStubs(remotePage.results);
+        _indexSeriesNamesFromIssueList(remotePage.results);
         return SeriesIssueListPage(
           count: remotePage.count,
           next: remotePage.next,
@@ -494,26 +495,30 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
       if (_isCancelled(error)) rethrow;
-      if (!hasFilters) {
-        final cachedDtos = await _localDataSource.getSeriesIssueListResults(
-          seriesId,
-          page: page,
-          limit: limit,
+      final cachedDtos = await _localDataSource.getSeriesIssueListResults(
+        seriesId,
+        page: page,
+        limit: limit,
+        ordering: ordering,
+        storeDateGte: storeDateGte,
+        storeDateLte: storeDateLte,
+      );
+      final cachedMeta = await _localDataSource.getSeriesIssueListResultsMeta(
+        seriesId,
+        page: page,
+        limit: limit,
+        ordering: ordering,
+        storeDateGte: storeDateGte,
+        storeDateLte: storeDateLte,
+      );
+      if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        return SeriesIssueListPage(
+          count: cachedMeta.count,
+          next: cachedMeta.next,
+          previous: cachedMeta.previous,
+          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
         );
-        final cachedMeta = await _localDataSource.getSeriesIssueListResultsMeta(
-          seriesId,
-          page: page,
-          limit: limit,
-        );
-        if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
-          return SeriesIssueListPage(
-            count: cachedMeta.count,
-            next: cachedMeta.next,
-            previous: cachedMeta.previous,
-            results: cachedDtos.map((entry) => entry.toEntity()).toList(),
-            currentPage: page,
-          );
-        }
       }
       rethrow;
     }

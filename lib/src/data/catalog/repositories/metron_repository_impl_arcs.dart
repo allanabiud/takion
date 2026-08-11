@@ -35,13 +35,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
             final remotePage = nextUrl != null
                 ? await _remoteDataSource.getArcList(
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.getArcList(
                     page: page,
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   );
@@ -76,13 +74,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getArcList(
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getArcList(
                 page: page,
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               );
@@ -173,13 +169,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 ? await _remoteDataSource.searchArcs(
                     query,
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.searchArcs(
                     query,
                     page: page,
-                    limit: limit,
                     cancelToken: cancelToken,
                   );
             await _localDataSource.cacheArcSearchResults(
@@ -214,13 +208,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
             ? await _remoteDataSource.searchArcs(
                 query,
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.searchArcs(
                 query,
                 page: page,
-                limit: limit,
                 cancelToken: cancelToken,
               );
         await _localDataSource.cacheArcSearchResults(
@@ -387,13 +379,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 ? await _remoteDataSource.getArcIssueList(
                     arcId,
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.getArcIssueList(
                     arcId,
                     page: page,
-                    limit: limit,
                     cancelToken: cancelToken,
                   );
             await _localDataSource.cacheArcIssueListResults(
@@ -430,13 +420,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
             ? await _remoteDataSource.getArcIssueList(
                 arcId,
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getArcIssueList(
                 arcId,
                 page: page,
-                limit: limit,
                 cancelToken: cancelToken,
               );
         await _localDataSource.cacheArcIssueListResults(
@@ -479,19 +467,19 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
   }) async {
     final allIssues = <IssueList>[];
     Uri? nextUrl;
+    var pageCount = 0;
 
-    while (true) {
+    while (pageCount < metronMaxWalkPages) {
       final page = await _remoteDataSource.getArcIssueList(
         arcId,
         nextUrl: nextUrl,
-        limit: metronDefaultPageSize,
-        bypassConditional: true,
       );
       _upsertIssueListStubs(page.results);
       _indexSeriesNamesFromIssueList(page.results);
       for (final dto in page.results) {
         allIssues.add(dto.toEntity());
       }
+      pageCount++;
       if (page.next == null) break;
       nextUrl = Uri.parse(page.next!);
     }

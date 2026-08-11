@@ -139,7 +139,6 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               query,
               nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
               page: page,
-              limit: limit,
               cancelToken: cancelToken,
             );
             await _localDataSource.cacheIssueSearchResults(
@@ -172,31 +171,33 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = await _remoteDataSource.searchIssues(
-        query,
-        nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      );
-      await _localDataSource.cacheIssueSearchResults(
-        query,
-        remotePage.results,
-        page: page,
-        limit: limit,
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-      );
-      _upsertIssueListStubs(remotePage.results);
-      _indexSeriesNamesFromIssueList(remotePage.results);
-      return IssueSearchPage(
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
-        currentPage: page,
-      );
+      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      return _coalesce(_issueSearchInFlight, key, () async {
+        final remotePage = await _remoteDataSource.searchIssues(
+          query,
+          nextUrl: nextUrl != null ? Uri.parse(nextUrl) : null,
+          page: page,
+          cancelToken: cancelToken,
+        );
+        await _localDataSource.cacheIssueSearchResults(
+          query,
+          remotePage.results,
+          page: page,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        _upsertIssueListStubs(remotePage.results);
+        _indexSeriesNamesFromIssueList(remotePage.results);
+        return IssueSearchPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
     } catch (error) {
       if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
@@ -258,7 +259,6 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               page: page,
               ordering: ordering,
               modifiedGt: modifiedGt,
-              limit: limit,
               cancelToken: cancelToken,
             );
             await _localDataSource.cacheIssueListResults(
@@ -300,7 +300,6 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           page: page,
           ordering: ordering,
           modifiedGt: modifiedGt,
-          limit: limit,
           cancelToken: cancelToken,
         );
         if (nextUrl == null) {
@@ -535,13 +534,15 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       totalCount = firstPage.count;
       nextUrl = firstPage.next;
 
-      while (nextUrl != null) {
+      var pageCount = 1;
+      while (nextUrl != null && pageCount < metronMaxWalkPages) {
         final page = await _remoteDataSource.getIssueSearchPage(
           nextUrl,
           cancelToken: cancelToken,
         );
         allDtos.addAll(page.results);
         nextUrl = page.next;
+        pageCount++;
       }
 
       await _localDataSource.cacheIssueSearchResults(

@@ -15,26 +15,32 @@ import 'package:takion/src/data/reading_list/repositories/local_reading_list_loc
 import 'package:takion/src/domain/entities.dart';
 
 class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
-  final List<IssueListDto> arcIssues;
-  bool lastGetArcIssueListBypassConditional = false;
+  final List<IssueListDto> allIssues;
+  int getArcIssueListCalls = 0;
 
-  FakeMetronRemoteDataSource(this.arcIssues);
+  FakeMetronRemoteDataSource(this.allIssues);
 
   @override
   Future<SeriesIssueListResponseDto> getArcIssueList(
     int arcId, {
     Uri? nextUrl,
     int page = 1,
-    int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool bypassConditional = false,
   }) async {
-    lastGetArcIssueListBypassConditional = bypassConditional;
+    getArcIssueListCalls++;
+    final pageNumber = nextUrl != null
+        ? int.tryParse(nextUrl.queryParameters['page'] ?? '') ?? page
+        : page;
+    final start = (pageNumber - 1) * metronDefaultPageSize;
+    final slice = allIssues.skip(start).take(metronDefaultPageSize).toList();
     return SeriesIssueListResponseDto(
-      count: arcIssues.length,
-      next: null,
+      count: allIssues.length,
+      next: start + slice.length < allIssues.length
+          ? 'https://metron.example/arc/$arcId/issue_list/?page=${pageNumber + 1}'
+          : null,
       previous: null,
-      results: arcIssues,
+      results: slice,
     );
   }
 
@@ -117,9 +123,10 @@ void main() {
     expect(reloaded!.items, hasLength(2));
   });
 
-  test('getArcIssueListAll bypasses conditional headers to survive 304s',
-      () async {
-    final remote = FakeMetronRemoteDataSource([_issue(1), _issue(2)]);
+  test('getArcIssueListAll caps the page walk', () async {
+    final remote = FakeMetronRemoteDataSource([
+      for (var i = 1; i <= 301; i++) _issue(i),
+    ]);
     final repo = MetronRepositoryImpl(
       remote,
       MetronLocalDataSourceImpl(db),
@@ -128,8 +135,9 @@ void main() {
       series_index.SeriesNameIndex(db),
     );
 
-    await repo.getArcIssueListAll(123);
+    final issues = await repo.getArcIssueListAll(123);
 
-    expect(remote.lastGetArcIssueListBypassConditional, isTrue);
+    expect(issues, hasLength(metronDefaultPageSize * metronMaxWalkPages));
+    expect(remote.getArcIssueListCalls, metronMaxWalkPages);
   });
 }

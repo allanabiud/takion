@@ -341,21 +341,33 @@ abstract class MetronLocalDataSource {
     required int count,
     String? next,
     String? previous,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   });
   Future<List<IssueListDto>?> getSeriesIssueListResults(
     int seriesId, {
     required int page,
     required int limit,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   });
   Future<DateTime?> getSeriesIssueListResultsCachedAt(
     int seriesId, {
     required int page,
     required int limit,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   });
   Future<SeriesIssueListPageCacheMeta?> getSeriesIssueListResultsMeta(
     int seriesId, {
     required int page,
     required int limit,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   });
   Future<void> cacheCharacterSearchResults(
     String query,
@@ -1044,6 +1056,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   String _normalizeOrdering(String? ordering) => ordering?.trim() ?? '';
   String _normalizeModifiedGt(DateTime? modifiedGt) =>
       modifiedGt?.toUtc().toIso8601String() ?? '';
+  String _normalizeStoreDate(DateTime? d) => d == null
+      ? ''
+      : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   String _getIssueSearchKey(String query, int page, int limit) =>
       '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
@@ -1056,14 +1071,21 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
   }) =>
       'issue_list:p$page:o${_normalizeOrdering(ordering)}:m${_normalizeModifiedGt(modifiedGt)}:l${_normalizeLimit(limit)}';
 
+  String _getSeriesIssueListKey(
+    int seriesId,
+    int page,
+    int limit, {
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
+  }) =>
+      'series_issue_list:$seriesId:p$page:l${_normalizeLimit(limit)}:o${_normalizeOrdering(ordering)}:a${_normalizeStoreDate(storeDateGte)}:b${_normalizeStoreDate(storeDateLte)}';
+
   String _getSeriesSearchKey(String query, int page, int limit) =>
       '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
 
   String _getSeriesListKey(int page, int limit, {DateTime? modifiedGt}) =>
       'series_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
-
-  String _getSeriesIssueListKey(int seriesId, int page, int limit) =>
-      'series_issue_list:$seriesId:p$page:l${_normalizeLimit(limit)}';
 
   String _getCharacterSearchKey(String query, int page, int limit) =>
       '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
@@ -1459,8 +1481,18 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int count,
     String? next,
     String? previous,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   }) async {
-    final key = _getSeriesIssueListKey(seriesId, page, limit);
+    final key = _getSeriesIssueListKey(
+      seriesId,
+      page,
+      limit,
+      ordering: ordering,
+      storeDateGte: storeDateGte,
+      storeDateLte: storeDateLte,
+    );
     await _cacheList(
       'series_issue_list:$key',
       'series_issue_list',
@@ -1475,8 +1507,18 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int seriesId, {
     required int page,
     required int limit,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   }) async {
-    final key = _getSeriesIssueListKey(seriesId, page, limit);
+    final key = _getSeriesIssueListKey(
+      seriesId,
+      page,
+      limit,
+      ordering: ordering,
+      storeDateGte: storeDateGte,
+      storeDateLte: storeDateLte,
+    );
     return _getList('series_issue_list:$key', IssueListDto.fromJson);
   }
 
@@ -1485,8 +1527,18 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int seriesId, {
     required int page,
     required int limit,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   }) async {
-    final key = _getSeriesIssueListKey(seriesId, page, limit);
+    final key = _getSeriesIssueListKey(
+      seriesId,
+      page,
+      limit,
+      ordering: ordering,
+      storeDateGte: storeDateGte,
+      storeDateLte: storeDateLte,
+    );
     return _getCachedAt('series_issue_list:$key');
   }
 
@@ -1495,8 +1547,18 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int seriesId, {
     required int page,
     required int limit,
+    String? ordering,
+    DateTime? storeDateGte,
+    DateTime? storeDateLte,
   }) async {
-    final key = _getSeriesIssueListKey(seriesId, page, limit);
+    final key = _getSeriesIssueListKey(
+      seriesId,
+      page,
+      limit,
+      ordering: ordering,
+      storeDateGte: storeDateGte,
+      storeDateLte: storeDateLte,
+    );
     final data = await _getMeta('series_issue_list:$key');
     if (data == null) return null;
     final count = (data['count'] as num?)?.toInt();

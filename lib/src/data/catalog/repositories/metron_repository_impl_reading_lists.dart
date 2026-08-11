@@ -304,8 +304,9 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
   }) async {
     final allItems = <MetronReadingListItem>[];
     Uri? nextUrl;
+    var pageCount = 0;
 
-    while (true) {
+    while (pageCount < metronMaxWalkPages) {
       final dto = await _remoteDataSource.getReadingListItems(
         id,
         nextUrl: nextUrl,
@@ -337,6 +338,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
         }
         allItems.add(item.toEntity());
       }
+      pageCount++;
       if (dto.next == null) break;
       nextUrl = Uri.parse(dto.next!);
     }

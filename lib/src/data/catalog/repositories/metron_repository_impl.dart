@@ -62,6 +62,14 @@ mixin _RepositoryState {
   Map<String, Future<List<IssueList>>> get _focReleasesInFlight;
   _AsyncConcurrencyGate get _issueDetailsGate;
   Map<String, Future<ArcListPage>> get _arcSearchInFlight;
+  Map<String, Future<IssueSearchPage>> get _issueSearchInFlight;
+  Map<String, Future<SeriesSearchPage>> get _seriesSearchInFlight;
+  Map<String, Future<CharacterListPage>> get _characterSearchInFlight;
+  Map<String, Future<CreatorListPage>> get _creatorSearchInFlight;
+  Map<String, Future<UniverseListPage>> get _universeSearchInFlight;
+  Map<String, Future<ImprintListPage>> get _imprintSearchInFlight;
+  Map<String, Future<TeamListPage>> get _teamSearchInFlight;
+  Map<String, Future<PublisherListPage>> get _publisherSearchInFlight;
   Map<String, Future<ArcIssueListPage>> get _arcIssueListInFlight;
   Map<String, Future<CharacterIssueListPage>> get _teamIssueListInFlight;
   Map<String, Future<ArcListPage>> get _arcListInFlight;
@@ -268,6 +276,30 @@ class MetronRepositoryImpl
   @override
   final Map<String, Future<ArcListPage>> _arcSearchInFlight =
       <String, Future<ArcListPage>>{};
+  @override
+  final Map<String, Future<IssueSearchPage>> _issueSearchInFlight =
+      <String, Future<IssueSearchPage>>{};
+  @override
+  final Map<String, Future<SeriesSearchPage>> _seriesSearchInFlight =
+      <String, Future<SeriesSearchPage>>{};
+  @override
+  final Map<String, Future<CharacterListPage>> _characterSearchInFlight =
+      <String, Future<CharacterListPage>>{};
+  @override
+  final Map<String, Future<CreatorListPage>> _creatorSearchInFlight =
+      <String, Future<CreatorListPage>>{};
+  @override
+  final Map<String, Future<UniverseListPage>> _universeSearchInFlight =
+      <String, Future<UniverseListPage>>{};
+  @override
+  final Map<String, Future<ImprintListPage>> _imprintSearchInFlight =
+      <String, Future<ImprintListPage>>{};
+  @override
+  final Map<String, Future<TeamListPage>> _teamSearchInFlight =
+      <String, Future<TeamListPage>>{};
+  @override
+  final Map<String, Future<PublisherListPage>> _publisherSearchInFlight =
+      <String, Future<PublisherListPage>>{};
   @override
   final Map<String, Future<ArcIssueListPage>> _arcIssueListInFlight =
       <String, Future<ArcIssueListPage>>{};
