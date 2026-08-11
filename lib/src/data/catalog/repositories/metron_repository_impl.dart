@@ -121,10 +121,10 @@ mixin _RepositoryState {
         ),
       );
       final series = dto.series;
-      if (series != null) {
+      if (series != null && series.id != null) {
         seriesStubs.add(
           MetronSeriesCompanion(
-            id: Value(series.id ?? 0),
+            id: Value(series.id!),
             name: Value(series.name),
             yearBegan: Value(series.yearBegan),
             volume: Value(series.volume),

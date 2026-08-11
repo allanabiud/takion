@@ -714,7 +714,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         : _isPublisherSearch
         ? SortPreferenceContext.searchPublishers
         : _isArcSearch
-        ? SortPreferenceContext.searchTeams
+        ? SortPreferenceContext.searchArcs
         : _isSeriesSearch
         ? SortPreferenceContext.searchSeries
         : SortPreferenceContext.searchIssues;

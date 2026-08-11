@@ -68,6 +68,7 @@ enum SortPreferenceContext {
   searchImprints,
   searchTeams,
   searchPublishers,
+  searchArcs,
   publisherSeries,
   arcIssues,
   teamIssues,
@@ -126,6 +127,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
         return 'search_teams';
       case SortPreferenceContext.searchPublishers:
         return 'search_publishers';
+      case SortPreferenceContext.searchArcs:
+        return 'search_arcs';
       case SortPreferenceContext.publisherSeries:
         return 'publisher_series';
       case SortPreferenceContext.arcIssues:
@@ -186,6 +189,8 @@ extension SortPreferenceContextX on SortPreferenceContext {
       case SortPreferenceContext.searchTeams:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.searchPublishers:
+        return ContentSortOption.nameAsc;
+      case SortPreferenceContext.searchArcs:
         return ContentSortOption.nameAsc;
       case SortPreferenceContext.publisherSeries:
         return ContentSortOption.nameAsc;

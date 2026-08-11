@@ -333,7 +333,7 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
         if (cached != null &&
             cached.modified != null &&
             dto.modified != null &&
-            cached.modified == cached.modified) {
+            cached.modified == dto.modified) {
           return _characterRowToEntity(characterId);
         }
         await _upsertCharacterDetails(dto);
