@@ -16,6 +16,7 @@ import 'package:takion/src/domain/entities.dart';
 
 class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
   final List<IssueListDto> arcIssues;
+  bool lastGetArcIssueListBypassConditional = false;
 
   FakeMetronRemoteDataSource(this.arcIssues);
 
@@ -26,7 +27,9 @@ class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
     int page = 1,
     int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
+    bool bypassConditional = false,
   }) async {
+    lastGetArcIssueListBypassConditional = bypassConditional;
     return SeriesIssueListResponseDto(
       count: arcIssues.length,
       next: null,
@@ -112,5 +115,21 @@ void main() {
     final reloaded = await readingListRepo.getListById('list-1');
     expect(reloaded, isNotNull);
     expect(reloaded!.items, hasLength(2));
+  });
+
+  test('getArcIssueListAll bypasses conditional headers to survive 304s',
+      () async {
+    final remote = FakeMetronRemoteDataSource([_issue(1), _issue(2)]);
+    final repo = MetronRepositoryImpl(
+      remote,
+      MetronLocalDataSourceImpl(db),
+      MetronEntityDao(db),
+      JunctionDao(db),
+      series_index.SeriesNameIndex(db),
+    );
+
+    await repo.getArcIssueListAll(123);
+
+    expect(remote.lastGetArcIssueListBypassConditional, isTrue);
   });
 }

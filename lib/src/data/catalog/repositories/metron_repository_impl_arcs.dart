@@ -485,6 +485,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
         arcId,
         nextUrl: nextUrl,
         limit: metronDefaultPageSize,
+        bypassConditional: true,
       );
       _upsertIssueListStubs(page.results);
       _indexSeriesNamesFromIssueList(page.results);

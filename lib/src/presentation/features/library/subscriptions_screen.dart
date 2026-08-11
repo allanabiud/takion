@@ -52,7 +52,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
       final seriesIds = page.results.map((s) => s.id).toList(growable: false);
       final hydrater = ref.read(subscriptionCardsHydraterProvider);
       unawaited(hydrater.hydrate(seriesIds));
-      unawaited(hydrater.warmCoverImages(context, seriesIds));
     });
 
     if (pageAsync.hasValue) {
@@ -185,7 +184,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         final series = sortedResults[index];
         return Opacity(
           opacity: isLoading ? 0.6 : 1.0,
-          child: SeriesSubscriptionCard(series: series),
+          child: SeriesSubscriptionCard(key: ValueKey(series.id), series: series),
         );
       },
       emptyMessage: 'No subscriptions.',

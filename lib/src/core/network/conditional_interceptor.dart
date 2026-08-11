@@ -11,6 +11,10 @@ class ConditionalRequestInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.extra['bypass_conditional'] == true) {
+      handler.next(options);
+      return;
+    }
     final url = options.uri.toString();
     final etag = _store.getEtag(url);
     final lastModified = _store.getLastModified(url);

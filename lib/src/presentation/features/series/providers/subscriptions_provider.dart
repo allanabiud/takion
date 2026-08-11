@@ -82,13 +82,15 @@ final subscriptionSeriesCardProvider = StreamProvider.autoDispose
 
       return dao.watchIssuesBySeries(seriesId).map((issues) {
         String? mostRecentImage;
+        String? nextIssueImage;
         DateTime? nextIssueDate;
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
 
         for (final issue in issues) {
-          if (mostRecentImage == null &&
-              (issue.imageUrl?.trim().isNotEmpty ?? false)) {
+          final imageUrl = issue.imageUrl?.trim();
+          final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+          if (mostRecentImage == null && hasImage) {
             mostRecentImage = issue.imageUrl;
           }
 
@@ -99,22 +101,20 @@ final subscriptionSeriesCardProvider = StreamProvider.autoDispose
           releaseDate ??= issue.coverDate != null
               ? DateTime.tryParse(issue.coverDate!)
               : null;
-          if (releaseDate != null) {
-            final day = DateTime(
-              releaseDate.year,
-              releaseDate.month,
-              releaseDate.day,
-            );
-            if (!day.isBefore(today)) {
-              if (nextIssueDate == null || day.isBefore(nextIssueDate)) {
-                nextIssueDate = day;
-              }
-            }
-          }
+          if (releaseDate == null) continue;
+          final day = DateTime(
+            releaseDate.year,
+            releaseDate.month,
+            releaseDate.day,
+          );
+          if (day.isBefore(today)) continue;
+          if (nextIssueDate != null && !day.isBefore(nextIssueDate)) continue;
+          nextIssueDate = day;
+          nextIssueImage = hasImage ? issue.imageUrl : null;
         }
 
         return SubscriptionSeriesCardData(
-          mostRecentIssueImage: mostRecentImage,
+          mostRecentIssueImage: nextIssueImage ?? mostRecentImage,
           nextIssueDate: nextIssueDate,
           seriesName: seriesName,
         );

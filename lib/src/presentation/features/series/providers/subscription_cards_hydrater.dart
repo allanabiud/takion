@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/dio_client.dart';
 import 'package:takion/src/core/network/request_priority.dart'
     show backgroundZoneKey;
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
 import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -69,43 +66,6 @@ class SubscriptionCardsHydrater {
 
   Future<T> _runInBackground<T>(Future<T> Function() task) {
     return runZoned(() => task(), zoneValues: {backgroundZoneKey: true});
-  }
-
-  Future<void> warmCoverImages(
-    BuildContext context,
-    List<int> seriesIds,
-  ) async {
-    if (seriesIds.isEmpty) return;
-
-    final dao = ref.read(metronEntityDaoProvider);
-    for (final seriesId in seriesIds) {
-      final imageUrl = await _mostRecentImageUrl(dao, seriesId);
-      if (imageUrl == null || imageUrl.trim().isEmpty) continue;
-      if (!context.mounted) return;
-      try {
-        await precacheImage(
-          CachedNetworkImageProvider(imageUrl.trim()),
-          context,
-        );
-      } catch (e) {
-        AppLogger.debug(
-          'Failed to pre-cache cover for series $seriesId',
-          error: e,
-        );
-      }
-    }
-  }
-
-  Future<String?> _mostRecentImageUrl(
-    MetronEntityDao dao,
-    int seriesId,
-  ) async {
-    final issues = await dao.getIssuesBySeries(seriesId, limit: _issueFetchLimit);
-    for (final issue in issues) {
-      final url = issue.imageUrl?.trim();
-      if (url != null && url.isNotEmpty) return url;
-    }
-    return null;
   }
 }
 
