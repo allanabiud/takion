@@ -1,4 +1,5 @@
 openapi: 3.0.3
+
 info:
   title: Metron Comicbook Database
   version: 1.0.0
@@ -9,16 +10,22 @@ info:
   license:
     name: Creative Commons License
     url: https://creativecommons.org/licenses/by-sa/4.0/
+
 paths:
+
   /api/arc/:
+
     get:
+
       operationId: api_arc_list
+
       description: |-
         list:
         Returns a list of all the story arcs.
 
         retrieve:
         Returns the information of an individual story arc.
+
       parameters:
       - in: query
         name: cv_id
@@ -46,11 +53,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -58,15 +68,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedArcListList'
           description: ''
+
   /api/arc/{id}/:
+
     get:
+
       operationId: api_arc_retrieve
+
       description: |-
         list:
         Returns a list of all the story arcs.
 
         retrieve:
         Returns the information of an individual story arc.
+
       parameters:
       - in: path
         name: id
@@ -74,11 +89,14 @@ paths:
           type: integer
         description: A unique integer value identifying this arc.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -86,15 +104,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/Arc'
           description: ''
+
   /api/arc/{id}/issue_list/:
+
     get:
+
       operationId: api_arc_issue_list_list
+
       description: |-
         list:
         Returns a list of all the story arcs.
 
         retrieve:
         Returns the information of an individual story arc.
+
       parameters:
       - in: path
         name: id
@@ -108,11 +131,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -120,15 +146,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
+
   /api/character/:
+
     get:
+
       operationId: api_character_list
+
       description: |-
         list:
         Return a list of all the characters.
 
         retrieve:
         Returns the information of an individual character.
+
       parameters:
       - in: query
         name: cv_id
@@ -156,11 +187,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -168,15 +202,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCharacterListList'
           description: ''
+
   /api/character/{id}/:
+
     get:
+
       operationId: api_character_retrieve
+
       description: |-
         list:
         Return a list of all the characters.
 
         retrieve:
         Returns the information of an individual character.
+
       parameters:
       - in: path
         name: id
@@ -184,11 +223,14 @@ paths:
           type: integer
         description: A unique integer value identifying this character.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -196,15 +238,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/CharacterRead'
           description: ''
+
   /api/character/{id}/issue_list/:
+
     get:
+
       operationId: api_character_issue_list_list
+
       description: |-
         list:
         Return a list of all the characters.
 
         retrieve:
         Returns the information of an individual character.
+
       parameters:
       - in: path
         name: id
@@ -218,11 +265,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -230,15 +280,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
+
   /api/creator/:
+
     get:
+
       operationId: api_creator_list
+
       description: |-
         list:
         Return a list of all the creators.
 
         retrieve:
         Returns the information of an individual creator.
+
       parameters:
       - in: query
         name: cv_id
@@ -266,11 +321,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -278,15 +336,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCreatorListList'
           description: ''
+
   /api/creator/{id}/:
+
     get:
+
       operationId: api_creator_retrieve
+
       description: |-
         list:
         Return a list of all the creators.
 
         retrieve:
         Returns the information of an individual creator.
+
       parameters:
       - in: path
         name: id
@@ -294,11 +357,14 @@ paths:
           type: integer
         description: A unique integer value identifying this creator.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -306,9 +372,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Creator'
           description: ''
+
   /api/imprint/:
+
     get:
+
       operationId: api_imprint_list
+
       description: |-
         list:
         Returns a list of all imprints.
@@ -321,6 +391,7 @@ paths:
 
         update:
         Update an imprint's information.
+
       parameters:
       - in: query
         name: cv_id
@@ -348,11 +419,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -360,9 +434,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedImprintListList'
           description: ''
+
   /api/imprint/{id}/:
+
     get:
+
       operationId: api_imprint_retrieve
+
       description: |-
         list:
         Returns a list of all imprints.
@@ -375,6 +453,7 @@ paths:
 
         update:
         Update an imprint's information.
+
       parameters:
       - in: path
         name: id
@@ -382,11 +461,14 @@ paths:
           type: integer
         description: A unique integer value identifying this imprint.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -394,9 +476,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImprintRead'
           description: ''
+
   /api/issue/:
+
     get:
+
       operationId: api_issue_list
+
       description: |-
         list:
         Return a list of all the issues.
@@ -406,6 +492,7 @@ paths:
 
         Note: cover_hash is a Perceptual hashing created with
         ImageHash. https://github.com/JohannesBuchner/imagehash
+
       parameters:
       - in: query
         name: alt_number
@@ -582,11 +669,14 @@ paths:
           type: string
         description: UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile
           scanner that strips the 5-digit EAN supplemental)
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -594,9 +684,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
+
   /api/issue/{id}/:
+
     get:
+
       operationId: api_issue_retrieve
+
       description: |-
         list:
         Return a list of all the issues.
@@ -606,6 +700,7 @@ paths:
 
         Note: cover_hash is a Perceptual hashing created with
         ImageHash. https://github.com/JohannesBuchner/imagehash
+
       parameters:
       - in: path
         name: id
@@ -613,11 +708,14 @@ paths:
           type: integer
         description: A unique integer value identifying this issue.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -625,9 +723,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueRead'
           description: ''
+
   /api/publisher/:
+
     get:
+
       operationId: api_publisher_list
+
       description: |-
         list:
         Returns a list of all publishers.
@@ -640,6 +742,7 @@ paths:
 
         update:
         Update a publisher's information.
+
       parameters:
       - in: query
         name: cv_id
@@ -667,11 +770,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -679,9 +785,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPublisherListList'
           description: ''
+
   /api/publisher/{id}/:
+
     get:
+
       operationId: api_publisher_retrieve
+
       description: |-
         list:
         Returns a list of all publishers.
@@ -694,6 +804,7 @@ paths:
 
         update:
         Update a publisher's information.
+
       parameters:
       - in: path
         name: id
@@ -701,11 +812,14 @@ paths:
           type: integer
         description: A unique integer value identifying this publisher.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -713,10 +827,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Publisher'
           description: ''
+
   /api/publisher/{id}/series_list/:
+
     get:
+
       operationId: api_publisher_series_list_list
+
       description: Returns a list of series for a publisher.
+
       parameters:
       - in: path
         name: id
@@ -730,11 +849,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -742,9 +864,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSeriesListList'
           description: ''
+
   /api/reading_list/:
+
     get:
+
       operationId: api_reading_list_list
+
       description: |-
         list:
         Returns a list of reading lists based on user permissions.
@@ -755,6 +881,7 @@ paths:
         retrieve:
         Returns the information of an individual reading list.
         Requires authentication.
+
       parameters:
       - in: query
         name: attribution_source
@@ -838,11 +965,14 @@ paths:
         name: username
         schema:
           type: string
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -850,9 +980,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedReadingListListList'
           description: ''
+
   /api/reading_list/{id}/:
+
     get:
+
       operationId: api_reading_list_retrieve
+
       description: |-
         list:
         Returns a list of reading lists based on user permissions.
@@ -863,6 +997,7 @@ paths:
         retrieve:
         Returns the information of an individual reading list.
         Requires authentication.
+
       parameters:
       - in: path
         name: id
@@ -870,11 +1005,14 @@ paths:
           type: integer
         description: A unique integer value identifying this reading list.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -882,10 +1020,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReadingListRead'
           description: ''
+
   /api/reading_list/{id}/items/:
+
     get:
+
       operationId: api_reading_list_items_list
+
       description: Returns a paginated list of items for this reading list.
+
       parameters:
       - in: path
         name: id
@@ -899,11 +1042,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -911,12 +1057,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedReadingListItemList'
           description: ''
+
   /api/role/:
+
     get:
+
       operationId: api_role_list
+
       description: |-
         list:
         Returns a list of all the creator roles.
+
       parameters:
       - in: query
         name: modified_gt
@@ -934,11 +1085,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -946,14 +1100,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedRoleList'
           description: ''
+
   /api/schema/:
+
     get:
+
       operationId: api_schema_retrieve
+
       description: |-
         OpenApi3 schema for this API. Format can be selected via content negotiation.
 
         - YAML: application/vnd.oai.openapi
         - JSON: application/vnd.oai.openapi+json
+
       parameters:
       - in: query
         name: format
@@ -1067,12 +1226,15 @@ paths:
           - vi
           - zh-hans
           - zh-hant
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
       - {}
+
       responses:
         '200':
           content:
@@ -1093,9 +1255,13 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+
   /api/series/:
+
     get:
+
       operationId: api_series_list
+
       description: |-
         list:
         Returns a list of all the comic series.
@@ -1108,6 +1274,7 @@ paths:
 
         update:
         Update a Series information.
+
       parameters:
       - in: query
         name: character_id
@@ -1213,11 +1380,14 @@ paths:
         name: year_end
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1225,9 +1395,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSeriesListList'
           description: ''
+
   /api/series/{id}/:
+
     get:
+
       operationId: api_series_retrieve
+
       description: |-
         list:
         Returns a list of all the comic series.
@@ -1240,6 +1414,7 @@ paths:
 
         update:
         Update a Series information.
+
       parameters:
       - in: path
         name: id
@@ -1247,11 +1422,14 @@ paths:
           type: integer
         description: A unique integer value identifying this series.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1259,9 +1437,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/SeriesRead'
           description: ''
+
   /api/series/{id}/issue_list/:
+
     get:
+
       operationId: api_series_issue_list_list
+
       description: |-
         list:
         Returns a list of all the comic series.
@@ -1274,6 +1456,7 @@ paths:
 
         update:
         Update a Series information.
+
       parameters:
       - in: path
         name: id
@@ -1287,11 +1470,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1299,12 +1485,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
+
   /api/series_type/:
+
     get:
+
       operationId: api_series_type_list
+
       description: |-
         list:
         Returns a list of the Series Types available.
+
       parameters:
       - in: query
         name: modified_gt
@@ -1322,11 +1513,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1334,15 +1528,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSeriesTypeList'
           description: ''
+
   /api/team/:
+
     get:
+
       operationId: api_team_list
+
       description: |-
         list:
         Return a list of all the teams.
 
         retrieve:
         Returns the information of an individual team.
+
       parameters:
       - in: query
         name: cv_id
@@ -1370,11 +1569,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1382,15 +1584,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTeamListList'
           description: ''
+
   /api/team/{id}/:
+
     get:
+
       operationId: api_team_retrieve
+
       description: |-
         list:
         Return a list of all the teams.
 
         retrieve:
         Returns the information of an individual team.
+
       parameters:
       - in: path
         name: id
@@ -1398,11 +1605,14 @@ paths:
           type: integer
         description: A unique integer value identifying this team.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1410,15 +1620,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/TeamRead'
           description: ''
+
   /api/team/{id}/issue_list/:
+
     get:
+
       operationId: api_team_issue_list_list
+
       description: |-
         list:
         Return a list of all the teams.
 
         retrieve:
         Returns the information of an individual team.
+
       parameters:
       - in: path
         name: id
@@ -1432,11 +1647,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1444,15 +1662,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
+
   /api/universe/:
+
     get:
+
       operationId: api_universe_list
+
       description: |-
         list:
         Return a list of all the universes.
 
         retrieve:
         Returns the information of an individual universe.
+
       parameters:
       - in: query
         name: designation
@@ -1474,11 +1697,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1486,15 +1712,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedUniverseListList'
           description: ''
+
   /api/universe/{id}/:
+
     get:
+
       operationId: api_universe_retrieve
+
       description: |-
         list:
         Return a list of all the universes.
 
         retrieve:
         Returns the information of an individual universe.
+
       parameters:
       - in: path
         name: id
@@ -1502,11 +1733,14 @@ paths:
           type: integer
         description: A unique integer value identifying this universe.
         required: true
+
       tags:
       - api
+
       security:
       - basicAuth: []
       - cookieAuth: []
+
       responses:
         '200':
           content:
@@ -1514,8 +1748,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/UniverseRead'
           description: ''
+
 components:
   schemas:
+
     Arc:
       type: object
       properties:
@@ -1555,6 +1791,7 @@ components:
       - modified
       - name
       - resource_url
+
     ArcList:
       type: object
       properties:
@@ -1572,6 +1809,7 @@ components:
       - id
       - modified
       - name
+
     AssociatedSeries:
       type: object
       properties:
@@ -1583,6 +1821,7 @@ components:
       required:
       - id
       - series
+
     AttributionSourceEnum:
       enum:
       - CBRO
@@ -1603,6 +1842,7 @@ components:
         * `HTLC` - How To Love Comics
         * `LOCG` - League of ComicGeeks
         * `OTHER` - Other
+
     BasicImprint:
       type: object
       properties:
@@ -1615,6 +1855,7 @@ components:
       required:
       - id
       - name
+
     BasicPublisher:
       type: object
       properties:
@@ -1627,9 +1868,11 @@ components:
       required:
       - id
       - name
+
     BlankEnum:
       enum:
       - ''
+
     CharacterList:
       type: object
       properties:
@@ -1647,6 +1890,7 @@ components:
       - id
       - modified
       - name
+
     CharacterRead:
       type: object
       properties:
@@ -1709,6 +1953,7 @@ components:
       - resource_url
       - teams
       - universes
+
     CreatorList:
       type: object
       properties:
@@ -1726,6 +1971,7 @@ components:
       - id
       - modified
       - name
+
     CreditRead:
       type: object
       properties:
@@ -1743,6 +1989,7 @@ components:
       - creator
       - id
       - role
+
     CurrencyEnum:
       enum:
       - USD
@@ -1751,6 +1998,7 @@ components:
       description: |-
         * `USD` - USD
         * `GBP` - GBP
+
     DesiredGradeEnum:
       enum:
       - 10.0
@@ -1805,6 +2053,7 @@ components:
         * `1.5` - 1.5 (FR/GD - Fair/Good)
         * `1.0` - 1.0 (FR - Fair)
         * `0.5` - 0.5 (PR - Poor)
+
     Genre:
       type: object
       properties:
@@ -1817,6 +2066,7 @@ components:
       required:
       - id
       - name
+
     ImprintList:
       type: object
       properties:
@@ -1834,6 +2084,7 @@ components:
       - id
       - modified
       - name
+
     ImprintRead:
       type: object
       properties:
@@ -1885,6 +2136,7 @@ components:
       - name
       - publisher
       - resource_url
+
     IssueList:
       type: object
       properties:
@@ -1927,6 +2179,7 @@ components:
       - modified
       - number
       - series
+
     IssueListSeries:
       type: object
       properties:
@@ -1950,6 +2203,7 @@ components:
       - name
       - volume
       - year_began
+
     IssueRead:
       type: object
       properties:
@@ -2147,6 +2401,7 @@ components:
       - teams
       - universes
       - variants
+
     IssueSeries:
       type: object
       properties:
@@ -2185,6 +2440,7 @@ components:
       - sort_name
       - volume
       - year_began
+
     MissingIssue:
       type: object
       description: Serializer for missing issues in a series.
@@ -2212,6 +2468,7 @@ components:
       - id
       - number
       - series
+
     MissingSeries:
       type: object
       description: Serializer for series with missing issues.
@@ -2268,9 +2525,11 @@ components:
       - sort_name
       - total_issues
       - year_began
+
     NullEnum:
       enum:
       - null
+
     PaginatedArcListList:
       type: object
       required:
@@ -2294,6 +2553,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ArcList'
+
     PaginatedCharacterListList:
       type: object
       required:
@@ -2317,6 +2577,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CharacterList'
+
     PaginatedCreatorListList:
       type: object
       required:
@@ -2340,6 +2601,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CreatorList'
+
     PaginatedImprintListList:
       type: object
       required:
@@ -2363,6 +2625,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ImprintList'
+
     PaginatedIssueListList:
       type: object
       required:
@@ -2386,6 +2649,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IssueList'
+
     PaginatedMissingIssueList:
       type: object
       required:
@@ -2409,6 +2673,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MissingIssue'
+
     PaginatedMissingSeriesList:
       type: object
       required:
@@ -2432,6 +2697,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MissingSeries'
+
     PaginatedPublisherListList:
       type: object
       required:
@@ -2455,6 +2721,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublisherList'
+
     PaginatedReadingListItemList:
       type: object
       required:
@@ -2478,6 +2745,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReadingListItem'
+
     PaginatedReadingListListList:
       type: object
       required:
@@ -2501,6 +2769,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReadingListList'
+
     PaginatedRoleList:
       type: object
       required:
@@ -2524,6 +2793,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Role'
+
     PaginatedSeriesListList:
       type: object
       required:
@@ -2547,6 +2817,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SeriesList'
+
     PaginatedSeriesTypeList:
       type: object
       required:
@@ -2570,6 +2841,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SeriesType'
+
     PaginatedTeamListList:
       type: object
       required:
@@ -2593,6 +2865,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TeamList'
+
     PaginatedUniverseListList:
       type: object
       required:
@@ -2616,6 +2889,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UniverseList'
+
     PriorityEnum:
       enum:
       - 1
@@ -2630,6 +2904,7 @@ components:
         * `3` - 3
         * `4` - 4
         * `5` - 5
+
     Publisher:
       type: object
       properties:
@@ -2678,6 +2953,7 @@ components:
       - modified
       - name
       - resource_url
+
     PublisherList:
       type: object
       properties:
@@ -2695,6 +2971,7 @@ components:
       - id
       - modified
       - name
+
     Rating:
       type: object
       properties:
@@ -2707,6 +2984,7 @@ components:
       required:
       - id
       - name
+
     RatingEnum:
       enum:
       - 1
@@ -2721,6 +2999,7 @@ components:
         * `3` - 3
         * `4` - 4
         * `5` - 5
+
     ReadDate:
       type: object
       description: Serializer for read dates.
@@ -2739,6 +3018,7 @@ components:
       - created_on
       - id
       - read_date
+
     ReadingListIssue:
       type: object
       description: Serializer for issues in reading lists (without image and cover_hash).
@@ -2782,6 +3062,7 @@ components:
       - modified
       - number
       - series
+
     ReadingListItem:
       type: object
       properties:
@@ -2804,6 +3085,7 @@ components:
       - id
       - issue
       - issue_type
+
     ReadingListList:
       type: object
       properties:
@@ -2863,6 +3145,7 @@ components:
       - rating_count
       - slug
       - user
+
     ReadingListNav:
       type: object
       description: Minimal representation of a reading list used for previous/next
@@ -2877,6 +3160,7 @@ components:
       required:
       - id
       - name
+
     ReadingListRead:
       type: object
       properties:
@@ -2960,6 +3244,7 @@ components:
       - resource_url
       - slug
       - user
+
     Reprint:
       type: object
       properties:
@@ -2971,6 +3256,7 @@ components:
       required:
       - id
       - issue
+
     Role:
       type: object
       properties:
@@ -2983,6 +3269,7 @@ components:
       required:
       - id
       - name
+
     SeriesList:
       type: object
       properties:
@@ -3020,6 +3307,7 @@ components:
       - series
       - volume
       - year_began
+
     SeriesRead:
       type: object
       properties:
@@ -3111,6 +3399,7 @@ components:
       - status
       - volume
       - year_began
+
     SeriesType:
       type: object
       properties:
@@ -3123,6 +3412,7 @@ components:
       required:
       - id
       - name
+
     TeamList:
       type: object
       properties:
@@ -3140,6 +3430,7 @@ components:
       - id
       - modified
       - name
+
     TeamRead:
       type: object
       properties:
@@ -3191,6 +3482,7 @@ components:
       - name
       - resource_url
       - universes
+
     UniverseList:
       type: object
       properties:
@@ -3208,6 +3500,7 @@ components:
       - id
       - modified
       - name
+
     UniverseRead:
       type: object
       properties:
@@ -3250,6 +3543,7 @@ components:
       - name
       - publisher
       - resource_url
+
     User:
       type: object
       properties:
@@ -3265,6 +3559,7 @@ components:
       required:
       - id
       - username
+
     VariantsIssue:
       type: object
       properties:
@@ -3315,9 +3610,11 @@ components:
       - image
       - price
   securitySchemes:
+
     basicAuth:
       type: http
       scheme: basic
+
     cookieAuth:
       type: apiKey
       in: cookie
