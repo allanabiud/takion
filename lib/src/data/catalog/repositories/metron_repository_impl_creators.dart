@@ -271,10 +271,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
         );
         final dto = CreatorDetailsDto.fromJson(cachedJson);
         await _upsertCreatorDetails(dto);
-        return _creatorRowToEntity(
-          await _metronEntityDao.getCreator(creatorId) ??
-              (throw StateError('Creator $creatorId not found after upsert')),
-        );
+        return dto.toEntity();
       }
     }
 
@@ -292,10 +289,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
           );
           final dto = CreatorDetailsDto.fromJson(cachedJson);
           await _upsertCreatorDetails(dto);
-          return _creatorRowToEntity(
-            await _metronEntityDao.getCreator(creatorId) ??
-                (throw StateError('Creator $creatorId not found')),
-          );
+          return dto.toEntity();
         }
         return _creatorRowToEntity(
           cached ?? (throw StateError('Creator $creatorId not found')),
@@ -313,10 +307,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       }
       await _upsertCreatorDetails(dto);
       await _localDataSource.cacheCreatorDetailsResponse(creatorId, data);
-      return _creatorRowToEntity(
-        await _metronEntityDao.getCreator(creatorId) ??
-            (throw StateError('Creator $creatorId not found after upsert')),
-      );
+      return dto.toEntity();
     } catch (e) {
       AppLogger.error('Failed to fetch creator details', error: e);
       final cachedJson =
@@ -324,10 +315,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       if (cachedJson != null) {
         final dto = CreatorDetailsDto.fromJson(cachedJson);
         await _upsertCreatorDetails(dto);
-        return _creatorRowToEntity(
-          await _metronEntityDao.getCreator(creatorId) ??
-              (throw StateError('Creator $creatorId not found after upsert')),
-        );
+        return dto.toEntity();
       }
       if (cached != null) {
         return _creatorRowToEntity(cached);
@@ -337,22 +325,24 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertCreatorDetails(CreatorDetailsDto dto) async {
-    await _metronEntityDao.upsertCreator(
-      MetronCreatorsCompanion(
-        id: Value(dto.id),
-        name: Value(dto.name),
-        imageUrl: Value(dto.image),
-        description: Value(dto.desc),
-        birth: Value(dto.birth),
-        death: Value(dto.death),
-        aliasJson: Value(dto.alias.isNotEmpty ? jsonEncode(dto.alias) : null),
-        cvId: Value(dto.cvId),
-        gcdId: Value(dto.gcdId),
-        resourceUrl: Value(dto.resourceUrl),
-        modified: Value(dto.modified),
-        isFullyHydrated: const Value(true),
-      ),
-    );
+    await _metronEntityDao.attachedDatabase.transaction(() async {
+      await _metronEntityDao.upsertCreator(
+        MetronCreatorsCompanion(
+          id: Value(dto.id),
+          name: Value(dto.name),
+          imageUrl: Value(dto.image),
+          description: Value(dto.desc),
+          birth: Value(dto.birth),
+          death: Value(dto.death),
+          aliasJson: Value(dto.alias.isNotEmpty ? jsonEncode(dto.alias) : null),
+          cvId: Value(dto.cvId),
+          gcdId: Value(dto.gcdId),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          isFullyHydrated: const Value(true),
+        ),
+      );
+    });
   }
 
   CreatorDetails _creatorRowToEntity(MetronCreator row) {

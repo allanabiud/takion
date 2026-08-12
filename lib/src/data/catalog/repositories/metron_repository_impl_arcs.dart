@@ -271,10 +271,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
         );
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);
-        return _arcRowToEntity(
-          await _metronEntityDao.getArc(arcId) ??
-              (throw StateError('Arc $arcId not found')),
-        );
+        return dto.toEntity();
       }
     }
 
@@ -289,10 +286,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           await _localDataSource.cacheArcDetailsResponse(arcId, cachedJson);
           final dto = ArcDetailsDto.fromJson(cachedJson);
           await _upsertArcDetails(dto);
-          return _arcRowToEntity(
-            await _metronEntityDao.getArc(arcId) ??
-                (throw StateError('Arc $arcId not found')),
-          );
+          return dto.toEntity();
         }
         return _arcRowToEntity(
           cached ?? (throw StateError('Arc $arcId not found')),
@@ -321,10 +315,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       }
       await _upsertArcDetails(dto);
       await _localDataSource.cacheArcDetailsResponse(arcId, data);
-      return _arcRowToEntity(
-        await _metronEntityDao.getArc(arcId) ??
-            (throw StateError('Arc $arcId not found after upsert')),
-      );
+      return dto.toEntity();
     } catch (e) {
       AppLogger.error('Failed to fetch arc details', error: e);
       final cachedJson =
@@ -332,10 +323,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       if (cachedJson != null) {
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);
-        return _arcRowToEntity(
-          await _metronEntityDao.getArc(arcId) ??
-              (throw StateError('Arc $arcId not found after upsert')),
-        );
+        return dto.toEntity();
       }
       if (cached != null) {
         return _arcRowToEntity(cached);

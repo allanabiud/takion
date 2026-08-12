@@ -258,11 +258,13 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
       return _characterRowToEntity(characterId);
     }
 
-    final cachedJson =
-        await _localDataSource.getCachedCharacterDetailsResponse(characterId);
+    final cachedJson = await _localDataSource.getCachedCharacterDetailsResponse(
+      characterId,
+    );
     if (cachedJson != null && !forceRefresh) {
-      final cachedAt =
-          await _localDataSource.getCachedCharacterDetailsCachedAt(characterId);
+      final cachedAt = await _localDataSource.getCachedCharacterDetailsCachedAt(
+        characterId,
+      );
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.characterDetails.isFresh(cachedAt, now)) {
@@ -271,21 +273,17 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
         );
         final dto = CharacterDetailsDto.fromJson(cachedJson);
         await _upsertCharacterDetails(dto);
-        return _characterRowToEntity(characterId);
+        return dto.toEntity();
       }
     }
 
     AppPerformanceMetrics.instance.recordCacheMiss('character_details');
 
     try {
-      final response = await _remoteDataSource.getCharacterDetails(
-        characterId,
-      );
+      final response = await _remoteDataSource.getCharacterDetails(characterId);
       if (response.statusCode == 304) {
-        final cachedJson =
-            await _localDataSource.getCachedCharacterDetailsResponse(
-          characterId,
-        );
+        final cachedJson = await _localDataSource
+            .getCachedCharacterDetailsResponse(characterId);
         if (cachedJson != null) {
           await _localDataSource.cacheCharacterDetailsResponse(
             characterId,
@@ -293,10 +291,10 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
           );
           final dto = CharacterDetailsDto.fromJson(cachedJson);
           await _upsertCharacterDetails(dto);
-          return _characterRowToEntity(characterId);
+          return dto.toEntity();
         }
         if (cached != null) {
-          return _characterRowToEntity(characterId);
+          return await _characterRowToEntity(characterId);
         }
         throw DioException(
           requestOptions: response.requestOptions,
@@ -312,30 +310,29 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
           cached.modified != null &&
           dto.modified != null &&
           cached.modified == dto.modified) {
-        return _characterRowToEntity(characterId);
+        return await _characterRowToEntity(characterId);
       }
       await _upsertCharacterDetails(dto);
       await _localDataSource.cacheCharacterDetailsResponse(characterId, data);
-      return _characterRowToEntity(characterId);
+      return dto.toEntity();
     } catch (e) {
       AppLogger.error('Failed to fetch character details', error: e);
-      final cachedJson =
-          await _localDataSource.getCachedCharacterDetailsResponse(
-        characterId,
-      );
+      final cachedJson = await _localDataSource
+          .getCachedCharacterDetailsResponse(characterId);
       if (cachedJson != null) {
         final dto = CharacterDetailsDto.fromJson(cachedJson);
-        if (cached != null &&
+        if (!forceRefresh &&
+            cached != null &&
             cached.modified != null &&
             dto.modified != null &&
             cached.modified == dto.modified) {
-          return _characterRowToEntity(characterId);
+          return await _characterRowToEntity(characterId);
         }
         await _upsertCharacterDetails(dto);
-        return _characterRowToEntity(characterId);
+        return dto.toEntity();
       }
       if (cached != null) {
-        return _characterRowToEntity(characterId);
+        return await _characterRowToEntity(characterId);
       }
       rethrow;
     }
@@ -458,87 +455,92 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertCharacterDetails(CharacterDetailsDto dto) async {
-    await _metronEntityDao.upsertCharacter(
-      MetronCharactersCompanion(
-        id: Value(dto.id),
-        name: Value(dto.name),
-        imageUrl: Value(dto.image),
-        description: Value(dto.desc),
-        cvId: Value(dto.cvId),
-        gcdId: Value(dto.gcdId),
-        resourceUrl: Value(dto.resourceUrl),
-        modified: Value(dto.modified),
-        isFullyHydrated: const Value(true),
-      ),
-    );
-
-    await _junctionDao.clearCharacterJunctions(dto.id);
-
-    for (final creator in dto.creators) {
-      await _metronEntityDao.upsertCreator(
-        MetronCreatorsCompanion(
-          id: Value(creator.id),
-          name: Value(creator.name),
-          isFullyHydrated: const Value(false),
+    await _metronEntityDao.attachedDatabase.transaction(() async {
+      await _metronEntityDao.upsertCharacter(
+        MetronCharactersCompanion(
+          id: Value(dto.id),
+          name: Value(dto.name),
+          imageUrl: Value(dto.image),
+          description: Value(dto.desc),
+          cvId: Value(dto.cvId),
+          gcdId: Value(dto.gcdId),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          isFullyHydrated: const Value(true),
         ),
       );
-    }
-    if (dto.creators.isNotEmpty) {
-      await _junctionDao.batchInsertCharacterCreators(
-        dto.creators
-            .map(
-              (c) => CharacterCreatorsCompanion(
-                characterId: Value(dto.id),
-                creatorId: Value(c.id),
-              ),
-            )
-            .toList(),
-      );
-    }
 
-    for (final team in dto.teams) {
-      await _metronEntityDao.upsertTeam(
-        MetronTeamsCompanion(
-          id: Value(team.id),
-          name: Value(team.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    if (dto.teams.isNotEmpty) {
-      await _junctionDao.batchInsertCharacterTeams(
-        dto.teams
-            .map(
-              (t) => CharacterTeamsCompanion(
-                characterId: Value(dto.id),
-                teamId: Value(t.id),
-              ),
-            )
-            .toList(),
-      );
-    }
+      await _junctionDao.clearCharacterJunctions(dto.id);
 
-    for (final universe in dto.universes) {
-      await _metronEntityDao.upsertUniverse(
-        MetronUniversesCompanion(
-          id: Value(universe.id),
-          name: Value(universe.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    if (dto.universes.isNotEmpty) {
-      await _junctionDao.batchInsertCharacterUniverses(
-        dto.universes
-            .map(
-              (u) => CharacterUniversesCompanion(
-                characterId: Value(dto.id),
-                universeId: Value(u.id),
-              ),
-            )
-            .toList(),
-      );
-    }
+      final validCreators = dto.creators.where((c) => c.id > 0).toList();
+      for (final creator in validCreators) {
+        await _metronEntityDao.upsertCreator(
+          MetronCreatorsCompanion(
+            id: Value(creator.id),
+            name: Value(creator.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (validCreators.isNotEmpty) {
+        await _junctionDao.batchInsertCharacterCreators(
+          validCreators
+              .map(
+                (c) => CharacterCreatorsCompanion(
+                  characterId: Value(dto.id),
+                  creatorId: Value(c.id),
+                ),
+              )
+              .toList(),
+        );
+      }
+
+      final validTeams = dto.teams.where((t) => t.id > 0).toList();
+      for (final team in validTeams) {
+        await _metronEntityDao.upsertTeam(
+          MetronTeamsCompanion(
+            id: Value(team.id),
+            name: Value(team.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (validTeams.isNotEmpty) {
+        await _junctionDao.batchInsertCharacterTeams(
+          validTeams
+              .map(
+                (t) => CharacterTeamsCompanion(
+                  characterId: Value(dto.id),
+                  teamId: Value(t.id),
+                ),
+              )
+              .toList(),
+        );
+      }
+
+      final validUniverses = dto.universes.where((u) => u.id > 0).toList();
+      for (final universe in validUniverses) {
+        await _metronEntityDao.upsertUniverse(
+          MetronUniversesCompanion(
+            id: Value(universe.id),
+            name: Value(universe.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (validUniverses.isNotEmpty) {
+        await _junctionDao.batchInsertCharacterUniverses(
+          validUniverses
+              .map(
+                (u) => CharacterUniversesCompanion(
+                  characterId: Value(dto.id),
+                  universeId: Value(u.id),
+                ),
+              )
+              .toList(),
+        );
+      }
+    });
   }
 
   Future<CharacterDetails> _characterRowToEntity(int characterId) async {

@@ -526,63 +526,66 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
 
   Future<void> _upsertSeriesDetails(SeriesDetailsDto dto) async {
     final coverUrl = await _metronEntityDao.computeSeriesCoverUrl(dto.id);
-    if (dto.publisher != null) {
-      await _metronEntityDao.upsertPublisher(
-        MetronPublishersCompanion(
-          id: Value(dto.publisher!.id),
-          name: Value(dto.publisher!.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    if (dto.imprint != null) {
-      await _metronEntityDao.upsertImprint(
-        MetronImprintsCompanion(
-          id: Value(dto.imprint!.id),
-          name: Value(dto.imprint!.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    await _metronEntityDao.upsertSeries(
-      MetronSeriesCompanion(
-        id: Value(dto.id),
-        name: Value(dto.name),
-        sortName: Value(dto.sortName),
-        volume: Value(dto.volume),
-        seriesTypeId: Value(dto.seriesType?.id),
-        seriesTypeName: Value(dto.seriesType?.name),
-        status: Value(dto.status),
-        publisherId: Value(dto.publisher?.id),
-        imprintId: Value(dto.imprint?.id),
-        yearBegan: Value(dto.yearBegan),
-        yearEnd: Value(dto.yearEnd),
-        description: Value(dto.description),
-        issueCount: Value(dto.issueCount),
-        computedCoverUrl: Value(coverUrl),
-        cvId: Value(dto.cvId),
-        gcdId: Value(dto.gcdId),
-        resourceUrl: Value(dto.resourceUrl),
-        modified: Value(dto.modified),
-        isFullyHydrated: const Value(true),
-      ),
-    );
-
-    for (final associated in dto.associated) {
+    await _metronEntityDao.attachedDatabase.transaction(() async {
+      if (dto.publisher != null && dto.publisher!.id > 0) {
+        await _metronEntityDao.upsertPublisher(
+          MetronPublishersCompanion(
+            id: Value(dto.publisher!.id),
+            name: Value(dto.publisher!.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (dto.imprint != null && dto.imprint!.id > 0) {
+        await _metronEntityDao.upsertImprint(
+          MetronImprintsCompanion(
+            id: Value(dto.imprint!.id),
+            name: Value(dto.imprint!.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
       await _metronEntityDao.upsertSeries(
         MetronSeriesCompanion(
-          id: Value(associated.id),
-          name: Value(associated.series),
-          isFullyHydrated: const Value(false),
+          id: Value(dto.id),
+          name: Value(dto.name),
+          sortName: Value(dto.sortName),
+          volume: Value(dto.volume),
+          seriesTypeId: Value(dto.seriesType?.id),
+          seriesTypeName: Value(dto.seriesType?.name),
+          status: Value(dto.status),
+          publisherId: Value(dto.publisher?.id),
+          imprintId: Value(dto.imprint?.id),
+          yearBegan: Value(dto.yearBegan),
+          yearEnd: Value(dto.yearEnd),
+          description: Value(dto.description),
+          issueCount: Value(dto.issueCount),
+          computedCoverUrl: Value(coverUrl),
+          cvId: Value(dto.cvId),
+          gcdId: Value(dto.gcdId),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          isFullyHydrated: const Value(true),
         ),
       );
-      await _junctionDao.insertIgnoreAssociatedSeries(
-        AssociatedSeriesCompanion(
-          seriesId: Value(dto.id),
-          associatedSeriesId: Value(associated.id),
-        ),
-      );
-    }
+
+      for (final associated in dto.associated) {
+        if (associated.id <= 0) continue;
+        await _metronEntityDao.upsertSeries(
+          MetronSeriesCompanion(
+            id: Value(associated.id),
+            name: Value(associated.series),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+        await _junctionDao.insertIgnoreAssociatedSeries(
+          AssociatedSeriesCompanion(
+            seriesId: Value(dto.id),
+            associatedSeriesId: Value(associated.id),
+          ),
+        );
+      }
+    });
   }
 
   Future<SeriesDetails> _seriesRowToEntity(MetronSery row) async {

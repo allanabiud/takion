@@ -271,7 +271,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
         );
         final dto = TeamDetailsDto.fromJson(cachedJson);
         await _upsertTeamDetails(dto);
-        return _teamRowToEntity(teamId);
+        return dto.toEntity();
       }
     }
 
@@ -286,11 +286,11 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           await _localDataSource.cacheTeamDetailsResponse(teamId, cachedJson);
           final dto = TeamDetailsDto.fromJson(cachedJson);
           await _upsertTeamDetails(dto);
-          return _teamRowToEntity(teamId);
+          return dto.toEntity();
         }
-      return _teamRowToEntity(
-        cached != null ? teamId : (throw StateError('Team $teamId not found')),
-      );
+        return await _teamRowToEntity(
+          cached != null ? teamId : (throw StateError('Team $teamId not found')),
+        );
       }
       final data = response.data as Map<String, dynamic>;
       final dto = TeamDetailsDto.fromJson(data);
@@ -300,11 +300,11 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           cached.modified != null &&
           dto.modified != null &&
           cached.modified == dto.modified) {
-        return _teamRowToEntity(teamId);
+        return await _teamRowToEntity(teamId);
       }
       await _upsertTeamDetails(dto);
       await _localDataSource.cacheTeamDetailsResponse(teamId, data);
-      return _teamRowToEntity(teamId);
+      return dto.toEntity();
     } catch (e) {
       AppLogger.error('Failed to fetch team details', error: e);
       final cachedJson =
@@ -312,75 +312,79 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       if (cachedJson != null) {
         final dto = TeamDetailsDto.fromJson(cachedJson);
         await _upsertTeamDetails(dto);
-        return _teamRowToEntity(teamId);
+        return dto.toEntity();
       }
       if (cached != null) {
-        return _teamRowToEntity(teamId);
+        return await _teamRowToEntity(teamId);
       }
       rethrow;
     }
   }
 
   Future<void> _upsertTeamDetails(TeamDetailsDto dto) async {
-    await _metronEntityDao.upsertTeam(
-      MetronTeamsCompanion(
-        id: Value(dto.id),
-        name: Value(dto.name),
-        imageUrl: Value(dto.image),
-        description: Value(dto.desc),
-        cvId: Value(dto.cvId),
-        gcdId: Value(dto.gcdId),
-        resourceUrl: Value(dto.resourceUrl),
-        modified: Value(dto.modified),
-        isFullyHydrated: const Value(true),
-      ),
-    );
-
-    await _junctionDao.clearTeamJunctions(dto.id);
-
-    for (final creator in dto.creators) {
-      await _metronEntityDao.upsertCreator(
-        MetronCreatorsCompanion(
-          id: Value(creator.id),
-          name: Value(creator.name),
-          isFullyHydrated: const Value(false),
+    await _metronEntityDao.attachedDatabase.transaction(() async {
+      await _metronEntityDao.upsertTeam(
+        MetronTeamsCompanion(
+          id: Value(dto.id),
+          name: Value(dto.name),
+          imageUrl: Value(dto.image),
+          description: Value(dto.desc),
+          cvId: Value(dto.cvId),
+          gcdId: Value(dto.gcdId),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          isFullyHydrated: const Value(true),
         ),
       );
-    }
-    if (dto.creators.isNotEmpty) {
-      await _junctionDao.batchInsertCreatorTeams(
-        dto.creators
-            .map(
-              (c) => CreatorTeamsCompanion(
-                creatorId: Value(c.id),
-                teamId: Value(dto.id),
-              ),
-            )
-            .toList(),
-      );
-    }
 
-    for (final universe in dto.universes) {
-      await _metronEntityDao.upsertUniverse(
-        MetronUniversesCompanion(
-          id: Value(universe.id),
-          name: Value(universe.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    if (dto.universes.isNotEmpty) {
-      await _junctionDao.batchInsertTeamUniverses(
-        dto.universes
-            .map(
-              (u) => TeamUniversesCompanion(
-                teamId: Value(dto.id),
-                universeId: Value(u.id),
-              ),
-            )
-            .toList(),
-      );
-    }
+      await _junctionDao.clearTeamJunctions(dto.id);
+
+      final validCreators = dto.creators.where((c) => c.id > 0).toList();
+      for (final creator in validCreators) {
+        await _metronEntityDao.upsertCreator(
+          MetronCreatorsCompanion(
+            id: Value(creator.id),
+            name: Value(creator.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (validCreators.isNotEmpty) {
+        await _junctionDao.batchInsertCreatorTeams(
+          validCreators
+              .map(
+                (c) => CreatorTeamsCompanion(
+                  creatorId: Value(c.id),
+                  teamId: Value(dto.id),
+                ),
+              )
+              .toList(),
+        );
+      }
+
+      final validUniverses = dto.universes.where((u) => u.id > 0).toList();
+      for (final universe in validUniverses) {
+        await _metronEntityDao.upsertUniverse(
+          MetronUniversesCompanion(
+            id: Value(universe.id),
+            name: Value(universe.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (validUniverses.isNotEmpty) {
+        await _junctionDao.batchInsertTeamUniverses(
+          validUniverses
+              .map(
+                (u) => TeamUniversesCompanion(
+                  teamId: Value(dto.id),
+                  universeId: Value(u.id),
+                ),
+              )
+              .toList(),
+        );
+      }
+    });
   }
 
   Future<TeamDetails> _teamRowToEntity(int teamId) async {
