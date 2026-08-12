@@ -138,31 +138,6 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshReadingListDelta({DateTime? modifiedGt}) {
-    return runZoned(
-      () async {
-        var page = 1;
-        var synced = 0;
-        while (true) {
-          final result = await searchReadingLists(
-            page: page,
-            limit: metronDefaultPageSize,
-            modifiedGt: modifiedGt,
-            forceRefresh: true,
-          );
-          for (final item in result.results) {
-            await getReadingListDetail(item.id, forceRefresh: true);
-            synced++;
-          }
-          if (!result.hasNext) break;
-          page++;
-        }
-        return synced;
-      },
-      zoneValues: {backgroundZoneKey: true},
-    );
-  }
-
   Future<MetronReadingListDetail> getReadingListDetail(
     int id, {
     bool forceRefresh = false,

@@ -1,14 +1,9 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:takion/src/core/utils/json_utils.dart';
 import 'package:takion/src/data/catalog/dto/dto.dart';
 import 'package:takion/src/data/reading_list/dto/dto.dart';
 
 abstract class MetronRemoteDataSource {
-  Future<Response> rawGet(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    CancelToken? cancelToken,
-  });
   Future<Response> getWeeklyReleasesForDate(
     DateTime date, {
     CancelToken? cancelToken,
@@ -225,32 +220,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
   final Dio _dio;
 
   MetronRemoteDataSourceImpl(this._dio);
-
-  @override
-  Future<Response> rawGet(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    CancelToken? cancelToken,
-  }) {
-    return _dio.get(
-      path,
-      queryParameters: queryParameters,
-      cancelToken: cancelToken,
-    );
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    if (data is String) {
-      try {
-        final decoded = jsonDecode(data);
-        if (decoded is Map<String, dynamic>) return decoded;
-        if (decoded is Map) return Map<String, dynamic>.from(decoded);
-      } catch (_) {}
-    }
-    return <String, dynamic>{};
-  }
 
   String _normalizeQuery(String query) {
     return query
@@ -867,7 +836,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
             queryParameters: queryParameters,
             cancelToken: cancelToken,
           );
-    return ArcListResponseDto.fromJson(_asMap(response.data));
+    return ArcListResponseDto.fromJson(jsonToMap(response.data));
   }
 
   @override
@@ -891,7 +860,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
           );
 
     return SeriesIssueListResponseDto.fromJson(
-      _asMap(response.data),
+      jsonToMap(response.data),
     );
   }
 

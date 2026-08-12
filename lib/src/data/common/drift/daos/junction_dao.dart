@@ -67,24 +67,6 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     });
   }
 
-  Future<void> insertIgnoreIssueImprint(IssueImprintsCompanion entry) async {
-    await into(attachedDatabase.issueImprints).insertOnConflictUpdate(entry);
-  }
-
-  Future<void> insertIgnoreSeriesArc(SeriesArcsCompanion entry) async {
-    await into(attachedDatabase.seriesArcs).insertOnConflictUpdate(entry);
-  }
-
-  Future<void> insertIgnoreSeriesTeam(SeriesTeamsCompanion entry) async {
-    await into(attachedDatabase.seriesTeams).insertOnConflictUpdate(entry);
-  }
-
-  Future<void> insertIgnoreSeriesUniverse(
-    SeriesUniversesCompanion entry,
-  ) async {
-    await into(attachedDatabase.seriesUniverses).insertOnConflictUpdate(entry);
-  }
-
   Future<void> insertIgnoreAssociatedSeries(
     AssociatedSeriesCompanion entry,
   ) async {

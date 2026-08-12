@@ -12,8 +12,6 @@ abstract class UniverseRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshUniverseListDelta({DateTime? modifiedGt});
-
   Future<UniverseListPage> searchUniverses(
     String query, {
     String? nextUrl,

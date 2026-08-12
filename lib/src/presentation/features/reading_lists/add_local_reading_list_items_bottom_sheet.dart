@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
+import 'package:takion/src/domain/common/search_utils.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';

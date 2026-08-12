@@ -12,8 +12,6 @@ abstract class PublisherRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshPublisherListDelta({DateTime? modifiedGt});
-
   Future<PublisherListPage> searchPublishers(
     String query, {
     String? nextUrl,

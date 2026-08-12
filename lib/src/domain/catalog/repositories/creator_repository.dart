@@ -12,8 +12,6 @@ abstract class CreatorRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshCreatorListDelta({DateTime? modifiedGt});
-
   Future<CreatorListPage> searchCreators(
     String query, {
     String? nextUrl,

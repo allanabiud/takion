@@ -118,7 +118,7 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
   DateTime? cachedAt;
   var cached = const <HomeTrendingEntry>[];
   try {
-    cachedAt = await cache.getCachedAt(homeTrendingMetaKey);
+    cachedAt = await cache.getCachedAt(homeTrendingCacheKey);
     final cachedJson = await cache.readJsonList(homeTrendingCacheKey);
     cached =
         cachedJson
@@ -144,10 +144,10 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
       cached.isNotEmpty;
 
   if (hasFreshCache) {
-    metrics.recordCacheHit(homeTrendingMetaKey);
+    metrics.recordCacheHit(homeTrendingCacheKey);
     return cached;
   }
-  metrics.recordCacheMiss(homeTrendingMetaKey);
+  metrics.recordCacheMiss(homeTrendingCacheKey);
 
   try {
     final fresh = await metrics.trackProvider(
@@ -166,7 +166,7 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
             )
             .toList(),
       );
-      await cache.writeCachedAtNow(homeTrendingMetaKey);
+      await cache.writeCachedAtNow(homeTrendingCacheKey);
     } catch (e) {
       AppLogger.warning('Failed to cache home trending', error: e);
     }

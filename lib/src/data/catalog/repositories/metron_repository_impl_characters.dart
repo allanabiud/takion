@@ -114,26 +114,6 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshCharacterListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getCharacterList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getCharacterDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
-  }
-
   Future<CharacterListPage> searchCharacters(
     String query, {
     String? nextUrl,

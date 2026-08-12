@@ -114,26 +114,6 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshUniverseListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getUniverseList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getUniverseDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
-  }
-
   Future<UniverseListPage> searchUniverses(
     String query, {
     String? nextUrl,

@@ -5,6 +5,7 @@ import 'package:takion/src/core/constants/pagination.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
+import 'package:takion/src/domain/common/search_utils.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_search_provider.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';

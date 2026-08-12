@@ -6,9 +6,7 @@ import 'package:takion/src/data/common/drift/database.dart';
 import 'package:takion/src/domain/entities.dart';
 
 const String homeTrendingCacheKey = 'home:series_suggestions';
-const String homeTrendingMetaKey = 'home:series_suggestions';
 const String homeBecauseYouPulledCacheKey = 'home:because_you_pulled';
-const String homeBecauseYouPulledMetaKey = 'home:because_you_pulled';
 
 final homeContentCacheProvider = Provider<HomeContentCache>((ref) {
   return HomeContentCache(ref.read(driftDatabaseProvider));
@@ -31,10 +29,6 @@ class HomeContentCache {
       entityType: 'home_content_meta',
       payload: '',
     );
-  }
-
-  Future<void> deleteCachedAt(String metaKey) async {
-    await _db.apiCacheDao.deleteByKey(metaKey);
   }
 
   Future<List<Map<String, dynamic>>?> readJsonList(String key) async {

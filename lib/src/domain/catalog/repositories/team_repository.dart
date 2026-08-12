@@ -12,8 +12,6 @@ abstract class TeamRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshTeamListDelta({DateTime? modifiedGt});
-
   Future<TeamListPage> searchTeams(
     String query, {
     String? nextUrl,

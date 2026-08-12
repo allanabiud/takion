@@ -60,7 +60,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               message: '304 Not Modified and no cached data available',
             );
           }
-          final data = _asMap(response.data);
+          final data = jsonToMap(response.data);
           final dto = IssueDetailsDto.fromJson(data);
           if (!forceRefresh &&
               cached != null &&
@@ -337,33 +337,6 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       }
       rethrow;
     }
-  }
-
-  Future<int> refreshIssueListDelta({DateTime? modifiedGt, String? ordering}) {
-    return runZoned(
-      () async {
-        var page = 1;
-        var synced = 0;
-        while (true) {
-          final result = await getIssueList(
-            page: page,
-            ordering: ordering,
-            modifiedGt: modifiedGt,
-            forceRefresh: true,
-          );
-          for (final item in result.results) {
-            if (item.id != null) {
-              await getIssueDetails(item.id!, forceRefresh: true);
-              synced++;
-            }
-          }
-          if (!result.hasNext) break;
-          page++;
-        }
-        return synced;
-      },
-      zoneValues: {backgroundZoneKey: true},
-    );
   }
 
   Future<IssueSearchPage> searchIssuesByUpc(

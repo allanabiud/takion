@@ -166,7 +166,7 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
   DateTime? cachedAt;
   var cached = const <IssueList>[];
   try {
-    cachedAt = await cache.getCachedAt(homeBecauseYouPulledMetaKey);
+    cachedAt = await cache.getCachedAt(homeBecauseYouPulledCacheKey);
     final cachedJson = await cache.readJsonList(homeBecauseYouPulledCacheKey);
     cached =
         cachedJson?.map(issueListFromJson).whereType<IssueList>().toList() ??
@@ -180,10 +180,10 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
       cached.isNotEmpty;
 
   if (hasFreshCache) {
-    metrics.recordCacheHit(homeBecauseYouPulledMetaKey);
+    metrics.recordCacheHit(homeBecauseYouPulledCacheKey);
     return cached;
   }
-  metrics.recordCacheMiss(homeBecauseYouPulledMetaKey);
+  metrics.recordCacheMiss(homeBecauseYouPulledCacheKey);
 
   try {
     final fresh = await metrics.trackProvider(
@@ -195,7 +195,7 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
         homeBecauseYouPulledCacheKey,
         fresh.map(issueListToJson).toList(),
       );
-      await cache.writeCachedAtNow(homeBecauseYouPulledMetaKey);
+      await cache.writeCachedAtNow(homeBecauseYouPulledCacheKey);
     } catch (e) {
       AppLogger.warning('Failed to cache because you pulled', error: e);
     }

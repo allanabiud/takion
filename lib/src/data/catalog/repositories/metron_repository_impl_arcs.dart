@@ -114,26 +114,6 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshArcListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getArcList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getArcDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
-  }
-
   Future<ArcListPage> searchArcs(
     String query, {
     String? nextUrl,
@@ -292,19 +272,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           cached ?? (throw StateError('Arc $arcId not found')),
         );
       }
-      final rawData = response.data;
-      final Map<String, dynamic> data;
-      if (rawData is Map<String, dynamic>) {
-        data = rawData;
-      } else if (rawData is Map) {
-        data = Map<String, dynamic>.from(rawData);
-      } else if (rawData is String) {
-        final decoded = jsonDecode(rawData);
-        data = decoded is Map ? Map<String, dynamic>.from(decoded) : <String, dynamic>{};
-      } else {
-        data = <String, dynamic>{};
-      }
-      final dto = ArcDetailsDto.fromJson(data);
+      final dto = ArcDetailsDto.fromJson(jsonToMap(response.data));
       if (!forceRefresh &&
           cached != null &&
           cached.isFullyHydrated &&
@@ -314,7 +282,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
         return _arcRowToEntity(cached);
       }
       await _upsertArcDetails(dto);
-      await _localDataSource.cacheArcDetailsResponse(arcId, data);
+      await _localDataSource.cacheArcDetailsResponse(arcId, response.data);
       return dto.toEntity();
     } catch (e) {
       AppLogger.error('Failed to fetch arc details', error: e);

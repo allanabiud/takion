@@ -18,7 +18,6 @@ export 'publisher_details_dto.dart';
 export 'publisher_list_dto.dart';
 export 'publisher_list_response_dto.dart';
 export 'series_details_dto.dart';
-export 'series_dto.dart';
 export 'series_issue_list_response_dto.dart';
 export 'series_list_dto.dart';
 export 'series_list_response_dto.dart';

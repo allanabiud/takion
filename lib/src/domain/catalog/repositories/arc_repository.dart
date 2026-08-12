@@ -12,8 +12,6 @@ abstract class ArcRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshArcListDelta({DateTime? modifiedGt});
-
   Future<ArcListPage> searchArcs(
     String query, {
     String? nextUrl,

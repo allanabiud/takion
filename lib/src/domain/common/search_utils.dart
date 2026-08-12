@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/repositories.dart';
-
 class SearchArgs {
   const SearchArgs({required this.query, required this.page});
 
@@ -38,12 +35,3 @@ mixin SearchPageMixin {
   bool get hasNext => nextPage != null;
   bool get hasPrevious => previousPage != null;
 }
-
-typedef SearchApiCall<TPage> =
-    Future<TPage> Function(
-      CatalogRepository repository,
-      String query, {
-      required int page,
-      required int limit,
-      CancelToken? cancelToken,
-    });

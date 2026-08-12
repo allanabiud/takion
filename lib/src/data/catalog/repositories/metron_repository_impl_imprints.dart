@@ -114,26 +114,6 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshImprintListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getImprintList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getImprintDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
-  }
-
   Future<ImprintListPage> searchImprints(
     String query, {
     String? nextUrl,

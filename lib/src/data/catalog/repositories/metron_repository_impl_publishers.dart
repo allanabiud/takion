@@ -114,26 +114,6 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshPublisherListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getPublisherList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getPublisherDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
-  }
-
   Future<PublisherListPage> searchPublishers(
     String query, {
     String? nextUrl,

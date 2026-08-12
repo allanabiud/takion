@@ -12,8 +12,6 @@ abstract class ImprintRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshImprintListDelta({DateTime? modifiedGt});
-
   Future<ImprintListPage> searchImprints(
     String query, {
     String? nextUrl,

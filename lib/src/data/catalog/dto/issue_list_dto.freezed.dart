@@ -11,7 +11,6 @@ part of 'issue_list_dto.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$IssueListDto {
 
@@ -22,8 +21,6 @@ mixin _$IssueListDto {
 @pragma('vm:prefer-inline')
 $IssueListDtoCopyWith<IssueListDto> get copyWith => _$IssueListDtoCopyWithImpl<IssueListDto>(this as IssueListDto, _$identity);
 
-  /// Serializes this IssueListDto to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueListDto&&(identical(other.id, id) || other.id == id)&&(identical(other.number, number) || other.number == number)&&(identical(other.series, series) || other.series == series)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.issueName, issueName) || other.issueName == issueName)&&(identical(other.modified, modified) || other.modified == modified)&&(identical(other.coverHash, coverHash) || other.coverHash == coverHash));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,number,series,coverDate,storeDate,image,issueName,modified,coverHash);
 
@@ -226,11 +223,11 @@ return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDa
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _IssueListDto extends IssueListDto {
   const _IssueListDto({required this.id, required this.number, required this.series, @JsonKey(name: 'cover_date') this.coverDate, @JsonKey(name: 'store_date') this.storeDate, required this.image, @JsonKey(name: 'issue') this.issueName, this.modified, @JsonKey(name: 'cover_hash') this.coverHash}): super._();
-  factory _IssueListDto.fromJson(Map<String, dynamic> json) => _$IssueListDtoFromJson(json);
+  
 
 @override final  int id;
 @override final  String number;
@@ -248,17 +245,14 @@ class _IssueListDto extends IssueListDto {
 @pragma('vm:prefer-inline')
 _$IssueListDtoCopyWith<_IssueListDto> get copyWith => __$IssueListDtoCopyWithImpl<_IssueListDto>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$IssueListDtoToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueListDto&&(identical(other.id, id) || other.id == id)&&(identical(other.number, number) || other.number == number)&&(identical(other.series, series) || other.series == series)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate)&&(identical(other.image, image) || other.image == image)&&(identical(other.issueName, issueName) || other.issueName == issueName)&&(identical(other.modified, modified) || other.modified == modified)&&(identical(other.coverHash, coverHash) || other.coverHash == coverHash));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,number,series,coverDate,storeDate,image,issueName,modified,coverHash);
 

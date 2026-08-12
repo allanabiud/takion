@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:takion/src/core/constants/pagination.dart';
+import 'package:takion/src/domain/common/search_utils.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 

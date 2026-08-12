@@ -9,6 +9,7 @@ import 'package:takion/src/core/logging/app_logger.dart';
 import 'package:takion/src/core/network/rate_limit_interceptor.dart'
     show backgroundZoneKey;
 import 'package:takion/src/core/performance/performance_metrics.dart';
+import 'package:takion/src/core/utils/json_utils.dart';
 import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
 import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
 import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart';
@@ -32,19 +33,6 @@ part 'metron_repository_impl_teams.dart';
 part 'metron_repository_impl_publishers.dart';
 part 'metron_repository_impl_arcs.dart';
 part 'metron_repository_impl_reading_lists.dart';
-
-Map<String, dynamic> _asMap(dynamic data) {
-  if (data is Map<String, dynamic>) return data;
-  if (data is Map) return Map<String, dynamic>.from(data);
-  if (data is String) {
-    try {
-      final decoded = jsonDecode(data);
-      if (decoded is Map<String, dynamic>) return decoded;
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
-    } catch (_) {}
-  }
-  return <String, dynamic>{};
-}
 
 mixin _RepositoryState {
   MetronRemoteDataSource get _remoteDataSource;

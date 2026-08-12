@@ -114,26 +114,6 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshTeamListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getTeamList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getTeamDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
-  }
-
   Future<TeamListPage> searchTeams(
     String query, {
     String? nextUrl,

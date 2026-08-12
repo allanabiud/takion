@@ -21,8 +21,6 @@ abstract class CharacterRepository {
     bool forceRefresh = false,
   });
 
-  Future<int> refreshCharacterListDelta({DateTime? modifiedGt});
-
   Future<CharacterDetails> getCharacterDetails(
     int characterId, {
     bool forceRefresh = false,

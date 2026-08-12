@@ -3,7 +3,6 @@ import 'package:takion/src/data/catalog/dto/dto.dart';
 import 'package:takion/src/domain/entities.dart';
 
 part 'issue_list_dto.freezed.dart';
-part 'issue_list_dto.g.dart';
 
 @freezed
 abstract class IssueListDto with _$IssueListDto {
@@ -50,6 +49,20 @@ abstract class IssueListDto with _$IssueListDto {
       modified: json['modified']?.toString(),
       coverHash: json['cover_hash']?.toString(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'number': number,
+      'series': series?.toJson(),
+      'cover_date': coverDate,
+      'store_date': storeDate,
+      'image': image,
+      'issue': issueName,
+      'modified': modified,
+      'cover_hash': coverHash,
+    };
   }
 
   const IssueListDto._();
