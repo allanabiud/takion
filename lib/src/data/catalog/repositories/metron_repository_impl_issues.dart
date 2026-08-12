@@ -302,18 +302,16 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           modifiedGt: modifiedGt,
           cancelToken: cancelToken,
         );
-        if (nextUrl == null) {
-          await _localDataSource.cacheIssueListResults(
-            remotePage.results,
-            page: page,
-            ordering: ordering,
-            modifiedGt: modifiedGt,
-            limit: limit,
-            count: remotePage.count,
-            next: remotePage.next,
-            previous: remotePage.previous,
-          );
-        }
+        await _localDataSource.cacheIssueListResults(
+          remotePage.results,
+          page: page,
+          ordering: ordering,
+          modifiedGt: modifiedGt,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
         _upsertIssueListStubs(remotePage.results);
         return IssueSearchPage(
           count: remotePage.count,
@@ -576,223 +574,228 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertIssueDetails(IssueDetailsDto dto) async {
-    if (dto.publisher != null) {
-      await _metronEntityDao.upsertPublisher(
-        MetronPublishersCompanion(
-          id: Value(dto.publisher!.id),
-          name: Value(dto.publisher!.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    if (dto.imprint != null) {
-      await _metronEntityDao.upsertImprint(
-        MetronImprintsCompanion(
-          id: Value(dto.imprint!.id),
-          name: Value(dto.imprint!.name),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-    if (dto.series != null) {
-      await _metronEntityDao.upsertSeries(
-        MetronSeriesCompanion(
-          id: Value(dto.series!.id),
-          name: Value(dto.series!.name),
-          sortName: Value(dto.series!.sortName),
-          volume: Value(dto.series!.volume),
-          yearBegan: Value(dto.series!.yearBegan),
-          seriesTypeId: Value(dto.series!.seriesType?.id),
-          seriesTypeName: Value(
-            dto.series!.seriesType?.name,
+    await _metronEntityDao.attachedDatabase.transaction(() async {
+      if (dto.publisher != null && dto.publisher!.id > 0) {
+        await _metronEntityDao.upsertPublisher(
+          MetronPublishersCompanion(
+            id: Value(dto.publisher!.id),
+            name: Value(dto.publisher!.name),
+            isFullyHydrated: const Value(false),
           ),
-          isFullyHydrated: const Value(false),
-        ),
-      );
-    }
-
-    await _metronEntityDao.upsertIssue(
-      MetronIssuesCompanion(
-        id: Value(dto.id),
-        number: Value(dto.number),
-        seriesId: Value(dto.series?.id),
-        coverDate: Value(dto.coverDate),
-        storeDate: Value(dto.storeDate),
-        focDate: Value(dto.focDate),
-        imageUrl: Value(dto.image),
-        description: Value(dto.description),
-        pageCount: Value(dto.page),
-        price: Value(dto.price),
-        sku: Value(dto.sku),
-        upc: Value(dto.upc),
-        isbn: Value(dto.isbn),
-        coverHash: Value(dto.coverHash),
-        publisherId: Value(dto.publisher?.id),
-        imprintId: Value(dto.imprint?.id),
-        cvId: Value(dto.cvId),
-        gcdId: Value(dto.gcdId),
-        resourceUrl: Value(dto.resourceUrl),
-        modified: Value(dto.modified),
-        variantsJson: Value(
-          dto.variants.isNotEmpty
-              ? jsonEncode(dto.variants.map((v) => v.toJson()).toList())
-              : null,
-        ),
-        reprintsJson: Value(
-          dto.reprints.isNotEmpty
-              ? jsonEncode(dto.reprints.map((r) => r.toJson()).toList())
-              : null,
-        ),
-        isFullyHydrated: const Value(true),
-      ),
-    );
-
-    await _junctionDao.clearIssueJunctions(dto.id);
-
-    await _metronEntityDao.upsertCharacterStubsBatch(
-      dto.characters
-          .map(
-            (c) => MetronCharactersCompanion(
-              id: Value(c.id),
-              name: Value(c.name),
-              isFullyHydrated: const Value(false),
+        );
+      }
+      if (dto.imprint != null && dto.imprint!.id > 0) {
+        await _metronEntityDao.upsertImprint(
+          MetronImprintsCompanion(
+            id: Value(dto.imprint!.id),
+            name: Value(dto.imprint!.name),
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
+      if (dto.series != null && dto.series!.id > 0) {
+        await _metronEntityDao.upsertSeries(
+          MetronSeriesCompanion(
+            id: Value(dto.series!.id),
+            name: Value(dto.series!.name),
+            sortName: Value(dto.series!.sortName),
+            volume: Value(dto.series!.volume),
+            yearBegan: Value(dto.series!.yearBegan),
+            seriesTypeId: Value(dto.series!.seriesType?.id),
+            seriesTypeName: Value(
+              dto.series!.seriesType?.name,
             ),
-          )
-          .toList(),
-    );
-    if (dto.characters.isNotEmpty) {
-      await _junctionDao.batchInsertIssueCharacters(
-        dto.characters
-            .asMap()
-            .entries
-            .map(
-              (e) => IssueCharactersCompanion(
-                issueId: Value(dto.id),
-                characterId: Value(e.value.id),
-                sortOrder: Value(e.key),
-              ),
-            )
-            .toList(),
-      );
-    }
+            isFullyHydrated: const Value(false),
+          ),
+        );
+      }
 
-    await _metronEntityDao.upsertCreatorStubsBatch(
-      dto.credits
-          .map((credit) {
-            final creatorId =
-                (credit.creatorId != null && credit.creatorId! > 0)
-                ? credit.creatorId!
-                : credit.id;
-            if (creatorId <= 0) return null;
-            return MetronCreatorsCompanion(
-              id: Value(creatorId),
-              name: Value(credit.creator ?? ''),
-              isFullyHydrated: const Value(false),
+      await _metronEntityDao.upsertIssue(
+        MetronIssuesCompanion(
+          id: Value(dto.id),
+          number: Value(dto.number),
+          seriesId: Value(dto.series?.id),
+          coverDate: Value(dto.coverDate),
+          storeDate: Value(dto.storeDate),
+          focDate: Value(dto.focDate),
+          imageUrl: Value(dto.image),
+          description: Value(dto.description),
+          pageCount: Value(dto.page),
+          price: Value(dto.price),
+          sku: Value(dto.sku),
+          upc: Value(dto.upc),
+          isbn: Value(dto.isbn),
+          coverHash: Value(dto.coverHash),
+          publisherId: Value(dto.publisher?.id),
+          imprintId: Value(dto.imprint?.id),
+          cvId: Value(dto.cvId),
+          gcdId: Value(dto.gcdId),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          variantsJson: Value(
+            dto.variants.isNotEmpty
+                ? jsonEncode(dto.variants.map((v) => v.toJson()).toList())
+                : null,
+          ),
+          reprintsJson: Value(
+            dto.reprints.isNotEmpty
+                ? jsonEncode(dto.reprints.map((r) => r.toJson()).toList())
+                : null,
+          ),
+          isFullyHydrated: const Value(true),
+        ),
+      );
+
+      await _junctionDao.clearIssueJunctions(dto.id);
+
+      final validCharacters = dto.characters.where((c) => c.id > 0).toList();
+      if (validCharacters.isNotEmpty) {
+        await _metronEntityDao.upsertCharacterStubsBatch(
+          validCharacters
+              .map(
+                (c) => MetronCharactersCompanion(
+                  id: Value(c.id),
+                  name: Value(c.name),
+                  isFullyHydrated: const Value(false),
+                ),
+              )
+              .toList(),
+        );
+        await _junctionDao.batchInsertIssueCharacters(
+          validCharacters
+              .asMap()
+              .entries
+              .map(
+                (e) => IssueCharactersCompanion(
+                  issueId: Value(dto.id),
+                  characterId: Value(e.value.id),
+                  sortOrder: Value(e.key),
+                ),
+              )
+              .toList(),
+        );
+      }
+
+      final validCreators = dto.credits.map((credit) {
+        final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
+            ? credit.creatorId!
+            : credit.id;
+        return (credit: credit, creatorId: creatorId);
+      }).where((entry) => entry.creatorId > 0).toList();
+
+      if (validCreators.isNotEmpty) {
+        await _metronEntityDao.upsertCreatorStubsBatch(
+          validCreators
+              .map(
+                (entry) => MetronCreatorsCompanion(
+                  id: Value(entry.creatorId),
+                  name: Value(entry.credit.creator ?? ''),
+                  isFullyHydrated: const Value(false),
+                ),
+              )
+              .toList(),
+        );
+        await _junctionDao.batchInsertIssueCreators(
+          validCreators.asMap().entries.map((e) {
+            final entry = e.value;
+            return IssueCreatorsCompanion(
+              issueId: Value(dto.id),
+              creatorId: Value(entry.creatorId),
+              role: Value(
+                entry.credit.roles.isNotEmpty
+                    ? entry.credit.roles.map((r) => r.name).join(', ')
+                    : null,
+              ),
+              sortOrder: Value(e.key),
             );
-          })
-          .whereType<MetronCreatorsCompanion>()
-          .toList(),
-    );
-    if (dto.credits.isNotEmpty) {
-      await _junctionDao.batchInsertIssueCreators(
-        dto.credits.map((credit) {
-          final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
-              ? credit.creatorId!
-              : credit.id;
-          return IssueCreatorsCompanion(
-            issueId: Value(dto.id),
-            creatorId: Value(creatorId),
-            role: Value(
-              credit.roles.isNotEmpty
-                  ? credit.roles.map((r) => r.name).join(', ')
-                  : null,
-            ),
-            sortOrder: Value(dto.credits.indexOf(credit)),
-          );
-        }).toList(),
-      );
-    }
+          }).toList(),
+        );
+      }
 
-    await _metronEntityDao.upsertArcStubsBatch(
-      dto.arcs
-          .map(
-            (a) => MetronArcsCompanion(
-              id: Value(a.id),
-              name: Value(a.name),
-              isFullyHydrated: const Value(false),
-            ),
-          )
-          .toList(),
-    );
-    if (dto.arcs.isNotEmpty) {
-      await _junctionDao.batchInsertIssueArcs(
-        dto.arcs
-            .asMap()
-            .entries
-            .map(
-              (e) => IssueArcsCompanion(
-                issueId: Value(dto.id),
-                arcId: Value(e.value.id),
-                sortOrder: Value(e.key),
-              ),
-            )
-            .toList(),
-      );
-    }
+      final validArcs = dto.arcs.where((a) => a.id > 0).toList();
+      if (validArcs.isNotEmpty) {
+        await _metronEntityDao.upsertArcStubsBatch(
+          validArcs
+              .map(
+                (a) => MetronArcsCompanion(
+                  id: Value(a.id),
+                  name: Value(a.name),
+                  isFullyHydrated: const Value(false),
+                ),
+              )
+              .toList(),
+        );
+        await _junctionDao.batchInsertIssueArcs(
+          validArcs
+              .asMap()
+              .entries
+              .map(
+                (e) => IssueArcsCompanion(
+                  issueId: Value(dto.id),
+                  arcId: Value(e.value.id),
+                  sortOrder: Value(e.key),
+                ),
+              )
+              .toList(),
+        );
+      }
 
-    await _metronEntityDao.upsertTeamStubsBatch(
-      dto.teams
-          .map(
-            (t) => MetronTeamsCompanion(
-              id: Value(t.id),
-              name: Value(t.name),
-              isFullyHydrated: const Value(false),
-            ),
-          )
-          .toList(),
-    );
-    if (dto.teams.isNotEmpty) {
-      await _junctionDao.batchInsertIssueTeams(
-        dto.teams
-            .asMap()
-            .entries
-            .map(
-              (e) => IssueTeamsCompanion(
-                issueId: Value(dto.id),
-                teamId: Value(e.value.id),
-                sortOrder: Value(e.key),
-              ),
-            )
-            .toList(),
-      );
-    }
+      final validTeams = dto.teams.where((t) => t.id > 0).toList();
+      if (validTeams.isNotEmpty) {
+        await _metronEntityDao.upsertTeamStubsBatch(
+          validTeams
+              .map(
+                (t) => MetronTeamsCompanion(
+                  id: Value(t.id),
+                  name: Value(t.name),
+                  isFullyHydrated: const Value(false),
+                ),
+              )
+              .toList(),
+        );
+        await _junctionDao.batchInsertIssueTeams(
+          validTeams
+              .asMap()
+              .entries
+              .map(
+                (e) => IssueTeamsCompanion(
+                  issueId: Value(dto.id),
+                  teamId: Value(e.value.id),
+                  sortOrder: Value(e.key),
+                ),
+              )
+              .toList(),
+        );
+      }
 
-    await _metronEntityDao.upsertUniverseStubsBatch(
-      dto.universes
-          .map(
-            (u) => MetronUniversesCompanion(
-              id: Value(u.id),
-              name: Value(u.name),
-              isFullyHydrated: const Value(false),
-            ),
-          )
-          .toList(),
-    );
-    if (dto.universes.isNotEmpty) {
-      await _junctionDao.batchInsertIssueUniverses(
-        dto.universes
-            .asMap()
-            .entries
-            .map(
-              (e) => IssueUniversesCompanion(
-                issueId: Value(dto.id),
-                universeId: Value(e.value.id),
-                sortOrder: Value(e.key),
-              ),
-            )
-            .toList(),
-      );
-    }
+      final validUniverses = dto.universes.where((u) => u.id > 0).toList();
+      if (validUniverses.isNotEmpty) {
+        await _metronEntityDao.upsertUniverseStubsBatch(
+          validUniverses
+              .map(
+                (u) => MetronUniversesCompanion(
+                  id: Value(u.id),
+                  name: Value(u.name),
+                  isFullyHydrated: const Value(false),
+                ),
+              )
+              .toList(),
+        );
+        await _junctionDao.batchInsertIssueUniverses(
+          validUniverses
+              .asMap()
+              .entries
+              .map(
+                (e) => IssueUniversesCompanion(
+                  issueId: Value(dto.id),
+                  universeId: Value(e.value.id),
+                  sortOrder: Value(e.key),
+                ),
+              )
+              .toList(),
+        );
+      }
+    });
   }
 
   Future<IssueDetails> _issueRowToEntity(MetronIssue row) async {

@@ -175,7 +175,6 @@ abstract class MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     CancelToken? cancelToken,
-    bool bypassConditional = false,
   });
 
   Future<PublisherListResponseDto> getPublisherList({
@@ -882,18 +881,13 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     Uri? nextUrl,
     int page = 1,
     CancelToken? cancelToken,
-    bool bypassConditional = false,
   }) async {
-    final options = bypassConditional
-        ? Options(extra: {'bypass_conditional': true})
-        : Options();
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl, options: options)
+        ? await _dio.getUri(nextUrl)
         : await _dio.get(
             'arc/$arcId/issue_list/',
             queryParameters: {'page': page},
             cancelToken: cancelToken,
-            options: options,
           );
 
     return SeriesIssueListResponseDto.fromJson(
