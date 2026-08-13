@@ -1,14 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
@@ -27,35 +26,17 @@ class CreatorDetailsScreen extends ConsumerStatefulWidget {
       _CreatorDetailsScreenState();
 }
 
-class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen> {
-  Uri? _resourceUri(CreatorDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
+class _CreatorDetailsScreenState
+    extends ConsumerState<CreatorDetailsScreen>
+    with ResourceUrlActions<CreatorDetails> {
+  @override
+  String? resourceUrlOf(CreatorDetails details) => details.resourceUrl;
 
-  Future<void> _shareResourceUrl(CreatorDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'creator');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
+  @override
+  String get resourceLabel => 'creator';
 
-  Future<void> _openResourceUrlInBrowser(CreatorDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'creator');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'creator');
-    }
-  }
+  @override
+  String shareSubjectOf(CreatorDetails details) => details.name;
 
   Future<void> _toggleFavorite() async {
     try {
@@ -125,8 +106,8 @@ class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen> {
           }
         }
       },
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,
       heroWidth: 260,
       heroHeight: 260,
@@ -175,12 +156,7 @@ class _CreatorInfoCard extends StatelessWidget {
   String? _modifiedValue() {
     final modified = details.modified;
     if (modified == null) return null;
-    final year = modified.year.toString().padLeft(4, '0');
-    final month = modified.month.toString().padLeft(2, '0');
-    final day = modified.day.toString().padLeft(2, '0');
-    final hour = modified.hour.toString().padLeft(2, '0');
-    final minute = modified.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
+    return DateFormatter.isoDateTime(modified);
   }
 
   @override

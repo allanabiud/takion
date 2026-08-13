@@ -4,8 +4,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
@@ -32,7 +32,21 @@ class MetronReadingListDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _MetronReadingListDetailScreenState
-    extends ConsumerState<MetronReadingListDetailScreen> {
+    extends ConsumerState<MetronReadingListDetailScreen>
+    with ResourceUrlActions<MetronReadingListDetail> {
+  @override
+  String? resourceUrlOf(MetronReadingListDetail details) {
+    final resourceUrl = details.resourceUrl?.trim();
+    if (resourceUrl != null && resourceUrl.isNotEmpty) return resourceUrl;
+    return details.attributionUrl?.trim();
+  }
+
+  @override
+  String get resourceLabel => 'reading list';
+
+  @override
+  String shareSubjectOf(MetronReadingListDetail details) => details.name;
+
   LocalReadingList? _localList;
   bool _isLoadingImport = false;
 
@@ -148,44 +162,6 @@ class _MetronReadingListDetailScreenState
     if (mounted) {
       TakionAlerts.success(context, 'Removed from Library');
       setState(() => _localList = null);
-    }
-  }
-
-  Uri? _resourceUri(MetronReadingListDetail detail) {
-    final resourceUrl = detail.resourceUrl?.trim();
-    if (resourceUrl != null && resourceUrl.isNotEmpty) {
-      return Uri.tryParse(resourceUrl);
-    }
-
-    final attributionUrl = detail.attributionUrl?.trim();
-    if (attributionUrl != null && attributionUrl.isNotEmpty) {
-      return Uri.tryParse(attributionUrl);
-    }
-    return null;
-  }
-
-  Future<void> _shareResourceUrl(MetronReadingListDetail detail) async {
-    final uri = _resourceUri(detail);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'reading list');
-      return;
-    }
-
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: detail.name),
-    );
-  }
-
-  Future<void> _openResourceUrlInBrowser(MetronReadingListDetail detail) async {
-    final uri = _resourceUri(detail);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'reading list');
-      return;
-    }
-
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'reading list');
     }
   }
 
@@ -335,8 +311,8 @@ class _MetronReadingListDetailScreenState
               actions: [
                 EntityDetailActions(
                   onRefresh: _refreshMetronReadingListData,
-                  onShare: () => _shareResourceUrl(detail),
-                  onOpenInBrowser: () => _openResourceUrlInBrowser(detail),
+                  onShare: () => shareResourceUrl(context, detail),
+                  onOpenInBrowser: () => openResourceUrlInBrowser(context, detail),
                 ),
               ],
             ),

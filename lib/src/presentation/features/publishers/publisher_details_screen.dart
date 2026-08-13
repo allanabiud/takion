@@ -1,14 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -30,35 +29,16 @@ class PublisherDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _PublisherDetailsScreenState
-    extends ConsumerState<PublisherDetailsScreen> {
-  Uri? _resourceUri(PublisherDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
+    extends ConsumerState<PublisherDetailsScreen>
+    with ResourceUrlActions<PublisherDetails> {
+  @override
+  String? resourceUrlOf(PublisherDetails details) => details.resourceUrl;
 
-  Future<void> _shareResourceUrl(PublisherDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'publisher');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
+  @override
+  String get resourceLabel => 'publisher';
 
-  Future<void> _openResourceUrlInBrowser(PublisherDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'publisher');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'publisher');
-    }
-  }
+  @override
+  String shareSubjectOf(PublisherDetails details) => details.name;
 
   @override
   Widget build(BuildContext context) {
@@ -94,8 +74,8 @@ class _PublisherDetailsScreenState
           }
         }
       },
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 260,
       heroHeight: 260,
       heroImageAlignment: Alignment.center,

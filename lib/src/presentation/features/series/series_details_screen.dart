@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
@@ -14,13 +13,13 @@ import 'package:takion/src/presentation/features/series/providers/series_complet
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
 import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class SeriesDetailsScreen extends ConsumerStatefulWidget {
@@ -38,7 +37,18 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
       _SeriesDetailsScreenState();
 }
 
-class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
+class _SeriesDetailsScreenState
+    extends ConsumerState<SeriesDetailsScreen>
+    with ResourceUrlActions<SeriesDetails> {
+  @override
+  String? resourceUrlOf(SeriesDetails details) => details.resourceUrl;
+
+  @override
+  String get resourceLabel => 'series';
+
+  @override
+  String shareSubjectOf(SeriesDetails details) => details.name;
+
   bool _isUpdatingSubscription = false;
 
   Future<void> _setSeriesSubscription(bool enabled) async {
@@ -92,37 +102,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           _isUpdatingSubscription = false;
         });
       }
-    }
-  }
-
-  Uri? _resourceUri(SeriesDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
-
-  Future<void> _shareResourceUrl(SeriesDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'series');
-      return;
-    }
-
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
-
-  Future<void> _openResourceUrlInBrowser(SeriesDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'series');
-      return;
-    }
-
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'series');
     }
   }
 
@@ -362,8 +341,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
           }
         }
       },
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       headerBackground: (context, d) => [
         coverImageAsync.when(
           data: (imageUrl) => imageUrl != null

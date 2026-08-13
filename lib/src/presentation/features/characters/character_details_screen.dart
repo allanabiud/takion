@@ -1,10 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart';
@@ -14,24 +14,9 @@ import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 String _monthYear(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.year}';
+  return '${DateFormatter.monthAbbrev(date)} ${date.year}';
 }
 
 @RoutePage()
@@ -51,35 +36,16 @@ class CharacterDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _CharacterDetailsScreenState
-    extends ConsumerState<CharacterDetailsScreen> {
-  Uri? _resourceUri(CharacterDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
+    extends ConsumerState<CharacterDetailsScreen>
+    with ResourceUrlActions<CharacterDetails> {
+  @override
+  String? resourceUrlOf(CharacterDetails details) => details.resourceUrl;
 
-  Future<void> _shareResourceUrl(CharacterDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'character');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
+  @override
+  String get resourceLabel => 'character';
 
-  Future<void> _openResourceUrlInBrowser(CharacterDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'character');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'character');
-    }
-  }
+  @override
+  String shareSubjectOf(CharacterDetails details) => details.name;
 
   Future<void> _toggleFavorite() async {
     try {
@@ -168,8 +134,8 @@ class _CharacterDetailsScreenState
           }
         }
       },
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,
       heroWidth: 260,
       heroHeight: 260,

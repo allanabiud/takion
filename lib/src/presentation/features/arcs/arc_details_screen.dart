@@ -1,16 +1,15 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart';
 import 'package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -29,7 +28,9 @@ class ArcDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<ArcDetailsScreen> createState() => _ArcDetailsScreenState();
 }
 
-class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
+class _ArcDetailsScreenState
+    extends ConsumerState<ArcDetailsScreen>
+    with ResourceUrlActions<ArcDetails> {
   LocalReadingList? _localList;
   bool _isLoadingImport = false;
 
@@ -173,34 +174,14 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
     );
   }
 
-  Uri? _resourceUri(ArcDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
+  @override
+  String? resourceUrlOf(ArcDetails details) => details.resourceUrl;
 
-  Future<void> _shareResourceUrl(ArcDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'arc');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
+  @override
+  String get resourceLabel => 'arc';
 
-  Future<void> _openResourceUrlInBrowser(ArcDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'arc');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'arc');
-    }
-  }
+  @override
+  String shareSubjectOf(ArcDetails details) => details.name;
 
   Future<void> _refreshArcData(ArcDetails details) async {
     try {
@@ -236,8 +217,8 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
       toHeroTag: (d) => 'arc-image-${d.id}',
       toTitle: (d) => d.name,
       onRefresh: (d) => _refreshArcData(d),
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>
           _buildArcSheetSlivers(d, context, ref),

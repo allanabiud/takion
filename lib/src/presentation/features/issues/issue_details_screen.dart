@@ -20,7 +20,7 @@ import 'package:takion/src/presentation/features/issues/issue_details/issue_deta
 import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
@@ -38,7 +38,17 @@ class IssueDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<IssueDetailsScreen> createState() => _IssueDetailsScreenState();
 }
 
-class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
+class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
+    with ResourceUrlActions<IssueDetails> {
+  @override
+  String? resourceUrlOf(IssueDetails issue) => issue.resourceUrl;
+
+  @override
+  String get resourceLabel => 'issue';
+
+  @override
+  String shareSubjectOf(IssueDetails issue) => issueDisplayTitle(issue);
+
   late int _currentIssueId;
 
   Future<void> _refreshIssueData() async {
@@ -179,29 +189,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
         heroTag: 'issue-cover-$_currentIssueId',
       ),
     );
-  }
-
-  Uri? _resourceUri(IssueDetails issue) {
-    final resourceUrl = issue.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
-
-  Future<void> _shareResourceUrl(IssueDetails issue) async {
-    await shareIssueResourceUrl(context, issue);
-  }
-
-  Future<void> _openResourceUrlInBrowser(IssueDetails issue) async {
-    final uri = _resourceUri(issue);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'issue');
-      return;
-    }
-
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'issue');
-    }
   }
 
   void _navigateToSeries(IssueDetails issue) {
@@ -478,10 +465,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen> {
                           EntityDetailActions(
                             onRefresh: isCurrentData ? _refreshIssueData : null,
                             onShare: isCurrentData
-                                ? () => _shareResourceUrl(issue)
+                                ? () => shareResourceUrl(context, issue)
                                 : null,
                             onOpenInBrowser: isCurrentData
-                                ? () => _openResourceUrlInBrowser(issue)
+                                ? () => openResourceUrlInBrowser(context, issue)
                                 : null,
                           ),
                         ],

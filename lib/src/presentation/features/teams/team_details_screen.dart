@@ -3,16 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
 @RoutePage()
@@ -30,35 +29,17 @@ class TeamDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<TeamDetailsScreen> createState() => _TeamDetailsScreenState();
 }
 
-class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
-  Uri? _resourceUri(TeamDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
+class _TeamDetailsScreenState
+    extends ConsumerState<TeamDetailsScreen>
+    with ResourceUrlActions<TeamDetails> {
+  @override
+  String? resourceUrlOf(TeamDetails details) => details.resourceUrl;
 
-  Future<void> _shareResourceUrl(TeamDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'team');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
+  @override
+  String get resourceLabel => 'team';
 
-  Future<void> _openResourceUrlInBrowser(TeamDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'team');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'team');
-    }
-  }
+  @override
+  String shareSubjectOf(TeamDetails details) => details.name;
 
   Future<void> _refreshTeamData(TeamDetails details) async {
     try {
@@ -94,8 +75,8 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
       toHeroTag: (d) => 'team-image-${d.id}',
       toTitle: (d) => d.name,
       onRefresh: (d) => _refreshTeamData(d),
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>
           _buildTeamSheetSlivers(d, context, ref),

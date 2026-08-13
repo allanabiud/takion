@@ -1,13 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/universes/providers/universe_details_provider.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:takion/src/presentation/shared/resource_url_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -27,35 +26,17 @@ class UniverseDetailsScreen extends ConsumerStatefulWidget {
       _UniverseDetailsScreenState();
 }
 
-class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
-  Uri? _resourceUri(UniverseDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
-  }
+class _UniverseDetailsScreenState
+    extends ConsumerState<UniverseDetailsScreen>
+    with ResourceUrlActions<UniverseDetails> {
+  @override
+  String? resourceUrlOf(UniverseDetails details) => details.resourceUrl;
 
-  Future<void> _shareResourceUrl(UniverseDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'universe');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
+  @override
+  String get resourceLabel => 'universe';
 
-  Future<void> _openResourceUrlInBrowser(UniverseDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'universe');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'universe');
-    }
-  }
+  @override
+  String shareSubjectOf(UniverseDetails details) => details.name;
 
   Future<void> _refreshUniverseData(UniverseDetails details) async {
     try {
@@ -92,8 +73,8 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.designation,
       onRefresh: (d) => _refreshUniverseData(d),
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 300,
       heroHeight: 260,
       initialChildSize: 0.55,
