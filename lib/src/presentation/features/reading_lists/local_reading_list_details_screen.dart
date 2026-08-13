@@ -16,6 +16,7 @@ import 'package:takion/src/presentation/features/reading_lists/reading_list_cove
 import 'package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart';
 import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
+import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -40,7 +41,8 @@ class LocalReadingListDetailsScreen extends ConsumerStatefulWidget {
 enum _ReadingListDetailsMenuAction { edit, share, delete }
 
 class _LocalReadingListDetailsScreenState
-    extends ConsumerState<LocalReadingListDetailsScreen> {
+    extends ConsumerState<LocalReadingListDetailsScreen>
+    with FavoriteToggleActions {
   void _openLocalReadingListItemDetails(LocalReadingListItem item) {
     final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
     final id = int.tryParse(idString);
@@ -57,28 +59,13 @@ class _LocalReadingListDetailsScreenState
     BuildContext context,
     WidgetRef ref,
     LocalReadingList list,
-  ) async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await repository.isReadingListFavorite(list.id);
-      await repository.toggleReadingListFavorite(list.id);
-      if (context.mounted) {
-        final added = !isFavorite;
-        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
-          icon: Icons.favorite,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            await repository.toggleReadingListFavorite(list.id);
-          },
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
-      }
-    }
+  ) {
+    final repository = ref.read(favoritesRepositoryProvider);
+    return toggleFavoriteWithUndo(
+      context,
+      isFavorite: repository.isReadingListFavorite(list.id),
+      toggle: () => repository.toggleReadingListFavorite(list.id),
+    );
   }
 
   Future<void> _confirmDelete(

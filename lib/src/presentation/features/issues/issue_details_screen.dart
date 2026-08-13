@@ -21,6 +21,7 @@ import 'package:takion/src/presentation/features/issues/issue_details/providers/
 import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
@@ -39,7 +40,7 @@ class IssueDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
-    with ResourceUrlActions<IssueDetails> {
+    with ResourceUrlActions<IssueDetails>, FavoriteToggleActions {
   @override
   String? resourceUrlOf(IssueDetails issue) => issue.resourceUrl;
 
@@ -225,32 +226,15 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
     );
   }
 
-  Future<void> toggleFavorite() async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(
-        isIssueFavoriteProvider(_currentIssueId).future,
-      );
-
-      await repository.toggleIssueFavorite(_currentIssueId);
-
-      if (mounted) {
-        final added = !isFavorite;
-        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
-          icon: Icons.favorite,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            await repository.toggleIssueFavorite(_currentIssueId);
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
-      }
-    }
+  Future<void> toggleFavorite() {
+    return toggleFavoriteWithUndo(
+      context,
+      isFavorite: ref.read(isIssueFavoriteProvider(_currentIssueId).future),
+      toggle: () async {
+        final repository = ref.read(favoritesRepositoryProvider);
+        await repository.toggleIssueFavorite(_currentIssueId);
+      },
+    );
   }
 
   Future<void> _setSeriesSubscription(bool enabled, int seriesId) async {

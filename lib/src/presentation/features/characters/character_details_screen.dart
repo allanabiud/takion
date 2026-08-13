@@ -5,6 +5,7 @@ import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart';
@@ -37,7 +38,7 @@ class CharacterDetailsScreen extends ConsumerStatefulWidget {
 
 class _CharacterDetailsScreenState
     extends ConsumerState<CharacterDetailsScreen>
-    with ResourceUrlActions<CharacterDetails> {
+    with ResourceUrlActions<CharacterDetails>, FavoriteToggleActions {
   @override
   String? resourceUrlOf(CharacterDetails details) => details.resourceUrl;
 
@@ -47,32 +48,15 @@ class _CharacterDetailsScreenState
   @override
   String shareSubjectOf(CharacterDetails details) => details.name;
 
-  Future<void> _toggleFavorite() async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(
-        isCharacterFavoriteProvider(widget.characterId).future,
-      );
-
-      await repository.toggleCharacterFavorite(widget.characterId);
-
-      if (mounted) {
-        final added = !isFavorite;
-        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
-          icon: Icons.favorite,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            await repository.toggleCharacterFavorite(widget.characterId);
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
-      }
-    }
+  Future<void> _toggleFavorite() {
+    return toggleFavoriteWithUndo(
+      context,
+      isFavorite: ref.read(isCharacterFavoriteProvider(widget.characterId).future),
+      toggle: () async {
+        final repository = ref.read(favoritesRepositoryProvider);
+        await repository.toggleCharacterFavorite(widget.characterId);
+      },
+    );
   }
 
   @override

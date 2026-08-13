@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/series/providers/series_details
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -39,7 +40,7 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 
 class _SeriesDetailsScreenState
     extends ConsumerState<SeriesDetailsScreen>
-    with ResourceUrlActions<SeriesDetails> {
+    with ResourceUrlActions<SeriesDetails>, FavoriteToggleActions {
   @override
   String? resourceUrlOf(SeriesDetails details) => details.resourceUrl;
 
@@ -105,32 +106,15 @@ class _SeriesDetailsScreenState
     }
   }
 
-  Future<void> _toggleFavorite() async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(
-        isSeriesFavoriteProvider(widget.seriesId).future,
-      );
-
-      await repository.toggleSeriesFavorite(widget.seriesId);
-
-      if (mounted) {
-        final added = !isFavorite;
-        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
-          icon: Icons.favorite,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            await repository.toggleSeriesFavorite(widget.seriesId);
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
-      }
-    }
+  Future<void> _toggleFavorite() {
+    return toggleFavoriteWithUndo(
+      context,
+      isFavorite: ref.read(isSeriesFavoriteProvider(widget.seriesId).future),
+      toggle: () async {
+        final repository = ref.read(favoritesRepositoryProvider);
+        await repository.toggleSeriesFavorite(widget.seriesId);
+      },
+    );
   }
 
   @override

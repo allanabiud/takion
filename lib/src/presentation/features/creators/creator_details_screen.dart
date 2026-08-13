@@ -8,6 +8,7 @@ import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 @RoutePage()
@@ -28,7 +29,7 @@ class CreatorDetailsScreen extends ConsumerStatefulWidget {
 
 class _CreatorDetailsScreenState
     extends ConsumerState<CreatorDetailsScreen>
-    with ResourceUrlActions<CreatorDetails> {
+    with ResourceUrlActions<CreatorDetails>, FavoriteToggleActions {
   @override
   String? resourceUrlOf(CreatorDetails details) => details.resourceUrl;
 
@@ -38,32 +39,15 @@ class _CreatorDetailsScreenState
   @override
   String shareSubjectOf(CreatorDetails details) => details.name;
 
-  Future<void> _toggleFavorite() async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(
-        isCreatorFavoriteProvider(widget.creatorId).future,
-      );
-
-      await repository.toggleCreatorFavorite(widget.creatorId);
-
-      if (mounted) {
-        final added = !isFavorite;
-        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
-          icon: Icons.favorite,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            await repository.toggleCreatorFavorite(widget.creatorId);
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
-      }
-    }
+  Future<void> _toggleFavorite() {
+    return toggleFavoriteWithUndo(
+      context,
+      isFavorite: ref.read(isCreatorFavoriteProvider(widget.creatorId).future),
+      toggle: () async {
+        final repository = ref.read(favoritesRepositoryProvider);
+        await repository.toggleCreatorFavorite(widget.creatorId);
+      },
+    );
   }
 
   @override
