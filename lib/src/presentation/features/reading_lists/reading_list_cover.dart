@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
@@ -7,6 +6,7 @@ import 'package:takion/src/presentation/features/reading_lists/providers/reading
 import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/domain/common/string_extensions.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class ReadingListCover extends ConsumerWidget {
   final LocalReadingList list;
@@ -198,12 +198,19 @@ class ReadingListCover extends ConsumerWidget {
   Widget _buildCachedImage(BuildContext context, String imageUrl) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
-      child: CachedNetworkImage(
+      child: EntityCover(
         imageUrl: imageUrl,
-        fit: BoxFit.cover,
+        placeholderLabel: null,
+        width: width,
+        height: height,
+        borderRadius: 0,
+        aspectRatio: width / height,
+        iconSize: width * 0.4,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
         placeholder: (context, url) =>
             const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        errorWidget: (context, url, error) => _buildItemIcon(context, ''),
+        errorBuilder: (context, url, error) => _buildItemIcon(context, ''),
       ),
     );
   }

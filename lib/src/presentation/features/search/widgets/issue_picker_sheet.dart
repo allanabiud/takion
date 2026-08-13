@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities.dart';
@@ -153,25 +152,17 @@ Future<List<IssueList>?> showIssuePickerSheet(
                             child: SizedBox(
                               width: 42,
                               height: 63,
-                              child: issue.image != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: issue.image!,
-                                      fit: BoxFit.cover,
-                                      placeholder: (_, _) => Container(
-                                        color: theme
-                                            .colorScheme
-                                            .surfaceContainerHighest,
-                                      ),
-                                      errorWidget: (_, _, _) =>
-                                          _PlaceholderInitials(
-                                            initials: initials(title),
-                                            theme: theme,
-                                          ),
-                                    )
-                                  : _PlaceholderInitials(
-                                      initials: initials(title),
-                                      theme: theme,
-                                    ),
+                              child: EntityCover(
+                                imageUrl: issue.image,
+                                placeholderLabel: initials(title),
+                                width: 42,
+                                height: 63,
+                                borderRadius: 0,
+                                aspectRatio: 42 / 63,
+                                iconSize: 20,
+                                fadeInDuration: Duration.zero,
+                                fadeOutDuration: Duration.zero,
+                              ),
                             ),
                           ),
                           title: Text(
@@ -224,27 +215,4 @@ Future<List<IssueList>?> showIssuePickerSheet(
       );
     },
   );
-}
-
-class _PlaceholderInitials extends StatelessWidget {
-  final String initials;
-  final ThemeData theme;
-
-  const _PlaceholderInitials({required this.initials, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: TextStyle(
-          color: theme.colorScheme.primary,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 }

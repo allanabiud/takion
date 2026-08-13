@@ -1,9 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
 import 'package:takion/src/domain/common/string_extensions.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class EntityListTile extends ConsumerWidget {
   final String entityType;
@@ -69,24 +68,15 @@ class EntityListTile extends ConsumerWidget {
                         alpha: 0.8,
                       ),
                     ),
-                    child:
-                        effectiveImageUrl != null &&
-                            effectiveImageUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: effectiveImageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                _buildInitials(theme),
-                            errorWidget: (context, url, error) =>
-                                imageErrorPlaceholder(
-                                  context,
-                                  url,
-                                  error,
-                                  label: initials(name),
-                                  iconSize: 20,
-                                ),
-                          )
-                        : _buildInitials(theme),
+                    child: EntityCover(
+                      imageUrl: effectiveImageUrl,
+                      placeholderLabel: initials(name),
+                      width: imageWidth,
+                      height: imageHeight,
+                      borderRadius: 0,
+                      aspectRatio: imageWidth / imageHeight,
+                      iconSize: 20,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -120,19 +110,6 @@ class EntityListTile extends ConsumerWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInitials(ThemeData theme) {
-    return Center(
-      child: Text(
-        initials(name),
-        style: TextStyle(
-          color: theme.colorScheme.primary,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

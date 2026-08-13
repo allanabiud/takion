@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -627,22 +626,16 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
               child: SizedBox(
                 width: 60,
                 height: 90,
-                child: issue.image != null && issue.image!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: issue.image!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.broken_image, size: 24),
-                        ),
-                      )
-                    : Container(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.image, size: 24),
-                      ),
+                child: EntityCover(
+                  imageUrl: issue.image,
+                  width: 60,
+                  height: 90,
+                  borderRadius: 0,
+                  aspectRatio: 60 / 90,
+                  iconSize: 24,
+                  fadeInDuration: Duration.zero,
+                  fadeOutDuration: Duration.zero,
+                ),
               ),
             ),
             const SizedBox(width: 12),

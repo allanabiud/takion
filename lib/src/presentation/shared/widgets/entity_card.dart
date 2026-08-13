@@ -1,9 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
 import 'package:takion/src/domain/common/string_extensions.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class EntityCard extends ConsumerWidget {
   const EntityCard({
@@ -61,39 +60,15 @@ class EntityCard extends ConsumerWidget {
                     alpha: 0.8,
                   ),
                 ),
-                child: effectiveImageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: effectiveImageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Center(
-                          child: Text(
-                            initials(name),
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) =>
-                            imageErrorPlaceholder(
-                              context,
-                              url,
-                              error,
-                              label: initials(name),
-                              iconSize: 24,
-                            ),
-                      )
-                    : Center(
-                        child: Text(
-                          initials(name),
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                child: EntityCover(
+                  imageUrl: effectiveImageUrl,
+                  placeholderLabel: initials(name),
+                  width: effectiveImageWidth,
+                  height: effectiveImageHeight,
+                  borderRadius: 0,
+                  aspectRatio: effectiveImageWidth / effectiveImageHeight,
+                  iconSize: 24,
+                ),
               ),
             ),
             const SizedBox(height: 6),

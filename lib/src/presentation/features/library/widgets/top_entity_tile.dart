@@ -1,12 +1,11 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/cache/entity_image_cache.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
 import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
 import 'package:takion/src/domain/common/string_extensions.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class _TopEntityImageArgs {
   const _TopEntityImageArgs({required this.entityType, required this.id});
@@ -94,23 +93,19 @@ class TopEntityTile extends ConsumerWidget {
                     child: SizedBox(
                       width: 44,
                       height: 44,
-                      child: cachedImage != null
-                          ? CachedNetworkImage(
-                              imageUrl: cachedImage,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.topCenter,
-                              placeholder: (context, url) =>
-                                  _initialsAvatar(theme),
-                              errorWidget: (context, url, error) =>
-                                  imageErrorPlaceholder(
-                                    context,
-                                    url,
-                                    error,
-                                    label: initials(entity.name),
-                                    iconSize: 16,
-                                  ),
-                            )
-                          : _initialsAvatar(theme),
+                      child: EntityCover(
+                        imageUrl: cachedImage,
+                        placeholderLabel: initials(entity.name),
+                        width: 44,
+                        height: 44,
+                        borderRadius: 0,
+                        aspectRatio: 1,
+                        iconSize: 16,
+                        circular: true,
+                        alignment: Alignment.topCenter,
+                        fadeInDuration: Duration.zero,
+                        fadeOutDuration: Duration.zero,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -152,27 +147,6 @@ class TopEntityTile extends ConsumerWidget {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
       ],
-    );
-  }
-
-  Widget _initialsAvatar(ThemeData theme) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          initials(entity.name),
-          style: TextStyle(
-            color: theme.colorScheme.primary,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
     );
   }
 }

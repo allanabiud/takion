@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +6,7 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/common/string_extensions.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
+import 'package:takion/src/presentation/shared/widgets/components.dart';
 
 class SeriesSubscriptionCard extends ConsumerWidget {
   final SeriesList series;
@@ -104,41 +104,15 @@ class SeriesSubscriptionCard extends ConsumerWidget {
     final validCacheWidth =
         (cacheWidth != null && cacheWidth > 0) ? cacheWidth : null;
     return Positioned.fill(
-      child: hasImage
-          ? CachedNetworkImage(
-              imageUrl: mostRecentImage,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              memCacheWidth: validCacheWidth,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              placeholder: (context, url) => Container(
-                color:
-                    theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-              ),
-              errorWidget: (context, url, error) =>
-                  _buildPlaceholder(theme, displayName),
-            )
-          : _buildPlaceholder(theme, displayName),
-    );
-  }
-
-  Widget _buildPlaceholder(ThemeData theme, String displayName) {
-    return Container(
-      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Text(
-            initials(displayName),
-            style: TextStyle(
-              color: theme.colorScheme.primary,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
+      child: EntityCover(
+        imageUrl: hasImage ? mostRecentImage : null,
+        placeholderLabel: initials(displayName),
+        alignment: Alignment.topCenter,
+        cacheWidth: validCacheWidth,
+        borderRadius: 0,
+        iconSize: 28,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
       ),
     );
   }
