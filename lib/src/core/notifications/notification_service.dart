@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import 'notification_settings_provider.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/logging/app_logger.dart';
 
 class NotificationService {
@@ -192,7 +193,7 @@ class NotificationService {
 
     final scheduledDate = _nextDayAt8PM(day);
     AppLogger.info(
-      'Scheduling weekly pull notification: $count pulls on ${day.name} at ${_formatTime(scheduledDate)} (${scheduledDate.location.name})',
+      'Scheduling weekly pull notification: $count pulls on ${day.name} at ${DateFormatter.time(scheduledDate)} (${scheduledDate.location.name})',
     );
 
     const androidDetails = AndroidNotificationDetails(
@@ -272,13 +273,6 @@ class NotificationService {
     } catch (e) {
       AppLogger.warning('Failed to cancel weekly pull notification', error: e);
     }
-  }
-
-  String _formatTime(DateTime dt) {
-    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour < 12 ? 'AM' : 'PM';
-    return '$hour:$minute $period';
   }
 }
 

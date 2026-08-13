@@ -13,6 +13,10 @@ class DateFormatter {
     return _comicDateTimeFmt.format(date.toLocal());
   }
 
+  static String comicTimeDate(DateTime date) {
+    return '${time(date)} · ${_comicDateFmt.format(date.toLocal())}';
+  }
+
   static String relativeShort(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
@@ -31,17 +35,17 @@ class DateFormatter {
     final dateDay = DateTime(date.year, date.month, date.day);
     final difference = today.difference(dateDay).inDays;
 
-    final time = _formatTime(date);
+    final timeText = time(date);
 
-    if (difference == 0) return 'Today at $time';
-    if (difference == 1) return 'Yesterday at $time';
+    if (difference == 0) return 'Today at $timeText';
+    if (difference == 1) return 'Yesterday at $timeText';
     if (difference > 1 && difference < 7) {
-      return '$difference days ago at $time';
+      return '$difference days ago at $timeText';
     }
     if (difference >= 7 && difference < 30) {
-      return '${(difference / 7).floor()} weeks ago at $time';
+      return '${(difference / 7).floor()} weeks ago at $timeText';
     }
-    return 'on ${_dayMonth(date)} at $time';
+    return 'on ${_dayMonth(date)} at $timeText';
   }
 
   static String isoDateTime(DateTime date) {
@@ -60,7 +64,7 @@ class DateFormatter {
     return DateFormat.E().format(date);
   }
 
-  static String _formatTime(DateTime dateTime) {
+  static String time(DateTime dateTime) {
     final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
     final minute = dateTime.minute.toString().padLeft(2, '0');
     final period = dateTime.hour < 12 ? 'AM' : 'PM';

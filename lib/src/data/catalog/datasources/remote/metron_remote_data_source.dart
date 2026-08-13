@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/utils/json_utils.dart';
 import 'package:takion/src/data/catalog/dto/dto.dart';
 import 'package:takion/src/data/reading_list/dto/dto.dart';
@@ -242,14 +243,11 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     ).subtract(Duration(days: offset));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    String formatDate(DateTime d) =>
-        "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-
     return _dio.get(
       'issue/',
       queryParameters: {
-        'store_date_range_after': formatDate(startOfWeek),
-        'store_date_range_before': formatDate(endOfWeek),
+        'store_date_range_after': DateFormatter.isoDate(startOfWeek),
+        'store_date_range_before': DateFormatter.isoDate(endOfWeek),
       },
       cancelToken: cancelToken,
     );
@@ -268,14 +266,11 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     ).subtract(Duration(days: offset));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    String formatDate(DateTime d) =>
-        "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-
     return _dio.get(
       'issue/',
       queryParameters: {
-        'foc_date_range_after': formatDate(startOfWeek),
-        'foc_date_range_before': formatDate(endOfWeek),
+        'foc_date_range_after': DateFormatter.isoDate(startOfWeek),
+        'foc_date_range_before': DateFormatter.isoDate(endOfWeek),
       },
       cancelToken: cancelToken,
     );
@@ -458,9 +453,6 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     DateTime? storeDateLte,
     CancelToken? cancelToken,
   }) async {
-    String formatDate(DateTime d) =>
-        "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl)
         : (storeDateGte != null || storeDateLte != null)
@@ -472,9 +464,9 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
               if (ordering != null && ordering.trim().isNotEmpty)
                 'ordering': ordering.trim(),
               if (storeDateGte != null)
-                'store_date_range_after': formatDate(storeDateGte),
+                'store_date_range_after': DateFormatter.isoDate(storeDateGte),
               if (storeDateLte != null)
-                'store_date_range_before': formatDate(storeDateLte),
+                'store_date_range_before': DateFormatter.isoDate(storeDateLte),
             },
             cancelToken: cancelToken,
           )

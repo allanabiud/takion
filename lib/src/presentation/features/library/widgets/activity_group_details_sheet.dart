@@ -1,6 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/library/activity_log_group.dart';
@@ -25,9 +25,7 @@ Future<void> showActivityGroupDetailsSheet(
         ),
         const SizedBox(height: 4),
         Text(
-          DateFormat(
-            'h:mm a · MMM d, yyyy',
-          ).format(group.latestTimestamp.toLocal()),
+          DateFormatter.comicTimeDate(group.latestTimestamp),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontStyle: FontStyle.italic,

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/data/common/drift/database.dart';
 import 'package:takion/src/data/catalog/dto/dto.dart';
 import 'package:takion/src/data/reading_list/dto/reading_list_dto.dart';
@@ -1058,7 +1059,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt?.toUtc().toIso8601String() ?? '';
   String _normalizeStoreDate(DateTime? d) => d == null
       ? ''
-      : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      : DateFormatter.isoDate(d);
 
   String _getIssueSearchKey(String query, int page, int limit) =>
       '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';

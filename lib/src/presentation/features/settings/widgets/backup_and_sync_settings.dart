@@ -361,8 +361,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
       final bytes = await service.exportBackupData();
 
       final today = DateTime.now();
-      final dateStr =
-          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final dateStr = DateFormatter.isoDate(today);
 
       final result = await FilePicker.saveFile(
         fileName: 'takion_backup_$dateStr.tkbak',
