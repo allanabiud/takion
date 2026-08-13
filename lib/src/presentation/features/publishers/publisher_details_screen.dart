@@ -6,8 +6,8 @@ import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
 import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/series/series_card.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
@@ -30,7 +30,7 @@ class PublisherDetailsScreen extends ConsumerStatefulWidget {
 
 class _PublisherDetailsScreenState
     extends ConsumerState<PublisherDetailsScreen>
-    with ResourceUrlActions<PublisherDetails> {
+    with ResourceUrlActions<PublisherDetails>, DetailRefreshActions<PublisherDetails> {
   @override
   String? resourceUrlOf(PublisherDetails details) => details.resourceUrl;
 
@@ -39,6 +39,26 @@ class _PublisherDetailsScreenState
 
   @override
   String shareSubjectOf(PublisherDetails details) => details.name;
+
+  @override
+  String get entityLabel => 'Publisher';
+
+  @override
+  Future<PublisherDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getPublisherDetails(widget.publisherId, forceRefresh: true);
+  }
+
+  @override
+  PublisherDetails? currentStoredDetails() {
+    return ref.read(publisherDetailsProvider(widget.publisherId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(publisherDetailsProvider(widget.publisherId));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,27 +73,7 @@ class _PublisherDetailsScreenState
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'publisher-image-${d.id}',
       toTitle: (d) => d.name,
-      onRefresh: (d) async {
-        try {
-          final newDetails = await ref
-              .read(catalogRepositoryProvider)
-              .getPublisherDetails(d.id, forceRefresh: true);
-          final currentDetails = ref
-              .read(publisherDetailsProvider(d.id))
-              .asData
-              ?.value;
-          if (currentDetails != newDetails) {
-            ref.invalidate(publisherDetailsProvider(d.id));
-          }
-          if (context.mounted) {
-            TakionAlerts.success(context, 'Publisher details refreshed');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.error(context, 'Failed to refresh publisher details');
-          }
-        }
-      },
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 260,

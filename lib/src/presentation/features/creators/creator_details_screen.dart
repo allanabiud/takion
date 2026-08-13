@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
@@ -29,7 +29,10 @@ class CreatorDetailsScreen extends ConsumerStatefulWidget {
 
 class _CreatorDetailsScreenState
     extends ConsumerState<CreatorDetailsScreen>
-    with ResourceUrlActions<CreatorDetails>, FavoriteToggleActions {
+    with
+        ResourceUrlActions<CreatorDetails>,
+        FavoriteToggleActions,
+        DetailRefreshActions<CreatorDetails> {
   @override
   String? resourceUrlOf(CreatorDetails details) => details.resourceUrl;
 
@@ -38,6 +41,26 @@ class _CreatorDetailsScreenState
 
   @override
   String shareSubjectOf(CreatorDetails details) => details.name;
+
+  @override
+  String get entityLabel => 'Creator';
+
+  @override
+  Future<CreatorDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getCreatorDetails(widget.creatorId, forceRefresh: true);
+  }
+
+  @override
+  CreatorDetails? currentStoredDetails() {
+    return ref.read(creatorDetailsProvider(widget.creatorId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(creatorDetailsProvider(widget.creatorId));
+  }
 
   Future<void> _toggleFavorite() {
     return toggleFavoriteWithUndo(
@@ -69,27 +92,7 @@ class _CreatorDetailsScreenState
       toTitle: (d) => d.name,
       toSubtitle: (d) =>
           d.alias.isNotEmpty ? d.alias.map((a) => '@$a').join(', ') : null,
-      onRefresh: (d) async {
-        try {
-          final newDetails = await ref
-              .read(catalogRepositoryProvider)
-              .getCreatorDetails(d.id, forceRefresh: true);
-          final currentDetails = ref
-              .read(creatorDetailsProvider(d.id))
-              .asData
-              ?.value;
-          if (currentDetails != newDetails) {
-            ref.invalidate(creatorDetailsProvider(d.id));
-          }
-          if (context.mounted) {
-            TakionAlerts.success(context, 'Creator details refreshed');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.error(context, 'Failed to refresh creator details');
-          }
-        }
-      },
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,

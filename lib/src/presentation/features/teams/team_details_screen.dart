@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
 import 'package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
@@ -31,7 +31,7 @@ class TeamDetailsScreen extends ConsumerStatefulWidget {
 
 class _TeamDetailsScreenState
     extends ConsumerState<TeamDetailsScreen>
-    with ResourceUrlActions<TeamDetails> {
+    with ResourceUrlActions<TeamDetails>, DetailRefreshActions<TeamDetails> {
   @override
   String? resourceUrlOf(TeamDetails details) => details.resourceUrl;
 
@@ -41,26 +41,24 @@ class _TeamDetailsScreenState
   @override
   String shareSubjectOf(TeamDetails details) => details.name;
 
-  Future<void> _refreshTeamData(TeamDetails details) async {
-    try {
-      final newDetails = await ref
-          .read(catalogRepositoryProvider)
-          .getTeamDetails(details.id, forceRefresh: true);
-      final currentDetails = ref
-          .read(teamDetailsProvider(details.id))
-          .asData
-          ?.value;
-      if (currentDetails != newDetails) {
-        ref.invalidate(teamDetailsProvider(details.id));
-      }
-      if (mounted) {
-        TakionAlerts.success(context, 'Team details refreshed');
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh team details');
-      }
-    }
+  @override
+  String get entityLabel => 'Team';
+
+  @override
+  Future<TeamDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getTeamDetails(widget.teamId, forceRefresh: true);
+  }
+
+  @override
+  TeamDetails? currentStoredDetails() {
+    return ref.read(teamDetailsProvider(widget.teamId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(teamDetailsProvider(widget.teamId));
   }
 
   @override
@@ -74,7 +72,7 @@ class _TeamDetailsScreenState
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'team-image-${d.id}',
       toTitle: (d) => d.name,
-      onRefresh: (d) => _refreshTeamData(d),
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,

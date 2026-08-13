@@ -14,6 +14,7 @@ import 'package:takion/src/presentation/features/series/providers/series_details
 import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
@@ -40,7 +41,10 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
 
 class _SeriesDetailsScreenState
     extends ConsumerState<SeriesDetailsScreen>
-    with ResourceUrlActions<SeriesDetails>, FavoriteToggleActions {
+    with
+        ResourceUrlActions<SeriesDetails>,
+        FavoriteToggleActions,
+        DetailRefreshActions<SeriesDetails> {
   @override
   String? resourceUrlOf(SeriesDetails details) => details.resourceUrl;
 
@@ -49,6 +53,27 @@ class _SeriesDetailsScreenState
 
   @override
   String shareSubjectOf(SeriesDetails details) => details.name;
+
+  @override
+  String get entityLabel => 'Series';
+
+  @override
+  Future<SeriesDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getSeriesDetails(widget.seriesId, forceRefresh: true);
+  }
+
+  @override
+  SeriesDetails? currentStoredDetails() {
+    return ref.read(seriesDetailsProvider(widget.seriesId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(seriesDetailsProvider(widget.seriesId));
+    ref.invalidate(seriesFullDetailsProvider(widget.seriesId));
+  }
 
   bool _isUpdatingSubscription = false;
 
@@ -303,28 +328,7 @@ class _SeriesDetailsScreenState
           ],
         );
       },
-      onRefresh: (d) async {
-        try {
-          final newSeries = await ref
-              .read(catalogRepositoryProvider)
-              .getSeriesDetails(d.id, forceRefresh: true);
-          final currentSeries = ref
-              .read(seriesDetailsProvider(d.id))
-              .asData
-              ?.value;
-          if (currentSeries != newSeries) {
-            ref.invalidate(seriesDetailsProvider(d.id));
-            ref.invalidate(seriesFullDetailsProvider(d.id));
-          }
-          if (context.mounted) {
-            TakionAlerts.success(context, 'Series details refreshed');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.error(context, 'Failed to refresh series details');
-          }
-        }
-      },
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       headerBackground: (context, d) => [

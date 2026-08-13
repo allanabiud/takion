@@ -5,8 +5,8 @@ import 'package:takion/src/core/constants/date_formatter.dart';
 
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -28,7 +28,9 @@ class ImprintDetailsScreen extends ConsumerStatefulWidget {
 
 class _ImprintDetailsScreenState
     extends ConsumerState<ImprintDetailsScreen>
-    with ResourceUrlActions<ImprintDetails> {
+    with
+        ResourceUrlActions<ImprintDetails>,
+        DetailRefreshActions<ImprintDetails> {
   @override
   String? resourceUrlOf(ImprintDetails details) => details.resourceUrl;
 
@@ -38,26 +40,24 @@ class _ImprintDetailsScreenState
   @override
   String shareSubjectOf(ImprintDetails details) => details.name;
 
-  Future<void> _refreshImprintData(ImprintDetails details) async {
-    try {
-      final newDetails = await ref
-          .read(catalogRepositoryProvider)
-          .getImprintDetails(details.id, forceRefresh: true);
-      final currentDetails = ref
-          .read(imprintDetailsProvider(details.id))
-          .asData
-          ?.value;
-      if (currentDetails != newDetails) {
-        ref.invalidate(imprintDetailsProvider(details.id));
-      }
-      if (mounted) {
-        TakionAlerts.success(context, 'Imprint details refreshed');
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh imprint details');
-      }
-    }
+  @override
+  String get entityLabel => 'Imprint';
+
+  @override
+  Future<ImprintDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getImprintDetails(widget.imprintId, forceRefresh: true);
+  }
+
+  @override
+  ImprintDetails? currentStoredDetails() {
+    return ref.read(imprintDetailsProvider(widget.imprintId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(imprintDetailsProvider(widget.imprintId));
   }
 
   @override
@@ -71,7 +71,7 @@ class _ImprintDetailsScreenState
       toImageUrl: (d) => d.image,
       toHeroTag: (d) => 'imprint-image-${d.id}',
       toTitle: (d) => d.name,
-      onRefresh: (d) => _refreshImprintData(d),
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 250,

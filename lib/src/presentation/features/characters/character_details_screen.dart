@@ -5,11 +5,11 @@ import 'package:takion/src/core/constants/date_formatter.dart';
 import 'package:takion/src/core/router/app_router.gr.dart';
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
 import 'package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
 import 'package:takion/src/presentation/features/issues/issue_card.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
@@ -38,7 +38,10 @@ class CharacterDetailsScreen extends ConsumerStatefulWidget {
 
 class _CharacterDetailsScreenState
     extends ConsumerState<CharacterDetailsScreen>
-    with ResourceUrlActions<CharacterDetails>, FavoriteToggleActions {
+    with
+        ResourceUrlActions<CharacterDetails>,
+        FavoriteToggleActions,
+        DetailRefreshActions<CharacterDetails> {
   @override
   String? resourceUrlOf(CharacterDetails details) => details.resourceUrl;
 
@@ -47,6 +50,26 @@ class _CharacterDetailsScreenState
 
   @override
   String shareSubjectOf(CharacterDetails details) => details.name;
+
+  @override
+  String get entityLabel => 'Character';
+
+  @override
+  Future<CharacterDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getCharacterDetails(widget.characterId, forceRefresh: true);
+  }
+
+  @override
+  CharacterDetails? currentStoredDetails() {
+    return ref.read(characterDetailsProvider(widget.characterId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(characterDetailsProvider(widget.characterId));
+  }
 
   Future<void> _toggleFavorite() {
     return toggleFavoriteWithUndo(
@@ -97,27 +120,7 @@ class _CharacterDetailsScreenState
       toHeroTag: (d) => 'character-image-${d.id}',
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.alias,
-      onRefresh: (d) async {
-        try {
-          final newDetails = await ref
-              .read(catalogRepositoryProvider)
-              .getCharacterDetails(d.id, forceRefresh: true);
-          final currentDetails = ref
-              .read(characterDetailsProvider(d.id))
-              .asData
-              ?.value;
-          if (currentDetails != newDetails) {
-            ref.invalidate(characterDetailsProvider(d.id));
-          }
-          if (context.mounted) {
-            TakionAlerts.success(context, 'Character details refreshed');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.error(context, 'Failed to refresh character details');
-          }
-        }
-      },
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,

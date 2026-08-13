@@ -5,8 +5,8 @@ import 'package:takion/src/core/constants/date_formatter.dart';
 
 import 'package:takion/src/domain/entities.dart';
 import 'package:takion/src/presentation/features/universes/providers/universe_details_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
@@ -28,7 +28,9 @@ class UniverseDetailsScreen extends ConsumerStatefulWidget {
 
 class _UniverseDetailsScreenState
     extends ConsumerState<UniverseDetailsScreen>
-    with ResourceUrlActions<UniverseDetails> {
+    with
+        ResourceUrlActions<UniverseDetails>,
+        DetailRefreshActions<UniverseDetails> {
   @override
   String? resourceUrlOf(UniverseDetails details) => details.resourceUrl;
 
@@ -38,26 +40,24 @@ class _UniverseDetailsScreenState
   @override
   String shareSubjectOf(UniverseDetails details) => details.name;
 
-  Future<void> _refreshUniverseData(UniverseDetails details) async {
-    try {
-      final newDetails = await ref
-          .read(catalogRepositoryProvider)
-          .getUniverseDetails(details.id, forceRefresh: true);
-      final currentDetails = ref
-          .read(universeDetailsProvider(details.id))
-          .asData
-          ?.value;
-      if (currentDetails != newDetails) {
-        ref.invalidate(universeDetailsProvider(details.id));
-      }
-      if (mounted) {
-        TakionAlerts.success(context, 'Universe details refreshed');
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh universe details');
-      }
-    }
+  @override
+  String get entityLabel => 'Universe';
+
+  @override
+  Future<UniverseDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getUniverseDetails(widget.universeId, forceRefresh: true);
+  }
+
+  @override
+  UniverseDetails? currentStoredDetails() {
+    return ref.read(universeDetailsProvider(widget.universeId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(universeDetailsProvider(widget.universeId));
   }
 
   @override
@@ -72,7 +72,7 @@ class _UniverseDetailsScreenState
       toHeroTag: (d) => 'universe-image-${d.id}',
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.designation,
-      onRefresh: (d) => _refreshUniverseData(d),
+      onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 300,

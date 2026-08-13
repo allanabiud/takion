@@ -21,6 +21,7 @@ import 'package:takion/src/presentation/features/issues/issue_details/providers/
 import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
 import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
 import 'package:takion/src/presentation/shared/resource_url_actions.dart';
+import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
 import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 
@@ -40,7 +41,10 @@ class IssueDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
-    with ResourceUrlActions<IssueDetails>, FavoriteToggleActions {
+    with
+        ResourceUrlActions<IssueDetails>,
+        FavoriteToggleActions,
+        DetailRefreshActions<IssueDetails> {
   @override
   String? resourceUrlOf(IssueDetails issue) => issue.resourceUrl;
 
@@ -50,23 +54,27 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
   @override
   String shareSubjectOf(IssueDetails issue) => issueDisplayTitle(issue);
 
-  late int _currentIssueId;
+  @override
+  String get entityLabel => 'Issue';
 
-  Future<void> _refreshIssueData() async {
-    try {
-      await ref
-          .read(catalogRepositoryProvider)
-          .getIssueDetails(_currentIssueId, forceRefresh: true);
-      ref.invalidate(issueDetailsProvider(_currentIssueId));
-      if (mounted) {
-        TakionAlerts.success(context, 'Issue details refreshed');
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh issue details');
-      }
-    }
+  @override
+  Future<IssueDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getIssueDetails(_currentIssueId, forceRefresh: true);
   }
+
+  @override
+  IssueDetails? currentStoredDetails() {
+    return ref.read(issueDetailsProvider(_currentIssueId)).asData?.value;
+  }
+
+  @override
+  void invalidateDetails() {
+    ref.invalidate(issueDetailsProvider(_currentIssueId));
+  }
+
+  late int _currentIssueId;
 
   @override
   void initState() {
@@ -447,7 +455,9 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                         elevation: 0,
                         actions: [
                           EntityDetailActions(
-                            onRefresh: isCurrentData ? _refreshIssueData : null,
+                            onRefresh: isCurrentData
+                                ? () => refreshDetails(context)
+                                : null,
                             onShare: isCurrentData
                                 ? () => shareResourceUrl(context, issue)
                                 : null,
