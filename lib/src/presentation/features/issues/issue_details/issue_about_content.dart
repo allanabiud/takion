@@ -620,48 +620,6 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     );
   }
 
-  Widget _buildIdsSection(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    addEntry('Metron', '${widget.issue.id}');
-    if (widget.issue.cvId != null) addEntry('CV', '${widget.issue.cvId}');
-    if (widget.issue.gcdId != null) addEntry('GCD', '${widget.issue.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(spacing: 6, runSpacing: 6, children: entries),
-      ],
-    );
-  }
-
   Widget _buildImprintSection(BuildContext context) {
     final imprint = widget.issue.imprint;
     if (imprint == null || imprint.name.trim().isEmpty) {
@@ -792,7 +750,11 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           _buildSectionCard(context, _buildGenresSection(context)),
           const SizedBox(height: 16),
         ],
-        _buildIdsSection(context),
+        DatabaseIdsSection(
+          metronId: widget.issue.id,
+          comicVineId: widget.issue.cvId,
+          gcdId: widget.issue.gcdId,
+        ),
         const SizedBox(height: 16),
         Text(
           'Last modified: ${_formatModified(widget.issue.modified)}',

@@ -415,48 +415,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             .toList();
         final showAssociated = associated.isNotEmpty;
 
-        Widget buildIdsSection(BuildContext context) {
-          final theme = Theme.of(context);
-          final entries = <Widget>[];
-          void addEntry(String label, String value) {
-            entries.add(
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.4,
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.3,
-                    ),
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  '$label $value',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontFamily: 'monospace',
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            );
-          }
-
-          addEntry('Metron', '${d.id}');
-          if (d.cvId != null) addEntry('CV', '${d.cvId}');
-          if (d.gcdId != null) addEntry('GCD', '${d.gcdId}');
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SectionHeader(title: 'DATABASE IDS'),
-              const SizedBox(height: 12),
-              Wrap(spacing: 6, runSpacing: 6, children: entries),
-            ],
-          );
-        }
-
         String? modifiedValue(DateTime? modified) {
           if (modified == null) return null;
           return DateFormatter.isoDateTime(modified);
@@ -567,7 +525,11 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: buildIdsSection(context),
+                child: DatabaseIdsSection(
+                  metronId: d.id,
+                  comicVineId: d.cvId,
+                  gcdId: d.gcdId,
+                ),
               ),
             ),
           ],

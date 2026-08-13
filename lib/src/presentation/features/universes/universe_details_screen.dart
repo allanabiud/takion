@@ -153,7 +153,10 @@ class _UniverseInfoSection extends StatelessWidget {
         const SizedBox(height: 12),
         InfoGrid(items: contentItems),
         const SizedBox(height: 16),
-        _buildDatabaseIdsSection(context),
+        DatabaseIdsSection(
+          metronId: details.id,
+          gcdId: details.gcdId,
+        ),
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
@@ -171,46 +174,5 @@ class _UniverseInfoSection extends StatelessWidget {
     final modified = details.modified;
     if (modified == null) return null;
     return DateFormatter.isoDateTime(modified);
-  }
-
-  Widget _buildDatabaseIdsSection(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    addEntry('Metron', '${details.id}');
-    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(spacing: 6, runSpacing: 6, children: entries),
-      ],
-    );
   }
 }

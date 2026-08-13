@@ -266,18 +266,14 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen> {
     yield SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _ArcDatabaseIdsSection(details: details),
+        child: DatabaseIdsSection(
+          metronId: details.id,
+          comicVineId: details.cvId,
+          gcdId: details.gcdId,
+          modifiedAt: details.modified,
+        ),
       ),
     );
-    if (details.modified != null) {
-      yield const SliverToBoxAdapter(child: SizedBox(height: 16));
-      yield SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _ArcModifiedSection(modified: details.modified!),
-        ),
-      );
-    }
   }
 }
 
@@ -360,82 +356,6 @@ class _ArcIssuesSection extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _ArcDatabaseIdsSection extends StatelessWidget {
-  const _ArcDatabaseIdsSection({required this.details});
-
-  final ArcDetails details;
-
-  @override
-  Widget build(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    addEntry('Metron', '${details.id}');
-    if (details.cvId != null) addEntry('CV', '${details.cvId}');
-    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(spacing: 6, runSpacing: 6, children: entries),
-      ],
-    );
-  }
-}
-
-class _ArcModifiedSection extends StatelessWidget {
-  const _ArcModifiedSection({required this.modified});
-
-  final DateTime modified;
-
-  @override
-  Widget build(BuildContext context) {
-    final formatted =
-        '${modified.day.toString().padLeft(2, '0')}/${modified.month.toString().padLeft(2, '0')}/${modified.year}';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'LAST MODIFIED'),
-        const SizedBox(height: 12),
-        Text(
-          formatted,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontStyle: FontStyle.italic,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
     );
   }
 }
