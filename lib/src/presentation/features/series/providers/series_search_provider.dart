@@ -109,14 +109,12 @@ class SeriesSearch extends _$SeriesSearch {
   }
 
   Future<void> refresh() async {
-    final query = _args?.query;
-    final page = _args?.page ?? 1;
-    if (query == null || query.trim().isEmpty) return;
-    await ref.read(metronRepositoryProvider).searchSeries(
-      query,
-      page: page,
-      forceRefresh: true,
+    final repository = ref.read(metronRepositoryProvider);
+    await performSearchRefresh(
+      ref: ref,
+      args: _args,
+      searchRefreshFetcher: (query, page) =>
+          repository.searchSeries(query, page: page, forceRefresh: true),
     );
-    ref.invalidateSelf();
   }
 }
