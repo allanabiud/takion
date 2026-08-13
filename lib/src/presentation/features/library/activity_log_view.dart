@@ -18,6 +18,9 @@ class ActivityLogView extends ConsumerStatefulWidget {
 
 class _ActivityLogViewState extends ConsumerState<ActivityLogView>
     with AutomaticKeepAliveClientMixin {
+  List<ActivityLogGroup>? _cachedGroups;
+  List<LibraryActivityEvent>? _lastEvents;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -40,7 +43,11 @@ class _ActivityLogViewState extends ConsumerState<ActivityLogView>
           );
         }
 
-        final groups = groupActivityEvents(events);
+        if (!identical(_lastEvents, events) && _lastEvents != events) {
+          _lastEvents = events;
+          _cachedGroups = groupActivityEvents(events);
+        }
+        final groups = _cachedGroups ?? groupActivityEvents(events);
 
         return RefreshIndicator(
           onRefresh: () async =>

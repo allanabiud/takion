@@ -72,8 +72,8 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: _isSearching && _tabController.index == 0 ? 0 : null,
-        title: _isSearching && _tabController.index == 0
+        titleSpacing: _isSearching ? 0 : null,
+        title: _isSearching
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
@@ -107,17 +107,21 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
             Tab(text: 'ACTIVITY'),
           ],
         ),
-        actions: _tabController.index == 0
-            ? (_isSearching
-                  ? null
-                  : [
-                      IconButton(
-                        tooltip: 'Search',
-                        onPressed: () => setState(() => _isSearching = true),
-                        icon: const Icon(Icons.search),
-                      ),
-                    ])
-            : null,
+        actions: [
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabController.index != 0 || _isSearching) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: 'Search',
+                onPressed: () => setState(() => _isSearching = true),
+                icon: const Icon(Icons.search),
+              );
+            },
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -213,18 +217,20 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final summary = filtered[index];
-                  return SeriesListTile(
-                    series: summary,
-                    categoryCount: categoryCounts[summary.id],
-                    categoryLabel: 'wishlist',
-                    showProgressBar: true,
-                    isFirst: index == 0,
-                    isLast: index == filtered.length - 1,
-                    onTap: () => context.pushRoute(
-                      LibrarySeriesRoute(
-                        seriesId: summary.id,
-                        category: 'wishlist',
-                        seriesName: summary.name,
+                  return RepaintBoundary(
+                    child: SeriesListTile(
+                      series: summary,
+                      categoryCount: categoryCounts[summary.id],
+                      categoryLabel: 'wishlist',
+                      showProgressBar: true,
+                      isFirst: index == 0,
+                      isLast: index == filtered.length - 1,
+                      onTap: () => context.pushRoute(
+                        LibrarySeriesRoute(
+                          seriesId: summary.id,
+                          category: 'wishlist',
+                          seriesName: summary.name,
+                        ),
                       ),
                     ),
                   );

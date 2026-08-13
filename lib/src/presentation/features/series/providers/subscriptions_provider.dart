@@ -74,8 +74,9 @@ final seriesStreamProvider = StreamProvider.autoDispose
     });
 
 /// Reads a subscription's cover, series name, and next release purely from the local cache (no network).
-final subscriptionSeriesCardProvider = StreamProvider.autoDispose
+final subscriptionSeriesCardProvider = StreamProvider
     .family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
+      ref.keepAlive();
       final dao = ref.watch(metronEntityDaoProvider);
       final seriesAsync = ref.watch(seriesStreamProvider(seriesId));
       final seriesName = seriesAsync.value?.name;

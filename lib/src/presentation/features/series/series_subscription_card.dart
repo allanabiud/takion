@@ -37,10 +37,10 @@ class SeriesSubscriptionCard extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final rawWidth =
+                constraints.maxWidth * MediaQuery.of(context).devicePixelRatio;
             final cacheWidth =
-                (constraints.maxWidth *
-                        MediaQuery.of(context).devicePixelRatio)
-                    .round();
+                rawWidth > 0 ? ((rawWidth / 50).ceil() * 50) : null;
             return Stack(
               fit: StackFit.expand,
               children: [
@@ -97,19 +97,27 @@ class SeriesSubscriptionCard extends ConsumerWidget {
   Widget _buildCover(
     ThemeData theme,
     String? mostRecentImage,
-    int cacheWidth,
+    int? cacheWidth,
     String displayName,
   ) {
     final hasImage = mostRecentImage != null && mostRecentImage.isNotEmpty;
+    final validCacheWidth =
+        (cacheWidth != null && cacheWidth > 0) ? cacheWidth : null;
     return Positioned.fill(
       child: hasImage
           ? CachedNetworkImage(
               imageUrl: mostRecentImage,
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
-              memCacheWidth: cacheWidth,
-              placeholder: (context, url) => _buildPlaceholder(theme, displayName),
-              errorWidget: (context, url, error) => _buildPlaceholder(theme, displayName),
+              memCacheWidth: validCacheWidth,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder: (context, url) => Container(
+                color:
+                    theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
+              ),
+              errorWidget: (context, url, error) =>
+                  _buildPlaceholder(theme, displayName),
             )
           : _buildPlaceholder(theme, displayName),
     );

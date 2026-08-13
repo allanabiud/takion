@@ -11,7 +11,6 @@ part of 'issue_list_series_dto.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$IssueListSeriesDto {
 
@@ -22,8 +21,6 @@ mixin _$IssueListSeriesDto {
 @pragma('vm:prefer-inline')
 $IssueListSeriesDtoCopyWith<IssueListSeriesDto> get copyWith => _$IssueListSeriesDtoCopyWithImpl<IssueListSeriesDto>(this as IssueListSeriesDto, _$identity);
 
-  /// Serializes this IssueListSeriesDto to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueListSeriesDto&&(identical(other.name, name) || other.name == name)&&(identical(other.volume, volume) || other.volume == volume)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.id, id) || other.id == id));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,name,volume,yearBegan,id);
 
@@ -209,11 +206,11 @@ return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _IssueListSeriesDto extends IssueListSeriesDto {
   const _IssueListSeriesDto({required this.name, required this.volume, @JsonKey(name: 'year_began') required this.yearBegan, this.id}): super._();
-  factory _IssueListSeriesDto.fromJson(Map<String, dynamic> json) => _$IssueListSeriesDtoFromJson(json);
+  
 
 @override final  String name;
 @override final  int volume;
@@ -226,17 +223,14 @@ class _IssueListSeriesDto extends IssueListSeriesDto {
 @pragma('vm:prefer-inline')
 _$IssueListSeriesDtoCopyWith<_IssueListSeriesDto> get copyWith => __$IssueListSeriesDtoCopyWithImpl<_IssueListSeriesDto>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$IssueListSeriesDtoToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueListSeriesDto&&(identical(other.name, name) || other.name == name)&&(identical(other.volume, volume) || other.volume == volume)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.id, id) || other.id == id));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,name,volume,yearBegan,id);
 

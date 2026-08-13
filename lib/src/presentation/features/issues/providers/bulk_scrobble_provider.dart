@@ -77,9 +77,11 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
     state = await AsyncValue.guard(() async {
       try {
         final libraryRepository = ref.read(libraryRepositoryProvider);
+        final activityRepository = ref.read(activityRepositoryProvider);
         final defaultFormat = _resolveDefaultFormat();
         final now = DateTime.now().toUtc();
         final readAt = dateRead ?? now;
+        final readEventsToAdd = <LibraryActivityEvent>[];
 
         for (final issueId in issueIds) {
           final existing = await libraryRepository.getItemByIssueId(issueId);
@@ -125,9 +127,8 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
               metronIssueId: issueId,
               readAt: readAt,
             );
-            final activityRepository = ref.read(activityRepositoryProvider);
             final meta = await _resolveIssueMetadata(issueId, ctx);
-            await activityRepository.addEvent(
+            readEventsToAdd.add(
               LibraryActivityEvent(
                 id: 'act-read-$issueId-${readAt.microsecondsSinceEpoch}',
                 userId: 'local-user',
@@ -157,11 +158,15 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
             if (firstLog.isNotEmpty) {
               await libraryRepository.deleteReadLogById(firstLog.first.id);
             }
-            final activityRepository = ref.read(activityRepositoryProvider);
             await activityRepository.deleteEventsByIssueIds([
               issueId,
             ], type: ActivityEventType.read);
           }
+        }
+
+        if (readEventsToAdd.isNotEmpty) {
+          final batchId = 'batch_${DateTime.now().millisecondsSinceEpoch}';
+          await activityRepository.batchAddEvents(readEventsToAdd, batchId: batchId);
         }
       } finally {
         keepAlive.close();

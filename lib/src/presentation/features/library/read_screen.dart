@@ -81,8 +81,8 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: _isSearching && _tabController.index == 0 ? 0 : null,
-        title: _isSearching && _tabController.index == 0
+        titleSpacing: _isSearching ? 0 : null,
+        title: _isSearching
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
@@ -117,17 +117,21 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
             Tab(text: 'STATS'),
           ],
         ),
-        actions: _tabController.index == 0
-            ? (_isSearching
-                  ? null
-                  : [
-                      IconButton(
-                        tooltip: 'Search',
-                        onPressed: () => setState(() => _isSearching = true),
-                        icon: const Icon(Icons.search),
-                      ),
-                    ])
-            : null,
+        actions: [
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabController.index != 0 || _isSearching) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: 'Search',
+                onPressed: () => setState(() => _isSearching = true),
+                icon: const Icon(Icons.search),
+              );
+            },
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -144,21 +148,80 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   }
 }
 
-class _ReadBrowseTab extends ConsumerWidget {
+class _ReadBrowseTab extends ConsumerStatefulWidget {
   final bool isSearching;
   final String searchQuery;
 
-  const _ReadBrowseTab({required this.isSearching, required this.searchQuery});
+  const _ReadBrowseTab({
+    required this.isSearching,
+    required this.searchQuery,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ReadBrowseTab> createState() => _ReadBrowseTabState();
+}
+
+class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
+    with AutomaticKeepAliveClientMixin {
+  static const _initialVisibleCount = 200;
+  static const _appendCount = 200;
+  static const _nearEndExtent = 800;
+
+  final ScrollController _scrollController = ScrollController();
+  late int _visibleCount = _initialVisibleCount;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - _nearEndExtent) {
+      setState(() => _visibleCount += _appendCount);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
-        (category: 'read', query: isSearching ? searchQuery : ''),
+        (
+          category: 'read',
+          query: widget.isSearching ? widget.searchQuery : '',
+        ),
       ),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryRead),
+    );
+
+    ref.listen(
+      categorySeriesViewProvider(
+        (
+          category: 'read',
+          query: widget.isSearching ? widget.searchQuery : '',
+        ),
+      ),
+      (previous, next) {
+        if (previous?.value != next.value &&
+            _visibleCount != _initialVisibleCount) {
+          _visibleCount = _initialVisibleCount;
+        }
+      },
     );
 
     return viewAsync.when(
@@ -186,9 +249,16 @@ class _ReadBrowseTab extends ConsumerWidget {
           );
         }
 
+        final visibleCount = filtered.length < _visibleCount
+            ? filtered.length
+            : _visibleCount;
+        final visible = filtered.sublist(0, visibleCount);
+        final hasMore = visibleCount < filtered.length;
+
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(readSeriesProvider),
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               PinnedListHeader(
                 child: ListHeader(
@@ -207,23 +277,37 @@ class _ReadBrowseTab extends ConsumerWidget {
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final summary = filtered[index];
-                  return SeriesListTile(
-                    series: summary,
-                    categoryCount: categoryCounts[summary.id],
-                    categoryLabel: 'read',
-                    showProgressBar: true,
-                    isFirst: index == 0,
-                    isLast: index == filtered.length - 1,
-                    onTap: () => context.pushRoute(
-                      LibrarySeriesRoute(
-                        seriesId: summary.id,
-                        category: 'read',
-                        seriesName: summary.name,
+                  if (index >= visible.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  }
+                  final summary = visible[index];
+                  return RepaintBoundary(
+                    child: SeriesListTile(
+                      series: summary,
+                      categoryCount: categoryCounts[summary.id],
+                      categoryLabel: 'read',
+                      showProgressBar: true,
+                      isFirst: index == 0,
+                      isLast: !hasMore && index == visible.length - 1,
+                      onTap: () => context.pushRoute(
+                        LibrarySeriesRoute(
+                          seriesId: summary.id,
+                          category: 'read',
+                          seriesName: summary.name,
+                        ),
                       ),
                     ),
                   );
-                }, childCount: filtered.length),
+                }, childCount: hasMore ? visible.length + 1 : visible.length),
               ),
             ],
           ),

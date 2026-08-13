@@ -48,37 +48,34 @@ class SuperHeroCharacterRepositoryImpl
       }
     }
 
-    // 1. Cleaned name without parentheses, e.g. "General Zod (Dru-Zod)" -> "General Zod"
+    // Variants of the Metron name most likely to match a SuperHero API alias,
+    // e.g. "General Zod (Dru-Zod)" -> "General Zod", "Dru-Zod", "The Flash",
+    // "Spider-Man" -> "Spider Man"/"SpiderMan", "Dr." <-> "Doctor".
     final clean = metronName.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
     if (clean.isNotEmpty) addQuery(clean);
 
-    // 2. Metron alias if provided, e.g. "Batman" for "Terry McGinnis"
     if (metronAlias != null && metronAlias.trim().isNotEmpty) {
-      final cleanAlias =
-          metronAlias.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
-      addQuery(cleanAlias);
+      addQuery(
+        metronAlias.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim(),
+      );
     }
 
-    // 3. Parenthetical name inside brackets if present, e.g. "Dru-Zod" or "Peter Parker"
     final parenMatch = RegExp(r'\(([^)]+)\)').firstMatch(metronName);
     if (parenMatch != null) {
-      final paren = parenMatch.group(1)?.trim();
-      if (paren != null) addQuery(paren);
+      addQuery(parenMatch.group(1)?.trim() ?? '');
     }
 
-    // 4. Hyphen variants for cleaned name, e.g. "Spider-Man" -> "Spider Man"
     if (clean.contains('-')) {
       addQuery(clean.replaceAll('-', ' '));
       addQuery(clean.replaceAll('-', ''));
     }
 
-    // 5. Strip "The " prefix, e.g. "The Flash" -> "Flash", "The Batman" -> "Batman"
     if (clean.toLowerCase().startsWith('the ')) {
       addQuery(clean.substring(4));
     }
 
-    // 6. Expand / abbreviate "Doctor" vs "Dr."
-    if (clean.toLowerCase().startsWith('dr. ') || clean.toLowerCase().startsWith('dr ')) {
+    if (clean.toLowerCase().startsWith('dr. ') ||
+        clean.toLowerCase().startsWith('dr ')) {
       addQuery(
         clean.replaceAll(RegExp(r'^dr\.?\s+', caseSensitive: false), 'Doctor '),
       );
@@ -88,7 +85,6 @@ class SuperHeroCharacterRepositoryImpl
       );
     }
 
-    // 7. Original metronName
     addQuery(metronName);
 
     return variants;

@@ -532,7 +532,8 @@ Future<void> applySeriesIssueBulkAction({
       await libraryRepository.batchUpsertItems(seriesId, itemsToUpsert);
     }
     if (eventsToAdd.isNotEmpty) {
-      await activityRepository.batchAddEvents(eventsToAdd);
+      final batchId = 'batch_${DateTime.now().millisecondsSinceEpoch}';
+      await activityRepository.batchAddEvents(eventsToAdd, batchId: batchId);
     }
     if (readLogsToAdd.isNotEmpty) {
       await libraryRepository.batchAddReadLogs(readLogsToAdd);

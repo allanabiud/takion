@@ -50,7 +50,7 @@ final class WeeklyReleasesProvider
   }
 }
 
-String _$weeklyReleasesHash() => r'924426513005f28c10368c564f0690f86035333a';
+String _$weeklyReleasesHash() => r'2c8e2922a0be6be4bcf5bb6548f89fc869bbffc0';
 
 final class WeeklyReleasesFamily extends $Family
     with
@@ -139,7 +139,7 @@ final class FocReleasesProvider
   }
 }
 
-String _$focReleasesHash() => r'd2159a35ff1e7119d7f97819844e3278f850b37c';
+String _$focReleasesHash() => r'747ccd1fe70bed520e18786631d38da78c2c34b1';
 
 final class FocReleasesFamily extends $Family
     with

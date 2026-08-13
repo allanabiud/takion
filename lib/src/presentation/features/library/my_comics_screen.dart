@@ -85,8 +85,8 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: _isSearching && _tabController.index == 0 ? 0 : null,
-        title: _isSearching && _tabController.index == 0
+        titleSpacing: _isSearching ? 0 : null,
+        title: _isSearching
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
@@ -121,17 +121,21 @@ class _MyComicsScreenState extends ConsumerState<MyComicsScreen>
             Tab(text: 'STATS'),
           ],
         ),
-        actions: _tabController.index == 0
-            ? (_isSearching
-                  ? null
-                  : [
-                      IconButton(
-                        tooltip: 'Search',
-                        onPressed: () => setState(() => _isSearching = true),
-                        icon: const Icon(Icons.search),
-                      ),
-                    ])
-            : null,
+        actions: [
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabController.index != 0 || _isSearching) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: 'Search',
+                onPressed: () => setState(() => _isSearching = true),
+                icon: const Icon(Icons.search),
+              );
+            },
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -162,13 +166,17 @@ class _MyComicsBrowseTab extends ConsumerStatefulWidget {
       _MyComicsBrowseTabState();
 }
 
-class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab> {
+class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab>
+    with AutomaticKeepAliveClientMixin {
   static const _initialVisibleCount = 200;
   static const _appendCount = 200;
   static const _nearEndExtent = 800;
 
   final ScrollController _scrollController = ScrollController();
   late int _visibleCount = _initialVisibleCount;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -193,6 +201,7 @@ class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
         (

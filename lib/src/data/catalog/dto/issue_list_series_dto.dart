@@ -2,7 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:takion/src/domain/entities.dart';
 
 part 'issue_list_series_dto.freezed.dart';
-part 'issue_list_series_dto.g.dart';
 
 @freezed
 abstract class IssueListSeriesDto with _$IssueListSeriesDto {
@@ -20,6 +19,15 @@ abstract class IssueListSeriesDto with _$IssueListSeriesDto {
       yearBegan: (json['year_began'] as num?)?.toInt() ?? 0,
       id: (json['id'] as num?)?.toInt(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'volume': volume,
+      'year_began': yearBegan,
+      'id': id,
+    };
   }
 
   const IssueListSeriesDto._();

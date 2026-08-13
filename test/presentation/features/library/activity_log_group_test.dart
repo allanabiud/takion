@@ -19,7 +19,7 @@ LibraryActivityEvent _event(
 
 void main() {
   group('groupActivityEvents', () {
-    test('groups same-type events within the 5 minute window', () {
+    test('groups same-type events within the 15 minute window', () {
       final now = DateTime.utc(2026, 3, 5, 18, 30);
       final groups = groupActivityEvents([
         _event(1, now),
@@ -31,13 +31,13 @@ void main() {
       expect(groups.single.count, 3);
     });
 
-    test('splits groups when more than 5 minutes elapse', () {
+    test('splits groups when more than 15 minutes elapse', () {
       final now = DateTime.utc(2026, 3, 5, 18, 30);
       final groups = groupActivityEvents([
         _event(1, now),
         _event(2, now.add(const Duration(minutes: 2))),
-        _event(3, now.add(const Duration(minutes: 12))),
-        _event(4, now.add(const Duration(minutes: 14))),
+        _event(3, now.add(const Duration(minutes: 16))),
+        _event(4, now.add(const Duration(minutes: 18))),
       ]);
 
       expect(groups, hasLength(2));

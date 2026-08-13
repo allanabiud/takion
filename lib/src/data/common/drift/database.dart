@@ -1,3 +1,7 @@
+/// Local Drift database: user state (library, pulls, activity), normalized
+/// Metron catalog metadata, junction tables, and API/image cache.
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -25,7 +29,6 @@ import 'daos/junction_dao.dart';
 
 part 'database.g.dart';
 
-// ── User State Tables (existing) ──────────────────────────────────────────
 
 @TableIndex(name: 'idx_lib_issue', columns: {#metronIssueId})
 @TableIndex(name: 'idx_lib_series', columns: {#metronSeriesId})
@@ -118,6 +121,7 @@ class ActivityEvents extends Table {
   TextColumn get issueNumber => text().nullable()();
   TextColumn get imageUrl => text().nullable()();
   TextColumn get metadata => text().nullable()();
+  TextColumn get batchId => text().nullable()();
   TextColumn get timestamp => text()();
 
   @override
@@ -206,7 +210,6 @@ class FavoriteReadingLists extends Table {
   Set<Column> get primaryKey => {readingListId};
 }
 
-// ── Metron Entity Tables (new normalized metadata) ────────────────────────
 
 @TableIndex(name: 'idx_metron_issues_series', columns: {#seriesId})
 class MetronIssues extends Table {
@@ -410,7 +413,6 @@ class MetronReadingLists extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ── Junction Tables (logical references, no FK constraints) ─────────────
 
 @TableIndex(name: 'idx_issue_creators_creator', columns: {#creatorId})
 class IssueCreators extends Table {
@@ -554,7 +556,6 @@ class MetronReadingListItems extends Table {
   Set<Column> get primaryKey => {listId, targetId};
 }
 
-// ── API Cache & Support Tables (existing) ─────────────────────────────────
 
 class ApiCache extends Table {
   TextColumn get cacheKey => text()();
@@ -685,7 +686,7 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
@@ -746,6 +747,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 10) {
           await m.createTable(superheroCharacterCache);
+        }
+        if (from < 11) {
+          await m.addColumn(activityEvents, activityEvents.batchId);
         }
       },
     );
