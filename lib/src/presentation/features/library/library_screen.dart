@@ -132,79 +132,10 @@ class LibraryScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            suggestionAsync.when(
-              loading: () => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Reading Suggestion',
-                      subtitle: 'Not sure what to read next?',
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16,
-                    ),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              ),
-              error: (error, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Reading Suggestion',
-                      subtitle: 'Not sure what to read next?',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      TakionAlerts.cleanError(
-                        error,
-                        fallback: 'Something went wrong',
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-              data: (suggestion) {
-                if (suggestion == null) return const SizedBox.shrink();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SectionSubtitleHeader(
-                        title: 'Reading Suggestion',
-                        subtitle: 'Not sure what to read next?',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    IssueListTile(
-                      issue: suggestion.issue,
-                      isFirst: true,
-                      isLast: true,
-                      useCardBackground: false,
-                      isCollected: suggestion.isCollected,
-                      isRead: suggestion.isRead,
-                      rating: suggestion.rating,
-                    ),
-                  ],
-                );
-              },
+            _IssueSuggestionSection(
+              title: 'Reading Suggestion',
+              subtitle: 'Not sure what to read next?',
+              asyncSuggestion: suggestionAsync,
             ),
             Consumer(
               builder: (context, ref, _) {
@@ -236,79 +167,10 @@ class LibraryScreen extends ConsumerWidget {
                 );
               },
             ),
-            rateSuggestionAsync.when(
-              loading: () => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Rate Suggestion',
-                      subtitle: 'You read it, what did you think?',
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16,
-                    ),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              ),
-              error: (error, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Rate Suggestion',
-                      subtitle: 'You read it, what did you think?',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      TakionAlerts.cleanError(
-                        error,
-                        fallback: 'Something went wrong',
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-              data: (suggestion) {
-                if (suggestion == null) return const SizedBox.shrink();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SectionSubtitleHeader(
-                        title: 'Rate Suggestion',
-                        subtitle: 'You read it, what did you think?',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    IssueListTile(
-                      issue: suggestion.issue,
-                      isFirst: true,
-                      isLast: true,
-                      useCardBackground: false,
-                      isCollected: suggestion.isCollected,
-                      isRead: suggestion.isRead,
-                      rating: suggestion.rating,
-                    ),
-                  ],
-                );
-              },
+            _IssueSuggestionSection(
+              title: 'Rate Suggestion',
+              subtitle: 'You read it, what did you think?',
+              asyncSuggestion: rateSuggestionAsync,
             ),
           ],
         ),
@@ -316,3 +178,86 @@ class LibraryScreen extends ConsumerWidget {
     );
   }
 }
+
+class _IssueSuggestionSection extends StatelessWidget {
+  const _IssueSuggestionSection({
+    required this.title,
+    required this.subtitle,
+    required this.asyncSuggestion,
+  });
+
+  final String title;
+  final String subtitle;
+  final AsyncValue<SuggestionIssueTileData?> asyncSuggestion;
+
+
+  @override
+  Widget build(BuildContext context) {
+    return asyncSuggestion.when(
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+          ),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 16,
+            ),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      ),
+      error: (error, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              TakionAlerts.cleanError(
+                error,
+                fallback: 'Something went wrong',
+              ),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+      data: (suggestion) {
+        if (suggestion == null) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+            ),
+            const SizedBox(height: 8),
+            IssueListTile(
+              issue: suggestion.issue,
+              isFirst: true,
+              isLast: true,
+              useCardBackground: false,
+              isCollected: suggestion.isCollected,
+              isRead: suggestion.isRead,
+              rating: suggestion.rating,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
