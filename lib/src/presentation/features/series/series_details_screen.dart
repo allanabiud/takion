@@ -20,7 +20,7 @@ import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
 import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
 import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
+import 'package:takion/src/presentation/features/series/series_issue_bulk_actions.dart';
 import 'package:takion/src/domain/common/content_sorting.dart';
 
 @RoutePage()

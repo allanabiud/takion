@@ -10,7 +10,7 @@ import 'package:takion/src/presentation/features/library/providers/category_seri
 import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
 import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
-import 'package:takion/src/presentation/features/series/series_issues_screen.dart';
+import 'package:takion/src/presentation/features/series/series_issue_bulk_actions.dart';
 import 'package:takion/src/presentation/shared/widgets/components.dart';
 import 'package:takion/src/presentation/providers/providers.dart';
 
