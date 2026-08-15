@@ -1,9 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
 
 DateTime weekStart(DateTime date) {
   final normalized = DateTime(date.year, date.month, date.day);
@@ -15,72 +14,20 @@ DateTime weekEnd(DateTime date) => weekStart(date).add(const Duration(days: 6));
 
 DateTime dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 
-PullListEntryStatus _statusFromRaw(String raw) {
-  switch (raw) {
-    case 'upcoming':
-      return PullListEntryStatus.upcoming;
-    case 'skipped':
-      return PullListEntryStatus.skipped;
-    default:
-      return PullListEntryStatus.upcoming;
-  }
-}
-
-PullListEntrySource _sourceFromRaw(String raw) {
-  switch (raw) {
-    case 'subscription':
-      return PullListEntrySource.subscription;
-    case 'manual':
-      return PullListEntrySource.manual;
-    default:
-      return PullListEntrySource.subscription;
-  }
-}
-
-PullListEntry _toDomain(db.PullListEntry d) {
-  return PullListEntry(
-    id: d.id,
-    userId: d.userId,
-    metronIssueId: d.metronIssueId,
-    metronSeriesId: d.metronSeriesId,
-    source: _sourceFromRaw(d.source),
-    releaseDate: d.releaseDate,
-    entryStatus: _statusFromRaw(d.entryStatus),
-    generatedAt: DateTime.parse(d.generatedAt),
-    createdAt: DateTime.parse(d.createdAt),
-    updatedAt: DateTime.parse(d.updatedAt),
-  );
-}
-
-final issuePullListEntryProvider = StreamProvider.family<PullListEntry?, int>((
-  ref,
-  issueId,
-) {
-  final dao = ref.watch(driftDatabaseProvider).pullListDao;
-  return dao.watchByIssueId(issueId).map((row) {
-    if (row == null) return null;
-    final entry = _toDomain(row);
-    if (entry.entryStatus == PullListEntryStatus.skipped) return null;
-    return entry;
-  });
-});
+final issuePullListEntryProvider =
+    StreamProvider.family<PullListEntry?, int>((ref, issueId) {
+      final repository = ref.watch(pullListRepositoryProvider);
+      return repository.watchEntryByIssueId(issueId).map((entry) {
+        if (entry == null) return null;
+        if (entry.entryStatus == PullListEntryStatus.skipped) return null;
+        return entry;
+      });
+    });
 
 final seriesSubscriptionProvider =
     StreamProvider.family<SeriesSubscription?, int>((ref, seriesId) {
-      final dao = ref.watch(driftDatabaseProvider).subscriptionDao;
-      return dao.watchBySeriesId(seriesId).map((row) {
-        if (row == null) return null;
-        return SeriesSubscription(
-          id: row.id,
-          userId: row.userId,
-          metronSeriesId: row.metronSeriesId,
-          isActive: row.isActive,
-          autoAddToPullList: row.autoAddPull,
-          subscribedAt: DateTime.parse(row.subscribedAt),
-          createdAt: DateTime.parse(row.createdAt),
-          updatedAt: DateTime.parse(row.updatedAt),
-        );
-      });
+      final repository = ref.watch(subscriptionRepositoryProvider);
+      return repository.watchSubscriptionBySeriesId(seriesId);
     });
 
 final pullListEntriesForWeekProvider = FutureProvider.autoDispose

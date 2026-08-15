@@ -1,7 +1,8 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "dart:async";
+import "package:dio/dio.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/durations.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 class SearchArgs {
   const SearchArgs({required this.query, required this.page});
@@ -27,14 +28,14 @@ mixin SearchPageMixin {
     if (next == null || next!.isEmpty) return null;
     final uri = Uri.tryParse(next!);
     if (uri == null) return null;
-    return int.tryParse(uri.queryParameters['page'] ?? '');
+    return int.tryParse(uri.queryParameters["page"] ?? "");
   }
 
   int? get previousPage {
     if (previous == null || previous!.isEmpty) return null;
     final uri = Uri.tryParse(previous!);
     if (uri == null) return null;
-    return int.tryParse(uri.queryParameters['page'] ?? '') ?? 1;
+    return int.tryParse(uri.queryParameters["page"] ?? "") ?? 1;
   }
 
   bool get hasNext => nextPage != null;
@@ -53,10 +54,11 @@ Future<T> performPaginatedSearch<T extends SearchPageMixin>({
   required SearchArgs args,
   required SearchFetcher<T> searchFetcher,
   required T emptyResult,
-  Duration debounceDuration = const Duration(milliseconds: 500),
-  Duration keepAliveDuration = const Duration(minutes: 5),
+  Duration debounceDuration = AppDurations.searchDebounce,
+  Duration keepAliveDuration = AppDurations.defaultKeepAlive,
   int pageSize = metronDefaultPageSize,
 }) async {
+
   if (args.query.trim().isEmpty) return emptyResult;
 
   if (debounceDuration > Duration.zero) {
@@ -96,7 +98,7 @@ Future<T> performPaginatedSearch<T extends SearchPageMixin>({
     );
   }
 
-  timer = Timer(keepAliveDuration, () => link.close());
+  timer = Timer(keepAliveDuration, link.close);
 
   return results;
 }

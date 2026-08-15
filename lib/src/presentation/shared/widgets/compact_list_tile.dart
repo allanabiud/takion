@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class CompactListTile extends StatelessWidget {
   final IconData icon;

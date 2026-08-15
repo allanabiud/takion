@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/notifications/notification_service.dart';
-import 'package:takion/src/core/notifications/notification_settings_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/notifications/notification_service.dart";
+import "package:takion/src/core/notifications/notification_settings_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
 
 void showNotificationSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Notifications',
+    title: "Notifications",
     child: Consumer(
       builder: (context, ref, _) {
         final enabledAsync = ref.watch(notificationsEnabledProvider);
@@ -20,15 +20,15 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildSettingsGroup(context, 'Pull Notifications', [
+              buildSettingsGroup(context, "Pull Notifications", [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text(
-                    'Pull Notifications',
+                    "Pull Notifications",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: const Text(
-                    'Get a weekly notification of your pulls',
+                    "Get a weekly notification of your pulls",
                   ),
                   value: enabled,
                   onChanged: enabledAsync.isLoading
@@ -63,11 +63,11 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Remind Me On',
+                              "Remind Me On",
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              '${selectedDay.label} at 8:00 PM',
+                              "${selectedDay.label} at 8:00 PM",
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: Theme.of(
@@ -96,19 +96,19 @@ void showNotificationSettings(BuildContext context, WidgetRef ref) {
                     children: [
                       RadioListTile<NotificationDay>(
                         value: NotificationDay.tuesday,
-                        title: const Text('Before Release Day'),
+                        title: const Text("Before Release Day"),
                         contentPadding: EdgeInsets.zero,
                         enabled: enabled && !dayAsync.isLoading,
                       ),
                       RadioListTile<NotificationDay>(
                         value: NotificationDay.wednesday,
-                        title: const Text('Release Day'),
+                        title: const Text("Release Day"),
                         contentPadding: EdgeInsets.zero,
                         enabled: enabled && !dayAsync.isLoading,
                       ),
                       RadioListTile<NotificationDay>(
                         value: NotificationDay.thursday,
-                        title: const Text('After Release Day'),
+                        title: const Text("After Release Day"),
                         contentPadding: EdgeInsets.zero,
                         enabled: enabled && !dayAsync.isLoading,
                       ),

@@ -1,23 +1,24 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
-import 'package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/favorite_toggle_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/features/characters/providers/character_details_provider.dart";
+import "package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart";
+import "package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 String _monthYear(DateTime date) {
-  return '${DateFormatter.monthAbbrev(date)} ${date.year}';
+  return "${DateFormatter.monthAbbrev(date)} ${date.year}";
 }
 
 @RoutePage()
@@ -46,13 +47,13 @@ class _CharacterDetailsScreenState
   String? resourceUrlOf(CharacterDetails details) => details.resourceUrl;
 
   @override
-  String get resourceLabel => 'character';
+  String get resourceLabel => "character";
 
   @override
   String shareSubjectOf(CharacterDetails details) => details.name;
 
   @override
-  String get entityLabel => 'Character';
+  String get entityLabel => "Character";
 
   @override
   Future<CharacterDetails> fetchDetails() {
@@ -62,13 +63,9 @@ class _CharacterDetailsScreenState
   }
 
   @override
-  CharacterDetails? currentStoredDetails() {
-    return ref.read(characterDetailsProvider(widget.characterId)).asData?.value;
-  }
-
-  @override
   void invalidateDetails() {
     ref.invalidate(characterDetailsProvider(widget.characterId));
+    ref.invalidate(characterIssueListProvider);
   }
 
   Future<void> _toggleFavorite() {
@@ -112,12 +109,12 @@ class _CharacterDetailsScreenState
     return DetailScreenShell<CharacterDetails>(
       asyncValue: detailsAsync,
       loadingImageUrl: widget.initialImageUrl,
-      entityType: 'character',
+      entityType: "character",
       initialChildSize: 0.60,
       headerHeight: 350,
       toImageUrl: (d) => d.image,
       toFallbackImageUrl: (d) => null,
-      toHeroTag: (d) => 'character-image-${d.id}',
+      toHeroTag: (d) => "character-image-${d.id}",
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.alias,
       onRefresh: (_) => refreshDetails(context),
@@ -143,12 +140,12 @@ class _CharacterDetailsScreenState
             issue.storeDate ?? issue.coverDate;
 
         final dates = allIssues
-            .map((i) => issueDate(i))
+            .map(issueDate)
             .where((d) => d != null)
             .toList();
         dates.sort();
         final dateRange = dates.isNotEmpty
-            ? '${dates.first!.year} – ${dates.last!.year}'
+            ? "${dates.first!.year} – ${dates.last!.year}"
             : null;
 
         final distinctSeries = allIssues
@@ -251,12 +248,22 @@ class _CharacterDetailsScreenState
               ),
             ),
           ],
-          if (hasIssues || isIssuesLoading) ...[
+          if (hasIssues || isIssuesLoading || issueListAsync.hasError) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: isIssuesLoading
+                child: issueListAsync.hasError
+                    ? SizedBox(
+                        height: 220,
+                        child: AsyncStatePanel.error(
+                          errorMessage: "Failed to load issues",
+                          onRetry: () => ref.invalidate(
+                            characterDetailsIssuesProvider(widget.characterId),
+                          ),
+                        ),
+                      )
+                    : isIssuesLoading
                     ? ShimmerWidget(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,18 +293,18 @@ class _CharacterDetailsScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SectionHeader(
-                            title: 'Recently Appeared In',
+                            title: "Recently Appeared In",
                             onViewAll: () => context.pushRoute(
                               CharacterIssuesRoute(characterId: data.id),
                             ),
                           ),
                           const SizedBox(height: 12),
                           HorizontalPreviewSection(
-                            title: '',
+                            title: "",
                             onViewAll: null,
                             itemCount: previewIssues.length,
                             height: 250,
-                            emptyText: 'No issues available.',
+                            emptyText: "No issues available.",
                             itemBuilder: (context, index) {
                               final issue = previewIssues[index];
                               final issueId = issue.id;
@@ -305,7 +312,7 @@ class _CharacterDetailsScreenState
                                 issueId: issueId,
                                 imageUrl: issue.image,
                                 title:
-                                    '${issue.series?.name ?? issue.name} #${issue.number}',
+                                    "${issue.series?.name ?? issue.name} #${issue.number}",
                                 seriesId: issue.series?.id,
                                 seriesName: issue.series?.name,
                                 issueNumber: issue.number,
@@ -329,10 +336,10 @@ class _CharacterDetailsScreenState
           ],
           if (hasTeams) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const SectionHeader(title: 'TEAMS'),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: "TEAMS"),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -347,7 +354,7 @@ class _CharacterDetailsScreenState
                   itemBuilder: (context, index) {
                     final team = data.teams[index];
                     return EntityCard(
-                      entityType: 'team',
+                      entityType: "team",
                       entityId: team.id,
                       name: team.name,
                       width: 110,
@@ -361,10 +368,10 @@ class _CharacterDetailsScreenState
           ],
           if (hasUniverses) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const SectionHeader(title: 'UNIVERSES'),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: "UNIVERSES"),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -379,7 +386,7 @@ class _CharacterDetailsScreenState
                   itemBuilder: (context, index) {
                     final universe = data.universes[index];
                     return EntityCard(
-                      entityType: 'universe',
+                      entityType: "universe",
                       entityId: universe.id,
                       name: universe.name,
                       width: 140,
@@ -416,7 +423,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'CREATORS'),
+        const SectionHeader(title: "CREATORS"),
         const SizedBox(height: 12),
         SizedBox(
           height: 130,
@@ -431,7 +438,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
                 creatorId: creator.id,
                 name: creator.name.trim().isNotEmpty
                     ? creator.name.trim()
-                    : 'Unknown Creator',
+                    : "Unknown Creator",
                 width: 95,
               );
             },
@@ -481,13 +488,13 @@ class _CharacterStatsCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$issueCount',
+                "$issueCount",
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                'Issues',
+                "Issues",
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -502,13 +509,13 @@ class _CharacterStatsCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$seriesCount',
+                "$seriesCount",
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                'Series',
+                "Series",
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -532,7 +539,7 @@ class _CharacterStatsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Date range',
+                    "Date range",
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -557,8 +564,8 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
     final theme = Theme.of(context);
     final seriesName = issue.series?.name.trim();
     final label = seriesName != null && seriesName.isNotEmpty
-        ? '$seriesName #${issue.number}'
-        : '${issue.name} #${issue.number}';
+        ? "$seriesName #${issue.number}"
+        : "${issue.name} #${issue.number}";
     final displayDate = issue.storeDate ?? issue.coverDate;
 
     return InkWell(
@@ -606,7 +613,7 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      'FIRST APPEARANCE',
+                      "FIRST APPEARANCE",
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,
@@ -673,7 +680,7 @@ class _CharacterInfoCard extends StatelessWidget {
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),

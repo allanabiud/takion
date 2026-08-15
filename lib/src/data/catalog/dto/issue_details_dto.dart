@@ -1,8 +1,8 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:takion/src/domain/entities.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:takion/src/domain/entities.dart";
 
-part 'issue_details_dto.freezed.dart';
-part 'issue_details_dto.g.dart';
+part "issue_details_dto.freezed.dart";
+part "issue_details_dto.g.dart";
 
 @freezed
 abstract class IssueDetailsDto with _$IssueDetailsDto {
@@ -12,46 +12,46 @@ abstract class IssueDetailsDto with _$IssueDetailsDto {
     IssueDetailsNamedRefDto? imprint,
     IssueDetailsSeriesDto? series,
     required String number,
-    @JsonKey(name: 'alt_number') String? altNumber,
+    @JsonKey(name: "alt_number") String? altNumber,
     String? title,
-    @JsonKey(name: 'name') @Default(<String>[]) List<String> names,
-    @JsonKey(name: 'cover_date') String? coverDate,
-    @JsonKey(name: 'store_date') String? storeDate,
-    @JsonKey(name: 'foc_date') String? focDate,
+    @JsonKey(name: "name") @Default(<String>[]) List<String> names,
+    @JsonKey(name: "cover_date") String? coverDate,
+    @JsonKey(name: "store_date") String? storeDate,
+    @JsonKey(name: "foc_date") String? focDate,
     String? price,
-    @JsonKey(name: 'price_currency') String? priceCurrency,
+    @JsonKey(name: "price_currency") String? priceCurrency,
     IssueDetailsNamedRefDto? rating,
     String? sku,
     String? isbn,
     String? upc,
-    @JsonKey(name: 'page') int? page,
-    @JsonKey(name: 'desc') String? description,
+    @JsonKey(name: "page") int? page,
+    @JsonKey(name: "desc") String? description,
     String? image,
-    @JsonKey(name: 'cover_hash') String? coverHash,
-    @JsonKey(name: 'arcs')
+    @JsonKey(name: "cover_hash") String? coverHash,
+    @JsonKey(name: "arcs")
     @Default(<IssueDetailsParticipationDto>[])
     List<IssueDetailsParticipationDto> arcs,
-    @JsonKey(name: 'credits')
+    @JsonKey(name: "credits")
     @Default(<IssueDetailsCreditDto>[])
     List<IssueDetailsCreditDto> credits,
-    @JsonKey(name: 'characters')
+    @JsonKey(name: "characters")
     @Default(<IssueDetailsParticipationDto>[])
     List<IssueDetailsParticipationDto> characters,
-    @JsonKey(name: 'teams')
+    @JsonKey(name: "teams")
     @Default(<IssueDetailsParticipationDto>[])
     List<IssueDetailsParticipationDto> teams,
-    @JsonKey(name: 'universes')
+    @JsonKey(name: "universes")
     @Default(<IssueDetailsParticipationDto>[])
     List<IssueDetailsParticipationDto> universes,
-    @JsonKey(name: 'reprints')
+    @JsonKey(name: "reprints")
     @Default(<IssueDetailsReprintDto>[])
     List<IssueDetailsReprintDto> reprints,
-    @JsonKey(name: 'variants')
+    @JsonKey(name: "variants")
     @Default(<IssueDetailsVariantDto>[])
     List<IssueDetailsVariantDto> variants,
-    @JsonKey(name: 'cv_id') int? cvId,
-    @JsonKey(name: 'gcd_id') int? gcdId,
-    @JsonKey(name: 'resource_url') String? resourceUrl,
+    @JsonKey(name: "cv_id") int? cvId,
+    @JsonKey(name: "gcd_id") int? gcdId,
+    @JsonKey(name: "resource_url") String? resourceUrl,
     String? modified,
   }) = _IssueDetailsDto;
 
@@ -118,10 +118,10 @@ abstract class IssueDetailsSeriesDto with _$IssueDetailsSeriesDto {
   const factory IssueDetailsSeriesDto({
     required int id,
     required String name,
-    @JsonKey(name: 'sort_name') String? sortName,
+    @JsonKey(name: "sort_name") String? sortName,
     int? volume,
-    @JsonKey(name: 'year_began') int? yearBegan,
-    @JsonKey(name: 'series_type') IssueDetailsNamedRefDto? seriesType,
+    @JsonKey(name: "year_began") int? yearBegan,
+    @JsonKey(name: "series_type") IssueDetailsNamedRefDto? seriesType,
     @Default(<IssueDetailsNamedRefDto>[]) List<IssueDetailsNamedRefDto> genres,
   }) = _IssueDetailsSeriesDto;
 
@@ -188,10 +188,10 @@ abstract class IssueDetailsCreditDto with _$IssueDetailsCreditDto {
   const factory IssueDetailsCreditDto({
     required int id,
     String? creator,
-    @JsonKey(name: 'role')
+    @JsonKey(name: "role")
     @Default(<IssueDetailsCreditRoleDto>[])
     List<IssueDetailsCreditRoleDto> roles,
-    @JsonKey(name: 'creator_id') int? creatorId,
+    @JsonKey(name: "creator_id") int? creatorId,
   }) = _IssueDetailsCreditDto;
 
   factory IssueDetailsCreditDto.fromJson(Map<String, dynamic> json) =>

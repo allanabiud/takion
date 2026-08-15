@@ -1,6 +1,6 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
 
-part 'selected_week_provider.g.dart';
+part "selected_week_provider.g.dart";
 
 @Riverpod(keepAlive: true)
 class SelectedWeek extends _$SelectedWeek {

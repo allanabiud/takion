@@ -1,38 +1,38 @@
-import 'dart:async';
-import 'dart:collection';
-import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/network/rate_limit_interceptor.dart'
+import "dart:async";
+import "dart:collection";
+import "dart:convert";
+import "package:dio/dio.dart";
+import "package:drift/drift.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/core/cache/cache_policy.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/rate_limit_interceptor.dart"
     show backgroundZoneKey;
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/core/utils/json_utils.dart';
-import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart';
-import 'package:takion/src/data/common/drift/database.dart'
+import "package:takion/src/core/performance/performance_metrics.dart";
+import "package:takion/src/core/utils/json_utils.dart";
+import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
+import "package:takion/src/data/catalog/datasources/local/series_name_index.dart";
+import "package:takion/src/data/common/drift/database.dart"
     hide MetronReadingListItem, SeriesNameIndex;
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/data/reading_list/dto/dto.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/data/reading_list/dto/dto.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
-part 'metron_repository_impl_releases.dart';
-part 'metron_repository_impl_issues.dart';
-part 'metron_repository_impl_series.dart';
-part 'metron_repository_impl_characters.dart';
-part 'metron_repository_impl_creators.dart';
-part 'metron_repository_impl_universes.dart';
-part 'metron_repository_impl_imprints.dart';
-part 'metron_repository_impl_teams.dart';
-part 'metron_repository_impl_publishers.dart';
-part 'metron_repository_impl_arcs.dart';
-part 'metron_repository_impl_reading_lists.dart';
+part "metron_repository_impl_releases.dart";
+part "metron_repository_impl_issues.dart";
+part "metron_repository_impl_series.dart";
+part "metron_repository_impl_characters.dart";
+part "metron_repository_impl_creators.dart";
+part "metron_repository_impl_universes.dart";
+part "metron_repository_impl_imprints.dart";
+part "metron_repository_impl_teams.dart";
+part "metron_repository_impl_publishers.dart";
+part "metron_repository_impl_arcs.dart";
+part "metron_repository_impl_reading_lists.dart";
 
 mixin _RepositoryState {
   MetronRemoteDataSource get _remoteDataSource;
@@ -90,6 +90,19 @@ mixin _RepositoryState {
     required Future<void> Function(Response response) cache,
     required Future<void> Function() updateTtl,
   });
+
+  /// A page with no results but a non-zero total count is a page that does not
+  /// exist (e.g. requested past the last page). Caching it would poison the
+  /// cache and make the empty state persist across sessions.
+  bool _isValidIssueListPage({required int count, required int resultCount}) {
+    return resultCount > 0 || count == 0;
+  }
+
+  /// The real per-page size reported by the API, when the response indicates
+  /// more than one page. Null when only one page exists or size is unknown.
+  int? _issuePageSize({required int resultCount, required bool hasNext}) {
+    return hasNext && resultCount > 0 ? resultCount : null;
+  }
 
   void _upsertIssueListStubs(Iterable<IssueListDto> dtos) {
     final issueStubs = <MetronIssuesCompanion>[];
@@ -184,7 +197,7 @@ mixin _RepositoryState {
       if (entries.isEmpty) return;
       await database.pullListDao.upsertSubscriptionEntries(entries);
     } catch (e) {
-      AppLogger.debug('Auto-add pull list entries failed', error: e);
+      AppLogger.debug("Auto-add pull list entries failed", error: e);
     }
   }
 
@@ -381,7 +394,7 @@ class MetronRepositoryImpl
         () => task()
             .catchError((e) {
               AppLogger.debug(
-                'Background refresh failed for $cacheKey',
+                "Background refresh failed for $cacheKey",
                 error: e,
               );
             })

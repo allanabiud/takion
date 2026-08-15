@@ -1,4 +1,4 @@
-import 'package:takion/src/core/logging/talker_setup.dart';
+import "package:takion/src/core/logging/talker_setup.dart";
 
 class AppLogger {
   static void info(String message, {Object? error, StackTrace? stackTrace}) {

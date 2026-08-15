@@ -1,11 +1,10 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:intl/intl.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/library/providers/stats_debounce.dart";
 
 final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   ref,
@@ -39,7 +38,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
       }
       totalValue += unitPrice * item.quantityOwned;
     }
-    final currencyFormat = NumberFormat('#,##0.00');
+    final currencyFormat = NumberFormat("#,##0.00");
 
     if (!controller.isClosed) {
       controller.add(CollectionStats(
@@ -48,7 +47,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
           0,
           (sum, item) => sum + item.quantityOwned,
         ),
-        totalValue: '\$${currencyFormat.format(totalValue)}',
+        totalValue: "\$${currencyFormat.format(totalValue)}",
         readCount: readCount,
         unreadCount: unreadCount,
         unratedCount: unratedCount,
@@ -58,7 +57,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     }
   }
 
-  void refreshIssuePrices(List<MetronIssue> issues) {
+  void refreshIssuePrices(List<LocalIssue> issues) {
     final newPrices = <int, double>{};
     for (final issue in issues) {
       if (issue.price != null) {
@@ -82,7 +81,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     },
   );
 
-  ref.listen<AsyncValue<List<MetronIssue>>>(
+  ref.listen<AsyncValue<List<LocalIssue>>>(
     metronIssuesStreamProvider,
     (_, next) {
       if (!next.hasValue) return;

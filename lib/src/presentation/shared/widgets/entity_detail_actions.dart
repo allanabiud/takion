@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class EntityDetailActions extends StatelessWidget {
   const EntityDetailActions({
@@ -15,7 +15,7 @@ class EntityDetailActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<_EntityMenuAction>(
-      tooltip: 'More options',
+      tooltip: "More options",
       onSelected: (action) {
         switch (action) {
           case _EntityMenuAction.refresh:
@@ -30,17 +30,17 @@ class EntityDetailActions extends StatelessWidget {
         if (onRefresh != null)
           const PopupMenuItem(
             value: _EntityMenuAction.refresh,
-            child: Text('Refresh'),
+            child: Text("Refresh"),
           ),
         if (onShare != null)
           const PopupMenuItem(
             value: _EntityMenuAction.share,
-            child: Text('Share'),
+            child: Text("Share"),
           ),
         if (onOpenInBrowser != null)
           const PopupMenuItem(
             value: _EntityMenuAction.openInBrowser,
-            child: Text('Open in Metron'),
+            child: Text("Open in Metron"),
           ),
       ],
     );

@@ -1,9 +1,9 @@
-import 'dart:convert';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/services/local_backup_service.dart';
+import "dart:convert";
+import "package:drift/drift.dart" hide isNull, isNotNull;
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/services/local_backup_service.dart";
 
 void main() {
   late AppDatabase db;
@@ -19,7 +19,7 @@ void main() {
   });
 
   test(
-    'exportBackupData exports database content as valid json bytes',
+    "exportBackupData exports database content as valid json bytes",
     () async {
       await db.favoriteDao.toggleCreator(505);
 
@@ -29,28 +29,28 @@ void main() {
       final jsonStr = utf8.decode(bytes);
       final map = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-      expect(map['version'], equals(2));
-      final tables = map['tables'] as Map<String, dynamic>;
-      final creatorInserts = tables['favorite_creators']['inserts'] as List;
+      expect(map["version"], equals(2));
+      final tables = map["tables"] as Map<String, dynamic>;
+      final creatorInserts = tables["favorite_creators"]["inserts"] as List;
 
       expect(creatorInserts.length, equals(1));
-      expect(creatorInserts.first['metronCreatorId'], equals(505));
+      expect(creatorInserts.first["metronCreatorId"], equals(505));
     },
   );
 
-  test('importBackupData imports valid backup bytes into database', () async {
+  test("importBackupData imports valid backup bytes into database", () async {
     final now = DateTime.now().toUtc().toIso8601String();
     final backupMap = {
-      'version': 1,
-      'deviceId': 'backup-export-device',
-      'toTimestamp': now,
-      'tables': {
-        'favorite_creators': {
-          'inserts': [
-            {'metronCreatorId': 707, 'createdAt': now, 'updatedAt': now},
+      "version": 1,
+      "deviceId": "backup-export-device",
+      "toTimestamp": now,
+      "tables": {
+        "favorite_creators": {
+          "inserts": [
+            {"metronCreatorId": 707, "createdAt": now, "updatedAt": now},
           ],
-          'updates': [],
-          'deletes': [],
+          "updates": [],
+          "deletes": [],
         },
       },
     };
@@ -63,8 +63,8 @@ void main() {
     expect(creators.first.metronCreatorId, equals(707));
   });
 
-  test('importBackupData throws FormatException for invalid version', () async {
-    final backupMap = {'version': 99, 'tables': {}};
+  test("importBackupData throws FormatException for invalid version", () async {
+    final backupMap = {"version": 99, "tables": {}};
     final bytes = utf8.encode(jsonEncode(backupMap));
 
     expect(
@@ -73,7 +73,7 @@ void main() {
     );
   });
 
-  test('full round trip restores data across multiple tables', () async {
+  test("full round trip restores data across multiple tables", () async {
     final now = DateTime.now().toUtc().toIso8601String();
 
     await db.favoriteDao.toggleCreator(808);
@@ -81,58 +81,58 @@ void main() {
 
     await db.into(db.libraryItems).insert(
       LibraryItemsCompanion.insert(
-        id: 'lib-500',
-        userId: 'local-user',
+        id: "lib-500",
+        userId: "local-user",
         metronIssueId: 500,
         metronSeriesId: 9,
-        ownershipStatus: 'owned',
+        ownershipStatus: "owned",
         isRead: true,
-        format: 'digital',
+        format: "digital",
         createdAt: now,
         updatedAt: now,
       ),
     );
     await db.into(db.libraryReadLogs).insert(
       LibraryReadLogsCompanion.insert(
-        id: 'log-500',
-        userId: 'local-user',
-        collectionItemId: 'lib-500',
+        id: "log-500",
+        userId: "local-user",
+        collectionItemId: "lib-500",
         readAt: now,
         createdAt: now,
       ),
     );
     await db.readingListDao.upsertList(
       ReadingListsCompanion.insert(
-        id: 'list-1',
-        title: 'Weekly Pulls',
-        description: 'desc',
+        id: "list-1",
+        title: "Weekly Pulls",
+        description: "desc",
         isOrdered: true,
-        contentType: 'series',
-        itemsJson: '[]',
+        contentType: "series",
+        itemsJson: "[]",
         createdAt: now,
         updatedAt: now,
       ),
     );
     await db.readingListDao.upsertItems([
       ReadingListItemsCompanion.insert(
-        id: 'item-1',
-        listId: 'list-1',
-        targetId: 'ser-9',
+        id: "item-1",
+        listId: "list-1",
+        targetId: "ser-9",
         isSeries: true,
-        role: 'main',
+        role: "main",
         isRead: false,
         sortOrder: 0,
       ),
     ]);
     await db.into(db.activityEvents).insert(
       ActivityEventsCompanion.insert(
-        id: 'act-1',
-        userId: 'local-user',
-        seriesId: Value(9),
-        issueId: Value(500),
-        eventType: 'read',
-        seriesName: Value('X-Men'),
-        issueNumber: Value('1'),
+        id: "act-1",
+        userId: "local-user",
+        seriesId: const Value(9),
+        issueId: const Value(500),
+        eventType: "read",
+        seriesName: const Value("X-Men"),
+        issueNumber: const Value("1"),
         timestamp: now,
       ),
     );
@@ -141,7 +141,7 @@ void main() {
     expect(bytes, isNotEmpty);
 
     final freshDb = AppDatabase.forTesting(NativeDatabase.memory());
-    addTearDown(() => freshDb.close());
+    addTearDown(freshDb.close);
     final freshService = LocalBackupService(freshDb);
 
     await freshService.importBackupData(bytes);

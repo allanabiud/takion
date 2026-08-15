@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+
+int? _defaultPageSize(Object? _) => null;
 
 /// Generic paged entity list screen (issues, series, …) with a pinned count +
 /// sort header, pull-to-refresh, and BottomAppBar page navigation.
@@ -25,6 +27,7 @@ class EntityPagedListScreen<T, TItem> extends ConsumerStatefulWidget {
     required this.resultsOf,
     required this.hasNextOf,
     required this.hasPreviousOf,
+    this.pageSizeOf = _defaultPageSize,
     required this.sortContext,
     required this.sortLabel,
     required this.sortItems,
@@ -32,7 +35,7 @@ class EntityPagedListScreen<T, TItem> extends ConsumerStatefulWidget {
     required this.emptyMessage,
     required this.emptyIcon,
     required this.errorMessage,
-    this.unit = 'item',
+    this.unit = "item",
     this.pluralUnit,
     this.enableRefresh = true,
     this.emptyHeight,
@@ -48,6 +51,10 @@ class EntityPagedListScreen<T, TItem> extends ConsumerStatefulWidget {
   final List<TItem> Function(T page) resultsOf;
   final bool Function(T page) hasNextOf;
   final bool Function(T page) hasPreviousOf;
+
+  /// Per-page result count as reported by the API, when known. When null the
+  /// default page size is assumed.
+  final int? Function(T page) pageSizeOf;
   final SortPreferenceContext sortContext;
   final String Function(ContentSortOption option) sortLabel;
   final List<TItem> Function(List<TItem> items, ContentSortOption option)
@@ -113,7 +120,10 @@ class _EntityPagedListScreenState<T, TItem>
       final page = itemsAsync.value;
       if (page != null) {
         _lastPage = page;
-        _totalPages = ((widget.countOf(page) - 1) ~/ metronDefaultPageSize) + 1;
+        final pageSize = widget.pageSizeOf(page) ?? metronDefaultPageSize;
+        _totalPages = pageSize > 0
+            ? (widget.countOf(page) / pageSize).ceil()
+            : 1;
       }
     }
 
@@ -173,7 +183,7 @@ class _EntityPagedListScreenState<T, TItem>
                   Expanded(
                     child: Center(
                       child: Text(
-                        'Page $_page of $_totalPages',
+                        "Page $_page of $_totalPages",
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),

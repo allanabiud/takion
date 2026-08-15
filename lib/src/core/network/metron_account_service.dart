@@ -1,11 +1,11 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/durations.dart';
-import 'package:takion/src/core/constants/settings_keys.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/network/dio_client.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/common/drift/daos/settings_dao.dart';
+import "package:dio/dio.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/durations.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/common/drift/daos/settings_dao.dart";
 
 final metronAccountServiceProvider = Provider<MetronAccountService>((ref) {
 
@@ -36,9 +36,9 @@ class MetronAccountService {
 
     try {
       await _dio.get(
-        'issue/',
-        queryParameters: {'limit': 1},
-        options: Options(headers: {'Authorization': 'Bearer $trimmedToken'}),
+        "issue/",
+        queryParameters: {"limit": 1},
+        options: Options(headers: {"Authorization": "Bearer $trimmedToken"}),
       );
       return true;
     } on DioException catch (error) {
@@ -52,20 +52,20 @@ class MetronAccountService {
   Future<bool> connect(String token) async {
     final trimmedToken = token.trim();
     if (trimmedToken.isEmpty) {
-      AppLogger.warning('Metron connect failed: empty token');
+      AppLogger.warning("Metron connect failed: empty token");
       return false;
     }
 
-    AppLogger.info('Metron connect started');
+    AppLogger.info("Metron connect started");
     final isValid = await verifyToken(trimmedToken);
     if (!isValid) {
-      AppLogger.warning('Metron connect failed: invalid token');
+      AppLogger.warning("Metron connect failed: invalid token");
       return false;
     }
 
     await _settingsDao.setString(_apiTokenKey, trimmedToken);
     invalidateCachedStatus();
-    AppLogger.info('Metron connected');
+    AppLogger.info("Metron connected");
     return true;
   }
 
@@ -86,14 +86,14 @@ class MetronAccountService {
   Future<void> disconnect() async {
     await _settingsDao.deleteByKey(_apiTokenKey);
     invalidateCachedStatus();
-    AppLogger.info('Metron disconnected');
+    AppLogger.info("Metron disconnected");
   }
 
   Future<MetronConnectionStatus> validateStoredConnection() async {
     if (_cachedStatus != null &&
         _cachedAt != null &&
         DateTime.now().difference(_cachedAt!) < _cacheDuration) {
-      AppLogger.debug('Metron validation using cached status: $_cachedStatus');
+      AppLogger.debug("Metron validation using cached status: $_cachedStatus");
       return _cachedStatus!;
     }
 
@@ -101,7 +101,7 @@ class MetronAccountService {
     if (token == null) {
       _cachedStatus = MetronConnectionStatus.missing;
       _cachedAt = DateTime.now();
-      AppLogger.info('Metron validation: no stored token');
+      AppLogger.info("Metron validation: no stored token");
       return _cachedStatus!;
     }
 
@@ -112,13 +112,13 @@ class MetronAccountService {
           ? MetronConnectionStatus.valid
           : MetronConnectionStatus.invalid;
       _cachedAt = DateTime.now();
-      AppLogger.info('Metron validation result: $_cachedStatus');
+      AppLogger.info("Metron validation result: $_cachedStatus");
       return _cachedStatus!;
     } on DioException catch (e) {
       _cachedStatus = MetronConnectionStatus.unreachable;
       _cachedAt = DateTime.now();
       AppLogger.warning(
-        'Metron validation failed: server unreachable',
+        "Metron validation failed: server unreachable",
         error: e,
       );
       return _cachedStatus!;

@@ -1,28 +1,28 @@
-import 'dart:ui' show ImageFilter;
+import "dart:ui" show ImageFilter;
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_local_reading_list_items_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
-import 'package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/sharing/reading_list_sharing_service.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/add_local_reading_list_items_bottom_sheet.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_cover.dart";
+import "package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/favorite_toggle_actions.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class LocalReadingListDetailsScreen extends ConsumerStatefulWidget {
@@ -30,7 +30,7 @@ class LocalReadingListDetailsScreen extends ConsumerStatefulWidget {
 
   const LocalReadingListDetailsScreen({
     super.key,
-    @PathParam('listId') required this.listId,
+    @PathParam("listId") required this.listId,
   });
 
   @override
@@ -44,7 +44,7 @@ class _LocalReadingListDetailsScreenState
     extends ConsumerState<LocalReadingListDetailsScreen>
     with FavoriteToggleActions {
   void _openLocalReadingListItemDetails(LocalReadingListItem item) {
-    final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+    final idString = item.targetId.replaceAll(RegExp(r"^.*-"), "");
     final id = int.tryParse(idString);
     if (id == null || id <= 0) return;
 
@@ -73,14 +73,14 @@ class _LocalReadingListDetailsScreenState
     LocalReadingList list,
   ) async {
     final isMetron = list.isMetronImported;
-    final titleText = isMetron ? 'Remove from Library' : 'Delete Reading List';
+    final titleText = isMetron ? "Remove from Library" : "Delete Reading List";
     final contentText = isMetron
         ? 'Are you sure you want to remove "${list.title}" from your library?'
         : 'Are you sure you want to delete "${list.title}"?';
-    final actionText = isMetron ? 'Remove' : 'Delete';
+    final actionText = isMetron ? "Remove" : "Delete";
     final successText = isMetron
-        ? 'Removed from Library'
-        : 'Reading List Deleted';
+        ? "Removed from Library"
+        : "Reading List Deleted";
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -90,7 +90,7 @@ class _LocalReadingListDetailsScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text("Cancel"),
           ),
           FilledButton.icon(
             style: FilledButton.styleFrom(
@@ -142,7 +142,7 @@ class _LocalReadingListDetailsScreenState
                 ? () => _confirmDelete(context, list)
                 : () => AddLocalReadingListItemsBottomSheet.show(context, list),
             icon: Icon(isMetron ? Icons.delete_outline : Icons.add, size: 22),
-            label: Text(isMetron ? 'Remove' : 'Add Items'),
+            label: Text(isMetron ? "Remove" : "Add Items"),
           ),
         ),
         const SizedBox(width: 6),
@@ -205,9 +205,9 @@ class _LocalReadingListDetailsScreenState
       final cache = ref.read(entityImageCacheProvider);
       final firstItem = list.items.first;
       final id =
-          int.tryParse(firstItem.targetId.replaceAll(RegExp(r'\D'), '')) ?? 0;
+          int.tryParse(firstItem.targetId.replaceAll(RegExp(r"\D"), "")) ?? 0;
       firstCoverUrl = cache.getCached(
-        firstItem.isSeries ? 'series' : 'issue',
+        firstItem.isSeries ? "series" : "issue",
         id,
       );
 
@@ -265,7 +265,7 @@ class _LocalReadingListDetailsScreenState
               elevation: 0,
               actions: [
                 PopupMenuButton<_ReadingListDetailsMenuAction>(
-                  tooltip: 'More options',
+                  tooltip: "More options",
                   onSelected: (action) {
                     switch (action) {
                       case _ReadingListDetailsMenuAction.edit:
@@ -284,18 +284,18 @@ class _LocalReadingListDetailsScreenState
                     if (!list.isMetronImported)
                       const PopupMenuItem(
                         value: _ReadingListDetailsMenuAction.edit,
-                        child: Text('Edit'),
+                        child: Text("Edit"),
                       ),
                     const PopupMenuItem(
                       value: _ReadingListDetailsMenuAction.share,
-                      child: Text('Share'),
+                      child: Text("Share"),
                     ),
                     PopupMenuItem(
                       value: _ReadingListDetailsMenuAction.delete,
                       child: Text(
                         list.isMetronImported
-                            ? 'Remove from Library'
-                            : 'Delete',
+                            ? "Remove from Library"
+                            : "Delete",
                       ),
                     ),
                   ],
@@ -361,7 +361,7 @@ class _LocalReadingListDetailsScreenState
                         (i) => Positioned(
                           top: i * 20.0,
                           left: i * 10.0,
-                          child: SkeletonBox(
+                          child: const SkeletonBox(
                             width: 120,
                             height: 180,
                             borderRadius: 8,
@@ -383,13 +383,13 @@ class _LocalReadingListDetailsScreenState
               const SizedBox(height: 8),
               const SkeletonBox(height: 14, width: 160, borderRadius: 4),
               const SizedBox(height: 20),
-              Row(
+              const Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: SkeletonBox(height: 14, borderRadius: 4),
                   ),
-                  const SizedBox(width: 8),
-                  const SkeletonBox(width: 40, height: 14, borderRadius: 4),
+                  SizedBox(width: 8),
+                  SkeletonBox(width: 40, height: 14, borderRadius: 4),
                 ],
               ),
               const SizedBox(height: 8),
@@ -399,8 +399,8 @@ class _LocalReadingListDetailsScreenState
                 borderRadius: 4,
               ),
               const SizedBox(height: 20),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(
                     flex: 3,
                     child: SkeletonBox(height: 48, borderRadius: 12),
@@ -422,29 +422,29 @@ class _LocalReadingListDetailsScreenState
               const SizedBox(height: 16),
               ...List.generate(
                 4,
-                (_) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                (_) => const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
                   child: Row(
                     children: [
-                      const SkeletonBox(
+                      SkeletonBox(
                         width: 24,
                         height: 24,
                         borderRadius: 12,
                       ),
-                      const SizedBox(width: 12),
-                      const SkeletonBox(width: 60, height: 85, borderRadius: 6),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
+                      SkeletonBox(width: 60, height: 85, borderRadius: 6),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SkeletonBox(
+                            SkeletonBox(
                               height: 14,
                               width: 200,
                               borderRadius: 4,
                             ),
-                            const SizedBox(height: 6),
-                            const SkeletonBox(
+                            SizedBox(height: 6),
+                            SkeletonBox(
                               height: 12,
                               width: 140,
                               borderRadius: 4,
@@ -464,13 +464,13 @@ class _LocalReadingListDetailsScreenState
         appBar: AppBar(),
         body: Center(
           child: Text(
-            TakionAlerts.cleanError(e, fallback: 'Failed to load reading list'),
+            TakionAlerts.cleanError(e, fallback: "Failed to load reading list"),
           ),
         ),
       ),
       data: (list) {
         if (list == null) {
-          return const Scaffold(body: Center(child: Text('List not found')));
+          return const Scaffold(body: Center(child: Text("List not found")));
         }
 
         final displayItems = list.items;
@@ -552,7 +552,7 @@ class _LocalReadingListDetailsScreenState
             hasScrollBody: false,
             child: EmptyContentState(
               icon: Icons.list_alt_rounded,
-              message: 'This reading list is empty.',
+              message: "This reading list is empty.",
             ),
           ),
         ],
@@ -576,8 +576,8 @@ class _LocalReadingListDetailsScreenState
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: SectionHeader(
               title: list.contentType == ListContentType.series
-                  ? 'SERIES'
-                  : 'ISSUES',
+                  ? "SERIES"
+                  : "ISSUES",
               count: items.length,
             ),
           ),
@@ -627,7 +627,7 @@ class _LocalReadingListDetailsScreenState
             hasScrollBody: false,
             child: EmptyContentState(
               icon: Icons.grid_view_rounded,
-              message: 'This reading list is empty.',
+              message: "This reading list is empty.",
             ),
           ),
         ],

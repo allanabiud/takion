@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_search_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 class AddLocalReadingListItemsBottomSheet extends ConsumerStatefulWidget {
   final LocalReadingList list;
@@ -36,7 +36,7 @@ enum _AddStep { selection, configuration }
 class _AddLocalReadingListItemsBottomSheetState
     extends ConsumerState<AddLocalReadingListItemsBottomSheet> {
   final _searchController = TextEditingController();
-  String _query = '';
+  String _query = "";
   SeriesList? _selectedSeries;
   bool _addAllIssues = true;
   bool _useManualRange = false;
@@ -47,15 +47,15 @@ class _AddLocalReadingListItemsBottomSheetState
 
   String _normalizeTargetId(String targetId, bool isSeries) {
     final normalized = targetId.trim().toLowerCase();
-    final expectedPrefix = isSeries ? 'series-' : 'issue-';
+    final expectedPrefix = isSeries ? "series-" : "issue-";
     if (normalized.startsWith(expectedPrefix)) return normalized;
 
-    final alternatePrefix = isSeries ? 'issue-' : 'series-';
+    final alternatePrefix = isSeries ? "issue-" : "series-";
     if (normalized.startsWith(alternatePrefix)) {
-      return '$expectedPrefix${normalized.substring(alternatePrefix.length)}';
+      return "$expectedPrefix${normalized.substring(alternatePrefix.length)}";
     }
 
-    return '$expectedPrefix$normalized';
+    return "$expectedPrefix$normalized";
   }
 
   void _onAddPressed() async {
@@ -71,7 +71,7 @@ class _AddLocalReadingListItemsBottomSheetState
       if (widget.list.contentType == ListContentType.series) {
         itemsToAdd.add(
           LocalReadingListItem(
-            targetId: 'series-${_selectedSeries!.id}',
+            targetId: "series-${_selectedSeries!.id}",
             isSeries: true,
             role: _selectedRole,
             isRead: false,
@@ -97,7 +97,7 @@ class _AddLocalReadingListItemsBottomSheetState
           for (final issue in allIssues) {
             itemsToAdd.add(
               LocalReadingListItem(
-                targetId: 'issue-${issue.id}',
+                targetId: "issue-${issue.id}",
                 isSeries: false,
                 role: _selectedRole,
                 isRead: false,
@@ -112,7 +112,7 @@ class _AddLocalReadingListItemsBottomSheetState
             if (i >= start && i <= end) {
               itemsToAdd.add(
                 LocalReadingListItem(
-                  targetId: 'issue-${allIssues[i].id}',
+                  targetId: "issue-${allIssues[i].id}",
                   isSeries: false,
                   role: _selectedRole,
                   isRead: false,
@@ -138,7 +138,7 @@ class _AddLocalReadingListItemsBottomSheetState
 
       if (newItems.isEmpty && itemsToAdd.isNotEmpty) {
         if (mounted) {
-          TakionAlerts.info(context, 'Already in this list');
+          TakionAlerts.info(context, "Already in this list");
           Navigator.pop(context);
         }
         return;
@@ -153,15 +153,15 @@ class _AddLocalReadingListItemsBottomSheetState
 
       if (mounted) {
         if (skippedCount > 0) {
-          TakionAlerts.success(context, 'Added ${newItems.length} Items');
+          TakionAlerts.success(context, "Added ${newItems.length} Items");
         } else {
-          TakionAlerts.success(context, 'Added to Reading List');
+          TakionAlerts.success(context, "Added to Reading List");
         }
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.safeError(context, e, userMessage: 'Failed to add items');
+        TakionAlerts.safeError(context, e, userMessage: "Failed to add items");
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);
@@ -180,7 +180,7 @@ class _AddLocalReadingListItemsBottomSheetState
           controller: _searchController,
           autofocus: true,
           decoration: const InputDecoration(
-            labelText: 'Search Series',
+            labelText: "Search Series",
             prefixIcon: Icon(Icons.search),
           ),
           onChanged: (v) => setState(() => _query = v),
@@ -218,7 +218,7 @@ class _AddLocalReadingListItemsBottomSheetState
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(
                   child: Text(
-                    TakionAlerts.cleanError(e, fallback: 'Failed to add items'),
+                    TakionAlerts.cleanError(e, fallback: "Failed to add items"),
                   ),
                 ),
               ) ??
@@ -237,7 +237,7 @@ class _AddLocalReadingListItemsBottomSheetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Item Role',
+                  "Item Role",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 8),
@@ -246,7 +246,7 @@ class _AddLocalReadingListItemsBottomSheetState
                   runSpacing: 8,
                   children: ItemRole.values.map((role) {
                     final label = role == ItemRole.tieIn
-                        ? 'Tie-In'
+                        ? "Tie-In"
                         : role.name.substring(0, 1).toUpperCase() +
                               role.name.substring(1);
                     return ChoiceChip(
@@ -264,11 +264,11 @@ class _AddLocalReadingListItemsBottomSheetState
                 const SizedBox(height: 24),
                 if (widget.list.contentType == ListContentType.issue) ...[
                   const Text(
-                    'Issue Selection',
+                    "Issue Selection",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   SwitchListTile.adaptive(
-                    title: const Text('Add all issues'),
+                    title: const Text("Add all issues"),
                     contentPadding: EdgeInsets.zero,
                     value: _addAllIssues,
                     onChanged: (v) => setState(() => _addAllIssues = v),
@@ -291,7 +291,7 @@ class _AddLocalReadingListItemsBottomSheetState
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '#${_issueRange.start.toInt()} to #${_issueRange.end.toInt()}',
+                                "#${_issueRange.start.toInt()} to #${_issueRange.end.toInt()}",
                                 style: TextStyle(
                                   color: Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
@@ -302,7 +302,7 @@ class _AddLocalReadingListItemsBottomSheetState
                                   () => _useManualRange = !_useManualRange,
                                 ),
                                 child: Text(
-                                  _useManualRange ? 'Use Slider' : 'Use Inputs',
+                                  _useManualRange ? "Use Slider" : "Use Inputs",
                                 ),
                               ),
                             ],
@@ -316,7 +316,7 @@ class _AddLocalReadingListItemsBottomSheetState
                                         .toInt()
                                         .toString(),
                                     decoration: const InputDecoration(
-                                      labelText: 'From',
+                                      labelText: "From",
                                     ),
                                     keyboardType: TextInputType.number,
                                     onChanged: (v) {
@@ -339,7 +339,7 @@ class _AddLocalReadingListItemsBottomSheetState
                                         .toInt()
                                         .toString(),
                                     decoration: const InputDecoration(
-                                      labelText: 'To',
+                                      labelText: "To",
                                     ),
                                     keyboardType: TextInputType.number,
                                     onChanged: (val) {
@@ -386,7 +386,7 @@ class _AddLocalReadingListItemsBottomSheetState
                   ? null
                   : () => setState(() => _currentStep = _AddStep.selection),
               icon: const Icon(Icons.arrow_back_rounded),
-              label: const Text('Back'),
+              label: const Text("Back"),
             ),
             const Spacer(),
             FilledButton(
@@ -400,7 +400,7 @@ class _AddLocalReadingListItemsBottomSheetState
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Add to List'),
+                  : const Text("Add to List"),
             ),
           ],
         ),
@@ -412,7 +412,7 @@ class _AddLocalReadingListItemsBottomSheetState
   Widget build(BuildContext context) {
     return TakionBottomSheet(
       title: _currentStep == _AddStep.selection
-          ? 'Add Items'
+          ? "Add Items"
           : _selectedSeries!.name,
       child: SizedBox(
         height:

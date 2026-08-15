@@ -1,11 +1,11 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 final readingListItemEffectiveReadStatusProvider = Provider.autoDispose
     .family<AsyncValue<bool>, LocalReadingListItem>((ref, item) {
-      final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+      final idString = item.targetId.replaceAll(RegExp(r"^.*-"), "");
       final id = int.tryParse(idString) ?? 0;
 
       if (item.isSeries) {

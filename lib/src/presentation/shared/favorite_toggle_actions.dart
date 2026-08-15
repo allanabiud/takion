@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 /// Shared favorite toggle with undo snackbar for entity detail screens.
 ///
@@ -19,9 +19,9 @@ mixin FavoriteToggleActions {
         final added = !wasFavorite;
         (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
           context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
+          added ? "Added to Favourites" : "Removed from Favourites",
           icon: Icons.favorite,
-          actionLabel: 'Undo',
+          actionLabel: "Undo",
           onUndo: () async {
             await toggle();
           },
@@ -29,7 +29,7 @@ mixin FavoriteToggleActions {
       }
     } catch (e) {
       if (context.mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
+        TakionAlerts.error(context, "Failed to update favourites");
       }
     }
   }

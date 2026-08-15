@@ -1,9 +1,9 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
-part 'creator_search_provider.g.dart';
+part "creator_search_provider.g.dart";
 
 @riverpod
 class CreatorSearch extends _$CreatorSearch {
@@ -17,13 +17,7 @@ class CreatorSearch extends _$CreatorSearch {
       ref: ref,
       args: args,
       emptyResult: const CreatorListPage(results: [], count: 0, currentPage: 1),
-      searchFetcher: (query, {required page, required limit, cancelToken}) =>
-          repository.searchCreators(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      ),
+      searchFetcher: repository.searchCreators,
     );
   }
 

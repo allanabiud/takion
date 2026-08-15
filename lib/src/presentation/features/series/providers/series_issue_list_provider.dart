@@ -1,14 +1,14 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "dart:async";
+import "package:dio/dio.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
-part 'series_issue_list_provider.g.dart';
+part "series_issue_list_provider.g.dart";
 
 class SeriesIssueListArgs {
   const SeriesIssueListArgs({required this.seriesId, required this.page});
@@ -30,11 +30,16 @@ class SeriesIssueListArgs {
 
 @riverpod
 class SeriesIssueList extends _$SeriesIssueList {
+  bool _forceRefresh = false;
+
   @override
   Future<SeriesIssueListPage> build(SeriesIssueListArgs args) async {
     final link = ref.keepAlive();
     Timer? timer;
     ref.onDispose(() => timer?.cancel());
+
+    final forceRefresh = _forceRefresh;
+    _forceRefresh = false;
 
     final repository = ref.watch(metronRepositoryProvider);
     final cancelToken = CancelToken();
@@ -51,9 +56,11 @@ class SeriesIssueList extends _$SeriesIssueList {
       page: 1,
       limit: metronDefaultPageSize,
       cancelToken: cancelToken,
+      forceRefresh: forceRefresh,
     );
 
-    final totalPages = ((page1.count - 1) ~/ metronDefaultPageSize) + 1;
+    final pageSize = page1.realPageSize ?? metronDefaultPageSize;
+    final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
 
     SeriesIssueListPage resultPage;
     if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
@@ -66,7 +73,15 @@ class SeriesIssueList extends _$SeriesIssueList {
           page: targetPage,
           limit: metronDefaultPageSize,
           cancelToken: cancelToken,
+          forceRefresh: forceRefresh,
         );
+        if (resultPage.results.isEmpty && page1.count > 0) {
+          AppLogger.warning(
+            "SeriesIssueList: page $targetPage returned empty for series "
+            "${args.seriesId} (count ${page1.count}). Falling back to page 1.",
+          );
+          resultPage = page1;
+        }
       }
     } else {
       if (args.page == 1) {
@@ -77,41 +92,50 @@ class SeriesIssueList extends _$SeriesIssueList {
           page: args.page,
           limit: metronDefaultPageSize,
           cancelToken: cancelToken,
+          forceRefresh: forceRefresh,
         );
       }
     }
 
-    timer = Timer(const Duration(minutes: 5), () => link.close());
+    timer = Timer(const Duration(minutes: 5), link.close);
 
     return SeriesIssueListPage(
       count: page1.count,
       results: resultPage.results,
       currentPage: args.page,
+      realPageSize: page1.realPageSize,
       next: args.page < totalPages
-          ? 'placeholder?page=${args.page + 1}'
+          ? "placeholder?page=${args.page + 1}"
           : null,
-      previous: args.page > 1 ? 'placeholder?page=${args.page - 1}' : null,
+      previous: args.page > 1 ? "placeholder?page=${args.page - 1}" : null,
     );
   }
 
   Future<void> refresh() async {
+    _forceRefresh = true;
     ref.invalidateSelf();
   }
 }
 
 final seriesDetailsIssuesProvider = FutureProvider.autoDispose
     .family<SeriesIssueListPage, int>((ref, seriesId) async {
-      ref.keepAlive();
+      final link = ref.keepAlive();
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+
       final page1 = await ref.watch(
         seriesIssueListProvider(
           SeriesIssueListArgs(seriesId: seriesId, page: 1),
         ).future,
       );
 
+      final pageSize = page1.realPageSize ?? metronDefaultPageSize;
+      final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
+
       final results = <IssueList>[...page1.results];
 
       Future<SeriesIssueListPage>? page2Future;
-      if (page1.nextPage != null) {
+      if (page1.nextPage != null && page1.nextPage! <= totalPages) {
         page2Future = ref.watch(
           seriesIssueListProvider(
             SeriesIssueListArgs(seriesId: seriesId, page: page1.nextPage!),
@@ -119,9 +143,7 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
         );
       }
 
-      final rawLastPage = page1.count > 0
-          ? ((page1.count - 1) ~/ metronDefaultPageSize) + 1
-          : 1;
+      final rawLastPage = totalPages;
       final knownMaxPage = page1.nextPage ?? 1;
 
       Future<SeriesIssueListPage>? lastPageFuture;
@@ -138,7 +160,7 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
         futures.add(
           page2Future.then((p) => p.results).catchError((e) {
             AppLogger.debug(
-              'Failed to fetch series page 2, falling back to empty',
+              "Failed to fetch series page 2, falling back to empty",
               error: e,
             );
             return <IssueList>[];
@@ -149,7 +171,7 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
         futures.add(
           lastPageFuture.then((p) => p.results).catchError((e) {
             AppLogger.debug(
-              'Failed to fetch series last page, falling back to empty',
+              "Failed to fetch series last page, falling back to empty",
               error: e,
             );
             return <IssueList>[];
@@ -164,9 +186,12 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
         }
       }
 
+      timer = Timer(const Duration(minutes: 5), link.close);
+
       return SeriesIssueListPage(
         count: page1.count,
         results: results,
         currentPage: 1,
+        realPageSize: page1.realPageSize,
       );
     });

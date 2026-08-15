@@ -1,10 +1,10 @@
-import 'dart:math';
+import "dart:math";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 class SuggestionIssueTileData {
   const SuggestionIssueTileData({
@@ -30,7 +30,7 @@ LibraryItem _randomLibraryItemByPredicate(
   final random = Random();
 
   if (items.isEmpty) {
-    throw StateError('No collection items found.');
+    throw StateError("No collection items found.");
   }
 
   final matches = items.where(predicate).toList();
@@ -50,7 +50,7 @@ LibraryItem _pickStableUnreadSuggestion(List<LibraryItem> items) {
   }).toList();
   if (unread.isEmpty) {
     throw StateError(
-      'No collected and unread issues found in your collection.',
+      "No collected and unread issues found in your collection.",
     );
   }
 
@@ -79,10 +79,10 @@ Future<IssueList> _toSuggestionIssueList(Ref ref, LibraryItem item) async {
     final seriesName = details.series?.name.trim();
     final issueNumber = details.number.trim();
     final title = seriesName != null && seriesName.isNotEmpty
-        ? '$seriesName #$issueNumber'
+        ? "$seriesName #$issueNumber"
         : (issueNumber.isNotEmpty
-              ? 'Issue #$issueNumber'
-              : 'Issue #${item.metronIssueId}');
+              ? "Issue #$issueNumber"
+              : "Issue #${item.metronIssueId}");
 
     return IssueList(
       id: details.id,
@@ -104,14 +104,14 @@ Future<IssueList> _toSuggestionIssueList(Ref ref, LibraryItem item) async {
       modified: details.modified,
     );
   } catch (e) {
-    AppLogger.warning('Failed to load suggestion issue details', error: e);
+    AppLogger.warning("Failed to load suggestion issue details", error: e);
     return IssueList(
       id: item.metronIssueId,
-      name: 'Issue #${item.metronIssueId}',
-      number: '',
+      name: "Issue #${item.metronIssueId}",
+      number: "",
       series: Series(
         id: item.metronSeriesId,
-        name: 'Series ${item.metronSeriesId}',
+        name: "Series ${item.metronSeriesId}",
         volume: null,
         yearBegan: null,
       ),
@@ -161,7 +161,7 @@ final rateSuggestionProvider = FutureProvider<LibraryItem?>((ref) async {
     return _randomLibraryItemByPredicate(items, (item) {
       final rating = item.rating;
       return item.isRead && (rating == null || rating <= 0);
-    }, emptyError: 'No read and unrated issues found in your collection.');
+    }, emptyError: "No read and unrated issues found in your collection.");
   } on StateError {
     return null;
   }

@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class UniverseListDto {
   const UniverseListDto({required this.id, required this.name, this.modified});
@@ -9,16 +9,16 @@ class UniverseListDto {
 
   factory UniverseListDto.fromJson(Map<String, dynamic> json) {
     return UniverseListDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: (json['name'] as String?)?.trim().isNotEmpty == true
-          ? (json['name'] as String)
-          : 'Unknown Universe',
-      modified: json['modified'] as String?,
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: (json["name"] as String?)?.trim().isNotEmpty == true
+          ? (json["name"] as String)
+          : "Unknown Universe",
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'modified': modified};
+    return {"id": id, "name": name, "modified": modified};
   }
 
   UniverseList toEntity() {

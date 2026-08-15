@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class SubscriptionDao extends DatabaseAccessor<AppDatabase> {
   SubscriptionDao(super.db);
@@ -64,7 +64,7 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase> {
       ).insertOnConflictUpdate(entry);
       if (entry.id.present) {
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:series_subscriptions:${entry.id.value}',
+          "delete:series_subscriptions:${entry.id.value}",
         );
       }
     });
@@ -76,7 +76,7 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase> {
         attachedDatabase.seriesSubscriptions,
       )..where((t) => t.id.equals(id))).go();
       await attachedDatabase.syncMetaDao.set(
-        'delete:series_subscriptions:$id',
+        "delete:series_subscriptions:$id",
         DateTime.now().toUtc().toIso8601String(),
       );
     });

@@ -1,13 +1,13 @@
-import 'dart:io';
+import "dart:io";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:gal/gal.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:dio/dio.dart";
+import "package:flutter/material.dart";
+import "package:gal/gal.dart";
+import "package:path_provider/path_provider.dart";
+import "package:permission_handler/permission_handler.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 @RoutePage()
 class IssueCoverGalleryScreen extends StatefulWidget {
@@ -62,23 +62,23 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
 
   String _safeFileComponent(String value) {
     final normalized = value.trim().toLowerCase();
-    final safe = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return safe.replaceAll(RegExp(r'^_+|_+$'), '');
+    final safe = normalized.replaceAll(RegExp(r"[^a-z0-9]+"), "_");
+    return safe.replaceAll(RegExp(r"^_+|_+$"), "");
   }
 
   String _fileExtensionFromUrl(String url) {
     final uri = Uri.tryParse(url);
-    final path = uri?.path ?? '';
-    final dotIndex = path.lastIndexOf('.');
-    if (dotIndex < 0 || dotIndex == path.length - 1) return 'jpg';
+    final path = uri?.path ?? "";
+    final dotIndex = path.lastIndexOf(".");
+    if (dotIndex < 0 || dotIndex == path.length - 1) return "jpg";
     final ext = path.substring(dotIndex + 1).toLowerCase();
-    if (ext.length > 5) return 'jpg';
+    if (ext.length > 5) return "jpg";
     return ext;
   }
 
   String _downloadFileName() {
     final label = _labelForIndex(_currentIndex);
-    final title = widget.title ?? 'issue_cover';
+    final title = widget.title ?? "issue_cover";
     final titlePart = _safeFileComponent(title);
     final labelPart = _safeFileComponent(label);
     final extension = _fileExtensionFromUrl(widget.imageUrls[_currentIndex]);
@@ -87,8 +87,8 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
       if (titlePart.isNotEmpty) titlePart,
       if (labelPart.isNotEmpty) labelPart,
       timestamp.toString(),
-    ].join('_');
-    return '$base.$extension';
+    ].join("_");
+    return "$base.$extension";
   }
 
   Future<void> _downloadCurrentCover() async {
@@ -100,7 +100,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
         if (!mounted) return;
         TakionAlerts.error(
           context,
-          'Storage permission is required to save images. Please enable it in settings.',
+          "Storage permission is required to save images. Please enable it in settings.",
         );
         openAppSettings();
         return;
@@ -114,11 +114,11 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
       final url = widget.imageUrls[_currentIndex];
       final tempDir = await getTemporaryDirectory();
       final fileName = _downloadFileName();
-      final filePath = '${tempDir.path}/$fileName';
+      final filePath = "${tempDir.path}/$fileName";
 
       await _dio.download(url, filePath);
 
-      await Gal.putImage(filePath, album: 'Takion');
+      await Gal.putImage(filePath, album: "Takion");
 
       final file = File(filePath);
       if (await file.exists()) {
@@ -126,10 +126,10 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
       }
 
       if (!mounted) return;
-      TakionAlerts.success(context, 'Cover Saved');
+      TakionAlerts.success(context, "Cover Saved");
     } catch (e) {
       if (!mounted) return;
-      TakionAlerts.safeError(context, e, userMessage: 'Failed to save cover');
+      TakionAlerts.safeError(context, e, userMessage: "Failed to save cover");
     } finally {
       if (mounted) {
         setState(() => _isDownloading = false);
@@ -144,8 +144,8 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
         labels[index].trim().isNotEmpty) {
       return labels[index].trim();
     }
-    if (index == 0) return 'Main Cover';
-    return 'Variant $index';
+    if (index == 0) return "Main Cover";
+    return "Variant $index";
   }
 
   String? _captionForIndex(int index) {
@@ -160,10 +160,10 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
   String? _priceFromCaption(int index) {
     final caption = _captionForIndex(index);
     if (caption == null) return null;
-    final parts = caption.split('•');
+    final parts = caption.split("•");
     if (parts.length < 2) return null;
     final trailing = parts.last.trim();
-    if (!trailing.startsWith('\$') || trailing.length <= 1) return null;
+    if (!trailing.startsWith("\$") || trailing.length <= 1) return null;
     return trailing;
   }
 
@@ -177,7 +177,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.title ?? 'Covers',
+          widget.title ?? "Covers",
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
@@ -186,7 +186,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Download current cover',
+            tooltip: "Download current cover",
             onPressed: _isDownloading ? null : _downloadCurrentCover,
             icon: _isDownloading
                 ? const SizedBox(

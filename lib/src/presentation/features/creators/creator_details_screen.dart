@@ -1,15 +1,15 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/creators/providers/creator_details_provider.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/favorite_toggle_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 @RoutePage()
 class CreatorDetailsScreen extends ConsumerStatefulWidget {
@@ -37,24 +37,19 @@ class _CreatorDetailsScreenState
   String? resourceUrlOf(CreatorDetails details) => details.resourceUrl;
 
   @override
-  String get resourceLabel => 'creator';
+  String get resourceLabel => "creator";
 
   @override
   String shareSubjectOf(CreatorDetails details) => details.name;
 
   @override
-  String get entityLabel => 'Creator';
+  String get entityLabel => "Creator";
 
   @override
   Future<CreatorDetails> fetchDetails() {
     return ref
         .read(catalogRepositoryProvider)
         .getCreatorDetails(widget.creatorId, forceRefresh: true);
-  }
-
-  @override
-  CreatorDetails? currentStoredDetails() {
-    return ref.read(creatorDetailsProvider(widget.creatorId)).asData?.value;
   }
 
   @override
@@ -84,14 +79,14 @@ class _CreatorDetailsScreenState
     return DetailScreenShell<CreatorDetails>(
       asyncValue: detailsAsync,
       loadingImageUrl: widget.initialImageUrl,
-      entityType: 'creator',
+      entityType: "creator",
       initialChildSize: 0.60,
       headerHeight: 350,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'creator-image-${d.id}',
+      toHeroTag: (d) => "creator-image-${d.id}",
       toTitle: (d) => d.name,
       toSubtitle: (d) =>
-          d.alias.isNotEmpty ? d.alias.map((a) => '@$a').join(', ') : null,
+          d.alias.isNotEmpty ? d.alias.map((a) => "@$a").join(", ") : null,
       onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
@@ -154,15 +149,15 @@ class _CreatorInfoCard extends StatelessWidget {
     final deathValue = _dateValue(details.death);
 
     final contentItems = <InfoGridItem>[
-      if (birthValue != null) InfoGridItem(label: 'Birth', value: birthValue),
-      if (deathValue != null) InfoGridItem(label: 'Death', value: deathValue),
+      if (birthValue != null) InfoGridItem(label: "Birth", value: birthValue),
+      if (deathValue != null) InfoGridItem(label: "Death", value: deathValue),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (contentItems.isNotEmpty) ...[
-          const SectionHeader(title: 'DETAILS'),
+          const SectionHeader(title: "DETAILS"),
           const SizedBox(height: 12),
           InfoGrid(items: contentItems),
           const SizedBox(height: 16),
@@ -175,7 +170,7 @@ class _CreatorInfoCard extends StatelessWidget {
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),

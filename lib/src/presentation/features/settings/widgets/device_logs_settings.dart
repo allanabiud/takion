@@ -1,24 +1,24 @@
-import 'dart:io';
+import "dart:io";
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/logging/talker_setup.dart';
-import 'package:takion/src/core/sync/sync_diagnostics.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:talker/talker.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:path_provider/path_provider.dart";
+import "package:share_plus/share_plus.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/logging/talker_setup.dart";
+import "package:takion/src/core/sync/sync_diagnostics.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:talker/talker.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
 
 void showDeviceLogs(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Device Logs',
+    title: "Device Logs",
     child: _DeviceLogsBody(),
   );
 }
@@ -37,58 +37,58 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
   List<String> get _logLines {
     final text = talker.history.text();
     if (text.isEmpty) return [];
-    return text.split('\n');
+    return text.split("\n");
   }
 
-  String _pad(int n) => n.toString().padLeft(2, '0');
+  String _pad(int n) => n.toString().padLeft(2, "0");
 
   String _formatTimestamp(DateTime dt) {
-    return '${dt.year}-${_pad(dt.month)}-${_pad(dt.day)} '
-        '${_pad(dt.hour)}:${_pad(dt.minute)}:${_pad(dt.second)}';
+    return "${dt.year}-${_pad(dt.month)}-${_pad(dt.day)} "
+        "${_pad(dt.hour)}:${_pad(dt.minute)}:${_pad(dt.second)}";
   }
 
   Future<String> _buildLogContent(List<String> logLines) async {
     final info = await PackageInfo.fromPlatform();
     final historyLength = talker.history.length;
     final buffer = StringBuffer();
-    buffer.writeln('Takion Debug Logs');
-    buffer.writeln('=' * 50);
+    buffer.writeln("Takion Debug Logs");
+    buffer.writeln("=" * 50);
     buffer.writeln();
-    buffer.writeln('App Version: ${info.version}+${info.buildNumber}');
-    buffer.writeln('Package Name: ${info.packageName}');
+    buffer.writeln("App Version: ${info.version}+${info.buildNumber}");
+    buffer.writeln("Package Name: ${info.packageName}");
     buffer.writeln(
-      'Platform: ${Platform.operatingSystem} '
-      '${Platform.operatingSystemVersion}',
+      "Platform: ${Platform.operatingSystem} "
+      "${Platform.operatingSystemVersion}",
     );
-    buffer.writeln('Device: ${Platform.localHostname}');
-    buffer.writeln('Generated: ${_formatTimestamp(DateTime.now())}');
-    buffer.writeln('Log Entries: $historyLength');
+    buffer.writeln("Device: ${Platform.localHostname}");
+    buffer.writeln("Generated: ${_formatTimestamp(DateTime.now())}");
+    buffer.writeln("Log Entries: $historyLength");
     buffer.writeln();
 
     final diagnostics = ref.read(syncDiagnosticsProvider).value;
     if (diagnostics != null) {
-      buffer.writeln('--- DRIVE SYNC ---');
+      buffer.writeln("--- DRIVE SYNC ---");
       buffer.writeln(
-        'Last success: '
+        "Last success: "
         '${diagnostics.lastSuccessTime == null ? 'never' : _formatTimestamp(diagnostics.lastSuccessTime!)}',
       );
       if (diagnostics.lastErrorTime != null) {
         buffer.writeln(
-          'Last failure (${_formatTimestamp(diagnostics.lastErrorTime!)})'
+          "Last failure (${_formatTimestamp(diagnostics.lastErrorTime!)})"
           '${diagnostics.lastPhase != null ? ' during ${diagnostics.lastPhase}' : ''}: '
           '${diagnostics.lastError ?? 'unknown'}'
           '${diagnostics.lastErrorDetail != null ? ' (${diagnostics.lastErrorDetail})' : ''}',
         );
       } else {
-        buffer.writeln('Last failure: none');
+        buffer.writeln("Last failure: none");
       }
-      buffer.writeln('Recent attempts:');
+      buffer.writeln("Recent attempts:");
       for (final entry in diagnostics.recentAttempts.take(20)) {
         final elapsed = entry.elapsedMs == null
-            ? ''
-            : ' [${entry.elapsedMs!}ms]';
+            ? ""
+            : " [${entry.elapsedMs!}ms]";
         buffer.writeln(
-          '  ${_formatTimestamp(entry.time)} '
+          "  ${_formatTimestamp(entry.time)} "
           '${entry.phase} ${entry.success ? 'OK' : 'FAILED'}'
           '${entry.success ? '' : ' ${entry.error ?? ''}'}$elapsed',
         );
@@ -96,7 +96,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
       buffer.writeln();
     }
 
-    buffer.writeln('--- LOGS ---');
+    buffer.writeln("--- LOGS ---");
     for (final line in logLines) {
       buffer.writeln(line);
     }
@@ -108,27 +108,27 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     try {
       final logLines = _logLines;
       if (logLines.isEmpty) {
-        if (mounted) TakionAlerts.info(context, 'No logs to share');
+        if (mounted) TakionAlerts.info(context, "No logs to share");
         return;
       }
 
       final content = await _buildLogContent(logLines);
       final dir = await getTemporaryDirectory();
       final fileName =
-          'takion_logs_${DateTime.now().millisecondsSinceEpoch}.log';
-      final file = File('${dir.path}/$fileName');
+          "takion_logs_${DateTime.now().millisecondsSinceEpoch}.log";
+      final file = File("${dir.path}/$fileName");
       await file.writeAsString(content);
 
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          subject: 'Takion Debug Logs',
-          text: 'Takion Debug Logs',
+          subject: "Takion Debug Logs",
+          text: "Takion Debug Logs",
         ),
       );
     } catch (e) {
       if (mounted) {
-        TakionAlerts.safeError(context, e, userMessage: 'Failed to share logs');
+        TakionAlerts.safeError(context, e, userMessage: "Failed to share logs");
       }
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -140,12 +140,12 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     try {
       final logLines = _logLines;
       if (logLines.isEmpty) {
-        if (mounted) TakionAlerts.info(context, 'No logs to copy');
+        if (mounted) TakionAlerts.info(context, "No logs to copy");
         return;
       }
 
-      await Clipboard.setData(ClipboardData(text: logLines.join('\n')));
-      if (mounted) TakionAlerts.success(context, 'Logs copied to clipboard');
+      await Clipboard.setData(ClipboardData(text: logLines.join("\n")));
+      if (mounted) TakionAlerts.success(context, "Logs copied to clipboard");
     } finally {
       if (mounted) setState(() => _copying = false);
     }
@@ -171,25 +171,25 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          buildSettingsGroup(context, 'Overview', [
-            _statRow(context, 'Total Entries', '$historyLength'),
+          buildSettingsGroup(context, "Overview", [
+            _statRow(context, "Total Entries", "$historyLength"),
             if (isCapped)
-              _statRow(context, 'Retention', 'Capped at $maxHistory'),
+              _statRow(context, "Retention", "Capped at $maxHistory"),
             if (oldest != null)
               _statRow(
                 context,
-                'Oldest',
+                "Oldest",
                 DateFormatter.relativeDetailed(oldest),
               ),
             if (newest != null)
               _statRow(
                 context,
-                'Newest',
+                "Newest",
                 DateFormatter.relativeDetailed(newest),
               ),
           ]),
           const SizedBox(height: 16),
-          buildSettingsGroup(context, 'Actions', [
+          buildSettingsGroup(context, "Actions", [
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(
@@ -197,11 +197,11 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
                 color: theme.colorScheme.primary,
               ),
               title: const Text(
-                'Share Log File',
+                "Share Log File",
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                _sharing ? 'Preparing...' : 'Share as .log file',
+                _sharing ? "Preparing..." : "Share as .log file",
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -229,11 +229,11 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
                 color: theme.colorScheme.primary,
               ),
               title: const Text(
-                'Copy Logs to Clipboard',
+                "Copy Logs to Clipboard",
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                _copying ? 'Copying...' : 'Copy all log entries',
+                _copying ? "Copying..." : "Copy all log entries",
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -293,16 +293,16 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
 
     return buildSettingsGroup(
       context,
-      'Recent Logs',
+      "Recent Logs",
       [
         if (diagnostics != null && diagnostics.lastErrorTime != null) ...[
           _statRow(
             context,
-            'Last Failure',
+            "Last Failure",
             DateFormatter.relativeDetailed(diagnostics.lastErrorTime!),
           ),
           if (diagnostics.lastPhase != null)
-            _statRow(context, 'Failed During', diagnostics.lastPhase!),
+            _statRow(context, "Failed During", diagnostics.lastPhase!),
           if (diagnostics.lastError != null)
             Padding(
               padding: const EdgeInsets.only(top: 2, bottom: 4),
@@ -329,8 +329,8 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
         _buildPreviewToggle(
           context,
           expanded: _syncPreviewExpanded,
-          showLabel: 'Show sync preview',
-          hideLabel: 'Hide sync preview',
+          showLabel: "Show sync preview",
+          hideLabel: "Hide sync preview",
           onTap: () =>
               setState(() => _syncPreviewExpanded = !_syncPreviewExpanded),
         ),
@@ -343,8 +343,8 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
           _buildPreviewToggle(
             context,
             expanded: _previewExpanded,
-            showLabel: 'Show preview',
-            hideLabel: 'Hide preview',
+            showLabel: "Show preview",
+            hideLabel: "Hide preview",
             onTap: () => setState(() => _previewExpanded = !_previewExpanded),
           ),
           if (_previewExpanded) ...[
@@ -353,7 +353,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
               context,
               logLines
                   .sublist(0, logLines.length > 50 ? 50 : logLines.length)
-                  .join('\n'),
+                  .join("\n"),
             ),
           ],
         ],
@@ -410,7 +410,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
         child: Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            fontFamily: 'monospace',
+            fontFamily: "monospace",
             fontSize: 11,
             height: 1.4,
           ),
@@ -431,7 +431,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Text(
-              'No sync attempts recorded yet.',
+              "No sync attempts recorded yet.",
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -443,17 +443,17 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
           attempts
               .map((entry) {
                 final elapsed = entry.elapsedMs == null
-                    ? ''
-                    : ' [${entry.elapsedMs!}ms]';
-                return '${_formatTimestamp(entry.time)} ${entry.phase} '
+                    ? ""
+                    : " [${entry.elapsedMs!}ms]";
+                return "${_formatTimestamp(entry.time)} ${entry.phase} "
                     '${entry.success ? 'OK' : 'FAILED'}'
                     '${entry.success ? '' : ' ${entry.error ?? ''}'}$elapsed';
               })
-              .join('\n'),
+              .join("\n"),
         );
       case AsyncValue(:final error?):
         return Text(
-          'Failed to load sync logs: $error',
+          "Failed to load sync logs: $error",
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.error,
           ),

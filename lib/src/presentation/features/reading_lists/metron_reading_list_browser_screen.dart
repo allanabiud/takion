@@ -1,14 +1,14 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_card.dart";
 
 @RoutePage()
 class MetronReadingListBrowserScreen extends ConsumerStatefulWidget {
@@ -29,30 +29,30 @@ class _MetronReadingListBrowserScreenState
 
   static const _listTypes = [
     null,
-    'EVENT',
-    'STORY',
-    'CHARACTERS',
-    'CREATOR',
-    'TEAMS',
-    'MASTER',
+    "EVENT",
+    "STORY",
+    "CHARACTERS",
+    "CREATOR",
+    "TEAMS",
+    "MASTER",
   ];
 
   static const _attributionSources = [
     null,
-    'CBRO',
-    'CMRO',
-    'CBH',
-    'CBT',
-    'MG',
-    'HTLC',
-    'LOCG',
-    'OTHER',
+    "CBRO",
+    "CMRO",
+    "CBH",
+    "CBT",
+    "MG",
+    "HTLC",
+    "LOCG",
+    "OTHER",
   ];
 
   String _listTypeLabel(String? t) =>
-      t == null ? 'All' : t[0] + t.substring(1).toLowerCase();
+      t == null ? "All" : t[0] + t.substring(1).toLowerCase();
 
-  String _attributionLabel(String? s) => s ?? 'All';
+  String _attributionLabel(String? s) => s ?? "All";
 
   MetronReadingListFilter get _filter => MetronReadingListFilter(
     page: _page,
@@ -80,16 +80,16 @@ class _MetronReadingListBrowserScreenState
     final previewItemsMap = ref.watch(metronListPreviewItemsProvider);
 
     return BrowsePagedListScreen<MetronReadingList>(
-      title: 'Browse Reading Lists',
+      title: "Browse Reading Lists",
       pageAsync: async,
       onRefresh: () async {
         ref.invalidate(metronReadingListBrowseProvider(_filter));
       },
       onPrevious: () => setState(() => _page--),
       onNext: () => setState(() => _page++),
-      emptyMessage: 'No reading lists found.',
+      emptyMessage: "No reading lists found.",
       emptyIcon: Icons.list_alt_outlined,
-      errorPrefix: 'Failed to load',
+      errorPrefix: "Failed to load",
       header: Column(
         children: [
           Padding(
@@ -108,8 +108,8 @@ class _MetronReadingListBrowserScreenState
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Filter by name...',
+                      decoration: const InputDecoration(
+                        hintText: "Filter by name...",
                         border: InputBorder.none,
                         isDense: true,
                         filled: false,
@@ -159,7 +159,7 @@ class _MetronReadingListBrowserScreenState
                       child: DropdownButton<String?>(
                         value: _selectedListType,
                         isExpanded: true,
-                        hint: const Text('Type'),
+                        hint: const Text("Type"),
                         items: _listTypes.map((t) {
                           return DropdownMenuItem(
                             value: t,
@@ -188,7 +188,7 @@ class _MetronReadingListBrowserScreenState
                       child: DropdownButton<String?>(
                         value: _selectedAttribution,
                         isExpanded: true,
-                        hint: const Text('Source'),
+                        hint: const Text("Source"),
                         items: _attributionSources.map((s) {
                           return DropdownMenuItem(
                             value: s,
@@ -218,7 +218,7 @@ class _MetronReadingListBrowserScreenState
             previewItemsMap[list.id]
                 ?.map(
                   (item) => LocalReadingListItem(
-                    targetId: 'issue-${item.issueId}',
+                    targetId: "issue-${item.issueId}",
                     isSeries: false,
                     role: ItemRole.standard,
                     isRead: false,
@@ -232,9 +232,9 @@ class _MetronReadingListBrowserScreenState
         final displayList =
             localList ??
             LocalReadingList(
-              id: 'metron-${list.id}',
+              id: "metron-${list.id}",
               title: list.name,
-              description: '',
+              description: "",
               isOrdered: true,
               contentType: ListContentType.issue,
               createdAt: list.modified ?? DateTime.now(),

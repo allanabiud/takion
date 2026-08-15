@@ -1,16 +1,16 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
-import 'package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/series/series_card.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart";
+import "package:takion/src/presentation/features/publishers/providers/publisher_series_list_provider.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/series/series_card.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class PublisherDetailsScreen extends ConsumerStatefulWidget {
@@ -35,24 +35,19 @@ class _PublisherDetailsScreenState
   String? resourceUrlOf(PublisherDetails details) => details.resourceUrl;
 
   @override
-  String get resourceLabel => 'publisher';
+  String get resourceLabel => "publisher";
 
   @override
   String shareSubjectOf(PublisherDetails details) => details.name;
 
   @override
-  String get entityLabel => 'Publisher';
+  String get entityLabel => "Publisher";
 
   @override
   Future<PublisherDetails> fetchDetails() {
     return ref
         .read(catalogRepositoryProvider)
         .getPublisherDetails(widget.publisherId, forceRefresh: true);
-  }
-
-  @override
-  PublisherDetails? currentStoredDetails() {
-    return ref.read(publisherDetailsProvider(widget.publisherId)).asData?.value;
   }
 
   @override
@@ -68,10 +63,10 @@ class _PublisherDetailsScreenState
 
     return DetailScreenShell<PublisherDetails>(
       asyncValue: detailsAsync,
-      entityType: 'publisher',
+      entityType: "publisher",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'publisher-image-${d.id}',
+      toHeroTag: (d) => "publisher-image-${d.id}",
       toTitle: (d) => d.name,
       onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
@@ -131,7 +126,7 @@ class _PublisherSeriesSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader(title: 'Series'),
+              const SectionHeader(title: "Series"),
               const SizedBox(height: 12),
               SizedBox(
                 height: 250,
@@ -164,18 +159,18 @@ class _PublisherSeriesSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(
-                title: '${seriesPage.count} Series',
+                title: "${seriesPage.count} Series",
                 onViewAll: () => context.pushRoute(
                   PublisherSeriesRoute(publisherId: publisherId),
                 ),
               ),
               const SizedBox(height: 12),
               HorizontalPreviewSection(
-                title: '',
+                title: "",
                 onViewAll: null,
                 itemCount: previewCount,
                 height: 250,
-                emptyText: 'No series available.',
+                emptyText: "No series available.",
                 itemBuilder: (context, index) {
                   final series = seriesPage.results[index];
                   return SeriesCard(
@@ -206,17 +201,17 @@ class _PublisherInfoSection extends StatelessWidget {
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
     final contentItems = <InfoGridItem>[
-      InfoGridItem(label: 'Name', value: details.name),
+      InfoGridItem(label: "Name", value: details.name),
       if (details.founded != null)
-        InfoGridItem(label: 'Founded', value: '${details.founded}'),
+        InfoGridItem(label: "Founded", value: "${details.founded}"),
       if (details.country != null)
-        InfoGridItem(label: 'Country', value: details.country!),
+        InfoGridItem(label: "Country", value: details.country!),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DETAILS'),
+        const SectionHeader(title: "DETAILS"),
         const SizedBox(height: 12),
         InfoGrid(items: contentItems),
         const SizedBox(height: 16),
@@ -228,7 +223,7 @@ class _PublisherInfoSection extends StatelessWidget {
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),

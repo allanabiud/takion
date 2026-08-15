@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _TeamsRepositoryMixin on _RepositoryState {
   Future<TeamListPage> getTeamList({
@@ -166,7 +166,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:team:$query:$page',
+          cacheKey: nextUrl ?? "search:team:$query:$page",
           cooldown: MetronCachePolicies.teamSearchResults.refreshCooldown,
         );
       }
@@ -182,7 +182,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_teamSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchTeams(
@@ -234,7 +234,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getTeam(teamId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('team_details');
+      AppPerformanceMetrics.instance.recordCacheHit("team_details");
       return _teamRowToEntity(teamId);
     }
 
@@ -247,7 +247,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.teamDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'team_details_response',
+          "team_details_response",
         );
         final dto = TeamDetailsDto.fromJson(cachedJson);
         await _upsertTeamDetails(dto);
@@ -255,7 +255,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('team_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("team_details");
 
     try {
       final response = await _remoteDataSource.getTeamDetails(teamId);
@@ -269,7 +269,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           return dto.toEntity();
         }
         return await _teamRowToEntity(
-          cached != null ? teamId : (throw StateError('Team $teamId not found')),
+          cached != null ? teamId : (throw StateError("Team $teamId not found")),
         );
       }
       final data = response.data as Map<String, dynamic>;
@@ -286,7 +286,7 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       await _localDataSource.cacheTeamDetailsResponse(teamId, data);
       return dto.toEntity();
     } catch (e) {
-      AppLogger.error('Failed to fetch team details', error: e);
+      AppLogger.error("Failed to fetch team details", error: e);
       final cachedJson =
           await _localDataSource.getCachedTeamDetailsResponse(teamId);
       if (cachedJson != null) {
@@ -370,21 +370,21 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
   Future<TeamDetails> _teamRowToEntity(int teamId) async {
     final row = await _metronEntityDao.getTeam(teamId);
     if (row == null) {
-      throw StateError('Team not found in cache: $teamId');
+      throw StateError("Team not found in cache: $teamId");
     }
 
     final creatorJunctions = await _junctionDao.getTeamCreators(teamId);
     final creators = <TeamCreatorRef>[];
     for (final j in creatorJunctions) {
       final c = await _metronEntityDao.getCreator(j.creatorId);
-      creators.add(TeamCreatorRef(id: j.creatorId, name: c?.name ?? ''));
+      creators.add(TeamCreatorRef(id: j.creatorId, name: c?.name ?? ""));
     }
 
     final universeJunctions = await _junctionDao.getTeamUniverses(teamId);
     final universes = <UniverseNamedRef>[];
     for (final j in universeJunctions) {
       final u = await _metronEntityDao.getUniverse(j.universeId);
-      universes.add(UniverseNamedRef(id: j.universeId, name: u?.name ?? ''));
+      universes.add(UniverseNamedRef(id: j.universeId, name: u?.name ?? ""));
     }
 
     return TeamDetails(
@@ -443,19 +443,24 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
                     page: page,
                     cancelToken: cancelToken,
                   );
-            await _localDataSource.cacheTeamIssueListResults(
-              teamId,
-              remotePage.results,
-              page: page,
-              limit: limit,
+            if (_isValidIssueListPage(
               count: remotePage.count,
-              next: remotePage.next,
-              previous: remotePage.previous,
-            );
+              resultCount: remotePage.results.length,
+            )) {
+              await _localDataSource.cacheTeamIssueListResults(
+                teamId,
+                remotePage.results,
+                page: page,
+                limit: limit,
+                count: remotePage.count,
+                next: remotePage.next,
+                previous: remotePage.previous,
+              );
+            }
             _upsertIssueListStubs(remotePage.results);
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: nextUrl ?? 'team_issue_list:$teamId:$page',
+          cacheKey: nextUrl ?? "team_issue_list:$teamId:$page",
           cooldown: MetronCachePolicies.teamIssueList.refreshCooldown,
         );
       }
@@ -466,12 +471,16 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
     }
 
     try {
-      final key = nextUrl ?? '$teamId|$page|$forceRefresh';
+      final key = nextUrl ?? "$teamId|$page|$forceRefresh|$limit";
       return _coalesce(_teamIssueListInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getTeamIssueList(
@@ -484,15 +493,20 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
                 page: page,
                 cancelToken: cancelToken,
               );
-        await _localDataSource.cacheTeamIssueListResults(
-          teamId,
-          remotePage.results,
-          page: page,
-          limit: limit,
+        if (_isValidIssueListPage(
           count: remotePage.count,
-          next: remotePage.next,
-          previous: remotePage.previous,
-        );
+          resultCount: remotePage.results.length,
+        )) {
+          await _localDataSource.cacheTeamIssueListResults(
+            teamId,
+            remotePage.results,
+            page: page,
+            limit: limit,
+            count: remotePage.count,
+            next: remotePage.next,
+            previous: remotePage.previous,
+          );
+        }
         _upsertIssueListStubs(remotePage.results);
         _indexSeriesNamesFromIssueList(remotePage.results);
         return CharacterIssueListPage(
@@ -501,6 +515,10 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           previous: remotePage.previous,
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: remotePage.results.length,
+            hasNext: remotePage.next != null,
+          ),
         );
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
@@ -512,6 +530,10 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
       rethrow;

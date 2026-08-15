@@ -1,13 +1,13 @@
-import 'dart:io';
+import "dart:io";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:gal/gal.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:dio/dio.dart";
+import "package:flutter/material.dart";
+import "package:gal/gal.dart";
+import "package:path_provider/path_provider.dart";
+import "package:permission_handler/permission_handler.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 @RoutePage()
 class ImagePreviewScreen extends StatefulWidget {
@@ -38,30 +38,30 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
 
   String _safeFileComponent(String value) {
     final normalized = value.trim().toLowerCase();
-    final safe = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return safe.replaceAll(RegExp(r'^_+|_+$'), '');
+    final safe = normalized.replaceAll(RegExp(r"[^a-z0-9]+"), "_");
+    return safe.replaceAll(RegExp(r"^_+|_+$"), "");
   }
 
   String _fileExtensionFromUrl(String url) {
     final uri = Uri.tryParse(url);
-    final path = uri?.path ?? '';
-    final dotIndex = path.lastIndexOf('.');
-    if (dotIndex < 0 || dotIndex == path.length - 1) return 'jpg';
+    final path = uri?.path ?? "";
+    final dotIndex = path.lastIndexOf(".");
+    if (dotIndex < 0 || dotIndex == path.length - 1) return "jpg";
     final ext = path.substring(dotIndex + 1).toLowerCase();
-    if (ext.length > 5) return 'jpg';
+    if (ext.length > 5) return "jpg";
     return ext;
   }
 
   String _downloadFileName() {
-    final title = widget.title ?? 'image';
+    final title = widget.title ?? "image";
     final titlePart = _safeFileComponent(title);
     final extension = _fileExtensionFromUrl(widget.imageUrl);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final base = [
       if (titlePart.isNotEmpty) titlePart,
       timestamp.toString(),
-    ].join('_');
-    return '$base.$extension';
+    ].join("_");
+    return "$base.$extension";
   }
 
   Future<void> _downloadImage() async {
@@ -73,7 +73,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
         if (!mounted) return;
         TakionAlerts.error(
           context,
-          'Storage permission is required to save images. Please enable it in settings.',
+          "Storage permission is required to save images. Please enable it in settings.",
         );
         openAppSettings();
         return;
@@ -86,11 +86,11 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
 
       final tempDir = await getTemporaryDirectory();
       final fileName = _downloadFileName();
-      final filePath = '${tempDir.path}/$fileName';
+      final filePath = "${tempDir.path}/$fileName";
 
       await _dio.download(widget.imageUrl, filePath);
 
-      await Gal.putImage(filePath, album: 'Takion');
+      await Gal.putImage(filePath, album: "Takion");
 
       final file = File(filePath);
       if (await file.exists()) {
@@ -98,10 +98,10 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
       }
 
       if (!mounted) return;
-      TakionAlerts.success(context, 'Image Saved');
+      TakionAlerts.success(context, "Image Saved");
     } catch (e) {
       if (!mounted) return;
-      TakionAlerts.safeError(context, e, userMessage: 'Failed to save image');
+      TakionAlerts.safeError(context, e, userMessage: "Failed to save image");
     } finally {
       if (mounted) {
         setState(() => _isDownloading = false);
@@ -136,7 +136,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
             : null,
         actions: [
           IconButton(
-            tooltip: 'Download image',
+            tooltip: "Download image",
             onPressed: _isDownloading ? null : _downloadImage,
             icon: _isDownloading
                 ? const SizedBox(

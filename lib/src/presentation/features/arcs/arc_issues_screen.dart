@@ -1,12 +1,12 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart';
-import 'package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/shared/widgets/entity_paged_list_screen.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/shared/widgets/entity_paged_list_screen.dart";
 
 @RoutePage()
 class ArcIssuesScreen extends ConsumerWidget {
@@ -17,14 +17,14 @@ class ArcIssuesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final arcName =
-        ref.watch(arcDetailsProvider(arcId)).asData?.value.name ?? '';
+        ref.watch(arcDetailsProvider(arcId)).asData?.value.name ?? "";
     return EntityPagedListScreen<ArcIssueListPage, IssueList>(
-      title: 'Issues',
+      title: "Issues",
       subtitle: arcName,
-      unit: 'issue',
+      unit: "issue",
       emptyHeight: 360,
       sortContext: SortPreferenceContext.arcIssues,
-      sortLabel: issueSortLabel,
+      sortLabel: contentSortLabel,
       sortItems: sortIssues,
       watchPage: (ref, page) => ref.watch(
         arcIssueListProvider(ArcIssueListArgs(arcId: arcId, page: page)),
@@ -36,11 +36,12 @@ class ArcIssuesScreen extends ConsumerWidget {
       resultsOf: (page) => page.results,
       hasNextOf: (page) => page.hasNext,
       hasPreviousOf: (page) => page.hasPrevious,
+      pageSizeOf: (page) => page.realPageSize,
       tileBuilder: (context, issue, {required isFirst, required isLast}) =>
           IssueListTile(issue: issue, isFirst: isFirst, isLast: isLast),
-      emptyMessage: 'No issues available.',
+      emptyMessage: "No issues available.",
       emptyIcon: Icons.menu_book_outlined,
-      errorMessage: 'Failed to load issues',
+      errorMessage: "Failed to load issues",
     );
   }
 }

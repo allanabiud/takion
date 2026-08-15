@@ -1,8 +1,8 @@
-import 'dart:math';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import "dart:math";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
 
 final randomReadingListProvider = Provider<LocalReadingList?>((ref) {
   final listsAsync = ref.watch(localReadingListsProvider);
@@ -22,7 +22,7 @@ final randomReadingListProvider = Provider<LocalReadingList?>((ref) {
           bool effectiveIsRead = item.isRead;
 
           if (!item.isSeries) {
-            final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+            final idString = item.targetId.replaceAll(RegExp(r"^.*-"), "");
             final id = int.tryParse(idString) ?? 0;
             if (id > 0) {
               if (statusMap != null) {

@@ -1,8 +1,8 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "dart:async";
+import "package:dio/dio.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 class PublisherSeriesListArgs {
   const PublisherSeriesListArgs({
@@ -40,9 +40,7 @@ final publisherSeriesListProvider = FutureProvider.autoDispose
         cancelToken: cancelToken,
       );
 
-      timer = Timer(const Duration(minutes: 5), () {
-        link.close();
-      });
+      timer = Timer(const Duration(minutes: 5), link.close);
 
       return results;
     });
@@ -62,9 +60,7 @@ final publisherSeriesListPaginatedProvider = FutureProvider.autoDispose
         cancelToken: cancelToken,
       );
 
-      timer = Timer(const Duration(minutes: 5), () {
-        link.close();
-      });
+      timer = Timer(const Duration(minutes: 5), link.close);
 
       return results;
     });

@@ -1,8 +1,8 @@
-import 'package:drift/drift.dart' show Value;
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/services/drive_backup_service.dart';
+import "package:drift/drift.dart" show Value;
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/services/drive_backup_service.dart";
 
 void main() {
   late AppDatabase db;
@@ -17,38 +17,38 @@ void main() {
     await db.close();
   });
 
-  test('extractDelta returns empty tables for fresh database', () async {
+  test("extractDelta returns empty tables for fresh database", () async {
     final delta = await syncService.extractDelta(null);
-    expect(delta['version'], equals(2));
-    expect(delta['tables'], isA<Map<String, dynamic>>());
-    final tables = delta['tables'] as Map<String, dynamic>;
-    expect(tables['favorite_creators']['inserts'], isEmpty);
+    expect(delta["version"], equals(2));
+    expect(delta["tables"], isA<Map<String, dynamic>>());
+    final tables = delta["tables"] as Map<String, dynamic>;
+    expect(tables["favorite_creators"]["inserts"], isEmpty);
   });
 
-  test('extractDelta extracts newly favorited creator', () async {
+  test("extractDelta extracts newly favorited creator", () async {
     await db.favoriteDao.toggleCreator(101);
 
     final delta = await syncService.extractDelta(null);
-    final tables = delta['tables'] as Map<String, dynamic>;
-    final creatorInserts = tables['favorite_creators']['inserts'] as List;
+    final tables = delta["tables"] as Map<String, dynamic>;
+    final creatorInserts = tables["favorite_creators"]["inserts"] as List;
 
     expect(creatorInserts.length, equals(1));
-    expect(creatorInserts.first['metronCreatorId'], equals(101));
+    expect(creatorInserts.first["metronCreatorId"], equals(101));
   });
 
-  test('applyDelta correctly inserts remote favorited creator', () async {
+  test("applyDelta correctly inserts remote favorited creator", () async {
     final now = DateTime.now().toUtc().toIso8601String();
     final payload = {
-      'version': 1,
-      'deviceId': 'remote-device-123',
-      'toTimestamp': now,
-      'tables': {
-        'favorite_creators': {
-          'inserts': [
-            {'metronCreatorId': 202, 'createdAt': now, 'updatedAt': now},
+      "version": 1,
+      "deviceId": "remote-device-123",
+      "toTimestamp": now,
+      "tables": {
+        "favorite_creators": {
+          "inserts": [
+            {"metronCreatorId": 202, "createdAt": now, "updatedAt": now},
           ],
-          'updates': [],
-          'deletes': [],
+          "updates": [],
+          "deletes": [],
         },
       },
     };
@@ -60,7 +60,7 @@ void main() {
     expect(creators.first.metronCreatorId, equals(202));
   });
 
-  test('applyDelta respects LWW when local creator update is newer', () async {
+  test("applyDelta respects LWW when local creator update is newer", () async {
     final past = DateTime.now()
         .toUtc()
         .subtract(const Duration(hours: 1))
@@ -69,14 +69,14 @@ void main() {
     await db.favoriteDao.toggleCreator(303); // Inserted at now
 
     final payload = {
-      'version': 1,
-      'deviceId': 'remote-device-123',
-      'toTimestamp': past,
-      'tables': {
-        'favorite_creators': {
-          'inserts': [],
-          'updates': [],
-          'deletes': [303],
+      "version": 1,
+      "deviceId": "remote-device-123",
+      "toTimestamp": past,
+      "tables": {
+        "favorite_creators": {
+          "inserts": [],
+          "updates": [],
+          "deletes": [303],
         },
       },
     };
@@ -89,29 +89,29 @@ void main() {
     expect(creators.first.metronCreatorId, equals(303));
   });
 
-  test('applyDelta inserts remote reading_list_items row', () async {
+  test("applyDelta inserts remote reading_list_items row", () async {
     final now = DateTime.now().toUtc().toIso8601String();
     final payload = {
-      'version': 2,
-      'deviceId': 'remote-device-123',
-      'toTimestamp': now,
-      'tables': {
-        'reading_list_items': {
-          'inserts': [
+      "version": 2,
+      "deviceId": "remote-device-123",
+      "toTimestamp": now,
+      "tables": {
+        "reading_list_items": {
+          "inserts": [
             {
-              'id': 'list-1:ser-1',
-              'listId': 'list-1',
-              'targetId': 'ser-1',
-              'isSeries': true,
-              'role': 'main',
-              'isRead': false,
-              'sortOrder': 0,
-              'createdAt': now,
-              'updatedAt': now,
+              "id": "list-1:ser-1",
+              "listId": "list-1",
+              "targetId": "ser-1",
+              "isSeries": true,
+              "role": "main",
+              "isRead": false,
+              "sortOrder": 0,
+              "createdAt": now,
+              "updatedAt": now,
             },
           ],
-          'updates': <Map<String, dynamic>>[],
-          'deletes': <String>[],
+          "updates": <Map<String, dynamic>>[],
+          "deletes": <String>[],
         },
       },
     };
@@ -120,11 +120,11 @@ void main() {
 
     final rows = await db.select(db.readingListItems).get();
     expect(rows, hasLength(1));
-    expect(rows.first.id, 'list-1:ser-1');
+    expect(rows.first.id, "list-1:ser-1");
     expect(rows.first.updatedAt, now);
   });
 
-  test('applyDelta keeps local reading_list_items row when it is newer (LWW)', () async {
+  test("applyDelta keeps local reading_list_items row when it is newer (LWW)", () async {
     final past = DateTime.now()
         .toUtc()
         .subtract(const Duration(hours: 1))
@@ -133,11 +133,11 @@ void main() {
 
     await db.into(db.readingListItems).insert(
       ReadingListItemsCompanion.insert(
-        id: 'list-1:ser-1',
-        listId: 'list-1',
-        targetId: 'ser-1',
+        id: "list-1:ser-1",
+        listId: "list-1",
+        targetId: "ser-1",
         isSeries: true,
-        role: 'main',
+        role: "main",
         isRead: true,
         sortOrder: 9,
         createdAt: Value(now),
@@ -146,26 +146,26 @@ void main() {
     );
 
     final payload = {
-      'version': 2,
-      'deviceId': 'remote-device-123',
-      'toTimestamp': now,
-      'tables': {
-        'reading_list_items': {
-          'inserts': [
+      "version": 2,
+      "deviceId": "remote-device-123",
+      "toTimestamp": now,
+      "tables": {
+        "reading_list_items": {
+          "inserts": [
             {
-              'id': 'list-1:ser-1',
-              'listId': 'list-1',
-              'targetId': 'ser-1',
-              'isSeries': true,
-              'role': 'main',
-              'isRead': false,
-              'sortOrder': 1,
-              'createdAt': past,
-              'updatedAt': past,
+              "id": "list-1:ser-1",
+              "listId": "list-1",
+              "targetId": "ser-1",
+              "isSeries": true,
+              "role": "main",
+              "isRead": false,
+              "sortOrder": 1,
+              "createdAt": past,
+              "updatedAt": past,
             },
           ],
-          'updates': <Map<String, dynamic>>[],
-          'deletes': <String>[],
+          "updates": <Map<String, dynamic>>[],
+          "deletes": <String>[],
         },
       },
     };
@@ -178,7 +178,7 @@ void main() {
     expect(rows.first.sortOrder, 9);
   });
 
-  test('applyDelta deletes reading_list_items row when remote delete is newer', () async {
+  test("applyDelta deletes reading_list_items row when remote delete is newer", () async {
     final past = DateTime.now()
         .toUtc()
         .subtract(const Duration(hours: 1))
@@ -187,11 +187,11 @@ void main() {
 
     await db.into(db.readingListItems).insert(
       ReadingListItemsCompanion.insert(
-        id: 'list-1:ser-1',
-        listId: 'list-1',
-        targetId: 'ser-1',
+        id: "list-1:ser-1",
+        listId: "list-1",
+        targetId: "ser-1",
         isSeries: true,
-        role: 'main',
+        role: "main",
         isRead: false,
         sortOrder: 0,
         createdAt: Value(past),
@@ -200,14 +200,14 @@ void main() {
     );
 
     final payload = {
-      'version': 2,
-      'deviceId': 'remote-device-123',
-      'toTimestamp': now,
-      'tables': {
-        'reading_list_items': {
-          'inserts': <Map<String, dynamic>>[],
-          'updates': <Map<String, dynamic>>[],
-          'deletes': <String>['list-1:ser-1'],
+      "version": 2,
+      "deviceId": "remote-device-123",
+      "toTimestamp": now,
+      "tables": {
+        "reading_list_items": {
+          "inserts": <Map<String, dynamic>>[],
+          "updates": <Map<String, dynamic>>[],
+          "deletes": <String>["list-1:ser-1"],
         },
       },
     };
@@ -217,15 +217,15 @@ void main() {
     expect(await db.select(db.readingListItems).get(), isEmpty);
   });
 
-  test('applyDelta applies remote row when timestamps are equal (LWW tie-break)', () async {
+  test("applyDelta applies remote row when timestamps are equal (LWW tie-break)", () async {
     final now = DateTime.now().toUtc().toIso8601String();
     await db.into(db.readingListItems).insert(
       ReadingListItemsCompanion.insert(
-        id: 'list-1:ser-1',
-        listId: 'list-1',
-        targetId: 'ser-1',
+        id: "list-1:ser-1",
+        listId: "list-1",
+        targetId: "ser-1",
         isSeries: true,
-        role: 'main',
+        role: "main",
         isRead: false,
         sortOrder: 1,
         createdAt: Value(now),
@@ -234,26 +234,26 @@ void main() {
     );
 
     final payload = {
-      'version': 2,
-      'deviceId': 'remote-device-123',
-      'toTimestamp': now,
-      'tables': {
-        'reading_list_items': {
-          'inserts': [
+      "version": 2,
+      "deviceId": "remote-device-123",
+      "toTimestamp": now,
+      "tables": {
+        "reading_list_items": {
+          "inserts": [
             {
-              'id': 'list-1:ser-1',
-              'listId': 'list-1',
-              'targetId': 'ser-1',
-              'isSeries': true,
-              'role': 'main',
-              'isRead': true,
-              'sortOrder': 5,
-              'createdAt': now,
-              'updatedAt': now,
+              "id": "list-1:ser-1",
+              "listId": "list-1",
+              "targetId": "ser-1",
+              "isSeries": true,
+              "role": "main",
+              "isRead": true,
+              "sortOrder": 5,
+              "createdAt": now,
+              "updatedAt": now,
             },
           ],
-          'updates': <Map<String, dynamic>>[],
-          'deletes': <String>[],
+          "updates": <Map<String, dynamic>>[],
+          "deletes": <String>[],
         },
       },
     };

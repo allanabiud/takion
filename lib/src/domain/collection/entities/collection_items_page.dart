@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/collection/entities/entities.dart';
+import "package:takion/src/domain/collection/entities/entities.dart";
 
 class CollectionItemsPage {
   const CollectionItemsPage({
@@ -19,7 +19,7 @@ class CollectionItemsPage {
     if (url == null || url.isEmpty) return null;
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
-    final parsedPage = int.tryParse(uri.queryParameters['page'] ?? '');
+    final parsedPage = int.tryParse(uri.queryParameters["page"] ?? "");
     if (parsedPage != null) return parsedPage;
     return defaultToFirstPage ? 1 : null;
   }

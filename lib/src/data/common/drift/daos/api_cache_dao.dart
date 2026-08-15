@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class ApiCacheDao extends DatabaseAccessor<AppDatabase> {
   ApiCacheDao(super.db);
@@ -38,16 +38,16 @@ class ApiCacheDao extends DatabaseAccessor<AppDatabase> {
   }
 
   static const _searchCachePrefixes = [
-    'issue_search',
-    'series_search',
-    'character_search',
-    'creator_search',
-    'universe_search',
-    'imprint_search',
-    'team_search',
-    'arc_search',
-    'publisher_search',
-    'upc_prefix',
+    "issue_search",
+    "series_search",
+    "character_search",
+    "creator_search",
+    "universe_search",
+    "imprint_search",
+    "team_search",
+    "arc_search",
+    "publisher_search",
+    "upc_prefix",
   ];
 
   Future<int> deleteStaleEntries() async {
@@ -56,21 +56,21 @@ class ApiCacheDao extends DatabaseAccessor<AppDatabase> {
         await (delete(attachedDatabase.apiCache)..where(
               (t) {
                 final searchKeys = _searchCachePrefixes
-                    .map((prefix) => t.cacheKey.like('$prefix:%'))
+                    .map((prefix) => t.cacheKey.like("$prefix:%"))
                     .reduce((a, b) => a | b);
                 return searchKeys &
                         t.cachedAt.isSmallerThan(
                           Constant(now.subtract(const Duration(hours: 3))),
                         ) |
-                    t.cacheKey.like('weekly_releases:%') &
+                    t.cacheKey.like("weekly_releases:%") &
                         t.cachedAt.isSmallerThan(
                           Constant(now.subtract(const Duration(hours: 24))),
                         ) |
-                    t.cacheKey.like('issue_details:%') &
+                    t.cacheKey.like("issue_details:%") &
                         t.cachedAt.isSmallerThan(
                           Constant(now.subtract(const Duration(hours: 24))),
                         ) |
-                    t.cacheKey.like('series_details:%') &
+                    t.cacheKey.like("series_details:%") &
                         t.cachedAt.isSmallerThan(
                           Constant(now.subtract(const Duration(hours: 48))),
                         ) |
@@ -90,6 +90,6 @@ class ApiCacheDao extends DatabaseAccessor<AppDatabase> {
   Future<List<ApiCacheData>> getByPrefix(String prefix) async {
     return (select(
       attachedDatabase.apiCache,
-    )..where((t) => t.cacheKey.like('$prefix%'))).get();
+    )..where((t) => t.cacheKey.like("$prefix%"))).get();
   }
 }

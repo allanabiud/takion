@@ -1,10 +1,10 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/domain/catalog/repositories/catalog_repository.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/domain/catalog/repositories/catalog_repository.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
-part 'browse_providers.g.dart';
+part "browse_providers.g.dart";
 
 class BrowseFilter {
   const BrowseFilter({this.page = 1, this.name});
@@ -34,7 +34,7 @@ BrowsePagedData<T> _browsePageData<T>({
     if (url == null || url.isEmpty) return null;
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
-    final parsed = int.tryParse(uri.queryParameters['page'] ?? '');
+    final parsed = int.tryParse(uri.queryParameters["page"] ?? "");
     if (parsed != null) return parsed;
     return defaultToFirstPage ? 1 : null;
   }

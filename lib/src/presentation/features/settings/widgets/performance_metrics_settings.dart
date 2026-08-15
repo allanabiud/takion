@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Performance Metrics',
+    title: "Performance Metrics",
     actions: [
       IconButton(
         onPressed: () => ref.read(performanceMetricsProvider).clear(),
         icon: const Icon(Icons.refresh),
-        tooltip: 'Reset Metrics',
+        tooltip: "Reset Metrics",
       ),
     ],
     child: Consumer(
@@ -38,32 +38,32 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  buildSettingsGroup(context, 'Network Health', [
+                  buildSettingsGroup(context, "Network Health", [
                     buildSettingsRow(
-                      'Total Requests',
-                      '${metrics.totalApiRequests}',
+                      "Total Requests",
+                      "${metrics.totalApiRequests}",
                     ),
                     buildSettingsRow(
-                      'Rate Limit Hits (429)',
-                      '${metrics.http429Count}',
+                      "Rate Limit Hits (429)",
+                      "${metrics.http429Count}",
                       color: metrics.http429Count > 0 ? Colors.red : null,
                     ),
                     buildSettingsRow(
-                      'Retries after 429',
-                      '${metrics.retryAfter429Count}',
+                      "Retries after 429",
+                      "${metrics.retryAfter429Count}",
                     ),
                   ]),
                   const SizedBox(height: 16),
-                  buildSettingsGroup(context, 'Cache Efficiency', [
+                  buildSettingsGroup(context, "Cache Efficiency", [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Hit Rate'),
+                            const Text("Hit Rate"),
                             Text(
-                              '${(cacheEfficiency * 100).toStringAsFixed(1)}%',
+                              "${(cacheEfficiency * 100).toStringAsFixed(1)}%",
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -81,17 +81,17 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    buildSettingsRow('Total Hits', '$cacheHitRate'),
-                    buildSettingsRow('Total Misses', '$cacheMissRate'),
+                    buildSettingsRow("Total Hits", "$cacheHitRate"),
+                    buildSettingsRow("Total Misses", "$cacheMissRate"),
                   ]),
                   const SizedBox(height: 16),
                   buildSettingsGroup(
                     context,
-                    'Recent Network Activity',
+                    "Recent Network Activity",
                     metrics.recentApiRecords.isEmpty
                         ? [
                             const Text(
-                              'No recent activity',
+                              "No recent activity",
                               style: TextStyle(fontStyle: FontStyle.italic),
                             ),
                           ]
@@ -149,11 +149,11 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
                   const SizedBox(height: 16),
                   buildSettingsGroup(
                     context,
-                    'Provider Latency (Avg)',
+                    "Provider Latency (Avg)",
                     metrics.providerCalls.isEmpty
                         ? [
                             const Text(
-                              'No provider metrics',
+                              "No provider metrics",
                               style: TextStyle(fontStyle: FontStyle.italic),
                             ),
                           ]
@@ -162,7 +162,7 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
                                 (metrics.providerTotalMs[e.key] ?? 0) / e.value;
                             return buildSettingsRow(
                               e.key,
-                              '${avg.toStringAsFixed(0)}ms',
+                              "${avg.toStringAsFixed(0)}ms",
                             );
                           }).toList(),
                   ),

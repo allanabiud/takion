@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class ListHeader extends StatelessWidget {
   const ListHeader({
@@ -26,12 +26,12 @@ class ListHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = count == 1 ? '1 $unit' : '$count ${pluralUnit ?? '${unit}s'}';
+    final label = count == 1 ? "1 $unit" : '$count ${pluralUnit ?? '${unit}s'}';
     final pageLabel = pageCount == null
         ? null
         : pageCount == 1
-        ? '1 item on this page'
-        : '$pageCount items on this page';
+        ? "1 item on this page"
+        : "$pageCount items on this page";
 
     return Padding(
       padding: padding,

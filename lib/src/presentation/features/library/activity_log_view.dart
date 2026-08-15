@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/features/library/activity_log_group.dart';
-import 'package:takion/src/presentation/features/library/providers/library_activity_provider.dart';
-import 'package:takion/src/presentation/features/library/widgets/activity_log_group_tile.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/features/library/activity_log_group.dart";
+import "package:takion/src/presentation/features/library/providers/library_activity_provider.dart";
+import "package:takion/src/presentation/features/library/widgets/activity_log_group_tile.dart";
 
 class ActivityLogView extends ConsumerStatefulWidget {
   final ActivityEventType? typeFilter;
@@ -32,13 +32,13 @@ class _ActivityLogViewState extends ConsumerState<ActivityLogView>
     return activityAsync.when(
       loading: () => const AsyncStatePanel.loading(),
       error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: 'Failed to load activity'),
+          const AsyncStatePanel.error(errorMessage: "Failed to load activity"),
       data: (events) {
         if (events.isEmpty) {
           return const Center(
             child: EmptyContentState(
               icon: Icons.history,
-              message: 'No activity.',
+              message: "No activity.",
             ),
           );
         }

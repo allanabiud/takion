@@ -1,12 +1,12 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/network/dio_client.dart';
-import 'package:takion/src/core/network/request_priority.dart'
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/core/network/request_priority.dart"
     show backgroundZoneKey;
-import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:takion/src/presentation/features/library/providers/library_items_serialization.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 class SubscriptionCardsHydrater {
   SubscriptionCardsHydrater(this.ref);
@@ -25,13 +25,13 @@ class SubscriptionCardsHydrater {
 
     if (!_hasBudget()) return;
 
-    final dao = ref.read(metronEntityDaoProvider);
+    final localCatalog = ref.read(localCatalogRepositoryProvider);
     final repository = ref.read(metronRepositoryProvider);
 
     final missingIds = <int>[];
     for (final seriesId in seriesIds) {
-      final series = await dao.getSeries(seriesId);
-      final issues = await dao.getIssuesBySeries(seriesId, limit: 1);
+      final series = await localCatalog.getSeries(seriesId);
+      final issues = await localCatalog.getIssuesBySeries(seriesId, limit: 1);
       if (series == null || series.name.trim().isEmpty || issues.isEmpty) {
         missingIds.add(seriesId);
       }
@@ -50,7 +50,7 @@ class SubscriptionCardsHydrater {
               );
             } catch (e) {
               AppLogger.warning(
-                'Failed to hydrate subscription card for series $seriesId',
+                "Failed to hydrate subscription card for series $seriesId",
                 error: e,
               );
             }
@@ -70,5 +70,5 @@ class SubscriptionCardsHydrater {
 }
 
 final subscriptionCardsHydraterProvider = Provider<SubscriptionCardsHydrater>(
-  (ref) => SubscriptionCardsHydrater(ref),
+  SubscriptionCardsHydrater.new,
 );

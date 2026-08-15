@@ -1,6 +1,6 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
 
-part 'series.freezed.dart';
+part "series.freezed.dart";
 
 @freezed
 abstract class Series with _$Series {

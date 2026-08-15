@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 String? _parseString(dynamic raw) {
   if (raw is String && raw.isNotEmpty) return raw;
@@ -43,32 +43,32 @@ class CreatorDetailsDto {
 
   factory CreatorDetailsDto.fromJson(Map<String, dynamic> json) {
     return CreatorDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
-      birth: _parseString(json['birth']),
-      death: _parseString(json['death']),
-      desc: _parseString(json['desc']),
-      image: _parseString(json['image']),
-      alias: _parseStringList(json['alias']),
-      cvId: (json['cv_id'] as num?)?.toInt(),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      resourceUrl: _parseString(json['resource_url']),
-      modified: _parseString(json['modified']),
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
+      birth: _parseString(json["birth"]),
+      death: _parseString(json["death"]),
+      desc: _parseString(json["desc"]),
+      image: _parseString(json["image"]),
+      alias: _parseStringList(json["alias"]),
+      cvId: (json["cv_id"] as num?)?.toInt(),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      resourceUrl: _parseString(json["resource_url"]),
+      modified: _parseString(json["modified"]),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'birth': birth,
-    'death': death,
-    'desc': desc,
-    'image': image,
-    'alias': alias,
-    'cv_id': cvId,
-    'gcd_id': gcdId,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "birth": birth,
+    "death": death,
+    "desc": desc,
+    "image": image,
+    "alias": alias,
+    "cv_id": cvId,
+    "gcd_id": gcdId,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   CreatorDetails toEntity() {

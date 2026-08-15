@@ -1,13 +1,13 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
+import "package:drift/drift.dart";
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
 
 void main() {
-  test('two concurrent unawaited stub batches', () async {
+  test("two concurrent unawaited stub batches", () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     final dao = MetronEntityDao(db);
 
@@ -28,23 +28,23 @@ void main() {
     void fireSeries() {
       unawaited(
         dao.upsertSeriesStubsBatch([
-          MetronSeriesCompanion(
-            id: const Value(900),
-            name: const Value('Test Series'),
-            yearBegan: const Value(2026),
-            volume: const Value(1),
-            isFullyHydrated: const Value(false),
+          const MetronSeriesCompanion(
+            id: Value(900),
+            name: Value("Test Series"),
+            yearBegan: Value(2026),
+            volume: Value(1),
+            isFullyHydrated: Value(false),
           ),
         ]),
       );
     }
 
-    fireIssue(1, '1');
+    fireIssue(1, "1");
     fireSeries();
-    fireIssue(2, '2');
+    fireIssue(2, "2");
     fireSeries();
 
-    await db.customStatement('SELECT 1');
+    await db.customStatement("SELECT 1");
     await db.close();
   });
 }

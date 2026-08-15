@@ -1,6 +1,10 @@
-import 'package:takion/src/domain/entities.dart';
+import "dart:async";
+
+import "package:takion/src/domain/entities.dart";
 
 abstract class SubscriptionRepository {
+  Stream<SeriesSubscription?> watchSubscriptionBySeriesId(int metronSeriesId);
+
   Future<List<SeriesSubscription>> listSubscriptions({
     bool activeOnly = true,
     int limit = 100,

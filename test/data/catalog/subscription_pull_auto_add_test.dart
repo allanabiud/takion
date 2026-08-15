@@ -1,17 +1,17 @@
-import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/core/cache/user_state_cache.dart';
-import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart'
+import "package:dio/dio.dart";
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/local/series_name_index.dart"
     as series_index;
-import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/data/catalog/repositories/metron_repository_impl.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
-import 'package:takion/src/data/subscription/repositories/local_subscription_repository.dart';
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/data/catalog/repositories/metron_repository_impl.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/data/subscription/repositories/local_subscription_repository.dart";
 
 class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
   int getIssueListCalls = 0;
@@ -26,25 +26,25 @@ class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     getIssueListCalls++;
-    return IssueSearchResponseDto(
+    return const IssueSearchResponseDto(
       count: 1,
       next: null,
       previous: null,
       results: [
         IssueListDto(
           id: 501,
-          number: '1',
+          number: "1",
           series: IssueListSeriesDto(
             id: 900,
-            name: 'Test Series',
+            name: "Test Series",
             volume: 1,
             yearBegan: 2026,
           ),
-          coverDate: '2026-10-14',
-          storeDate: '2026-10-14',
+          coverDate: "2026-10-14",
+          storeDate: "2026-10-14",
           image: null,
-          issueName: 'Test Series #1',
-          modified: '2026-10-01T00:00:00Z',
+          issueName: "Test Series #1",
+          modified: "2026-10-01T00:00:00Z",
           coverHash: null,
         ),
       ],
@@ -53,7 +53,7 @@ class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    throw UnimplementedError('${invocation.memberName}');
+    throw UnimplementedError("${invocation.memberName}");
   }
 }
 
@@ -77,7 +77,7 @@ void main() {
   });
 
   tearDown(() async {
-    await db.customStatement('SELECT 1');
+    await db.customStatement("SELECT 1");
     await db.close();
   });
 
@@ -91,7 +91,7 @@ void main() {
     );
   }
 
-  test('ingesting an issue for a subscribed auto-add series creates a pull entry',
+  test("ingesting an issue for a subscribed auto-add series creates a pull entry",
       () async {
     final remote = FakeMetronRemoteDataSource();
     final repo = buildRepo(remote);
@@ -110,12 +110,12 @@ void main() {
     final entry = await waitForPullEntry(db, 501);
     expect(entry, isNotNull);
     expect(entry!.metronSeriesId, 900);
-    expect(entry.entryStatus, 'upcoming');
-    expect(entry.source, 'subscription');
+    expect(entry.entryStatus, "upcoming");
+    expect(entry.source, "subscription");
     expect(entry.releaseDate, isNotNull);
   });
 
-  test('ingesting an issue for a subscribed non-auto-add series does not pull',
+  test("ingesting an issue for a subscribed non-auto-add series does not pull",
       () async {
     final remote = FakeMetronRemoteDataSource();
     final repo = buildRepo(remote);
@@ -135,7 +135,7 @@ void main() {
     expect(entry, isNull);
   });
 
-  test('ingesting an issue for an unsubscribed series does not pull', () async {
+  test("ingesting an issue for an unsubscribed series does not pull", () async {
     final remote = FakeMetronRemoteDataSource();
     final repo = buildRepo(remote);
 

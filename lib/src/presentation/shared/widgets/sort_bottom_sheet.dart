@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
 
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 Future<void> showSortBottomSheet(
   BuildContext context,
@@ -17,7 +17,7 @@ Future<void> showSortBottomSheet(
 
   await TakionBottomSheet.show(
     context: context,
-    title: 'Sort Options',
+    title: "Sort Options",
     child: RadioGroup<ContentSortOption>(
       groupValue: currentOption,
       onChanged: (value) {

@@ -1,9 +1,27 @@
-import 'package:takion/src/domain/entities.dart';
+import "dart:async";
+
+import "package:takion/src/domain/entities.dart";
 
 abstract class LibraryRepository {
+  Stream<List<LibraryItem>> watchItems();
+
+  Stream<List<LibraryItem>> watchItemsByOwnershipStatus(
+    LibraryOwnershipStatus status,
+  );
+
+  Stream<List<LibraryItem>> watchItemsByIsRead(bool isRead);
+
   Future<int> getItemCount();
 
+  Future<int> getItemCountByOwnershipStatus(LibraryOwnershipStatus status);
+
   Future<List<LibraryItem>> listItems({int limit = 50, int offset = 0});
+
+  Future<List<LibraryItem>> listItemsByOwnershipStatus(
+    LibraryOwnershipStatus status, {
+    int limit = 50,
+    int offset = 0,
+  });
 
   Future<LibraryItem?> getItemByIssueId(int metronIssueId);
 

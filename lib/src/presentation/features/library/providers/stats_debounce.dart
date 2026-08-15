@@ -1,4 +1,4 @@
-import 'dart:async';
+import "dart:async";
 
 class DebouncedWorker {
   DebouncedWorker({this.delay = const Duration(milliseconds: 300)});

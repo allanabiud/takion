@@ -1,40 +1,40 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/core/cache/user_state_cache.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
 class LocalLibraryRepository implements LibraryRepository {
   LocalLibraryRepository(this._database, this._cache);
 
-  static const _localUserId = 'local-user';
+  static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final UserStateCache _cache;
 
-  String _idForIssue(int issueId) => 'lib-$issueId';
+  String _idForIssue(int issueId) => "lib-$issueId";
 
   String _readLogId(int issueId) =>
-      'read-$issueId-${DateTime.now().microsecondsSinceEpoch}';
+      "read-$issueId-${DateTime.now().microsecondsSinceEpoch}";
 
   String _ownershipToRaw(LibraryOwnershipStatus status) {
     switch (status) {
       case LibraryOwnershipStatus.owned:
-        return 'owned';
+        return "owned";
       case LibraryOwnershipStatus.notOwned:
-        return 'not_owned';
+        return "not_owned";
       case LibraryOwnershipStatus.wishlist:
-        return 'wishlist';
+        return "wishlist";
     }
   }
 
   LibraryOwnershipStatus _ownershipFromRaw(String raw) {
     switch (raw) {
-      case 'owned':
+      case "owned":
         return LibraryOwnershipStatus.owned;
-      case 'wishlist':
+      case "wishlist":
         return LibraryOwnershipStatus.wishlist;
-      case 'not_owned':
+      case "not_owned":
       default:
         return LibraryOwnershipStatus.notOwned;
     }
@@ -43,21 +43,21 @@ class LocalLibraryRepository implements LibraryRepository {
   String _formatToRaw(LibraryItemFormat format) {
     switch (format) {
       case LibraryItemFormat.print:
-        return 'print';
+        return "print";
       case LibraryItemFormat.digital:
-        return 'digital';
+        return "digital";
       case LibraryItemFormat.both:
-        return 'both';
+        return "both";
     }
   }
 
   LibraryItemFormat _formatFromRaw(String raw) {
     switch (raw) {
-      case 'digital':
+      case "digital":
         return LibraryItemFormat.digital;
-      case 'both':
+      case "both":
         return LibraryItemFormat.both;
-      case 'print':
+      case "print":
       default:
         return LibraryItemFormat.print;
     }
@@ -103,11 +103,57 @@ class LocalLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Stream<List<LibraryItem>> watchItems() {
+    return _database.libraryItemDao
+        .watchAll()
+        .map((rows) => rows.map(_toDomain).toList());
+  }
+
+  @override
+  Stream<List<LibraryItem>> watchItemsByOwnershipStatus(
+    LibraryOwnershipStatus status,
+  ) {
+    return _database.libraryItemDao
+        .watchByOwnershipStatus(_ownershipToRaw(status))
+        .map((rows) => rows.map(_toDomain).toList());
+  }
+
+  @override
+  Stream<List<LibraryItem>> watchItemsByIsRead(bool isRead) {
+    return _database.libraryItemDao
+        .watchByIsRead(isRead)
+        .map((rows) => rows.map(_toDomain).toList());
+  }
+
+  @override
   Future<int> getItemCount() async => _database.libraryItemDao.getItemCount();
+
+  @override
+  Future<int> getItemCountByOwnershipStatus(
+    LibraryOwnershipStatus status,
+  ) async {
+    return _database.libraryItemDao.getItemCount(
+      ownershipStatus: _ownershipToRaw(status),
+    );
+  }
 
   @override
   Future<List<LibraryItem>> listItems({int limit = 50, int offset = 0}) async {
     final rows = await _database.libraryItemDao.getItems(
+      limit: limit,
+      offset: offset,
+    );
+    return rows.map(_toDomain).toList();
+  }
+
+  @override
+  Future<List<LibraryItem>> listItemsByOwnershipStatus(
+    LibraryOwnershipStatus status, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final rows = await _database.libraryItemDao.getItems(
+      ownershipStatus: _ownershipToRaw(status),
       limit: limit,
       offset: offset,
     );
@@ -293,7 +339,7 @@ class LocalLibraryRepository implements LibraryRepository {
   }) async {
     final item = await _database.libraryItemDao.getByIssueId(metronIssueId);
     if (item == null) {
-      throw StateError('Library item does not exist for issue $metronIssueId');
+      throw StateError("Library item does not exist for issue $metronIssueId");
     }
 
     final now = DateTime.now().toUtc();

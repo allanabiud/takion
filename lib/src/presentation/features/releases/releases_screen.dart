@@ -1,15 +1,15 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
+import "package:takion/src/presentation/features/releases/providers/selected_week_provider.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
 
 @RoutePage()
 class ReleasesScreen extends ConsumerWidget {
@@ -49,10 +49,10 @@ class ReleasesScreen extends ConsumerWidget {
                     icon: Icons.new_releases_outlined,
                     value: currentIssuesAsync.when(
                       data: (issues) => issues.length.toString(),
-                      loading: () => '--',
-                      error: (_, _) => '!',
+                      loading: () => "--",
+                      error: (_, _) => "!",
                     ),
-                    label: 'This Week',
+                    label: "This Week",
                     onTap: () {
                       ref
                           .read(selectedWeekProvider.notifier)
@@ -64,9 +64,9 @@ class ReleasesScreen extends ConsumerWidget {
                   ActionCard(
                     icon: Icons.notifications_outlined,
                     value: subscriptionsAsync.isLoading
-                        ? '--'
+                        ? "--"
                         : subscriptionsCount.toString(),
-                    label: 'Subscriptions',
+                    label: "Subscriptions",
                     onTap: () {
                       context.pushRoute(const SubscriptionsRoute());
                     },
@@ -75,9 +75,9 @@ class ReleasesScreen extends ConsumerWidget {
                   ActionCard(
                     icon: Icons.shopping_bag_outlined,
                     value: pullsAsync.isLoading
-                        ? '--'
+                        ? "--"
                         : pullsCountAsync.toString(),
-                    label: 'Pulls',
+                    label: "Pulls",
                     onTap: () {
                       ref
                           .read(selectedWeekProvider.notifier)
@@ -90,11 +90,11 @@ class ReleasesScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             CompactListSection(
-              title: 'Browse',
+              title: "Browse",
               items: [
                 CompactListSectionItem(
                   icon: Icons.new_releases_outlined,
-                  label: 'New #1s',
+                  label: "New #1s",
                   onTap: () {
                     ref
                         .read(selectedWeekProvider.notifier)
@@ -104,7 +104,7 @@ class ReleasesScreen extends ConsumerWidget {
                 ),
                 CompactListSectionItem(
                   icon: Icons.calendar_month_outlined,
-                  label: 'FOC Calendar',
+                  label: "FOC Calendar",
                   onTap: () {
                     ref
                         .read(selectedWeekProvider.notifier)
@@ -131,7 +131,7 @@ class ReleasesScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text.rich(
                           TextSpan(
-                            text: '$pullsCountAsync',
+                            text: "$pullsCountAsync",
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w700,
@@ -139,8 +139,8 @@ class ReleasesScreen extends ConsumerWidget {
                             children: [
                               TextSpan(
                                 text: pullsCountAsync == 1
-                                    ? ' Pull This Week'
-                                    : ' Pulls This Week',
+                                    ? " Pull This Week"
+                                    : " Pulls This Week",
                                 style: TextStyle(
                                   color: Theme.of(
                                     context,
@@ -224,7 +224,7 @@ class ReleasesScreen extends ConsumerWidget {
                 ),
                 error: (_, _) => const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Could not load pulls preview.'),
+                  child: Text("Could not load pulls preview."),
                 ),
               ),
           ],

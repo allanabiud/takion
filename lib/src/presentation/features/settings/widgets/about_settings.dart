@@ -1,35 +1,35 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/settings/providers/debug_mode_provider.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/settings/widgets/licenses_viewer.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:flutter_svg/flutter_svg.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:url_launcher/url_launcher.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/settings/providers/debug_mode_provider.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/features/settings/widgets/licenses_viewer.dart";
 
 Future<void> launchGitHubRepo(BuildContext context) async {
-  final url = Uri.parse('https://github.com/allanabiud/takion');
+  final url = Uri.parse("https://github.com/allanabiud/takion");
   if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
     if (!context.mounted) return;
-    TakionAlerts.couldNotOpenInBrowser(context, 'repository');
+    TakionAlerts.couldNotOpenInBrowser(context, "repository");
   }
 }
 
 Future<void> launchKoFi(BuildContext context) async {
-  final url = Uri.parse('https://ko-fi.com/allanabiud');
+  final url = Uri.parse("https://ko-fi.com/allanabiud");
   if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
     if (!context.mounted) return;
-    TakionAlerts.couldNotOpenInBrowser(context, 'Ko-fi page');
+    TakionAlerts.couldNotOpenInBrowser(context, "Ko-fi page");
   }
 }
 
 void showAboutSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'About',
+    title: "About",
     child: const _AboutBody(),
   );
 }
@@ -56,11 +56,11 @@ class _AboutBody extends ConsumerWidget {
                   if (!context.mounted) return;
                   TakionAlerts.info(
                     context,
-                    isEnabled ? 'Debug mode enabled' : 'Debug mode disabled',
+                    isEnabled ? "Debug mode enabled" : "Debug mode disabled",
                   );
                 },
                 child: SvgPicture.asset(
-                  'assets/branding/takion_logo.svg',
+                  "assets/branding/takion_logo.svg",
                   height: 64,
                   colorFilter: ColorFilter.mode(
                     theme.colorScheme.primary,
@@ -74,7 +74,7 @@ class _AboutBody extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Takion',
+                      "Takion",
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
@@ -85,13 +85,13 @@ class _AboutBody extends ConsumerWidget {
                         final versionText = snapshot.hasData
                             ? snapshot.data!.buildNumber.isEmpty
                                   ? snapshot.data!.version
-                                  : '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
-                            : '...';
+                                  : "${snapshot.data!.version}+${snapshot.data!.buildNumber}"
+                            : "...";
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Version $versionText',
+                              "Version $versionText",
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
@@ -107,7 +107,7 @@ class _AboutBody extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  'DEBUG',
+                                  "DEBUG",
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color:
                                         theme.colorScheme.onTertiaryContainer,
@@ -134,7 +134,7 @@ class _AboutBody extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'GitHub Repository',
+                            "GitHub Repository",
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
@@ -150,20 +150,20 @@ class _AboutBody extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-          buildSettingsGroup(context, 'Developer', [
-            ListTile(
+          buildSettingsGroup(context, "Developer", [
+            const ListTile(
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(
                 radius: 20,
-                backgroundImage: const CachedNetworkImageProvider(
-                  'https://avatars.githubusercontent.com/u/66108188?s=96&v=4',
+                backgroundImage: CachedNetworkImageProvider(
+                  "https://avatars.githubusercontent.com/u/66108188?s=96&v=4",
                 ),
               ),
-              title: const Text(
-                'allanabiud',
+              title: Text(
+                "allanabiud",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: const Text('Creator and maintainer'),
+              subtitle: Text("Creator and maintainer"),
             ),
             const SizedBox(height: 12),
             Row(
@@ -171,10 +171,10 @@ class _AboutBody extends ConsumerWidget {
                 Expanded(
                   child: _DeveloperAction(
                     icon: Icons.code,
-                    label: 'GitHub',
-                    subtitle: 'View profile',
+                    label: "GitHub",
+                    subtitle: "View profile",
                     onTap: () => launchUrl(
-                      Uri.parse('https://github.com/allanabiud'),
+                      Uri.parse("https://github.com/allanabiud"),
                       mode: LaunchMode.externalApplication,
                     ),
                   ),
@@ -183,8 +183,8 @@ class _AboutBody extends ConsumerWidget {
                 Expanded(
                   child: _DeveloperAction(
                     icon: Icons.coffee_outlined,
-                    label: 'Support',
-                    subtitle: 'Buy me a coffee',
+                    label: "Support",
+                    subtitle: "Buy me a coffee",
                     onTap: () => launchKoFi(context),
                   ),
                 ),
@@ -192,15 +192,15 @@ class _AboutBody extends ConsumerWidget {
             ),
           ]),
           const SizedBox(height: 24),
-          buildSettingsGroup(context, 'Legal', [
+          buildSettingsGroup(context, "Legal", [
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.description_outlined),
               title: const Text(
-                'Open Source Licenses',
+                "Open Source Licenses",
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('View licenses for third-party libraries'),
+              subtitle: const Text("View licenses for third-party libraries"),
               onTap: () => showLicensesSheet(context),
             ),
           ]),

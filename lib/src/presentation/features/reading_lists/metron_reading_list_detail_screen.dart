@@ -1,24 +1,24 @@
-import 'dart:ui' show ImageFilter;
+import "dart:ui" show ImageFilter;
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/metron_reading_list_timeline_tile.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
-import 'package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:uuid/uuid.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/reading_lists/metron_reading_list_timeline_tile.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_cover.dart";
+import "package:takion/src/presentation/features/reading_lists/local_reading_list_details_sheet.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:url_launcher/url_launcher.dart";
+import "package:uuid/uuid.dart";
 
 @RoutePage()
 class MetronReadingListDetailScreen extends ConsumerStatefulWidget {
@@ -42,7 +42,7 @@ class _MetronReadingListDetailScreenState
   }
 
   @override
-  String get resourceLabel => 'reading list';
+  String get resourceLabel => "reading list";
 
   @override
   String shareSubjectOf(MetronReadingListDetail details) => details.name;
@@ -75,7 +75,7 @@ class _MetronReadingListDetailScreenState
 
       final readingListItems = items.map((item) {
         return LocalReadingListItem(
-          targetId: 'issue-${item.issueId}',
+          targetId: "issue-${item.issueId}",
           isSeries: false,
           role: ItemRole.standard,
           isRead: false,
@@ -93,7 +93,7 @@ class _MetronReadingListDetailScreenState
       final list = LocalReadingList(
         id: const Uuid().v4(),
         title: detail.name,
-        description: detail.desc ?? '',
+        description: detail.desc ?? "",
         isOrdered: true,
         contentType: ListContentType.issue,
         createdAt: now,
@@ -110,7 +110,7 @@ class _MetronReadingListDetailScreenState
       await ref.read(localReadingListsProvider.notifier).addList(list);
 
       if (mounted) {
-        TakionAlerts.success(context, 'Reading List Imported');
+        TakionAlerts.success(context, "Reading List Imported");
         setState(() => _localList = list);
       }
     } catch (e) {
@@ -118,7 +118,7 @@ class _MetronReadingListDetailScreenState
         TakionAlerts.safeError(
           context,
           e,
-          userMessage: 'Failed to import reading list',
+          userMessage: "Failed to import reading list",
         );
       }
     } finally {
@@ -132,14 +132,14 @@ class _MetronReadingListDetailScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove from Library'),
+        title: const Text("Remove from Library"),
         content: Text(
           'Are you sure you want to remove "${_localList!.title}" from your library?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text("Cancel"),
           ),
           FilledButton.icon(
             style: FilledButton.styleFrom(
@@ -148,7 +148,7 @@ class _MetronReadingListDetailScreenState
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             icon: const Icon(Icons.delete_outline, size: 22),
-            label: const Text('Remove'),
+            label: const Text("Remove"),
           ),
         ],
       ),
@@ -160,7 +160,7 @@ class _MetronReadingListDetailScreenState
     await repo.deleteList(_localList!.id);
 
     if (mounted) {
-      TakionAlerts.success(context, 'Removed from Library');
+      TakionAlerts.success(context, "Removed from Library");
       setState(() => _localList = null);
     }
   }
@@ -185,11 +185,11 @@ class _MetronReadingListDetailScreenState
         ref.invalidate(metronReadingListDetailProvider(widget.id));
       }
       if (mounted) {
-        TakionAlerts.success(context, 'Reading list refreshed');
+        TakionAlerts.success(context, "Reading list refreshed");
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh reading list');
+        TakionAlerts.error(context, "Failed to refresh reading list");
       }
     }
   }
@@ -217,7 +217,7 @@ class _MetronReadingListDetailScreenState
                   ),
                   onPressed: _removeFromLibrary,
                   icon: const Icon(Icons.delete_outline, size: 22),
-                  label: const Text('Remove'),
+                  label: const Text("Remove"),
                 )
               : FilledButton.icon(
                   style: FilledButton.styleFrom(
@@ -238,7 +238,7 @@ class _MetronReadingListDetailScreenState
                           ),
                         )
                       : const Icon(Icons.add, size: 22),
-                  label: const Text('Add to Library'),
+                  label: const Text("Add to Library"),
                 ),
         ),
         if (detail.attributionUrl != null &&
@@ -373,7 +373,7 @@ class _MetronReadingListDetailScreenState
             hasScrollBody: false,
             child: EmptyContentState(
               icon: Icons.list_alt_rounded,
-              message: 'This reading list is empty.',
+              message: "This reading list is empty.",
             ),
           ),
         ],
@@ -397,7 +397,7 @@ class _MetronReadingListDetailScreenState
           delegate: SliverChildListDelegate.fixed([
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-              child: SectionHeader(title: 'ISSUES', count: items.length),
+              child: SectionHeader(title: "ISSUES", count: items.length),
             ),
           ]),
         ),
@@ -447,7 +447,7 @@ class _MetronReadingListDetailScreenState
                         (i) => Positioned(
                           top: i * 20.0,
                           left: i * 10.0,
-                          child: SkeletonBox(
+                          child: const SkeletonBox(
                             width: 120,
                             height: 180,
                             borderRadius: 8,
@@ -467,21 +467,21 @@ class _MetronReadingListDetailScreenState
             children: [
               const SkeletonBox(height: 26, width: 280, borderRadius: 4),
               const SizedBox(height: 8),
-              Row(
+              const Row(
                 children: [
-                  const SkeletonBox(width: 80, height: 24, borderRadius: 12),
-                  const SizedBox(width: 8),
-                  const SkeletonBox(width: 100, height: 24, borderRadius: 12),
+                  SkeletonBox(width: 80, height: 24, borderRadius: 12),
+                  SizedBox(width: 8),
+                  SkeletonBox(width: 100, height: 24, borderRadius: 12),
                 ],
               ),
               const SizedBox(height: 20),
-              Row(
+              const Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: SkeletonBox(height: 14, borderRadius: 4),
                   ),
-                  const SizedBox(width: 8),
-                  const SkeletonBox(width: 40, height: 14, borderRadius: 4),
+                  SizedBox(width: 8),
+                  SkeletonBox(width: 40, height: 14, borderRadius: 4),
                 ],
               ),
               const SizedBox(height: 8),
@@ -491,8 +491,8 @@ class _MetronReadingListDetailScreenState
                 borderRadius: 4,
               ),
               const SizedBox(height: 20),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(
                     flex: 3,
                     child: SkeletonBox(height: 48, borderRadius: 12),
@@ -509,29 +509,29 @@ class _MetronReadingListDetailScreenState
               const SizedBox(height: 16),
               ...List.generate(
                 4,
-                (_) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                (_) => const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
                   child: Row(
                     children: [
-                      const SkeletonBox(
+                      SkeletonBox(
                         width: 24,
                         height: 24,
                         borderRadius: 12,
                       ),
-                      const SizedBox(width: 12),
-                      const SkeletonBox(width: 60, height: 85, borderRadius: 6),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
+                      SkeletonBox(width: 60, height: 85, borderRadius: 6),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SkeletonBox(
+                            SkeletonBox(
                               height: 14,
                               width: 200,
                               borderRadius: 4,
                             ),
-                            const SizedBox(height: 6),
-                            const SkeletonBox(
+                            SizedBox(height: 6),
+                            SkeletonBox(
                               height: 12,
                               width: 140,
                               borderRadius: 4,
@@ -549,8 +549,8 @@ class _MetronReadingListDetailScreenState
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
-        body: AsyncStatePanel.error(
-          errorMessage: 'Failed to load reading list',
+        body: const AsyncStatePanel.error(
+          errorMessage: "Failed to load reading list",
         ),
       ),
       data: (data) {
@@ -566,7 +566,7 @@ class _MetronReadingListDetailScreenState
 
         final readingListItems = items.map((item) {
           return LocalReadingListItem(
-            targetId: 'issue-${item.issueId}',
+            targetId: "issue-${item.issueId}",
             isSeries: false,
             role: ItemRole.standard,
             isRead: false,
@@ -581,9 +581,9 @@ class _MetronReadingListDetailScreenState
         }).toList();
 
         final list = LocalReadingList(
-          id: _localList?.id ?? 'temp-${widget.id}',
+          id: _localList?.id ?? "temp-${widget.id}",
           title: detail.name,
-          description: detail.desc ?? '',
+          description: detail.desc ?? "",
           isOrdered: true,
           contentType: ListContentType.issue,
           createdAt: DateTime.now(),

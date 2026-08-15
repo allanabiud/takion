@@ -1,13 +1,13 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/entity_cover.dart';
-import 'package:takion/src/presentation/features/library/activity_log_group.dart';
-import 'package:takion/src/presentation/features/library/widgets/activity_group_details_sheet.dart';
-import 'package:timelines_plus/timelines_plus.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/entity_cover.dart";
+import "package:takion/src/presentation/features/library/activity_log_group.dart";
+import "package:takion/src/presentation/features/library/widgets/activity_group_details_sheet.dart";
+import "package:timelines_plus/timelines_plus.dart";
 
 class ActivityLogGroupTile extends ConsumerWidget {
   final ActivityLogGroup group;
@@ -134,7 +134,7 @@ class ActivityLogGroupTile extends ConsumerWidget {
                   ),
                   child: Center(
                     child: Text(
-                      '+$moreCount',
+                      "+$moreCount",
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onPrimaryContainer,

@@ -1,14 +1,14 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
 
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class ImprintDetailsScreen extends ConsumerStatefulWidget {
@@ -35,24 +35,19 @@ class _ImprintDetailsScreenState
   String? resourceUrlOf(ImprintDetails details) => details.resourceUrl;
 
   @override
-  String get resourceLabel => 'imprint';
+  String get resourceLabel => "imprint";
 
   @override
   String shareSubjectOf(ImprintDetails details) => details.name;
 
   @override
-  String get entityLabel => 'Imprint';
+  String get entityLabel => "Imprint";
 
   @override
   Future<ImprintDetails> fetchDetails() {
     return ref
         .read(catalogRepositoryProvider)
         .getImprintDetails(widget.imprintId, forceRefresh: true);
-  }
-
-  @override
-  ImprintDetails? currentStoredDetails() {
-    return ref.read(imprintDetailsProvider(widget.imprintId)).asData?.value;
   }
 
   @override
@@ -66,10 +61,10 @@ class _ImprintDetailsScreenState
 
     return DetailScreenShell<ImprintDetails>(
       asyncValue: detailsAsync,
-      entityType: 'imprint',
+      entityType: "imprint",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'imprint-image-${d.id}',
+      toHeroTag: (d) => "imprint-image-${d.id}",
       toTitle: (d) => d.name,
       onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
@@ -120,17 +115,17 @@ class _ImprintInfoSection extends StatelessWidget {
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
     final contentItems = <InfoGridItem>[
-      InfoGridItem(label: 'Name', value: details.name),
+      InfoGridItem(label: "Name", value: details.name),
       if (details.founded != null)
-        InfoGridItem(label: 'Founded', value: '${details.founded}'),
+        InfoGridItem(label: "Founded", value: "${details.founded}"),
       if (details.publisher != null)
-        InfoGridItem(label: 'Publisher', value: details.publisher!.name),
+        InfoGridItem(label: "Publisher", value: details.publisher!.name),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DETAILS'),
+        const SectionHeader(title: "DETAILS"),
         const SizedBox(height: 12),
         InfoGrid(items: contentItems),
         const SizedBox(height: 16),
@@ -142,7 +137,7 @@ class _ImprintInfoSection extends StatelessWidget {
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),

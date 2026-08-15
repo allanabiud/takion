@@ -1,6 +1,6 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
 
-part 'issue_details.freezed.dart';
+part "issue_details.freezed.dart";
 
 @freezed
 abstract class IssueDetails with _$IssueDetails {

@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class CreatorListDto {
   const CreatorListDto({required this.id, required this.name, this.modified});
@@ -9,16 +9,16 @@ class CreatorListDto {
 
   factory CreatorListDto.fromJson(Map<String, dynamic> json) {
     return CreatorListDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: (json['name'] as String?)?.trim().isNotEmpty == true
-          ? (json['name'] as String)
-          : 'Unknown Creator',
-      modified: json['modified'] as String?,
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: (json["name"] as String?)?.trim().isNotEmpty == true
+          ? (json["name"] as String)
+          : "Unknown Creator",
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'modified': modified};
+    return {"id": id, "name": name, "modified": modified};
   }
 
   CreatorList toEntity() {

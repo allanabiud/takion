@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class ActivityDao extends DatabaseAccessor<AppDatabase> {
   ActivityDao(super.db);
@@ -61,7 +61,7 @@ class ActivityDao extends DatabaseAccessor<AppDatabase> {
         b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
           for (final id in ids)
             SyncMetaCompanion.insert(
-              key: 'delete:activity_events:$id',
+              key: "delete:activity_events:$id",
               value: now,
             ),
         ]);

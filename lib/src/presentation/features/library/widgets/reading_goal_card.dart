@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class ReadingGoalCard extends ConsumerWidget {
   final LibraryFilter filter;
@@ -51,13 +51,13 @@ class ReadingGoalCard extends ConsumerWidget {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Reading Goal',
+                          "Reading Goal",
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
                         Text(
-                          '${(percent * 100).toStringAsFixed(0)}%',
+                          "${(percent * 100).toStringAsFixed(0)}%",
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class ReadingGoalCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$progress / $target issues (${goal.period})',
+                      "$progress / $target issues (${goal.period})",
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -90,14 +90,14 @@ class ReadingGoalCard extends ConsumerWidget {
                       children: [
                         TextButton.icon(
                           icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: const Text('Edit Goal'),
+                          label: const Text("Edit Goal"),
                           onPressed: () =>
                               _showEditGoalSheet(context, ref, goal),
                         ),
                         const SizedBox(width: 8),
                         TextButton.icon(
                           icon: const Icon(Icons.delete_outline, size: 18),
-                          label: const Text('Clear'),
+                          label: const Text("Clear"),
                           onPressed: () async {
                             await ref
                                 .read(readingGoalProvider.notifier)
@@ -126,7 +126,7 @@ class ReadingGoalCard extends ConsumerWidget {
 
     TakionBottomSheet.show<void>(
       context: context,
-      title: 'Set Reading Goal',
+      title: "Set Reading Goal",
       child: StatefulBuilder(
         builder: (context, setModalState) {
           return Padding(
@@ -137,7 +137,7 @@ class ReadingGoalCard extends ConsumerWidget {
               children: [
                 TextField(
                   decoration: const InputDecoration(
-                    labelText: 'Target (issues)',
+                    labelText: "Target (issues)",
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
@@ -152,8 +152,8 @@ class ReadingGoalCard extends ConsumerWidget {
                 const SizedBox(height: 16),
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'monthly', label: Text('Monthly')),
-                    ButtonSegment(value: 'yearly', label: Text('Yearly')),
+                    ButtonSegment(value: "monthly", label: Text("Monthly")),
+                    ButtonSegment(value: "yearly", label: Text("Yearly")),
                   ],
                   selected: {period},
                   onSelectionChanged: (selected) {
@@ -170,7 +170,7 @@ class ReadingGoalCard extends ConsumerWidget {
                           .setGoal(ReadingGoal(target: target, period: period));
                       if (context.mounted) Navigator.of(context).pop();
                     },
-                    child: const Text('Save'),
+                    child: const Text("Save"),
                   ),
                 ),
               ],

@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 
 /// Lightweight metadata from the UI so the bulk scrobble controller avoids a full details fetch.
 class BulkScrobbleIssueContext {
@@ -31,15 +31,15 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
 
   Future<({String seriesName, String issueNumber, String? imageUrl})>
   _resolveIssueMetadata(int issueId, BulkScrobbleIssueContext? ctx) async {
-    String seriesName = ctx?.seriesName ?? 'Unknown Series';
-    String issueNumber = ctx?.issueNumber ?? '#$issueId';
+    final String seriesName = ctx?.seriesName ?? "Unknown Series";
+    final String issueNumber = ctx?.issueNumber ?? "#$issueId";
     String? imageUrl = ctx?.imageUrl;
 
     if (imageUrl == null || imageUrl.isEmpty) {
       try {
         imageUrl = await ref
             .read(entityImageCacheProvider)
-            .get('issue', issueId);
+            .get("issue", issueId);
       } catch (_) {}
     }
 
@@ -130,8 +130,8 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
             final meta = await _resolveIssueMetadata(issueId, ctx);
             readEventsToAdd.add(
               LibraryActivityEvent(
-                id: 'act-read-$issueId-${readAt.microsecondsSinceEpoch}',
-                userId: 'local-user',
+                id: "act-read-$issueId-${readAt.microsecondsSinceEpoch}",
+                userId: "local-user",
                 type: ActivityEventType.read,
                 issueId: issueId,
                 seriesId: seriesId,
@@ -165,7 +165,7 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
         }
 
         if (readEventsToAdd.isNotEmpty) {
-          final batchId = 'batch_${DateTime.now().millisecondsSinceEpoch}';
+          final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
           await activityRepository.batchAddEvents(readEventsToAdd, batchId: batchId);
         }
       } finally {

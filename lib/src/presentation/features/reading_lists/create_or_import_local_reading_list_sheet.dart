@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/sharing/reading_list_sharing_service.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:uuid/uuid.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/sharing/reading_list_sharing_service.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:uuid/uuid.dart";
 
 enum _CreateOrImportMode { create, import }
 
@@ -22,8 +22,8 @@ class CreateOrImportLocalReadingListSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context) {
     return TakionBottomSheet.show<void>(
       context: context,
-      title: 'Create/Import Reading List',
-      child: CreateOrImportLocalReadingListSheet(showModeToggle: true),
+      title: "Create/Import Reading List",
+      child: const CreateOrImportLocalReadingListSheet(showModeToggle: true),
     );
   }
 
@@ -33,7 +33,7 @@ class CreateOrImportLocalReadingListSheet extends ConsumerStatefulWidget {
   }) {
     return TakionBottomSheet.show<void>(
       context: context,
-      title: 'Create Reading List',
+      title: "Create Reading List",
       child: CreateOrImportLocalReadingListSheet(
         showModeToggle: false,
         initialContentType: initialContentType,
@@ -84,7 +84,7 @@ class _CreateOrImportLocalReadingListSheetState
     );
 
     ref.read(localReadingListsProvider.notifier).addList(newList);
-    TakionAlerts.success(context, 'Reading List Created');
+    TakionAlerts.success(context, "Reading List Created");
     Navigator.pop(context);
   }
 
@@ -96,18 +96,18 @@ class _CreateOrImportLocalReadingListSheetState
       final existingLists = ref.read(localReadingListsProvider).value ?? [];
       if (existingLists.any((l) => l.id == list.id)) {
         if (mounted) {
-          TakionAlerts.error(context, 'Reading list already exists');
+          TakionAlerts.error(context, "Reading list already exists");
         }
         return;
       }
       await ref.read(localReadingListsProvider.notifier).addList(list);
       if (mounted) {
-        TakionAlerts.success(context, 'Reading List Imported');
+        TakionAlerts.success(context, "Reading List Imported");
         Navigator.pop(context);
       }
     } else {
       if (mounted) {
-        TakionAlerts.error(context, 'Failed to import reading list');
+        TakionAlerts.error(context, "Failed to import reading list");
       }
     }
   }
@@ -128,11 +128,11 @@ class _CreateOrImportLocalReadingListSheetState
                 segments: const [
                   ButtonSegment(
                     value: _CreateOrImportMode.create,
-                    label: Text('Create'),
+                    label: Text("Create"),
                   ),
                   ButtonSegment(
                     value: _CreateOrImportMode.import,
-                    label: Text('Import'),
+                    label: Text("Import"),
                   ),
                 ],
                 selected: {_mode},
@@ -158,23 +158,23 @@ class _CreateOrImportLocalReadingListSheetState
           TextFormField(
             controller: _titleController,
             decoration: const InputDecoration(
-              labelText: 'Title',
-              hintText: 'e.g. Batman: Knightfall',
+              labelText: "Title",
+              hintText: "e.g. Batman: Knightfall",
             ),
-            validator: (v) => v?.isEmpty == true ? 'Required' : null,
+            validator: (v) => v?.isEmpty == true ? "Required" : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _descController,
             decoration: const InputDecoration(
-              labelText: 'Description',
-              hintText: 'Optional summary...',
+              labelText: "Description",
+              hintText: "Optional summary...",
             ),
             maxLines: 2,
           ),
           const SizedBox(height: 16),
           const Text(
-            'Content Type',
+            "Content Type",
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -184,11 +184,11 @@ class _CreateOrImportLocalReadingListSheetState
               segments: const [
                 ButtonSegment(
                   value: ListContentType.issue,
-                  label: Text('ISSUES'),
+                  label: Text("ISSUES"),
                 ),
                 ButtonSegment(
                   value: ListContentType.series,
-                  label: Text('SERIES'),
+                  label: Text("SERIES"),
                 ),
               ],
               selected: {_contentType},
@@ -199,7 +199,7 @@ class _CreateOrImportLocalReadingListSheetState
           const SizedBox(height: 16),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Ordered List'),
+            title: const Text("Ordered List"),
             value: _isOrdered,
             onChanged: (v) => setState(() => _isOrdered = v),
           ),
@@ -208,7 +208,7 @@ class _CreateOrImportLocalReadingListSheetState
             width: double.infinity,
             child: FilledButton(
               onPressed: _submitCreate,
-              child: const Text('Create List'),
+              child: const Text("Create List"),
             ),
           ),
         ],
@@ -225,7 +225,7 @@ class _CreateOrImportLocalReadingListSheetState
           child: OutlinedButton.icon(
             onPressed: _importFile,
             icon: const Icon(Icons.file_upload_outlined),
-            label: const Text('Select File'),
+            label: const Text("Select File"),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
             ),
@@ -233,7 +233,7 @@ class _CreateOrImportLocalReadingListSheetState
         ),
         const SizedBox(height: 12),
         Text(
-          'Import a .takion reading list file',
+          "Import a .takion reading list file",
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),

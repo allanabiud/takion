@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class BrowsePagedData<T> {
   const BrowsePagedData({
@@ -156,15 +156,15 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
               top: index == 0 ? 12 : 2,
               bottom: index == 7 ? 0 : 2,
             ),
-            child: Material(
+            child: const Material(
               color: Colors.transparent,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 child: Row(
                   children: [
-                    const SkeletonBox(width: 56, height: 80, borderRadius: 8),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    SkeletonBox(width: 56, height: 80, borderRadius: 8),
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

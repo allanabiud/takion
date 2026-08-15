@@ -1,10 +1,9 @@
-import 'dart:convert';
-import 'dart:typed_data';
+import "dart:convert";
+import "dart:typed_data";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/services/drive_backup_service.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/common/services/drive_backup_service.dart";
 
 final localBackupServiceProvider = Provider<LocalBackupService>((ref) {
   final db = ref.watch(driftDatabaseProvider);
@@ -25,7 +24,7 @@ class LocalBackupService {
     final decoded = utf8.decode(bytes);
     final payload = jsonDecode(decoded) as Map<String, dynamic>;
 
-    if (payload['version'] != 1 && payload['version'] != 2) {
+    if (payload["version"] != 1 && payload["version"] != 2) {
       throw FormatException(
         'Unsupported backup format version: ${payload['version']}',
       );

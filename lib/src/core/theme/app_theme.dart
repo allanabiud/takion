@@ -1,12 +1,12 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
+import "package:flex_color_scheme/flex_color_scheme.dart";
+import "package:flutter/material.dart";
 
 /// Defines the light and dark themes.
 class AppThemes {
   static ThemeData light({FlexScheme accentScheme = FlexScheme.green}) {
     final ThemeData base = FlexThemeData.light(
       scheme: accentScheme,
-      fontFamily: 'Rubik',
+      fontFamily: "Rubik",
       appBarOpacity: 0.0,
       subThemesData: const FlexSubThemesData(
         interactionEffects: true,
@@ -22,7 +22,7 @@ class AppThemes {
           TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Rubik',
+            fontFamily: "Rubik",
           ),
         ),
         elevatedButtonRadius: 10.0,
@@ -73,7 +73,7 @@ class AppThemes {
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Rubik',
+          fontFamily: "Rubik",
           color: scheme.onSurface,
         ),
         actionsIconTheme: const IconThemeData(size: 30),
@@ -89,7 +89,7 @@ class AppThemes {
         extendedTextStyle: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Rubik',
+          fontFamily: "Rubik",
         ),
         iconSize: 30,
       ),
@@ -102,7 +102,7 @@ class AppThemes {
   }) {
     final ThemeData base = FlexThemeData.dark(
       scheme: accentScheme,
-      fontFamily: 'Rubik',
+      fontFamily: "Rubik",
       appBarOpacity: 0.0,
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 8,
@@ -122,7 +122,7 @@ class AppThemes {
           TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Rubik',
+            fontFamily: "Rubik",
           ),
         ),
         elevatedButtonRadius: 10.0,
@@ -173,7 +173,7 @@ class AppThemes {
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Rubik',
+          fontFamily: "Rubik",
           color: scheme.onSurface,
         ),
         actionsIconTheme: const IconThemeData(size: 30),
@@ -189,7 +189,7 @@ class AppThemes {
         extendedTextStyle: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Rubik',
+          fontFamily: "Rubik",
         ),
         iconSize: 30,
       ),

@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _SeriesRepositoryMixin on _RepositoryState {
   Future<SeriesSearchPage> searchSeries(
@@ -73,7 +73,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_seriesSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchSeries(
@@ -180,7 +180,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         );
       }
       if (cachedMeta != null) {
-        AppPerformanceMetrics.instance.recordCacheHit('series_list');
+        AppPerformanceMetrics.instance.recordCacheHit("series_list");
         return SeriesListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -190,7 +190,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         );
       }
     }
-    AppPerformanceMetrics.instance.recordCacheMiss('series_list');
+    AppPerformanceMetrics.instance.recordCacheMiss("series_list");
 
     try {
       final key = '${nextUrl ?? "$page"}|$modifiedGt|$forceRefresh';
@@ -271,7 +271,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getSeries(seriesId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('series_details');
+      AppPerformanceMetrics.instance.recordCacheHit("series_details");
       return _seriesRowToEntity(cached);
     }
 
@@ -286,7 +286,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.seriesDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'series_details_response',
+          "series_details_response",
         );
         final dto = SeriesDetailsDto.fromJson(cachedJson);
         await _upsertSeriesDetails(dto);
@@ -295,10 +295,10 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('series_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("series_details");
 
     try {
-      final key = '$seriesId|$forceRefresh';
+      final key = "$seriesId|$forceRefresh";
       return _coalesce(_seriesDetailsInFlight, key, () async {
         final response = await _remoteDataSource.getSeriesDetails(seriesId);
         if (response.statusCode == 304) {
@@ -320,7 +320,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
           throw DioException(
             requestOptions: response.requestOptions,
             response: response,
-            message: '304 Not Modified and no cached data available',
+            message: "304 Not Modified and no cached data available",
           );
         }
         final data = response.data as Map<String, dynamic>;
@@ -359,7 +359,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
       if (cached != null) {
         return _seriesRowToEntity(cached);
       }
-      AppLogger.error('Failed to fetch series details', error: e);
+      AppLogger.error("Failed to fetch series details", error: e);
       rethrow;
     }
   }
@@ -419,18 +419,23 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
                       page: page,
                       cancelToken: cancelToken,
                     );
-              await _localDataSource.cacheSeriesIssueListResults(
-                seriesId,
-                remotePage.results,
-                page: page,
-                limit: limit,
+              if (_isValidIssueListPage(
                 count: remotePage.count,
-                next: remotePage.next,
-                previous: remotePage.previous,
-                ordering: ordering,
-                storeDateGte: storeDateGte,
-                storeDateLte: storeDateLte,
-              );
+                resultCount: remotePage.results.length,
+              )) {
+                await _localDataSource.cacheSeriesIssueListResults(
+                  seriesId,
+                  remotePage.results,
+                  page: page,
+                  limit: limit,
+                  count: remotePage.count,
+                  next: remotePage.next,
+                  previous: remotePage.previous,
+                  ordering: ordering,
+                  storeDateGte: storeDateGte,
+                  storeDateLte: storeDateLte,
+                );
+              }
               _upsertIssueListStubs(remotePage.results);
               _indexSeriesNamesFromIssueList(remotePage.results);
             },
@@ -445,6 +450,10 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
             previous: cachedMeta.previous,
             results: cachedDtos.map((entry) => entry.toEntity()).toList(),
             currentPage: page,
+            realPageSize: _issuePageSize(
+              resultCount: cachedDtos.length,
+              hasNext: cachedMeta.next != null,
+            ),
           );
         }
       }
@@ -452,7 +461,7 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
 
     try {
       final key =
-          '$seriesId|${nextUrl ?? "$page"}|$forceRefresh|$ordering|${storeDateGte?.millisecondsSinceEpoch}|${storeDateLte?.millisecondsSinceEpoch}';
+          '$seriesId|${nextUrl ?? "$page"}|$forceRefresh|$limit|$ordering|${storeDateGte?.millisecondsSinceEpoch}|${storeDateLte?.millisecondsSinceEpoch}';
       return _coalesce(_seriesIssueListInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getSeriesIssueList(
@@ -471,18 +480,23 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
                 storeDateLte: storeDateLte,
                 cancelToken: cancelToken,
               );
-        await _localDataSource.cacheSeriesIssueListResults(
-          seriesId,
-          remotePage.results,
-          page: page,
-          limit: limit,
+        if (_isValidIssueListPage(
           count: remotePage.count,
-          next: remotePage.next,
-          previous: remotePage.previous,
-          ordering: ordering,
-          storeDateGte: storeDateGte,
-          storeDateLte: storeDateLte,
-        );
+          resultCount: remotePage.results.length,
+        )) {
+          await _localDataSource.cacheSeriesIssueListResults(
+            seriesId,
+            remotePage.results,
+            page: page,
+            limit: limit,
+            count: remotePage.count,
+            next: remotePage.next,
+            previous: remotePage.previous,
+            ordering: ordering,
+            storeDateGte: storeDateGte,
+            storeDateLte: storeDateLte,
+          );
+        }
         _upsertIssueListStubs(remotePage.results);
         _indexSeriesNamesFromIssueList(remotePage.results);
         return SeriesIssueListPage(
@@ -491,6 +505,10 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
           previous: remotePage.previous,
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: remotePage.results.length,
+            hasNext: remotePage.next != null,
+          ),
         );
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
@@ -518,6 +536,10 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
       rethrow;

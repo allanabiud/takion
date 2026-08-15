@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _ArcsRepositoryMixin on _RepositoryState {
   Future<ArcListPage> getArcList({
@@ -166,7 +166,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:arc:$query:$page',
+          cacheKey: nextUrl ?? "search:arc:$query:$page",
           cooldown: MetronCachePolicies.arcSearchResults.refreshCooldown,
         );
       }
@@ -182,7 +182,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_arcSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchArcs(
@@ -234,7 +234,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getArc(arcId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('arc_details');
+      AppPerformanceMetrics.instance.recordCacheHit("arc_details");
       return _arcRowToEntity(cached);
     }
 
@@ -247,7 +247,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.arcDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'arc_details_response',
+          "arc_details_response",
         );
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);
@@ -255,7 +255,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('arc_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("arc_details");
 
     try {
       final response = await _remoteDataSource.getArcDetails(arcId);
@@ -269,7 +269,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           return dto.toEntity();
         }
         return _arcRowToEntity(
-          cached ?? (throw StateError('Arc $arcId not found')),
+          cached ?? (throw StateError("Arc $arcId not found")),
         );
       }
       final dto = ArcDetailsDto.fromJson(jsonToMap(response.data));
@@ -285,7 +285,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       await _localDataSource.cacheArcDetailsResponse(arcId, response.data);
       return dto.toEntity();
     } catch (e) {
-      AppLogger.error('Failed to fetch arc details', error: e);
+      AppLogger.error("Failed to fetch arc details", error: e);
       final cachedJson =
           await _localDataSource.getCachedArcDetailsResponse(arcId);
       if (cachedJson != null) {
@@ -342,19 +342,24 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                     page: page,
                     cancelToken: cancelToken,
                   );
-            await _localDataSource.cacheArcIssueListResults(
-              arcId,
-              remotePage.results,
-              page: page,
-              limit: limit,
+            if (_isValidIssueListPage(
               count: remotePage.count,
-              next: remotePage.next,
-              previous: remotePage.previous,
-            );
+              resultCount: remotePage.results.length,
+            )) {
+              await _localDataSource.cacheArcIssueListResults(
+                arcId,
+                remotePage.results,
+                page: page,
+                limit: limit,
+                count: remotePage.count,
+                next: remotePage.next,
+                previous: remotePage.previous,
+              );
+            }
             _upsertIssueListStubs(remotePage.results);
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: nextUrl ?? 'arc_issue_list:$arcId:$page',
+          cacheKey: nextUrl ?? "arc_issue_list:$arcId:$page",
           cooldown: MetronCachePolicies.arcIssueList.refreshCooldown,
         );
       }
@@ -365,12 +370,16 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
     }
 
     try {
-      final key = nextUrl ?? '$arcId|$page|$forceRefresh';
+      final key = nextUrl ?? "$arcId|$page|$forceRefresh|$limit";
       return _coalesce(_arcIssueListInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getArcIssueList(
@@ -383,15 +392,20 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 page: page,
                 cancelToken: cancelToken,
               );
-        await _localDataSource.cacheArcIssueListResults(
-          arcId,
-          remotePage.results,
-          page: page,
-          limit: limit,
+        if (_isValidIssueListPage(
           count: remotePage.count,
-          next: remotePage.next,
-          previous: remotePage.previous,
-        );
+          resultCount: remotePage.results.length,
+        )) {
+          await _localDataSource.cacheArcIssueListResults(
+            arcId,
+            remotePage.results,
+            page: page,
+            limit: limit,
+            count: remotePage.count,
+            next: remotePage.next,
+            previous: remotePage.previous,
+          );
+        }
         _upsertIssueListStubs(remotePage.results);
         _indexSeriesNamesFromIssueList(remotePage.results);
         return ArcIssueListPage(
@@ -400,6 +414,10 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           previous: remotePage.previous,
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: remotePage.results.length,
+            hasNext: remotePage.next != null,
+          ),
         );
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
@@ -411,6 +429,10 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
       rethrow;

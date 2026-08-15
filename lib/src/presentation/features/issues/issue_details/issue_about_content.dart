@@ -1,22 +1,22 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 int _creditPriority(IssueDetailsCredit credit) {
   const primary = [
-    'writer',
-    'script',
-    'artist',
-    'penciler',
-    'penciller',
-    'colorist',
-    'letterer',
-    'inker',
-    'cover',
+    "writer",
+    "script",
+    "artist",
+    "penciler",
+    "penciller",
+    "colorist",
+    "letterer",
+    "inker",
+    "cover",
   ];
   for (final role in credit.roles) {
     final name = role.name.trim().toLowerCase();
@@ -48,16 +48,16 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   static bool _isCollectedEdition(String? seriesType) {
     if (seriesType == null) return false;
     final lower = seriesType.toLowerCase();
-    return lower.contains('trade paperback') ||
-        lower.contains('tpb') ||
-        lower.contains('hardcover') ||
-        lower.contains('hc') ||
-        lower.contains('omnibus') ||
-        lower.contains('graphic novel') ||
-        lower.contains('gn') ||
-        lower.contains('compendium') ||
-        lower.contains('digest') ||
-        lower.contains('treasury');
+    return lower.contains("trade paperback") ||
+        lower.contains("tpb") ||
+        lower.contains("hardcover") ||
+        lower.contains("hc") ||
+        lower.contains("omnibus") ||
+        lower.contains("graphic novel") ||
+        lower.contains("gn") ||
+        lower.contains("compendium") ||
+        lower.contains("digest") ||
+        lower.contains("treasury");
   }
 
   Widget _buildSectionCard(
@@ -78,7 +78,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     if (!hasDescription) {
       return Text(
-        'No description available.',
+        "No description available.",
         style: Theme.of(context).textTheme.bodyMedium,
       );
     }
@@ -114,7 +114,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader(title: 'SUMMARY'),
+              const SectionHeader(title: "SUMMARY"),
               const SizedBox(height: 8),
               ClipRect(
                 child: AnimatedAlign(
@@ -143,8 +143,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
                     ),
                     child: Text(
                       _isDescriptionExpanded
-                          ? 'Tap to read less'
-                          : 'Tap to read more',
+                          ? "Tap to read less"
+                          : "Tap to read more",
                       key: ValueKey(_isDescriptionExpanded),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
@@ -182,7 +182,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'STORIES'),
+        const SectionHeader(title: "STORIES"),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -221,7 +221,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(title: isCollected ? 'REPRINTS' : 'REPRINTED IN'),
+        SectionHeader(title: isCollected ? "REPRINTS" : "REPRINTED IN"),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -230,7 +230,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
             final issueText = reprint.issue?.trim();
             final label = issueText != null && issueText.isNotEmpty
                 ? issueText
-                : 'Issue ${reprint.id}';
+                : "Issue ${reprint.id}";
             final chipWidth = MediaQuery.of(context).size.width - 48;
             return ConstrainedBox(
               constraints: BoxConstraints(maxWidth: chipWidth),
@@ -305,10 +305,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'CREATORS'),
+        const SectionHeader(title: "CREATORS"),
         const SizedBox(height: 12),
         HorizontalPreviewSection(
-          title: 'Creators',
+          title: "Creators",
           itemCount: credits.length,
           height: 150,
           separatorWidth: 0,
@@ -324,7 +324,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               creatorId: credit.id,
               name: creator != null && creator.isNotEmpty
                   ? creator
-                  : 'Unknown Creator',
+                  : "Unknown Creator",
               subtitle: roles.isNotEmpty ? roles.first : null,
               width: 95,
             );
@@ -343,10 +343,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'CHARACTERS'),
+        const SectionHeader(title: "CHARACTERS"),
         const SizedBox(height: 12),
         HorizontalPreviewSection(
-          title: 'Characters',
+          title: "Characters",
           itemCount: characters.length,
           height: 130,
           separatorWidth: 0,
@@ -356,7 +356,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               characterId: character.id,
               name: character.name.trim().isNotEmpty
                   ? character.name.trim()
-                  : 'Unknown Character',
+                  : "Unknown Character",
               width: 95,
             );
           },
@@ -372,21 +372,21 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'TEAMS'),
+        const SectionHeader(title: "TEAMS"),
         const SizedBox(height: 12),
         HorizontalPreviewSection(
-          title: 'Teams',
+          title: "Teams",
           itemCount: teams.length,
           height: 155,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final team = teams[index];
             return EntityCard(
-              entityType: 'team',
+              entityType: "team",
               entityId: team.id,
               name: team.name.trim().isNotEmpty
                   ? team.name.trim()
-                  : 'Unknown Team',
+                  : "Unknown Team",
               width: 100,
               onTap: () => context.pushRoute(TeamDetailsRoute(teamId: team.id)),
             );
@@ -403,21 +403,21 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'ARCS'),
+        const SectionHeader(title: "ARCS"),
         const SizedBox(height: 12),
         HorizontalPreviewSection(
-          title: 'Arcs',
+          title: "Arcs",
           itemCount: arcs.length,
           height: 155,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final arc = arcs[index];
             return EntityCard(
-              entityType: 'arc',
+              entityType: "arc",
               entityId: arc.id,
               name: arc.name.trim().isNotEmpty
                   ? arc.name.trim()
-                  : 'Unknown Arc',
+                  : "Unknown Arc",
               width: 100,
               onTap: () => context.pushRoute(ArcDetailsRoute(arcId: arc.id)),
             );
@@ -434,21 +434,21 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'UNIVERSES'),
+        const SectionHeader(title: "UNIVERSES"),
         const SizedBox(height: 12),
         HorizontalPreviewSection(
-          title: 'Universes',
+          title: "Universes",
           itemCount: universes.length,
           height: 140,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final universe = universes[index];
             return EntityCard(
-              entityType: 'universe',
+              entityType: "universe",
               entityId: universe.id,
               name: universe.name.trim().isNotEmpty
                   ? universe.name.trim()
-                  : 'Unknown Universe',
+                  : "Unknown Universe",
               width: 100,
               imageHeight: 80,
               onTap: () => context.pushRoute(
@@ -472,7 +472,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final isbn = widget.issue.isbn?.trim();
     final upcIsbn =
         (upc != null && upc.isNotEmpty && isbn != null && isbn.isNotEmpty)
-        ? '$upc / $isbn'
+        ? "$upc / $isbn"
         : (upc != null && upc.isNotEmpty)
         ? upc
         : (isbn != null && isbn.isNotEmpty)
@@ -481,20 +481,20 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     String? currencySymbol(String? code) {
       switch (code?.toUpperCase()) {
-        case 'USD':
-          return r'$';
-        case 'GBP':
-          return '£';
-        case 'EUR':
-          return '€';
-        case 'JPY':
-          return '¥';
-        case 'CAD':
-          return r'CA$';
-        case 'AUD':
-          return r'A$';
+        case "USD":
+          return r"$";
+        case "GBP":
+          return "£";
+        case "EUR":
+          return "€";
+        case "JPY":
+          return "¥";
+        case "CAD":
+          return r"CA$";
+        case "AUD":
+          return r"A$";
         default:
-          return r'$';
+          return r"$";
       }
     }
 
@@ -502,41 +502,41 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         date == null ? null : DateFormatter.comicDate(date);
 
     final price = priceValue != null && priceValue.isNotEmpty
-        ? '${currencySymbol(currency)}$priceValue'
+        ? "${currencySymbol(currency)}$priceValue"
         : null;
 
     final allItems = <InfoGridItem>[
       // Format / Pages / Price / Volume / Rating
-      if (seriesType != null) InfoGridItem(label: 'Format', value: seriesType),
-      if (pages != null) InfoGridItem(label: 'Pages', value: '$pages'),
-      if (price != null) InfoGridItem(label: 'Price', value: price),
+      if (seriesType != null) InfoGridItem(label: "Format", value: seriesType),
+      if (pages != null) InfoGridItem(label: "Pages", value: "$pages"),
+      if (price != null) InfoGridItem(label: "Price", value: price),
       if (widget.issue.series?.volume != null)
-        InfoGridItem(label: 'Volume', value: '${widget.issue.series!.volume}'),
+        InfoGridItem(label: "Volume", value: "${widget.issue.series!.volume}"),
       if (rating != null && rating.isNotEmpty)
-        InfoGridItem(label: 'Rating', value: rating),
+        InfoGridItem(label: "Rating", value: rating),
       if (widget.issue.altNumber != null &&
           widget.issue.altNumber!.trim().isNotEmpty)
-        InfoGridItem(label: 'Alt Number', value: widget.issue.altNumber!),
+        InfoGridItem(label: "Alt Number", value: widget.issue.altNumber!),
       // Dates
       if (widget.issue.focDate != null)
         InfoGridItem(
-          label: 'FOC Date',
+          label: "FOC Date",
           value: formatDate(widget.issue.focDate)!,
         ),
       if (widget.issue.coverDate != null)
         InfoGridItem(
-          label: 'Cover Date',
+          label: "Cover Date",
           value: formatDate(widget.issue.coverDate)!,
         ),
       if (widget.issue.storeDate != null)
         InfoGridItem(
-          label: 'Store Date',
+          label: "Store Date",
           value: formatDate(widget.issue.storeDate)!,
         ),
       // Product codes
       if (distributorSku != null && distributorSku.isNotEmpty)
-        InfoGridItem(label: 'Distributor SKU', value: distributorSku),
-      if (upcIsbn != null) InfoGridItem(label: 'UPC / ISBN', value: upcIsbn),
+        InfoGridItem(label: "Distributor SKU", value: distributorSku),
+      if (upcIsbn != null) InfoGridItem(label: "UPC / ISBN", value: upcIsbn),
     ];
 
     if (allItems.isEmpty) return const SizedBox.shrink();
@@ -613,7 +613,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DETAILS'),
+        const SectionHeader(title: "DETAILS"),
         const SizedBox(height: 12),
         buildItems(allItems),
       ],
@@ -628,7 +628,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'IMPRINT'),
+        const SectionHeader(title: "IMPRINT"),
         const SizedBox(height: 12),
         ImprintCard(imprintId: imprint.id, name: imprint.name),
       ],
@@ -641,7 +641,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'GENRES'),
+        const SectionHeader(title: "GENRES"),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -757,7 +757,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Last modified: ${_formatModified(widget.issue.modified)}',
+          "Last modified: ${_formatModified(widget.issue.modified)}",
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
@@ -767,7 +767,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   }
 
   String _formatModified(DateTime? dateTime) {
-    if (dateTime == null) return 'Unknown';
+    if (dateTime == null) return "Unknown";
     return DateFormatter.isoDateTime(dateTime);
   }
 }

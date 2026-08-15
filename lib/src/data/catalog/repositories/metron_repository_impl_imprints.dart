@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _ImprintsRepositoryMixin on _RepositoryState {
   Future<ImprintListPage> getImprintList({
@@ -166,7 +166,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:imprint:$query:$page',
+          cacheKey: nextUrl ?? "search:imprint:$query:$page",
           cooldown: MetronCachePolicies.imprintSearchResults.refreshCooldown,
         );
       }
@@ -182,7 +182,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_imprintSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchImprints(
@@ -234,7 +234,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getImprint(imprintId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('imprint_details');
+      AppPerformanceMetrics.instance.recordCacheHit("imprint_details");
       return _imprintRowToEntity(cached);
     }
 
@@ -247,18 +247,18 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.imprintDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'imprint_details_response',
+          "imprint_details_response",
         );
         final dto = ImprintDetailsDto.fromJson(cachedJson);
         await _upsertImprintDetails(dto);
         return _imprintRowToEntity(
           await _metronEntityDao.getImprint(imprintId) ??
-              (throw StateError('Imprint $imprintId not found after upsert')),
+              (throw StateError("Imprint $imprintId not found after upsert")),
         );
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('imprint_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("imprint_details");
 
     try {
       final response = await _remoteDataSource.getImprintDetails(imprintId);
@@ -274,11 +274,11 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
           await _upsertImprintDetails(dto);
           return _imprintRowToEntity(
             await _metronEntityDao.getImprint(imprintId) ??
-                (throw StateError('Imprint $imprintId not found after upsert')),
+                (throw StateError("Imprint $imprintId not found after upsert")),
           );
         }
         return _imprintRowToEntity(
-          cached ?? (throw StateError('Imprint $imprintId not found')),
+          cached ?? (throw StateError("Imprint $imprintId not found")),
         );
       }
       final data = response.data as Map<String, dynamic>;
@@ -295,10 +295,10 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       await _localDataSource.cacheImprintDetailsResponse(imprintId, data);
       return _imprintRowToEntity(
         await _metronEntityDao.getImprint(imprintId) ??
-            (throw StateError('Imprint $imprintId not found after upsert')),
+            (throw StateError("Imprint $imprintId not found after upsert")),
       );
     } catch (e) {
-      AppLogger.error('Failed to fetch imprint details', error: e);
+      AppLogger.error("Failed to fetch imprint details", error: e);
       final cachedJson =
           await _localDataSource.getCachedImprintDetailsResponse(imprintId);
       if (cachedJson != null) {
@@ -306,7 +306,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
         await _upsertImprintDetails(dto);
         return _imprintRowToEntity(
           await _metronEntityDao.getImprint(imprintId) ??
-              (throw StateError('Imprint $imprintId not found after upsert')),
+              (throw StateError("Imprint $imprintId not found after upsert")),
         );
       }
       if (cached != null) {
@@ -348,7 +348,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       id: row.id,
       name: row.name,
       publisher: row.publisherId != null
-          ? ImprintNamedRef(id: row.publisherId!, name: '')
+          ? ImprintNamedRef(id: row.publisherId!, name: "")
           : null,
       founded: row.founded,
       desc: row.description,

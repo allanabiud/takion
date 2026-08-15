@@ -1,12 +1,12 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "dart:async";
+import "package:dio/dio.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
-part 'series_search_provider.g.dart';
+part "series_search_provider.g.dart";
 
 @riverpod
 class SeriesSearch extends _$SeriesSearch {
@@ -19,24 +19,12 @@ class SeriesSearch extends _$SeriesSearch {
       return const SeriesSearchPage(results: [], count: 0, currentPage: 1);
     }
 
-    // 1. Instant local search from MetronEntityDao
-    final db = ref.watch(driftDatabaseProvider);
-    final localRows = await db.metronEntityDao.searchSeriesLocally(
+    // 1. Instant local search from LocalCatalogRepository
+    final localCatalog = ref.watch(localCatalogRepositoryProvider);
+    final localStubs = await localCatalog.searchSeriesLocally(
       args.query,
       limit: metronDefaultPageSize,
     );
-    final localStubs = localRows
-        .map(
-          (row) => SeriesList(
-            id: row.id,
-            name: row.name,
-            yearBegan: row.yearBegan,
-            yearEnd: row.yearEnd,
-            volume: row.volume,
-            issueCount: row.issueCount,
-          ),
-        )
-        .toList();
 
     // Small debounce for remote API call
     await Future.delayed(const Duration(milliseconds: 300));
@@ -76,7 +64,7 @@ class SeriesSearch extends _$SeriesSearch {
         );
       }
 
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
 
       // Merge local stubs and remote results without duplicates
       final seenIds = <int>{for (final item in remotePage.results) item.id};

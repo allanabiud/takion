@@ -1,7 +1,7 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:takion/src/domain/catalog/entities/entities.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:takion/src/domain/catalog/entities/entities.dart";
 
-part 'issue_list.freezed.dart';
+part "issue_list.freezed.dart";
 
 @freezed
 abstract class IssueList with _$IssueList {

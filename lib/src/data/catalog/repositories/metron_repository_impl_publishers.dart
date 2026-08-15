@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _PublishersRepositoryMixin on _RepositoryState {
   Future<PublisherListPage> getPublisherList({
@@ -166,7 +166,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:publisher:$query:$page',
+          cacheKey: nextUrl ?? "search:publisher:$query:$page",
           cooldown: MetronCachePolicies.publisherSearchResults.refreshCooldown,
         );
       }
@@ -182,7 +182,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_publisherSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchPublishers(
@@ -234,7 +234,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getPublisher(publisherId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('publisher_details');
+      AppPerformanceMetrics.instance.recordCacheHit("publisher_details");
       return _publisherRowToEntity(cached);
     }
 
@@ -247,18 +247,18 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.publisherDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'publisher_details_response',
+          "publisher_details_response",
         );
         final dto = PublisherDetailsDto.fromJson(cachedJson);
         await _upsertPublisherDetails(dto);
         return _publisherRowToEntity(
           await _metronEntityDao.getPublisher(publisherId) ??
-              (throw StateError('Publisher $publisherId not found after upsert')),
+              (throw StateError("Publisher $publisherId not found after upsert")),
         );
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('publisher_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("publisher_details");
 
     try {
       final response = await _remoteDataSource.getPublisherDetails(
@@ -278,11 +278,11 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
           await _upsertPublisherDetails(dto);
           return _publisherRowToEntity(
             await _metronEntityDao.getPublisher(publisherId) ??
-                (throw StateError('Publisher $publisherId not found after upsert')),
+                (throw StateError("Publisher $publisherId not found after upsert")),
           );
         }
         return _publisherRowToEntity(
-          cached ?? (throw StateError('Publisher $publisherId not found')),
+          cached ?? (throw StateError("Publisher $publisherId not found")),
         );
       }
       final data = response.data as Map<String, dynamic>;
@@ -299,10 +299,10 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
       await _localDataSource.cachePublisherDetailsResponse(publisherId, data);
       return _publisherRowToEntity(
         await _metronEntityDao.getPublisher(publisherId) ??
-            (throw StateError('Publisher $publisherId not found after upsert')),
+            (throw StateError("Publisher $publisherId not found after upsert")),
       );
     } catch (e) {
-      AppLogger.error('Failed to fetch publisher details', error: e);
+      AppLogger.error("Failed to fetch publisher details", error: e);
       final cachedJson =
           await _localDataSource.getCachedPublisherDetailsResponse(publisherId);
       if (cachedJson != null) {
@@ -310,7 +310,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
         await _upsertPublisherDetails(dto);
         return _publisherRowToEntity(
           await _metronEntityDao.getPublisher(publisherId) ??
-              (throw StateError('Publisher $publisherId not found after upsert')),
+              (throw StateError("Publisher $publisherId not found after upsert")),
         );
       }
       if (cached != null) {
@@ -373,7 +373,7 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
             );
             _upsertSeriesListStubs(remotePage.results);
           },
-          cacheKey: nextUrl ?? 'publisher_series_list:$publisherId:$page',
+          cacheKey: nextUrl ?? "publisher_series_list:$publisherId:$page",
           cooldown: MetronCachePolicies.publisherSeriesList.refreshCooldown,
         );
       }

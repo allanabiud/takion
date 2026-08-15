@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/catalog/entities/entities.dart';
+import "package:takion/src/domain/catalog/entities/entities.dart";
 
 class CharacterIssueListPage {
   const CharacterIssueListPage({
@@ -7,6 +7,7 @@ class CharacterIssueListPage {
     required this.currentPage,
     this.next,
     this.previous,
+    this.realPageSize,
   });
 
   final int count;
@@ -15,11 +16,16 @@ class CharacterIssueListPage {
   final List<IssueList> results;
   final int currentPage;
 
+  /// The number of results Metron returns per page, when known (i.e. when the
+  /// response indicated more than one page). Null when the single-page size is
+  /// unknown or only one page exists.
+  final int? realPageSize;
+
   int? _extractPage(String? url, {required bool defaultToFirstPage}) {
     if (url == null || url.isEmpty) return null;
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
-    final parsedPage = int.tryParse(uri.queryParameters['page'] ?? '');
+    final parsedPage = int.tryParse(uri.queryParameters["page"] ?? "");
     if (parsedPage != null) return parsedPage;
     return defaultToFirstPage ? 1 : null;
   }

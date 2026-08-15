@@ -1,42 +1,42 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/cache_policy.dart";
+import "package:takion/src/core/performance/performance_metrics.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/home/providers/home_content_cache.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 Set<String> _seriesTokens(String name) {
   return name
       .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ')
-      .split(RegExp(r'\s+'))
+      .replaceAll(RegExp(r"[^a-z0-9\s]"), " ")
+      .split(RegExp(r"\s+"))
       .where((token) => token.length >= 4)
       .toSet();
 }
 
 List<int> _scoreBecauseYouPulledCandidates(Map<String, dynamic> input) {
-  final weeklySeriesIds = (input['weekly_series_ids'] as List).cast<int?>();
-  final weeklyIssueIds = (input['weekly_issue_ids'] as List).cast<int?>();
-  final weeklyPublishers = (input['weekly_publishers'] as List).cast<String?>();
-  final weeklyNames = (input['weekly_names'] as List).cast<String?>();
+  final weeklySeriesIds = (input["weekly_series_ids"] as List).cast<int?>();
+  final weeklyIssueIds = (input["weekly_issue_ids"] as List).cast<int?>();
+  final weeklyPublishers = (input["weekly_publishers"] as List).cast<String?>();
+  final weeklyNames = (input["weekly_names"] as List).cast<String?>();
 
-  final pulledSeriesIdsSet = (input['pulled_series_ids'] as List)
+  final pulledSeriesIdsSet = (input["pulled_series_ids"] as List)
       .cast<int>()
       .toSet();
-  final pulledIssueIdsSet = (input['pulled_issue_ids'] as List)
+  final pulledIssueIdsSet = (input["pulled_issue_ids"] as List)
       .cast<int>()
       .toSet();
-  final ownedIssueIdsSet = (input['owned_issue_ids'] as List)
+  final ownedIssueIdsSet = (input["owned_issue_ids"] as List)
       .cast<int>()
       .toSet();
-  final pulledPublishersSet = (input['pulled_publishers'] as List)
+  final pulledPublishersSet = (input["pulled_publishers"] as List)
       .cast<String>()
       .toSet();
-  final pulledTokens = (input['pulled_tokens'] as List).cast<String>().toSet();
+  final pulledTokens = (input["pulled_tokens"] as List).cast<String>().toSet();
 
   final candidateIndices = <int>[];
   for (var i = 0; i < weeklyIssueIds.length; i++) {
@@ -144,15 +144,15 @@ Future<List<IssueList>> _computeBecauseYouPulledIssues(Ref ref) async {
       .toList(growable: false);
 
   final topIndices = await compute(_scoreBecauseYouPulledCandidates, {
-    'weekly_issue_ids': weeklyIssueIds,
-    'weekly_series_ids': weeklySeriesIds,
-    'weekly_publishers': weeklyPublishers,
-    'weekly_names': weeklyNames,
-    'pulled_issue_ids': pulledIssueIds,
-    'pulled_series_ids': pulledSeriesIds,
-    'pulled_publishers': pulledPublishers,
-    'pulled_tokens': pulledTokens,
-    'owned_issue_ids': ownedIssueIds.toList(growable: false),
+    "weekly_issue_ids": weeklyIssueIds,
+    "weekly_series_ids": weeklySeriesIds,
+    "weekly_publishers": weeklyPublishers,
+    "weekly_names": weeklyNames,
+    "pulled_issue_ids": pulledIssueIds,
+    "pulled_series_ids": pulledSeriesIds,
+    "pulled_publishers": pulledPublishers,
+    "pulled_tokens": pulledTokens,
+    "owned_issue_ids": ownedIssueIds.toList(growable: false),
   });
 
   return topIndices.map((i) => weeklyIssues[i]).toList(growable: false);
@@ -172,7 +172,7 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
         cachedJson?.map(issueListFromJson).whereType<IssueList>().toList() ??
         const <IssueList>[];
   } catch (e) {
-    AppLogger.warning('Failed to load cached because you pulled', error: e);
+    AppLogger.warning("Failed to load cached because you pulled", error: e);
   }
   final hasFreshCache =
       cachedAt != null &&
@@ -187,7 +187,7 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
 
   try {
     final fresh = await metrics.trackProvider(
-      'becauseYouPulledIssuesProvider',
+      "becauseYouPulledIssuesProvider",
       () => _computeBecauseYouPulledIssues(ref),
     );
     try {
@@ -197,11 +197,11 @@ final becauseYouPulledIssuesProvider = FutureProvider<List<IssueList>>((
       );
       await cache.writeCachedAtNow(homeBecauseYouPulledCacheKey);
     } catch (e) {
-      AppLogger.warning('Failed to cache because you pulled', error: e);
+      AppLogger.warning("Failed to cache because you pulled", error: e);
     }
     return fresh;
   } catch (e) {
-    AppLogger.error('Failed to compute because you pulled', error: e);
+    AppLogger.error("Failed to compute because you pulled", error: e);
     return cached;
   }
 });

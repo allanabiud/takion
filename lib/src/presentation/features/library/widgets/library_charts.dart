@@ -1,6 +1,6 @@
-import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
+import "package:fl_chart/fl_chart.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
 
 class ReadingTrendChart extends StatelessWidget {
   const ReadingTrendChart({super.key, required this.data});
@@ -139,7 +139,7 @@ class ReadingTrendChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final point = data[spot.spotIndex];
                   return LineTooltipItem(
-                    '${point.count} issues\n${point.label}',
+                    "${point.count} issues\n${point.label}",
                     TextStyle(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
@@ -214,7 +214,7 @@ class StatBarTable extends StatelessWidget {
               SizedBox(
                 width: 32,
                 child: Text(
-                  '${item.value}',
+                  "${item.value}",
                   textAlign: TextAlign.right,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -257,7 +257,7 @@ class PublisherDistributionChart extends StatelessWidget {
               getTooltipColor: (group) => colorScheme.surfaceContainerHigh,
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
-                  '${publishers[groupIndex].key}\n${rod.toY.toInt()} issues',
+                  "${publishers[groupIndex].key}\n${rod.toY.toInt()} issues",
                   TextStyle(
                     color: colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
@@ -279,7 +279,7 @@ class PublisherDistributionChart extends StatelessWidget {
                   }
                   final name = publishers[index].key;
                   final displayName = name.length > 10
-                      ? '${name.substring(0, 8)}..'
+                      ? "${name.substring(0, 8)}.."
                       : name;
 
                   return SideTitleWidget(

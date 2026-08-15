@@ -1,14 +1,14 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_card.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
 
 @RoutePage()
 class FavoritesScreen extends ConsumerWidget {
@@ -20,16 +20,16 @@ class FavoritesScreen extends ConsumerWidget {
       length: 5,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Favorites'),
+          title: const Text("Favorites"),
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
-              Tab(text: 'Issues'),
-              Tab(text: 'Series'),
-              Tab(text: 'Characters'),
-              Tab(text: 'Creators'),
-              Tab(text: 'Reading Lists'),
+              Tab(text: "Issues"),
+              Tab(text: "Series"),
+              Tab(text: "Characters"),
+              Tab(text: "Creators"),
+              Tab(text: "Reading Lists"),
             ],
           ),
         ),
@@ -59,7 +59,7 @@ class _FavoriteSeriesTab extends ConsumerWidget {
         if (seriesList.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite series.',
+            message: "No favorite series.",
           );
         }
 
@@ -79,7 +79,7 @@ class _FavoriteSeriesTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite series',
+        errorMessage: "Failed to load favorite series",
         onRetry: () => ref.invalidate(favoriteSeriesListProvider),
       ),
     );
@@ -98,7 +98,7 @@ class _FavoriteIssuesTab extends ConsumerWidget {
         if (issuesList.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite issues.',
+            message: "No favorite issues.",
           );
         }
 
@@ -117,7 +117,7 @@ class _FavoriteIssuesTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite issues',
+        errorMessage: "Failed to load favorite issues",
         onRetry: () => ref.invalidate(favoriteIssuesListProvider),
       ),
     );
@@ -136,7 +136,7 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
         if (readingLists.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite reading lists.',
+            message: "No favorite reading lists.",
           );
         }
 
@@ -158,7 +158,7 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite reading lists',
+        errorMessage: "Failed to load favorite reading lists",
         onRetry: () => ref.invalidate(favoriteReadingListsListProvider),
       ),
     );
@@ -177,7 +177,7 @@ class _FavoriteCreatorsTab extends ConsumerWidget {
         if (creators.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite creators.',
+            message: "No favorite creators.",
           );
         }
 
@@ -197,7 +197,7 @@ class _FavoriteCreatorsTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite creators',
+        errorMessage: "Failed to load favorite creators",
         onRetry: () => ref.invalidate(favoriteCreatorsListProvider),
       ),
     );
@@ -216,7 +216,7 @@ class _FavoriteCharactersTab extends ConsumerWidget {
         if (characters.isEmpty) {
           return const EmptyContentState(
             icon: Icons.favorite_border,
-            message: 'No favorite characters.',
+            message: "No favorite characters.",
           );
         }
 
@@ -236,7 +236,7 @@ class _FavoriteCharactersTab extends ConsumerWidget {
       },
       loading: () => const AsyncStatePanel.loading(),
       error: (error, stack) => AsyncStatePanel.error(
-        errorMessage: 'Failed to load favorite characters',
+        errorMessage: "Failed to load favorite characters",
         onRetry: () => ref.invalidate(favoriteCharactersListProvider),
       ),
     );

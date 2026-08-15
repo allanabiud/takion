@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 /// CRUD and stream queries for the Metron catalog tables, one method family
 /// per entity (issues, series, creators, characters, arcs, teams, universes,
@@ -127,10 +127,10 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     if (query.trim().isEmpty) return [];
     final cleanQuery = query
         .trim()
-        .replaceAll('%', '\\%')
-        .replaceAll('_', '\\_');
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
     return (select(attachedDatabase.metronSeries)
-          ..where((t) => t.name.like('%$cleanQuery%'))
+          ..where((t) => t.name.like("%$cleanQuery%"))
           ..orderBy([
             (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
             (t) =>

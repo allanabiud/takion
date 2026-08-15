@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class SettingsDao extends DatabaseAccessor<AppDatabase> {
   SettingsDao(super.db);
@@ -9,7 +9,7 @@ class SettingsDao extends DatabaseAccessor<AppDatabase> {
       attachedDatabase.appSettings,
     )..where((t) => t.key.equals(key))).getSingleOrNull();
     if (row == null) return defaultValue;
-    return row.value.toLowerCase() == 'true';
+    return row.value.toLowerCase() == "true";
   }
 
   Future<String?> getString(String key) async {

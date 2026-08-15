@@ -1,27 +1,27 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/logging/talker_setup.dart';
-import 'package:talker_flutter/talker_flutter.dart';
-import 'package:takion/src/core/network/metron_account_service.dart';
-import 'package:takion/src/core/notifications/notification_service.dart';
-import 'package:takion/src/core/notifications/notification_settings_provider.dart';
-import 'package:takion/src/data/common/services/drive_backup_service.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/router/app_router.dart';
-import 'package:takion/src/core/router/app_router.gr.dart'
+import "package:flex_color_scheme/flex_color_scheme.dart";
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/logging/talker_setup.dart";
+import "package:talker_flutter/talker_flutter.dart";
+import "package:takion/src/core/network/metron_account_service.dart";
+import "package:takion/src/core/notifications/notification_service.dart";
+import "package:takion/src/core/notifications/notification_settings_provider.dart";
+import "package:takion/src/data/common/services/drive_backup_service.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/router/app_router.dart";
+import "package:takion/src/core/router/app_router.gr.dart"
     show AuthorizeMetronRoute, MyPullsRoute, OnboardingRoute;
-import 'package:takion/src/core/router/auth_guard.dart';
-import 'package:takion/src/core/theme/app_theme.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/utils/shortcut_handler.dart';
+import "package:takion/src/core/router/auth_guard.dart";
+import "package:takion/src/core/theme/app_theme.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
+import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/utils/shortcut_handler.dart";
 
 class TakionApp extends ConsumerStatefulWidget {
   const TakionApp({super.key});
@@ -48,7 +48,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
     ref
         .read(driftDatabaseProvider)
         .settingsDao
-        .getBool('has_seen_onboarding')
+        .getBool("has_seen_onboarding")
         .then((seen) {
           if (!mounted) return;
           setState(() => _hasSeenOnboarding = seen);
@@ -99,7 +99,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
     ref
         .read(driftDatabaseProvider)
         .settingsDao
-        .getBool('has_seen_onboarding')
+        .getBool("has_seen_onboarding")
         .then((seen) {
           if (seen) {
             ShortcutHandler.enableShortcuts();
@@ -121,7 +121,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
       TakionAlerts.safeError(
         context,
         error,
-        userMessage: 'Background pull reconciliation failed',
+        userMessage: "Background pull reconciliation failed",
       );
     }
   }
@@ -133,25 +133,25 @@ class _TakionAppState extends ConsumerState<TakionApp>
     await syncNotifier.ensureInitialized();
     final syncState = ref.read(driveSyncProvider);
     if (!syncState.enabled) {
-      AppLogger.info('Drive auto sync skipped: disabled');
+      AppLogger.info("Drive auto sync skipped: disabled");
       return;
     }
     final driveService = ref.read(driveSyncServiceProvider);
     final account = await driveService.signInSilently();
     if (account == null) {
-      AppLogger.info('Drive auto sync skipped: no account');
+      AppLogger.info("Drive auto sync skipped: no account");
       return;
     }
-    AppLogger.info('Drive auto sync triggered');
+    AppLogger.info("Drive auto sync triggered");
     syncNotifier.setSyncing(true);
     try {
       await driveService.triggerSync();
       await syncNotifier.updateLastSync();
       syncNotifier.clearError();
-      invalidateCacheBackedProvidersForAutoSync((p) => container.invalidate(p));
-      AppLogger.info('Drive auto sync completed');
+      invalidateCacheBackedProvidersForAutoSync(container.invalidate);
+      AppLogger.info("Drive auto sync completed");
     } catch (e) {
-      AppLogger.warning('Background sync failed', error: e);
+      AppLogger.warning("Background sync failed", error: e);
       syncNotifier.setError(e.toString());
     }
     syncNotifier.setSyncing(false);
@@ -175,14 +175,14 @@ class _TakionAppState extends ConsumerState<TakionApp>
       return;
     }
 
-    AppLogger.info('Metron session check: stored connection found');
+    AppLogger.info("Metron session check: stored connection found");
     final status = await service.validateStoredConnection();
 
     if (!mounted) return;
 
     if (status == MetronConnectionStatus.invalid) {
       AppLogger.warning(
-        'Metron session check: invalid credentials, disconnecting',
+        "Metron session check: invalid credentials, disconnecting",
       );
       await service.disconnect();
       ref.invalidate(authStateProvider);
@@ -190,11 +190,11 @@ class _TakionAppState extends ConsumerState<TakionApp>
 
       TakionAlerts.error(
         context,
-        'Metron connection is invalid. Please reconnect your Metron account.',
+        "Metron connection is invalid. Please reconnect your Metron account.",
       );
       _appRouter.replaceAll([const AuthorizeMetronRoute()]);
     } else {
-      AppLogger.info('Metron session check: status=$status');
+      AppLogger.info("Metron session check: status=$status");
     }
   }
 
@@ -228,7 +228,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
               _hasSeenOnboarding &&
               mounted) {
             AppLogger.warning(
-              'Session expired - redirecting to authorize screen',
+              "Session expired - redirecting to authorize screen",
             );
             Future.microtask(
               () => _appRouter.replaceAll([const AuthorizeMetronRoute()]),
@@ -246,7 +246,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
     final accentScheme =
         ref.watch(accentSchemeProvider).value ?? FlexScheme.green;
     return MaterialApp.router(
-      title: 'Takion',
+      title: "Takion",
       theme: AppThemes.light(accentScheme: accentScheme),
       darkTheme: AppThemes.dark(
         darkIsTrueBlack: themeSettings.darkIsTrueBlack,
@@ -282,7 +282,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    AppLogger.debug('App lifecycle state: $state');
+    AppLogger.debug("App lifecycle state: $state");
     if (state == AppLifecycleState.resumed && mounted) {
       _scheduleWeeklyPullNotification();
       ref.read(driftDatabaseProvider).apiCacheDao.deleteStaleEntries();

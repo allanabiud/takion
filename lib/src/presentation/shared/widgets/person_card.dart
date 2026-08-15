@@ -1,9 +1,9 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/smart_entity_image.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/shared/widgets/smart_entity_image.dart";
 
 class PersonCard extends ConsumerWidget {
   const PersonCard({
@@ -34,7 +34,7 @@ class PersonCard extends ConsumerWidget {
 
     final hasCharacterId = characterId != null;
     final hasCreatorId = creatorId != null;
-    final entityType = hasCharacterId ? 'character' : (hasCreatorId ? 'creator' : null);
+    final entityType = hasCharacterId ? "character" : (hasCreatorId ? "creator" : null);
     final entityId = characterId ?? creatorId;
 
     final isFav =

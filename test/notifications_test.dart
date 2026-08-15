@@ -1,32 +1,30 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/core/notifications/notification_settings_provider.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/core/notifications/notification_settings_provider.dart";
+import "package:timezone/data/latest_all.dart" as tz;
+import "package:timezone/timezone.dart" as tz;
 
 void main() {
-  setUpAll(() {
-    tz.initializeTimeZones();
-  });
+  setUpAll(tz.initializeTimeZones);
 
-  group('NotificationDay', () {
-    test('NotificationDay weekday values are correct', () {
+  group("NotificationDay", () {
+    test("NotificationDay weekday values are correct", () {
       expect(NotificationDay.tuesday.dartWeekday, DateTime.tuesday);
       expect(NotificationDay.wednesday.dartWeekday, DateTime.wednesday);
       expect(NotificationDay.thursday.dartWeekday, DateTime.thursday);
     });
 
-    test('NotificationDay labels are accurate', () {
-      expect(NotificationDay.tuesday.label, 'Before Release Day');
-      expect(NotificationDay.wednesday.label, 'Release Day');
-      expect(NotificationDay.thursday.label, 'After Release Day');
+    test("NotificationDay labels are accurate", () {
+      expect(NotificationDay.tuesday.label, "Before Release Day");
+      expect(NotificationDay.wednesday.label, "Release Day");
+      expect(NotificationDay.thursday.label, "After Release Day");
     });
   });
 
-  group('Timezone 8:00 PM Scheduling Calculation', () {
+  group("Timezone 8:00 PM Scheduling Calculation", () {
     test(
-      'Schedules for today at 8:00 PM if current time is before 8:00 PM on target day',
+      "Schedules for today at 8:00 PM if current time is before 8:00 PM on target day",
       () {
-        final location = tz.getLocation('America/New_York');
+        final location = tz.getLocation("America/New_York");
         // Set to Wednesday 10:00 AM
         final now = tz.TZDateTime(location, 2026, 7, 29, 10, 0);
 
@@ -53,9 +51,9 @@ void main() {
     );
 
     test(
-      'Schedules for next week at 8:00 PM if current time is past 8:00 PM on target day',
+      "Schedules for next week at 8:00 PM if current time is past 8:00 PM on target day",
       () {
-        final location = tz.getLocation('America/New_York');
+        final location = tz.getLocation("America/New_York");
         // Set to Wednesday 8:30 PM (20:30)
         final now = tz.TZDateTime(location, 2026, 7, 29, 20, 30);
 
@@ -81,11 +79,11 @@ void main() {
       },
     );
 
-    test('Handles month rollover correctly across different timezones', () {
+    test("Handles month rollover correctly across different timezones", () {
       for (final tzName in [
-        'America/Los_Angeles',
-        'Europe/London',
-        'Asia/Tokyo',
+        "America/Los_Angeles",
+        "Europe/London",
+        "Asia/Tokyo",
       ]) {
         final location = tz.getLocation(tzName);
         // Set to Tuesday July 28 21:00 (past 8:00 PM)
@@ -112,17 +110,17 @@ void main() {
     });
   });
 
-  group('Pull Notification Body Text', () {
-    test('Pluralization logic produces correct text', () {
+  group("Pull Notification Body Text", () {
+    test("Pluralization logic produces correct text", () {
       String getBodyText(int count) {
         return count == 1
-            ? 'You have 1 pull this week'
-            : 'You have $count pulls this week';
+            ? "You have 1 pull this week"
+            : "You have $count pulls this week";
       }
 
-      expect(getBodyText(1), 'You have 1 pull this week');
-      expect(getBodyText(5), 'You have 5 pulls this week');
-      expect(getBodyText(12), 'You have 12 pulls this week');
+      expect(getBodyText(1), "You have 1 pull this week");
+      expect(getBodyText(5), "You have 5 pulls this week");
+      expect(getBodyText(12), "You have 12 pulls this week");
     });
   });
 }

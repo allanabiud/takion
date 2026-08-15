@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 final seriesOwnedCountProvider = StreamProvider.autoDispose.family<int, int>((
   ref,
@@ -8,7 +8,7 @@ final seriesOwnedCountProvider = StreamProvider.autoDispose.family<int, int>((
   final db = ref.watch(driftDatabaseProvider);
   return db.libraryItemDao
       .watchBySeriesId(seriesId)
-      .map((items) => items.where((i) => i.ownershipStatus == 'owned').length);
+      .map((items) => items.where((i) => i.ownershipStatus == "owned").length);
 });
 
 final seriesReadCountProvider = StreamProvider.autoDispose.family<int, int>((

@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class SuperHeroSearchResponseDto {
   const SuperHeroSearchResponseDto({
@@ -12,10 +12,10 @@ class SuperHeroSearchResponseDto {
   final List<SuperHeroCharacterDto> results;
 
   factory SuperHeroSearchResponseDto.fromJson(Map<String, dynamic> json) {
-    final rawResults = json['results'];
+    final rawResults = json["results"];
     return SuperHeroSearchResponseDto(
-      response: (json['response'] as String?) ?? '',
-      resultsFor: json['results-for'] as String?,
+      response: (json["response"] as String?) ?? "",
+      resultsFor: json["results-for"] as String?,
       results: rawResults is List
           ? rawResults
                 .whereType<Map<String, dynamic>>()
@@ -44,36 +44,36 @@ class SuperHeroCharacterDto {
   final SuperHeroPowerStatsDto? powerstats;
 
   factory SuperHeroCharacterDto.fromJson(Map<String, dynamic> json) {
-    final rawImage = json['image'];
+    final rawImage = json["image"];
     final imageUrl = rawImage is Map<String, dynamic>
-        ? _parseNullableString(rawImage['url'])
+        ? _parseNullableString(rawImage["url"])
         : null;
 
-    final rawPowerstats = json['powerstats'];
+    final rawPowerstats = json["powerstats"];
     final powerstats = rawPowerstats is Map<String, dynamic>
         ? SuperHeroPowerStatsDto.fromJson(rawPowerstats)
         : null;
 
-    final rawBio = json['biography'];
+    final rawBio = json["biography"];
     String? fullName;
     List<String> aliases = const [];
     if (rawBio is Map<String, dynamic>) {
-      fullName = _parseNullableString(rawBio['full-name']);
-      final rawAliases = rawBio['aliases'];
+      fullName = _parseNullableString(rawBio["full-name"]);
+      final rawAliases = rawBio["aliases"];
       if (rawAliases is List) {
         aliases = rawAliases
             .whereType<String>()
             .map((e) => e.trim())
-            .where((e) => e.isNotEmpty && e != '-')
+            .where((e) => e.isNotEmpty && e != "-")
             .toList();
       }
     }
 
     return SuperHeroCharacterDto(
-      id: _parseId(json['id']),
-      name: (json['name'] as String?)?.trim().isNotEmpty == true
-          ? (json['name'] as String)
-          : 'Unknown Character',
+      id: _parseId(json["id"]),
+      name: (json["name"] as String?)?.trim().isNotEmpty == true
+          ? (json["name"] as String)
+          : "Unknown Character",
       fullName: fullName,
       aliases: aliases,
       imageUrl: imageUrl,
@@ -97,10 +97,10 @@ class SuperHeroCharacterDto {
     if (superheroId <= 0) return rawUrl;
     final slug = name
         .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-+|-+$'), '');
+        .replaceAll(RegExp(r"[^a-z0-9]+"), "-")
+        .replaceAll(RegExp(r"^-+|-+$"), "");
     if (slug.isEmpty) return rawUrl;
-    return 'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/lg/$superheroId-$slug.jpg';
+    return "https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/lg/$superheroId-$slug.jpg";
   }
 
   SuperHeroCharacter toEntity() {
@@ -155,19 +155,19 @@ class SuperHeroPowerStatsDto {
       if (value is int) return value;
       if (value is String && value.trim().isNotEmpty) {
         final lower = value.trim().toLowerCase();
-        if (lower == 'null') return null;
+        if (lower == "null") return null;
         return int.tryParse(lower);
       }
       return null;
     }
 
     return SuperHeroPowerStatsDto(
-      intelligence: parseStat(json['intelligence']),
-      strength: parseStat(json['strength']),
-      speed: parseStat(json['speed']),
-      durability: parseStat(json['durability']),
-      power: parseStat(json['power']),
-      combat: parseStat(json['combat']),
+      intelligence: parseStat(json["intelligence"]),
+      strength: parseStat(json["strength"]),
+      speed: parseStat(json["speed"]),
+      durability: parseStat(json["durability"]),
+      power: parseStat(json["power"]),
+      combat: parseStat(json["combat"]),
     );
   }
 

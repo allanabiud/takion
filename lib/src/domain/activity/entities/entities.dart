@@ -1,1 +1,1 @@
-export 'library_activity_event.dart';
+export "library_activity_event.dart";

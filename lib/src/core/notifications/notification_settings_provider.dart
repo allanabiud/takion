@@ -1,12 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/notifications/notification_service.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/notifications/notification_service.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 
 enum NotificationDay {
-  tuesday('Before Release Day', DateTime.tuesday),
-  wednesday('Release Day', DateTime.wednesday),
-  thursday('After Release Day', DateTime.thursday);
+  tuesday("Before Release Day", DateTime.tuesday),
+  wednesday("Release Day", DateTime.wednesday),
+  thursday("After Release Day", DateTime.thursday);
 
   const NotificationDay(this.label, this.dartWeekday);
   final String label;
@@ -19,7 +19,7 @@ final notificationsEnabledProvider =
     );
 
 class NotificationsEnabledNotifier extends AsyncNotifier<bool> {
-  static const _key = 'weekly_pull_notifications_enabled';
+  static const _key = "weekly_pull_notifications_enabled";
 
   @override
   Future<bool> build() async {
@@ -40,15 +40,15 @@ final notificationDayProvider =
     );
 
 class NotificationDayNotifier extends AsyncNotifier<NotificationDay> {
-  static const _key = 'weekly_pull_notification_day';
+  static const _key = "weekly_pull_notification_day";
 
   @override
   Future<NotificationDay> build() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
-    final raw = await dao.getString(_key) ?? 'wednesday';
+    final raw = await dao.getString(_key) ?? "wednesday";
     return switch (raw) {
-      'tuesday' => NotificationDay.tuesday,
-      'thursday' => NotificationDay.thursday,
+      "tuesday" => NotificationDay.tuesday,
+      "thursday" => NotificationDay.thursday,
       _ => NotificationDay.wednesday,
     };
   }
@@ -56,9 +56,9 @@ class NotificationDayNotifier extends AsyncNotifier<NotificationDay> {
   Future<void> setDay(NotificationDay day) async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final raw = switch (day) {
-      NotificationDay.tuesday => 'tuesday',
-      NotificationDay.wednesday => 'wednesday',
-      NotificationDay.thursday => 'thursday',
+      NotificationDay.tuesday => "tuesday",
+      NotificationDay.wednesday => "wednesday",
+      NotificationDay.thursday => "thursday",
     };
     await dao.setString(_key, raw);
     state = AsyncValue.data(day);

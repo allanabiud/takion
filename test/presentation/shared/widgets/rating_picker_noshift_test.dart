@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/presentation/shared/widgets/rating_picker.dart';
+import "package:flutter/material.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/presentation/shared/widgets/rating_picker.dart";
 
 void main() {
   Widget build({
@@ -23,7 +23,7 @@ void main() {
     );
   }
 
-  testWidgets('stars are centered when no rating is set', (tester) async {
+  testWidgets("stars are centered when no rating is set", (tester) async {
     await tester.pumpWidget(build(rating: 0, iconSize: 40));
 
     final picker = tester.getRect(find.byType(RatingPicker));
@@ -34,7 +34,7 @@ void main() {
     expect(starGroupCenter, closeTo(picker.center.dx, 0.1));
   });
 
-  testWidgets('reset icon appears to the left of the stars when rated', (
+  testWidgets("reset icon appears to the left of the stars when rated", (
     tester,
   ) async {
     await tester.pumpWidget(build(rating: 3));
@@ -47,7 +47,7 @@ void main() {
     expect(reset.dx, lessThan(firstStar.dx));
   });
 
-  testWidgets('stars do not shift when a rating is set', (tester) async {
+  testWidgets("stars do not shift when a rating is set", (tester) async {
     await tester.pumpWidget(build(rating: 0, iconSize: 40));
     final centerBefore = tester.getCenter(find.byIcon(Icons.star_border).first);
 
@@ -57,7 +57,7 @@ void main() {
     expect(centerAfter.dx, closeTo(centerBefore.dx, 0.1));
   });
 
-  testWidgets('reset icon triggers onReset when pressed', (tester) async {
+  testWidgets("reset icon triggers onReset when pressed", (tester) async {
     var resetCount = 0;
     await tester.pumpWidget(build(rating: 3, onReset: () => resetCount++));
     await tester.pump();

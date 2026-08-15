@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 String? _parseString(dynamic raw) {
   if (raw is String && raw.isNotEmpty) return raw;
@@ -14,12 +14,12 @@ class CharacterDetailsNamedRefDto {
 
   factory CharacterDetailsNamedRefDto.fromJson(Map<String, dynamic> json) {
     return CharacterDetailsNamedRefDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
     );
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
 
   CharacterDetailsNamedRef toEntity() =>
       CharacterDetailsNamedRef(id: id, name: name);
@@ -58,19 +58,19 @@ class CharacterDetailsDto {
 
   factory CharacterDetailsDto.fromJson(Map<String, dynamic> json) {
     return CharacterDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
-      slug: _parseString(json['slug']) ?? '',
-      alias: _parseString(json['alias']),
-      desc: _parseString(json['desc']),
-      image: _parseString(json['image']),
-      creators: _parseNamedRefList(json['creators']),
-      teams: _parseNamedRefList(json['teams']),
-      universes: _parseNamedRefList(json['universes']),
-      cvId: (json['cv_id'] as num?)?.toInt(),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      resourceUrl: _parseString(json['resource_url']),
-      modified: _parseString(json['modified']),
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
+      slug: _parseString(json["slug"]) ?? "",
+      alias: _parseString(json["alias"]),
+      desc: _parseString(json["desc"]),
+      image: _parseString(json["image"]),
+      creators: _parseNamedRefList(json["creators"]),
+      teams: _parseNamedRefList(json["teams"]),
+      universes: _parseNamedRefList(json["universes"]),
+      cvId: (json["cv_id"] as num?)?.toInt(),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      resourceUrl: _parseString(json["resource_url"]),
+      modified: _parseString(json["modified"]),
     );
   }
 
@@ -78,25 +78,25 @@ class CharacterDetailsDto {
     if (raw is! List) return const [];
     return raw
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .map(CharacterDetailsNamedRefDto.fromJson)
         .toList();
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'slug': slug,
-    'alias': alias,
-    'desc': desc,
-    'image': image,
-    'creators': creators.map((e) => e.toJson()).toList(),
-    'teams': teams.map((e) => e.toJson()).toList(),
-    'universes': universes.map((e) => e.toJson()).toList(),
-    'cv_id': cvId,
-    'gcd_id': gcdId,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "slug": slug,
+    "alias": alias,
+    "desc": desc,
+    "image": image,
+    "creators": creators.map((e) => e.toJson()).toList(),
+    "teams": teams.map((e) => e.toJson()).toList(),
+    "universes": universes.map((e) => e.toJson()).toList(),
+    "cv_id": cvId,
+    "gcd_id": gcdId,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   CharacterDetails toEntity() {

@@ -1,9 +1,9 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
-part 'character_search_provider.g.dart';
+part "character_search_provider.g.dart";
 
 @riverpod
 class CharacterSearch extends _$CharacterSearch {
@@ -18,13 +18,7 @@ class CharacterSearch extends _$CharacterSearch {
       args: args,
       emptyResult:
           const CharacterListPage(results: [], count: 0, currentPage: 1),
-      searchFetcher: (query, {required page, required limit, cancelToken}) =>
-          repository.searchCharacters(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      ),
+      searchFetcher: repository.searchCharacters,
     );
   }
 

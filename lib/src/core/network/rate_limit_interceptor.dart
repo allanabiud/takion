@@ -1,12 +1,12 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
-import 'package:takion/src/core/network/metron_request_scheduler.dart';
-import 'package:takion/src/core/network/request_priority.dart';
+import "package:dio/dio.dart";
+import "package:flutter/widgets.dart";
+import "package:takion/src/core/network/metron_request_scheduler.dart";
+import "package:takion/src/core/network/request_priority.dart";
 
-export 'metron_request_scheduler.dart' show RateLimitState;
-export 'request_priority.dart' show backgroundZoneKey;
+export "metron_request_scheduler.dart" show RateLimitState;
+export "request_priority.dart" show backgroundZoneKey;
 
 class RateLimitInterceptor extends Interceptor {
   final MetronRequestScheduler _scheduler;
@@ -45,7 +45,7 @@ class RateLimitInterceptor extends Interceptor {
           DioException(
             requestOptions: options,
             type: DioExceptionType.cancel,
-            message: 'Request dropped by rate-limit scheduler',
+            message: "Request dropped by rate-limit scheduler",
           ),
         );
       }

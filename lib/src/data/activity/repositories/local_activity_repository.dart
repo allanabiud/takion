@@ -1,9 +1,9 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
 class LocalActivityRepository implements ActivityRepository {
   LocalActivityRepository(this._database);
@@ -29,7 +29,7 @@ class LocalActivityRepository implements ActivityRepository {
   }
 
   String _metadataToRaw(Map<String, dynamic>? metadata) {
-    if (metadata == null || metadata.isEmpty) return '';
+    if (metadata == null || metadata.isEmpty) return "";
     return jsonEncode(metadata);
   }
 
@@ -59,7 +59,7 @@ class LocalActivityRepository implements ActivityRepository {
   }) async {
     if (events.isEmpty) return;
     final effectiveBatchId =
-        batchId ?? 'batch_${DateTime.now().millisecondsSinceEpoch}';
+        batchId ?? "batch_${DateTime.now().millisecondsSinceEpoch}";
     final companions = events
         .map(
           (event) => db.ActivityEventsCompanion(

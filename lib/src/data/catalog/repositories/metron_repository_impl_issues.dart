@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _IssuesRepositoryMixin on _RepositoryState {
   Future<IssueDetails> getIssueDetails(
@@ -8,7 +8,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getIssue(issueId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('issue_details');
+      AppPerformanceMetrics.instance.recordCacheHit("issue_details");
       return _issueRowToEntity(cached);
     }
 
@@ -22,7 +22,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.issueDetails.isFresh(cachedAt, now)) {
-        AppPerformanceMetrics.instance.recordCacheHit('issue_details_response');
+        AppPerformanceMetrics.instance.recordCacheHit("issue_details_response");
         final dto = IssueDetailsDto.fromJson(cachedJson);
         await _upsertIssueDetails(dto);
         _indexSeriesNamesFromIssueDetails(dto);
@@ -30,10 +30,10 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('issue_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("issue_details");
 
     try {
-      final key = '$issueId|$forceRefresh';
+      final key = "$issueId|$forceRefresh";
       return _coalesce(_issueDetailsInFlight, key, () async {
         await _issueDetailsGate.acquire();
         try {
@@ -57,7 +57,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             throw DioException(
               requestOptions: response.requestOptions,
               response: response,
-              message: '304 Not Modified and no cached data available',
+              message: "304 Not Modified and no cached data available",
             );
           }
           final data = jsonToMap(response.data);
@@ -99,7 +99,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       if (cached != null) {
         return _issueRowToEntity(cached);
       }
-      AppLogger.error('Failed to fetch issue details', error: e);
+      AppLogger.error("Failed to fetch issue details", error: e);
       rethrow;
     }
   }
@@ -154,8 +154,8 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
           cacheKey: nextUrl != null
-              ? 'search:issue:$query:$nextUrl'
-              : 'search:issue:$query:$page',
+              ? "search:issue:$query:$nextUrl"
+              : "search:issue:$query:$page",
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -171,7 +171,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_issueSearchInFlight, key, () async {
         final remotePage = await _remoteDataSource.searchIssues(
           query,
@@ -273,12 +273,12 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             );
             _upsertIssueListStubs(remotePage.results);
           },
-          cacheKey: 'issue_list:$key',
+          cacheKey: "issue_list:$key",
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
       if (cachedMeta != null) {
-        AppPerformanceMetrics.instance.recordCacheHit('issue_list');
+        AppPerformanceMetrics.instance.recordCacheHit("issue_list");
         return IssueSearchPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
@@ -288,7 +288,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         );
       }
     }
-    AppPerformanceMetrics.instance.recordCacheMiss('issue_list');
+    AppPerformanceMetrics.instance.recordCacheMiss("issue_list");
 
     final key =
         nextUrl ??
@@ -345,17 +345,17 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     bool forceRefresh = false,
   }) async {
     final cachedDtos = await _localDataSource.getIssueSearchResults(
-      'upc:$upc',
+      "upc:$upc",
       page: 1,
       limit: 1,
     );
     final cachedAt = await _localDataSource.getIssueSearchResultsCachedAt(
-      'upc:$upc',
+      "upc:$upc",
       page: 1,
       limit: 1,
     );
     final cachedMeta = await _localDataSource.getIssueSearchResultsMeta(
-      'upc:$upc',
+      "upc:$upc",
       page: 1,
       limit: 1,
     );
@@ -372,7 +372,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               cancelToken: cancelToken,
             );
             await _localDataSource.cacheIssueSearchResults(
-              'upc:$upc',
+              "upc:$upc",
               remotePage.results,
               page: 1,
               limit: 1,
@@ -382,7 +382,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             );
             _upsertIssueListStubs(remotePage.results);
           },
-          cacheKey: 'search:upc:$upc',
+          cacheKey: "search:upc:$upc",
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -403,7 +403,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         cancelToken: cancelToken,
       );
       await _localDataSource.cacheIssueSearchResults(
-        'upc:$upc',
+        "upc:$upc",
         remotePage.results,
         page: 1,
         limit: 1,
@@ -440,17 +440,17 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     bool forceRefresh = false,
   }) async {
     final cachedDtos = await _localDataSource.getIssueSearchResults(
-      'upc_prefix:$prefix',
+      "upc_prefix:$prefix",
       page: 1,
       limit: 1,
     );
     final cachedAt = await _localDataSource.getIssueSearchResultsCachedAt(
-      'upc_prefix:$prefix',
+      "upc_prefix:$prefix",
       page: 1,
       limit: 1,
     );
     final cachedMeta = await _localDataSource.getIssueSearchResultsMeta(
-      'upc_prefix:$prefix',
+      "upc_prefix:$prefix",
       page: 1,
       limit: 1,
     );
@@ -467,7 +467,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               cancelToken: cancelToken,
             );
             await _localDataSource.cacheIssueSearchResults(
-              'upc_prefix:$prefix',
+              "upc_prefix:$prefix",
               remotePage.results,
               page: 1,
               limit: 1,
@@ -477,7 +477,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             );
             _upsertIssueListStubs(remotePage.results);
           },
-          cacheKey: 'search:upc_prefix:$prefix',
+          cacheKey: "search:upc_prefix:$prefix",
           cooldown: MetronCachePolicies.searchResults.refreshCooldown,
         );
       }
@@ -517,7 +517,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
       }
 
       await _localDataSource.cacheIssueSearchResults(
-        'upc_prefix:$prefix',
+        "upc_prefix:$prefix",
         allDtos,
         page: 1,
         limit: 1,
@@ -662,7 +662,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               .map(
                 (entry) => MetronCreatorsCompanion(
                   id: Value(entry.creatorId),
-                  name: Value(entry.credit.creator ?? ''),
+                  name: Value(entry.credit.creator ?? ""),
                   isFullyHydrated: const Value(false),
                 ),
               )
@@ -676,7 +676,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               creatorId: Value(entry.creatorId),
               role: Value(
                 entry.credit.roles.isNotEmpty
-                    ? entry.credit.roles.map((r) => r.name).join(', ')
+                    ? entry.credit.roles.map((r) => r.name).join(", ")
                     : null,
               ),
               sortOrder: Value(e.key),
@@ -817,7 +817,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         .map(
           (j) => IssueDetailsParticipation(
             id: j.characterId,
-            name: characterMap[j.characterId]?.name ?? '',
+            name: characterMap[j.characterId]?.name ?? "",
           ),
         )
         .toList();
@@ -829,7 +829,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         .map(
           (j) => IssueDetailsParticipation(
             id: j.arcId,
-            name: arcMap[j.arcId]?.name ?? '',
+            name: arcMap[j.arcId]?.name ?? "",
           ),
         )
         .toList();
@@ -841,7 +841,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         .map(
           (j) => IssueDetailsParticipation(
             id: j.teamId,
-            name: teamMap[j.teamId]?.name ?? '',
+            name: teamMap[j.teamId]?.name ?? "",
           ),
         )
         .toList();
@@ -853,7 +853,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         .map(
           (j) => IssueDetailsParticipation(
             id: j.universeId,
-            name: universeMap[j.universeId]?.name ?? '',
+            name: universeMap[j.universeId]?.name ?? "",
           ),
         )
         .toList();
@@ -869,7 +869,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             creatorId: j.creatorId,
             roles: j.role != null
                 ? j.role!
-                      .split(', ')
+                      .split(", ")
                       .map((r) => IssueDetailsCreditRole(id: 0, name: r))
                       .toList()
                 : const [],

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 /// Shared force-refresh flow for entity detail screens.
 ///
@@ -15,26 +15,21 @@ mixin DetailRefreshActions<T> {
   /// Fetches fresh details from the catalog (force refresh).
   Future<T> fetchDetails();
 
-  /// Current value stored in the watched provider, or null if none yet.
-  T? currentStoredDetails();
-
   /// Invalidates the provider(s) backing this screen.
   void invalidateDetails();
 
   Future<void> refreshDetails(BuildContext context) async {
     try {
-      final newDetails = await fetchDetails();
-      if (currentStoredDetails() != newDetails) {
-        invalidateDetails();
-      }
+      await fetchDetails();
+      invalidateDetails();
       if (context.mounted) {
-        TakionAlerts.success(context, '$entityLabel details refreshed');
+        TakionAlerts.success(context, "$entityLabel details refreshed");
       }
     } catch (e) {
       if (context.mounted) {
         TakionAlerts.error(
           context,
-          'Failed to refresh ${entityLabel.toLowerCase()} details',
+          "Failed to refresh ${entityLabel.toLowerCase()} details",
         );
       }
     }

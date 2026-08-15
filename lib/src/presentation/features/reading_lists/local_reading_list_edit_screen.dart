@@ -1,16 +1,16 @@
-import 'dart:ui';
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/providers/bulk_scrobble_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "dart:ui";
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_list_details_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_grid_item.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_timeline_tile.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/issues/providers/bulk_scrobble_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class LocalReadingListEditScreen extends ConsumerStatefulWidget {
@@ -18,7 +18,7 @@ class LocalReadingListEditScreen extends ConsumerStatefulWidget {
 
   const LocalReadingListEditScreen({
     super.key,
-    @PathParam('listId') required this.listId,
+    @PathParam("listId") required this.listId,
   });
 
   @override
@@ -66,14 +66,14 @@ class _LocalReadingListEditScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Selected Items'),
+        title: const Text("Remove Selected Items"),
         content: Text(
-          'Are you sure you want to remove ${_selectedIds.length} items?',
+          "Are you sure you want to remove ${_selectedIds.length} items?",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text("Cancel"),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -81,7 +81,7 @@ class _LocalReadingListEditScreenState
               foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
+            child: const Text("Remove"),
           ),
         ],
       ),
@@ -122,7 +122,7 @@ class _LocalReadingListEditScreenState
         for (int i = 0; i < updatedItems.length; i++) {
           final item = updatedItems[i];
           if (_selectedIds.contains(item.targetId)) {
-            final idString = item.targetId.replaceAll(RegExp(r'^.*-'), '');
+            final idString = item.targetId.replaceAll(RegExp(r"^.*-"), "");
             final id = int.tryParse(idString) ?? 0;
 
             if (item.isSeries) {
@@ -170,7 +170,7 @@ class _LocalReadingListEditScreenState
         TakionAlerts.safeError(
           context,
           e,
-          userMessage: 'Failed to update read status',
+          userMessage: "Failed to update read status",
         );
       }
     } finally {
@@ -195,14 +195,14 @@ class _LocalReadingListEditScreenState
   void _showBulkActions(BuildContext context) {
     TakionBottomSheet.show(
       context: context,
-      title: 'Bulk Actions (${_selectedIds.length} items)',
+      title: "Bulk Actions (${_selectedIds.length} items)",
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.bookmark_added_outlined),
-            title: const Text('Mark as Read'),
+            title: const Text("Mark as Read"),
             onTap: () {
               Navigator.pop(context);
               _markSelectedRead(true);
@@ -211,7 +211,7 @@ class _LocalReadingListEditScreenState
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.bookmark_remove_outlined),
-            title: const Text('Mark as Unread'),
+            title: const Text("Mark as Unread"),
             onTap: () {
               Navigator.pop(context);
               _markSelectedRead(false);
@@ -223,7 +223,7 @@ class _LocalReadingListEditScreenState
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Change Role',
+                "Change Role",
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -235,7 +235,7 @@ class _LocalReadingListEditScreenState
             runSpacing: 8,
             children: ItemRole.values.map((role) {
               String label = role.name.toUpperCase();
-              if (role == ItemRole.tieIn) label = 'TIE-IN';
+              if (role == ItemRole.tieIn) label = "TIE-IN";
 
               return ActionChip(
                 label: Text(
@@ -283,12 +283,12 @@ class _LocalReadingListEditScreenState
         children: [
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(labelText: 'List Title'),
+            decoration: const InputDecoration(labelText: "List Title"),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _descriptionController,
-            decoration: const InputDecoration(labelText: 'Description'),
+            decoration: const InputDecoration(labelText: "Description"),
             maxLines: null,
             minLines: 2,
           ),
@@ -308,13 +308,13 @@ class _LocalReadingListEditScreenState
       error: (e, _) => Scaffold(
         body: Center(
           child: Text(
-            TakionAlerts.cleanError(e, fallback: 'Failed to load reading list'),
+            TakionAlerts.cleanError(e, fallback: "Failed to load reading list"),
           ),
         ),
       ),
       data: (list) {
         if (list == null) {
-          return const Scaffold(body: Center(child: Text('List not found')));
+          return const Scaffold(body: Center(child: Text("List not found")));
         }
 
         if (!_initialized) {
@@ -331,7 +331,7 @@ class _LocalReadingListEditScreenState
           canPop: !hasSelection,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) {
-              setState(() => _selectedIds.clear());
+              setState(_selectedIds.clear);
             }
           },
           child: Scaffold(
@@ -342,7 +342,7 @@ class _LocalReadingListEditScreenState
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: hasSelection
-                    ? () => setState(() => _selectedIds.clear())
+                    ? () => setState(_selectedIds.clear)
                     : () => context.router.maybePop(),
               ),
               title: AnimatedSwitcher(
@@ -358,18 +358,18 @@ class _LocalReadingListEditScreenState
                 },
                 child: hasSelection
                     ? Text(
-                        key: const ValueKey('selected'),
-                        '${_selectedIds.length} Selected',
+                        key: const ValueKey("selected"),
+                        "${_selectedIds.length} Selected",
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSecondaryContainer,
                         ),
                       )
                     : Column(
-                        key: const ValueKey('editing'),
+                        key: const ValueKey("editing"),
                         children: [
                           Text(
-                            'Editing List',
+                            "Editing List",
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onPrimaryContainer,
@@ -406,8 +406,8 @@ class _LocalReadingListEditScreenState
                       setState(() {});
                     },
                     tooltip: _selectedIds.length == displayItems.length
-                        ? 'Deselect all'
-                        : 'Select all',
+                        ? "Deselect all"
+                        : "Select all",
                   )
                 else
                   IconButton(
@@ -418,7 +418,7 @@ class _LocalReadingListEditScreenState
                         ..addAll(displayItems.map((item) => item.targetId));
                       setState(() {});
                     },
-                    tooltip: 'Select all items',
+                    tooltip: "Select all items",
                   ),
               ],
             ),
@@ -447,7 +447,7 @@ class _LocalReadingListEditScreenState
                             color: theme.colorScheme.onErrorContainer,
                           ),
                           label: Text(
-                            'Delete',
+                            "Delete",
                             style: TextStyle(
                               color: theme.colorScheme.onErrorContainer,
                             ),
@@ -467,7 +467,7 @@ class _LocalReadingListEditScreenState
                             color: theme.colorScheme.primary,
                           ),
                           label: Text(
-                            'Bulk',
+                            "Bulk",
                             style: TextStyle(color: theme.colorScheme.primary),
                           ),
                           style: TextButton.styleFrom(
@@ -506,12 +506,12 @@ class _LocalReadingListEditScreenState
                         localReadingListDetailsProvider(widget.listId),
                       );
                       if (context.mounted) {
-                        TakionAlerts.success(context, 'Changes Saved');
+                        TakionAlerts.success(context, "Changes Saved");
                         context.router.maybePop();
                       }
                     },
                     icon: const Icon(Icons.save_rounded),
-                    label: const Text('Save'),
+                    label: const Text("Save"),
                   ),
                 ),
               ),
@@ -606,7 +606,7 @@ class _LocalReadingListEditScreenState
         if (items.isEmpty)
           const SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('This reading list is empty.')),
+            child: Center(child: Text("This reading list is empty.")),
           )
         else
           SliverPadding(

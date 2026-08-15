@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class PagedIssueListScaffold extends StatelessWidget {
   const PagedIssueListScaffold({
@@ -51,7 +51,7 @@ class PagedIssueListScaffold extends StatelessWidget {
               loading: () => const SizedBox.shrink(),
               error: (error, _) => AsyncStatePanel.error(
                 errorMessage:
-                    errorTextBuilder?.call(error) ?? 'Something went wrong',
+                    errorTextBuilder?.call(error) ?? "Something went wrong",
               ),
               data: (issues) {
                 final visibleIssues = transformIssues(issues);

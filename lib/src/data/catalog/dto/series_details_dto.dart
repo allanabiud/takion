@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class SeriesDetailsNamedRefDto {
   const SeriesDetailsNamedRefDto({required this.id, required this.name});
@@ -8,12 +8,12 @@ class SeriesDetailsNamedRefDto {
 
   factory SeriesDetailsNamedRefDto.fromJson(Map<String, dynamic> json) {
     return SeriesDetailsNamedRefDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: (json['name'] as String?) ?? '',
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: (json["name"] as String?) ?? "",
     );
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
 
   SeriesDetailsNamedRef toEntity() => SeriesDetailsNamedRef(id: id, name: name);
 }
@@ -26,12 +26,12 @@ class SeriesDetailsAssociatedDto {
 
   factory SeriesDetailsAssociatedDto.fromJson(Map<String, dynamic> json) {
     return SeriesDetailsAssociatedDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      series: (json['series'] as String?) ?? '',
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      series: (json["series"] as String?) ?? "",
     );
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'series': series};
+  Map<String, dynamic> toJson() => {"id": id, "series": series};
 
   SeriesDetailsAssociated toEntity() =>
       SeriesDetailsAssociated(id: id, series: series);
@@ -79,13 +79,13 @@ class SeriesDetailsDto {
   final String? modified;
 
   factory SeriesDetailsDto.fromJson(Map<String, dynamic> json) {
-    final rawGenres = json['genres'];
-    final rawAssociated = json['associated'];
-    final publisherMap = json['publisher'];
+    final rawGenres = json["genres"];
+    final rawAssociated = json["associated"];
+    final publisherMap = json["publisher"];
     final publisherFromMap = publisherMap is Map<String, dynamic>
         ? SeriesDetailsNamedRefDto.fromJson(publisherMap)
         : null;
-    final publisherName = (json['publisher_name'] as String?)?.trim();
+    final publisherName = (json["publisher_name"] as String?)?.trim();
     final resolvedPublisher = (() {
       if (publisherFromMap != null && publisherFromMap.name.trim().isNotEmpty) {
         return publisherFromMap;
@@ -100,66 +100,66 @@ class SeriesDetailsDto {
     })();
 
     return SeriesDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: (json['name'] as String?) ?? '',
-      sortName: json['sort_name'] as String?,
-      volume: (json['volume'] as num?)?.toInt(),
-      seriesType: json['series_type'] is Map
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: (json["name"] as String?) ?? "",
+      sortName: json["sort_name"] as String?,
+      volume: (json["volume"] as num?)?.toInt(),
+      seriesType: json["series_type"] is Map
           ? SeriesDetailsNamedRefDto.fromJson(
-              Map<String, dynamic>.from(json['series_type']),
+              Map<String, dynamic>.from(json["series_type"]),
             )
           : null,
-      status: json['status'] as String?,
+      status: json["status"] as String?,
       publisher: resolvedPublisher,
-      imprint: json['imprint'] is Map
+      imprint: json["imprint"] is Map
           ? SeriesDetailsNamedRefDto.fromJson(
-              Map<String, dynamic>.from(json['imprint']),
+              Map<String, dynamic>.from(json["imprint"]),
             )
           : null,
-      yearBegan: (json['year_began'] as num?)?.toInt(),
-      yearEnd: (json['year_end'] as num?)?.toInt(),
-      description: json['desc'] as String?,
-      issueCount: (json['issue_count'] as num?)?.toInt(),
+      yearBegan: (json["year_began"] as num?)?.toInt(),
+      yearEnd: (json["year_end"] as num?)?.toInt(),
+      description: json["desc"] as String?,
+      issueCount: (json["issue_count"] as num?)?.toInt(),
       genres: rawGenres is List
           ? rawGenres
                 .whereType<Map>()
-                .map((e) => Map<String, dynamic>.from(e))
+                .map(Map<String, dynamic>.from)
                 .map(SeriesDetailsNamedRefDto.fromJson)
                 .toList()
           : const [],
       associated: rawAssociated is List
           ? rawAssociated
                 .whereType<Map>()
-                .map((e) => Map<String, dynamic>.from(e))
+                .map(Map<String, dynamic>.from)
                 .map(SeriesDetailsAssociatedDto.fromJson)
                 .toList()
           : const [],
-      cvId: (json['cv_id'] as num?)?.toInt(),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      resourceUrl: json['resource_url'] as String?,
-      modified: json['modified'] as String?,
+      cvId: (json["cv_id"] as num?)?.toInt(),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      resourceUrl: json["resource_url"] as String?,
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'sort_name': sortName,
-    'volume': volume,
-    'series_type': seriesType?.toJson(),
-    'status': status,
-    'publisher': publisher?.toJson(),
-    'imprint': imprint?.toJson(),
-    'year_began': yearBegan,
-    'year_end': yearEnd,
-    'desc': description,
-    'issue_count': issueCount,
-    'genres': genres.map((entry) => entry.toJson()).toList(),
-    'associated': associated.map((entry) => entry.toJson()).toList(),
-    'cv_id': cvId,
-    'gcd_id': gcdId,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "sort_name": sortName,
+    "volume": volume,
+    "series_type": seriesType?.toJson(),
+    "status": status,
+    "publisher": publisher?.toJson(),
+    "imprint": imprint?.toJson(),
+    "year_began": yearBegan,
+    "year_end": yearEnd,
+    "desc": description,
+    "issue_count": issueCount,
+    "genres": genres.map((entry) => entry.toJson()).toList(),
+    "associated": associated.map((entry) => entry.toJson()).toList(),
+    "cv_id": cvId,
+    "gcd_id": gcdId,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   SeriesDetails toEntity() {

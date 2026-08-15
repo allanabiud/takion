@@ -1,59 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/library_items_serialization.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 const _collectionPageSize = metronDefaultPageSize;
-
-LibraryOwnershipStatus _ownershipFromRaw(String raw) {
-  switch (raw) {
-    case 'owned':
-      return LibraryOwnershipStatus.owned;
-    case 'wishlist':
-      return LibraryOwnershipStatus.wishlist;
-    default:
-      return LibraryOwnershipStatus.notOwned;
-  }
-}
-
-LibraryItemFormat _formatFromRaw(String raw) {
-  switch (raw) {
-    case 'digital':
-      return LibraryItemFormat.digital;
-    case 'both':
-      return LibraryItemFormat.both;
-    default:
-      return LibraryItemFormat.print;
-  }
-}
-
-LibraryItem _driftItemToDomain(db.LibraryItem d) {
-  return LibraryItem(
-    id: d.id,
-    userId: d.userId,
-    metronIssueId: d.metronIssueId,
-    metronSeriesId: d.metronSeriesId,
-    ownershipStatus: _ownershipFromRaw(d.ownershipStatus),
-    isRead: d.isRead,
-    rating: d.rating,
-    purchaseDate: d.purchaseDate != null
-        ? DateTime.tryParse(d.purchaseDate!)
-        : null,
-    pricePaid: d.pricePaid,
-    quantityOwned: d.quantityOwned,
-    format: _formatFromRaw(d.format),
-    firstReadAt: d.firstReadAt != null
-        ? DateTime.tryParse(d.firstReadAt!)
-        : null,
-    conditionGrade: d.conditionGrade,
-    acquiredOn: d.acquiredOn != null ? DateTime.tryParse(d.acquiredOn!) : null,
-    notes: d.notes,
-    createdAt: DateTime.parse(d.createdAt),
-    updatedAt: DateTime.parse(d.updatedAt),
-  );
-}
 
 final selectedCollectionItemsPageProvider =
     NotifierProvider<SelectedCollectionItemsPage, int>(
@@ -78,57 +29,41 @@ class SelectedCollectionItemsPage extends Notifier<int> {
 }
 
 final libraryItemsStreamProvider = StreamProvider<List<LibraryItem>>((ref) {
-  return ref
-      .watch(driftDatabaseProvider)
-      .libraryItemDao
-      .watchAll()
-      .map((rows) => rows.map(_driftItemToDomain).toList());
+  return ref.watch(libraryRepositoryProvider).watchItems();
 });
 
 final ownedLibraryItemsProvider = StreamProvider<List<LibraryItem>>((ref) {
   return ref
-      .watch(driftDatabaseProvider)
-      .libraryItemDao
-      .watchByOwnershipStatus('owned')
-      .map((rows) => rows.map(_driftItemToDomain).toList());
+      .watch(libraryRepositoryProvider)
+      .watchItemsByOwnershipStatus(LibraryOwnershipStatus.owned);
 });
 
 final readLibraryItemsProvider = StreamProvider<List<LibraryItem>>((ref) {
-  return ref
-      .watch(driftDatabaseProvider)
-      .libraryItemDao
-      .watchByIsRead(true)
-      .map((rows) => rows.map(_driftItemToDomain).toList());
+  return ref.watch(libraryRepositoryProvider).watchItemsByIsRead(true);
 });
 
-final metronIssuesStreamProvider = StreamProvider.autoDispose<List<db.MetronIssue>>((ref) {
-  return ref
-      .watch(driftDatabaseProvider)
-      .metronEntityDao
-      .watchAllIssues();
+final metronIssuesStreamProvider = StreamProvider.autoDispose<List<LocalIssue>>((ref) {
+  return ref.watch(localCatalogRepositoryProvider).watchAllIssues();
 });
 
 final collectionItemsProvider = FutureProvider.family<CollectionItemsPage, int>(
-  (ref, page) {
-    return _loadCollectionPage(ref, page);
-  },
+  _loadCollectionPage,
 );
 
 Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
   final safePage = page < 1 ? 1 : page;
   final offset = (safePage - 1) * _collectionPageSize;
-  final db = ref.watch(driftDatabaseProvider);
-  final totalCount = await db.libraryItemDao.getItemCount(
-    ownershipStatus: 'owned',
+  final repository = ref.watch(libraryRepositoryProvider);
+  final totalCount = await repository.getItemCountByOwnershipStatus(
+    LibraryOwnershipStatus.owned,
   );
-  final ownedRows = await db.libraryItemDao.getItems(
-    ownershipStatus: 'owned',
+  final ownedRows = await repository.listItemsByOwnershipStatus(
+    LibraryOwnershipStatus.owned,
     limit: _collectionPageSize,
     offset: offset,
   );
-  final libraryItems = ownedRows.map(_driftItemToDomain).toList();
 
-  final enriched = await hydrateLibraryItems(ref, libraryItems);
+  final enriched = await hydrateLibraryItems(ref, ownedRows);
 
   final totalPages = totalCount == 0
       ? 1
@@ -136,7 +71,7 @@ Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
   final hasPrevious = safePage > 1;
   final hasNext = safePage < totalPages;
 
-  String? pageUrl(int pageNumber) => 'app://collection?page=$pageNumber';
+  String? pageUrl(int pageNumber) => "app://collection?page=$pageNumber";
 
   return CollectionItemsPage(
     count: totalCount,
@@ -209,7 +144,7 @@ final wishlistCollectionItemsProvider =
     });
 
 String _normalizeSeriesName(String name) {
-  return name.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  return name.trim().toLowerCase().replaceAll(RegExp(r"\s+"), " ");
 }
 
 String _seriesKey({
@@ -217,7 +152,7 @@ String _seriesKey({
   required int? volume,
   required int? yearBegan,
 }) {
-  return '${_normalizeSeriesName(name)}|${volume ?? -1}|${yearBegan ?? -1}';
+  return "${_normalizeSeriesName(name)}|${volume ?? -1}|${yearBegan ?? -1}";
 }
 
 final collectionSeriesKeysProvider = FutureProvider.autoDispose<Set<String>>((

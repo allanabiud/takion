@@ -1,11 +1,11 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/activity_log_group.dart';
-import 'package:takion/src/presentation/shared/widgets/entity_cover.dart';
-import 'package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/activity_log_group.dart";
+import "package:takion/src/presentation/shared/widgets/entity_cover.dart";
+import "package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart";
 
 Future<void> showActivityGroupDetailsSheet(
   BuildContext context,
@@ -52,10 +52,10 @@ Future<void> showActivityGroupDetailsSheet(
           ),
           title: Text(
             event.issueNumber?.trim().isNotEmpty == true && event.seriesName?.trim().isNotEmpty == true
-                ? '${event.seriesName!.trim()} #${event.issueNumber!.trim()}'
+                ? "${event.seriesName!.trim()} #${event.issueNumber!.trim()}"
                 : event.issueNumber?.trim().isNotEmpty == true
-                    ? '#${event.issueNumber!.trim()}'
-                    : 'Issue #${event.issueId}',
+                    ? "#${event.issueNumber!.trim()}"
+                    : "Issue #${event.issueId}",
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           onTap: () {

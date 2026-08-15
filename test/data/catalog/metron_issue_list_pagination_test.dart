@@ -1,15 +1,15 @@
-import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart'
+import "package:dio/dio.dart";
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/local/series_name_index.dart"
     as series_index;
-import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/data/catalog/repositories/metron_repository_impl.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/data/catalog/repositories/metron_repository_impl.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
 
 class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
   int getIssueListCalls = 0;
@@ -34,21 +34,21 @@ class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
         previous: null,
         results: [
           for (final id in _pageTwoIssueIds)
-            _issue(id: id, number: '$id', storeDate: '2026-10-14'),
+            _issue(id: id, number: "$id", storeDate: "2026-10-14"),
         ],
       );
     }
     return IssueSearchResponseDto(
       count: _pageTwoIssueIds.length + 1,
-      next: 'https://metron.example/issue/?page=2&modified_gt=2026-01-01',
+      next: "https://metron.example/issue/?page=2&modified_gt=2026-01-01",
       previous: null,
-      results: [_issue(id: 1, number: '1', storeDate: '2026-10-07')],
+      results: [_issue(id: 1, number: "1", storeDate: "2026-10-07")],
     );
   }
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    throw UnimplementedError('${invocation.memberName}');
+    throw UnimplementedError("${invocation.memberName}");
   }
 }
 
@@ -60,17 +60,17 @@ IssueListDto _issue({
   return IssueListDto(
     id: id,
     number: number,
-    series: IssueListSeriesDto(
+    series: const IssueListSeriesDto(
       id: 900,
-      name: 'Test Series',
+      name: "Test Series",
       volume: 1,
       yearBegan: 2026,
     ),
     coverDate: storeDate,
     storeDate: storeDate,
     image: null,
-    issueName: 'Test Series #$number',
-    modified: '2026-10-01T00:00:00Z',
+    issueName: "Test Series #$number",
+    modified: "2026-10-01T00:00:00Z",
     coverHash: null,
   );
 }
@@ -83,7 +83,7 @@ void main() {
   });
 
   tearDown(() async {
-    await db.customStatement('SELECT 1');
+    await db.customStatement("SELECT 1");
     await db.close();
   });
 
@@ -98,7 +98,7 @@ void main() {
   }
 
   test(
-    'getIssueList with nextUrl returns the next page, not cached page 1',
+    "getIssueList with nextUrl returns the next page, not cached page 1",
     () async {
       final remote = FakeMetronRemoteDataSource([202]);
       final repo = buildRepo(remote);
@@ -117,7 +117,7 @@ void main() {
     },
   );
 
-  test('getIssueList serves a fresh cached page 1 without re-fetching', () async {
+  test("getIssueList serves a fresh cached page 1 without re-fetching", () async {
     final remote = FakeMetronRemoteDataSource([202]);
     final repo = buildRepo(remote);
     final modifiedGt = DateTime.utc(2026, 9, 1);

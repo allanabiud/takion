@@ -1,9 +1,9 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
-part 'issue_search_provider.g.dart';
+part "issue_search_provider.g.dart";
 
 @riverpod
 class IssueSearch extends _$IssueSearch {
@@ -17,13 +17,7 @@ class IssueSearch extends _$IssueSearch {
       ref: ref,
       args: args,
       emptyResult: const IssueSearchPage(results: [], count: 0, currentPage: 1),
-      searchFetcher: (query, {required page, required limit, cancelToken}) =>
-          repository.searchIssues(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      ),
+      searchFetcher: repository.searchIssues,
     );
   }
 

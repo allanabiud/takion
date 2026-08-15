@@ -1,9 +1,9 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
 
-import 'package:takion/src/domain/catalog/entities/entities.dart';
+import "package:takion/src/domain/catalog/entities/entities.dart";
 
-part 'local_reading_list.freezed.dart';
-part 'local_reading_list.g.dart';
+part "local_reading_list.freezed.dart";
+part "local_reading_list.g.dart";
 
 enum ListContentType { series, issue }
 
@@ -27,25 +27,25 @@ abstract class LocalReadingListItem with _$LocalReadingListItem {
 
   factory LocalReadingListItem.fromJson(Map<String, dynamic> json) {
     return LocalReadingListItem(
-      targetId: json['targetId']?.toString() ?? '',
-      isSeries: json['isSeries'] as bool? ?? false,
-      role: json['role'] != null
+      targetId: json["targetId"]?.toString() ?? "",
+      isSeries: json["isSeries"] as bool? ?? false,
+      role: json["role"] != null
           ? ItemRole.values.firstWhere(
-              (e) => e.name == json['role'],
+              (e) => e.name == json["role"],
               orElse: () => ItemRole.standard,
             )
           : ItemRole.standard,
-      isRead: json['isRead'] as bool? ?? false,
-      seriesName: json['seriesName']?.toString(),
-      seriesVolume: (json['seriesVolume'] as num?)?.toInt(),
-      issueNumber: json['issueNumber']?.toString(),
-      seriesId: (json['seriesId'] as num?)?.toInt(),
-      yearBegan: (json['yearBegan'] as num?)?.toInt(),
-      coverDate: json['coverDate'] != null
-          ? DateTime.tryParse(json['coverDate'].toString())
+      isRead: json["isRead"] as bool? ?? false,
+      seriesName: json["seriesName"]?.toString(),
+      seriesVolume: (json["seriesVolume"] as num?)?.toInt(),
+      issueNumber: json["issueNumber"]?.toString(),
+      seriesId: (json["seriesId"] as num?)?.toInt(),
+      yearBegan: (json["yearBegan"] as num?)?.toInt(),
+      coverDate: json["coverDate"] != null
+          ? DateTime.tryParse(json["coverDate"].toString())
           : null,
-      storeDate: json['storeDate'] != null
-          ? DateTime.tryParse(json['storeDate'].toString())
+      storeDate: json["storeDate"] != null
+          ? DateTime.tryParse(json["storeDate"].toString())
           : null,
     );
   }
@@ -72,7 +72,7 @@ abstract class LocalReadingList with _$LocalReadingList {
   }) = _LocalReadingList;
 
   factory LocalReadingList.fromJson(Map<String, dynamic> json) {
-    final rawItems = json['items'];
+    final rawItems = json["items"];
     final items = rawItems is List
         ? rawItems
               .whereType<Map>()
@@ -81,31 +81,31 @@ abstract class LocalReadingList with _$LocalReadingList {
         : <LocalReadingListItem>[];
 
     return LocalReadingList(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      isOrdered: json['isOrdered'] as bool? ?? true,
-      contentType: json['contentType'] != null
+      id: json["id"]?.toString() ?? "",
+      title: json["title"]?.toString() ?? "",
+      description: json["description"]?.toString() ?? "",
+      isOrdered: json["isOrdered"] as bool? ?? true,
+      contentType: json["contentType"] != null
           ? ListContentType.values.firstWhere(
-              (e) => e.name == json['contentType'],
+              (e) => e.name == json["contentType"],
               orElse: () => ListContentType.issue,
             )
           : ListContentType.issue,
-      createdAt: json['createdAt'] != null
-          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
+      createdAt: json["createdAt"] != null
+          ? (DateTime.tryParse(json["createdAt"].toString()) ?? DateTime.now())
           : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now())
+      updatedAt: json["updatedAt"] != null
+          ? (DateTime.tryParse(json["updatedAt"].toString()) ?? DateTime.now())
           : DateTime.now(),
       items: items,
-      metronSourceId: (json['metronSourceId'] as num?)?.toInt(),
-      metronArcId: (json['metronArcId'] as num?)?.toInt(),
-      metronAttributionSource: json['metronAttributionSource']?.toString(),
-      metronAttributionUrl: json['metronAttributionUrl']?.toString(),
-      metronImageUrl: json['metronImageUrl']?.toString(),
-      metronListType: json['metronListType']?.toString(),
-      lastSyncedAt: json['lastSyncedAt'] != null
-          ? DateTime.tryParse(json['lastSyncedAt'].toString())
+      metronSourceId: (json["metronSourceId"] as num?)?.toInt(),
+      metronArcId: (json["metronArcId"] as num?)?.toInt(),
+      metronAttributionSource: json["metronAttributionSource"]?.toString(),
+      metronAttributionUrl: json["metronAttributionUrl"]?.toString(),
+      metronImageUrl: json["metronImageUrl"]?.toString(),
+      metronListType: json["metronListType"]?.toString(),
+      lastSyncedAt: json["lastSyncedAt"] != null
+          ? DateTime.tryParse(json["lastSyncedAt"].toString())
           : null,
     );
   }
@@ -117,7 +117,7 @@ extension LocalReadingListExtensions on LocalReadingList {
 
 LocalReadingListItem localReadingListItemFromIssueList(IssueList issue) {
   return LocalReadingListItem(
-    targetId: 'issue-${issue.id}',
+    targetId: "issue-${issue.id}",
     isSeries: false,
     role: ItemRole.standard,
     isRead: false,

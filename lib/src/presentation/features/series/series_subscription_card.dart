@@ -1,12 +1,12 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class SeriesSubscriptionCard extends ConsumerWidget {
   final SeriesList series;
@@ -140,7 +140,7 @@ class _NextReleaseBadge extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
             child: Text(
-              'NEXT',
+              "NEXT",
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurface,
                 fontSize: 8,
@@ -162,7 +162,7 @@ class _NextReleaseBadge extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${date.day}',
+                  "${date.day}",
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,

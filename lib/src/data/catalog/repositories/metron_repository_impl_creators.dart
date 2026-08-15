@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _CreatorsRepositoryMixin on _RepositoryState {
   Future<CreatorListPage> getCreatorList({
@@ -166,7 +166,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:creator:$query:$page',
+          cacheKey: nextUrl ?? "search:creator:$query:$page",
           cooldown: MetronCachePolicies.creatorSearchResults.refreshCooldown,
         );
       }
@@ -182,7 +182,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_creatorSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchCreators(
@@ -234,7 +234,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getCreator(creatorId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('creator_details');
+      AppPerformanceMetrics.instance.recordCacheHit("creator_details");
       return _creatorRowToEntity(cached);
     }
 
@@ -247,7 +247,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.creatorDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'creator_details_response',
+          "creator_details_response",
         );
         final dto = CreatorDetailsDto.fromJson(cachedJson);
         await _upsertCreatorDetails(dto);
@@ -255,7 +255,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('creator_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("creator_details");
 
     try {
       final response = await _remoteDataSource.getCreatorDetails(creatorId);
@@ -272,7 +272,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
           return dto.toEntity();
         }
         return _creatorRowToEntity(
-          cached ?? (throw StateError('Creator $creatorId not found')),
+          cached ?? (throw StateError("Creator $creatorId not found")),
         );
       }
       final data = response.data as Map<String, dynamic>;
@@ -289,7 +289,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       await _localDataSource.cacheCreatorDetailsResponse(creatorId, data);
       return dto.toEntity();
     } catch (e) {
-      AppLogger.error('Failed to fetch creator details', error: e);
+      AppLogger.error("Failed to fetch creator details", error: e);
       final cachedJson =
           await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
       if (cachedJson != null) {

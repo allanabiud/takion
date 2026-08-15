@@ -1,12 +1,12 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
+import "package:dio/dio.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 
-part 'series_list_provider.g.dart';
+part "series_list_provider.g.dart";
 
 final selectedSeriesListPageProvider =
     NotifierProvider<SelectedSeriesListPage, int>(SelectedSeriesListPage.new);
@@ -45,12 +45,12 @@ class SeriesList extends _$SeriesList {
   Future<int> refresh({DateTime? modifiedGt}) async {
     final settings = ref.read(settingsProvider.notifier);
     final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp('series_list');
+        await settings.getListSyncTimestamp("series_list");
     final repository = ref.read(metronRepositoryProvider);
     final count = await repository.refreshSeriesListDelta(
       modifiedGt: lastSync,
     );
-    await settings.setListSyncTimestamp('series_list', DateTime.now());
+    await settings.setListSyncTimestamp("series_list", DateTime.now());
     ref.invalidateSelf();
     return count;
   }

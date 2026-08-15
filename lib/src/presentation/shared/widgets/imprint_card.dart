@@ -1,10 +1,10 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class ImprintCard extends ConsumerWidget {
   const ImprintCard({
@@ -29,7 +29,7 @@ class ImprintCard extends ConsumerWidget {
     final theme = Theme.of(context);
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached('imprint', imprintId);
+    final cachedImage = cache.getCached("imprint", imprintId);
     final effectiveImageUrl = imageUrl ?? cachedImage;
 
     return SizedBox(

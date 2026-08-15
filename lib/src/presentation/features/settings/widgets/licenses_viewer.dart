@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import "package:flutter/material.dart";
+import "package:flutter/foundation.dart";
+import "package:flutter_svg/flutter_svg.dart";
 
 void showLicensesSheet(BuildContext context) {
   showModalBottomSheet(
@@ -86,7 +86,7 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                         child: Row(
                           children: [
                             SvgPicture.asset(
-                              'assets/branding/takion_logo.svg',
+                              "assets/branding/takion_logo.svg",
                               height: 32,
                               colorFilter: ColorFilter.mode(
                                 theme.colorScheme.primary,
@@ -96,7 +96,7 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Open Source Licenses',
+                                "Open Source Licenses",
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -146,7 +146,7 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        entry.packages.join(', '),
+                                        entry.packages.join(", "),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
                                               fontWeight: FontWeight.w600,
@@ -174,7 +174,7 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                                 child: SelectableText(
                                   entry.paragraphs
                                       .map((p) => p.text)
-                                      .join('\n'),
+                                      .join("\n"),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     height: 1.5,
                                     color: theme.colorScheme.onSurfaceVariant,

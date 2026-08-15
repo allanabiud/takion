@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/domain/entities.dart";
 
 class RoleBadge extends StatelessWidget {
   final ItemRole role;
@@ -25,15 +25,15 @@ class RoleBadge extends StatelessWidget {
   String _getRoleLabel(ItemRole role) {
     switch (role) {
       case ItemRole.standard:
-        return 'Standard';
+        return "Standard";
       case ItemRole.prologue:
-        return 'Prologue';
+        return "Prologue";
       case ItemRole.core:
-        return 'Core';
+        return "Core";
       case ItemRole.tieIn:
-        return 'Tie-In';
+        return "Tie-In";
       case ItemRole.epilogue:
-        return 'Epilogue';
+        return "Epilogue";
     }
   }
 

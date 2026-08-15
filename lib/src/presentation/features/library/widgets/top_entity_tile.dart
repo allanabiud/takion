@@ -1,11 +1,11 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class _TopEntityImageArgs {
   const _TopEntityImageArgs({required this.entityType, required this.id});
@@ -51,7 +51,7 @@ class TopEntityTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final cacheKey = isCharacter ? 'character' : 'creator';
+    final cacheKey = isCharacter ? "character" : "creator";
     final imageAsync = ref.watch(
       _topEntityImageProvider(
         _TopEntityImageArgs(entityType: cacheKey, id: entity.id),
@@ -81,7 +81,7 @@ class TopEntityTile extends ConsumerWidget {
                   SizedBox(
                     width: 28,
                     child: Text(
-                      '${index + 1}.',
+                      "${index + 1}.",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurfaceVariant,

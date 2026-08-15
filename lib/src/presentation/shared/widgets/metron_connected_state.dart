@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import "package:flutter/material.dart";
+import "package:lucide_icons_flutter/lucide_icons.dart";
 
 String maskMetronToken(String token) {
   if (token.length <= 8) {
-    return '${token.substring(0, 2)}…${token.substring(token.length - 2)}';
+    return "${token.substring(0, 2)}…${token.substring(token.length - 2)}";
   }
-  return '${token.substring(0, 3)}…${token.substring(token.length - 4)}';
+  return "${token.substring(0, 3)}…${token.substring(token.length - 4)}";
 }
 
 Widget buildMetronAccountCard({
@@ -77,7 +77,7 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
               ),
               const SizedBox(width: 12),
               Text(
-                isConnected ? 'Connected' : 'Disconnected',
+                isConnected ? "Connected" : "Disconnected",
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: isConnected ? primaryColor : theme.colorScheme.error,
                   fontWeight: FontWeight.w600,
@@ -101,7 +101,7 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
               ),
               const SizedBox(width: 8),
               Text(
-                'API Token',
+                "API Token",
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
@@ -118,9 +118,9 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isConnected ? widget.maskedToken : '—',
+                  isConnected ? widget.maskedToken : "—",
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
+                    fontFamily: "monospace",
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.8,
                     color: theme.colorScheme.onSurface,
@@ -151,7 +151,7 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isConnected ? 'Disconnect Account' : 'Connect Account',
+                    isConnected ? "Disconnect Account" : "Connect Account",
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: isConnected
                           ? theme.colorScheme.error

@@ -1,27 +1,27 @@
-import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/drift/daos/library_item_dao.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
+import "package:drift/drift.dart";
+import "package:drift/native.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/drift/daos/library_item_dao.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
+import "package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart";
 
 LibraryItemsCompanion _item({
   required int issueId,
-  String ownershipStatus = 'not_owned',
+  String ownershipStatus = "not_owned",
   bool isRead = false,
 }) {
   final now = DateTime.now().toUtc().toIso8601String();
   return LibraryItemsCompanion(
-    id: Value('lib-$issueId'),
-    userId: const Value('local-user'),
+    id: Value("lib-$issueId"),
+    userId: const Value("local-user"),
     metronIssueId: Value(issueId),
     metronSeriesId: const Value(1),
     ownershipStatus: Value(ownershipStatus),
     isRead: Value(isRead),
-    format: const Value('print'),
+    format: const Value("print"),
     createdAt: Value(now),
     updatedAt: Value(now),
   );
@@ -38,16 +38,16 @@ void main() {
     await db.close();
   });
 
-  group('watchStatusRows', () {
+  group("watchStatusRows", () {
     test(
-      'emits initial rows and re-emits when a library item changes',
+      "emits initial rows and re-emits when a library item changes",
       () async {
         final emissions = <List<LibraryItemStatusRow>>[];
         final sub = db.libraryItemDao.watchStatusRows().listen(emissions.add);
 
         await db.libraryItemDao.batchUpsert([_item(issueId: 42)]);
         await db.libraryItemDao.batchUpsert([
-          _item(issueId: 42, ownershipStatus: 'owned', isRead: true),
+          _item(issueId: 42, ownershipStatus: "owned", isRead: true),
         ]);
 
         await pumpEventQueue();
@@ -57,14 +57,14 @@ void main() {
         final latest = emissions.last;
         expect(latest, hasLength(1));
         expect(latest.first.metronIssueId, 42);
-        expect(latest.first.ownershipStatus, 'owned');
+        expect(latest.first.ownershipStatus, "owned");
         expect(latest.first.isRead, isTrue);
       },
     );
   });
 
-  group('collectionStatusCacheProvider', () {
-    test('reflects library mutations without manual invalidation', () async {
+  group("collectionStatusCacheProvider", () {
+    test("reflects library mutations without manual invalidation", () async {
       final container = ProviderContainer(
         overrides: [driftDatabaseProvider.overrideWithValue(db)],
       );
@@ -81,7 +81,7 @@ void main() {
       expect(before[7]?.isCollected, isFalse);
 
       await db.libraryItemDao.batchUpsert([
-        _item(issueId: 7, ownershipStatus: 'owned'),
+        _item(issueId: 7, ownershipStatus: "owned"),
       ]);
 
       // Wait for the DB stream to propagate through the provider, including the async status-map computation.

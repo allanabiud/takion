@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _ReleasesRepositoryMixin on _RepositoryState {
   Future<List<IssueList>> getWeeklyReleasesForDate(
@@ -23,7 +23,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
                 return dtos!.map((e) => e.toEntity()).toList();
               },
               cache: (response) async {
-                final List results = response.data['results'];
+                final List results = response.data["results"];
                 final remoteDtos = results
                     .map((e) => IssueListDto.fromJson(e))
                     .toList();
@@ -36,17 +36,17 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
               },
             );
           },
-          cacheKey: 'weekly_releases:${date.year}-${date.month}-${date.day}',
+          cacheKey: "weekly_releases:${date.year}-${date.month}-${date.day}",
           cooldown: policy.refreshCooldown,
         );
       }
-      AppPerformanceMetrics.instance.recordCacheHit('weekly_releases');
+      AppPerformanceMetrics.instance.recordCacheHit("weekly_releases");
       return cachedDtos.map((entry) => entry.toEntity()).toList();
     }
-    AppPerformanceMetrics.instance.recordCacheMiss('weekly_releases');
+    AppPerformanceMetrics.instance.recordCacheMiss("weekly_releases");
 
     try {
-      final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
+      final key = "${date.year}-${date.month}-${date.day}|$forceRefresh";
       return _coalesce(_weeklyInFlight, key, () async {
         return _fetchWithConditional<List<IssueList>>(
           fetch: _remoteDataSource.getWeeklyReleasesForDate(
@@ -58,7 +58,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
             return dtos.map((e) => e.toEntity()).toList();
           },
           cache: (response) async {
-            final List results = response.data['results'];
+            final List results = response.data["results"];
             final remoteDtos = results
                 .map((e) => IssueListDto.fromJson(e))
                 .toList();
@@ -74,7 +74,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
         );
       }, timeout: const Duration(seconds: 30));
     } catch (e) {
-      AppLogger.error('Failed to fetch weekly releases', error: e);
+      AppLogger.error("Failed to fetch weekly releases", error: e);
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
       }
@@ -104,7 +104,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
                 return dtos!.map((e) => e.toEntity()).toList();
               },
               cache: (response) async {
-                final List results = response.data['results'];
+                final List results = response.data["results"];
                 final remoteDtos = results
                     .map((e) => IssueListDto.fromJson(e))
                     .toList();
@@ -117,7 +117,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
               },
             );
           },
-          cacheKey: 'foc_releases:${date.year}-${date.month}-${date.day}',
+          cacheKey: "foc_releases:${date.year}-${date.month}-${date.day}",
           cooldown: policy.refreshCooldown,
         );
       }
@@ -125,7 +125,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = '${date.year}-${date.month}-${date.day}|$forceRefresh';
+      final key = "${date.year}-${date.month}-${date.day}|$forceRefresh";
       return _coalesce(_focReleasesInFlight, key, () async {
         return _fetchWithConditional<List<IssueList>>(
           fetch: _remoteDataSource.getFocReleasesForDate(
@@ -137,7 +137,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
             return dtos.map((e) => e.toEntity()).toList();
           },
           cache: (response) async {
-            final List results = response.data['results'];
+            final List results = response.data["results"];
             final remoteDtos = results
                 .map((e) => IssueListDto.fromJson(e))
                 .toList();
@@ -153,7 +153,7 @@ mixin _ReleasesRepositoryMixin on _RepositoryState {
         );
       }, timeout: const Duration(seconds: 30));
     } catch (e) {
-      AppLogger.error('Failed to fetch FOC releases', error: e);
+      AppLogger.error("Failed to fetch FOC releases", error: e);
       if (cachedDtos != null && cachedDtos.isNotEmpty) {
         return cachedDtos.map((entry) => entry.toEntity()).toList();
       }

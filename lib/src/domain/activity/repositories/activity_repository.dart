@@ -1,5 +1,5 @@
-import 'dart:async';
-import 'package:takion/src/domain/entities.dart';
+import "dart:async";
+import "package:takion/src/domain/entities.dart";
 
 abstract class ActivityRepository {
   Future<void> addEvent(LibraryActivityEvent event);

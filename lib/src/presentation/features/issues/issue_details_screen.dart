@@ -1,29 +1,29 @@
-import 'dart:ui';
+import "dart:ui";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
-import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
-import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/favorite_toggle_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_details_provider.dart";
+import "package:takion/src/presentation/features/issues/scrobble_sheet.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart";
+import "package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_share_util.dart";
+import "package:takion/src/presentation/features/issues/series_subscription_toggle.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/favorite_toggle_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 @RoutePage()
 class IssueDetailsScreen extends ConsumerStatefulWidget {
@@ -49,24 +49,19 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
   String? resourceUrlOf(IssueDetails issue) => issue.resourceUrl;
 
   @override
-  String get resourceLabel => 'issue';
+  String get resourceLabel => "issue";
 
   @override
   String shareSubjectOf(IssueDetails issue) => issueDisplayTitle(issue);
 
   @override
-  String get entityLabel => 'Issue';
+  String get entityLabel => "Issue";
 
   @override
   Future<IssueDetails> fetchDetails() {
     return ref
         .read(catalogRepositoryProvider)
         .getIssueDetails(_currentIssueId, forceRefresh: true);
-  }
-
-  @override
-  IssueDetails? currentStoredDetails() {
-    return ref.read(issueDetailsProvider(_currentIssueId)).asData?.value;
   }
 
   @override
@@ -89,15 +84,15 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
 
     String baseName;
     if (seriesName != null && seriesName.isNotEmpty && issueNumber.isNotEmpty) {
-      baseName = '$seriesName #$issueNumber';
+      baseName = "$seriesName #$issueNumber";
     } else if (issue.names.isNotEmpty && issue.names.first.trim().isNotEmpty) {
       baseName = issue.names.first.trim();
     } else {
-      baseName = issueNumber.isNotEmpty ? 'Issue #$issueNumber' : 'Issue';
+      baseName = issueNumber.isNotEmpty ? "Issue #$issueNumber" : "Issue";
     }
 
     if (storyTitle != null && storyTitle.isNotEmpty) {
-      return '$baseName: $storyTitle';
+      return "$baseName: $storyTitle";
     }
 
     return baseName;
@@ -126,17 +121,17 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
 
     for (final image in images) {
       if (mainImage != null && mainImage.isNotEmpty && image == mainImage) {
-        labels.add('Main Cover');
+        labels.add("Main Cover");
         continue;
       }
 
       final variant = issue.variants.firstWhere(
-        (item) => (item.image?.trim() ?? '') == image,
+        (item) => (item.image?.trim() ?? "") == image,
         orElse: () => const IssueDetailsVariant(),
       );
       final variantName = variant.name?.trim();
       labels.add(
-        variantName != null && variantName.isNotEmpty ? variantName : 'Variant',
+        variantName != null && variantName.isNotEmpty ? variantName : "Variant",
       );
     }
 
@@ -152,14 +147,14 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
         final mainPrice = issue.price?.trim();
         captions.add(
           mainPrice != null && mainPrice.isNotEmpty
-              ? 'Main Cover • \$$mainPrice'
-              : 'Main Cover',
+              ? "Main Cover • \$$mainPrice"
+              : "Main Cover",
         );
         continue;
       }
 
       final variant = issue.variants.firstWhere(
-        (item) => (item.image?.trim() ?? '') == image,
+        (item) => (item.image?.trim() ?? "") == image,
         orElse: () => const IssueDetailsVariant(),
       );
       final variantName = variant.name?.trim();
@@ -169,13 +164,13 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
       final hasPrice = variantPrice != null && variantPrice.isNotEmpty;
 
       if (hasName && hasPrice) {
-        captions.add('$variantName • \$$variantPrice');
+        captions.add("$variantName • \$$variantPrice");
       } else if (hasName) {
         captions.add(variantName);
       } else if (hasPrice) {
-        captions.add('Variant • \$$variantPrice');
+        captions.add("Variant • \$$variantPrice");
       } else {
-        captions.add('Variant');
+        captions.add("Variant");
       }
     }
 
@@ -195,7 +190,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
         imageCaptions: captions,
         initialIndex: 0,
         title: _displayTitle(issue),
-        heroTag: 'issue-cover-$_currentIssueId',
+        heroTag: "issue-cover-$_currentIssueId",
       ),
     );
   }
@@ -311,10 +306,10 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
           error: (error, stack) => Scaffold(
             appBar: AppBar(),
             body: AsyncStatePanel.error(
-              title: 'Failed to load issue details',
+              title: "Failed to load issue details",
               errorMessage: TakionAlerts.cleanError(
                 error,
-                fallback: 'Something went wrong',
+                fallback: "Something went wrong",
               ),
               onRetry: () {
                 ref.invalidate(issueDetailsProvider(_currentIssueId));
@@ -399,7 +394,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                                 ? () => _openCoverGallery(issue)
                                 : null,
                             child: Hero(
-                              tag: 'issue-cover-$_currentIssueId',
+                              tag: "issue-cover-$_currentIssueId",
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: SizedBox(
@@ -487,7 +482,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                     isFavorite: isCurrentData
                         ? (isFavoriteAsync.asData?.value ?? false)
                         : false,
-                    displayTitle: isCurrentData ? _displayTitle(issue) : '',
+                    displayTitle: isCurrentData ? _displayTitle(issue) : "",
                     onShowScrobbleSheet: isCurrentData
                         ? scrobbleCurrentIssue
                         : () {},

@@ -1,18 +1,19 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/teams/providers/team_details_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class TeamDetailsScreen extends ConsumerStatefulWidget {
@@ -36,13 +37,13 @@ class _TeamDetailsScreenState
   String? resourceUrlOf(TeamDetails details) => details.resourceUrl;
 
   @override
-  String get resourceLabel => 'team';
+  String get resourceLabel => "team";
 
   @override
   String shareSubjectOf(TeamDetails details) => details.name;
 
   @override
-  String get entityLabel => 'Team';
+  String get entityLabel => "Team";
 
   @override
   Future<TeamDetails> fetchDetails() {
@@ -52,13 +53,9 @@ class _TeamDetailsScreenState
   }
 
   @override
-  TeamDetails? currentStoredDetails() {
-    return ref.read(teamDetailsProvider(widget.teamId)).asData?.value;
-  }
-
-  @override
   void invalidateDetails() {
     ref.invalidate(teamDetailsProvider(widget.teamId));
+    ref.invalidate(teamIssueListProvider);
   }
 
   @override
@@ -67,10 +64,10 @@ class _TeamDetailsScreenState
 
     return DetailScreenShell<TeamDetails>(
       asyncValue: detailsAsync,
-      entityType: 'team',
+      entityType: "team",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'team-image-${d.id}',
+      toHeroTag: (d) => "team-image-${d.id}",
       toTitle: (d) => d.name,
       onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
@@ -114,10 +111,10 @@ class _TeamDetailsScreenState
     }
     if (hasCreators) {
       yield const SliverToBoxAdapter(child: SizedBox(height: 16));
-      yield SliverToBoxAdapter(
+      yield const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const SectionHeader(title: 'CREATORS'),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SectionHeader(title: "CREATORS"),
         ),
       );
       yield const SliverToBoxAdapter(child: SizedBox(height: 12));
@@ -143,10 +140,10 @@ class _TeamDetailsScreenState
     }
     if (hasUniverses) {
       yield const SliverToBoxAdapter(child: SizedBox(height: 16));
-      yield SliverToBoxAdapter(
+      yield const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const SectionHeader(title: 'UNIVERSES'),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SectionHeader(title: "UNIVERSES"),
         ),
       );
       yield const SliverToBoxAdapter(child: SizedBox(height: 12));
@@ -161,7 +158,7 @@ class _TeamDetailsScreenState
             itemBuilder: (context, index) {
               final universe = details.universes[index];
               return EntityCard(
-                entityType: 'universe',
+                entityType: "universe",
                 entityId: universe.id,
                 name: universe.name,
                 width: 140,
@@ -183,10 +180,10 @@ class _TeamDetailsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionHeader(
-              title: isIssuesLoading
-                  ? 'Issues'
+              title: (isIssuesLoading || issuesPreviewAsync.hasError)
+                  ? "Issues"
                   : '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
-              onViewAll: isIssuesLoading
+              onViewAll: (isIssuesLoading || issuesPreviewAsync.hasError)
                   ? null
                   : () => context.pushRoute(
                       TeamIssuesRoute(teamId: widget.teamId),
@@ -205,13 +202,23 @@ class _TeamDetailsScreenState
                       const ShimmerWidget(child: IssueCardSkeleton()),
                 ),
               )
+            else if (issuesPreviewAsync.hasError)
+              SizedBox(
+                height: 200,
+                child: AsyncStatePanel.error(
+                  errorMessage: "Failed to load issues",
+                  onRetry: () => ref.invalidate(
+                    teamDetailsIssuesProvider(widget.teamId),
+                  ),
+                ),
+              )
             else
               HorizontalPreviewSection(
-                title: '',
+                title: "",
                 onViewAll: null,
                 itemCount: issuesPreview.length,
                 height: 250,
-                emptyText: 'No issues available.',
+                emptyText: "No issues available.",
                 itemBuilder: (context, index) {
                   final issue = issuesPreview[index];
                   final issueId = issue.id;
@@ -219,7 +226,7 @@ class _TeamDetailsScreenState
                     issueId: issueId,
                     imageUrl: issue.image,
                     title:
-                        '${issue.series?.name ?? issue.name} #${issue.number}',
+                        "${issue.series?.name ?? issue.name} #${issue.number}",
                     seriesId: issue.series?.id,
                     seriesName: issue.series?.name,
                     issueNumber: issue.number,
@@ -271,7 +278,7 @@ class _TeamInfoSection extends StatelessWidget {
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),

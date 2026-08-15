@@ -1,9 +1,9 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
-part 'publisher_search_provider.g.dart';
+part "publisher_search_provider.g.dart";
 
 @riverpod
 class PublisherSearch extends _$PublisherSearch {
@@ -18,13 +18,7 @@ class PublisherSearch extends _$PublisherSearch {
       args: args,
       emptyResult:
           const PublisherListPage(results: [], count: 0, currentPage: 1),
-      searchFetcher: (query, {required page, required limit, cancelToken}) =>
-          repository.searchPublishers(
-        query,
-        page: page,
-        limit: limit,
-        cancelToken: cancelToken,
-      ),
+      searchFetcher: repository.searchPublishers,
     );
   }
 

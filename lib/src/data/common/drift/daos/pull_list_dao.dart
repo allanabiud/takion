@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class PullListDao extends DatabaseAccessor<AppDatabase> {
   PullListDao(super.db);
@@ -44,7 +44,7 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
     for (final entry in entries) {
       if (entry.id.present) {
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:pull_list_entries:${entry.id.value}',
+          "delete:pull_list_entries:${entry.id.value}",
         );
       }
     }
@@ -57,17 +57,17 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
     entries,
   ) async {
     if (entries.isEmpty) return;
-    const localUserId = 'local-user';
+    const localUserId = "local-user";
     final now = DateTime.now().toUtc();
     final companions = <PullListEntriesCompanion>[];
 
     for (final item in entries) {
       final existing = await getByIssueId(item.metronIssueId);
-      final id = existing?.id ?? 'pull-${item.metronIssueId}';
+      final id = existing?.id ?? "pull-${item.metronIssueId}";
       final createdAt = existing != null
           ? existing.createdAt
           : now.toIso8601String();
-      final status = existing != null ? existing.entryStatus : 'upcoming';
+      final status = existing != null ? existing.entryStatus : "upcoming";
 
       companions.add(
         PullListEntriesCompanion(
@@ -77,7 +77,7 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
           metronSeriesId: Value(item.metronSeriesId),
           entryStatus: Value(status),
           releaseDate: Value(item.releaseDate),
-          source: const Value('subscription'),
+          source: const Value("subscription"),
           generatedAt: Value(now.toIso8601String()),
           createdAt: Value(createdAt),
           updatedAt: Value(now.toIso8601String()),
@@ -118,7 +118,7 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
       ).insertOnConflictUpdate(entry);
       if (entry.id.present) {
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:pull_list_entries:${entry.id.value}',
+          "delete:pull_list_entries:${entry.id.value}",
         );
       }
     });
@@ -139,7 +139,7 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
           );
           b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
             SyncMetaCompanion.insert(
-              key: 'delete:pull_list_entries:${entry.id}',
+              key: "delete:pull_list_entries:${entry.id}",
               value: now,
             ),
           ]);
@@ -156,7 +156,7 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.pullListEntries,
         )..where((t) => t.metronIssueId.equals(metronIssueId))).go();
         await attachedDatabase.syncMetaDao.set(
-          'delete:pull_list_entries:${existing.id}',
+          "delete:pull_list_entries:${existing.id}",
           DateTime.now().toUtc().toIso8601String(),
         );
       }

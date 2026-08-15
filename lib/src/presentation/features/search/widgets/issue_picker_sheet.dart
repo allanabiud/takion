@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
 
 Future<List<IssueList>?> showIssuePickerSheet(
   BuildContext context,
@@ -18,7 +18,7 @@ Future<List<IssueList>?> showIssuePickerSheet(
     builder: (context) {
       final selectedIds = <int>{};
       final filterController = TextEditingController();
-      var filterText = '';
+      var filterText = "";
 
       List<IssueList> filteredIssues() {
         if (filterText.isEmpty) return issues;
@@ -39,10 +39,10 @@ Future<List<IssueList>?> showIssuePickerSheet(
           .every((i) => selectedIds.contains(i.id));
 
       String issueTitle(IssueList issue) {
-        if (issue.name.contains('#${issue.number}') || issue.number.isEmpty) {
+        if (issue.name.contains("#${issue.number}") || issue.number.isEmpty) {
           return issue.name;
         }
-        return '${issue.name} #${issue.number}';
+        return "${issue.name} #${issue.number}";
       }
 
       return StatefulBuilder(
@@ -52,18 +52,18 @@ Future<List<IssueList>?> showIssuePickerSheet(
           final selectedCount = selectedIds.length;
 
           return TakionBottomSheet(
-            title: 'Select Issues',
+            title: "Select Issues",
             titleHeader: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Select Issues',
+                  "Select Issues",
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  '$selectedCount of ${issues.length}',
+                  "$selectedCount of ${issues.length}",
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -81,7 +81,7 @@ Future<List<IssueList>?> showIssuePickerSheet(
                   child: TextField(
                     controller: filterController,
                     decoration: const InputDecoration(
-                      hintText: 'Search issues...',
+                      hintText: "Search issues...",
                       prefixIcon: Icon(Icons.search, size: 20),
                       isDense: true,
                     ),
@@ -106,7 +106,7 @@ Future<List<IssueList>?> showIssuePickerSheet(
                       });
                     },
                     title: Text(
-                      allSelected() ? 'Deselect all' : 'Select all',
+                      allSelected() ? "Deselect all" : "Select all",
                       style: theme.textTheme.bodyMedium,
                     ),
                     controlAffinity: ListTileControlAffinity.leading,
@@ -204,7 +204,7 @@ Future<List<IssueList>?> showIssuePickerSheet(
                                   .toList();
                               Navigator.of(context).pop(selected);
                             },
-                      child: Text('ADD ($selectedCount)'),
+                      child: Text("ADD ($selectedCount)"),
                     ),
                   ),
                 ),

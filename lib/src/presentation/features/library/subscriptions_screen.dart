@@ -1,17 +1,17 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/series/providers/subscription_cards_hydrater.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/series/series_subscription_card.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/series/providers/subscription_cards_hydrater.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/series/series_subscription_card.dart";
 
 @RoutePage()
 class SubscriptionsScreen extends ConsumerStatefulWidget {
@@ -67,12 +67,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search series...',
+                  hintText: "Search series...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close search',
+                    tooltip: "Close search",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -85,12 +85,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                   ),
                 ),
               )
-            : const Text('Subscriptions'),
+            : const Text("Subscriptions"),
         actions: _isSearching
             ? null
             : [
                 IconButton(
-                  tooltip: 'Search',
+                  tooltip: "Search",
                   onPressed: () => setState(() => _isSearching = true),
                   icon: const Icon(Icons.search),
                 ),
@@ -104,7 +104,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           return _buildSkeletonList();
         },
         error: (error, _) =>
-            AsyncStatePanel.error(errorMessage: 'Failed to load subscriptions'),
+            const AsyncStatePanel.error(errorMessage: "Failed to load subscriptions"),
         data: (pageData) {
           final filtered = _filteredPage(pageData, query);
           return _buildContent(filtered, sortOption, isLoading: false);
@@ -151,15 +151,15 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
       isLoading: isLoading,
       header: ListHeader(
         count: sortedResults.length,
-        unit: 'series',
-        pluralUnit: 'series',
+        unit: "series",
+        pluralUnit: "series",
         enabled: !isLoading,
-        sortLabel: seriesSortLabel(sortOption),
+        sortLabel: contentSortLabel(sortOption),
         onSortTap: () => showSortBottomSheet(
           context,
           ref,
           SortPreferenceContext.subscriptions,
-          seriesSortLabel,
+          contentSortLabel,
         ),
       ),
       onPrevious: () {
@@ -187,7 +187,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           child: SeriesSubscriptionCard(key: ValueKey(series.id), series: series),
         );
       },
-      emptyMessage: 'No subscriptions.',
+      emptyMessage: "No subscriptions.",
       emptyIcon: Icons.notifications_outlined,
     );
   }
@@ -211,15 +211,15 @@ class _SubscriptionSkeletonContent extends StatelessWidget {
       itemBuilder: (context, index) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(14),
-          child: Stack(
+          child: const Stack(
             fit: StackFit.expand,
             children: [
-              const SkeletonBox(borderRadius: 14),
+              SkeletonBox(borderRadius: 14),
               Positioned(
                 left: 10,
                 right: 10,
                 bottom: 10,
-                child: const SkeletonBox(
+                child: SkeletonBox(
                   height: 14,
                   width: double.infinity,
                   borderRadius: 4,

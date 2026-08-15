@@ -1,18 +1,18 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
-import 'package:takion/src/presentation/features/library/activity_log_view.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/category_series_providers.dart";
+import "package:takion/src/presentation/features/library/activity_log_view.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
 
 @RoutePage()
 class WishlistScreen extends ConsumerStatefulWidget {
@@ -28,7 +28,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounceTimer;
-  String _debouncedSearchQuery = '';
+  String _debouncedSearchQuery = "";
 
   @override
   void initState() {
@@ -51,7 +51,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
       _searchDebounceTimer?.cancel();
       setState(() {
         _isSearching = false;
-        _debouncedSearchQuery = '';
+        _debouncedSearchQuery = "";
         _searchController.clear();
       });
     }
@@ -79,12 +79,12 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
                 autofocus: true,
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
-                  hintText: 'Search series...',
+                  hintText: "Search series...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close search',
+                    tooltip: "Close search",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -92,19 +92,19 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
                       _searchDebounceTimer?.cancel();
                       setState(() {
                         _isSearching = false;
-                        _debouncedSearchQuery = '';
+                        _debouncedSearchQuery = "";
                         _searchController.clear();
                       });
                     },
                   ),
                 ),
               )
-            : const Text('Wishlist'),
+            : const Text("Wishlist"),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'BROWSE'),
-            Tab(text: 'ACTIVITY'),
+            Tab(text: "BROWSE"),
+            Tab(text: "ACTIVITY"),
           ],
         ),
         actions: [
@@ -115,7 +115,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen>
                 return const SizedBox.shrink();
               }
               return IconButton(
-                tooltip: 'Search',
+                tooltip: "Search",
                 onPressed: () => setState(() => _isSearching = true),
                 icon: const Icon(Icons.search),
               );
@@ -161,8 +161,8 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
         (
-          category: 'wishlist',
-          query: widget.isSearching ? widget.searchQuery : '',
+          category: "wishlist",
+          query: widget.isSearching ? widget.searchQuery : "",
         ),
       ),
     );
@@ -173,21 +173,21 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
     return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
       error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: 'Failed to load wishlist series'),
+          const AsyncStatePanel.error(errorMessage: "Failed to load wishlist series"),
       data: (view) {
         final filtered = view.series;
         final categoryCounts = view.categoryCounts;
         if (filtered.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(wishlistSeriesProvider),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: const [
+            child: const CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              slivers: [
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: EmptyContentState(
                     icon: Icons.turned_in_not,
-                    message: 'No wishlist comics.',
+                    message: "No wishlist comics.",
                   ),
                 ),
               ],
@@ -202,15 +202,15 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
               PinnedListHeader(
                 child: ListHeader(
                   count: filtered.length,
-                  unit: 'series',
-                  pluralUnit: 'series',
+                  unit: "series",
+                  pluralUnit: "series",
                   enabled: true,
-                  sortLabel: seriesSortLabel(sortOption),
+                  sortLabel: contentSortLabel(sortOption),
                   onSortTap: () => showSortBottomSheet(
                     context,
                     ref,
                     SortPreferenceContext.libraryWishlist,
-                    seriesSortLabel,
+                    contentSortLabel,
                   ),
                 ),
               ),
@@ -221,14 +221,14 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                     child: SeriesListTile(
                       series: summary,
                       categoryCount: categoryCounts[summary.id],
-                      categoryLabel: 'wishlist',
+                      categoryLabel: "wishlist",
                       showProgressBar: true,
                       isFirst: index == 0,
                       isLast: index == filtered.length - 1,
                       onTap: () => context.pushRoute(
                         LibrarySeriesRoute(
                           seriesId: summary.id,
-                          category: 'wishlist',
+                          category: "wishlist",
                           seriesName: summary.name,
                         ),
                       ),

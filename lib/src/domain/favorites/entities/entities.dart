@@ -1,1 +1,1 @@
-export 'favorite_item.dart';
+export "favorite_item.dart";

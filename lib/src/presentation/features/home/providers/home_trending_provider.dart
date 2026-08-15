@@ -1,12 +1,12 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/home/providers/home_content_cache.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/cache_policy.dart";
+import "package:takion/src/core/performance/performance_metrics.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/home/providers/home_content_cache.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 class HomeTrendingEntry {
   const HomeTrendingEntry({required this.issue, required this.reason});
@@ -18,15 +18,15 @@ class HomeTrendingEntry {
 Set<String> _seriesNameTokens(String name) {
   return name
       .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ')
-      .split(RegExp(r'\s+'))
+      .replaceAll(RegExp(r"[^a-z0-9\s]"), " ")
+      .split(RegExp(r"\s+"))
       .where((token) => token.length >= 4)
       .toSet();
 }
 
 List<Map<String, dynamic>> _scoreTrendingEntries(Map<String, dynamic> input) {
-  final weeklyNames = (input['weekly_names'] as List).cast<String>();
-  final pullNames = (input['pull_names'] as List).cast<String>();
+  final weeklyNames = (input["weekly_names"] as List).cast<String>();
+  final pullNames = (input["pull_names"] as List).cast<String>();
 
   if (weeklyNames.isEmpty) return const [];
 
@@ -41,7 +41,7 @@ List<Map<String, dynamic>> _scoreTrendingEntries(Map<String, dynamic> input) {
       .map((n) => n.toLowerCase())
       .where((n) => n.isNotEmpty)
       .toSet();
-  final pulledTokens = pullNames.expand((n) => _seriesNameTokens(n)).toSet();
+  final pulledTokens = pullNames.expand(_seriesNameTokens).toSet();
 
   final bestScores = <String, int>{};
   final bestIndices = <String, int>{};
@@ -65,8 +65,8 @@ List<Map<String, dynamic>> _scoreTrendingEntries(Map<String, dynamic> input) {
       final isPulledSeries = pulledSeriesNames.contains(key);
       final isHot = (seriesFrequency[key] ?? 0) >= 2;
       bestReasons[key] = isPulledSeries
-          ? 'In Pulls'
-          : (isHot ? 'Hot this week' : 'Trending');
+          ? "In Pulls"
+          : (isHot ? "Hot this week" : "Trending");
     }
   }
 
@@ -75,8 +75,8 @@ List<Map<String, dynamic>> _scoreTrendingEntries(Map<String, dynamic> input) {
 
   return ranked.take(10).map((entry) {
     return <String, dynamic>{
-      'index': bestIndices[entry.key],
-      'reason': bestReasons[entry.key],
+      "index": bestIndices[entry.key],
+      "reason": bestReasons[entry.key],
     };
   }).toList();
 }
@@ -90,22 +90,22 @@ Future<List<HomeTrendingEntry>> _computeHomeTrendingEntries(Ref ref) async {
   if (weeklyIssues.isEmpty) return const [];
 
   final weeklyNames = weeklyIssues
-      .map((issue) => issue.series?.name.trim() ?? '')
+      .map((issue) => issue.series?.name.trim() ?? "")
       .toList(growable: false);
   final pullNames = pullIssues
-      .map((issue) => issue.series?.name ?? '')
+      .map((issue) => issue.series?.name ?? "")
       .toList(growable: false);
 
   final results = await compute(_scoreTrendingEntries, {
-    'weekly_names': weeklyNames,
-    'pull_names': pullNames,
+    "weekly_names": weeklyNames,
+    "pull_names": pullNames,
   });
 
   return results.map((r) {
-    final index = r['index'] as int;
+    final index = r["index"] as int;
     return HomeTrendingEntry(
       issue: weeklyIssues[index],
-      reason: r['reason'] as String,
+      reason: r["reason"] as String,
     );
   }).toList();
 }
@@ -124,9 +124,9 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
         cachedJson
             ?.map((json) {
               final issue = issueListFromJson(
-                (json['issue'] as Map?)?.cast<String, dynamic>() ?? const {},
+                (json["issue"] as Map?)?.cast<String, dynamic>() ?? const {},
               );
-              final reason = json['reason'] as String?;
+              final reason = json["reason"] as String?;
               if (issue == null || reason == null || reason.trim().isEmpty) {
                 return null;
               }
@@ -136,7 +136,7 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
             .toList() ??
         const <HomeTrendingEntry>[];
   } catch (e) {
-    AppLogger.warning('Failed to load cached home trending', error: e);
+    AppLogger.warning("Failed to load cached home trending", error: e);
   }
   final hasFreshCache =
       cachedAt != null &&
@@ -151,7 +151,7 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
 
   try {
     final fresh = await metrics.trackProvider(
-      'homeTrendingProvider',
+      "homeTrendingProvider",
       () => _computeHomeTrendingEntries(ref),
     );
     try {
@@ -160,19 +160,19 @@ final homeTrendingProvider = FutureProvider<List<HomeTrendingEntry>>((
         fresh
             .map(
               (entry) => {
-                'issue': issueListToJson(entry.issue),
-                'reason': entry.reason,
+                "issue": issueListToJson(entry.issue),
+                "reason": entry.reason,
               },
             )
             .toList(),
       );
       await cache.writeCachedAtNow(homeTrendingCacheKey);
     } catch (e) {
-      AppLogger.warning('Failed to cache home trending', error: e);
+      AppLogger.warning("Failed to cache home trending", error: e);
     }
     return fresh;
   } catch (e) {
-    AppLogger.error('Failed to compute home trending', error: e);
+    AppLogger.error("Failed to compute home trending", error: e);
     return cached;
   }
 });

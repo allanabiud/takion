@@ -1,18 +1,19 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart';
-import 'package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/resource_url_actions.dart';
-import 'package:takion/src/presentation/shared/detail_refresh_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:uuid/uuid.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:uuid/uuid.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class ArcDetailsScreen extends ConsumerStatefulWidget {
@@ -61,14 +62,14 @@ class _ArcDetailsScreenState
       final list = LocalReadingList(
         id: const Uuid().v4(),
         title: details.name,
-        description: details.desc ?? '',
+        description: details.desc ?? "",
         isOrdered: true,
         contentType: ListContentType.issue,
         createdAt: now,
         updatedAt: now,
         items: issues.map(localReadingListItemFromIssueList).toList(),
         metronArcId: widget.arcId,
-        metronAttributionSource: 'Metron Arc',
+        metronAttributionSource: "Metron Arc",
         metronImageUrl: details.image,
         lastSyncedAt: now,
       );
@@ -76,7 +77,7 @@ class _ArcDetailsScreenState
       await ref.read(localReadingListsProvider.notifier).addList(list);
 
       if (mounted) {
-        TakionAlerts.success(context, 'Reading List Imported');
+        TakionAlerts.success(context, "Reading List Imported");
         setState(() => _localList = list);
       }
     } catch (e) {
@@ -84,7 +85,7 @@ class _ArcDetailsScreenState
         TakionAlerts.safeError(
           context,
           e,
-          userMessage: 'Failed to import arc as reading list',
+          userMessage: "Failed to import arc as reading list",
         );
       }
     } finally {
@@ -98,14 +99,14 @@ class _ArcDetailsScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove from Library'),
+        title: const Text("Remove from Library"),
         content: Text(
           'Are you sure you want to remove "${_localList!.title}" from your library?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text("Cancel"),
           ),
           FilledButton.icon(
             style: FilledButton.styleFrom(
@@ -114,7 +115,7 @@ class _ArcDetailsScreenState
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             icon: const Icon(Icons.delete_outline, size: 22),
-            label: const Text('Remove'),
+            label: const Text("Remove"),
           ),
         ],
       ),
@@ -126,7 +127,7 @@ class _ArcDetailsScreenState
     await repo.deleteList(_localList!.id);
 
     if (mounted) {
-      TakionAlerts.success(context, 'Removed from Library');
+      TakionAlerts.success(context, "Removed from Library");
       setState(() => _localList = null);
     }
   }
@@ -149,7 +150,7 @@ class _ArcDetailsScreenState
               ),
               onPressed: _removeFromLibrary,
               icon: const Icon(Icons.delete_outline, size: 22),
-              label: const Text('Remove from Library'),
+              label: const Text("Remove from Library"),
             )
           : FilledButton.icon(
               style: FilledButton.styleFrom(
@@ -170,7 +171,7 @@ class _ArcDetailsScreenState
                       ),
                     )
                   : const Icon(Icons.add, size: 22),
-              label: const Text('Add to Library'),
+              label: const Text("Add to Library"),
             ),
     );
   }
@@ -179,13 +180,13 @@ class _ArcDetailsScreenState
   String? resourceUrlOf(ArcDetails details) => details.resourceUrl;
 
   @override
-  String get resourceLabel => 'arc';
+  String get resourceLabel => "arc";
 
   @override
   String shareSubjectOf(ArcDetails details) => details.name;
 
   @override
-  String get entityLabel => 'Arc';
+  String get entityLabel => "Arc";
 
   @override
   Future<ArcDetails> fetchDetails() {
@@ -195,13 +196,9 @@ class _ArcDetailsScreenState
   }
 
   @override
-  ArcDetails? currentStoredDetails() {
-    return ref.read(arcDetailsProvider(widget.arcId)).asData?.value;
-  }
-
-  @override
   void invalidateDetails() {
     ref.invalidate(arcDetailsProvider(widget.arcId));
+    ref.invalidate(arcIssueListProvider);
   }
 
   @override
@@ -210,10 +207,10 @@ class _ArcDetailsScreenState
 
     return DetailScreenShell<ArcDetails>(
       asyncValue: detailsAsync,
-      entityType: 'arc',
+      entityType: "arc",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'arc-image-${d.id}',
+      toHeroTag: (d) => "arc-image-${d.id}",
       toTitle: (d) => d.name,
       onRefresh: (_) => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
@@ -271,7 +268,7 @@ class _ArcIssuesSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SectionHeader(title: 'Issues'),
+            const SectionHeader(title: "Issues"),
             const SizedBox(height: 12),
             SizedBox(
               height: 280,
@@ -287,7 +284,13 @@ class _ArcIssuesSection extends ConsumerWidget {
           ],
         ),
       ),
-      error: (error, _) => const SizedBox.shrink(),
+      error: (error, _) => SizedBox(
+        height: 220,
+        child: AsyncStatePanel.error(
+          errorMessage: "Failed to load issues",
+          onRetry: () => ref.invalidate(arcDetailsIssuesProvider(arcId)),
+        ),
+      ),
       data: (page) {
         if (page.results.isEmpty) return const SizedBox.shrink();
         final totalIssueCount = page.count;
@@ -304,11 +307,11 @@ class _ArcIssuesSection extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               HorizontalPreviewSection(
-                title: '',
+                title: "",
                 onViewAll: null,
                 itemCount: page.results.length,
                 height: 250,
-                emptyText: 'No issues available.',
+                emptyText: "No issues available.",
                 itemBuilder: (context, index) {
                   final issue = page.results[index];
                   final issueId = issue.id;
@@ -316,7 +319,7 @@ class _ArcIssuesSection extends ConsumerWidget {
                     issueId: issueId,
                     imageUrl: issue.image,
                     title:
-                        '${issue.series?.name ?? issue.name} #${issue.number}',
+                        "${issue.series?.name ?? issue.name} #${issue.number}",
                     seriesId: issue.series?.id,
                     seriesName: issue.series?.name,
                     issueNumber: issue.number,

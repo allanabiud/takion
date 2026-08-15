@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
 
 enum SeriesIssueBulkOperation {
   addToCollection,
@@ -145,8 +145,8 @@ Future<void> applySeriesIssueBulkAction({
         if (isCollected) continue;
         itemsToUpsert.add(
           LibraryItem(
-            id: existing?.id ?? 'lib-$issueId',
-            userId: 'local-user',
+            id: existing?.id ?? "lib-$issueId",
+            userId: "local-user",
             metronIssueId: issueId,
             metronSeriesId: seriesId,
             ownershipStatus: LibraryOwnershipStatus.owned,
@@ -166,8 +166,8 @@ Future<void> applySeriesIssueBulkAction({
         );
         eventsToAdd.add(
           LibraryActivityEvent(
-            id: 'act-col-$issueId-${now.microsecondsSinceEpoch}',
-            userId: 'local-user',
+            id: "act-col-$issueId-${now.microsecondsSinceEpoch}",
+            userId: "local-user",
             type: ActivityEventType.collected,
             issueId: issueId,
             seriesId: seriesId,
@@ -199,8 +199,8 @@ Future<void> applySeriesIssueBulkAction({
             existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned;
         itemsToUpsert.add(
           LibraryItem(
-            id: existing?.id ?? 'lib-$issueId',
-            userId: 'local-user',
+            id: existing?.id ?? "lib-$issueId",
+            userId: "local-user",
             metronIssueId: issueId,
             metronSeriesId: seriesId,
             ownershipStatus: ownershipStatus,
@@ -220,17 +220,17 @@ Future<void> applySeriesIssueBulkAction({
         );
         readLogsToAdd.add(
           LibraryReadLog(
-            id: 'read-$issueId-${now.microsecondsSinceEpoch}',
-            userId: 'local-user',
-            collectionItemId: 'lib-$issueId',
+            id: "read-$issueId-${now.microsecondsSinceEpoch}",
+            userId: "local-user",
+            collectionItemId: "lib-$issueId",
             readAt: now,
             createdAt: now,
           ),
         );
         eventsToAdd.add(
           LibraryActivityEvent(
-            id: 'act-read-$issueId-${now.microsecondsSinceEpoch}',
-            userId: 'local-user',
+            id: "act-read-$issueId-${now.microsecondsSinceEpoch}",
+            userId: "local-user",
             type: ActivityEventType.read,
             issueId: issueId,
             seriesId: seriesId,
@@ -254,8 +254,8 @@ Future<void> applySeriesIssueBulkAction({
             existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned;
         itemsToUpsert.add(
           LibraryItem(
-            id: existing?.id ?? 'lib-$issueId',
-            userId: 'local-user',
+            id: existing?.id ?? "lib-$issueId",
+            userId: "local-user",
             metronIssueId: issueId,
             metronSeriesId: seriesId,
             ownershipStatus: ownershipStatus,
@@ -273,20 +273,20 @@ Future<void> applySeriesIssueBulkAction({
             updatedAt: now,
           ),
         );
-        readLogItemIdsToDelete.add('lib-$issueId');
+        readLogItemIdsToDelete.add("lib-$issueId");
         affectedIssueIds.add(issueId);
         affected++;
       }
     }
 
     if (imageCacheEntries.isNotEmpty) {
-      await imageCache.setMany('issue', imageCacheEntries);
+      await imageCache.setMany("issue", imageCacheEntries);
     }
     if (itemsToUpsert.isNotEmpty) {
       await libraryRepository.batchUpsertItems(seriesId, itemsToUpsert);
     }
     if (eventsToAdd.isNotEmpty) {
-      final batchId = 'batch_${DateTime.now().millisecondsSinceEpoch}';
+      final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
       await activityRepository.batchAddEvents(eventsToAdd, batchId: batchId);
     }
     if (readLogsToAdd.isNotEmpty) {
@@ -318,13 +318,13 @@ Future<void> applySeriesIssueBulkAction({
 
     if (context.mounted) {
       final actionText = switch (operation) {
-        SeriesIssueBulkOperation.addToCollection => 'Added to Collection',
+        SeriesIssueBulkOperation.addToCollection => "Added to Collection",
         SeriesIssueBulkOperation.removeFromCollection =>
-          'Removed from Collection',
-        SeriesIssueBulkOperation.markAsRead => 'Marked as Read',
-        SeriesIssueBulkOperation.markAsUnread => 'Marked as Unread',
+          "Removed from Collection",
+        SeriesIssueBulkOperation.markAsRead => "Marked as Read",
+        SeriesIssueBulkOperation.markAsUnread => "Marked as Unread",
       };
-      TakionAlerts.success(context, '$affected $actionText');
+      TakionAlerts.success(context, "$affected $actionText");
       Navigator.of(context).pop();
     }
   } catch (error) {
@@ -332,7 +332,7 @@ Future<void> applySeriesIssueBulkAction({
       TakionAlerts.safeError(
         context,
         error,
-        userMessage: 'Failed to apply series issue action',
+        userMessage: "Failed to apply series issue action",
       );
     }
   }
@@ -384,7 +384,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
 
   TakionBottomSheet.show<void>(
     context: context,
-    title: seriesYear != null ? '$seriesName ($seriesYear)' : seriesName,
+    title: seriesYear != null ? "$seriesName ($seriesYear)" : seriesName,
     child: StatefulBuilder(
       builder: (context, setModalState) {
         if (isLoading) {
@@ -395,7 +395,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
               if (!context.mounted) return;
               if (fetched.isEmpty) {
                 Navigator.of(context).pop();
-                TakionAlerts.info(context, 'No issues found');
+                TakionAlerts.info(context, "No issues found");
                 return;
               }
               setModalState(() {
@@ -406,46 +406,46 @@ Future<void> showSeriesIssueBulkActionsSheet({
               });
             });
           }
-          return SizedBox(
+          return const SizedBox(
             height: 400,
-            child: const Center(child: CircularProgressIndicator()),
+            child: Center(child: CircularProgressIndicator()),
           );
         }
 
         String operationLabel(SeriesIssueBulkOperation value) {
           switch (value) {
             case SeriesIssueBulkOperation.addToCollection:
-              return 'Add to Collection';
+              return "Add to Collection";
             case SeriesIssueBulkOperation.removeFromCollection:
-              return 'Remove from Collection';
+              return "Remove from Collection";
             case SeriesIssueBulkOperation.markAsRead:
-              return 'Mark as Read';
+              return "Mark as Read";
             case SeriesIssueBulkOperation.markAsUnread:
-              return 'Mark as Unread';
+              return "Mark as Unread";
           }
         }
 
         String selectionModeLabel(SeriesIssueSelectionMode value) {
           switch (value) {
             case SeriesIssueSelectionMode.predefined:
-              return 'Filters';
+              return "Filters";
             case SeriesIssueSelectionMode.range:
-              return 'Issue range';
+              return "Issue range";
           }
         }
 
         String subsetLabel(SeriesIssueSubset value) {
           switch (value) {
             case SeriesIssueSubset.all:
-              return 'All issues';
+              return "All issues";
             case SeriesIssueSubset.collected:
-              return 'Collected issues';
+              return "Collected issues";
             case SeriesIssueSubset.uncollected:
-              return 'Uncollected issues';
+              return "Uncollected issues";
             case SeriesIssueSubset.read:
-              return 'Read issues';
+              return "Read issues";
             case SeriesIssueSubset.unread:
-              return 'Unread issues';
+              return "Unread issues";
           }
         }
 
@@ -494,7 +494,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Action', style: Theme.of(context).textTheme.labelLarge),
+              Text("Action", style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               RadioGroup<SeriesIssueBulkOperation>(
                 groupValue: selectedOperation,
@@ -518,7 +518,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
               ),
               const SizedBox(height: 16),
               Text(
-                'Selection method',
+                "Selection method",
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
@@ -550,7 +550,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
               ),
               const SizedBox(height: 12),
               if (selectedMode == SeriesIssueSelectionMode.predefined) ...[
-                Text('Apply to', style: Theme.of(context).textTheme.labelLarge),
+                Text("Apply to", style: Theme.of(context).textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -586,7 +586,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Issue range: #$startIssueNumber - #$endIssueNumber',
+                            "Issue range: #$startIssueNumber - #$endIssueNumber",
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
@@ -599,7 +599,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                                     });
                                   },
                             child: Text(
-                              useManualRange ? 'Use Slider' : 'Use Inputs',
+                              useManualRange ? "Use Slider" : "Use Inputs",
                             ),
                           ),
                         ],
@@ -611,7 +611,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                               child: TextFormField(
                                 initialValue: startIssueNumber,
                                 decoration: const InputDecoration(
-                                  labelText: 'From issue #',
+                                  labelText: "From issue #",
                                   isDense: true,
                                 ),
                                 keyboardType: TextInputType.number,
@@ -639,7 +639,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                               child: TextFormField(
                                 initialValue: endIssueNumber,
                                 decoration: const InputDecoration(
-                                  labelText: 'To issue #',
+                                  labelText: "To issue #",
                                   isDense: true,
                                 ),
                                 keyboardType: TextInputType.number,
@@ -671,7 +671,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                           divisions: totalIssues > 1
                               ? (totalIssues - 1).clamp(1, 100)
                               : null,
-                          labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                          labels: RangeLabels("$selectedStart", "$selectedEnd"),
                           values: selectedRange,
                           onChanged: isApplying
                               ? null
@@ -686,7 +686,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                         ),
                       const SizedBox(height: 4),
                       Text(
-                        'Selected: #$startIssueNumber - #$endIssueNumber ($selectedStart to $selectedEnd of $totalIssues)',
+                        "Selected: #$startIssueNumber - #$endIssueNumber ($selectedStart to $selectedEnd of $totalIssues)",
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -700,7 +700,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                     onPressed: isApplying
                         ? null
                         : () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    child: const Text("Cancel"),
                   ),
                   const Spacer(),
                   FilledButton(
@@ -749,7 +749,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Apply'),
+                        : const Text("Apply"),
                   ),
                 ],
               ),
