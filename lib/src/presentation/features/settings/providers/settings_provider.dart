@@ -1,47 +1,51 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:takion/src/core/network/dio_client.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_list_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/because_you_pulled_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
-import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/creators/providers/creator_details_provider.dart';
-import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
-import 'package:takion/src/presentation/features/universes/providers/universe_details_provider.dart';
-import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
-import 'package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart';
-import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
-import 'package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart';
-import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:flex_color_scheme/flex_color_scheme.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "dart:io";
+import "package:path_provider/path_provider.dart";
+import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_search_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_details_provider.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_details_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_list_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_search_provider.dart";
+import "package:takion/src/presentation/features/library/providers/category_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart";
+import "package:takion/src/presentation/features/library/providers/because_you_pulled_provider.dart";
+import "package:takion/src/presentation/features/library/providers/continue_reading_provider.dart";
+import "package:takion/src/presentation/features/home/providers/home_trending_provider.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/presentation/features/characters/providers/character_details_provider.dart";
+import "package:takion/src/presentation/features/characters/providers/character_search_provider.dart";
+import "package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart";
+import "package:takion/src/presentation/features/creators/providers/creator_details_provider.dart";
+import "package:takion/src/presentation/features/creators/providers/creator_search_provider.dart";
+import "package:takion/src/presentation/features/universes/providers/universe_details_provider.dart";
+import "package:takion/src/presentation/features/universes/providers/universe_search_provider.dart";
+import "package:takion/src/presentation/features/imprints/providers/imprint_details_provider.dart";
+import "package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_details_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_search_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_details_provider.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_search_provider.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_issue_list_provider.dart";
+import "package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart";
+import "package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
-part 'settings_provider.freezed.dart';
-part 'settings_provider.g.dart';
+part "settings_provider.freezed.dart";
+part "settings_provider.g.dart";
 
 @freezed
 abstract class AppSettings with _$AppSettings {
@@ -51,19 +55,19 @@ abstract class AppSettings with _$AppSettings {
   }) = _AppSettings;
 }
 
-void invalidateReleaseProviders(void Function(dynamic provider) invalidate) {
+void invalidateReleaseProviders(void Function(ProviderOrFamily provider) invalidate) {
   invalidate(weeklyReleasesProvider);
   invalidate(focReleasesProvider);
 }
 
 void invalidateCacheBackedProviders(
-  void Function(dynamic provider) invalidate,
+  void Function(ProviderOrFamily provider) invalidate,
 ) {
   _invalidateBatch(invalidate);
 }
 
 void invalidateCacheBackedProvidersForAutoSync(
-  void Function(dynamic provider) invalidate,
+  void Function(ProviderOrFamily provider) invalidate,
 ) {
   invalidateReleaseProviders(invalidate);
   invalidate(homeTrendingProvider);
@@ -86,9 +90,10 @@ void invalidateCacheBackedProvidersForAutoSync(
     invalidate(pullListEntriesForWeekProvider);
     invalidate(pullsIssuesForWeekProvider);
 
-    Future.microtask(() {
-      invalidate(seriesIssueListProvider);
-      invalidate(seriesListProvider);
+Future.microtask(() {
+        invalidate(seriesIssueListProvider);
+        invalidate(seriesDetailsIssuesProvider);
+        invalidate(seriesListProvider);
       invalidate(currentSeriesListProvider);
       invalidate(seriesSearchProvider);
       invalidate(readingSuggestionProvider);
@@ -105,6 +110,10 @@ void invalidateCacheBackedProvidersForAutoSync(
         invalidate(characterSearchProvider);
         invalidate(characterIssueListProvider);
         invalidate(characterDetailsIssuesProvider);
+        invalidate(teamIssueListProvider);
+        invalidate(teamDetailsIssuesProvider);
+        invalidate(arcIssueListProvider);
+        invalidate(arcDetailsIssuesProvider);
         invalidate(creatorSearchProvider);
         invalidate(universeSearchProvider);
         invalidate(imprintSearchProvider);
@@ -116,12 +125,12 @@ void invalidateCacheBackedProvidersForAutoSync(
 }
 
 void invalidateCacheBackedProvidersBatched(
-  void Function(dynamic provider) invalidate,
+  void Function(ProviderOrFamily provider) invalidate,
 ) {
   _invalidateBatch(invalidate);
 }
 
-void _invalidateBatch(void Function(dynamic provider) invalidate) {
+void _invalidateBatch(void Function(ProviderOrFamily provider) invalidate) {
   invalidateReleaseProviders(invalidate);
   invalidate(issueDetailsProvider);
   invalidate(issueSearchProvider);
@@ -129,6 +138,7 @@ void _invalidateBatch(void Function(dynamic provider) invalidate) {
   invalidate(allLibraryItemsProvider);
   invalidate(seriesDetailsProvider);
   invalidate(seriesIssueListProvider);
+  invalidate(seriesDetailsIssuesProvider);
   invalidate(seriesListProvider);
   invalidate(currentSeriesListProvider);
   invalidate(seriesSearchProvider);
@@ -158,6 +168,14 @@ void _invalidateBatch(void Function(dynamic provider) invalidate) {
   invalidate(characterSearchProvider);
   invalidate(characterIssueListProvider);
   invalidate(characterDetailsIssuesProvider);
+  invalidate(teamDetailsProvider);
+  invalidate(teamSearchProvider);
+  invalidate(teamIssueListProvider);
+  invalidate(teamDetailsIssuesProvider);
+  invalidate(arcDetailsProvider);
+  invalidate(arcSearchProvider);
+  invalidate(arcIssueListProvider);
+  invalidate(arcDetailsIssuesProvider);
   invalidate(creatorDetailsProvider);
   invalidate(creatorSearchProvider);
   invalidate(universeDetailsProvider);
@@ -177,7 +195,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   Future<DateTime?> getListSyncTimestamp(String key) async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
-    final raw = await dao.getString('list_sync:$key');
+    final raw = await dao.getString("list_sync:$key");
     if (raw == null) return null;
     return DateTime.tryParse(raw);
   }
@@ -185,7 +203,7 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<void> setListSyncTimestamp(String key, DateTime timestamp) async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     await dao.setString(
-      'list_sync:$key',
+      "list_sync:$key",
       timestamp.toUtc().toIso8601String(),
     );
   }
@@ -199,7 +217,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
     state = state.copyWith(
       isBusy: true,
-      statusMessage: 'Clearing local cache and metadata...',
+      statusMessage: "Clearing local cache and metadata...",
     );
 
     try {
@@ -211,13 +229,13 @@ class SettingsNotifier extends _$SettingsNotifier {
       _invalidateCacheBackedProviders();
       state = state.copyWith(
         isBusy: false,
-        statusMessage: 'Cache and metadata cleared successfully',
+        statusMessage: "Cache and metadata cleared successfully",
       );
     } catch (e) {
-      AppLogger.error('Failed to clear cache', error: e);
+      AppLogger.error("Failed to clear cache", error: e);
       state = state.copyWith(
         isBusy: false,
-        statusMessage: 'Failed to clear cache',
+        statusMessage: "Failed to clear cache",
       );
     }
   }
@@ -233,19 +251,19 @@ final collectionDefaultFormatProvider =
 
 class CollectionDefaultFormatNotifier
     extends AsyncNotifier<CollectionDefaultFormat> {
-  static const _key = 'collection_default_format';
+  static const _key = "collection_default_format";
 
   @override
   Future<CollectionDefaultFormat> build() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
-    final raw = await dao.getString(_key) ?? 'digital';
+    final raw = await dao.getString(_key) ?? "digital";
 
     switch (raw) {
-      case 'print':
+      case "print":
         return CollectionDefaultFormat.print;
-      case 'both':
+      case "both":
         return CollectionDefaultFormat.both;
-      case 'digital':
+      case "digital":
       default:
         return CollectionDefaultFormat.digital;
     }
@@ -254,9 +272,9 @@ class CollectionDefaultFormatNotifier
   Future<void> setDefaultFormat(CollectionDefaultFormat format) async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final value = switch (format) {
-      CollectionDefaultFormat.print => 'print',
-      CollectionDefaultFormat.digital => 'digital',
-      CollectionDefaultFormat.both => 'both',
+      CollectionDefaultFormat.print => "print",
+      CollectionDefaultFormat.digital => "digital",
+      CollectionDefaultFormat.both => "both",
     };
     await dao.setString(_key, value);
     state = AsyncValue.data(format);
@@ -269,7 +287,7 @@ final autoCollectOnReadProvider =
     );
 
 class AutoCollectOnReadNotifier extends AsyncNotifier<bool> {
-  static const _key = 'auto_collect_on_read';
+  static const _key = "auto_collect_on_read";
 
   @override
   Future<bool> build() async {
@@ -290,7 +308,7 @@ final autoPullToCollectionProvider =
     );
 
 class AutoPullToCollectionNotifier extends AsyncNotifier<bool> {
-  static const _key = 'auto_pull_to_collection';
+  static const _key = "auto_pull_to_collection";
 
   @override
   Future<bool> build() async {
@@ -311,7 +329,7 @@ final showReadIssueTickOverlayProvider =
     );
 
 class ShowReadIssueTickOverlayNotifier extends AsyncNotifier<bool> {
-  static const _key = 'show_read_issue_tick_overlay';
+  static const _key = "show_read_issue_tick_overlay";
 
   @override
   Future<bool> build() async {
@@ -332,7 +350,7 @@ final accentSchemeProvider =
     );
 
 class AccentSchemeNotifier extends AsyncNotifier<FlexScheme> {
-  static const _key = 'accent_scheme';
+  static const _key = "accent_scheme";
 
   @override
   Future<FlexScheme> build() async {
@@ -352,7 +370,7 @@ class AccentSchemeNotifier extends AsyncNotifier<FlexScheme> {
 
 Future<int> _dbFileSize() async {
   final dir = await getApplicationDocumentsDirectory();
-  final file = File('${dir.path}/takion.sqlite');
+  final file = File("${dir.path}/takion.sqlite");
   if (!await file.exists()) return 0;
   return await file.length();
 }

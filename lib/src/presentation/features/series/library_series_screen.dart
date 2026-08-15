@@ -1,26 +1,26 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
-import 'package:takion/src/presentation/features/series/series_issue_bulk_actions.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/features/library/providers/category_series_providers.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_cover_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_details_provider.dart";
+import "package:takion/src/presentation/features/series/series_issue_bulk_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class LibrarySeriesScreen extends ConsumerWidget {
   const LibrarySeriesScreen({
     super.key,
     @pathParam required this.seriesId,
-    @pathParam required this.category,
-    @pathParam this.seriesName,
+    this.category = "collected",
+    this.seriesName,
   });
 
   final int seriesId;
@@ -29,16 +29,16 @@ class LibrarySeriesScreen extends ConsumerWidget {
 
   String get _categoryLabel {
     switch (category) {
-      case 'collected':
-        return 'Collected';
-      case 'read':
-        return 'Read';
-      case 'wishlist':
-        return 'Wishlisted';
-      case 'unread':
-        return 'Unread';
-      case 'unrated':
-        return 'Unrated';
+      case "collected":
+        return "Collected";
+      case "read":
+        return "Read";
+      case "wishlist":
+        return "Wishlisted";
+      case "unread":
+        return "Unread";
+      case "unrated":
+        return "Unrated";
       default:
         return category;
     }
@@ -52,16 +52,16 @@ class LibrarySeriesScreen extends ConsumerWidget {
 
     return DetailScreenShell<SeriesDetails>(
       asyncValue: detailsAsync,
-      entityType: 'series',
+      entityType: "series",
       initialChildSize: 0.60,
       headerHeight: 350,
       showHero: false,
       toImageUrl: (d) => null,
-      toHeroTag: (d) => 'library-series-${d.id}',
+      toHeroTag: (d) => "library-series-${d.id}",
       toTitle: (d) => '${d.name.toUpperCase()} (${d.yearBegan ?? ''})',
       appBarTrailingAction: (d) => IconButton(
         icon: const Icon(Icons.open_in_new),
-        tooltip: 'View full series details',
+        tooltip: "View full series details",
         onPressed: () =>
             context.pushRoute(SeriesDetailsRoute(seriesId: seriesId)),
       ),
@@ -183,18 +183,18 @@ class _CombinedCategoryHeader extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return categorySeriesAsync.when(
-      loading: () => Row(
+      loading: () => const Row(
         children: [
           Expanded(
             flex: 3,
             child: Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: EdgeInsets.only(top: 16),
               child: ShimmerWidget(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SkeletonBox(width: 120, height: 12, borderRadius: 4),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     SkeletonBox(height: 8, borderRadius: 4),
                   ],
                 ),
@@ -225,7 +225,7 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${categoryLabel.toUpperCase()}: $count / $total',
+                      "${categoryLabel.toUpperCase()}: $count / $total",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
@@ -244,7 +244,7 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                   ],
                 ),
               ),
-              if (category == 'unread' || category == 'unrated') ...[
+              if (category == "unread" || category == "unrated") ...[
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 1,
@@ -264,11 +264,11 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                       );
                       final categoryIssues = allItems.where((ci) {
                         if (ci.issue?.series?.id != seriesId) return false;
-                        if (category == 'unread') return ci.isRead == false;
-                        if (category == 'unrated') return ci.rating == null;
-                        if (category == 'collected') return ci.quantity > 0;
-                        if (category == 'read') return ci.isRead == true;
-                        if (category == 'wishlist') return ci.quantity == 0;
+                        if (category == "unread") return ci.isRead == false;
+                        if (category == "unrated") return ci.rating == null;
+                        if (category == "collected") return ci.quantity > 0;
+                        if (category == "read") return ci.isRead == true;
+                        if (category == "wishlist") return ci.quantity == 0;
                         return true;
                       }).toList();
 
@@ -286,7 +286,7 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                       );
                     },
                     child: Icon(
-                      category == 'unread'
+                      category == "unread"
                           ? Icons.bookmark_added
                           : Icons.star_outline,
                     ),
@@ -315,7 +315,7 @@ Future<void> _showCategoryBulkSheet(
     return SeriesIssueBulkCandidate(
       issueId: entry.value.issue?.id ?? 0,
       orderIndex: entry.key + 1,
-      issueNumber: entry.value.issue?.number ?? '',
+      issueNumber: entry.value.issue?.number ?? "",
       imageUrl: entry.value.issue?.image,
       storeDate: entry.value.issue?.storeDate,
     );
@@ -345,10 +345,10 @@ Future<void> _showCategoryBulkSheet(
             : candidates.length;
 
         String actionLabel() {
-          if (category == 'unrated') {
-            return selectedRating > 0 ? 'Rate $selectedCount' : 'Rate All';
+          if (category == "unrated") {
+            return selectedRating > 0 ? "Rate $selectedCount" : "Rate All";
           }
-          return useRange ? 'Mark $selectedCount as Read' : 'Mark All as Read';
+          return useRange ? "Mark $selectedCount as Read" : "Mark All as Read";
         }
 
         return SingleChildScrollView(
@@ -356,8 +356,8 @@ Future<void> _showCategoryBulkSheet(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (category == 'unrated') ...[
-                Text('Action', style: theme.textTheme.labelLarge),
+              if (category == "unrated") ...[
+                Text("Action", style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Container(
                   width: double.infinity,
@@ -370,7 +370,7 @@ Future<void> _showCategoryBulkSheet(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Rate Issues',
+                        "Rate Issues",
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -390,7 +390,7 @@ Future<void> _showCategoryBulkSheet(
                   ),
                 ),
               ] else ...[
-                Text('Action', style: theme.textTheme.labelLarge),
+                Text("Action", style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Container(
                   width: double.infinity,
@@ -400,7 +400,7 @@ Future<void> _showCategoryBulkSheet(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    'Mark as Read',
+                    "Mark as Read",
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -411,7 +411,7 @@ Future<void> _showCategoryBulkSheet(
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Apply To', style: theme.textTheme.labelLarge),
+                  Text("Apply To", style: theme.textTheme.labelLarge),
                   if (canSelectRange)
                     TextButton(
                       onPressed: isApplying
@@ -427,14 +427,14 @@ Future<void> _showCategoryBulkSheet(
                                 }
                               });
                             },
-                      child: Text(useRange ? 'Select All' : 'Select Range'),
+                      child: Text(useRange ? "Select All" : "Select Range"),
                     ),
                 ],
               ),
               const SizedBox(height: 8),
               if (!useRange)
                 Text(
-                  'All ${candidates.length} issues in this series',
+                  "All ${candidates.length} issues in this series",
                   style: theme.textTheme.bodyMedium,
                 )
               else ...[
@@ -451,7 +451,7 @@ Future<void> _showCategoryBulkSheet(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Issue Range',
+                            "Issue Range",
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -465,7 +465,7 @@ Future<void> _showCategoryBulkSheet(
                                     });
                                   },
                             child: Text(
-                              useManualRange ? 'Use Slider' : 'Manual Entry',
+                              useManualRange ? "Use Slider" : "Manual Entry",
                             ),
                           ),
                         ],
@@ -477,7 +477,7 @@ Future<void> _showCategoryBulkSheet(
                               child: DropdownButtonFormField<int>(
                                 initialValue: selectedStart,
                                 decoration: const InputDecoration(
-                                  labelText: 'From',
+                                  labelText: "From",
                                   isDense: true,
                                 ),
                                 items: [
@@ -489,7 +489,7 @@ Future<void> _showCategoryBulkSheet(
                                     DropdownMenuItem(
                                       value: idx + 1,
                                       child: Text(
-                                        '#${candidates[idx].issueNumber}',
+                                        "#${candidates[idx].issueNumber}",
                                       ),
                                     ),
                                 ],
@@ -512,7 +512,7 @@ Future<void> _showCategoryBulkSheet(
                               child: DropdownButtonFormField<int>(
                                 initialValue: selectedEnd,
                                 decoration: const InputDecoration(
-                                  labelText: 'To',
+                                  labelText: "To",
                                   isDense: true,
                                 ),
                                 items: [
@@ -524,7 +524,7 @@ Future<void> _showCategoryBulkSheet(
                                     DropdownMenuItem(
                                       value: idx + 1,
                                       child: Text(
-                                        '#${candidates[idx].issueNumber}',
+                                        "#${candidates[idx].issueNumber}",
                                       ),
                                     ),
                                 ],
@@ -548,7 +548,7 @@ Future<void> _showCategoryBulkSheet(
                           divisions: candidates.length > 1
                               ? (candidates.length - 1).clamp(1, 100)
                               : null,
-                          labels: RangeLabels('$selectedStart', '$selectedEnd'),
+                          labels: RangeLabels("$selectedStart", "$selectedEnd"),
                           values: selectedRange,
                           onChanged: isApplying
                               ? null
@@ -572,10 +572,10 @@ Future<void> _showCategoryBulkSheet(
                     onPressed: isApplying
                         ? null
                         : () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    child: const Text("Cancel"),
                   ),
                   const Spacer(),
-                  if (category == 'unrated') ...[
+                  if (category == "unrated") ...[
                     FilledButton(
                       onPressed: isApplying || selectedRating == 0
                           ? null
@@ -643,7 +643,7 @@ Future<void> _showCategoryBulkSheet(
                                 Navigator.of(context).pop();
                                 TakionAlerts.success(
                                   context,
-                                  '$affected Issues Rated',
+                                  "$affected Issues Rated",
                                 );
                                 ref.invalidate(
                                   seriesByCategoryProvider(category),
@@ -736,12 +736,12 @@ class _CategoryIssueList extends ConsumerWidget {
     final allItemsAsync = ref.watch(allCollectionItemsProvider);
 
     return allItemsAsync.when(
-      loading: () => Column(
+      loading: () => const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(title: 'ISSUES'),
-          const SizedBox(height: 8),
-          const ShimmerWidget(
+          SectionHeader(title: "ISSUES"),
+          SizedBox(height: 8),
+          ShimmerWidget(
             child: Column(
               children: [
                 _IssueTileSkeleton(),
@@ -753,15 +753,15 @@ class _CategoryIssueList extends ConsumerWidget {
           ),
         ],
       ),
-      error: (error, _) => const Text('Failed to load issues'),
+      error: (error, _) => const Text("Failed to load issues"),
       data: (allItems) {
         final categoryItems = allItems.where((ci) {
           if (ci.issue?.series?.id != seriesId) return false;
-          if (category == 'unread') return ci.isRead == false;
-          if (category == 'unrated') return ci.rating == null;
-          if (category == 'collected') return ci.quantity > 0;
-          if (category == 'read') return ci.isRead == true;
-          if (category == 'wishlist') return ci.quantity == 0;
+          if (category == "unread") return ci.isRead == false;
+          if (category == "unrated") return ci.rating == null;
+          if (category == "collected") return ci.quantity > 0;
+          if (category == "read") return ci.isRead == true;
+          if (category == "wishlist") return ci.quantity == 0;
           return true;
         }).toList();
 
@@ -770,7 +770,7 @@ class _CategoryIssueList extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 12, bottom: 12),
             child: Center(
               child: Text(
-                'No $categoryLabel issues in this series.',
+                "No $categoryLabel issues in this series.",
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -782,7 +782,7 @@ class _CategoryIssueList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SectionHeader(title: 'ISSUES', badge: '(${categoryItems.length})'),
+            SectionHeader(title: "ISSUES", badge: "(${categoryItems.length})"),
             const SizedBox(height: 8),
             ...categoryItems.map((item) {
               final index = categoryItems.indexOf(item);
@@ -807,8 +807,8 @@ extension _CollectionItemToIssueList on CollectionItem {
   IssueList toIssueList() {
     return IssueList(
       id: issue?.id ?? 0,
-      name: issue?.series?.name ?? issue?.number ?? '',
-      number: issue?.number ?? '',
+      name: issue?.series?.name ?? issue?.number ?? "",
+      number: issue?.number ?? "",
       image: issue?.image,
       coverDate: issue?.coverDate,
       storeDate: issue?.storeDate,
@@ -830,20 +830,20 @@ class _IssueTileSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          const SkeletonBox(width: 72, height: 98, borderRadius: 8),
-          const SizedBox(width: 12),
+          SkeletonBox(width: 72, height: 98, borderRadius: 8),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SkeletonBox(height: 14, borderRadius: 4),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 SkeletonBox(width: 80, height: 12, borderRadius: 4),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 SkeletonBox(width: 60, height: 12, borderRadius: 4),
               ],
             ),

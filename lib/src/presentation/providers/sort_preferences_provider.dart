@@ -1,11 +1,12 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
 
 class SortPreferencesNotifier extends Notifier<Map<String, ContentSortOption>> {
-  static const _sortPreferencesKey = 'sort_preferences';
+  static const _sortPreferencesKey = SettingsKeys.sortPreferences;
 
   bool _hydrated = false;
 

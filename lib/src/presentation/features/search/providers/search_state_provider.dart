@@ -1,7 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
 
-const kSearchBarHeroTag = 'discover-search-bar-hero';
+const kSearchBarHeroTag = "discover-search-bar-hero";
 
 enum SearchTarget {
   series,
@@ -33,8 +34,8 @@ class SearchState {
 }
 
 class SearchStateNotifier extends Notifier<SearchState> {
-  static const _historyKey = 'search_history';
-  static const _targetKey = 'search_target';
+  static const _historyKey = SettingsKeys.searchHistory;
+  static const _targetKey = SettingsKeys.searchTarget;
 
   bool _hydrated = false;
 
@@ -50,14 +51,14 @@ class SearchStateNotifier extends Notifier<SearchState> {
   Future<void> _hydrateFromStorage() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final rawHistory = await dao.getString(_historyKey);
-    final history = rawHistory?.split(',') ?? <String>[];
+    final history = rawHistory?.split(",") ?? <String>[];
     final cleanHistory = history
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList();
 
     final rawTarget = await dao.getString(_targetKey);
-    final targetIndex = int.tryParse(rawTarget ?? '') ?? 0;
+    final targetIndex = int.tryParse(rawTarget ?? "") ?? 0;
     final target = SearchTarget.values.elementAt(
       targetIndex.clamp(0, SearchTarget.values.length - 1),
     );
@@ -67,7 +68,7 @@ class SearchStateNotifier extends Notifier<SearchState> {
 
   Future<void> _persist() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
-    await dao.setString(_historyKey, state.history.join(','));
+    await dao.setString(_historyKey, state.history.join(","));
     await dao.setString(_targetKey, state.target.index.toString());
   }
 
@@ -100,5 +101,5 @@ class SearchStateNotifier extends Notifier<SearchState> {
 }
 
 final searchStateProvider = NotifierProvider<SearchStateNotifier, SearchState>(
-  () => SearchStateNotifier(),
+  SearchStateNotifier.new,
 );

@@ -1,13 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/core/sync/periodic_sync_manager.dart';
-import 'package:takion/src/core/sync/sync_diagnostics.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/core/sync/periodic_sync_manager.dart";
+import "package:takion/src/core/sync/sync_diagnostics.dart";
 
 enum SyncInterval {
-  hours1(Duration(hours: 1), '1 hr'),
-  hours3(Duration(hours: 3), '3 hrs'),
-  hours24(Duration(hours: 24), '24 hrs');
+  hours1(Duration(hours: 1), "1 hr"),
+  hours3(Duration(hours: 3), "3 hrs"),
+  hours24(Duration(hours: 24), "24 hrs");
 
   final Duration duration;
   final String label;
@@ -16,20 +17,20 @@ enum SyncInterval {
 
   static SyncInterval fromString(String? value) {
     switch (value) {
-      case '1 hr':
-      case '1h':
-      case '1_hr':
-      case 'hours1':
+      case "1 hr":
+      case "1h":
+      case "1_hr":
+      case "hours1":
         return SyncInterval.hours1;
-      case '3 hrs':
-      case '3h':
-      case '3_hrs':
-      case 'hours3':
+      case "3 hrs":
+      case "3h":
+      case "3_hrs":
+      case "hours3":
         return SyncInterval.hours3;
-      case '24 hrs':
-      case '24h':
-      case '24_hrs':
-      case 'hours24':
+      case "24 hrs":
+      case "24h":
+      case "24_hrs":
+      case "hours24":
         return SyncInterval.hours24;
       default:
         return SyncInterval.hours1;
@@ -95,10 +96,10 @@ final syncDiagnosticsProvider = FutureProvider<SyncDiagnostics>((ref) async {
 });
 
 class DriveSyncNotifier extends Notifier<DriveSyncState> {
-  static const _enabledKey = 'drive_sync_enabled';
-  static const _emailKey = 'drive_sync_email';
-  static const _intervalKey = 'drive_sync_interval';
-  static const _intervalEnabledKey = 'drive_sync_interval_enabled';
+  static const _enabledKey = SettingsKeys.driveSyncEnabled;
+  static const _emailKey = SettingsKeys.driveSyncEmail;
+  static const _intervalKey = SettingsKeys.driveSyncInterval;
+  static const _intervalEnabledKey = SettingsKeys.driveSyncIntervalEnabled;
 
   late final Future<void> _initFuture = _loadSettings();
 
@@ -124,7 +125,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
       defaultValue: false,
     );
 
-    final lastSyncRaw = await db.syncMetaDao.get('last_sync_timestamp');
+    final lastSyncRaw = await db.syncMetaDao.get("last_sync_timestamp");
     DateTime? lastSync;
     if (lastSyncRaw != null) {
       lastSync = DateTime.tryParse(lastSyncRaw);
@@ -145,7 +146,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
 
   Future<void> enable({required String email}) async {
     await ensureInitialized();
-    AppLogger.info('Drive sync enabled for $email');
+    AppLogger.info("Drive sync enabled for $email");
     final db = ref.read(driftDatabaseProvider);
     await db.settingsDao.setBool(_enabledKey, true);
     await db.settingsDao.setString(_emailKey, email);
@@ -159,7 +160,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
 
   Future<void> disable() async {
     await ensureInitialized();
-    AppLogger.info('Drive sync disabled');
+    AppLogger.info("Drive sync disabled");
     final db = ref.read(driftDatabaseProvider);
     await db.settingsDao.setBool(_enabledKey, false);
     await db.settingsDao.deleteByKey(_emailKey);
@@ -169,7 +170,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
 
   Future<void> updateSyncInterval(SyncInterval interval) async {
     await ensureInitialized();
-    AppLogger.info('Drive sync interval changed to ${interval.label}');
+    AppLogger.info("Drive sync interval changed to ${interval.label}");
     final db = ref.read(driftDatabaseProvider);
     await db.settingsDao.setString(_intervalKey, interval.label);
     state = state.copyWith(syncInterval: interval);
@@ -199,9 +200,9 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
 
   Future<void> updateLastSync() async {
     await ensureInitialized();
-    AppLogger.info('Last sync timestamp updated');
+    AppLogger.info("Last sync timestamp updated");
     final db = ref.read(driftDatabaseProvider);
-    final lastSyncRaw = await db.syncMetaDao.get('last_sync_timestamp');
+    final lastSyncRaw = await db.syncMetaDao.get("last_sync_timestamp");
     DateTime? lastSync;
     if (lastSyncRaw != null) {
       lastSync = DateTime.tryParse(lastSyncRaw);
@@ -211,12 +212,12 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   }
 
   void setSyncing(bool value) {
-    AppLogger.info('Sync state: $value');
+    AppLogger.info("Sync state: $value");
     state = state.copyWith(isSyncing: value);
   }
 
   void setError(String error) {
-    AppLogger.error('Drive sync error', error: error);
+    AppLogger.error("Drive sync error", error: error);
     state = state.copyWith(lastError: error, lastErrorTime: DateTime.now());
     ref.invalidate(syncDiagnosticsProvider);
   }

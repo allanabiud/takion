@@ -1,11 +1,10 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-
-import '../../../shared/widgets/components.dart';
+import "package:flex_color_scheme/flex_color_scheme.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
+import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 const accentSchemes = [
   FlexScheme.green,
@@ -23,7 +22,7 @@ const accentSchemes = [
 void showAppearanceSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Appearance',
+    title: "Appearance",
     child: Consumer(
       builder: (context, ref, _) {
         final themeAsync = ref.watch(themeProvider);
@@ -41,7 +40,7 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              buildSettingsGroup(context, 'Theme Mode', [
+              buildSettingsGroup(context, "Theme Mode", [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Padding(
@@ -57,11 +56,11 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Theme Mode',
+                              "Theme Mode",
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              'Choose your preferred interface theme',
+                              "Choose your preferred interface theme",
                               style: TextStyle(fontSize: 12),
                             ),
                           ],
@@ -78,17 +77,17 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                       ButtonSegment(
                         value: ThemeMode.system,
                         icon: Icon(Icons.brightness_auto_outlined),
-                        label: Text('AUTO'),
+                        label: Text("AUTO"),
                       ),
                       ButtonSegment(
                         value: ThemeMode.light,
                         icon: Icon(Icons.light_mode_outlined),
-                        label: Text('LIGHT'),
+                        label: Text("LIGHT"),
                       ),
                       ButtonSegment(
                         value: ThemeMode.dark,
                         icon: Icon(Icons.dark_mode_outlined),
-                        label: Text('DARK'),
+                        label: Text("DARK"),
                       ),
                     ],
                     selected: {themeSettings.themeMode},
@@ -102,7 +101,7 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                 ),
               ], padding: const EdgeInsets.fromLTRB(0, 16, 0, 16)),
               const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Accent Color', [
+              buildSettingsGroup(context, "Accent Color", [
                 Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 12,
@@ -152,15 +151,15 @@ void showAppearanceSettings(BuildContext context, WidgetRef ref) {
                 ),
               ]),
               const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Dark Mode', [
+              buildSettingsGroup(context, "Dark Mode", [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text(
-                    'Pure Black',
+                    "Pure Black",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: const Text(
-                    'Use a true black background in dark mode',
+                    "Use a true black background in dark mode",
                   ),
                   value: themeSettings.darkIsTrueBlack,
                   onChanged: (bool value) {

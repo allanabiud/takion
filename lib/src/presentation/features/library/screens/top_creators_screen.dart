@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/presentation/features/library/widgets/top_entity_tile.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/features/library/widgets/top_entity_tile.dart";
 
+@RoutePage()
 class TopCreatorsScreen extends StatelessWidget {
   final List<EntityStat> creators;
 
@@ -10,7 +12,7 @@ class TopCreatorsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Top Creators')),
+      appBar: AppBar(title: const Text("Top Creators")),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: creators.length,

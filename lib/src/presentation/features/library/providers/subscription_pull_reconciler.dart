@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 DateTime _weekStart(DateTime date) {
   final normalized = DateTime(date.year, date.month, date.day);
@@ -13,8 +14,8 @@ DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 class SubscriptionPullReconciler {
   SubscriptionPullReconciler(this.ref);
 
-  static const _lastRunEpochKey = 'subscription_pull_reconcile_last_run_ms';
-  static const _browseRunEpochKey = 'subscription_pull_reconcile_browse_last_run_ms';
+  static const _lastRunEpochKey = SettingsKeys.subscriptionPullReconcileLastRunMs;
+  static const _browseRunEpochKey = SettingsKeys.subscriptionPullReconcileBrowseLastRunMs;
   static const _throttleWindow = Duration(hours: 12);
   static const _browseCooldown = Duration(minutes: 30);
   static const _subscriptionPageSize = 200;
@@ -33,7 +34,7 @@ class SubscriptionPullReconciler {
     if (force || onlySeriesId != null) return true;
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final lastRunEpochStr = await dao.getString(_lastRunEpochKey);
-    final lastRunEpoch = int.tryParse(lastRunEpochStr ?? '');
+    final lastRunEpoch = int.tryParse(lastRunEpochStr ?? "");
     if (lastRunEpoch == null) return true;
     final lastRun = DateTime.fromMillisecondsSinceEpoch(lastRunEpoch);
     return DateTime.now().difference(lastRun) >= _throttleWindow;
@@ -90,7 +91,7 @@ class SubscriptionPullReconciler {
   Future<ReconcileResult> browseReconcile() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final lastBrowseEpochStr = await dao.getString(_browseRunEpochKey);
-    final lastBrowseEpoch = int.tryParse(lastBrowseEpochStr ?? '');
+    final lastBrowseEpoch = int.tryParse(lastBrowseEpochStr ?? "");
     if (lastBrowseEpoch != null &&
         DateTime.now()
                 .difference(
@@ -128,7 +129,7 @@ class SubscriptionPullReconciler {
 
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final lastRunEpochStr = await dao.getString(_lastRunEpochKey);
-    final lastRunEpoch = int.tryParse(lastRunEpochStr ?? '');
+    final lastRunEpoch = int.tryParse(lastRunEpochStr ?? "");
     final lastRun = lastRunEpoch != null
         ? DateTime.fromMillisecondsSinceEpoch(lastRunEpoch)
         : null;
@@ -199,7 +200,7 @@ class SubscriptionPullReconciler {
             final issuePage = await metronRepository.getSeriesIssueList(
               seriesId,
               nextUrl: nextUrl,
-              ordering: '-store_date',
+              ordering: "-store_date",
               storeDateGte: fromDate,
               storeDateLte: toDate,
             );

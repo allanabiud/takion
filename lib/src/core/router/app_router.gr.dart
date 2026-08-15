@@ -28,7 +28,7 @@ import 'package:takion/src/presentation/features/home/authorize_metron_screen.da
     as _i4;
 import 'package:takion/src/presentation/features/home/home_screen.dart' as _i12;
 import 'package:takion/src/presentation/features/home/main_screen.dart' as _i22;
-import 'package:takion/src/presentation/features/home/onboarding_screen.dart'
+import 'package:takion/src/presentation/features/onboarding/onboarding_screen.dart'
     as _i28;
 import 'package:takion/src/presentation/features/imprints/imprint_details_screen.dart'
     as _i14;
@@ -46,10 +46,16 @@ import 'package:takion/src/presentation/features/library/my_comics_screen.dart'
     as _i25;
 import 'package:takion/src/presentation/features/library/my_pulls_screen.dart'
     as _i26;
+import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart'
+    as _i49;
 import 'package:takion/src/presentation/features/library/read_screen.dart'
     as _i31;
 import 'package:takion/src/presentation/features/library/reading_history_screen.dart'
     as _i32;
+import 'package:takion/src/presentation/features/library/screens/top_characters_screen.dart'
+    as _i50;
+import 'package:takion/src/presentation/features/library/screens/top_creators_screen.dart'
+    as _i51;
 import 'package:takion/src/presentation/features/library/subscriptions_screen.dart'
     as _i38;
 import 'package:takion/src/presentation/features/library/unrated_screen.dart'
@@ -919,7 +925,7 @@ class LibrarySeriesRoute extends _i46.PageRouteInfo<LibrarySeriesRouteArgs> {
   LibrarySeriesRoute({
     _i47.Key? key,
     required int seriesId,
-    required String category,
+    String category = 'collected',
     String? seriesName,
     List<_i46.PageRouteInfo>? children,
   }) : super(
@@ -930,11 +936,7 @@ class LibrarySeriesRoute extends _i46.PageRouteInfo<LibrarySeriesRouteArgs> {
            category: category,
            seriesName: seriesName,
          ),
-         rawPathParams: {
-           'seriesId': seriesId,
-           'category': category,
-           'seriesName': seriesName,
-         },
+         rawPathParams: {'seriesId': seriesId},
          initialChildren: children,
        );
 
@@ -945,11 +947,8 @@ class LibrarySeriesRoute extends _i46.PageRouteInfo<LibrarySeriesRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<LibrarySeriesRouteArgs>(
-        orElse: () => LibrarySeriesRouteArgs(
-          seriesId: pathParams.getInt('seriesId'),
-          category: pathParams.getString('category'),
-          seriesName: pathParams.optString('seriesName'),
-        ),
+        orElse: () =>
+            LibrarySeriesRouteArgs(seriesId: pathParams.getInt('seriesId')),
       );
       return _i18.LibrarySeriesScreen(
         key: args.key,
@@ -965,7 +964,7 @@ class LibrarySeriesRouteArgs {
   const LibrarySeriesRouteArgs({
     this.key,
     required this.seriesId,
-    required this.category,
+    this.category = 'collected',
     this.seriesName,
   });
 
@@ -998,6 +997,118 @@ class LibrarySeriesRouteArgs {
       seriesId.hashCode ^
       category.hashCode ^
       seriesName.hashCode;
+}
+
+/// generated route for
+/// [_i50.TopCharactersScreen]
+class TopCharactersRoute extends _i46.PageRouteInfo<TopCharactersRouteArgs> {
+  TopCharactersRoute({
+    _i47.Key? key,
+    required List<_i49.EntityStat> characters,
+    List<_i46.PageRouteInfo>? children,
+  }) : super(
+         TopCharactersRoute.name,
+         args: TopCharactersRouteArgs(
+           key: key,
+           characters: characters,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'TopCharactersRoute';
+
+  static _i46.PageInfo page = _i46.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<TopCharactersRouteArgs>();
+      return _i50.TopCharactersScreen(
+        key: args.key,
+        characters: args.characters,
+      );
+    },
+  );
+}
+
+class TopCharactersRouteArgs {
+  const TopCharactersRouteArgs({
+    this.key,
+    required this.characters,
+  });
+
+  final _i47.Key? key;
+
+  final List<_i49.EntityStat> characters;
+
+  @override
+  String toString() {
+    return 'TopCharactersRouteArgs{key: $key, characters: $characters}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! TopCharactersRouteArgs) return false;
+    return key == other.key && characters == other.characters;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ characters.hashCode;
+}
+
+/// generated route for
+/// [_i51.TopCreatorsScreen]
+class TopCreatorsRoute extends _i46.PageRouteInfo<TopCreatorsRouteArgs> {
+  TopCreatorsRoute({
+    _i47.Key? key,
+    required List<_i49.EntityStat> creators,
+    List<_i46.PageRouteInfo>? children,
+  }) : super(
+         TopCreatorsRoute.name,
+         args: TopCreatorsRouteArgs(
+           key: key,
+           creators: creators,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'TopCreatorsRoute';
+
+  static _i46.PageInfo page = _i46.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<TopCreatorsRouteArgs>();
+      return _i51.TopCreatorsScreen(
+        key: args.key,
+        creators: args.creators,
+      );
+    },
+  );
+}
+
+class TopCreatorsRouteArgs {
+  const TopCreatorsRouteArgs({
+    this.key,
+    required this.creators,
+  });
+
+  final _i47.Key? key;
+
+  final List<_i49.EntityStat> creators;
+
+  @override
+  String toString() {
+    return 'TopCreatorsRouteArgs{key: $key, creators: $creators}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! TopCreatorsRouteArgs) return false;
+    return key == other.key && creators == other.creators;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ creators.hashCode;
 }
 
 /// generated route for

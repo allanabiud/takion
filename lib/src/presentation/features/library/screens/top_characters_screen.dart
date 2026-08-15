@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/presentation/features/library/widgets/top_entity_tile.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/features/library/widgets/top_entity_tile.dart";
 
+@RoutePage()
 class TopCharactersScreen extends StatelessWidget {
   final List<EntityStat> characters;
 
@@ -10,7 +12,7 @@ class TopCharactersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Top Characters')),
+      appBar: AppBar(title: const Text("Top Characters")),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: characters.length,

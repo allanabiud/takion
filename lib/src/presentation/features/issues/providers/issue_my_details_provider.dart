@@ -1,12 +1,13 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
+import "package:takion/src/presentation/features/library/providers/category_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 class IssueMyDetailsData {
   const IssueMyDetailsData({required this.item, required this.readLogs});
@@ -64,8 +65,8 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
 
         if (seriesId == null || seriesId <= 0) {
           throw StateError(
-            'Could not save this issue because its series metadata is unavailable. '
-            'Try refreshing the issue details, then save again.',
+            "Could not save this issue because its series metadata is unavailable. "
+            "Try refreshing the issue details, then save again.",
           );
         }
 
@@ -77,14 +78,19 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           final now = DateTime.now().toUtc();
           final imageCache = ref.read(entityImageCacheProvider);
           String? imageUrl;
-          String seriesName = 'Unknown Series';
-          String issueNumber = '#$_issueId';
+          String seriesName = "Unknown Series";
+          String issueNumber = "#$_issueId";
           try {
-            final cachedUrl = await imageCache.get('issue', _issueId);
+            final cachedUrl = await imageCache.get("issue", _issueId);
             if (cachedUrl != null && cachedUrl.isNotEmpty) {
               imageUrl = cachedUrl;
             }
-          } catch (_) {}
+          } catch (e) {
+            AppLogger.debug(
+              "Failed to read cached issue image for event recording",
+              error: e,
+            );
+          }
           try {
             final catalogRepository = ref.read(catalogRepositoryProvider);
             final details = await catalogRepository.getIssueDetails(_issueId);
@@ -95,16 +101,26 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             imageUrl ??= details.image;
             if (details.image != null && details.image!.isNotEmpty) {
               try {
-                await imageCache.set('issue', _issueId, details.image!);
-              } catch (_) {}
+                await imageCache.set("issue", _issueId, details.image!);
+              } catch (e) {
+                AppLogger.debug(
+                  "Failed to cache issue image for event recording",
+                  error: e,
+                );
+              }
             }
-          } catch (_) {}
+          } catch (e) {
+            AppLogger.debug(
+              "Failed to load issue details for event recording",
+              error: e,
+            );
+          }
 
           if (isCollected && !wasCollected) {
             await activityRepository.addEvent(
               LibraryActivityEvent(
-                id: 'act-col-$_issueId-${now.microsecondsSinceEpoch}',
-                userId: 'local-user',
+                id: "act-col-$_issueId-${now.microsecondsSinceEpoch}",
+                userId: "local-user",
                 type: ActivityEventType.collected,
                 issueId: _issueId,
                 seriesId: seriesId,
@@ -123,8 +139,8 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           if (isRead && !wasRead) {
             await activityRepository.addEvent(
               LibraryActivityEvent(
-                id: 'act-read-$_issueId-${now.microsecondsSinceEpoch}',
-                userId: 'local-user',
+                id: "act-read-$_issueId-${now.microsecondsSinceEpoch}",
+                userId: "local-user",
                 type: ActivityEventType.read,
                 issueId: _issueId,
                 seriesId: seriesId,
@@ -201,7 +217,7 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         final item = await libraryRepository.getItemByIssueId(_issueId);
         if (item == null) {
           throw StateError(
-            'Add the issue to your library before logging reads.',
+            "Add the issue to your library before logging reads.",
           );
         }
 
@@ -231,14 +247,19 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         final activityRepository = ref.read(activityRepositoryProvider);
         final imageCache = ref.read(entityImageCacheProvider);
         String? imageUrl;
-        String seriesName = 'Unknown Series';
-        String issueNumber = '#$_issueId';
+        String seriesName = "Unknown Series";
+        String issueNumber = "#$_issueId";
         try {
-          final cachedUrl = await imageCache.get('issue', _issueId);
+          final cachedUrl = await imageCache.get("issue", _issueId);
           if (cachedUrl != null && cachedUrl.isNotEmpty) {
             imageUrl = cachedUrl;
           }
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.debug(
+            "Failed to read cached issue image for read event",
+            error: e,
+          );
+        }
         try {
           final catalogRepository = ref.read(catalogRepositoryProvider);
           final details = await catalogRepository.getIssueDetails(_issueId);
@@ -249,14 +270,21 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           imageUrl ??= details.image;
           if (details.image != null && details.image!.isNotEmpty) {
             try {
-              await imageCache.set('issue', _issueId, details.image!);
-            } catch (_) {}
+              await imageCache.set("issue", _issueId, details.image!);
+            } catch (e) {
+              AppLogger.debug(
+                "Failed to cache issue image for read event",
+                error: e,
+              );
+            }
           }
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.debug("Failed to load issue details for read event", error: e);
+        }
         await activityRepository.addEvent(
           LibraryActivityEvent(
-            id: 'act-read-$_issueId-${normalizedReadAt.microsecondsSinceEpoch}',
-            userId: 'local-user',
+            id: "act-read-$_issueId-${normalizedReadAt.microsecondsSinceEpoch}",
+            userId: "local-user",
             type: ActivityEventType.read,
             issueId: _issueId,
             seriesId: item.metronSeriesId,
@@ -293,7 +321,7 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         final libraryRepository = ref.read(libraryRepositoryProvider);
         final item = await libraryRepository.getItemByIssueId(_issueId);
         if (item == null) {
-          throw StateError('No library item found for this issue.');
+          throw StateError("No library item found for this issue.");
         }
 
         await libraryRepository.deleteReadLogById(readLogId);

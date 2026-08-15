@@ -1,15 +1,15 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
+import "package:takion/src/presentation/features/library/providers/category_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart";
+import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 /// Lightweight metadata from the UI so the scrobble controller avoids a full details fetch.
 class ScrobbleIssueContext {
@@ -72,7 +72,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     state = await AsyncValue.guard(() async {
       try {
         AppLogger.info(
-          'Scrobble started for issue #$_issueId: collection=$addToCollection, read=$markAsRead, wishlist=$addToWishlist, rating=$rating',
+          "Scrobble started for issue #$_issueId: collection=$addToCollection, read=$markAsRead, wishlist=$addToWishlist, rating=$rating",
         );
         final libraryRepository = ref.read(libraryRepositoryProvider);
 
@@ -85,8 +85,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
         if (seriesId == null || seriesId <= 0) {
           throw StateError(
-            'Could not save this issue because its series metadata is unavailable. '
-            'Try refreshing the issue details, then save again.',
+            "Could not save this issue because its series metadata is unavailable. "
+            "Try refreshing the issue details, then save again.",
           );
         }
 
@@ -130,7 +130,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             wasRating: existing?.rating,
             isRating: null,
           );
-          AppLogger.info('Scrobble: deleted item for issue #$_issueId');
+          AppLogger.info("Scrobble: deleted item for issue #$_issueId");
           ref.invalidate(collectionStatsProvider);
           ref.invalidate(categoryInsightsProvider);
           ref.invalidate(libraryBasicStatsProvider);
@@ -177,7 +177,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             readAt: readAt,
           );
           AppLogger.info(
-            'Scrobble: created read log for issue #$_issueId at $readAt',
+            "Scrobble: created read log for issue #$_issueId at $readAt",
           );
         } else if (!targetIsRead && wasRead && existing?.firstReadAt != null) {
           final firstLog = readLogs
@@ -190,7 +190,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
               .toList();
           if (firstLog.isNotEmpty) {
             await libraryRepository.deleteReadLogById(firstLog.first.id);
-            AppLogger.info('Scrobble: deleted read log for issue #$_issueId');
+            AppLogger.info("Scrobble: deleted read log for issue #$_issueId");
           }
         }
         await _recordActivityEvents(
@@ -205,7 +205,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           isRating: rating,
         );
 
-        AppLogger.info('Scrobble completed for issue #$_issueId');
+        AppLogger.info("Scrobble completed for issue #$_issueId");
         ref.invalidate(collectionStatsProvider);
         ref.invalidate(categoryInsightsProvider);
         ref.invalidate(issueMyDetailsProvider(_issueId));
@@ -234,8 +234,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     if (isCollected && !wasCollected) {
       await repository.addEvent(
         LibraryActivityEvent(
-          id: 'act-col-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-          userId: 'local-user',
+          id: "act-col-$_issueId-${DateTime.now().microsecondsSinceEpoch}",
+          userId: "local-user",
           type: ActivityEventType.collected,
           issueId: _issueId,
           seriesId: seriesId,
@@ -254,8 +254,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     if (isWishlisted && !wasWishlisted) {
       await repository.addEvent(
         LibraryActivityEvent(
-          id: 'act-wsh-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-          userId: 'local-user',
+          id: "act-wsh-$_issueId-${DateTime.now().microsecondsSinceEpoch}",
+          userId: "local-user",
           type: ActivityEventType.wishlisted,
           issueId: _issueId,
           seriesId: seriesId,
@@ -274,8 +274,8 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     if (isRead && !wasRead) {
       await repository.addEvent(
         LibraryActivityEvent(
-          id: 'act-read-$_issueId-${DateTime.now().microsecondsSinceEpoch}',
-          userId: 'local-user',
+          id: "act-read-$_issueId-${DateTime.now().microsecondsSinceEpoch}",
+          userId: "local-user",
           type: ActivityEventType.read,
           issueId: _issueId,
           seriesId: seriesId,
@@ -296,21 +296,26 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     try {
       // Prefer metadata passed in from the UI layer.
       final ctx = _context;
-      String seriesName = ctx?.seriesName ?? 'Unknown Series';
-      String issueNumber = ctx?.issueNumber ?? '#$_issueId';
+      String seriesName = ctx?.seriesName ?? "Unknown Series";
+      String issueNumber = ctx?.issueNumber ?? "#$_issueId";
       String? imageUrl = ctx?.imageUrl;
 
       if (imageUrl == null || imageUrl.isEmpty) {
         try {
           imageUrl = await ref
               .read(entityImageCacheProvider)
-              .get('issue', _issueId);
-        } catch (_) {}
+              .get("issue", _issueId);
+        } catch (e) {
+          AppLogger.debug(
+            "Failed to read cached image for scrobble metadata",
+            error: e,
+          );
+        }
       }
 
       if (imageUrl == null ||
           imageUrl.isEmpty ||
-          seriesName == 'Unknown Series') {
+          seriesName == "Unknown Series") {
         try {
           final catalogRepository = ref.read(catalogRepositoryProvider);
           final details = await catalogRepository.getIssueDetails(_issueId);
@@ -323,10 +328,20 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             try {
               await ref
                   .read(entityImageCacheProvider)
-                  .set('issue', _issueId, details.image!);
-            } catch (_) {}
+                  .set("issue", _issueId, details.image!);
+            } catch (e) {
+              AppLogger.debug(
+                "Failed to cache image for scrobble metadata",
+                error: e,
+              );
+            }
           }
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.debug(
+            "Failed to load issue details for scrobble metadata",
+            error: e,
+          );
+        }
       }
 
       return _IssueMetadata(
