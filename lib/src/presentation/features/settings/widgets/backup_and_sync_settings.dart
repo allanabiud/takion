@@ -37,6 +37,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
   _BackupSyncMode _mode = _BackupSyncMode.backup;
   bool _isBackingUp = false;
   bool _isRestoring = false;
+  bool _isDeletingBackup = false;
 
   @override
   void initState() {
@@ -122,18 +123,22 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
             ),
             value: syncState.enabled,
             onChanged: (value) async {
+              final syncNotifier = ref.read(driveSyncProvider.notifier);
               if (value) {
-                final account = await driveService.signIn();
-                if (account != null) {
-                  await ref
-                      .read(driveSyncProvider.notifier)
-                      .enable(email: account.email);
+                syncNotifier.setSyncing(true);
+                try {
+                  final account = await driveService.signIn();
+                  if (account == null) return;
+                  await syncNotifier.enable(email: account.email);
                   if (!mounted) return;
-                  _syncNow();
+                  await _syncNow();
+                } finally {
+                  syncNotifier.setSyncing(false);
                 }
               } else {
+                syncNotifier.setSyncing(false);
                 await driveService.signOut();
-                await ref.read(driveSyncProvider.notifier).disable();
+                await syncNotifier.disable();
               }
             },
           ),
@@ -218,15 +223,28 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
             const Divider(height: 1),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+              enabled: !_isDeletingBackup,
+              leading: _isDeletingBackup
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+              title: Text(
+                _isDeletingBackup
+                    ? "Deleting Backup..."
+                    : "Delete Backup from Drive",
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              title: const Text(
-                "Delete Backup from Drive",
-                style: TextStyle(fontWeight: FontWeight.w600),
+              subtitle: Text(
+                _isDeletingBackup
+                    ? "Please wait"
+                    : "Remove backup file from Google Drive",
               ),
-              subtitle: const Text("Remove backup file from Google Drive"),
               onTap: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
@@ -249,6 +267,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                   ),
                 );
                 if (confirm != true) return;
+                setState(() => _isDeletingBackup = true);
                 try {
                   await driveService.deleteRemoteData();
                   if (!mounted) return;
@@ -260,6 +279,8 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                     e,
                     userMessage: "Failed to delete backup",
                   );
+                } finally {
+                  if (mounted) setState(() => _isDeletingBackup = false);
                 }
               },
             ),

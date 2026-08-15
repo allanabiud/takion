@@ -33,6 +33,20 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final page = ref.read(subscribedSeriesPageProvider(_page)).value;
+      if (page == null) return;
+      final hydrater = ref.read(subscriptionCardsHydraterProvider);
+      unawaited(
+        hydrater.hydrate(page.results.map((s) => s.id).toList(growable: false)),
+      );
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
