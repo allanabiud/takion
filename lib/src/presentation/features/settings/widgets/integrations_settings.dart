@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:takion/src/core/network/superhero_account_service.dart';
-import 'package:takion/src/presentation/features/integrations/providers/superhero_providers.dart';
-import 'package:takion/src/presentation/features/settings/widgets/superhero_integration_settings.dart';
-import 'package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:lucide_icons_flutter/lucide_icons.dart";
+import "package:takion/src/core/network/superhero_account_service.dart";
+import "package:takion/src/presentation/features/integrations/providers/superhero_providers.dart";
+import "package:takion/src/presentation/features/integrations/widgets/superhero_integration_settings.dart";
+import "package:takion/src/presentation/shared/widgets/takion_bottom_sheet.dart";
 
 void showIntegrationsSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Integrations',
+    title: "Integrations",
     child: const _IntegrationsContent(),
   );
 }
@@ -29,8 +29,8 @@ class _IntegrationsContent extends ConsumerWidget {
       padding: EdgeInsets.zero,
       children: [
         Text(
-          'Connect third-party data sources to enrich your library. '
-          'Each integration is optional and can be configured independently.',
+          "Connect third-party data sources to enrich your library. "
+          "Each integration is optional and can be configured independently.",
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -50,7 +50,7 @@ class _IntegrationsContent extends ConsumerWidget {
               child: const Icon(LucideIcons.shield, size: 20),
             ),
             title: const Text(
-              'SuperHero API',
+              "SuperHero API",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(_statusLabel(connectionAsync.value)),
@@ -62,7 +62,7 @@ class _IntegrationsContent extends ConsumerWidget {
                     onPressed: () =>
                         showSuperHeroIntegrationSettings(context, ref),
                     icon: const Icon(Icons.settings_outlined),
-                    tooltip: 'Configure',
+                    tooltip: "Configure",
                   ),
                 Switch(
                   value: enabled,
@@ -85,15 +85,15 @@ class _IntegrationsContent extends ConsumerWidget {
   String _statusLabel(SuperHeroConnectionStatus? status) {
     switch (status) {
       case SuperHeroConnectionStatus.valid:
-        return 'Connected';
+        return "Connected";
       case SuperHeroConnectionStatus.missing:
-        return 'Not connected';
+        return "Not connected";
       case SuperHeroConnectionStatus.invalid:
-        return 'Invalid token';
+        return "Invalid token";
       case SuperHeroConnectionStatus.unreachable:
-        return 'Cannot reach API';
+        return "Cannot reach API";
       case null:
-        return 'Checking…';
+        return "Checking…";
     }
   }
 }
