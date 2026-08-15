@@ -1,22 +1,24 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/user_state_cache.dart';
-import 'package:takion/src/core/network/dio_client.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-export 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/reading_list/repositories/local_reading_list_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart';
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
-import 'package:takion/src/data/catalog/mappers/entity_mapper.dart';
-import 'package:takion/src/data/activity/repositories/local_activity_repository.dart';
-import 'package:takion/src/data/favorites/repositories/local_favorites_repository.dart';
-import 'package:takion/src/data/collection/repositories/local_library_repository.dart';
-import 'package:takion/src/data/pull_list/repositories/local_pull_list_repository.dart';
-import 'package:takion/src/data/subscription/repositories/local_subscription_repository.dart';
-import 'package:takion/src/data/catalog/repositories/metron_repository_impl.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+export "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source_impl.dart";
+import "package:takion/src/data/reading_list/repositories/local_reading_list_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/local/series_name_index.dart";
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/data/catalog/mappers/entity_mapper.dart";
+import "package:takion/src/data/activity/repositories/local_activity_repository.dart";
+import "package:takion/src/data/favorites/repositories/local_favorites_repository.dart";
+import "package:takion/src/data/collection/repositories/local_library_repository.dart";
+import "package:takion/src/data/pull_list/repositories/local_pull_list_repository.dart";
+import "package:takion/src/data/subscription/repositories/local_subscription_repository.dart";
+import "package:takion/src/data/catalog/repositories/metron_local_catalog_repository.dart";
+import "package:takion/src/data/catalog/repositories/metron_repository_impl.dart";
+import "package:takion/src/domain/repositories.dart";
 
 final userStateCacheProvider = Provider<UserStateCache>((ref) {
   return UserStateCache();
@@ -51,6 +53,12 @@ final entityMapperProvider = Provider<EntityMapper>((ref) {
   final entityDao = ref.watch(metronEntityDaoProvider);
   final junctionDao = ref.watch(junctionDaoProvider);
   return EntityMapper(entityDao, junctionDao);
+});
+
+final localCatalogRepositoryProvider = Provider<LocalCatalogRepository>((ref) {
+  final entityDao = ref.watch(metronEntityDaoProvider);
+  final mapper = ref.watch(entityMapperProvider);
+  return MetronLocalCatalogRepository(entityDao, mapper);
 });
 
 final metronRepositoryProvider = Provider<CatalogRepository>((ref) {

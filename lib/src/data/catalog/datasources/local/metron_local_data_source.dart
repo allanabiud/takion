@@ -1,228 +1,30 @@
-import 'dart:convert';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/data/reading_list/dto/reading_list_dto.dart';
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/data/catalog/datasources/local/paged_local_cache.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/reading_list/dto/reading_list_dto.dart";
 
-dynamic _decodeJson(String input) => jsonDecode(input);
-String _encodeJson(Map<String, dynamic> input) => jsonEncode(input);
-String _encodeJsonList(List<Map<String, dynamic>> input) => jsonEncode(input);
-
-class IssueSearchPageCacheMeta {
-  const IssueSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class SeriesSearchPageCacheMeta {
-  const SeriesSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class SeriesListPageCacheMeta {
-  const SeriesListPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class SeriesIssueListPageCacheMeta {
-  const SeriesIssueListPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class CharacterSearchPageCacheMeta {
-  const CharacterSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class CreatorSearchPageCacheMeta {
-  const CreatorSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class UniverseSearchPageCacheMeta {
-  const UniverseSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class ImprintSearchPageCacheMeta {
-  const ImprintSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class CharacterIssueListPageCacheMeta {
-  const CharacterIssueListPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class TeamSearchPageCacheMeta {
-  const TeamSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class TeamIssueListPageCacheMeta {
-  const TeamIssueListPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class ArcSearchPageCacheMeta {
-  const ArcSearchPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class ArcListPageCacheMeta {
-  const ArcListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class CharacterListPageCacheMeta {
-  const CharacterListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class CreatorListPageCacheMeta {
-  const CreatorListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class ImprintListPageCacheMeta {
-  const ImprintListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class PublisherListPageCacheMeta {
-  const PublisherListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class TeamListPageCacheMeta {
-  const TeamListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class UniverseListPageCacheMeta {
-  const UniverseListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class ReadingListPageCacheMeta {
-  const ReadingListPageCacheMeta({required this.count, this.next, this.previous});
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
-
-class PublisherSearchPageCacheMeta {
-  const PublisherSearchPageCacheMeta({
-    required this.count,
-    this.next,
-    this.previous,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-}
+typedef IssueSearchPageCacheMeta = PageCacheMeta;
+typedef SeriesSearchPageCacheMeta = PageCacheMeta;
+typedef SeriesListPageCacheMeta = PageCacheMeta;
+typedef SeriesIssueListPageCacheMeta = PageCacheMeta;
+typedef CharacterSearchPageCacheMeta = PageCacheMeta;
+typedef CreatorSearchPageCacheMeta = PageCacheMeta;
+typedef UniverseSearchPageCacheMeta = PageCacheMeta;
+typedef ImprintSearchPageCacheMeta = PageCacheMeta;
+typedef CharacterIssueListPageCacheMeta = PageCacheMeta;
+typedef TeamSearchPageCacheMeta = PageCacheMeta;
+typedef TeamIssueListPageCacheMeta = PageCacheMeta;
+typedef ArcSearchPageCacheMeta = PageCacheMeta;
+typedef ArcListPageCacheMeta = PageCacheMeta;
+typedef CharacterListPageCacheMeta = PageCacheMeta;
+typedef CreatorListPageCacheMeta = PageCacheMeta;
+typedef ImprintListPageCacheMeta = PageCacheMeta;
+typedef PublisherListPageCacheMeta = PageCacheMeta;
+typedef TeamListPageCacheMeta = PageCacheMeta;
+typedef UniverseListPageCacheMeta = PageCacheMeta;
+typedef ReadingListPageCacheMeta = PageCacheMeta;
+typedef PublisherSearchPageCacheMeta = PageCacheMeta;
 
 abstract class MetronLocalDataSource {
   Future<void> cacheWeeklyReleases(
@@ -947,98 +749,301 @@ abstract class MetronLocalDataSource {
     String? publisher,
   });
 }
-
 class MetronLocalDataSourceImpl implements MetronLocalDataSource {
-  final AppDatabase _db;
-
   MetronLocalDataSourceImpl(this._db);
 
-  Future<void> _cacheList<T>(
-    String cacheKey,
-    String entityType,
-    List<T> list,
-    Map<String, dynamic> Function(T) toJson,
-  ) async {
-    final listJson = list.map((item) => toJson(item)).toList(growable: false);
-    final payload = _encodeJsonList(listJson);
-    await _db.apiCacheDao.put(
-      cacheKey: cacheKey,
-      entityType: entityType,
-      payload: payload,
-    );
-  }
+  final AppDatabase _db;
 
-  Future<List<T>?> _getList<T>(
-    String cacheKey,
-    T Function(Map<String, dynamic>) fromJson,
-  ) async {
-    final row = await _db.apiCacheDao.get(cacheKey);
-    if (row == null) return null;
-    try {
-      final decoded = _decodeJson(row.payload) as List;
-      return decoded
-          .map((item) => fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return null;
-    }
-  }
+  late final PagedLocalCache<IssueListDto> _weeklyReleases =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "weekly_releases",
+        entityType: "weekly_releases",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+        withMeta: false,
+      );
 
-  Future<DateTime?> _getCachedAt(String cacheKey) async {
-    final row = await _db.apiCacheDao.get(cacheKey);
-    return row?.cachedAt;
-  }
+  late final PagedLocalCache<IssueListDto> _focReleases =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "foc_releases",
+        entityType: "foc_releases",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+        withMeta: false,
+      );
 
-  Future<void> _cacheMeta(
-    String cacheKey,
-    int count,
-    String? next,
-    String? previous,
-  ) async {
-    final payload = _encodeJson({
-      'count': count,
-      'next': next,
-      'previous': previous,
-    });
-    await _db.apiCacheDao.put(
-      cacheKey: 'meta:$cacheKey',
-      entityType: 'page_meta',
-      payload: payload,
-    );
-  }
+  late final PagedLocalCache<IssueListDto> _issueSearch =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "issue_search",
+        entityType: "issue_search",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
 
-  Future<Map<String, dynamic>?> _getMeta(String cacheKey) async {
-    final row = await _db.apiCacheDao.get('meta:$cacheKey');
-    if (row == null) return null;
-    try {
-      return _decodeJson(row.payload) as Map<String, dynamic>;
-    } catch (_) {
-      return null;
-    }
-  }
+  late final PagedLocalCache<IssueListDto> _issueList =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "issue_list",
+        entityType: "issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
 
-  Future<void> _cacheSingle(
-    String cacheKey,
-    String entityType,
-    Map<String, dynamic> json,
-  ) async {
-    final payload = _encodeJson(json);
-    await _db.apiCacheDao.put(
-      cacheKey: cacheKey,
-      entityType: entityType,
-      payload: payload,
-    );
-  }
+  late final PagedLocalCache<SeriesListDto> _seriesSearch =
+      PagedLocalCache<SeriesListDto>(
+        db: _db,
+        cacheKeyPrefix: "series_search",
+        entityType: "series_search",
+        fromJson: SeriesListDto.fromJson,
+        toJson: (s) => s.toJson(),
+      );
 
-  Future<Map<String, dynamic>?> _getSingle(String cacheKey) async {
-    final row = await _db.apiCacheDao.get(cacheKey);
-    if (row == null) return null;
-    try {
-      return _decodeJson(row.payload) as Map<String, dynamic>;
-    } catch (_) {
-      return null;
-    }
-  }
+  late final PagedLocalCache<SeriesListDto> _seriesList =
+      PagedLocalCache<SeriesListDto>(
+        db: _db,
+        cacheKeyPrefix: "series_list",
+        entityType: "series_list",
+        fromJson: SeriesListDto.fromJson,
+        toJson: (s) => s.toJson(),
+      );
+
+  late final PagedLocalCache<IssueListDto> _seriesIssueList =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "series_issue_list",
+        entityType: "series_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
+
+  late final PagedLocalCache<CharacterListDto> _characterSearch =
+      PagedLocalCache<CharacterListDto>(
+        db: _db,
+        cacheKeyPrefix: "character_search",
+        entityType: "character_search",
+        fromJson: CharacterListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      );
+
+  late final PagedLocalCache<IssueListDto> _characterIssueList =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "character_issue_list",
+        entityType: "character_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
+
+  late final PagedLocalCache<IssueListDto> _teamIssueList =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "team_issue_list",
+        entityType: "team_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
+
+  late final PagedLocalCache<CreatorListDto> _creatorSearch =
+      PagedLocalCache<CreatorListDto>(
+        db: _db,
+        cacheKeyPrefix: "creator_search",
+        entityType: "creator_search",
+        fromJson: CreatorListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      );
+
+  late final PagedLocalCache<UniverseListDto> _universeSearch =
+      PagedLocalCache<UniverseListDto>(
+        db: _db,
+        cacheKeyPrefix: "universe_search",
+        entityType: "universe_search",
+        fromJson: UniverseListDto.fromJson,
+        toJson: (u) => u.toJson(),
+      );
+
+  late final PagedLocalCache<ImprintListDto> _imprintSearch =
+      PagedLocalCache<ImprintListDto>(
+        db: _db,
+        cacheKeyPrefix: "imprint_search",
+        entityType: "imprint_search",
+        fromJson: ImprintListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
+
+  late final PagedLocalCache<TeamListDto> _teamSearch =
+      PagedLocalCache<TeamListDto>(
+        db: _db,
+        cacheKeyPrefix: "team_search",
+        entityType: "team_search",
+        fromJson: TeamListDto.fromJson,
+        toJson: (t) => t.toJson(),
+      );
+
+  late final PagedLocalCache<ArcListDto> _arcSearch = PagedLocalCache<
+    ArcListDto
+  >(
+    db: _db,
+    cacheKeyPrefix: "arc_search",
+    entityType: "arc_search",
+    fromJson: ArcListDto.fromJson,
+    toJson: (a) => a.toJson(),
+  );
+
+  late final PagedLocalCache<IssueListDto> _arcIssueList =
+      PagedLocalCache<IssueListDto>(
+        db: _db,
+        cacheKeyPrefix: "arc_issue_list",
+        entityType: "arc_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
+
+  late final PagedLocalCache<PublisherListDto> _publisherSearch =
+      PagedLocalCache<PublisherListDto>(
+        db: _db,
+        cacheKeyPrefix: "publisher_search",
+        entityType: "publisher_search",
+        fromJson: PublisherListDto.fromJson,
+        toJson: (p) => p.toJson(),
+      );
+
+  late final PagedLocalCache<SeriesListDto> _publisherSeriesList =
+      PagedLocalCache<SeriesListDto>(
+        db: _db,
+        cacheKeyPrefix: "publisher_series_list",
+        entityType: "publisher_series_list",
+        fromJson: SeriesListDto.fromJson,
+        toJson: (s) => s.toJson(),
+      );
+
+  late final PagedLocalCache<ArcListDto> _arcList = PagedLocalCache<ArcListDto>(
+    db: _db,
+    cacheKeyPrefix: "arc_list",
+    entityType: "arc_list",
+    fromJson: ArcListDto.fromJson,
+    toJson: (a) => a.toJson(),
+  );
+
+  late final PagedLocalCache<CharacterListDto> _characterList =
+      PagedLocalCache<CharacterListDto>(
+        db: _db,
+        cacheKeyPrefix: "character_list",
+        entityType: "character_list",
+        fromJson: CharacterListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      );
+
+  late final PagedLocalCache<CreatorListDto> _creatorList =
+      PagedLocalCache<CreatorListDto>(
+        db: _db,
+        cacheKeyPrefix: "creator_list",
+        entityType: "creator_list",
+        fromJson: CreatorListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      );
+
+  late final PagedLocalCache<ImprintListDto> _imprintList =
+      PagedLocalCache<ImprintListDto>(
+        db: _db,
+        cacheKeyPrefix: "imprint_list",
+        entityType: "imprint_list",
+        fromJson: ImprintListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      );
+
+  late final PagedLocalCache<PublisherListDto> _publisherList =
+      PagedLocalCache<PublisherListDto>(
+        db: _db,
+        cacheKeyPrefix: "publisher_list",
+        entityType: "publisher_list",
+        fromJson: PublisherListDto.fromJson,
+        toJson: (p) => p.toJson(),
+      );
+
+  late final PagedLocalCache<TeamListDto> _teamList = PagedLocalCache<
+    TeamListDto
+  >(
+    db: _db,
+    cacheKeyPrefix: "team_list",
+    entityType: "team_list",
+    fromJson: TeamListDto.fromJson,
+    toJson: (t) => t.toJson(),
+  );
+
+  late final PagedLocalCache<UniverseListDto> _universeList =
+      PagedLocalCache<UniverseListDto>(
+        db: _db,
+        cacheKeyPrefix: "universe_list",
+        entityType: "universe_list",
+        fromJson: UniverseListDto.fromJson,
+        toJson: (u) => u.toJson(),
+      );
+
+  late final PagedLocalCache<ReadingListDto> _readingList =
+      PagedLocalCache<ReadingListDto>(
+        db: _db,
+        cacheKeyPrefix: "reading_list",
+        entityType: "reading_list",
+        fromJson: ReadingListDto.fromJson,
+        toJson: (r) => r.toJson(),
+      );
+
+  late final DetailsLocalCache _issueDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "issue_details",
+    entityType: "issue_details",
+  );
+
+  late final DetailsLocalCache _seriesDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "series_details",
+    entityType: "series_details",
+  );
+
+  late final DetailsLocalCache _characterDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "character_details",
+    entityType: "character_details",
+  );
+
+  late final DetailsLocalCache _creatorDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "creator_details",
+    entityType: "creator_details",
+  );
+
+  late final DetailsLocalCache _teamDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "team_details",
+    entityType: "team_details",
+  );
+
+  late final DetailsLocalCache _universeDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "universe_details",
+    entityType: "universe_details",
+  );
+
+  late final DetailsLocalCache _imprintDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "imprint_details",
+    entityType: "imprint_details",
+  );
+
+  late final DetailsLocalCache _publisherDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "publisher_details",
+    entityType: "publisher_details",
+  );
+
+  late final DetailsLocalCache _arcDetails = DetailsLocalCache(
+    db: _db,
+    cacheKeyPrefix: "arc_details",
+    entityType: "arc_details",
+  );
 
   // Key normalization helpers
   String _getWeekKey(DateTime date) {
@@ -1053,16 +1058,16 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
 
   String _normalizeSearchQuery(String query) => query.trim().toLowerCase();
   String _normalizeLimit(int? limit) =>
-      limit != null && limit > 0 ? '$limit' : '';
-  String _normalizeOrdering(String? ordering) => ordering?.trim() ?? '';
+      limit != null && limit > 0 ? "$limit" : "";
+  String _normalizeOrdering(String? ordering) => ordering?.trim() ?? "";
   String _normalizeModifiedGt(DateTime? modifiedGt) =>
-      modifiedGt?.toUtc().toIso8601String() ?? '';
+      modifiedGt?.toUtc().toIso8601String() ?? "";
   String _normalizeStoreDate(DateTime? d) => d == null
-      ? ''
+      ? ""
       : DateFormatter.isoDate(d);
 
   String _getIssueSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getIssueListKey({
     required int page,
@@ -1070,7 +1075,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
     int? limit,
   }) =>
-      'issue_list:p$page:o${_normalizeOrdering(ordering)}:m${_normalizeModifiedGt(modifiedGt)}:l${_normalizeLimit(limit)}';
+      "issue_list:p$page:o${_normalizeOrdering(ordering)}:m${_normalizeModifiedGt(modifiedGt)}:l${_normalizeLimit(limit)}";
 
   String _getSeriesIssueListKey(
     int seriesId,
@@ -1080,67 +1085,67 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? storeDateGte,
     DateTime? storeDateLte,
   }) =>
-      'series_issue_list:$seriesId:p$page:l${_normalizeLimit(limit)}:o${_normalizeOrdering(ordering)}:a${_normalizeStoreDate(storeDateGte)}:b${_normalizeStoreDate(storeDateLte)}';
+      "series_issue_list:$seriesId:p$page:l${_normalizeLimit(limit)}:o${_normalizeOrdering(ordering)}:a${_normalizeStoreDate(storeDateGte)}:b${_normalizeStoreDate(storeDateLte)}";
 
   String _getSeriesSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getSeriesListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'series_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "series_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getCharacterSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getCharacterIssueListKey(int characterId, int page, int limit) =>
-      'character_issue_list:$characterId:p$page:l${_normalizeLimit(limit)}';
+      "character_issue_list:$characterId:p$page:l${_normalizeLimit(limit)}";
 
   String _getCreatorSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getUniverseSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getImprintSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getTeamSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getTeamIssueListKey(int teamId, int page, int limit) =>
-      'team_issue_list:$teamId:p$page:l${_normalizeLimit(limit)}';
+      "team_issue_list:$teamId:p$page:l${_normalizeLimit(limit)}";
 
   String _getPublisherSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getPublisherSeriesListKey(int publisherId, int page, int limit) =>
-      'publisher_series_list:$publisherId:p$page:l${_normalizeLimit(limit)}';
+      "publisher_series_list:$publisherId:p$page:l${_normalizeLimit(limit)}";
 
   String _getArcSearchKey(String query, int page, int limit) =>
-      '${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}';
+      "${_normalizeSearchQuery(query)}::p$page:l${_normalizeLimit(limit)}";
 
   String _getArcIssueListKey(int arcId, int page, int limit) =>
-      'arc_issue_list:$arcId:p$page:l${_normalizeLimit(limit)}';
+      "arc_issue_list:$arcId:p$page:l${_normalizeLimit(limit)}";
 
   String _getArcListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'arc_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "arc_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getCharacterListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'character_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "character_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getCreatorListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'creator_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "creator_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getImprintListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'imprint_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "imprint_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getPublisherListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'publisher_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "publisher_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getTeamListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'team_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "team_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getUniverseListKey(int page, int limit, {DateTime? modifiedGt}) =>
-      'universe_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}';
+      "universe_list:p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}";
 
   String _getReadingListKey(
     int page,
@@ -1152,38 +1157,28 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? publisher,
   }) =>
       'reading_list:${name != null ? '${_normalizeSearchQuery(name)}::' : ''}'
-      'p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}'
+      "p$page:l${_normalizeLimit(limit)}:m${_normalizeModifiedGt(modifiedGt)}"
       ':lt${(listType ?? '').trim().toLowerCase()}'
       ':as${(attributionSource ?? '').trim().toLowerCase()}'
       ':pu${(publisher ?? '').trim().toLowerCase()}';
 
-  // --- Implementations ---
 
-  // Releases
   @override
   Future<void> cacheWeeklyReleases(
     DateTime weekStart,
     List<IssueListDto> issues,
   ) async {
-    final key = _getWeekKey(weekStart);
-    await _cacheList(
-      'weekly_releases:$key',
-      'weekly_releases',
-      issues,
-      (i) => i.toJson(),
-    );
+    await _weeklyReleases.cache(_getWeekKey(weekStart), issues);
   }
 
   @override
   Future<List<IssueListDto>?> getWeeklyReleases(DateTime weekStart) async {
-    final key = _getWeekKey(weekStart);
-    return _getList('weekly_releases:$key', IssueListDto.fromJson);
+    return _weeklyReleases.get(_getWeekKey(weekStart));
   }
 
   @override
   Future<DateTime?> getWeeklyReleasesCachedAt(DateTime weekStart) async {
-    final key = _getWeekKey(weekStart);
-    return _getCachedAt('weekly_releases:$key');
+    return _weeklyReleases.cachedAt(_getWeekKey(weekStart));
   }
 
   @override
@@ -1191,28 +1186,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime weekStart,
     List<IssueListDto> issues,
   ) async {
-    final key = _getWeekKey(weekStart);
-    await _cacheList(
-      'foc_releases:$key',
-      'foc_releases',
-      issues,
-      (i) => i.toJson(),
-    );
+    await _focReleases.cache(_getWeekKey(weekStart), issues);
   }
 
   @override
   Future<List<IssueListDto>?> getFocReleases(DateTime weekStart) async {
-    final key = _getWeekKey(weekStart);
-    return _getList('foc_releases:$key', IssueListDto.fromJson);
+    return _focReleases.get(_getWeekKey(weekStart));
   }
 
   @override
   Future<DateTime?> getFocReleasesCachedAt(DateTime weekStart) async {
-    final key = _getWeekKey(weekStart);
-    return _getCachedAt('foc_releases:$key');
+    return _focReleases.cachedAt(_getWeekKey(weekStart));
   }
 
-  // Issue Search Results
   @override
   Future<void> cacheIssueSearchResults(
     String query,
@@ -1224,13 +1210,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getIssueSearchKey(query, page, limit);
-    await _cacheList(
-      'issue_search:$key',
-      'issue_search',
-      issues,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('issue_search:$key', count, next, previous);
+    await _issueSearch.cache(key, issues, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1240,7 +1220,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getIssueSearchKey(query, page, limit);
-    return _getList('issue_search:$key', IssueListDto.fromJson);
+    return _issueSearch.get(key);
   }
 
   @override
@@ -1250,7 +1230,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getIssueSearchKey(query, page, limit);
-    return _getCachedAt('issue_search:$key');
+    return _issueSearch.cachedAt(key);
   }
 
   @override
@@ -1260,18 +1240,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getIssueSearchKey(query, page, limit);
-    final data = await _getMeta('issue_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return IssueSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _issueSearch.meta(key);
   }
 
-  // Issue List Results
   @override
   Future<void> cacheIssueListResults(
     List<IssueListDto> issues, {
@@ -1289,13 +1260,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    await _cacheList(
-      'issue_list:$key',
-      'issue_list',
-      issues,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('issue_list:$key', count, next, previous);
+    await _issueList.cache(key, issues, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1311,7 +1276,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    return _getList('issue_list:$key', IssueListDto.fromJson);
+    return _issueList.get(key);
   }
 
   @override
@@ -1327,7 +1292,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    return _getCachedAt('issue_list:$key');
+    return _issueList.cachedAt(key);
   }
 
   @override
@@ -1343,18 +1308,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       modifiedGt: modifiedGt,
       limit: limit,
     );
-    final data = await _getMeta('issue_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return IssueSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _issueList.meta(key);
   }
 
-  // Series Search Results
   @override
   Future<void> cacheSeriesSearchResults(
     String query,
@@ -1366,13 +1322,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getSeriesSearchKey(query, page, limit);
-    await _cacheList(
-      'series_search:$key',
-      'series_search',
-      series,
-      (s) => s.toJson(),
-    );
-    await _cacheMeta('series_search:$key', count, next, previous);
+    await _seriesSearch.cache(key, series, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1382,7 +1332,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesSearchKey(query, page, limit);
-    return _getList('series_search:$key', SeriesListDto.fromJson);
+    return _seriesSearch.get(key);
   }
 
   @override
@@ -1392,7 +1342,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesSearchKey(query, page, limit);
-    return _getCachedAt('series_search:$key');
+    return _seriesSearch.cachedAt(key);
   }
 
   @override
@@ -1402,18 +1352,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getSeriesSearchKey(query, page, limit);
-    final data = await _getMeta('series_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return SeriesSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _seriesSearch.meta(key);
   }
 
-  // Series List Results
   @override
   Future<void> cacheSeriesListResults(
     List<SeriesListDto> series, {
@@ -1425,13 +1366,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getSeriesListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList(
-      'series_list:$key',
-      'series_list',
-      series,
-      (s) => s.toJson(),
-    );
-    await _cacheMeta('series_list:$key', count, next, previous);
+    await _seriesList.cache(key, series, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1441,7 +1376,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getSeriesListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('series_list:$key', SeriesListDto.fromJson);
+    return _seriesList.get(key);
   }
 
   @override
@@ -1451,7 +1386,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getSeriesListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('series_list:$key');
+    return _seriesList.cachedAt(key);
   }
 
   @override
@@ -1461,18 +1396,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getSeriesListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('series_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return SeriesListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _seriesList.meta(key);
   }
 
-  // Series Issue List Results
   @override
   Future<void> cacheSeriesIssueListResults(
     int seriesId,
@@ -1494,13 +1420,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       storeDateGte: storeDateGte,
       storeDateLte: storeDateLte,
     );
-    await _cacheList(
-      'series_issue_list:$key',
-      'series_issue_list',
-      issues,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('series_issue_list:$key', count, next, previous);
+    await _seriesIssueList.cache(key, issues, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1520,7 +1440,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       storeDateGte: storeDateGte,
       storeDateLte: storeDateLte,
     );
-    return _getList('series_issue_list:$key', IssueListDto.fromJson);
+    return _seriesIssueList.get(key);
   }
 
   @override
@@ -1540,7 +1460,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       storeDateGte: storeDateGte,
       storeDateLte: storeDateLte,
     );
-    return _getCachedAt('series_issue_list:$key');
+    return _seriesIssueList.cachedAt(key);
   }
 
   @override
@@ -1560,18 +1480,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       storeDateGte: storeDateGte,
       storeDateLte: storeDateLte,
     );
-    final data = await _getMeta('series_issue_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return SeriesIssueListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _seriesIssueList.meta(key);
   }
 
-  // Character Search Results
   @override
   Future<void> cacheCharacterSearchResults(
     String query,
@@ -1583,13 +1494,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getCharacterSearchKey(query, page, limit);
-    await _cacheList(
-      'character_search:$key',
-      'character_search',
-      characters,
-      (c) => c.toJson(),
-    );
-    await _cacheMeta('character_search:$key', count, next, previous);
+    await _characterSearch.cache(key, characters, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1599,7 +1504,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCharacterSearchKey(query, page, limit);
-    return _getList('character_search:$key', CharacterListDto.fromJson);
+    return _characterSearch.get(key);
   }
 
   @override
@@ -1609,7 +1514,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCharacterSearchKey(query, page, limit);
-    return _getCachedAt('character_search:$key');
+    return _characterSearch.cachedAt(key);
   }
 
   @override
@@ -1619,18 +1524,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCharacterSearchKey(query, page, limit);
-    final data = await _getMeta('character_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return CharacterSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _characterSearch.meta(key);
   }
 
-  // Character Issue List Results
   @override
   Future<void> cacheCharacterIssueListResults(
     int characterId,
@@ -1642,13 +1538,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getCharacterIssueListKey(characterId, page, limit);
-    await _cacheList(
-      'character_issue_list:$key',
-      'character_issue_list',
-      issues,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('character_issue_list:$key', count, next, previous);
+    await _characterIssueList.cache(key, issues, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1658,7 +1548,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCharacterIssueListKey(characterId, page, limit);
-    return _getList('character_issue_list:$key', IssueListDto.fromJson);
+    return _characterIssueList.get(key);
   }
 
   @override
@@ -1668,7 +1558,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCharacterIssueListKey(characterId, page, limit);
-    return _getCachedAt('character_issue_list:$key');
+    return _characterIssueList.cachedAt(key);
   }
 
   @override
@@ -1678,18 +1568,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCharacterIssueListKey(characterId, page, limit);
-    final data = await _getMeta('character_issue_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return CharacterIssueListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _characterIssueList.meta(key);
   }
 
-  // Team Issue List Results
   @override
   Future<void> cacheTeamIssueListResults(
     int teamId,
@@ -1701,13 +1582,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getTeamIssueListKey(teamId, page, limit);
-    await _cacheList(
-      'team_issue_list:$key',
-      'team_issue_list',
-      issues,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('team_issue_list:$key', count, next, previous);
+    await _teamIssueList.cache(key, issues, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1717,7 +1592,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getTeamIssueListKey(teamId, page, limit);
-    return _getList('team_issue_list:$key', IssueListDto.fromJson);
+    return _teamIssueList.get(key);
   }
 
   @override
@@ -1727,7 +1602,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getTeamIssueListKey(teamId, page, limit);
-    return _getCachedAt('team_issue_list:$key');
+    return _teamIssueList.cachedAt(key);
   }
 
   @override
@@ -1737,18 +1612,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getTeamIssueListKey(teamId, page, limit);
-    final data = await _getMeta('team_issue_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return TeamIssueListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _teamIssueList.meta(key);
   }
 
-  // Creator Search Results
   @override
   Future<void> cacheCreatorSearchResults(
     String query,
@@ -1760,13 +1626,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getCreatorSearchKey(query, page, limit);
-    await _cacheList(
-      'creator_search:$key',
-      'creator_search',
-      creators,
-      (c) => c.toJson(),
-    );
-    await _cacheMeta('creator_search:$key', count, next, previous);
+    await _creatorSearch.cache(key, creators, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1776,7 +1636,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCreatorSearchKey(query, page, limit);
-    return _getList('creator_search:$key', CreatorListDto.fromJson);
+    return _creatorSearch.get(key);
   }
 
   @override
@@ -1786,7 +1646,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCreatorSearchKey(query, page, limit);
-    return _getCachedAt('creator_search:$key');
+    return _creatorSearch.cachedAt(key);
   }
 
   @override
@@ -1796,18 +1656,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getCreatorSearchKey(query, page, limit);
-    final data = await _getMeta('creator_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return CreatorSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _creatorSearch.meta(key);
   }
 
-  // Universe Search Results
   @override
   Future<void> cacheUniverseSearchResults(
     String query,
@@ -1819,13 +1670,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getUniverseSearchKey(query, page, limit);
-    await _cacheList(
-      'universe_search:$key',
-      'universe_search',
-      universes,
-      (u) => u.toJson(),
-    );
-    await _cacheMeta('universe_search:$key', count, next, previous);
+    await _universeSearch.cache(key, universes, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1835,7 +1680,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getUniverseSearchKey(query, page, limit);
-    return _getList('universe_search:$key', UniverseListDto.fromJson);
+    return _universeSearch.get(key);
   }
 
   @override
@@ -1845,7 +1690,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getUniverseSearchKey(query, page, limit);
-    return _getCachedAt('universe_search:$key');
+    return _universeSearch.cachedAt(key);
   }
 
   @override
@@ -1855,18 +1700,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getUniverseSearchKey(query, page, limit);
-    final data = await _getMeta('universe_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return UniverseSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _universeSearch.meta(key);
   }
 
-  // Imprint Search Results
   @override
   Future<void> cacheImprintSearchResults(
     String query,
@@ -1878,13 +1714,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getImprintSearchKey(query, page, limit);
-    await _cacheList(
-      'imprint_search:$key',
-      'imprint_search',
-      imprints,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('imprint_search:$key', count, next, previous);
+    await _imprintSearch.cache(key, imprints, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1894,7 +1724,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getImprintSearchKey(query, page, limit);
-    return _getList('imprint_search:$key', ImprintListDto.fromJson);
+    return _imprintSearch.get(key);
   }
 
   @override
@@ -1904,7 +1734,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getImprintSearchKey(query, page, limit);
-    return _getCachedAt('imprint_search:$key');
+    return _imprintSearch.cachedAt(key);
   }
 
   @override
@@ -1914,18 +1744,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getImprintSearchKey(query, page, limit);
-    final data = await _getMeta('imprint_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return ImprintSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _imprintSearch.meta(key);
   }
 
-  // Team Search Results
   @override
   Future<void> cacheTeamSearchResults(
     String query,
@@ -1937,13 +1758,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getTeamSearchKey(query, page, limit);
-    await _cacheList(
-      'team_search:$key',
-      'team_search',
-      teams,
-      (t) => t.toJson(),
-    );
-    await _cacheMeta('team_search:$key', count, next, previous);
+    await _teamSearch.cache(key, teams, count: count, next: next, previous: previous);
   }
 
   @override
@@ -1953,7 +1768,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getTeamSearchKey(query, page, limit);
-    return _getList('team_search:$key', TeamListDto.fromJson);
+    return _teamSearch.get(key);
   }
 
   @override
@@ -1963,7 +1778,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getTeamSearchKey(query, page, limit);
-    return _getCachedAt('team_search:$key');
+    return _teamSearch.cachedAt(key);
   }
 
   @override
@@ -1973,18 +1788,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getTeamSearchKey(query, page, limit);
-    final data = await _getMeta('team_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return TeamSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _teamSearch.meta(key);
   }
 
-  // Arc Search Results
   @override
   Future<void> cacheArcSearchResults(
     String query,
@@ -1996,8 +1802,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getArcSearchKey(query, page, limit);
-    await _cacheList('arc_search:$key', 'arc_search', arcs, (a) => a.toJson());
-    await _cacheMeta('arc_search:$key', count, next, previous);
+    await _arcSearch.cache(key, arcs, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2007,7 +1812,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getArcSearchKey(query, page, limit);
-    return _getList('arc_search:$key', ArcListDto.fromJson);
+    return _arcSearch.get(key);
   }
 
   @override
@@ -2017,7 +1822,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getArcSearchKey(query, page, limit);
-    return _getCachedAt('arc_search:$key');
+    return _arcSearch.cachedAt(key);
   }
 
   @override
@@ -2027,18 +1832,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getArcSearchKey(query, page, limit);
-    final data = await _getMeta('arc_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return ArcSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _arcSearch.meta(key);
   }
 
-  // Arc Issue List Results
   @override
   Future<void> cacheArcIssueListResults(
     int arcId,
@@ -2050,13 +1846,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getArcIssueListKey(arcId, page, limit);
-    await _cacheList(
-      'arc_issue_list:$key',
-      'arc_issue_list',
-      issues,
-      (i) => i.toJson(),
-    );
-    await _cacheMeta('arc_issue_list:$key', count, next, previous);
+    await _arcIssueList.cache(key, issues, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2066,7 +1856,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getArcIssueListKey(arcId, page, limit);
-    return _getList('arc_issue_list:$key', IssueListDto.fromJson);
+    return _arcIssueList.get(key);
   }
 
   @override
@@ -2076,7 +1866,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getArcIssueListKey(arcId, page, limit);
-    return _getCachedAt('arc_issue_list:$key');
+    return _arcIssueList.cachedAt(key);
   }
 
   @override
@@ -2086,18 +1876,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getArcIssueListKey(arcId, page, limit);
-    final data = await _getMeta('arc_issue_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return SeriesIssueListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _arcIssueList.meta(key);
   }
 
-  // Publisher Search Results
   @override
   Future<void> cachePublisherSearchResults(
     String query,
@@ -2109,13 +1890,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getPublisherSearchKey(query, page, limit);
-    await _cacheList(
-      'publisher_search:$key',
-      'publisher_search',
-      publishers,
-      (p) => p.toJson(),
-    );
-    await _cacheMeta('publisher_search:$key', count, next, previous);
+    await _publisherSearch.cache(key, publishers, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2125,7 +1900,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getPublisherSearchKey(query, page, limit);
-    return _getList('publisher_search:$key', PublisherListDto.fromJson);
+    return _publisherSearch.get(key);
   }
 
   @override
@@ -2135,7 +1910,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getPublisherSearchKey(query, page, limit);
-    return _getCachedAt('publisher_search:$key');
+    return _publisherSearch.cachedAt(key);
   }
 
   @override
@@ -2145,18 +1920,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getPublisherSearchKey(query, page, limit);
-    final data = await _getMeta('publisher_search:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return PublisherSearchPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _publisherSearch.meta(key);
   }
 
-  // Publisher Series List Results
   @override
   Future<void> cachePublisherSeriesListResults(
     int publisherId,
@@ -2168,13 +1934,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getPublisherSeriesListKey(publisherId, page, limit);
-    await _cacheList(
-      'publisher_series_list:$key',
-      'publisher_series_list',
-      series,
-      (s) => s.toJson(),
-    );
-    await _cacheMeta('publisher_series_list:$key', count, next, previous);
+    await _publisherSeriesList.cache(key, series, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2184,7 +1944,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getPublisherSeriesListKey(publisherId, page, limit);
-    return _getList('publisher_series_list:$key', SeriesListDto.fromJson);
+    return _publisherSeriesList.get(key);
   }
 
   @override
@@ -2194,7 +1954,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getPublisherSeriesListKey(publisherId, page, limit);
-    return _getCachedAt('publisher_series_list:$key');
+    return _publisherSeriesList.cachedAt(key);
   }
 
   @override
@@ -2204,15 +1964,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     required int limit,
   }) async {
     final key = _getPublisherSeriesListKey(publisherId, page, limit);
-    final data = await _getMeta('publisher_series_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return SeriesIssueListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _publisherSeriesList.meta(key);
   }
 
   @override
@@ -2220,19 +1972,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int issueId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('issue_details:$issueId', 'issue_details', json);
+    await _issueDetails.cache("$issueId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedIssueDetailsResponse(
     int issueId,
   ) async {
-    return _getSingle('issue_details:$issueId');
+    return _issueDetails.get("$issueId");
   }
 
   @override
   Future<DateTime?> getCachedIssueDetailsCachedAt(int issueId) async {
-    return _getCachedAt('issue_details:$issueId');
+    return _issueDetails.cachedAt("$issueId");
   }
 
   @override
@@ -2240,19 +1992,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int seriesId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('series_details:$seriesId', 'series_details', json);
+    await _seriesDetails.cache("$seriesId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedSeriesDetailsResponse(
     int seriesId,
   ) async {
-    return _getSingle('series_details:$seriesId');
+    return _seriesDetails.get("$seriesId");
   }
 
   @override
   Future<DateTime?> getCachedSeriesDetailsCachedAt(int seriesId) async {
-    return _getCachedAt('series_details:$seriesId');
+    return _seriesDetails.cachedAt("$seriesId");
   }
 
   @override
@@ -2260,19 +2012,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int characterId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('character_details:$characterId', 'character_details', json);
+    await _characterDetails.cache("$characterId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedCharacterDetailsResponse(
     int characterId,
   ) async {
-    return _getSingle('character_details:$characterId');
+    return _characterDetails.get("$characterId");
   }
 
   @override
   Future<DateTime?> getCachedCharacterDetailsCachedAt(int characterId) async {
-    return _getCachedAt('character_details:$characterId');
+    return _characterDetails.cachedAt("$characterId");
   }
 
   @override
@@ -2280,19 +2032,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int creatorId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('creator_details:$creatorId', 'creator_details', json);
+    await _creatorDetails.cache("$creatorId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedCreatorDetailsResponse(
     int creatorId,
   ) async {
-    return _getSingle('creator_details:$creatorId');
+    return _creatorDetails.get("$creatorId");
   }
 
   @override
   Future<DateTime?> getCachedCreatorDetailsCachedAt(int creatorId) async {
-    return _getCachedAt('creator_details:$creatorId');
+    return _creatorDetails.cachedAt("$creatorId");
   }
 
   @override
@@ -2300,17 +2052,17 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int teamId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('team_details:$teamId', 'team_details', json);
+    await _teamDetails.cache("$teamId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedTeamDetailsResponse(int teamId) async {
-    return _getSingle('team_details:$teamId');
+    return _teamDetails.get("$teamId");
   }
 
   @override
   Future<DateTime?> getCachedTeamDetailsCachedAt(int teamId) async {
-    return _getCachedAt('team_details:$teamId');
+    return _teamDetails.cachedAt("$teamId");
   }
 
   @override
@@ -2318,19 +2070,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int universeId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('universe_details:$universeId', 'universe_details', json);
+    await _universeDetails.cache("$universeId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedUniverseDetailsResponse(
     int universeId,
   ) async {
-    return _getSingle('universe_details:$universeId');
+    return _universeDetails.get("$universeId");
   }
 
   @override
   Future<DateTime?> getCachedUniverseDetailsCachedAt(int universeId) async {
-    return _getCachedAt('universe_details:$universeId');
+    return _universeDetails.cachedAt("$universeId");
   }
 
   @override
@@ -2338,19 +2090,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int imprintId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('imprint_details:$imprintId', 'imprint_details', json);
+    await _imprintDetails.cache("$imprintId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedImprintDetailsResponse(
     int imprintId,
   ) async {
-    return _getSingle('imprint_details:$imprintId');
+    return _imprintDetails.get("$imprintId");
   }
 
   @override
   Future<DateTime?> getCachedImprintDetailsCachedAt(int imprintId) async {
-    return _getCachedAt('imprint_details:$imprintId');
+    return _imprintDetails.cachedAt("$imprintId");
   }
 
   @override
@@ -2358,19 +2110,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int publisherId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('publisher_details:$publisherId', 'publisher_details', json);
+    await _publisherDetails.cache("$publisherId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedPublisherDetailsResponse(
     int publisherId,
   ) async {
-    return _getSingle('publisher_details:$publisherId');
+    return _publisherDetails.get("$publisherId");
   }
 
   @override
   Future<DateTime?> getCachedPublisherDetailsCachedAt(int publisherId) async {
-    return _getCachedAt('publisher_details:$publisherId');
+    return _publisherDetails.cachedAt("$publisherId");
   }
 
   @override
@@ -2378,20 +2130,19 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     int arcId,
     Map<String, dynamic> json,
   ) async {
-    await _cacheSingle('arc_details:$arcId', 'arc_details', json);
+    await _arcDetails.cache("$arcId", json);
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedArcDetailsResponse(int arcId) async {
-    return _getSingle('arc_details:$arcId');
+    return _arcDetails.get("$arcId");
   }
 
   @override
   Future<DateTime?> getCachedArcDetailsCachedAt(int arcId) async {
-    return _getCachedAt('arc_details:$arcId');
+    return _arcDetails.cachedAt("$arcId");
   }
 
-  // Arc List Results
   @override
   Future<void> cacheArcListResults(
     List<ArcListDto> arcs, {
@@ -2403,8 +2154,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('arc_list:$key', 'arc_list', arcs, (a) => a.toJson());
-    await _cacheMeta('arc_list:$key', count, next, previous);
+    await _arcList.cache(key, arcs, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2414,7 +2164,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('arc_list:$key', ArcListDto.fromJson);
+    return _arcList.get(key);
   }
 
   @override
@@ -2424,7 +2174,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('arc_list:$key');
+    return _arcList.cachedAt(key);
   }
 
   @override
@@ -2434,18 +2184,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getArcListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('arc_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return ArcListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _arcList.meta(key);
   }
 
-  // Character List Results
   @override
   Future<void> cacheCharacterListResults(
     List<CharacterListDto> characters, {
@@ -2457,8 +2198,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('character_list:$key', 'character_list', characters, (c) => c.toJson());
-    await _cacheMeta('character_list:$key', count, next, previous);
+    await _characterList.cache(key, characters, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2468,7 +2208,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('character_list:$key', CharacterListDto.fromJson);
+    return _characterList.get(key);
   }
 
   @override
@@ -2478,7 +2218,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('character_list:$key');
+    return _characterList.cachedAt(key);
   }
 
   @override
@@ -2488,18 +2228,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getCharacterListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('character_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return CharacterListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _characterList.meta(key);
   }
 
-  // Creator List Results
   @override
   Future<void> cacheCreatorListResults(
     List<CreatorListDto> creators, {
@@ -2511,8 +2242,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('creator_list:$key', 'creator_list', creators, (c) => c.toJson());
-    await _cacheMeta('creator_list:$key', count, next, previous);
+    await _creatorList.cache(key, creators, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2522,7 +2252,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('creator_list:$key', CreatorListDto.fromJson);
+    return _creatorList.get(key);
   }
 
   @override
@@ -2532,7 +2262,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('creator_list:$key');
+    return _creatorList.cachedAt(key);
   }
 
   @override
@@ -2542,18 +2272,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getCreatorListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('creator_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return CreatorListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _creatorList.meta(key);
   }
 
-  // Imprint List Results
   @override
   Future<void> cacheImprintListResults(
     List<ImprintListDto> imprints, {
@@ -2565,8 +2286,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('imprint_list:$key', 'imprint_list', imprints, (i) => i.toJson());
-    await _cacheMeta('imprint_list:$key', count, next, previous);
+    await _imprintList.cache(key, imprints, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2576,7 +2296,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('imprint_list:$key', ImprintListDto.fromJson);
+    return _imprintList.get(key);
   }
 
   @override
@@ -2586,7 +2306,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('imprint_list:$key');
+    return _imprintList.cachedAt(key);
   }
 
   @override
@@ -2596,18 +2316,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getImprintListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('imprint_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return ImprintListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _imprintList.meta(key);
   }
 
-  // Publisher List Results
   @override
   Future<void> cachePublisherListResults(
     List<PublisherListDto> publishers, {
@@ -2619,8 +2330,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('publisher_list:$key', 'publisher_list', publishers, (p) => p.toJson());
-    await _cacheMeta('publisher_list:$key', count, next, previous);
+    await _publisherList.cache(key, publishers, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2630,7 +2340,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('publisher_list:$key', PublisherListDto.fromJson);
+    return _publisherList.get(key);
   }
 
   @override
@@ -2640,7 +2350,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('publisher_list:$key');
+    return _publisherList.cachedAt(key);
   }
 
   @override
@@ -2650,18 +2360,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getPublisherListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('publisher_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return PublisherListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _publisherList.meta(key);
   }
 
-  // Team List Results
   @override
   Future<void> cacheTeamListResults(
     List<TeamListDto> teams, {
@@ -2673,8 +2374,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('team_list:$key', 'team_list', teams, (t) => t.toJson());
-    await _cacheMeta('team_list:$key', count, next, previous);
+    await _teamList.cache(key, teams, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2684,7 +2384,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('team_list:$key', TeamListDto.fromJson);
+    return _teamList.get(key);
   }
 
   @override
@@ -2694,7 +2394,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('team_list:$key');
+    return _teamList.cachedAt(key);
   }
 
   @override
@@ -2704,18 +2404,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getTeamListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('team_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return TeamListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _teamList.meta(key);
   }
 
-  // Universe List Results
   @override
   Future<void> cacheUniverseListResults(
     List<UniverseListDto> universes, {
@@ -2727,8 +2418,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     String? previous,
   }) async {
     final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
-    await _cacheList('universe_list:$key', 'universe_list', universes, (u) => u.toJson());
-    await _cacheMeta('universe_list:$key', count, next, previous);
+    await _universeList.cache(key, universes, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2738,7 +2428,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
-    return _getList('universe_list:$key', UniverseListDto.fromJson);
+    return _universeList.get(key);
   }
 
   @override
@@ -2748,7 +2438,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
-    return _getCachedAt('universe_list:$key');
+    return _universeList.cachedAt(key);
   }
 
   @override
@@ -2758,18 +2448,9 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
     DateTime? modifiedGt,
   }) async {
     final key = _getUniverseListKey(page, limit, modifiedGt: modifiedGt);
-    final data = await _getMeta('universe_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return UniverseListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _universeList.meta(key);
   }
 
-  // Reading List Results
   @override
   Future<void> cacheReadingListResults(
     List<ReadingListDto> readingLists, {
@@ -2793,8 +2474,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       attributionSource: attributionSource,
       publisher: publisher,
     );
-    await _cacheList('reading_list:$key', 'reading_list', readingLists, (r) => r.toJson());
-    await _cacheMeta('reading_list:$key', count, next, previous);
+    await _readingList.cache(key, readingLists, count: count, next: next, previous: previous);
   }
 
   @override
@@ -2816,7 +2496,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       attributionSource: attributionSource,
       publisher: publisher,
     );
-    return _getList('reading_list:$key', ReadingListDto.fromJson);
+    return _readingList.get(key);
   }
 
   @override
@@ -2838,7 +2518,7 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       attributionSource: attributionSource,
       publisher: publisher,
     );
-    return _getCachedAt('reading_list:$key');
+    return _readingList.cachedAt(key);
   }
 
   @override
@@ -2860,14 +2540,6 @@ class MetronLocalDataSourceImpl implements MetronLocalDataSource {
       attributionSource: attributionSource,
       publisher: publisher,
     );
-    final data = await _getMeta('reading_list:$key');
-    if (data == null) return null;
-    final count = (data['count'] as num?)?.toInt();
-    if (count == null) return null;
-    return ReadingListPageCacheMeta(
-      count: count,
-      next: data['next'] as String?,
-      previous: data['previous'] as String?,
-    );
+    return _readingList.meta(key);
   }
 }
