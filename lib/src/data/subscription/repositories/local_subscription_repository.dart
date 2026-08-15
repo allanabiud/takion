@@ -1,18 +1,18 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/core/cache/user_state_cache.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
 class LocalSubscriptionRepository implements SubscriptionRepository {
   LocalSubscriptionRepository(this._database, this._cache);
 
-  static const _localUserId = 'local-user';
+  static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final UserStateCache _cache;
 
-  String _idForSeries(int seriesId) => 'sub-$seriesId';
+  String _idForSeries(int seriesId) => "sub-$seriesId";
 
   SeriesSubscription _toDomain(db.SeriesSubscription d) {
     return SeriesSubscription(
@@ -25,6 +25,15 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       createdAt: DateTime.parse(d.createdAt),
       updatedAt: DateTime.parse(d.updatedAt),
     );
+  }
+
+  @override
+  Stream<SeriesSubscription?> watchSubscriptionBySeriesId(
+    int metronSeriesId,
+  ) {
+    return _database.subscriptionDao
+        .watchBySeriesId(metronSeriesId)
+        .map((row) => row == null ? null : _toDomain(row));
   }
 
   @override

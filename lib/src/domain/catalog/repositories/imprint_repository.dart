@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "package:dio/dio.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 abstract class ImprintRepository {
   Future<ImprintListPage> getImprintList({
@@ -11,8 +11,6 @@ abstract class ImprintRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
-
-  Future<int> refreshImprintListDelta({DateTime? modifiedGt});
 
   Future<ImprintListPage> searchImprints(
     String query, {

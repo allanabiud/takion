@@ -1,11 +1,11 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "dart:async";
+import "package:dio/dio.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 class ArcIssueListArgs {
   const ArcIssueListArgs({
@@ -52,7 +52,8 @@ final arcIssueListProvider = FutureProvider.autoDispose
         cancelToken: cancelToken,
       );
 
-      final totalPages = ((page1.count - 1) ~/ args.limit) + 1;
+      final pageSize = page1.realPageSize ?? args.limit;
+      final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
 
       ArcIssueListPage resultPage;
       if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
@@ -66,6 +67,13 @@ final arcIssueListProvider = FutureProvider.autoDispose
             limit: args.limit,
             cancelToken: cancelToken,
           );
+          if (resultPage.results.isEmpty && page1.count > 0) {
+            AppLogger.warning(
+              "ArcIssueList: page $targetPage returned empty for arc "
+              "${args.arcId} (count ${page1.count}). Falling back to page 1.",
+            );
+            resultPage = page1;
+          }
         }
       } else {
         if (args.page == 1) {
@@ -80,16 +88,17 @@ final arcIssueListProvider = FutureProvider.autoDispose
         }
       }
 
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
 
       return ArcIssueListPage(
         count: page1.count,
         results: resultPage.results,
         currentPage: args.page,
+        realPageSize: page1.realPageSize,
         next: args.page < totalPages
-            ? 'placeholder?page=${args.page + 1}'
+            ? "placeholder?page=${args.page + 1}"
             : null,
-        previous: args.page > 1 ? 'placeholder?page=${args.page - 1}' : null,
+        previous: args.page > 1 ? "placeholder?page=${args.page - 1}" : null,
       );
     });
 
@@ -103,10 +112,13 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
         arcIssueListProvider(ArcIssueListArgs(arcId: arcId, page: 1)).future,
       );
 
+      final pageSize = page1.realPageSize ?? metronDefaultPageSize;
+      final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
+
       final results = <IssueList>[...page1.results];
 
       Future<ArcIssueListPage>? page2Future;
-      if (page1.nextPage != null) {
+      if (page1.nextPage != null && page1.nextPage! <= totalPages) {
         page2Future = ref.watch(
           arcIssueListProvider(
             ArcIssueListArgs(arcId: arcId, page: page1.nextPage!),
@@ -114,9 +126,7 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
         );
       }
 
-      final rawLastPage = page1.count > 0
-          ? ((page1.count - 1) ~/ metronDefaultPageSize) + 1
-          : 1;
+      final rawLastPage = totalPages;
       final knownMaxPage = page1.nextPage ?? 1;
 
       Future<ArcIssueListPage>? lastPageFuture;
@@ -133,7 +143,7 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
         futures.add(
           page2Future.then((p) => p.results).catchError((e) {
             AppLogger.debug(
-              'Failed to fetch arc page 2, falling back to empty',
+              "Failed to fetch arc page 2, falling back to empty",
               error: e,
             );
             return <IssueList>[];
@@ -144,7 +154,7 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
         futures.add(
           lastPageFuture.then((p) => p.results).catchError((e) {
             AppLogger.debug(
-              'Failed to fetch arc last page, falling back to empty',
+              "Failed to fetch arc last page, falling back to empty",
               error: e,
             );
             return <IssueList>[];
@@ -159,10 +169,11 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
         }
       }
 
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return ArcIssueListPage(
         count: page1.count,
         results: results,
         currentPage: 1,
+        realPageSize: page1.realPageSize,
       );
     });

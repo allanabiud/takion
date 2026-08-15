@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/catalog/entities/entities.dart';
+import "package:takion/src/domain/catalog/entities/entities.dart";
 
 class TeamCreatorRef {
   const TeamCreatorRef({required this.id, required this.name, this.modified});

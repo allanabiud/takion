@@ -1,15 +1,15 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_completion_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_details_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_completion_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_details_provider.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
 
 class SeriesListTile extends ConsumerWidget {
   final SeriesList series;
@@ -44,25 +44,25 @@ class SeriesListTile extends ConsumerWidget {
   });
 
   String _formatSeriesType(String? type) {
-    if (type == null) return '';
+    if (type == null) return "";
     final lower = type.toLowerCase();
-    if (lower == 'single issue') {
-      return '';
+    if (lower == "single issue") {
+      return "";
     }
-    if (lower == 'limited series') {
-      return '';
+    if (lower == "limited series") {
+      return "";
     }
-    if (lower.contains('trade paperback') || lower.contains('tpb')) {
-      return 'TPB';
+    if (lower.contains("trade paperback") || lower.contains("tpb")) {
+      return "TPB";
     }
-    if (lower.contains('hardcover') || lower.contains('hc')) {
-      return 'HC';
+    if (lower.contains("hardcover") || lower.contains("hc")) {
+      return "HC";
     }
-    if (lower.contains('graphic novel') || lower.contains('gn')) {
-      return 'GN';
+    if (lower.contains("graphic novel") || lower.contains("gn")) {
+      return "GN";
     }
-    if (lower.contains('omnibus')) {
-      return 'Omnibus';
+    if (lower.contains("omnibus")) {
+      return "Omnibus";
     }
     return type;
   }
@@ -96,7 +96,7 @@ class SeriesListTile extends ConsumerWidget {
         series.issueCount;
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached('series', series.id);
+    final cachedImage = cache.getCached("series", series.id);
     final coverImage = cachedImage;
     final effectiveOnTap =
         onTap ??
@@ -156,10 +156,10 @@ class SeriesListTile extends ConsumerWidget {
                             builder: (context) {
                               final formattedType = series.seriesType != null
                                   ? _formatSeriesType(series.seriesType!)
-                                  : '';
+                                  : "";
                               return Text(
                                 formattedType.isNotEmpty
-                                    ? '${series.name} ($formattedType)'
+                                    ? "${series.name} ($formattedType)"
                                     : series.name,
                                 style: const TextStyle(
                                   fontSize: 16,
@@ -179,7 +179,7 @@ class SeriesListTile extends ConsumerWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '•',
+                                "•",
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               const SizedBox(width: 8),
@@ -226,7 +226,7 @@ class SeriesListTile extends ConsumerWidget {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'SUBSCRIBED',
+                                        "SUBSCRIBED",
                                         style: Theme.of(context)
                                             .textTheme
                                             .labelSmall
@@ -322,7 +322,7 @@ class _SeriesProgressBar extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '$count/$total',
+              "$count/$total",
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -371,7 +371,7 @@ class _SeriesProgressBar extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '$owned/$total',
+            "$owned/$total",
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),

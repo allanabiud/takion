@@ -1,18 +1,18 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:drift/drift.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/drift/daos/superhero_character_cache_dao.dart';
-import 'package:takion/src/data/integrations/superhero/dto/superhero_search_response_dto.dart';
-import 'package:takion/src/data/integrations/superhero/superhero_remote_data_source.dart';
-import 'package:takion/src/domain/integrations/entities/entities.dart';
-import 'package:takion/src/domain/integrations/repositories/repositories.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/drift/daos/superhero_character_cache_dao.dart";
+import "package:takion/src/data/integrations/superhero/dto/superhero_search_response_dto.dart";
+import "package:takion/src/data/integrations/superhero/superhero_remote_data_source.dart";
+import "package:takion/src/domain/integrations/entities/entities.dart";
+import "package:takion/src/domain/integrations/repositories/repositories.dart";
 
 String normalizeSuperHeroName(String name) {
   return name
       .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9]'), '');
+      .replaceAll(RegExp(r"[^a-z0-9]"), "");
 }
 
 class SuperHeroCharacterRepositoryImpl
@@ -32,7 +32,7 @@ class SuperHeroCharacterRepositoryImpl
   final Future<String?> Function() _getToken;
 
   String _cleanName(String name) {
-    return name.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+    return name.replaceAll(RegExp(r"\s*\([^)]*\)"), "").trim();
   }
 
   List<String> _generateSearchVariants(
@@ -48,47 +48,43 @@ class SuperHeroCharacterRepositoryImpl
       }
     }
 
-    // 1. Cleaned name without parentheses, e.g. "General Zod (Dru-Zod)" -> "General Zod"
-    final clean = metronName.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+    // Variants of the Metron name most likely to match a SuperHero API alias,
+    // e.g. "General Zod (Dru-Zod)" -> "General Zod", "Dru-Zod", "The Flash",
+    // "Spider-Man" -> "Spider Man"/"SpiderMan", "Dr." <-> "Doctor".
+    final clean = metronName.replaceAll(RegExp(r"\s*\([^)]*\)"), "").trim();
     if (clean.isNotEmpty) addQuery(clean);
 
-    // 2. Metron alias if provided, e.g. "Batman" for "Terry McGinnis"
     if (metronAlias != null && metronAlias.trim().isNotEmpty) {
-      final cleanAlias =
-          metronAlias.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
-      addQuery(cleanAlias);
+      addQuery(
+        metronAlias.replaceAll(RegExp(r"\s*\([^)]*\)"), "").trim(),
+      );
     }
 
-    // 3. Parenthetical name inside brackets if present, e.g. "Dru-Zod" or "Peter Parker"
-    final parenMatch = RegExp(r'\(([^)]+)\)').firstMatch(metronName);
+    final parenMatch = RegExp(r"\(([^)]+)\)").firstMatch(metronName);
     if (parenMatch != null) {
-      final paren = parenMatch.group(1)?.trim();
-      if (paren != null) addQuery(paren);
+      addQuery(parenMatch.group(1)?.trim() ?? "");
     }
 
-    // 4. Hyphen variants for cleaned name, e.g. "Spider-Man" -> "Spider Man"
-    if (clean.contains('-')) {
-      addQuery(clean.replaceAll('-', ' '));
-      addQuery(clean.replaceAll('-', ''));
+    if (clean.contains("-")) {
+      addQuery(clean.replaceAll("-", " "));
+      addQuery(clean.replaceAll("-", ""));
     }
 
-    // 5. Strip "The " prefix, e.g. "The Flash" -> "Flash", "The Batman" -> "Batman"
-    if (clean.toLowerCase().startsWith('the ')) {
+    if (clean.toLowerCase().startsWith("the ")) {
       addQuery(clean.substring(4));
     }
 
-    // 6. Expand / abbreviate "Doctor" vs "Dr."
-    if (clean.toLowerCase().startsWith('dr. ') || clean.toLowerCase().startsWith('dr ')) {
+    if (clean.toLowerCase().startsWith("dr. ") ||
+        clean.toLowerCase().startsWith("dr ")) {
       addQuery(
-        clean.replaceAll(RegExp(r'^dr\.?\s+', caseSensitive: false), 'Doctor '),
+        clean.replaceAll(RegExp(r"^dr\.?\s+", caseSensitive: false), "Doctor "),
       );
-    } else if (clean.toLowerCase().startsWith('doctor ')) {
+    } else if (clean.toLowerCase().startsWith("doctor ")) {
       addQuery(
-        clean.replaceAll(RegExp(r'^doctor\s+', caseSensitive: false), 'Dr. '),
+        clean.replaceAll(RegExp(r"^doctor\s+", caseSensitive: false), "Dr. "),
       );
     }
 
-    // 7. Original metronName
     addQuery(metronName);
 
     return variants;
@@ -179,7 +175,7 @@ class SuperHeroCharacterRepositoryImpl
 
     final token = await _getToken();
     if (token == null || token.isEmpty) {
-      AppLogger.warning('SuperHero search skipped: missing API token');
+      AppLogger.warning("SuperHero search skipped: missing API token");
       return null;
     }
 
@@ -189,7 +185,7 @@ class SuperHeroCharacterRepositoryImpl
     );
     final cleanName = _cleanName(metronName);
     final parentheticalName =
-        RegExp(r'\(([^)]+)\)').firstMatch(metronName)?.group(1)?.trim();
+        RegExp(r"\(([^)]+)\)").firstMatch(metronName)?.group(1)?.trim();
 
     AppLogger.info(
       'SuperHero searching API for character "$metronName" (alias: "$metronAlias") with variants: $searchQueries',
@@ -201,7 +197,7 @@ class SuperHeroCharacterRepositoryImpl
     try {
       for (final query in searchQueries) {
         final result = await _remoteDataSource.search(token, query);
-        if (result.response != 'success' || result.results.isEmpty) {
+        if (result.response != "success" || result.results.isEmpty) {
           continue;
         }
 
@@ -269,10 +265,10 @@ class SuperHeroCharacterRepositoryImpl
   @override
   Future<bool> validateToken(String token) async {
     try {
-      final result = await _remoteDataSource.search(token.trim(), 'batman');
-      return result.response == 'success';
+      final result = await _remoteDataSource.search(token.trim(), "batman");
+      return result.response == "success";
     } on Exception catch (e) {
-      AppLogger.warning('SuperHero token validation failed', error: e);
+      AppLogger.warning("SuperHero token validation failed", error: e);
       return false;
     }
   }
@@ -304,19 +300,19 @@ class SuperHeroCharacterRepositoryImpl
       if (value is int) return value;
       if (value is String && value.trim().isNotEmpty) {
         final lower = value.trim().toLowerCase();
-        if (lower == 'null') return null;
+        if (lower == "null") return null;
         return int.tryParse(lower);
       }
       return null;
     }
 
     return SuperHeroPowerStats(
-      intelligence: parseStat(map['intelligence']),
-      strength: parseStat(map['strength']),
-      speed: parseStat(map['speed']),
-      durability: parseStat(map['durability']),
-      power: parseStat(map['power']),
-      combat: parseStat(map['combat']),
+      intelligence: parseStat(map["intelligence"]),
+      strength: parseStat(map["strength"]),
+      speed: parseStat(map["speed"]),
+      durability: parseStat(map["durability"]),
+      power: parseStat(map["power"]),
+      combat: parseStat(map["combat"]),
     );
   }
 }

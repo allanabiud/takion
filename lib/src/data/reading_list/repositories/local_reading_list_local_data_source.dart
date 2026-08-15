@@ -1,12 +1,12 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:drift/drift.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:drift/drift.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 final localReadingListLocalDataSourceProvider =
     Provider<LocalReadingListRepository>((ref) {
@@ -31,7 +31,7 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
         items = <LocalReadingListItem>[];
       }
     } catch (e) {
-      AppLogger.warning('Failed to decode reading list items', error: e);
+      AppLogger.warning("Failed to decode reading list items", error: e);
       items = <LocalReadingListItem>[];
     }
 
@@ -90,7 +90,7 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
     final companions = <db.ReadingListItemsCompanion>[
       for (var i = 0; i < list.items.length; i++)
         db.ReadingListItemsCompanion(
-          id: Value('${list.id}:${list.items[i].targetId}'),
+          id: Value("${list.id}:${list.items[i].targetId}"),
           listId: Value(list.id),
           targetId: Value(list.items[i].targetId),
           isSeries: Value(list.items[i].isSeries),
@@ -107,7 +107,7 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
     for (final row in existingRows) {
       if (!currentTargets.contains(row.targetId)) {
         await _database.syncMetaDao.set(
-          'delete:reading_list_items:${row.id}',
+          "delete:reading_list_items:${row.id}",
           now,
         );
         await (_database.delete(_database.readingListItems)

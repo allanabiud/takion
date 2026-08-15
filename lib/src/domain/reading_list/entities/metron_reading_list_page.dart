@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/reading_list/entities/entities.dart';
+import "package:takion/src/domain/reading_list/entities/entities.dart";
 
 class MetronReadingListPage {
   const MetronReadingListPage({
@@ -17,14 +17,14 @@ class MetronReadingListPage {
     if (next == null || next!.isEmpty) return null;
     final uri = Uri.tryParse(next!);
     if (uri == null) return null;
-    return int.tryParse(uri.queryParameters['page'] ?? '');
+    return int.tryParse(uri.queryParameters["page"] ?? "");
   }
 
   int? get previousPage {
     if (previous == null || previous!.isEmpty) return null;
     final uri = Uri.tryParse(previous!);
     if (uri == null) return null;
-    final pageStr = uri.queryParameters['page'];
+    final pageStr = uri.queryParameters["page"];
     if (pageStr == null || pageStr.isEmpty) {
       return 1;
     }

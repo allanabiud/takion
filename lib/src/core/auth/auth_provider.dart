@@ -1,7 +1,7 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
 
-part 'auth_provider.g.dart';
+part "auth_provider.g.dart";
 
 enum AuthStatus { authenticated, unauthenticated }
 
@@ -10,7 +10,7 @@ class AuthState extends _$AuthState {
   @override
   Future<AuthStatus> build() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
-    final token = await dao.getString('metron_api_token');
+    final token = await dao.getString("metron_api_token");
     if (token != null && token.trim().isNotEmpty) {
       return AuthStatus.authenticated;
     }

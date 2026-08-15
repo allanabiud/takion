@@ -1,19 +1,19 @@
-import 'dart:async';
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/search/providers/barcode_scan_providers.dart';
-import 'package:takion/src/presentation/features/search/widgets/bulk_scan_actions_sheet.dart';
-import 'package:takion/src/presentation/features/search/widgets/issue_picker_sheet.dart';
-import 'package:takion/src/presentation/features/search/widgets/manual_upc_dialog.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "dart:async";
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:mobile_scanner/mobile_scanner.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/features/search/providers/barcode_scan_providers.dart";
+import "package:takion/src/presentation/features/search/widgets/bulk_scan_actions_sheet.dart";
+import "package:takion/src/presentation/features/search/widgets/issue_picker_sheet.dart";
+import "package:takion/src/presentation/features/search/widgets/manual_upc_dialog.dart";
+import "package:lucide_icons_flutter/lucide_icons.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 const _barcodeFormats = [
   BarcodeFormat.upcA,
@@ -43,7 +43,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.info('BarcodeScannerScreen initState');
+    AppLogger.info("BarcodeScannerScreen initState");
     _scannerController = MobileScannerController(
       autoStart: false,
       formats: _barcodeFormats,
@@ -55,7 +55,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
         .then((_) {
           final running = _scannerController.value.isRunning;
           AppLogger.info(
-            'BarcodeScannerScreen camera start(): isRunning=$running',
+            "BarcodeScannerScreen camera start(): isRunning=$running",
           );
           if (running) {
             _scannerController.setZoomScale(0.5);
@@ -63,7 +63,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
         })
         .catchError((e) {
           AppLogger.error(
-            'BarcodeScannerScreen camera start() failed',
+            "BarcodeScannerScreen camera start() failed",
             error: e,
           );
         });
@@ -71,7 +71,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
 
   @override
   void dispose() {
-    AppLogger.info('BarcodeScannerScreen dispose');
+    AppLogger.info("BarcodeScannerScreen dispose");
     _scanCooldown?.cancel();
     _scannerController.dispose();
     super.dispose();
@@ -83,9 +83,9 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
     for (final barcode in capture.barcodes) {
       final value = barcode.rawValue;
       if (value == null || value.isEmpty) continue;
-      final isDigits = RegExp(r'^\d+$').hasMatch(value);
+      final isDigits = RegExp(r"^\d+$").hasMatch(value);
       if (!isDigits) continue;
-      AppLogger.debug('BarcodeScannerScreen detected: $value');
+      AppLogger.debug("BarcodeScannerScreen detected: $value");
 
       await HapticFeedback.heavyImpact();
       _isScanningEnabled = false;
@@ -104,7 +104,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
     setState(() => _isLookingUp = true);
 
     try {
-      AppLogger.info('BarcodeScannerScreen lookup UPC: $upc');
+      AppLogger.info("BarcodeScannerScreen lookup UPC: $upc");
       final repo = ref.read(catalogRepositoryProvider);
 
       IssueSearchPage result;
@@ -120,7 +120,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
       if (!mounted) return;
 
       if (result.results.isEmpty) {
-        TakionAlerts.info(context, 'No issue found for barcode $upc');
+        TakionAlerts.info(context, "No issue found for barcode $upc");
         return;
       }
 
@@ -166,7 +166,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
       TakionAlerts.safeError(
         context,
         e,
-        userMessage: 'Failed to look up barcode',
+        userMessage: "Failed to look up barcode",
       );
     } finally {
       if (mounted) setState(() => _isLookingUp = false);
@@ -176,8 +176,8 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
   String _issueTitle(IssueList issue) {
     final name = issue.name;
     final number = issue.number;
-    if (number.isEmpty || name.contains('#$number')) return name;
-    return '$name #$number';
+    if (number.isEmpty || name.contains("#$number")) return name;
+    return "$name #$number";
   }
 
   Future<void> _showManualUpcDialog() async {
@@ -190,7 +190,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
   Future<void> _showBulkActionsSheet() async {
     final scannedIssues = ref.read(scannedIssueIdsProvider);
     if (scannedIssues.isEmpty) {
-      TakionAlerts.info(context, 'No scanned issues');
+      TakionAlerts.info(context, "No scanned issues");
       return;
     }
     final issueSeriesIds = <int, int>{};
@@ -212,7 +212,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
 
   void _clearAll() {
     ref.read(scannedIssueIdsProvider.notifier).clearAll();
-    TakionAlerts.info(context, 'List cleared');
+    TakionAlerts.info(context, "List cleared");
   }
 
   @override
@@ -226,10 +226,10 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
-        title: const Text('Barcode Scanner'),
+        title: const Text("Barcode Scanner"),
         actions: [
           IconButton(
-            tooltip: 'Enter UPC manually',
+            tooltip: "Enter UPC manually",
             icon: const Icon(Icons.keyboard),
             onPressed: _showManualUpcDialog,
           ),
@@ -246,8 +246,8 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                   _ScannerOverlay(isLookingUp: _isLookingUp),
               errorBuilder: (context, error, child) {
                 AppLogger.error(
-                  'BarcodeScannerScreen error: ${error.errorCode} '
-                  '${error.errorDetails?.message}',
+                  "BarcodeScannerScreen error: ${error.errorCode} "
+                  "${error.errorDetails?.message}",
                 );
                 return Container(
                   color: Colors.black,
@@ -266,8 +266,8 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                         Text(
                           error.errorCode ==
                                   MobileScannerErrorCode.permissionDenied
-                              ? 'Camera permission denied. Please grant camera permission in your system settings.'
-                              : 'Scanner error: ${error.errorDetails?.message ?? error.errorCode.name}',
+                              ? "Camera permission denied. Please grant camera permission in your system settings."
+                              : "Scanner error: ${error.errorDetails?.message ?? error.errorCode.name}",
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
@@ -306,7 +306,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Scanning',
+                          "Scanning",
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.primary,
@@ -320,7 +320,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Awaiting Scan...',
+                          "Awaiting Scan...",
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
@@ -353,14 +353,14 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Scan barcodes to add issues',
+                                "Scan barcodes to add issues",
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Swipe left to remove from list',
+                                "Swipe left to remove from list",
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -390,7 +390,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                                     .removeIssue(state.issueId);
                                 TakionAlerts.info(
                                   context,
-                                  'Removed: ${_issueTitle(state.issue)}',
+                                  "Removed: ${_issueTitle(state.issue)}",
                                 );
                               },
                               child: IssueListTile(
@@ -414,7 +414,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
             TextButton.icon(
               onPressed: scannedIssues.isEmpty ? null : _clearAll,
               icon: const Icon(Icons.clear_all),
-              label: const Text('CLEAR'),
+              label: const Text("CLEAR"),
             ),
             const Spacer(),
             TextButton.icon(
@@ -422,8 +422,8 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
               icon: const Icon(Icons.more_horiz),
               label: Text(
                 scannedIssues.isEmpty
-                    ? 'BULK ACTIONS'
-                    : 'BULK ACTIONS (${scannedIssues.length})',
+                    ? "BULK ACTIONS"
+                    : "BULK ACTIONS (${scannedIssues.length})",
               ),
             ),
           ],

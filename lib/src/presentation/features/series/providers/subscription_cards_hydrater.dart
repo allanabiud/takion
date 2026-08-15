@@ -1,12 +1,12 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/network/dio_client.dart';
-import 'package:takion/src/core/network/request_priority.dart'
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/core/network/request_priority.dart"
     show backgroundZoneKey;
-import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:takion/src/presentation/features/library/providers/library_items_serialization.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 class SubscriptionCardsHydrater {
   SubscriptionCardsHydrater(this.ref);
@@ -14,8 +14,14 @@ class SubscriptionCardsHydrater {
   static const _maxHydrationConcurrency = 4;
   static const _issueFetchLimit = 200;
   static const _minBurstRemainingToHydrate = 5;
+  static const _retryDelay = Duration(seconds: 60);
+  static const _maxRetryAttempts = 3;
 
   final Ref ref;
+
+  final Map<int, int> _retryAttempts = {};
+  final Set<int> _pendingRetry = {};
+  Timer? _retryTimer;
 
   Future<void> hydrate(List<int> seriesIds) async {
     if (seriesIds.isEmpty) return;
@@ -23,21 +29,27 @@ class SubscriptionCardsHydrater {
     final status = ref.read(connectivityStatusProvider).value;
     if (status == AppConnectivityStatus.offline) return;
 
-    if (!_hasBudget()) return;
+    if (!_hasBudget()) {
+      _scheduleRetry(seriesIds);
+      return;
+    }
 
-    final dao = ref.read(metronEntityDaoProvider);
+    final localCatalog = ref.read(localCatalogRepositoryProvider);
     final repository = ref.read(metronRepositoryProvider);
 
     final missingIds = <int>[];
     for (final seriesId in seriesIds) {
-      final series = await dao.getSeries(seriesId);
-      final issues = await dao.getIssuesBySeries(seriesId, limit: 1);
+      final series = await localCatalog.getSeries(seriesId);
+      final issues = await localCatalog.getIssuesBySeries(seriesId, limit: 1);
       if (series == null || series.name.trim().isEmpty || issues.isEmpty) {
         missingIds.add(seriesId);
+      } else {
+        _retryAttempts.remove(seriesId);
       }
     }
     if (missingIds.isEmpty) return;
 
+    final failedIds = <int>[];
     await _runInBackground(() => mapWithConcurrency(
           missingIds,
           (seriesId) async {
@@ -48,15 +60,39 @@ class SubscriptionCardsHydrater {
                 page: 1,
                 limit: _issueFetchLimit,
               );
+              _retryAttempts.remove(seriesId);
             } catch (e) {
+              failedIds.add(seriesId);
               AppLogger.warning(
-                'Failed to hydrate subscription card for series $seriesId',
+                "Failed to hydrate subscription card for series $seriesId",
                 error: e,
               );
             }
           },
           maxConcurrency: _maxHydrationConcurrency,
         ));
+
+    if (failedIds.isNotEmpty) {
+      _scheduleRetry(failedIds);
+    }
+  }
+
+  void _scheduleRetry(Iterable<int> seriesIds) {
+    final due = <int>[];
+    for (final seriesId in seriesIds) {
+      final attempts = _retryAttempts[seriesId] ?? 0;
+      if (attempts >= _maxRetryAttempts) continue;
+      _retryAttempts[seriesId] = attempts + 1;
+      due.add(seriesId);
+    }
+    if (due.isEmpty) return;
+    _pendingRetry.addAll(due);
+    _retryTimer ??= Timer(_retryDelay, () {
+      _retryTimer = null;
+      final batch = _pendingRetry.toList(growable: false);
+      _pendingRetry.clear();
+      unawaited(hydrate(batch));
+    });
   }
 
   bool _hasBudget() {
@@ -70,5 +106,5 @@ class SubscriptionCardsHydrater {
 }
 
 final subscriptionCardsHydraterProvider = Provider<SubscriptionCardsHydrater>(
-  (ref) => SubscriptionCardsHydrater(ref),
+  SubscriptionCardsHydrater.new,
 );

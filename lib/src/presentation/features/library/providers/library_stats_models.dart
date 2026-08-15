@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 enum LibraryFilter { week, month, year, allTime }
 

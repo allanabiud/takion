@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 Future<void> showEditMyDetailsSheet(
   BuildContext context,
@@ -17,22 +17,22 @@ Future<void> showEditMyDetailsSheet(
   if (!context.mounted) return;
   final item = detailsAsync.item;
   final quantityController = TextEditingController(
-    text: item != null ? item.quantityOwned.toString() : '',
+    text: item != null ? item.quantityOwned.toString() : "",
   );
   final priceController = TextEditingController(
-    text: item?.pricePaid?.toStringAsFixed(2) ?? '',
+    text: item?.pricePaid?.toStringAsFixed(2) ?? "",
   );
   final conditionController = TextEditingController(
-    text: item?.conditionGrade ?? '',
+    text: item?.conditionGrade ?? "",
   );
-  final notesController = TextEditingController(text: item?.notes ?? '');
+  final notesController = TextEditingController(text: item?.notes ?? "");
   var format = item?.format;
   var purchaseDate = item?.purchaseDate;
   var isEditing = item == null;
 
   await TakionBottomSheet.show<void>(
     context: context,
-    title: 'My Details',
+    title: "My Details",
     child: Consumer(
       builder: (context, ref, _) {
         final saveState = ref.watch(issueMyDetailsControllerProvider(issueId));
@@ -47,7 +47,7 @@ Future<void> showEditMyDetailsSheet(
                   children: [
                     Row(
                       children: [
-                        const Text('Quantity Owned'),
+                        const Text("Quantity Owned"),
                         const Spacer(),
                         IconButton(
                           onPressed: saveState.isLoading
@@ -90,7 +90,7 @@ Future<void> showEditMyDetailsSheet(
                       readOnly: true,
                       controller: TextEditingController(
                         text: purchaseDate == null
-                            ? ''
+                            ? ""
                             : DateFormatter.comicDate(purchaseDate!),
                       ),
                       onTap: saveState.isLoading
@@ -108,7 +108,7 @@ Future<void> showEditMyDetailsSheet(
                               }
                             },
                       decoration: const InputDecoration(
-                        labelText: 'Purchase Date',
+                        labelText: "Purchase Date",
                         suffixIcon: Icon(Icons.calendar_today_outlined),
                       ),
                     ),
@@ -120,25 +120,25 @@ Future<void> showEditMyDetailsSheet(
                             isExpanded: true,
                             initialValue: format,
                             decoration: const InputDecoration(
-                              labelText: 'Format',
+                              labelText: "Format",
                             ),
-                            hint: const Text('Select format'),
+                            hint: const Text("Select format"),
                             items: const [
                               DropdownMenuItem(
                                 value: null,
-                                child: Text('Not set'),
+                                child: Text("Not set"),
                               ),
                               DropdownMenuItem(
                                 value: LibraryItemFormat.print,
-                                child: Text('Print'),
+                                child: Text("Print"),
                               ),
                               DropdownMenuItem(
                                 value: LibraryItemFormat.digital,
-                                child: Text('Digital'),
+                                child: Text("Digital"),
                               ),
                               DropdownMenuItem(
                                 value: LibraryItemFormat.both,
-                                child: Text('Both'),
+                                child: Text("Both"),
                               ),
                             ],
                             onChanged: saveState.isLoading
@@ -156,7 +156,7 @@ Future<void> showEditMyDetailsSheet(
                               decimal: true,
                             ),
                             decoration: const InputDecoration(
-                              labelText: 'Price Paid',
+                              labelText: "Price Paid",
                             ),
                           ),
                         ),
@@ -167,7 +167,7 @@ Future<void> showEditMyDetailsSheet(
                       controller: conditionController,
                       enabled: !saveState.isLoading,
                       decoration: const InputDecoration(
-                        labelText: 'Condition Grade',
+                        labelText: "Condition Grade",
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -177,7 +177,7 @@ Future<void> showEditMyDetailsSheet(
                       minLines: 2,
                       maxLines: 5,
                       decoration: const InputDecoration(
-                        labelText: 'Additional Notes',
+                        labelText: "Additional Notes",
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -187,7 +187,7 @@ Future<void> showEditMyDetailsSheet(
                           onPressed: saveState.isLoading
                               ? null
                               : () => setSheetState(() => isEditing = false),
-                          child: const Text('Cancel'),
+                          child: const Text("Cancel"),
                         ),
                         const Spacer(),
                         FilledButton(
@@ -238,7 +238,7 @@ Future<void> showEditMyDetailsSheet(
                                       TakionAlerts.safeError(
                                         context,
                                         s.error,
-                                        userMessage: 'Failed to save changes',
+                                        userMessage: "Failed to save changes",
                                       );
                                     }
                                     return;
@@ -255,7 +255,7 @@ Future<void> showEditMyDetailsSheet(
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save Details'),
+                              : const Text("Save Details"),
                         ),
                       ],
                     ),
@@ -273,13 +273,13 @@ Future<void> showEditMyDetailsSheet(
                   if (item != null) ...[
                     _detailTile(
                       icon: Icons.inventory_2_outlined,
-                      label: 'Quantity Owned',
+                      label: "Quantity Owned",
                       value: item.quantityOwned.toString(),
                       theme: theme,
                     ),
                     _detailTile(
                       icon: Icons.library_books_outlined,
-                      label: 'Format',
+                      label: "Format",
                       value:
                           item.format.name[0].toUpperCase() +
                           item.format.name.substring(1),
@@ -288,14 +288,14 @@ Future<void> showEditMyDetailsSheet(
                     if (item.pricePaid != null)
                       _detailTile(
                         icon: Icons.attach_money,
-                        label: 'Price Paid',
-                        value: '\$${item.pricePaid!.toStringAsFixed(2)}',
+                        label: "Price Paid",
+                        value: "\$${item.pricePaid!.toStringAsFixed(2)}",
                         theme: theme,
                       ),
                     if (item.purchaseDate != null)
                       _detailTile(
                         icon: Icons.calendar_month_outlined,
-                        label: 'Purchase Date',
+                        label: "Purchase Date",
                         value: DateFormatter.comicDate(item.purchaseDate!),
                         theme: theme,
                       ),
@@ -303,14 +303,14 @@ Future<void> showEditMyDetailsSheet(
                         item.conditionGrade!.trim().isNotEmpty)
                       _detailTile(
                         icon: Icons.checklist_outlined,
-                        label: 'Condition Grade',
+                        label: "Condition Grade",
                         value: item.conditionGrade!.trim(),
                         theme: theme,
                       ),
                     if (item.notes != null && item.notes!.trim().isNotEmpty)
                       _detailTile(
                         icon: Icons.notes_outlined,
-                        label: 'Notes',
+                        label: "Notes",
                         value: item.notes!.trim(),
                         theme: theme,
                       ),
@@ -319,7 +319,7 @@ Future<void> showEditMyDetailsSheet(
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Center(
                         child: Text(
-                          'No details saved.',
+                          "No details saved.",
                           style: theme.textTheme.bodyMedium,
                         ),
                       ),
@@ -331,7 +331,7 @@ Future<void> showEditMyDetailsSheet(
                     child: FilledButton.icon(
                       onPressed: () => setSheetState(() => isEditing = true),
                       icon: const Icon(Icons.edit_outlined, size: 18),
-                      label: const Text('Edit'),
+                      label: const Text("Edit"),
                     ),
                   ),
                 ],
@@ -396,7 +396,7 @@ Widget _detailTile({
 void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
   TakionBottomSheet.show<void>(
     context: context,
-    title: 'Reading History',
+    title: "Reading History",
     child: Consumer(
       builder: (context, ref, _) {
         final detailsAsync = ref.watch(issueMyDetailsProvider(issueId));
@@ -412,7 +412,7 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
             ),
           ),
           error: (e, _) => Text(
-            TakionAlerts.cleanError(e, fallback: 'Something went wrong'),
+            TakionAlerts.cleanError(e, fallback: "Something went wrong"),
           ),
           data: (data) {
             final logs = data.readLogs;
@@ -422,7 +422,7 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                 if (logs.isEmpty)
                   const EmptyContentState(
                     icon: Icons.history_outlined,
-                    message: 'No reading history.',
+                    message: "No reading history.",
                   )
                 else
                   Flexible(
@@ -438,7 +438,7 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                               ? Text(log.notes!.trim())
                               : null,
                           trailing: IconButton(
-                            tooltip: 'Delete read log',
+                            tooltip: "Delete read log",
                             onPressed: () {
                               ref
                                   .read(
@@ -461,7 +461,7 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                   child: FilledButton.tonalIcon(
                     onPressed: () => showLogReadPicker(context, ref, issueId),
                     icon: const Icon(Icons.add, size: 18, weight: 700),
-                    label: const Text('Log Read', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text("Log Read", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

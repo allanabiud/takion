@@ -1,15 +1,14 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
 
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/universes/providers/universe_details_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/universes/providers/universe_details_provider.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class UniverseDetailsScreen extends ConsumerStatefulWidget {
@@ -27,56 +26,33 @@ class UniverseDetailsScreen extends ConsumerStatefulWidget {
       _UniverseDetailsScreenState();
 }
 
-class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
-  Uri? _resourceUri(UniverseDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
+class _UniverseDetailsScreenState
+    extends ConsumerState<UniverseDetailsScreen>
+    with
+        ResourceUrlActions<UniverseDetails>,
+        DetailRefreshActions<UniverseDetails> {
+  @override
+  String? resourceUrlOf(UniverseDetails details) => details.resourceUrl;
+
+  @override
+  String get resourceLabel => "universe";
+
+  @override
+  String shareSubjectOf(UniverseDetails details) => details.name;
+
+  @override
+  String get entityLabel => "Universe";
+
+  @override
+  Future<UniverseDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getUniverseDetails(widget.universeId, forceRefresh: true);
   }
 
-  Future<void> _shareResourceUrl(UniverseDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'universe');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
-
-  Future<void> _openResourceUrlInBrowser(UniverseDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'universe');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'universe');
-    }
-  }
-
-  Future<void> _refreshUniverseData(UniverseDetails details) async {
-    try {
-      final newDetails = await ref
-          .read(catalogRepositoryProvider)
-          .getUniverseDetails(details.id, forceRefresh: true);
-      final currentDetails = ref
-          .read(universeDetailsProvider(details.id))
-          .asData
-          ?.value;
-      if (currentDetails != newDetails) {
-        ref.invalidate(universeDetailsProvider(details.id));
-      }
-      if (mounted) {
-        TakionAlerts.success(context, 'Universe details refreshed');
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh universe details');
-      }
-    }
+  @override
+  void invalidateDetails() {
+    ref.invalidate(universeDetailsProvider(widget.universeId));
   }
 
   @override
@@ -85,15 +61,15 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen> {
 
     return DetailScreenShell<UniverseDetails>(
       asyncValue: detailsAsync,
-      entityType: 'universe',
+      entityType: "universe",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'universe-image-${d.id}',
+      toHeroTag: (d) => "universe-image-${d.id}",
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.designation,
-      onRefresh: (d) => _refreshUniverseData(d),
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onRefresh: (_) => refreshDetails(context),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 300,
       heroHeight: 260,
       initialChildSize: 0.55,
@@ -139,25 +115,28 @@ class _UniverseInfoSection extends StatelessWidget {
     final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
 
     final contentItems = <InfoGridItem>[
-      InfoGridItem(label: 'Name', value: details.name),
+      InfoGridItem(label: "Name", value: details.name),
       if (details.designation != null && details.designation!.trim().isNotEmpty)
-        InfoGridItem(label: 'Designation', value: details.designation!),
+        InfoGridItem(label: "Designation", value: details.designation!),
       if (details.publisher != null)
-        InfoGridItem(label: 'Publisher', value: details.publisher!.name),
+        InfoGridItem(label: "Publisher", value: details.publisher!.name),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DETAILS'),
+        const SectionHeader(title: "DETAILS"),
         const SizedBox(height: 12),
         InfoGrid(items: contentItems),
         const SizedBox(height: 16),
-        _buildDatabaseIdsSection(context),
+        DatabaseIdsSection(
+          metronId: details.id,
+          gcdId: details.gcdId,
+        ),
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
@@ -171,46 +150,5 @@ class _UniverseInfoSection extends StatelessWidget {
     final modified = details.modified;
     if (modified == null) return null;
     return DateFormatter.isoDateTime(modified);
-  }
-
-  Widget _buildDatabaseIdsSection(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    addEntry('Metron', '${details.id}');
-    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(spacing: 6, runSpacing: 6, children: entries),
-      ],
-    );
   }
 }

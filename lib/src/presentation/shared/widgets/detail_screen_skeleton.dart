@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class DetailScreenSkeleton extends StatelessWidget {
   const DetailScreenSkeleton({
@@ -86,12 +86,12 @@ class DetailScreenSkeleton extends StatelessWidget {
 }
 
 Widget _buildSkeletonRow() {
-  return Row(
+  return const Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const SkeletonBox(width: 60, height: 80, borderRadius: 8),
-      const SizedBox(width: 12),
-      const Expanded(
+      SkeletonBox(width: 60, height: 80, borderRadius: 8),
+      SizedBox(width: 12),
+      Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

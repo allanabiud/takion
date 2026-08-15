@@ -1,9 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/data/common/drift/database.dart' hide SeriesSubscription;
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 const _subscriptionsPageSize = metronDefaultPageSize;
 
@@ -50,9 +49,7 @@ final subscribedSeriesListProvider =
     });
 
 final subscribedSeriesPageProvider = FutureProvider.family<SeriesListPage, int>(
-  (ref, page) {
-    return _loadSubscribedSeriesPage(ref, page);
-  },
+  _loadSubscribedSeriesPage,
 );
 
 class SubscriptionSeriesCardData {
@@ -68,19 +65,20 @@ class SubscriptionSeriesCardData {
 }
 
 final seriesStreamProvider = StreamProvider.autoDispose
-    .family<MetronSery?, int>((ref, seriesId) {
-      final dao = ref.watch(metronEntityDaoProvider);
-      return dao.watchSeries(seriesId);
+    .family<SeriesList?, int>((ref, seriesId) {
+      final localCatalog = ref.watch(localCatalogRepositoryProvider);
+      return localCatalog.watchSeries(seriesId);
     });
 
 /// Reads a subscription's cover, series name, and next release purely from the local cache (no network).
-final subscriptionSeriesCardProvider = StreamProvider.autoDispose
+final subscriptionSeriesCardProvider = StreamProvider
     .family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
-      final dao = ref.watch(metronEntityDaoProvider);
+      ref.keepAlive();
+      final localCatalog = ref.watch(localCatalogRepositoryProvider);
       final seriesAsync = ref.watch(seriesStreamProvider(seriesId));
       final seriesName = seriesAsync.value?.name;
 
-      return dao.watchIssuesBySeries(seriesId).map((issues) {
+      return localCatalog.watchIssuesBySeries(seriesId).map((issues) {
         String? mostRecentImage;
         String? nextIssueImage;
         DateTime? nextIssueDate;
@@ -94,13 +92,7 @@ final subscriptionSeriesCardProvider = StreamProvider.autoDispose
             mostRecentImage = issue.imageUrl;
           }
 
-          DateTime? releaseDate;
-          if (issue.storeDate != null) {
-            releaseDate = DateTime.tryParse(issue.storeDate!);
-          }
-          releaseDate ??= issue.coverDate != null
-              ? DateTime.tryParse(issue.coverDate!)
-              : null;
+          final releaseDate = issue.storeDate ?? issue.coverDate;
           if (releaseDate == null) continue;
           final day = DateTime(
             releaseDate.year,
@@ -122,19 +114,10 @@ final subscriptionSeriesCardProvider = StreamProvider.autoDispose
     });
 
 Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {
-  final db = ref.read(driftDatabaseProvider);
-  final localSeries = await db.metronEntityDao.getSeries(seriesId);
+  final localCatalog = ref.read(localCatalogRepositoryProvider);
+  final localSeries = await localCatalog.getSeries(seriesId);
   if (localSeries != null) {
-    return SeriesList(
-      id: localSeries.id,
-      name: localSeries.name,
-      yearBegan: localSeries.yearBegan,
-      volume: localSeries.volume,
-      issueCount: localSeries.issueCount,
-      modified: localSeries.modified != null
-          ? DateTime.tryParse(localSeries.modified!)
-          : null,
-    );
+    return localSeries;
   }
 
   return _seriesListFromSubscriptionFallback(seriesId);
@@ -143,7 +126,7 @@ Future<SeriesList> _loadSeriesListItem(Ref ref, int seriesId) async {
 SeriesList _seriesListFromSubscriptionFallback(int seriesId) {
   return SeriesList(
     id: seriesId,
-    name: 'Series $seriesId',
+    name: "Series $seriesId",
     yearBegan: 0,
     volume: 1,
   );
@@ -177,7 +160,7 @@ Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
           results[index] = await _loadSeriesListItem(ref, seriesId);
         } catch (e) {
           AppLogger.warning(
-            'Failed to load subscription series list item $seriesId',
+            "Failed to load subscription series list item $seriesId",
             error: e,
           );
           results[index] = _seriesListFromSubscriptionFallback(seriesId);
@@ -199,13 +182,13 @@ Future<SeriesListPage> _loadSubscribedSeriesPage(Ref ref, int page) async {
           : offset + seriesList.length,
       currentPage: safePage,
       previous: safePage > 1
-          ? 'app://subscriptions?page=${safePage - 1}'
+          ? "app://subscriptions?page=${safePage - 1}"
           : null,
-      next: hasNext ? 'app://subscriptions?page=${safePage + 1}' : null,
+      next: hasNext ? "app://subscriptions?page=${safePage + 1}" : null,
       results: seriesList,
     );
   } catch (e) {
-    AppLogger.error('Failed to load subscriptions page', error: e);
+    AppLogger.error("Failed to load subscriptions page", error: e);
     rethrow;
   }
 }

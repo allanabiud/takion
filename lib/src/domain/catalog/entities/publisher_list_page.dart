@@ -1,5 +1,5 @@
-import 'package:takion/src/domain/catalog/entities/entities.dart';
-import 'package:takion/src/domain/common/search_utils.dart';
+import "package:takion/src/domain/catalog/entities/entities.dart";
+import "package:takion/src/domain/common/search_utils.dart";
 
 class PublisherListPage with SearchPageMixin {
   const PublisherListPage({

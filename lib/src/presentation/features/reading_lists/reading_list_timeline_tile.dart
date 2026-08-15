@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:timelines_plus/timelines_plus.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:timelines_plus/timelines_plus.dart";
 
 class ReadingListTimelineTile extends ConsumerWidget {
   final LocalReadingList list;
@@ -41,12 +41,12 @@ class ReadingListTimelineTile extends ConsumerWidget {
       readingListItemEffectiveReadStatusProvider(item),
     );
     final isRead = isReadAsync.value ?? item.isRead;
-    final id = int.tryParse(item.targetId.replaceAll(RegExp(r'^.*-'), '')) ?? 0;
+    final id = int.tryParse(item.targetId.replaceAll(RegExp(r"^.*-"), "")) ?? 0;
 
-    String fallbackName([String prefix = 'Issue']) {
+    String fallbackName([String prefix = "Issue"]) {
       final seriesName = item.seriesName?.trim();
       if (seriesName != null && seriesName.isNotEmpty) return seriesName;
-      return id > 0 ? '$prefix #$id' : prefix;
+      return id > 0 ? "$prefix #$id" : prefix;
     }
 
     IssueList fallbackIssue([int? withId]) {
@@ -55,7 +55,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
       return IssueList(
         id: effectiveId > 0 ? effectiveId : null,
         name: fallbackName(),
-        number: item.issueNumber ?? '',
+        number: item.issueNumber ?? "",
         series:
             item.seriesId != null && seriesName != null && seriesName.isNotEmpty
             ? Series(
@@ -115,7 +115,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
               id: id,
               name: item.seriesName?.trim().isNotEmpty == true
                   ? item.seriesName!
-                  : (id > 0 ? 'Series #$id' : 'Series'),
+                  : (id > 0 ? "Series #$id" : "Series"),
               yearBegan: item.yearBegan,
               volume: item.seriesVolume,
             );
@@ -144,7 +144,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
             id: cachedMetadata.id,
             name: issueSeries?.name.trim().isNotEmpty == true
                 ? issueSeries!.name
-                : (id > 0 ? 'Issue #$id' : 'Issue'),
+                : (id > 0 ? "Issue #$id" : "Issue"),
             number: cachedMetadata.number,
             series: series,
             image: cachedMetadata.image,
@@ -169,7 +169,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
                 id: id,
                 name: item.seriesName?.trim().isNotEmpty == true
                     ? item.seriesName!
-                    : (id > 0 ? 'Series #$id' : 'Series'),
+                    : (id > 0 ? "Series #$id" : "Series"),
                 yearBegan: item.yearBegan,
                 volume: item.seriesVolume,
               ),
@@ -189,7 +189,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
                 id: id,
                 name: item.seriesName?.trim().isNotEmpty == true
                     ? item.seriesName!
-                    : (id > 0 ? 'Series #$id' : 'Series'),
+                    : (id > 0 ? "Series #$id" : "Series"),
                 yearBegan: item.yearBegan,
                 volume: item.seriesVolume,
               ),
@@ -359,7 +359,7 @@ class ReadingListTimelineTile extends ConsumerWidget {
                 ? const Icon(Icons.check, size: 16, color: Colors.white)
                 : Center(
                     child: Text(
-                      '$index',
+                      "$index",
                       style: TextStyle(
                         color: unreadConnectorColor,
                         fontWeight: FontWeight.bold,

@@ -1,4 +1,4 @@
-import 'package:takion/src/data/catalog/dto/dto.dart';
+import "package:takion/src/data/catalog/dto/dto.dart";
 
 class ArcListResponseDto {
   const ArcListResponseDto({
@@ -14,7 +14,7 @@ class ArcListResponseDto {
   final List<ArcListDto> results;
 
   factory ArcListResponseDto.fromJson(Map<String, dynamic> json) {
-    final rawResults = json['results'];
+    final rawResults = json["results"];
     final results = rawResults is List
         ? rawResults
               .whereType<Map<String, dynamic>>()
@@ -23,9 +23,9 @@ class ArcListResponseDto {
         : <ArcListDto>[];
 
     return ArcListResponseDto(
-      count: (json['count'] as num?)?.toInt() ?? results.length,
-      next: json['next'] as String?,
-      previous: json['previous'] as String?,
+      count: (json["count"] as num?)?.toInt() ?? results.length,
+      next: json["next"] as String?,
+      previous: json["previous"] as String?,
       results: results,
     );
   }

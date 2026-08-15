@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "package:dio/dio.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 abstract class ArcRepository {
   Future<ArcListPage> getArcList({
@@ -11,8 +11,6 @@ abstract class ArcRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
-
-  Future<int> refreshArcListDelta({DateTime? modifiedGt});
 
   Future<ArcListPage> searchArcs(
     String query, {

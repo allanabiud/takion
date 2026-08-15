@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class LocalReadingListDetailsSheetHeader extends StatefulWidget {
   final LocalReadingList list;
@@ -68,7 +68,7 @@ class _LocalReadingListDetailsSheetHeaderState
                     ),
                   ),
                   Text(
-                    '${(widget.progress * 100).toInt()}%',
+                    "${(widget.progress * 100).toInt()}%",
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -140,19 +140,19 @@ class _LocalReadingListDetailsSheetHeaderState
     final type = detail.listType?.trim();
     final username = detail.username?.trim();
     final attributionHost = Uri.tryParse(
-      detail.attributionUrl ?? '',
+      detail.attributionUrl ?? "",
     )?.host.trim();
 
     if (source != null && source.isNotEmpty) {
-      badges.add('Source: $source');
+      badges.add("Source: $source");
     }
     if (username != null && username.isNotEmpty) {
-      badges.add('Attribution: @$username');
+      badges.add("Attribution: @$username");
     } else if (attributionHost != null && attributionHost.isNotEmpty) {
-      badges.add('Attribution: $attributionHost');
+      badges.add("Attribution: $attributionHost");
     }
     if (type != null && type.isNotEmpty) {
-      badges.add('Type: $type');
+      badges.add("Type: $type");
     }
 
     if (badges.isEmpty) return const SizedBox.shrink();
@@ -178,17 +178,17 @@ class _LocalReadingListDetailsSheetHeaderState
     final source = list.metronAttributionSource?.trim();
     final type = list.metronListType?.trim();
     final attributionHost = Uri.tryParse(
-      list.metronAttributionUrl ?? '',
+      list.metronAttributionUrl ?? "",
     )?.host.trim();
 
     if (source != null && source.isNotEmpty) {
-      badges.add('Source: $source');
+      badges.add("Source: $source");
     }
     if (attributionHost != null && attributionHost.isNotEmpty) {
-      badges.add('Attribution: $attributionHost');
+      badges.add("Attribution: $attributionHost");
     }
     if (type != null && type.isNotEmpty) {
-      badges.add('Type: $type');
+      badges.add("Type: $type");
     }
 
     if (badges.isEmpty) return const SizedBox.shrink();
@@ -246,7 +246,7 @@ class _LocalReadingListDetailsSheetHeaderState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader(title: 'SUMMARY'),
+                const SectionHeader(title: "SUMMARY"),
                 const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
@@ -261,8 +261,8 @@ class _LocalReadingListDetailsSheetHeaderState
                   const SizedBox(height: 4),
                   Text(
                     _isDescriptionExpanded
-                        ? 'Tap to read less'
-                        : 'Tap to read more',
+                        ? "Tap to read less"
+                        : "Tap to read more",
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,

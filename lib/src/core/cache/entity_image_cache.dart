@@ -1,8 +1,8 @@
-import 'dart:collection';
+import "dart:collection";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
 
 final entityImageCacheProvider = Provider<EntityImageCache>((ref) {
   final database = ref.watch(driftDatabaseProvider);
@@ -28,7 +28,7 @@ class EntityImageCache {
   );
 
   Future<String?> get(String entityType, int id) async {
-    final key = '$entityType:$id';
+    final key = "$entityType:$id";
     if (_cache.containsKey(key)) {
       _promoteToMru(key);
       return _cache[key];
@@ -49,7 +49,7 @@ class EntityImageCache {
   }
 
   String? getCached(String entityType, int id) {
-    final key = '$entityType:$id';
+    final key = "$entityType:$id";
     if (_cache.containsKey(key)) {
       _promoteToMru(key);
       return _cache[key];
@@ -58,7 +58,7 @@ class EntityImageCache {
   }
 
   Future<void> set(String entityType, int id, String imageUrl) async {
-    final key = '$entityType:$id';
+    final key = "$entityType:$id";
     _setInMemory(key, imageUrl);
     await database.imageCacheDao.put(
       key,
@@ -73,7 +73,7 @@ class EntityImageCache {
     final missingIds = <int>[];
 
     for (final id in ids) {
-      final key = '$entityType:$id';
+      final key = "$entityType:$id";
       if (_cache.containsKey(key)) {
         _promoteToMru(key);
         result[id] = _cache[key];
@@ -83,10 +83,10 @@ class EntityImageCache {
     }
 
     if (missingIds.isNotEmpty) {
-      final keys = [for (final id in missingIds) '$entityType:$id'];
+      final keys = [for (final id in missingIds) "$entityType:$id"];
       final cachedMap = await database.imageCacheDao.getByKeys(keys);
       for (final id in missingIds) {
-        final key = '$entityType:$id';
+        final key = "$entityType:$id";
         final cached = cachedMap[key];
         if (cached?.imageUrl != null) {
           _setInMemory(key, cached!.imageUrl);
@@ -103,7 +103,7 @@ class EntityImageCache {
   Future<void> setMany(String entityType, Map<int, String> entries) async {
     final dbEntries = <String, String>{};
     for (final entry in entries.entries) {
-      final key = '$entityType:${entry.key}';
+      final key = "$entityType:${entry.key}";
       _setInMemory(key, entry.value);
       dbEntries[key] = entry.value;
     }

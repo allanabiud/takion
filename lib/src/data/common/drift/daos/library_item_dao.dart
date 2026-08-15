@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class LibraryItemStatusRow {
   const LibraryItemStatusRow({
@@ -92,7 +92,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         seriesId: seriesId,
         seriesName: (name != null && name.isNotEmpty)
             ? name
-            : 'Series $seriesId',
+            : "Series $seriesId",
         volume: vol,
         yearBegan: year,
         issueCount: totalIssues,
@@ -179,7 +179,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
           ownershipStatus: row.read(
                 attachedDatabase.libraryItems.ownershipStatus,
               ) ??
-              'notOwned',
+              "notOwned",
           isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
           rating: row.read(attachedDatabase.libraryItems.rating),
         ),
@@ -205,7 +205,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
             ownershipStatus: row.read(
                   attachedDatabase.libraryItems.ownershipStatus,
                 ) ??
-                'notOwned',
+                "notOwned",
             isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
             rating: row.read(attachedDatabase.libraryItems.rating),
           ),
@@ -230,7 +230,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       ..addColumns([countAll()])
       ..where(
         attachedDatabase.libraryItems.metronSeriesId.equals(metronSeriesId) &
-            attachedDatabase.libraryItems.ownershipStatus.equals('owned'),
+            attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
       );
     final result = await query.getSingle();
     return result.read(countAll()) as int;
@@ -245,7 +245,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       ])
       ..where(
         attachedDatabase.libraryItems.metronSeriesId.isIn(seriesIds) &
-            attachedDatabase.libraryItems.ownershipStatus.equals('owned'),
+            attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
       )
       ..groupBy([attachedDatabase.libraryItems.metronSeriesId]);
     final rows = await query.get();
@@ -298,7 +298,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       await into(attachedDatabase.libraryItems).insertOnConflictUpdate(entry);
       if (entry.id.present) {
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:library_items:${entry.id.value}',
+          "delete:library_items:${entry.id.value}",
         );
       }
     });
@@ -310,7 +310,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         attachedDatabase.libraryItems,
       )..where((t) => t.id.equals(id))).go();
       await attachedDatabase.syncMetaDao.set(
-        'delete:library_items:$id',
+        "delete:library_items:$id",
         DateTime.now().toUtc().toIso8601String(),
       );
     });
@@ -319,26 +319,26 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   Stream<List<LibraryItem>> watchCollected() {
     return (select(
       attachedDatabase.libraryItems,
-    )..where((t) => t.ownershipStatus.equals('owned'))).watch();
+    )..where((t) => t.ownershipStatus.equals("owned"))).watch();
   }
 
   Stream<List<LibraryItem>> watchWishlist() {
     return (select(
       attachedDatabase.libraryItems,
-    )..where((t) => t.ownershipStatus.equals('wishlist'))).watch();
+    )..where((t) => t.ownershipStatus.equals("wishlist"))).watch();
   }
 
   Future<List<int>> getOwnedIssueIds() async {
     final rows = await (select(
       attachedDatabase.libraryItems,
-    )..where((t) => t.ownershipStatus.equals('owned'))).get();
+    )..where((t) => t.ownershipStatus.equals("owned"))).get();
     return rows.map((r) => r.metronIssueId).toList();
   }
 
   Future<List<int>> getWishlistedIssueIds() async {
     final rows = await (select(
       attachedDatabase.libraryItems,
-    )..where((t) => t.ownershipStatus.equals('wishlist'))).get();
+    )..where((t) => t.ownershipStatus.equals("wishlist"))).get();
     return rows.map((r) => r.metronIssueId).toList();
   }
 
@@ -408,7 +408,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     for (final entry in entries) {
       if (entry.id.present) {
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:library_items:${entry.id.value}',
+          "delete:library_items:${entry.id.value}",
         );
       }
     }
@@ -425,7 +425,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
           for (final id in ids)
             SyncMetaCompanion.insert(
-              key: 'delete:library_items:$id',
+              key: "delete:library_items:$id",
               value: now,
             ),
         ]);
@@ -446,7 +446,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
           for (final id in ids)
             SyncMetaCompanion.insert(
-              key: 'delete:library_items:$id',
+              key: "delete:library_items:$id",
               value: now,
             ),
         ]);
@@ -459,7 +459,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Stream<List<LibraryReadLog>> watchReadLogsByIssueId(int metronIssueId) {
-    final itemId = 'lib-$metronIssueId';
+    final itemId = "lib-$metronIssueId";
     return (select(
       attachedDatabase.libraryReadLogs,
     )..where((t) => t.collectionItemId.equals(itemId))).watch();

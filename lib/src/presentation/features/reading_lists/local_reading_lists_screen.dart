@@ -1,14 +1,14 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/create_or_import_local_reading_list_sheet.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/create_or_import_local_reading_list_sheet.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_card.dart";
 
 enum _ReadingListFilter { all, local, metron }
 
@@ -46,12 +46,12 @@ class _LocalReadingListsScreenState
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search lists...',
+                  hintText: "Search lists...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close search',
+                    tooltip: "Close search",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -64,12 +64,12 @@ class _LocalReadingListsScreenState
                   ),
                 ),
               )
-            : const Text('Reading Lists'),
+            : const Text("Reading Lists"),
         actions: _isSearching
             ? null
             : [
                 IconButton(
-                  tooltip: 'Search',
+                  tooltip: "Search",
                   onPressed: () => setState(() => _isSearching = true),
                   icon: const Icon(Icons.search),
                 ),
@@ -97,7 +97,7 @@ class _LocalReadingListsScreenState
           if (lists.isEmpty) {
             content = const EmptyContentState(
               icon: Icons.list_alt_outlined,
-              message: 'No reading lists created.',
+              message: "No reading lists created.",
             );
           } else if (filtered.isEmpty) {
             if (_isSearching) {
@@ -108,17 +108,17 @@ class _LocalReadingListsScreenState
             } else if (_filter == _ReadingListFilter.local) {
               content = const EmptyContentState(
                 icon: Icons.list_alt_outlined,
-                message: 'No local reading lists created.',
+                message: "No local reading lists created.",
               );
             } else if (_filter == _ReadingListFilter.metron) {
               content = EmptyContentState(
                 icon: Icons.cloud_download_outlined,
-                message: 'No Metron reading lists imported.',
-                actionLabel: 'Browse Metron',
+                message: "No Metron reading lists imported.",
+                actionLabel: "Browse Metron",
                 onAction: () {
                   context.pushRoute(const MetronReadingListBrowserRoute());
                 },
-                secondaryActionLabel: 'Browse Arcs',
+                secondaryActionLabel: "Browse Arcs",
                 onSecondaryAction: () {
                   context.pushRoute(const ArcBrowseRoute());
                 },
@@ -126,7 +126,7 @@ class _LocalReadingListsScreenState
             } else {
               content = const EmptyContentState(
                 icon: Icons.list_alt_outlined,
-                message: 'No reading lists found.',
+                message: "No reading lists found.",
               );
             }
           } else {
@@ -162,15 +162,15 @@ class _LocalReadingListsScreenState
                     segments: const [
                       ButtonSegment(
                         value: _ReadingListFilter.all,
-                        label: Text('All'),
+                        label: Text("All"),
                       ),
                       ButtonSegment(
                         value: _ReadingListFilter.local,
-                        label: Text('Local'),
+                        label: Text("Local"),
                       ),
                       ButtonSegment(
                         value: _ReadingListFilter.metron,
-                        label: Text('Metron'),
+                        label: Text("Metron"),
                       ),
                     ],
                     selected: {_filter},
@@ -184,12 +184,12 @@ class _LocalReadingListsScreenState
             ],
           );
         },
-        loading: () => _buildSkeletonList(),
+        loading: _buildSkeletonList,
         error: (e, _) => Center(
           child: Text(
             TakionAlerts.cleanError(
               e,
-              fallback: 'Failed to load reading lists',
+              fallback: "Failed to load reading lists",
             ),
           ),
         ),
@@ -257,7 +257,7 @@ class _LocalReadingListsScreenState
                         height: coverHeight,
                         child: Stack(
                           children: [
-                            Positioned(
+                            const Positioned(
                               left: 0,
                               child: SkeletonBox(
                                 width: coverWidth * 0.85,
@@ -265,7 +265,7 @@ class _LocalReadingListsScreenState
                                 borderRadius: 6,
                               ),
                             ),
-                            Positioned(
+                            const Positioned(
                               right: 0,
                               child: SkeletonBox(
                                 width: coverWidth * 0.85,

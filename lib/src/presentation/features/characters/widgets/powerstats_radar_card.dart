@@ -1,7 +1,7 @@
-import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:fl_chart/fl_chart.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class PowerStatsRadarCard extends StatelessWidget {
   const PowerStatsRadarCard({super.key, required this.powerstats});
@@ -9,12 +9,12 @@ class PowerStatsRadarCard extends StatelessWidget {
   final SuperHeroPowerStats powerstats;
 
   static const _labels = [
-    'Intelligence',
-    'Strength',
-    'Speed',
-    'Durability',
-    'Power',
-    'Combat',
+    "Intelligence",
+    "Strength",
+    "Speed",
+    "Durability",
+    "Power",
+    "Combat",
   ];
 
   Color _getStatColor(int value, ThemeData theme) {
@@ -57,7 +57,7 @@ class PowerStatsRadarCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'POWERSTATS'),
+        const SectionHeader(title: "POWERSTATS"),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -116,10 +116,10 @@ class PowerStatsRadarCard extends StatelessWidget {
                   final valColor = _getStatColor(valInt, theme);
 
                   return RadarChartTitle(
-                    text: '$label: ',
+                    text: "$label: ",
                     children: [
                       TextSpan(
-                        text: '$valInt',
+                        text: "$valInt",
                         style: TextStyle(
                           color: valColor,
                           fontWeight: FontWeight.bold,
@@ -154,14 +154,14 @@ class PowerStatsRadarCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Average Power Level: ',
+                  "Average Power Level: ",
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  '$avg / 100',
+                  "$avg / 100",
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: _getStatColor(avg, theme),
                     fontWeight: FontWeight.bold,
@@ -176,7 +176,7 @@ class PowerStatsRadarCard extends StatelessWidget {
           children: [
             const Spacer(),
             Text(
-              'via SuperHero API',
+              "via SuperHero API",
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 10,

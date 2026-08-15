@@ -1,19 +1,19 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/teams/providers/team_details_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 @RoutePage()
 class TeamDetailsScreen extends ConsumerStatefulWidget {
@@ -30,56 +30,32 @@ class TeamDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<TeamDetailsScreen> createState() => _TeamDetailsScreenState();
 }
 
-class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
-  Uri? _resourceUri(TeamDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
+class _TeamDetailsScreenState
+    extends ConsumerState<TeamDetailsScreen>
+    with ResourceUrlActions<TeamDetails>, DetailRefreshActions<TeamDetails> {
+  @override
+  String? resourceUrlOf(TeamDetails details) => details.resourceUrl;
+
+  @override
+  String get resourceLabel => "team";
+
+  @override
+  String shareSubjectOf(TeamDetails details) => details.name;
+
+  @override
+  String get entityLabel => "Team";
+
+  @override
+  Future<TeamDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getTeamDetails(widget.teamId, forceRefresh: true);
   }
 
-  Future<void> _shareResourceUrl(TeamDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'team');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
-    );
-  }
-
-  Future<void> _openResourceUrlInBrowser(TeamDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'team');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'team');
-    }
-  }
-
-  Future<void> _refreshTeamData(TeamDetails details) async {
-    try {
-      final newDetails = await ref
-          .read(catalogRepositoryProvider)
-          .getTeamDetails(details.id, forceRefresh: true);
-      final currentDetails = ref
-          .read(teamDetailsProvider(details.id))
-          .asData
-          ?.value;
-      if (currentDetails != newDetails) {
-        ref.invalidate(teamDetailsProvider(details.id));
-      }
-      if (mounted) {
-        TakionAlerts.success(context, 'Team details refreshed');
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to refresh team details');
-      }
-    }
+  @override
+  void invalidateDetails() {
+    ref.invalidate(teamDetailsProvider(widget.teamId));
+    ref.invalidate(teamIssueListProvider);
   }
 
   @override
@@ -88,14 +64,14 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
 
     return DetailScreenShell<TeamDetails>(
       asyncValue: detailsAsync,
-      entityType: 'team',
+      entityType: "team",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
-      toHeroTag: (d) => 'team-image-${d.id}',
+      toHeroTag: (d) => "team-image-${d.id}",
       toTitle: (d) => d.name,
-      onRefresh: (d) => _refreshTeamData(d),
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onRefresh: (_) => refreshDetails(context),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>
           _buildTeamSheetSlivers(d, context, ref),
@@ -135,10 +111,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
     }
     if (hasCreators) {
       yield const SliverToBoxAdapter(child: SizedBox(height: 16));
-      yield SliverToBoxAdapter(
+      yield const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const SectionHeader(title: 'CREATORS'),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SectionHeader(title: "CREATORS"),
         ),
       );
       yield const SliverToBoxAdapter(child: SizedBox(height: 12));
@@ -164,10 +140,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
     }
     if (hasUniverses) {
       yield const SliverToBoxAdapter(child: SizedBox(height: 16));
-      yield SliverToBoxAdapter(
+      yield const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const SectionHeader(title: 'UNIVERSES'),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SectionHeader(title: "UNIVERSES"),
         ),
       );
       yield const SliverToBoxAdapter(child: SizedBox(height: 12));
@@ -182,7 +158,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
             itemBuilder: (context, index) {
               final universe = details.universes[index];
               return EntityCard(
-                entityType: 'universe',
+                entityType: "universe",
                 entityId: universe.id,
                 name: universe.name,
                 width: 140,
@@ -204,10 +180,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionHeader(
-              title: isIssuesLoading
-                  ? 'Issues'
+              title: (isIssuesLoading || issuesPreviewAsync.hasError)
+                  ? "Issues"
                   : '$totalIssueCount Issue${totalIssueCount == 1 ? '' : 's'}',
-              onViewAll: isIssuesLoading
+              onViewAll: (isIssuesLoading || issuesPreviewAsync.hasError)
                   ? null
                   : () => context.pushRoute(
                       TeamIssuesRoute(teamId: widget.teamId),
@@ -226,13 +202,23 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                       const ShimmerWidget(child: IssueCardSkeleton()),
                 ),
               )
+            else if (issuesPreviewAsync.hasError)
+              SizedBox(
+                height: 200,
+                child: AsyncStatePanel.error(
+                  errorMessage: "Failed to load issues",
+                  onRetry: () => ref.invalidate(
+                    teamDetailsIssuesProvider(widget.teamId),
+                  ),
+                ),
+              )
             else
               HorizontalPreviewSection(
-                title: '',
+                title: "",
                 onViewAll: null,
                 itemCount: issuesPreview.length,
                 height: 250,
-                emptyText: 'No issues available.',
+                emptyText: "No issues available.",
                 itemBuilder: (context, index) {
                   final issue = issuesPreview[index];
                   final issueId = issue.id;
@@ -240,7 +226,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen> {
                     issueId: issueId,
                     imageUrl: issue.image,
                     title:
-                        '${issue.series?.name ?? issue.name} #${issue.number}',
+                        "${issue.series?.name ?? issue.name} #${issue.number}",
                     seriesId: issue.series?.id,
                     seriesName: issue.series?.name,
                     issueNumber: issue.number,
@@ -284,11 +270,15 @@ class _TeamInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDatabaseIdsSection(context),
+        DatabaseIdsSection(
+          metronId: details.id,
+          comicVineId: details.cvId,
+          gcdId: details.gcdId,
+        ),
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
@@ -302,47 +292,5 @@ class _TeamInfoSection extends StatelessWidget {
     final modified = details.modified;
     if (modified == null) return null;
     return DateFormatter.isoDateTime(modified);
-  }
-
-  Widget _buildDatabaseIdsSection(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    addEntry('Metron', '${details.id}');
-    if (details.cvId != null) addEntry('CV', '${details.cvId}');
-    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(spacing: 6, runSpacing: 6, children: entries),
-      ],
-    );
   }
 }

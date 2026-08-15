@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 Widget imageErrorPlaceholder(
   BuildContext context,
@@ -9,7 +9,7 @@ Widget imageErrorPlaceholder(
   IconData? icon,
   double? iconSize,
 }) {
-  AppLogger.warning('Image load failed: $url', error: error);
+  AppLogger.warning("Image load failed: $url", error: error);
   final theme = Theme.of(context);
   return Container(
     color: label != null && label.isNotEmpty

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/widgets/section_header.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/section_header.dart";
 
 class DatabaseIdsSection extends StatelessWidget {
   const DatabaseIdsSection({
@@ -34,9 +34,9 @@ class DatabaseIdsSection extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Text(
-            '$label $value',
+            "$label $value",
             style: theme.textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
+              fontFamily: "monospace",
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -44,9 +44,9 @@ class DatabaseIdsSection extends StatelessWidget {
       );
     }
 
-    addEntry('Metron', '$metronId');
-    if (comicVineId != null) addEntry('CV', '$comicVineId');
-    if (gcdId != null) addEntry('GCD', '$gcdId');
+    addEntry("Metron", "$metronId");
+    if (comicVineId != null) addEntry("CV", "$comicVineId");
+    if (gcdId != null) addEntry("GCD", "$gcdId");
 
     final formattedDate = modifiedAt != null
         ? '${modifiedAt!.day.toString().padLeft(2, '0')}/${modifiedAt!.month.toString().padLeft(2, '0')}/${modifiedAt!.year}'
@@ -55,12 +55,12 @@ class DatabaseIdsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'DATABASE IDS'),
+        const SectionHeader(title: "DATABASE IDS"),
         const SizedBox(height: 12),
         Wrap(spacing: 6, runSpacing: 6, children: entries),
         if (formattedDate != null) ...[
           const SizedBox(height: 16),
-          const SectionHeader(title: 'LAST MODIFIED'),
+          const SectionHeader(title: "LAST MODIFIED"),
           const SizedBox(height: 12),
           Text(
             formattedDate,

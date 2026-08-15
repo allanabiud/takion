@@ -2655,6 +2655,17 @@ class $ActivityEventsTable extends ActivityEvents
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _batchIdMeta = const VerificationMeta(
+    'batchId',
+  );
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+    'batch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _timestampMeta = const VerificationMeta(
     'timestamp',
   );
@@ -2677,6 +2688,7 @@ class $ActivityEventsTable extends ActivityEvents
     issueNumber,
     imageUrl,
     metadata,
+    batchId,
     timestamp,
   ];
   @override
@@ -2751,6 +2763,12 @@ class $ActivityEventsTable extends ActivityEvents
         metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta),
       );
     }
+    if (data.containsKey('batch_id')) {
+      context.handle(
+        _batchIdMeta,
+        batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta),
+      );
+    }
     if (data.containsKey('timestamp')) {
       context.handle(
         _timestampMeta,
@@ -2804,6 +2822,10 @@ class $ActivityEventsTable extends ActivityEvents
         DriftSqlType.string,
         data['${effectivePrefix}metadata'],
       ),
+      batchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}batch_id'],
+      ),
       timestamp: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}timestamp'],
@@ -2827,6 +2849,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
   final String? issueNumber;
   final String? imageUrl;
   final String? metadata;
+  final String? batchId;
   final String timestamp;
   const ActivityEvent({
     required this.id,
@@ -2838,6 +2861,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
     this.issueNumber,
     this.imageUrl,
     this.metadata,
+    this.batchId,
     required this.timestamp,
   });
   @override
@@ -2863,6 +2887,9 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
     }
     if (!nullToAbsent || metadata != null) {
       map['metadata'] = Variable<String>(metadata);
+    }
+    if (!nullToAbsent || batchId != null) {
+      map['batch_id'] = Variable<String>(batchId);
     }
     map['timestamp'] = Variable<String>(timestamp);
     return map;
@@ -2891,6 +2918,9 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
       metadata: metadata == null && nullToAbsent
           ? const Value.absent()
           : Value(metadata),
+      batchId: batchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchId),
       timestamp: Value(timestamp),
     );
   }
@@ -2910,6 +2940,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
       issueNumber: serializer.fromJson<String?>(json['issueNumber']),
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       metadata: serializer.fromJson<String?>(json['metadata']),
+      batchId: serializer.fromJson<String?>(json['batchId']),
       timestamp: serializer.fromJson<String>(json['timestamp']),
     );
   }
@@ -2926,6 +2957,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
       'issueNumber': serializer.toJson<String?>(issueNumber),
       'imageUrl': serializer.toJson<String?>(imageUrl),
       'metadata': serializer.toJson<String?>(metadata),
+      'batchId': serializer.toJson<String?>(batchId),
       'timestamp': serializer.toJson<String>(timestamp),
     };
   }
@@ -2940,6 +2972,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
     Value<String?> issueNumber = const Value.absent(),
     Value<String?> imageUrl = const Value.absent(),
     Value<String?> metadata = const Value.absent(),
+    Value<String?> batchId = const Value.absent(),
     String? timestamp,
   }) => ActivityEvent(
     id: id ?? this.id,
@@ -2951,6 +2984,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
     issueNumber: issueNumber.present ? issueNumber.value : this.issueNumber,
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     metadata: metadata.present ? metadata.value : this.metadata,
+    batchId: batchId.present ? batchId.value : this.batchId,
     timestamp: timestamp ?? this.timestamp,
   );
   ActivityEvent copyWithCompanion(ActivityEventsCompanion data) {
@@ -2968,6 +3002,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
           : this.issueNumber,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       metadata: data.metadata.present ? data.metadata.value : this.metadata,
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
       timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
     );
   }
@@ -2984,6 +3019,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
           ..write('issueNumber: $issueNumber, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('metadata: $metadata, ')
+          ..write('batchId: $batchId, ')
           ..write('timestamp: $timestamp')
           ..write(')'))
         .toString();
@@ -3000,6 +3036,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
     issueNumber,
     imageUrl,
     metadata,
+    batchId,
     timestamp,
   );
   @override
@@ -3015,6 +3052,7 @@ class ActivityEvent extends DataClass implements Insertable<ActivityEvent> {
           other.issueNumber == this.issueNumber &&
           other.imageUrl == this.imageUrl &&
           other.metadata == this.metadata &&
+          other.batchId == this.batchId &&
           other.timestamp == this.timestamp);
 }
 
@@ -3028,6 +3066,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
   final Value<String?> issueNumber;
   final Value<String?> imageUrl;
   final Value<String?> metadata;
+  final Value<String?> batchId;
   final Value<String> timestamp;
   final Value<int> rowid;
   const ActivityEventsCompanion({
@@ -3040,6 +3079,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
     this.issueNumber = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.metadata = const Value.absent(),
+    this.batchId = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3053,6 +3093,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
     this.issueNumber = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.metadata = const Value.absent(),
+    this.batchId = const Value.absent(),
     required String timestamp,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -3069,6 +3110,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
     Expression<String>? issueNumber,
     Expression<String>? imageUrl,
     Expression<String>? metadata,
+    Expression<String>? batchId,
     Expression<String>? timestamp,
     Expression<int>? rowid,
   }) {
@@ -3082,6 +3124,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
       if (issueNumber != null) 'issue_number': issueNumber,
       if (imageUrl != null) 'image_url': imageUrl,
       if (metadata != null) 'metadata': metadata,
+      if (batchId != null) 'batch_id': batchId,
       if (timestamp != null) 'timestamp': timestamp,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3097,6 +3140,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
     Value<String?>? issueNumber,
     Value<String?>? imageUrl,
     Value<String?>? metadata,
+    Value<String?>? batchId,
     Value<String>? timestamp,
     Value<int>? rowid,
   }) {
@@ -3110,6 +3154,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
       issueNumber: issueNumber ?? this.issueNumber,
       imageUrl: imageUrl ?? this.imageUrl,
       metadata: metadata ?? this.metadata,
+      batchId: batchId ?? this.batchId,
       timestamp: timestamp ?? this.timestamp,
       rowid: rowid ?? this.rowid,
     );
@@ -3145,6 +3190,9 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
     if (metadata.present) {
       map['metadata'] = Variable<String>(metadata.value);
     }
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
     if (timestamp.present) {
       map['timestamp'] = Variable<String>(timestamp.value);
     }
@@ -3166,6 +3214,7 @@ class ActivityEventsCompanion extends UpdateCompanion<ActivityEvent> {
           ..write('issueNumber: $issueNumber, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('metadata: $metadata, ')
+          ..write('batchId: $batchId, ')
           ..write('timestamp: $timestamp, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -20861,6 +20910,7 @@ typedef $$ActivityEventsTableCreateCompanionBuilder =
       Value<String?> issueNumber,
       Value<String?> imageUrl,
       Value<String?> metadata,
+      Value<String?> batchId,
       required String timestamp,
       Value<int> rowid,
     });
@@ -20875,6 +20925,7 @@ typedef $$ActivityEventsTableUpdateCompanionBuilder =
       Value<String?> issueNumber,
       Value<String?> imageUrl,
       Value<String?> metadata,
+      Value<String?> batchId,
       Value<String> timestamp,
       Value<int> rowid,
     });
@@ -20930,6 +20981,11 @@ class $$ActivityEventsTableFilterComposer
 
   ColumnFilters<String> get metadata => $composableBuilder(
     column: $table.metadata,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get batchId => $composableBuilder(
+    column: $table.batchId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20993,6 +21049,11 @@ class $$ActivityEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get batchId => $composableBuilder(
+    column: $table.batchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get timestamp => $composableBuilder(
     column: $table.timestamp,
     builder: (column) => ColumnOrderings(column),
@@ -21038,6 +21099,9 @@ class $$ActivityEventsTableAnnotationComposer
 
   GeneratedColumn<String> get metadata =>
       $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  GeneratedColumn<String> get batchId =>
+      $composableBuilder(column: $table.batchId, builder: (column) => column);
 
   GeneratedColumn<String> get timestamp =>
       $composableBuilder(column: $table.timestamp, builder: (column) => column);
@@ -21085,6 +21149,7 @@ class $$ActivityEventsTableTableManager
                 Value<String?> issueNumber = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
                 Value<String?> metadata = const Value.absent(),
+                Value<String?> batchId = const Value.absent(),
                 Value<String> timestamp = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ActivityEventsCompanion(
@@ -21097,6 +21162,7 @@ class $$ActivityEventsTableTableManager
                 issueNumber: issueNumber,
                 imageUrl: imageUrl,
                 metadata: metadata,
+                batchId: batchId,
                 timestamp: timestamp,
                 rowid: rowid,
               ),
@@ -21111,6 +21177,7 @@ class $$ActivityEventsTableTableManager
                 Value<String?> issueNumber = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
                 Value<String?> metadata = const Value.absent(),
+                Value<String?> batchId = const Value.absent(),
                 required String timestamp,
                 Value<int> rowid = const Value.absent(),
               }) => ActivityEventsCompanion.insert(
@@ -21123,6 +21190,7 @@ class $$ActivityEventsTableTableManager
                 issueNumber: issueNumber,
                 imageUrl: imageUrl,
                 metadata: metadata,
+                batchId: batchId,
                 timestamp: timestamp,
                 rowid: rowid,
               ),

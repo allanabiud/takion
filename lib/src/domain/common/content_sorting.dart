@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 int naturalCompare(String a, String b) {
   final aLower = a.toLowerCase();
@@ -68,249 +68,77 @@ enum SortPreferenceContext {
   searchImprints,
   searchTeams,
   searchPublishers,
+  searchArcs,
   publisherSeries,
   arcIssues,
   teamIssues,
 }
 
+const Map<SortPreferenceContext, String> _storageKeys = {
+  SortPreferenceContext.searchIssues: "search_issues",
+  SortPreferenceContext.searchSeries: "search_series",
+  SortPreferenceContext.searchCharacters: "search_characters",
+  SortPreferenceContext.searchCreators: "search_creators",
+  SortPreferenceContext.searchUniverses: "search_universes",
+  SortPreferenceContext.browseIssues: "browse_issues",
+  SortPreferenceContext.browseRecentlyAdded: "browse_recently_added",
+  SortPreferenceContext.browseSeries: "browse_series",
+  SortPreferenceContext.libraryMyComics: "library_my_comics",
+  SortPreferenceContext.libraryWishlist: "library_wishlist",
+  SortPreferenceContext.libraryUnrated: "library_unrated",
+  SortPreferenceContext.libraryRead: "library_read",
+  SortPreferenceContext.libraryUnread: "library_unread",
+  SortPreferenceContext.libraryReadingHistory: "library_reading_history",
+  SortPreferenceContext.seriesDetailsIssues: "series_details_issues",
+  SortPreferenceContext.characterIssues: "character_issues_sort",
+  SortPreferenceContext.releasesWeekly: "releases_weekly",
+  SortPreferenceContext.releasesFoc: "releases_foc",
+  SortPreferenceContext.releasesMyPulls: "releases_my_pulls",
+  SortPreferenceContext.releasesNewFirst: "releases_new_first",
+  SortPreferenceContext.continueReading: "continue_reading",
+  SortPreferenceContext.subscriptions: "subscriptions",
+  SortPreferenceContext.searchImprints: "search_imprints",
+  SortPreferenceContext.searchTeams: "search_teams",
+  SortPreferenceContext.searchPublishers: "search_publishers",
+  SortPreferenceContext.searchArcs: "search_arcs",
+  SortPreferenceContext.publisherSeries: "publisher_series",
+  SortPreferenceContext.arcIssues: "arc_issues_sort",
+  SortPreferenceContext.teamIssues: "team_issues_sort",
+};
+
+const Set<SortPreferenceContext> _dateNewestDefaults = {
+  SortPreferenceContext.browseRecentlyAdded,
+  SortPreferenceContext.libraryReadingHistory,
+  SortPreferenceContext.seriesDetailsIssues,
+  SortPreferenceContext.continueReading,
+};
+
+const Set<SortPreferenceContext> _dateOldestDefaults = {
+  SortPreferenceContext.characterIssues,
+  SortPreferenceContext.arcIssues,
+  SortPreferenceContext.teamIssues,
+};
+
 extension SortPreferenceContextX on SortPreferenceContext {
-  String get storageKey {
-    switch (this) {
-      case SortPreferenceContext.searchIssues:
-        return 'search_issues';
-      case SortPreferenceContext.searchSeries:
-        return 'search_series';
-      case SortPreferenceContext.searchCharacters:
-        return 'search_characters';
-      case SortPreferenceContext.searchCreators:
-        return 'search_creators';
-      case SortPreferenceContext.searchUniverses:
-        return 'search_universes';
-      case SortPreferenceContext.browseIssues:
-        return 'browse_issues';
-      case SortPreferenceContext.browseRecentlyAdded:
-        return 'browse_recently_added';
-      case SortPreferenceContext.browseSeries:
-        return 'browse_series';
-      case SortPreferenceContext.libraryMyComics:
-        return 'library_my_comics';
-      case SortPreferenceContext.libraryWishlist:
-        return 'library_wishlist';
-      case SortPreferenceContext.libraryUnrated:
-        return 'library_unrated';
-      case SortPreferenceContext.libraryRead:
-        return 'library_read';
-      case SortPreferenceContext.libraryUnread:
-        return 'library_unread';
-      case SortPreferenceContext.libraryReadingHistory:
-        return 'library_reading_history';
-      case SortPreferenceContext.seriesDetailsIssues:
-        return 'series_details_issues';
-      case SortPreferenceContext.characterIssues:
-        return 'character_issues_sort';
-      case SortPreferenceContext.releasesWeekly:
-        return 'releases_weekly';
-      case SortPreferenceContext.releasesFoc:
-        return 'releases_foc';
-      case SortPreferenceContext.releasesMyPulls:
-        return 'releases_my_pulls';
-      case SortPreferenceContext.releasesNewFirst:
-        return 'releases_new_first';
-      case SortPreferenceContext.continueReading:
-        return 'continue_reading';
-      case SortPreferenceContext.subscriptions:
-        return 'subscriptions';
-      case SortPreferenceContext.searchImprints:
-        return 'search_imprints';
-      case SortPreferenceContext.searchTeams:
-        return 'search_teams';
-      case SortPreferenceContext.searchPublishers:
-        return 'search_publishers';
-      case SortPreferenceContext.publisherSeries:
-        return 'publisher_series';
-      case SortPreferenceContext.arcIssues:
-        return 'arc_issues_sort';
-      case SortPreferenceContext.teamIssues:
-        return 'team_issues_sort';
-    }
-  }
+  String get storageKey => _storageKeys[this]!;
 
   ContentSortOption get defaultOption {
-    switch (this) {
-      case SortPreferenceContext.searchIssues:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchSeries:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchCharacters:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchCreators:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchUniverses:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.browseIssues:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.browseRecentlyAdded:
-        return ContentSortOption.dateNewest;
-      case SortPreferenceContext.browseSeries:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.libraryMyComics:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.libraryWishlist:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.libraryUnrated:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.libraryRead:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.libraryUnread:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.libraryReadingHistory:
-        return ContentSortOption.dateNewest;
-      case SortPreferenceContext.seriesDetailsIssues:
-        return ContentSortOption.dateNewest;
-      case SortPreferenceContext.characterIssues:
-        return ContentSortOption.dateOldest;
-      case SortPreferenceContext.releasesWeekly:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.releasesFoc:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.releasesMyPulls:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.releasesNewFirst:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.continueReading:
-        return ContentSortOption.dateNewest;
-      case SortPreferenceContext.subscriptions:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchImprints:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchTeams:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.searchPublishers:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.publisherSeries:
-        return ContentSortOption.nameAsc;
-      case SortPreferenceContext.arcIssues:
-        return ContentSortOption.dateOldest;
-      case SortPreferenceContext.teamIssues:
-        return ContentSortOption.dateOldest;
-    }
+    if (_dateNewestDefaults.contains(this)) return ContentSortOption.dateNewest;
+    if (_dateOldestDefaults.contains(this)) return ContentSortOption.dateOldest;
+    return ContentSortOption.nameAsc;
   }
 }
 
-String issueSortLabel(ContentSortOption option) {
+String contentSortLabel(ContentSortOption option) {
   switch (option) {
     case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
+      return "Alphabetical (A-Z)";
     case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
+      return "Alphabetical (Z-A)";
     case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
+      return "Release Date (Newest)";
     case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String seriesSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String characterSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String creatorSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String universeSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String imprintSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String teamSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String publisherSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
-  }
-}
-
-String arcSortLabel(ContentSortOption option) {
-  switch (option) {
-    case ContentSortOption.nameAsc:
-      return 'Alphabetical (A-Z)';
-    case ContentSortOption.nameDesc:
-      return 'Alphabetical (Z-A)';
-    case ContentSortOption.dateNewest:
-      return 'Release Date (Newest)';
-    case ContentSortOption.dateOldest:
-      return 'Release Date (Oldest)';
+      return "Release Date (Oldest)";
   }
 }
 
@@ -318,269 +146,65 @@ List<IssueList> sortIssues(
   List<IssueList> issues,
   ContentSortOption sortOption,
 ) {
-  final sorted = [...issues];
-
-  int compareByName(IssueList a, IssueList b) => naturalCompare(a.name, b.name);
-
-  DateTime? issueDate(IssueList issue) {
-    return issue.storeDate ?? issue.coverDate ?? issue.modified;
-  }
-
-  int compareByDate(IssueList a, IssueList b) {
-    final aDate = issueDate(a);
-    final bDate = issueDate(b);
-    if (aDate == null && bDate == null) return compareByName(a, b);
-    if (aDate == null) return 1;
-    if (bDate == null) return -1;
-    final dateCompare = aDate.compareTo(bDate);
-    if (dateCompare != 0) return dateCompare;
-    return compareByName(a, b);
-  }
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort((a, b) => compareByDate(b, a));
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByDate);
-      break;
-  }
-
-  return sorted;
+  return sortItemsByNameAndDate<IssueList>(
+    issues,
+    sortOption: sortOption,
+    nameOf: (i) => i.name,
+    dateOf: (i) => i.storeDate ?? i.coverDate ?? i.modified,
+  );
 }
 
 List<SeriesList> sortSeries(
   List<SeriesList> series,
   ContentSortOption sortOption,
 ) {
-  final sorted = [...series];
-
-  int compareByName(SeriesList a, SeriesList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-  int compareByYear(SeriesList a, SeriesList b) {
-    final aYear = a.yearBegan;
-    final bYear = b.yearBegan;
-    if (aYear == null && bYear == null) return compareByName(a, b);
-    if (aYear == null) return 1;
-    if (bYear == null) return -1;
-    final yearCompare = aYear.compareTo(bYear);
-    if (yearCompare != 0) return yearCompare;
-    return compareByName(a, b);
-  }
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort((a, b) => compareByYear(b, a));
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByYear);
-      break;
-  }
-
-  return sorted;
+  return sortItemsByNameAndDate<SeriesList>(
+    series,
+    sortOption: sortOption,
+    nameOf: (s) => s.name,
+    dateOf: (s) => s.yearBegan != null ? DateTime(s.yearBegan!) : null,
+  );
 }
 
-List<CharacterList> sortCharacters(
-  List<CharacterList> characters,
+List<T> _sortByNameOnly<T>(
+  List<T> items,
   ContentSortOption sortOption,
+  String Function(T item) nameOf,
 ) {
-  final sorted = [...characters];
-
-  int compareByName(CharacterList a, CharacterList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
-
-  return sorted;
+  return sortItemsByNameAndDate<T>(
+    items,
+    sortOption: sortOption,
+    nameOf: nameOf,
+    dateOf: (_) => null,
+  );
 }
 
-List<CreatorList> sortCreators(
-  List<CreatorList> creators,
-  ContentSortOption sortOption,
-) {
-  final sorted = [...creators];
+List<CharacterList> sortCharacters(List<CharacterList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (c) => c.name);
 
-  int compareByName(CreatorList a, CreatorList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+List<CreatorList> sortCreators(List<CreatorList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (c) => c.name);
 
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
+List<UniverseList> sortUniverses(List<UniverseList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (u) => u.name);
 
-  return sorted;
-}
+List<ImprintList> sortImprints(List<ImprintList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (i) => i.name);
 
-List<UniverseList> sortUniverses(
-  List<UniverseList> universes,
-  ContentSortOption sortOption,
-) {
-  final sorted = [...universes];
+List<TeamList> sortTeams(List<TeamList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (t) => t.name);
 
-  int compareByName(UniverseList a, UniverseList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+List<ArcList> sortArcs(List<ArcList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (a) => a.name);
 
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
-
-  return sorted;
-}
-
-List<ImprintList> sortImprints(
-  List<ImprintList> imprints,
-  ContentSortOption sortOption,
-) {
-  final sorted = [...imprints];
-
-  int compareByName(ImprintList a, ImprintList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
-
-  return sorted;
-}
-
-List<TeamList> sortTeams(List<TeamList> teams, ContentSortOption sortOption) {
-  final sorted = [...teams];
-
-  int compareByName(TeamList a, TeamList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
-
-  return sorted;
-}
-
-List<ArcList> sortArcs(List<ArcList> arcs, ContentSortOption sortOption) {
-  final sorted = [...arcs];
-
-  int compareByName(ArcList a, ArcList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
-
-  return sorted;
-}
-
-List<PublisherList> sortPublishers(
-  List<PublisherList> publishers,
-  ContentSortOption sortOption,
-) {
-  final sorted = [...publishers];
-
-  int compareByName(PublisherList a, PublisherList b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByName);
-      break;
-  }
-
-  return sorted;
-}
+List<PublisherList> sortPublishers(List<PublisherList> items, ContentSortOption option) =>
+    _sortByNameOnly(items, option, (p) => p.name);
 
 String _collectionItemName(CollectionItem item) {
-  final seriesName = item.issue?.series?.name.trim() ?? '';
-  final issueNumber = item.issue?.number.trim() ?? '';
-  if (seriesName.isEmpty && issueNumber.isEmpty) return '';
-  return '$seriesName #$issueNumber'.trim();
+  final seriesName = item.issue?.series?.name.trim() ?? "";
+  final issueNumber = item.issue?.number.trim() ?? "";
+  if (seriesName.isEmpty && issueNumber.isEmpty) return "";
+  return "$seriesName #$issueNumber".trim();
 }
 
 DateTime? _collectionItemDate(CollectionItem item) {
@@ -595,39 +219,12 @@ List<CollectionItem> sortCollectionItems(
   List<CollectionItem> items,
   ContentSortOption sortOption,
 ) {
-  final sorted = [...items];
-
-  int compareByName(CollectionItem a, CollectionItem b) {
-    return naturalCompare(_collectionItemName(a), _collectionItemName(b));
-  }
-
-  int compareByDate(CollectionItem a, CollectionItem b) {
-    final aDate = _collectionItemDate(a);
-    final bDate = _collectionItemDate(b);
-    if (aDate == null && bDate == null) return compareByName(a, b);
-    if (aDate == null) return 1;
-    if (bDate == null) return -1;
-    final dateCompare = aDate.compareTo(bDate);
-    if (dateCompare != 0) return dateCompare;
-    return compareByName(a, b);
-  }
-
-  switch (sortOption) {
-    case ContentSortOption.nameAsc:
-      sorted.sort(compareByName);
-      break;
-    case ContentSortOption.nameDesc:
-      sorted.sort((a, b) => compareByName(b, a));
-      break;
-    case ContentSortOption.dateNewest:
-      sorted.sort((a, b) => compareByDate(b, a));
-      break;
-    case ContentSortOption.dateOldest:
-      sorted.sort(compareByDate);
-      break;
-  }
-
-  return sorted;
+  return sortItemsByNameAndDate<CollectionItem>(
+    items,
+    sortOption: sortOption,
+    nameOf: _collectionItemName,
+    dateOf: _collectionItemDate,
+  );
 }
 
 List<T> sortItemsByNameAndDate<T>(

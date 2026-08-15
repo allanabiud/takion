@@ -1,33 +1,34 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/arcs/providers/arc_search_provider.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_search_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/creators/providers/creator_search_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_search_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_cover_provider.dart';
-import 'package:takion/src/presentation/features/series/providers/series_search_provider.dart';
-import 'package:takion/src/presentation/features/universes/providers/universe_search_provider.dart';
-import 'package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_search_provider.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/publishers/providers/publisher_search_provider.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/common/search_utils.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/arcs/providers/arc_search_provider.dart";
+import "package:takion/src/presentation/features/characters/providers/character_search_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/creators/providers/creator_search_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_search_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_cover_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_search_provider.dart";
+import "package:takion/src/presentation/features/universes/providers/universe_search_provider.dart";
+import "package:takion/src/presentation/features/imprints/providers/imprint_search_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_search_provider.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 @RoutePage()
 class SearchResultsScreen extends ConsumerStatefulWidget {
   const SearchResultsScreen({
     super.key,
     required this.query,
-    this.searchChoice = 'Issues',
+    this.searchChoice = "Issues",
   });
 
   final String query;
@@ -53,17 +54,17 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   TeamListPage? _lastTeamPage;
   ArcListPage? _lastArcPage;
   PublisherListPage? _lastPublisherPage;
-  bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == 'series';
+  bool get _isSeriesSearch => widget.searchChoice.toLowerCase() == "series";
   bool get _isCharacterSearch =>
-      widget.searchChoice.toLowerCase() == 'characters';
-  bool get _isCreatorSearch => widget.searchChoice.toLowerCase() == 'creators';
+      widget.searchChoice.toLowerCase() == "characters";
+  bool get _isCreatorSearch => widget.searchChoice.toLowerCase() == "creators";
   bool get _isUniverseSearch =>
-      widget.searchChoice.toLowerCase() == 'universes';
-  bool get _isImprintSearch => widget.searchChoice.toLowerCase() == 'imprints';
-  bool get _isTeamSearch => widget.searchChoice.toLowerCase() == 'teams';
+      widget.searchChoice.toLowerCase() == "universes";
+  bool get _isImprintSearch => widget.searchChoice.toLowerCase() == "imprints";
+  bool get _isTeamSearch => widget.searchChoice.toLowerCase() == "teams";
   bool get _isPublisherSearch =>
-      widget.searchChoice.toLowerCase() == 'publishers';
-  bool get _isArcSearch => widget.searchChoice.toLowerCase() == 'arcs';
+      widget.searchChoice.toLowerCase() == "publishers";
+  bool get _isArcSearch => widget.searchChoice.toLowerCase() == "arcs";
 
   SearchArgs get _currentSearchArgs =>
       SearchArgs(query: widget.query, page: _page);
@@ -88,7 +89,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         await ref.read(seriesSearchProvider(_currentSearchArgs).notifier).refresh();
       } catch (e) {
         if (mounted) {
-          TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          TakionAlerts.safeError(context, e, userMessage: "Refresh failed");
         }
       }
     } else {
@@ -96,7 +97,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         await ref.read(issueSearchProvider(_currentSearchArgs).notifier).refresh();
       } catch (e) {
         if (mounted) {
-          TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+          TakionAlerts.safeError(context, e, userMessage: "Refresh failed");
         }
       }
     }
@@ -150,7 +151,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
     return issues.where((issue) {
       final issueName = issue.name.toLowerCase();
-      final seriesName = issue.series?.name.toLowerCase() ?? '';
+      final seriesName = issue.series?.name.toLowerCase() ?? "";
       return issueName.contains(filter) || seriesName.contains(filter);
     }).toList();
   }
@@ -277,7 +278,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastPublisherPage;
     if (pageData == null) {
@@ -302,14 +303,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: publisherSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.business,
-      emptyMessage: 'No publishers found.',
+      emptyMessage: "No publishers found.",
       itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
-        entityType: 'publisher',
+        entityType: "publisher",
         entityId: item.id,
         name: item.name,
         isFirst: isFirst,
@@ -329,7 +330,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastArcPage;
     if (pageData == null) {
@@ -351,14 +352,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: arcSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.auto_stories_outlined,
-      emptyMessage: 'No arcs found.',
+      emptyMessage: "No arcs found.",
       itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
-        entityType: 'arc',
+        entityType: "arc",
         entityId: item.id,
         name: item.name,
         isFirst: isFirst,
@@ -374,7 +375,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastUniversePage;
     if (pageData == null) {
@@ -399,14 +400,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: universeSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.language_outlined,
-      emptyMessage: 'No universes found.',
+      emptyMessage: "No universes found.",
       itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
-        entityType: 'universe',
+        entityType: "universe",
         entityId: item.id,
         name: item.name,
         isFirst: isFirst,
@@ -423,7 +424,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastImprintPage;
     if (pageData == null) {
@@ -448,14 +449,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: imprintSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.business_outlined,
-      emptyMessage: 'No imprints found.',
+      emptyMessage: "No imprints found.",
       itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
-        entityType: 'imprint',
+        entityType: "imprint",
         entityId: item.id,
         name: item.name,
         isFirst: isFirst,
@@ -471,7 +472,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastTeamPage;
     if (pageData == null) {
@@ -496,14 +497,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: teamSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.groups_outlined,
-      emptyMessage: 'No teams found.',
+      emptyMessage: "No teams found.",
       itemBuilder: (context, index, item, isFirst, isLast) => EntityListTile(
-        entityType: 'team',
+        entityType: "team",
         entityId: item.id,
         name: item.name,
         isFirst: isFirst,
@@ -519,7 +520,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastCreatorPage;
     if (pageData == null) {
@@ -544,12 +545,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: creatorSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.person_outline,
-      emptyMessage: 'No creators found.',
+      emptyMessage: "No creators found.",
       itemBuilder: (context, index, item, isFirst, isLast) => PersonListTile(
         creatorId: item.id,
         name: item.name,
@@ -565,7 +566,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastCharacterPage;
     if (pageData == null) {
@@ -590,12 +591,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: characterSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.people_outline,
-      emptyMessage: 'No characters found.',
+      emptyMessage: "No characters found.",
       itemBuilder: (context, index, item, isFirst, isLast) => PersonListTile(
         characterId: item.id,
         name: item.name,
@@ -611,7 +612,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastSeriesPage;
     if (pageData == null) {
@@ -642,16 +643,16 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: seriesSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.collections_bookmark_outlined,
-      emptyMessage: 'No series found.',
+      emptyMessage: "No series found.",
       itemBuilder: (context, index, item, isFirst, isLast) => SeriesListTile(
         series: item,
         allowRemoteCoverFetch: index < _seriesCoverFetchLimit,
-        heroTag: 'series-cover-${item.id}',
+        heroTag: "series-cover-${item.id}",
         isFirst: isFirst,
         isLast: isLast,
       ),
@@ -666,7 +667,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     SortPreferenceContext sortContext,
   ) {
     if (async.hasError) {
-      return AsyncStatePanel.error(errorMessage: 'Search failed');
+      return const AsyncStatePanel.error(errorMessage: "Search failed");
     }
     final pageData = async.asData?.value ?? _lastIssuePage;
     if (pageData == null) {
@@ -688,12 +689,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           : null,
       sortOption: sortOption,
       sortContext: sortContext,
-      sortLabelFn: issueSortLabel,
+      sortLabelFn: contentSortLabel,
       onRefresh: _forceRefreshResults,
       isFiltering: _isFiltering,
       isLoading: async.isLoading,
       emptyIcon: Icons.menu_book_outlined,
-      emptyMessage: 'No issues found.',
+      emptyMessage: "No issues found.",
       itemBuilder: (context, index, item, isFirst, isLast) =>
           IssueListTile(issue: item, isFirst: isFirst, isLast: isLast),
     );
@@ -714,7 +715,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         : _isPublisherSearch
         ? SortPreferenceContext.searchPublishers
         : _isArcSearch
-        ? SortPreferenceContext.searchTeams
+        ? SortPreferenceContext.searchArcs
         : _isSeriesSearch
         ? SortPreferenceContext.searchSeries
         : SortPreferenceContext.searchIssues;
@@ -820,12 +821,12 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Filter results...',
+                  hintText: "Filter results...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close filter',
+                    tooltip: "Close filter",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -841,9 +842,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Search Results'),
+                  const Text("Search Results"),
                   Text(
-                    '${widget.query} - ${widget.searchChoice}',
+                    "${widget.query} - ${widget.searchChoice}",
                     style: Theme.of(context).textTheme.bodySmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -854,7 +855,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             ? null
             : [
                 IconButton(
-                  tooltip: 'Search',
+                  tooltip: "Search",
                   onPressed: () {
                     setState(() {
                       _isFiltering = true;

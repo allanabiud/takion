@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _ReadingListsRepositoryMixin on _RepositoryState {
   Future<MetronReadingListPage> searchReadingLists({
@@ -138,31 +138,6 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
     }
   }
 
-  Future<int> refreshReadingListDelta({DateTime? modifiedGt}) {
-    return runZoned(
-      () async {
-        var page = 1;
-        var synced = 0;
-        while (true) {
-          final result = await searchReadingLists(
-            page: page,
-            limit: metronDefaultPageSize,
-            modifiedGt: modifiedGt,
-            forceRefresh: true,
-          );
-          for (final item in result.results) {
-            await getReadingListDetail(item.id, forceRefresh: true);
-            synced++;
-          }
-          if (!result.hasNext) break;
-          page++;
-        }
-        return synced;
-      },
-      zoneValues: {backgroundZoneKey: true},
-    );
-  }
-
   Future<MetronReadingListDetail> getReadingListDetail(
     int id, {
     bool forceRefresh = false,
@@ -217,7 +192,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
                 : null,
           );
         }
-        throw StateError('Reading list $id not found');
+        throw StateError("Reading list $id not found");
       }
       final dto = ReadingListDetailDto.fromJson(
         response.data as Map<String, dynamic>,
@@ -271,7 +246,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
       );
       return dto.toEntity();
     } catch (e) {
-      AppLogger.error('Failed to fetch reading list detail', error: e);
+      AppLogger.error("Failed to fetch reading list detail", error: e);
       if (cached != null) {
         return MetronReadingListDetail(
           id: cached.id,
@@ -304,8 +279,9 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
   }) async {
     final allItems = <MetronReadingListItem>[];
     Uri? nextUrl;
+    var pageCount = 0;
 
-    while (true) {
+    while (pageCount < metronMaxWalkPages) {
       final dto = await _remoteDataSource.getReadingListItems(
         id,
         nextUrl: nextUrl,
@@ -315,7 +291,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
           _metronEntityDao.upsertIssueStub(
             item.issueId,
             item.seriesId,
-            item.issueNumber ?? '0',
+            item.issueNumber ?? "0",
             null,
             storeDate: item.storeDate != null
                 ? DateTime.tryParse(item.storeDate!)
@@ -337,6 +313,7 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
         }
         allItems.add(item.toEntity());
       }
+      pageCount++;
       if (dto.next == null) break;
       nextUrl = Uri.parse(dto.next!);
     }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class AsyncStatePanel extends StatelessWidget {
   const AsyncStatePanel.loading({
@@ -8,7 +8,7 @@ class AsyncStatePanel extends StatelessWidget {
   }) : title = null,
        errorMessage = null,
        onRetry = null,
-       retryLabel = 'Retry',
+       retryLabel = "Retry",
        icon = null,
        _isLoading = true;
 
@@ -17,7 +17,7 @@ class AsyncStatePanel extends StatelessWidget {
     required this.errorMessage,
     this.title,
     this.onRetry,
-    this.retryLabel = 'Retry',
+    this.retryLabel = "Retry",
     this.icon = Icons.error_outline,
     this.padding = const EdgeInsets.all(24),
   }) : message = null,
@@ -72,7 +72,7 @@ class AsyncStatePanel extends StatelessWidget {
                     const SizedBox(height: 8),
                   ],
                   Text(
-                    errorMessage ?? 'Something went wrong.',
+                    errorMessage ?? "Something went wrong.",
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),

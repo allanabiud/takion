@@ -1,17 +1,17 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:fake_async/fake_async.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:dio/dio.dart';
-import 'package:takion/src/core/network/rate_limit_interceptor.dart';
+import "package:fake_async/fake_async.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:dio/dio.dart";
+import "package:takion/src/core/network/rate_limit_interceptor.dart";
 
 void main() {
-  group('RateLimitInterceptor', () {
+  group("RateLimitInterceptor", () {
     RequestInterceptorHandler run(
       RateLimitInterceptor interceptor, {
       bool background = false,
     }) {
-      final options = RequestOptions(path: '/issue/');
+      final options = RequestOptions(path: "/issue/");
       final handler = RequestInterceptorHandler();
       if (background) {
         runZoned(
@@ -24,7 +24,7 @@ void main() {
       return handler;
     }
 
-    test('foreground requests are served before waiting background work', () {
+    test("foreground requests are served before waiting background work", () {
       fakeAsync((async) {
         final interceptor = RateLimitInterceptor(
           maxRequestsPerMinute: 3,
@@ -41,13 +41,13 @@ void main() {
         expect(bg1.isCompleted, isTrue);
         expect(bg2.isCompleted, isTrue);
         expect(bg3.isCompleted, isFalse,
-            reason: 'background budget must be capped at 2');
+            reason: "background budget must be capped at 2");
 
         // A foreground request is still served from the reserved slot.
         final fg = run(interceptor, background: false);
         async.flushMicrotasks();
         expect(fg.isCompleted, isTrue,
-            reason: 'foreground must bypass background budget cap');
+            reason: "foreground must bypass background budget cap");
 
         // Advancing a minute lets the queued background request through.
         async.elapse(const Duration(minutes: 1, seconds: 1));
@@ -55,7 +55,7 @@ void main() {
       });
     });
 
-    test('foreground requests share the hard per-minute cap', () {
+    test("foreground requests share the hard per-minute cap", () {
       fakeAsync((async) {
         final interceptor = RateLimitInterceptor(
           maxRequestsPerMinute: 2,
@@ -71,20 +71,20 @@ void main() {
         expect(fg1.isCompleted, isTrue);
         expect(fg2.isCompleted, isTrue);
         expect(fg3.isCompleted, isFalse,
-            reason: 'total budget (2) applies to foreground too');
+            reason: "total budget (2) applies to foreground too");
 
         async.elapse(const Duration(minutes: 1, seconds: 1));
         expect(fg3.isCompleted, isTrue);
       });
     });
 
-    test('optimistic decrement and header parsing update state', () {
+    test("optimistic decrement and header parsing update state", () {
       fakeAsync((async) {
         final interceptor = RateLimitInterceptor(
           maxRequestsPerMinute: 18,
         );
 
-        final options = RequestOptions(path: '/series/');
+        final options = RequestOptions(path: "/series/");
         final handler = RequestInterceptorHandler();
         interceptor.onRequest(options, handler);
         async.flushMicrotasks();
@@ -95,8 +95,8 @@ void main() {
           Response(
             requestOptions: options,
             headers: Headers.fromMap({
-              'x-ratelimit-burst-remaining': ['9'],
-              'x-ratelimit-sustained-remaining': ['4200'],
+              "x-ratelimit-burst-remaining": ["9"],
+              "x-ratelimit-sustained-remaining": ["4200"],
             }),
           ),
           ResponseInterceptorHandler(),

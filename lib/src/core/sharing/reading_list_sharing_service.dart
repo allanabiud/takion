@@ -1,12 +1,12 @@
-import 'dart:convert';
-import 'dart:io';
+import "dart:convert";
+import "dart:io";
 
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:file_picker/file_picker.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:path_provider/path_provider.dart";
+import "package:share_plus/share_plus.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 final readingListSharingServiceProvider = Provider(
   (ref) => ReadingListSharingService(),
@@ -18,15 +18,15 @@ class ReadingListSharingService {
     final tempDir = await getTemporaryDirectory();
     final fileName =
         '${list.title.replaceAll(RegExp(r'[^\w\s]+'), '').replaceAll(' ', '_')}.takion';
-    final file = File('${tempDir.path}/$fileName');
+    final file = File("${tempDir.path}/$fileName");
 
     await file.writeAsString(json);
 
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
-        subject: 'Sharing Reading List: ${list.title}',
-        text: 'Check out this reading list: ${list.title}',
+        subject: "Sharing Reading List: ${list.title}",
+        text: "Check out this reading list: ${list.title}",
       ),
     );
   }
@@ -51,7 +51,7 @@ class ReadingListSharingService {
           updatedAt: DateTime.now(),
         );
       } catch (e) {
-        AppLogger.warning('Failed to parse imported reading list', error: e);
+        AppLogger.warning("Failed to parse imported reading list", error: e);
         return null;
       }
     }

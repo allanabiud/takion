@@ -1,11 +1,11 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class ReadLogDao extends DatabaseAccessor<AppDatabase> {
   ReadLogDao(super.db);
 
   Stream<List<LibraryReadLog>> watchByIssueId(int metronIssueId) {
-    final itemId = 'lib-$metronIssueId';
+    final itemId = "lib-$metronIssueId";
     return (select(
       attachedDatabase.libraryReadLogs,
     )..where((t) => t.collectionItemId.equals(itemId))).watch();
@@ -39,7 +39,7 @@ class ReadLogDao extends DatabaseAccessor<AppDatabase> {
       for (final log in logs) {
         b.insertAllOnConflictUpdate(attachedDatabase.syncMeta, [
           SyncMetaCompanion.insert(
-            key: 'delete:library_read_logs:${log.id}',
+            key: "delete:library_read_logs:${log.id}",
             value: now,
           ),
         ]);
@@ -53,7 +53,7 @@ class ReadLogDao extends DatabaseAccessor<AppDatabase> {
         attachedDatabase.libraryReadLogs,
       )..where((t) => t.id.equals(id))).go();
       await attachedDatabase.syncMetaDao.set(
-        'delete:library_read_logs:$id',
+        "delete:library_read_logs:$id",
         DateTime.now().toUtc().toIso8601String(),
       );
     });

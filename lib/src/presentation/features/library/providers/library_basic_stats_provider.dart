@@ -1,14 +1,14 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/features/series/providers/subscriptions_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_items_serialization.dart';
-import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_items_serialization.dart";
+import "package:takion/src/presentation/features/library/providers/stats_debounce.dart";
 
 DateTime _atStartOfWeek(DateTime date) => DateTime(
   date.year,
@@ -84,7 +84,7 @@ List<ReadingTrendPoint> _computeReadingTrends(
           isFirst || isLast || (isEveryFifth && !isPenultimateWhenLastIs31);
       trends.add(
         ReadingTrendPoint(
-          label: shouldShowLabel ? '$i' : '',
+          label: shouldShowLabel ? "$i" : "",
           count: count,
           date: day,
         ),
@@ -127,7 +127,7 @@ List<ReadingTrendPoint> _computeReadingTrends(
 final libraryBasicStatsProvider = StreamProvider.autoDispose
     .family<LibraryBasicStats, LibraryFilter>((ref, filter) {
       final pullRepository = ref.watch(pullListRepositoryProvider);
-      final db = ref.watch(driftDatabaseProvider);
+      final localCatalog = ref.watch(localCatalogRepositoryProvider);
       final controller = StreamController<LibraryBasicStats>();
       final debounced = DebouncedWorker();
 
@@ -219,9 +219,9 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
               .toSet()
               .toList();
 
-          Map<int, dynamic> seriesMap;
+          Map<int, SeriesList> seriesMap;
           try {
-            seriesMap = await db.metronEntityDao.getSeriesByIds(readSeriesIds);
+            seriesMap = await localCatalog.getSeriesByIds(readSeriesIds);
           } catch (_) {
             seriesMap = const {};
           }

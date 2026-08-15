@@ -1,4 +1,4 @@
-import 'package:takion/src/data/catalog/dto/dto.dart';
+import "package:takion/src/data/catalog/dto/dto.dart";
 
 class SeriesSearchResponseDto {
   const SeriesSearchResponseDto({
@@ -14,7 +14,7 @@ class SeriesSearchResponseDto {
   final List<SeriesListDto> results;
 
   factory SeriesSearchResponseDto.fromJson(Map<String, dynamic> json) {
-    final rawResults = json['results'];
+    final rawResults = json["results"];
     final results = rawResults is List
         ? rawResults
               .whereType<Map<String, dynamic>>()
@@ -23,9 +23,9 @@ class SeriesSearchResponseDto {
         : <SeriesListDto>[];
 
     return SeriesSearchResponseDto(
-      count: (json['count'] as num?)?.toInt() ?? results.length,
-      next: json['next'] as String?,
-      previous: json['previous'] as String?,
+      count: (json["count"] as num?)?.toInt() ?? results.length,
+      next: json["next"] as String?,
+      previous: json["previous"] as String?,
       results: results,
     );
   }

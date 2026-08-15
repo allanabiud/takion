@@ -1,38 +1,24 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
-import 'package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:url_launcher/url_launcher.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/resource_url_actions.dart";
+import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
+import "package:takion/src/presentation/shared/favorite_toggle_actions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/features/characters/providers/character_details_provider.dart";
+import "package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart";
+import "package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 String _monthYear(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.year}';
+  return "${DateFormatter.monthAbbrev(date)} ${date.year}";
 }
 
 @RoutePage()
@@ -52,62 +38,45 @@ class CharacterDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _CharacterDetailsScreenState
-    extends ConsumerState<CharacterDetailsScreen> {
-  Uri? _resourceUri(CharacterDetails details) {
-    final resourceUrl = details.resourceUrl?.trim();
-    if (resourceUrl == null || resourceUrl.isEmpty) return null;
-    return Uri.tryParse(resourceUrl);
+    extends ConsumerState<CharacterDetailsScreen>
+    with
+        ResourceUrlActions<CharacterDetails>,
+        FavoriteToggleActions,
+        DetailRefreshActions<CharacterDetails> {
+  @override
+  String? resourceUrlOf(CharacterDetails details) => details.resourceUrl;
+
+  @override
+  String get resourceLabel => "character";
+
+  @override
+  String shareSubjectOf(CharacterDetails details) => details.name;
+
+  @override
+  String get entityLabel => "Character";
+
+  @override
+  Future<CharacterDetails> fetchDetails() {
+    return ref
+        .read(catalogRepositoryProvider)
+        .getCharacterDetails(widget.characterId, forceRefresh: true);
   }
 
-  Future<void> _shareResourceUrl(CharacterDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noShareUrl(context, 'character');
-      return;
-    }
-    await SharePlus.instance.share(
-      ShareParams(text: uri.toString(), subject: details.name),
+  @override
+  void invalidateDetails() {
+    ref.invalidate(characterDetailsProvider(widget.characterId));
+    ref.invalidate(characterIssueListProvider);
+  }
+
+  Future<void> _toggleFavorite() {
+    return toggleFavoriteWithUndo(
+      context,
+      isFavorite: ref.read(isCharacterFavoriteProvider(widget.characterId).future),
+      toggle: () async {
+        final repository = ref.read(favoritesRepositoryProvider);
+        await repository.toggleCharacterFavorite(widget.characterId);
+      },
     );
-  }
-
-  Future<void> _openResourceUrlInBrowser(CharacterDetails details) async {
-    final uri = _resourceUri(details);
-    if (uri == null) {
-      TakionAlerts.noBrowserUrl(context, 'character');
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      TakionAlerts.couldNotOpenInBrowser(context, 'character');
-    }
-  }
-
-  Future<void> _toggleFavorite() async {
-    try {
-      final repository = ref.read(favoritesRepositoryProvider);
-      final isFavorite = await ref.read(
-        isCharacterFavoriteProvider(widget.characterId).future,
-      );
-
-      await repository.toggleCharacterFavorite(widget.characterId);
-
-      if (mounted) {
-        final added = !isFavorite;
-        (added ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
-          context,
-          added ? 'Added to Favourites' : 'Removed from Favourites',
-          icon: Icons.favorite,
-          actionLabel: 'Undo',
-          onUndo: () async {
-            await repository.toggleCharacterFavorite(widget.characterId);
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.error(context, 'Failed to update favourites');
-      }
-    }
   }
 
   @override
@@ -140,37 +109,17 @@ class _CharacterDetailsScreenState
     return DetailScreenShell<CharacterDetails>(
       asyncValue: detailsAsync,
       loadingImageUrl: widget.initialImageUrl,
-      entityType: 'character',
+      entityType: "character",
       initialChildSize: 0.60,
       headerHeight: 350,
       toImageUrl: (d) => d.image,
       toFallbackImageUrl: (d) => null,
-      toHeroTag: (d) => 'character-image-${d.id}',
+      toHeroTag: (d) => "character-image-${d.id}",
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.alias,
-      onRefresh: (d) async {
-        try {
-          final newDetails = await ref
-              .read(catalogRepositoryProvider)
-              .getCharacterDetails(d.id, forceRefresh: true);
-          final currentDetails = ref
-              .read(characterDetailsProvider(d.id))
-              .asData
-              ?.value;
-          if (currentDetails != newDetails) {
-            ref.invalidate(characterDetailsProvider(d.id));
-          }
-          if (context.mounted) {
-            TakionAlerts.success(context, 'Character details refreshed');
-          }
-        } catch (e) {
-          if (context.mounted) {
-            TakionAlerts.error(context, 'Failed to refresh character details');
-          }
-        }
-      },
-      onShare: (d) => _shareResourceUrl(d),
-      onOpenInBrowser: (d) => _openResourceUrlInBrowser(d),
+      onRefresh: (_) => refreshDetails(context),
+      onShare: (d) => shareResourceUrl(context, d),
+      onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,
       heroWidth: 260,
       heroHeight: 260,
@@ -191,12 +140,12 @@ class _CharacterDetailsScreenState
             issue.storeDate ?? issue.coverDate;
 
         final dates = allIssues
-            .map((i) => issueDate(i))
+            .map(issueDate)
             .where((d) => d != null)
             .toList();
         dates.sort();
         final dateRange = dates.isNotEmpty
-            ? '${dates.first!.year} – ${dates.last!.year}'
+            ? "${dates.first!.year} – ${dates.last!.year}"
             : null;
 
         final distinctSeries = allIssues
@@ -299,12 +248,22 @@ class _CharacterDetailsScreenState
               ),
             ),
           ],
-          if (hasIssues || isIssuesLoading) ...[
+          if (hasIssues || isIssuesLoading || issueListAsync.hasError) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: isIssuesLoading
+                child: issueListAsync.hasError
+                    ? SizedBox(
+                        height: 220,
+                        child: AsyncStatePanel.error(
+                          errorMessage: "Failed to load issues",
+                          onRetry: () => ref.invalidate(
+                            characterDetailsIssuesProvider(widget.characterId),
+                          ),
+                        ),
+                      )
+                    : isIssuesLoading
                     ? ShimmerWidget(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,18 +293,18 @@ class _CharacterDetailsScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SectionHeader(
-                            title: 'Recently Appeared In',
+                            title: "Recently Appeared In",
                             onViewAll: () => context.pushRoute(
                               CharacterIssuesRoute(characterId: data.id),
                             ),
                           ),
                           const SizedBox(height: 12),
                           HorizontalPreviewSection(
-                            title: '',
+                            title: "",
                             onViewAll: null,
                             itemCount: previewIssues.length,
                             height: 250,
-                            emptyText: 'No issues available.',
+                            emptyText: "No issues available.",
                             itemBuilder: (context, index) {
                               final issue = previewIssues[index];
                               final issueId = issue.id;
@@ -353,7 +312,7 @@ class _CharacterDetailsScreenState
                                 issueId: issueId,
                                 imageUrl: issue.image,
                                 title:
-                                    '${issue.series?.name ?? issue.name} #${issue.number}',
+                                    "${issue.series?.name ?? issue.name} #${issue.number}",
                                 seriesId: issue.series?.id,
                                 seriesName: issue.series?.name,
                                 issueNumber: issue.number,
@@ -377,10 +336,10 @@ class _CharacterDetailsScreenState
           ],
           if (hasTeams) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const SectionHeader(title: 'TEAMS'),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: "TEAMS"),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -395,7 +354,7 @@ class _CharacterDetailsScreenState
                   itemBuilder: (context, index) {
                     final team = data.teams[index];
                     return EntityCard(
-                      entityType: 'team',
+                      entityType: "team",
                       entityId: team.id,
                       name: team.name,
                       width: 110,
@@ -409,10 +368,10 @@ class _CharacterDetailsScreenState
           ],
           if (hasUniverses) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const SectionHeader(title: 'UNIVERSES'),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SectionHeader(title: "UNIVERSES"),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -427,7 +386,7 @@ class _CharacterDetailsScreenState
                   itemBuilder: (context, index) {
                     final universe = data.universes[index];
                     return EntityCard(
-                      entityType: 'universe',
+                      entityType: "universe",
                       entityId: universe.id,
                       name: universe.name,
                       width: 140,
@@ -464,7 +423,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'CREATORS'),
+        const SectionHeader(title: "CREATORS"),
         const SizedBox(height: 12),
         SizedBox(
           height: 130,
@@ -479,7 +438,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
                 creatorId: creator.id,
                 name: creator.name.trim().isNotEmpty
                     ? creator.name.trim()
-                    : 'Unknown Creator',
+                    : "Unknown Creator",
                 width: 95,
               );
             },
@@ -529,13 +488,13 @@ class _CharacterStatsCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$issueCount',
+                "$issueCount",
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                'Issues',
+                "Issues",
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -550,13 +509,13 @@ class _CharacterStatsCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$seriesCount',
+                "$seriesCount",
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                'Series',
+                "Series",
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -580,7 +539,7 @@ class _CharacterStatsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Date range',
+                    "Date range",
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -605,8 +564,8 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
     final theme = Theme.of(context);
     final seriesName = issue.series?.name.trim();
     final label = seriesName != null && seriesName.isNotEmpty
-        ? '$seriesName #${issue.number}'
-        : '${issue.name} #${issue.number}';
+        ? "$seriesName #${issue.number}"
+        : "${issue.name} #${issue.number}";
     final displayDate = issue.storeDate ?? issue.coverDate;
 
     return InkWell(
@@ -627,22 +586,16 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
               child: SizedBox(
                 width: 60,
                 height: 90,
-                child: issue.image != null && issue.image!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: issue.image!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.broken_image, size: 24),
-                        ),
-                      )
-                    : Container(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.image, size: 24),
-                      ),
+                child: EntityCover(
+                  imageUrl: issue.image,
+                  width: 60,
+                  height: 90,
+                  borderRadius: 0,
+                  aspectRatio: 60 / 90,
+                  iconSize: 24,
+                  fadeInDuration: Duration.zero,
+                  fadeOutDuration: Duration.zero,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -660,7 +613,7 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      'FIRST APPEARANCE',
+                      "FIRST APPEARANCE",
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,
@@ -719,58 +672,20 @@ class _CharacterInfoCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildIdsSection(context),
+        DatabaseIdsSection(
+          metronId: details.id,
+          comicVineId: details.cvId,
+          gcdId: details.gcdId,
+        ),
         if (hasModified) ...[
           const SizedBox(height: 8),
           Text(
-            'Last modified: $modifiedValue',
+            "Last modified: $modifiedValue",
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           ),
         ],
-      ],
-    );
-  }
-
-  Widget _buildIdsSection(BuildContext context) {
-    final entries = <Widget>[];
-    void addEntry(String label, String value) {
-      entries.add(
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            '$label $value',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontFamily: 'monospace',
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    addEntry('Metron', '${details.id}');
-    if (details.cvId != null) addEntry('CV', '${details.cvId}');
-    if (details.gcdId != null) addEntry('GCD', '${details.gcdId}');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'DATABASE IDS'),
-        const SizedBox(height: 12),
-        Wrap(spacing: 6, runSpacing: 6, children: entries),
       ],
     );
   }

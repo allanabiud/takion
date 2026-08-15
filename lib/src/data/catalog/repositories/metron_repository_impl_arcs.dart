@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _ArcsRepositoryMixin on _RepositoryState {
   Future<ArcListPage> getArcList({
@@ -35,13 +35,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
             final remotePage = nextUrl != null
                 ? await _remoteDataSource.getArcList(
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.getArcList(
                     page: page,
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   );
@@ -76,13 +74,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getArcList(
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getArcList(
                 page: page,
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               );
@@ -116,26 +112,6 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       }
       rethrow;
     }
-  }
-
-  Future<int> refreshArcListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getArcList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getArcDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
   }
 
   Future<ArcListPage> searchArcs(
@@ -173,13 +149,11 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 ? await _remoteDataSource.searchArcs(
                     query,
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.searchArcs(
                     query,
                     page: page,
-                    limit: limit,
                     cancelToken: cancelToken,
                   );
             await _localDataSource.cacheArcSearchResults(
@@ -192,7 +166,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:arc:$query:$page',
+          cacheKey: nextUrl ?? "search:arc:$query:$page",
           cooldown: MetronCachePolicies.arcSearchResults.refreshCooldown,
         );
       }
@@ -208,19 +182,17 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final key = nextUrl ?? '$query|$page|$limit|$forceRefresh';
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
       return _coalesce(_arcSearchInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.searchArcs(
                 query,
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.searchArcs(
                 query,
                 page: page,
-                limit: limit,
                 cancelToken: cancelToken,
               );
         await _localDataSource.cacheArcSearchResults(
@@ -262,7 +234,7 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getArc(arcId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('arc_details');
+      AppPerformanceMetrics.instance.recordCacheHit("arc_details");
       return _arcRowToEntity(cached);
     }
 
@@ -275,18 +247,15 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.arcDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'arc_details_response',
+          "arc_details_response",
         );
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);
-        return _arcRowToEntity(
-          await _metronEntityDao.getArc(arcId) ??
-              (throw StateError('Arc $arcId not found')),
-        );
+        return dto.toEntity();
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('arc_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("arc_details");
 
     try {
       final response = await _remoteDataSource.getArcDetails(arcId);
@@ -297,28 +266,13 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           await _localDataSource.cacheArcDetailsResponse(arcId, cachedJson);
           final dto = ArcDetailsDto.fromJson(cachedJson);
           await _upsertArcDetails(dto);
-          return _arcRowToEntity(
-            await _metronEntityDao.getArc(arcId) ??
-                (throw StateError('Arc $arcId not found')),
-          );
+          return dto.toEntity();
         }
         return _arcRowToEntity(
-          cached ?? (throw StateError('Arc $arcId not found')),
+          cached ?? (throw StateError("Arc $arcId not found")),
         );
       }
-      final rawData = response.data;
-      final Map<String, dynamic> data;
-      if (rawData is Map<String, dynamic>) {
-        data = rawData;
-      } else if (rawData is Map) {
-        data = Map<String, dynamic>.from(rawData);
-      } else if (rawData is String) {
-        final decoded = jsonDecode(rawData);
-        data = decoded is Map ? Map<String, dynamic>.from(decoded) : <String, dynamic>{};
-      } else {
-        data = <String, dynamic>{};
-      }
-      final dto = ArcDetailsDto.fromJson(data);
+      final dto = ArcDetailsDto.fromJson(jsonToMap(response.data));
       if (!forceRefresh &&
           cached != null &&
           cached.isFullyHydrated &&
@@ -328,22 +282,16 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
         return _arcRowToEntity(cached);
       }
       await _upsertArcDetails(dto);
-      await _localDataSource.cacheArcDetailsResponse(arcId, data);
-      return _arcRowToEntity(
-        await _metronEntityDao.getArc(arcId) ??
-            (throw StateError('Arc $arcId not found after upsert')),
-      );
+      await _localDataSource.cacheArcDetailsResponse(arcId, response.data);
+      return dto.toEntity();
     } catch (e) {
-      AppLogger.error('Failed to fetch arc details', error: e);
+      AppLogger.error("Failed to fetch arc details", error: e);
       final cachedJson =
           await _localDataSource.getCachedArcDetailsResponse(arcId);
       if (cachedJson != null) {
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);
-        return _arcRowToEntity(
-          await _metronEntityDao.getArc(arcId) ??
-              (throw StateError('Arc $arcId not found after upsert')),
-        );
+        return dto.toEntity();
       }
       if (cached != null) {
         return _arcRowToEntity(cached);
@@ -387,28 +335,31 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 ? await _remoteDataSource.getArcIssueList(
                     arcId,
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.getArcIssueList(
                     arcId,
                     page: page,
-                    limit: limit,
                     cancelToken: cancelToken,
                   );
-            await _localDataSource.cacheArcIssueListResults(
-              arcId,
-              remotePage.results,
-              page: page,
-              limit: limit,
+            if (_isValidIssueListPage(
               count: remotePage.count,
-              next: remotePage.next,
-              previous: remotePage.previous,
-            );
+              resultCount: remotePage.results.length,
+            )) {
+              await _localDataSource.cacheArcIssueListResults(
+                arcId,
+                remotePage.results,
+                page: page,
+                limit: limit,
+                count: remotePage.count,
+                next: remotePage.next,
+                previous: remotePage.previous,
+              );
+            }
             _upsertIssueListStubs(remotePage.results);
             _indexSeriesNamesFromIssueList(remotePage.results);
           },
-          cacheKey: nextUrl ?? 'arc_issue_list:$arcId:$page',
+          cacheKey: nextUrl ?? "arc_issue_list:$arcId:$page",
           cooldown: MetronCachePolicies.arcIssueList.refreshCooldown,
         );
       }
@@ -419,35 +370,42 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
     }
 
     try {
-      final key = nextUrl ?? '$arcId|$page|$forceRefresh';
+      final key = nextUrl ?? "$arcId|$page|$forceRefresh|$limit";
       return _coalesce(_arcIssueListInFlight, key, () async {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getArcIssueList(
                 arcId,
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getArcIssueList(
                 arcId,
                 page: page,
-                limit: limit,
                 cancelToken: cancelToken,
               );
-        await _localDataSource.cacheArcIssueListResults(
-          arcId,
-          remotePage.results,
-          page: page,
-          limit: limit,
+        if (_isValidIssueListPage(
           count: remotePage.count,
-          next: remotePage.next,
-          previous: remotePage.previous,
-        );
+          resultCount: remotePage.results.length,
+        )) {
+          await _localDataSource.cacheArcIssueListResults(
+            arcId,
+            remotePage.results,
+            page: page,
+            limit: limit,
+            count: remotePage.count,
+            next: remotePage.next,
+            previous: remotePage.previous,
+          );
+        }
         _upsertIssueListStubs(remotePage.results);
         _indexSeriesNamesFromIssueList(remotePage.results);
         return ArcIssueListPage(
@@ -456,6 +414,10 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           previous: remotePage.previous,
           results: remotePage.results.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: remotePage.results.length,
+            hasNext: remotePage.next != null,
+          ),
         );
       }, timeout: const Duration(seconds: 30));
     } catch (error) {
@@ -467,6 +429,10 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           previous: cachedMeta.previous,
           results: cachedDtos.map((entry) => entry.toEntity()).toList(),
           currentPage: page,
+          realPageSize: _issuePageSize(
+            resultCount: cachedDtos.length,
+            hasNext: cachedMeta.next != null,
+          ),
         );
       }
       rethrow;
@@ -479,19 +445,19 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
   }) async {
     final allIssues = <IssueList>[];
     Uri? nextUrl;
+    var pageCount = 0;
 
-    while (true) {
+    while (pageCount < metronMaxWalkPages) {
       final page = await _remoteDataSource.getArcIssueList(
         arcId,
         nextUrl: nextUrl,
-        limit: metronDefaultPageSize,
-        bypassConditional: true,
       );
       _upsertIssueListStubs(page.results);
       _indexSeriesNamesFromIssueList(page.results);
       for (final dto in page.results) {
         allIssues.add(dto.toEntity());
       }
+      pageCount++;
       if (page.next == null) break;
       nextUrl = Uri.parse(page.next!);
     }

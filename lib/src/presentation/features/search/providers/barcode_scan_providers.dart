@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
 
 class ScannedIssueState {
   final int issueId;

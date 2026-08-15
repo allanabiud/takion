@@ -1,50 +1,38 @@
-import 'dart:async';
-import 'dart:collection';
-import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/core/cache/cache_policy.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/network/rate_limit_interceptor.dart'
+import "dart:async";
+import "dart:collection";
+import "dart:convert";
+import "package:dio/dio.dart";
+import "package:drift/drift.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/core/cache/cache_policy.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/rate_limit_interceptor.dart"
     show backgroundZoneKey;
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart';
-import 'package:takion/src/data/common/drift/database.dart'
+import "package:takion/src/core/performance/performance_metrics.dart";
+import "package:takion/src/core/utils/json_utils.dart";
+import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
+import "package:takion/src/data/catalog/datasources/local/series_name_index.dart";
+import "package:takion/src/data/common/drift/database.dart"
     hide MetronReadingListItem, SeriesNameIndex;
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/data/reading_list/dto/dto.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/data/reading_list/dto/dto.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
-part 'metron_repository_impl_releases.dart';
-part 'metron_repository_impl_issues.dart';
-part 'metron_repository_impl_series.dart';
-part 'metron_repository_impl_characters.dart';
-part 'metron_repository_impl_creators.dart';
-part 'metron_repository_impl_universes.dart';
-part 'metron_repository_impl_imprints.dart';
-part 'metron_repository_impl_teams.dart';
-part 'metron_repository_impl_publishers.dart';
-part 'metron_repository_impl_arcs.dart';
-part 'metron_repository_impl_reading_lists.dart';
-
-Map<String, dynamic> _asMap(dynamic data) {
-  if (data is Map<String, dynamic>) return data;
-  if (data is Map) return Map<String, dynamic>.from(data);
-  if (data is String) {
-    try {
-      final decoded = jsonDecode(data);
-      if (decoded is Map<String, dynamic>) return decoded;
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
-    } catch (_) {}
-  }
-  return <String, dynamic>{};
-}
+part "metron_repository_impl_releases.dart";
+part "metron_repository_impl_issues.dart";
+part "metron_repository_impl_series.dart";
+part "metron_repository_impl_characters.dart";
+part "metron_repository_impl_creators.dart";
+part "metron_repository_impl_universes.dart";
+part "metron_repository_impl_imprints.dart";
+part "metron_repository_impl_teams.dart";
+part "metron_repository_impl_publishers.dart";
+part "metron_repository_impl_arcs.dart";
+part "metron_repository_impl_reading_lists.dart";
 
 mixin _RepositoryState {
   MetronRemoteDataSource get _remoteDataSource;
@@ -62,6 +50,14 @@ mixin _RepositoryState {
   Map<String, Future<List<IssueList>>> get _focReleasesInFlight;
   _AsyncConcurrencyGate get _issueDetailsGate;
   Map<String, Future<ArcListPage>> get _arcSearchInFlight;
+  Map<String, Future<IssueSearchPage>> get _issueSearchInFlight;
+  Map<String, Future<SeriesSearchPage>> get _seriesSearchInFlight;
+  Map<String, Future<CharacterListPage>> get _characterSearchInFlight;
+  Map<String, Future<CreatorListPage>> get _creatorSearchInFlight;
+  Map<String, Future<UniverseListPage>> get _universeSearchInFlight;
+  Map<String, Future<ImprintListPage>> get _imprintSearchInFlight;
+  Map<String, Future<TeamListPage>> get _teamSearchInFlight;
+  Map<String, Future<PublisherListPage>> get _publisherSearchInFlight;
   Map<String, Future<ArcIssueListPage>> get _arcIssueListInFlight;
   Map<String, Future<CharacterIssueListPage>> get _teamIssueListInFlight;
   Map<String, Future<ArcListPage>> get _arcListInFlight;
@@ -95,6 +91,19 @@ mixin _RepositoryState {
     required Future<void> Function() updateTtl,
   });
 
+  /// A page with no results but a non-zero total count is a page that does not
+  /// exist (e.g. requested past the last page). Caching it would poison the
+  /// cache and make the empty state persist across sessions.
+  bool _isValidIssueListPage({required int count, required int resultCount}) {
+    return resultCount > 0 || count == 0;
+  }
+
+  /// The real per-page size reported by the API, when the response indicates
+  /// more than one page. Null when only one page exists or size is unknown.
+  int? _issuePageSize({required int resultCount, required bool hasNext}) {
+    return hasNext && resultCount > 0 ? resultCount : null;
+  }
+
   void _upsertIssueListStubs(Iterable<IssueListDto> dtos) {
     final issueStubs = <MetronIssuesCompanion>[];
     final seriesStubs = <MetronSeriesCompanion>[];
@@ -121,10 +130,10 @@ mixin _RepositoryState {
         ),
       );
       final series = dto.series;
-      if (series != null) {
+      if (series != null && series.id != null) {
         seriesStubs.add(
           MetronSeriesCompanion(
-            id: Value(series.id ?? 0),
+            id: Value(series.id!),
             name: Value(series.name),
             yearBegan: Value(series.yearBegan),
             volume: Value(series.volume),
@@ -188,7 +197,7 @@ mixin _RepositoryState {
       if (entries.isEmpty) return;
       await database.pullListDao.upsertSubscriptionEntries(entries);
     } catch (e) {
-      AppLogger.debug('Auto-add pull list entries failed', error: e);
+      AppLogger.debug("Auto-add pull list entries failed", error: e);
     }
   }
 
@@ -268,6 +277,30 @@ class MetronRepositoryImpl
   @override
   final Map<String, Future<ArcListPage>> _arcSearchInFlight =
       <String, Future<ArcListPage>>{};
+  @override
+  final Map<String, Future<IssueSearchPage>> _issueSearchInFlight =
+      <String, Future<IssueSearchPage>>{};
+  @override
+  final Map<String, Future<SeriesSearchPage>> _seriesSearchInFlight =
+      <String, Future<SeriesSearchPage>>{};
+  @override
+  final Map<String, Future<CharacterListPage>> _characterSearchInFlight =
+      <String, Future<CharacterListPage>>{};
+  @override
+  final Map<String, Future<CreatorListPage>> _creatorSearchInFlight =
+      <String, Future<CreatorListPage>>{};
+  @override
+  final Map<String, Future<UniverseListPage>> _universeSearchInFlight =
+      <String, Future<UniverseListPage>>{};
+  @override
+  final Map<String, Future<ImprintListPage>> _imprintSearchInFlight =
+      <String, Future<ImprintListPage>>{};
+  @override
+  final Map<String, Future<TeamListPage>> _teamSearchInFlight =
+      <String, Future<TeamListPage>>{};
+  @override
+  final Map<String, Future<PublisherListPage>> _publisherSearchInFlight =
+      <String, Future<PublisherListPage>>{};
   @override
   final Map<String, Future<ArcIssueListPage>> _arcIssueListInFlight =
       <String, Future<ArcIssueListPage>>{};
@@ -361,7 +394,7 @@ class MetronRepositoryImpl
         () => task()
             .catchError((e) {
               AppLogger.debug(
-                'Background refresh failed for $cacheKey',
+                "Background refresh failed for $cacheKey",
                 error: e,
               );
             })

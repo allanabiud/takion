@@ -1,47 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-
-FavoriteSeries _seriesToDomain(db.FavoriteSery d) {
-  return FavoriteSeries(
-    metronSeriesId: d.metronSeriesId,
-    createdAt: DateTime.parse(d.createdAt),
-  );
-}
-
-FavoriteIssue _issueToDomain(db.FavoriteIssue d) {
-  return FavoriteIssue(
-    metronIssueId: d.metronIssueId,
-    createdAt: DateTime.parse(d.createdAt),
-  );
-}
-
-FavoriteReadingList _readingListToDomain(db.FavoriteReadingList d) {
-  return FavoriteReadingList(
-    readingListId: d.readingListId,
-    createdAt: DateTime.parse(d.createdAt),
-  );
-}
-
-FavoriteCharacter _characterToDomain(db.FavoriteCharacter d) {
-  return FavoriteCharacter(
-    metronCharacterId: d.metronCharacterId,
-    createdAt: DateTime.parse(d.createdAt),
-  );
-}
-
-FavoriteCreator _creatorToDomain(db.FavoriteCreator d) {
-  return FavoriteCreator(
-    metronCreatorId: d.metronCreatorId,
-    createdAt: DateTime.parse(d.createdAt),
-  );
-}
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 final favoriteSeriesListProvider = StreamProvider<List<FavoriteSeries>>((ref) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllSeries().map((rows) => rows.map(_seriesToDomain).toList());
+  return ref.watch(favoritesRepositoryProvider).watchSeries();
 });
 
 final favoriteSeriesIdsSetProvider = Provider<Set<int>>((ref) {
@@ -57,7 +20,7 @@ final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
 ) async {
   final favorites = await ref.watch(favoriteSeriesListProvider.future);
   final repository = ref.watch(metronRepositoryProvider);
-  final db = ref.watch(driftDatabaseProvider);
+  final localCatalog = ref.watch(localCatalogRepositoryProvider);
 
   final results = List<SeriesList?>.filled(favorites.length, null);
   var cursor = 0;
@@ -68,18 +31,9 @@ final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
       cursor = index + 1;
       final seriesId = favorites[index].metronSeriesId;
       try {
-        final localSeries = await db.metronEntityDao.getSeries(seriesId);
+        final localSeries = await localCatalog.getSeries(seriesId);
         if (localSeries != null) {
-          results[index] = SeriesList(
-            id: localSeries.id,
-            name: localSeries.name,
-            volume: localSeries.volume,
-            yearBegan: localSeries.yearBegan,
-            issueCount: localSeries.issueCount,
-            modified: localSeries.modified != null
-                ? DateTime.tryParse(localSeries.modified!)
-                : null,
-          );
+          results[index] = localSeries;
           continue;
         }
         final details = await repository.getSeriesDetails(seriesId);
@@ -92,7 +46,7 @@ final favoriteSeriesFullListProvider = FutureProvider<List<SeriesList>>((
           modified: details.modified,
         );
       } catch (e) {
-        AppLogger.warning('Failed to load series favorite details', error: e);
+        AppLogger.warning("Failed to load series favorite details", error: e);
       }
     }
   }
@@ -108,20 +62,15 @@ final isSeriesFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   seriesId,
 ) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchSeriesBySeriesId(seriesId).map((row) => row != null);
+  return ref.watch(favoritesRepositoryProvider).watchIsSeriesFavorite(seriesId);
 });
 
 final favoriteIssuesListProvider = StreamProvider<List<FavoriteIssue>>((ref) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllIssues().map((rows) => rows.map(_issueToDomain).toList());
+  return ref.watch(favoritesRepositoryProvider).watchIssues();
 });
 
 final favoriteIssueIdsProvider = StreamProvider<Set<int>>((ref) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllIssues().map(
-    (rows) => rows.map((r) => r.metronIssueId).toSet(),
-  );
+  return ref.watch(favoritesRepositoryProvider).watchIssueIds();
 });
 
 final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
@@ -129,7 +78,7 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
 ) async {
   final favorites = await ref.watch(favoriteIssuesListProvider.future);
   final repository = ref.watch(metronRepositoryProvider);
-  final db = ref.watch(driftDatabaseProvider);
+  final localCatalog = ref.watch(localCatalogRepositoryProvider);
 
   final results = List<IssueList?>.filled(favorites.length, null);
   var cursor = 0;
@@ -140,11 +89,11 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
       cursor = index + 1;
       final issueId = favorites[index].metronIssueId;
       try {
-        final localIssue = await db.metronEntityDao.getIssue(issueId);
+        final localIssue = await localCatalog.getIssue(issueId);
         if (localIssue != null) {
           Series? series;
           if (localIssue.seriesId != null) {
-            final localSeries = await db.metronEntityDao.getSeries(
+            final localSeries = await localCatalog.getSeries(
               localIssue.seriesId!,
             );
             if (localSeries != null) {
@@ -156,25 +105,19 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
               );
             }
           }
-          String displayName = series?.name ?? 'Issue';
+          String displayName = series?.name ?? "Issue";
           if (localIssue.number.isNotEmpty) {
-            displayName += ' #${localIssue.number}';
+            displayName += " #${localIssue.number}";
           }
           results[index] = IssueList(
             id: localIssue.id,
             name: displayName,
             number: localIssue.number,
             series: series,
-            coverDate: localIssue.coverDate != null
-                ? DateTime.tryParse(localIssue.coverDate!)
-                : null,
-            storeDate: localIssue.storeDate != null
-                ? DateTime.tryParse(localIssue.storeDate!)
-                : null,
+            coverDate: localIssue.coverDate,
+            storeDate: localIssue.storeDate,
             image: localIssue.imageUrl,
-            modified: localIssue.modified != null
-                ? DateTime.tryParse(localIssue.modified!)
-                : null,
+            modified: localIssue.modified,
           );
           continue;
         }
@@ -189,9 +132,9 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
             yearBegan: details.series!.yearBegan,
           );
         }
-        String displayName = details.series?.name ?? 'Issue';
+        String displayName = details.series?.name ?? "Issue";
         if (details.number.isNotEmpty) {
-          displayName += ' #${details.number}';
+          displayName += " #${details.number}";
         }
         results[index] = IssueList(
           id: details.id,
@@ -204,7 +147,7 @@ final favoriteIssuesFullListProvider = FutureProvider<List<IssueList>>((
           modified: details.modified,
         );
       } catch (e) {
-        AppLogger.warning('Failed to load issue favorite details', error: e);
+        AppLogger.warning("Failed to load issue favorite details", error: e);
       }
     }
   }
@@ -220,16 +163,12 @@ final isIssueFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   issueId,
 ) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchIssueByIssueId(issueId).map((row) => row != null);
+  return ref.watch(favoritesRepositoryProvider).watchIsIssueFavorite(issueId);
 });
 
 final favoriteReadingListsListProvider =
     StreamProvider<List<FavoriteReadingList>>((ref) {
-      final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-      return dao.watchAllReadingLists().map(
-        (rows) => rows.map(_readingListToDomain).toList(),
-      );
+      return ref.watch(favoritesRepositoryProvider).watchReadingLists();
     });
 
 final favoriteReadingListsFullListProvider =
@@ -248,7 +187,7 @@ final favoriteReadingListsFullListProvider =
           }
         } catch (e) {
           AppLogger.warning(
-            'Failed to load reading list favorite details',
+            "Failed to load reading list favorite details",
             error: e,
           );
         }
@@ -260,20 +199,15 @@ final isReadingListFavoriteProvider = StreamProvider.family<bool, String>((
   ref,
   listId,
 ) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllReadingLists().map(
-    (list) => list.any((f) => f.readingListId == listId),
-  );
+  return ref
+      .watch(favoritesRepositoryProvider)
+      .watchIsReadingListFavorite(listId);
 });
 
-final favoriteCharactersListProvider = StreamProvider<List<FavoriteCharacter>>((
-  ref,
-) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllCharacters().map(
-    (rows) => rows.map(_characterToDomain).toList(),
-  );
-});
+final favoriteCharactersListProvider =
+    StreamProvider<List<FavoriteCharacter>>((ref) {
+      return ref.watch(favoritesRepositoryProvider).watchCharacters();
+    });
 
 final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
   ref,
@@ -299,7 +233,7 @@ final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
         );
       } catch (e) {
         AppLogger.warning(
-          'Failed to load character favorite details',
+          "Failed to load character favorite details",
           error: e,
         );
       }
@@ -317,19 +251,15 @@ final isCharacterFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   characterId,
 ) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllCharacters().map(
-    (list) => list.any((f) => f.metronCharacterId == characterId),
-  );
+  return ref
+      .watch(favoritesRepositoryProvider)
+      .watchIsCharacterFavorite(characterId);
 });
 
 final favoriteCreatorsListProvider = StreamProvider<List<FavoriteCreator>>((
   ref,
 ) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllCreators().map(
-    (rows) => rows.map(_creatorToDomain).toList(),
-  );
+  return ref.watch(favoritesRepositoryProvider).watchCreators();
 });
 
 final favoriteCreatorsFullListProvider = FutureProvider<List<CreatorList>>((
@@ -354,7 +284,7 @@ final favoriteCreatorsFullListProvider = FutureProvider<List<CreatorList>>((
           modified: details.modified,
         );
       } catch (e) {
-        AppLogger.warning('Failed to load creator favorite details', error: e);
+        AppLogger.warning("Failed to load creator favorite details", error: e);
       }
     }
   }
@@ -370,8 +300,5 @@ final isCreatorFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   creatorId,
 ) {
-  final dao = ref.watch(driftDatabaseProvider).favoriteDao;
-  return dao.watchAllCreators().map(
-    (list) => list.any((f) => f.metronCreatorId == creatorId),
-  );
+  return ref.watch(favoritesRepositoryProvider).watchIsCreatorFavorite(creatorId);
 });

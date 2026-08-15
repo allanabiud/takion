@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/pinned_list_header.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/pinned_list_header.dart";
 
 class PagedListScaffold extends StatelessWidget {
   const PagedListScaffold({
@@ -89,7 +89,7 @@ class PagedListScaffold extends StatelessWidget {
                   Expanded(
                     child: Center(
                       child: Text(
-                        'Page $currentPage of $totalPages',
+                        "Page $currentPage of $totalPages",
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -122,7 +122,7 @@ class PagedListScaffold extends StatelessWidget {
             childAspectRatio: gridChildAspectRatio,
           ),
           delegate: SliverChildBuilderDelegate(
-            (context, index) => itemBuilder(context, index),
+            itemBuilder,
             childCount: itemCount,
           ),
         ),
@@ -182,7 +182,7 @@ class PagedListScaffold extends StatelessWidget {
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              (context, index) => itemBuilder(context, index),
+              itemBuilder,
               childCount: itemCount,
             ),
           ),

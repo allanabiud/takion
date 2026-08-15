@@ -1,15 +1,15 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/random_reading_list_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/collection_suggestions_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/random_reading_list_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_card.dart";
 
 @RoutePage()
 class LibraryScreen extends ConsumerWidget {
@@ -44,10 +44,10 @@ class LibraryScreen extends ConsumerWidget {
                     icon: Icons.inventory_2_outlined,
                     value: statsAsync.when(
                       data: (stats) => stats.totalQuantity.toString(),
-                      loading: () => '--',
-                      error: (_, _) => '!',
+                      loading: () => "--",
+                      error: (_, _) => "!",
                     ),
-                    label: 'Comics',
+                    label: "Comics",
                     onTap: () {
                       context.pushRoute(const MyComicsRoute());
                     },
@@ -57,10 +57,10 @@ class LibraryScreen extends ConsumerWidget {
                     icon: Icons.bookmark_added,
                     value: statsAsync.when(
                       data: (stats) => stats.readCount.toString(),
-                      loading: () => '--',
-                      error: (_, _) => '!',
+                      loading: () => "--",
+                      error: (_, _) => "!",
                     ),
-                    label: 'Read',
+                    label: "Read",
                     onTap: () {
                       context.pushRoute(const ReadRoute());
                     },
@@ -70,10 +70,10 @@ class LibraryScreen extends ConsumerWidget {
                     icon: Icons.turned_in_not,
                     value: statsAsync.when(
                       data: (stats) => stats.wishlistCount.toString(),
-                      loading: () => '--',
-                      error: (_, _) => '!',
+                      loading: () => "--",
+                      error: (_, _) => "!",
                     ),
-                    label: 'Wishlist',
+                    label: "Wishlist",
                     onTap: () {
                       context.pushRoute(const WishlistRoute());
                     },
@@ -83,15 +83,15 @@ class LibraryScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             CompactListSection(
-              title: 'Lists',
+              title: "Lists",
               items: [
                 CompactListSectionItem(
                   icon: Icons.bookmark_added_outlined,
-                  label: 'Unread',
+                  label: "Unread",
                   value: statsAsync.when(
                     data: (stats) => stats.unreadCount.toString(),
-                    loading: () => '--',
-                    error: (_, _) => '!',
+                    loading: () => "--",
+                    error: (_, _) => "!",
                   ),
                   onTap: () {
                     context.pushRoute(const UnreadRoute());
@@ -99,11 +99,11 @@ class LibraryScreen extends ConsumerWidget {
                 ),
                 CompactListSectionItem(
                   icon: Icons.star_border_outlined,
-                  label: 'Unrated',
+                  label: "Unrated",
                   value: statsAsync.when(
                     data: (stats) => stats.unratedCount.toString(),
-                    loading: () => '--',
-                    error: (_, _) => '!',
+                    loading: () => "--",
+                    error: (_, _) => "!",
                   ),
                   onTap: () {
                     context.pushRoute(const UnratedRoute());
@@ -111,13 +111,13 @@ class LibraryScreen extends ConsumerWidget {
                 ),
                 CompactListSectionItem(
                   icon: Icons.list_alt_outlined,
-                  label: 'Reading Lists',
+                  label: "Reading Lists",
                   value: ref
                       .watch(localReadingListsProvider)
                       .when(
                         data: (lists) => lists.length.toString(),
-                        loading: () => '--',
-                        error: (_, _) => '!',
+                        loading: () => "--",
+                        error: (_, _) => "!",
                       ),
                   onTap: () {
                     context.pushRoute(const LocalReadingListsRoute());
@@ -125,86 +125,17 @@ class LibraryScreen extends ConsumerWidget {
                 ),
                 CompactListSectionItem(
                   icon: Icons.favorite_border,
-                  label: 'Favorites',
+                  label: "Favorites",
                   onTap: () {
                     context.pushRoute(const FavoritesRoute());
                   },
                 ),
               ],
             ),
-            suggestionAsync.when(
-              loading: () => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Reading Suggestion',
-                      subtitle: 'Not sure what to read next?',
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16,
-                    ),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              ),
-              error: (error, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Reading Suggestion',
-                      subtitle: 'Not sure what to read next?',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      TakionAlerts.cleanError(
-                        error,
-                        fallback: 'Something went wrong',
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-              data: (suggestion) {
-                if (suggestion == null) return const SizedBox.shrink();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SectionSubtitleHeader(
-                        title: 'Reading Suggestion',
-                        subtitle: 'Not sure what to read next?',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    IssueListTile(
-                      issue: suggestion.issue,
-                      isFirst: true,
-                      isLast: true,
-                      useCardBackground: false,
-                      isCollected: suggestion.isCollected,
-                      isRead: suggestion.isRead,
-                      rating: suggestion.rating,
-                    ),
-                  ],
-                );
-              },
+            _IssueSuggestionSection(
+              title: "Reading Suggestion",
+              subtitle: "Not sure what to read next?",
+              asyncSuggestion: suggestionAsync,
             ),
             Consumer(
               builder: (context, ref, _) {
@@ -218,8 +149,8 @@ class LibraryScreen extends ConsumerWidget {
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: SectionSubtitleHeader(
-                        title: 'Reading List Suggestion',
-                        subtitle: 'Pick up where you left off!',
+                        title: "Reading List Suggestion",
+                        subtitle: "Pick up where you left off!",
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -236,79 +167,10 @@ class LibraryScreen extends ConsumerWidget {
                 );
               },
             ),
-            rateSuggestionAsync.when(
-              loading: () => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Rate Suggestion',
-                      subtitle: 'You read it, what did you think?',
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16,
-                    ),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              ),
-              error: (error, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SectionSubtitleHeader(
-                      title: 'Rate Suggestion',
-                      subtitle: 'You read it, what did you think?',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      TakionAlerts.cleanError(
-                        error,
-                        fallback: 'Something went wrong',
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-              data: (suggestion) {
-                if (suggestion == null) return const SizedBox.shrink();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SectionSubtitleHeader(
-                        title: 'Rate Suggestion',
-                        subtitle: 'You read it, what did you think?',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    IssueListTile(
-                      issue: suggestion.issue,
-                      isFirst: true,
-                      isLast: true,
-                      useCardBackground: false,
-                      isCollected: suggestion.isCollected,
-                      isRead: suggestion.isRead,
-                      rating: suggestion.rating,
-                    ),
-                  ],
-                );
-              },
+            _IssueSuggestionSection(
+              title: "Rate Suggestion",
+              subtitle: "You read it, what did you think?",
+              asyncSuggestion: rateSuggestionAsync,
             ),
           ],
         ),
@@ -316,3 +178,86 @@ class LibraryScreen extends ConsumerWidget {
     );
   }
 }
+
+class _IssueSuggestionSection extends StatelessWidget {
+  const _IssueSuggestionSection({
+    required this.title,
+    required this.subtitle,
+    required this.asyncSuggestion,
+  });
+
+  final String title;
+  final String subtitle;
+  final AsyncValue<SuggestionIssueTileData?> asyncSuggestion;
+
+
+  @override
+  Widget build(BuildContext context) {
+    return asyncSuggestion.when(
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+          ),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 16,
+            ),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      ),
+      error: (error, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              TakionAlerts.cleanError(
+                error,
+                fallback: "Something went wrong",
+              ),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+      data: (suggestion) {
+        if (suggestion == null) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+            ),
+            const SizedBox(height: 8),
+            IssueListTile(
+              issue: suggestion.issue,
+              isFirst: true,
+              isLast: true,
+              useCardBackground: false,
+              isCollected: suggestion.isCollected,
+              isRead: suggestion.isRead,
+              rating: suggestion.rating,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+

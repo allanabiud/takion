@@ -1,6 +1,6 @@
-import 'dart:collection';
+import "dart:collection";
 
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class UserStateCache {
   static const int _maxEntries = 500;

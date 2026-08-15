@@ -1,10 +1,10 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
+import "package:takion/src/presentation/features/issues/issue_details/issue_about_content.dart";
 
 class IssueDetailsSheet extends StatelessWidget {
   const IssueDetailsSheet({
@@ -201,7 +201,7 @@ class IssueDetailsSheet extends StatelessWidget {
                           flex: 2,
                           child: (collectionStatus?.isCollected == true)
                               ? _StateActionButton(
-                                  label: 'Remove',
+                                  label: "Remove",
                                   icon: Icons.delete_outline,
                                   backgroundColor:
                                       theme.colorScheme.errorContainer,
@@ -211,7 +211,7 @@ class IssueDetailsSheet extends StatelessWidget {
                                 )
                               : (collectionStatus?.isWishlisted == true)
                               ? _StateActionButton(
-                                  label: 'Wishlisted',
+                                  label: "Wishlisted",
                                   icon: Icons.turned_in,
                                   backgroundColor:
                                       theme.colorScheme.tertiaryContainer,
@@ -221,7 +221,7 @@ class IssueDetailsSheet extends StatelessWidget {
                                 )
                               : isInPullList
                               ? _StateActionButton(
-                                  label: 'Pulled',
+                                  label: "Pulled",
                                   icon: Icons.shopping_bag,
                                   backgroundColor:
                                       theme.colorScheme.secondaryContainer,
@@ -230,7 +230,7 @@ class IssueDetailsSheet extends StatelessWidget {
                                   onPressed: onShowScrobbleSheet,
                                 )
                               : _StateActionButton(
-                                  label: 'Add',
+                                  label: "Add",
                                   icon: Icons.add,
                                   onPressed: onShowScrobbleSheet,
                                 ),
@@ -274,7 +274,7 @@ class IssueDetailsSheet extends StatelessWidget {
                         Expanded(
                           flex: 1,
                           child: Tooltip(
-                            message: 'Go to series',
+                            message: "Go to series",
                             child: FilledButton.tonal(
                               style: FilledButton.styleFrom(
                                 backgroundColor:

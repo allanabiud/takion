@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/image_error_placeholder.dart";
 
 class EntityCover extends StatelessWidget {
   final String? imageUrl;
@@ -12,10 +12,20 @@ class EntityCover extends StatelessWidget {
   final ItemRole? role;
   final double borderRadius;
   final double aspectRatio;
+  final double? width;
+  final double? height;
   final IconData placeholderIcon;
   final double iconSize;
   final int? cacheWidth;
   final int? cacheHeight;
+  final Alignment alignment;
+  final Widget? overlay;
+  final Duration fadeInDuration;
+  final Duration fadeOutDuration;
+  final bool circular;
+  final Widget Function(BuildContext context, String url, Object error)?
+      errorBuilder;
+  final PlaceholderWidgetBuilder? placeholder;
 
   const EntityCover({
     super.key,
@@ -26,19 +36,28 @@ class EntityCover extends StatelessWidget {
     this.role,
     this.borderRadius = 8,
     this.aspectRatio = 2 / 3,
+    this.width,
+    this.height,
     this.placeholderIcon = Icons.image,
     this.iconSize = 24,
     this.cacheWidth,
     this.cacheHeight,
+    this.alignment = Alignment.center,
+    this.overlay,
+    this.fadeInDuration = const Duration(milliseconds: 400),
+    this.fadeOutDuration = const Duration(milliseconds: 400),
+    this.circular = false,
+    this.errorBuilder,
+    this.placeholder,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return RepaintBoundary(
+    Widget cover = RepaintBoundary(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(circular ? 0 : borderRadius),
         child: AspectRatio(
           aspectRatio: aspectRatio,
           child: Stack(
@@ -48,15 +67,20 @@ class EntityCover extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: imageUrl!,
                       fit: BoxFit.cover,
+                      alignment: alignment,
                       memCacheWidth: cacheWidth,
-                      placeholder: (context, url) => Container(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) =>
-                          imageErrorPlaceholder(
+                      memCacheHeight: cacheHeight,
+                      fadeInDuration: fadeInDuration,
+                      fadeOutDuration: fadeOutDuration,
+                      placeholder: placeholder ??
+                          (context, url) => Container(
+                            color: theme.colorScheme.surfaceContainerHighest,
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                      errorWidget: errorBuilder ??
+                          (context, url, error) => imageErrorPlaceholder(
                             context,
                             url,
                             error,
@@ -113,10 +137,25 @@ class EntityCover extends StatelessWidget {
                     ),
                   ),
                 ),
+              ?overlay,
             ],
           ),
         ),
       ),
     );
+
+    if (circular) {
+      cover = ClipOval(
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: cover,
+        ),
+      );
+    } else if (width != null || height != null) {
+      cover = SizedBox(width: width, height: height, child: cover);
+    }
+
+    return cover;
   }
 }

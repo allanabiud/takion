@@ -1,6 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/network/dio_client.dart';
-import 'package:takion/src/core/network/rate_limit_interceptor.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/core/network/rate_limit_interceptor.dart";
 
 class RateLimitNotifier extends Notifier<RateLimitState> {
   bool _disposed = false;

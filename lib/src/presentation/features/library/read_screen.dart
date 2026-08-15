@@ -1,27 +1,27 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
-import 'package:takion/src/presentation/features/library/activity_log_view.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/presentation/features/library/widgets/streak_calendar_widget.dart';
-import 'package:takion/src/presentation/features/library/widgets/stats_skeleton.dart';
-import 'package:takion/src/presentation/features/library/widgets/reading_goal_card.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/features/library/widgets/stat_card.dart';
-import 'package:takion/src/presentation/features/library/widgets/library_charts.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/category_series_providers.dart";
+import "package:takion/src/presentation/features/library/activity_log_view.dart";
+import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/features/library/widgets/streak_calendar_widget.dart";
+import "package:takion/src/presentation/features/library/widgets/stats_skeleton.dart";
+import "package:takion/src/presentation/features/library/widgets/reading_goal_card.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:takion/src/presentation/features/library/widgets/stat_card.dart";
+import "package:takion/src/presentation/features/library/widgets/library_charts.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
 
 @RoutePage()
 class ReadScreen extends ConsumerStatefulWidget {
@@ -37,7 +37,7 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounceTimer;
-  String _debouncedSearchQuery = '';
+  String _debouncedSearchQuery = "";
 
   @override
   void initState() {
@@ -60,7 +60,7 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
       _searchDebounceTimer?.cancel();
       setState(() {
         _isSearching = false;
-        _debouncedSearchQuery = '';
+        _debouncedSearchQuery = "";
         _searchController.clear();
       });
     }
@@ -81,19 +81,19 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: _isSearching && _tabController.index == 0 ? 0 : null,
-        title: _isSearching && _tabController.index == 0
+        titleSpacing: _isSearching ? 0 : null,
+        title: _isSearching
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
-                  hintText: 'Search series...',
+                  hintText: "Search series...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close search',
+                    tooltip: "Close search",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -101,33 +101,37 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
                       _searchDebounceTimer?.cancel();
                       setState(() {
                         _isSearching = false;
-                        _debouncedSearchQuery = '';
+                        _debouncedSearchQuery = "";
                         _searchController.clear();
                       });
                     },
                   ),
                 ),
               )
-            : const Text('Read Comics'),
+            : const Text("Read Comics"),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'BROWSE'),
-            Tab(text: 'ACTIVITY'),
-            Tab(text: 'STATS'),
+            Tab(text: "BROWSE"),
+            Tab(text: "ACTIVITY"),
+            Tab(text: "STATS"),
           ],
         ),
-        actions: _tabController.index == 0
-            ? (_isSearching
-                  ? null
-                  : [
-                      IconButton(
-                        tooltip: 'Search',
-                        onPressed: () => setState(() => _isSearching = true),
-                        icon: const Icon(Icons.search),
-                      ),
-                    ])
-            : null,
+        actions: [
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabController.index != 0 || _isSearching) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: "Search",
+                onPressed: () => setState(() => _isSearching = true),
+                icon: const Icon(Icons.search),
+              );
+            },
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -144,41 +148,100 @@ class _ReadScreenState extends ConsumerState<ReadScreen>
   }
 }
 
-class _ReadBrowseTab extends ConsumerWidget {
+class _ReadBrowseTab extends ConsumerStatefulWidget {
   final bool isSearching;
   final String searchQuery;
 
-  const _ReadBrowseTab({required this.isSearching, required this.searchQuery});
+  const _ReadBrowseTab({
+    required this.isSearching,
+    required this.searchQuery,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ReadBrowseTab> createState() => _ReadBrowseTabState();
+}
+
+class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
+    with AutomaticKeepAliveClientMixin {
+  static const _initialVisibleCount = 200;
+  static const _appendCount = 200;
+  static const _nearEndExtent = 800;
+
+  final ScrollController _scrollController = ScrollController();
+  late int _visibleCount = _initialVisibleCount;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - _nearEndExtent) {
+      setState(() => _visibleCount += _appendCount);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
-        (category: 'read', query: isSearching ? searchQuery : ''),
+        (
+          category: "read",
+          query: widget.isSearching ? widget.searchQuery : "",
+        ),
       ),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryRead),
     );
 
+    ref.listen(
+      categorySeriesViewProvider(
+        (
+          category: "read",
+          query: widget.isSearching ? widget.searchQuery : "",
+        ),
+      ),
+      (previous, next) {
+        if (previous?.value != next.value &&
+            _visibleCount != _initialVisibleCount) {
+          _visibleCount = _initialVisibleCount;
+        }
+      },
+    );
+
     return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
       error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: 'Failed to load read series'),
+          const AsyncStatePanel.error(errorMessage: "Failed to load read series"),
       data: (view) {
         final filtered = view.series;
         final categoryCounts = view.categoryCounts;
         if (filtered.isEmpty) {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(readSeriesProvider),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: const [
+            child: const CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              slivers: [
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: EmptyContentState(
                     icon: Icons.bookmark_added,
-                    message: 'No read comics in your collection.',
+                    message: "No read comics in your collection.",
                   ),
                 ),
               ],
@@ -186,44 +249,65 @@ class _ReadBrowseTab extends ConsumerWidget {
           );
         }
 
+        final visibleCount = filtered.length < _visibleCount
+            ? filtered.length
+            : _visibleCount;
+        final visible = filtered.sublist(0, visibleCount);
+        final hasMore = visibleCount < filtered.length;
+
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(readSeriesProvider),
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               PinnedListHeader(
                 child: ListHeader(
                   count: filtered.length,
-                  unit: 'series',
-                  pluralUnit: 'series',
+                  unit: "series",
+                  pluralUnit: "series",
                   enabled: true,
-                  sortLabel: seriesSortLabel(sortOption),
+                  sortLabel: contentSortLabel(sortOption),
                   onSortTap: () => showSortBottomSheet(
                     context,
                     ref,
                     SortPreferenceContext.libraryRead,
-                    seriesSortLabel,
+                    contentSortLabel,
                   ),
                 ),
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final summary = filtered[index];
-                  return SeriesListTile(
-                    series: summary,
-                    categoryCount: categoryCounts[summary.id],
-                    categoryLabel: 'read',
-                    showProgressBar: true,
-                    isFirst: index == 0,
-                    isLast: index == filtered.length - 1,
-                    onTap: () => context.pushRoute(
-                      LibrarySeriesRoute(
-                        seriesId: summary.id,
-                        category: 'read',
-                        seriesName: summary.name,
+                  if (index >= visible.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  }
+                  final summary = visible[index];
+                  return RepaintBoundary(
+                    child: SeriesListTile(
+                      series: summary,
+                      categoryCount: categoryCounts[summary.id],
+                      categoryLabel: "read",
+                      showProgressBar: true,
+                      isFirst: index == 0,
+                      isLast: !hasMore && index == visible.length - 1,
+                      onTap: () => context.pushRoute(
+                        LibrarySeriesRoute(
+                          seriesId: summary.id,
+                          category: "read",
+                          seriesName: summary.name,
+                        ),
                       ),
                     ),
                   );
-                }, childCount: filtered.length),
+                }, childCount: hasMore ? visible.length + 1 : visible.length),
               ),
             ],
           ),
@@ -271,7 +355,7 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
                     child: ChoiceChip(
                       label: Text(
                         f == LibraryFilter.allTime
-                            ? 'All-Time'
+                            ? "All-Time"
                             : f.name[0].toUpperCase() + f.name.substring(1),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -356,8 +440,8 @@ class _ReadStatsCards extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   icon: Icons.menu_book,
-                  value: '${displayStats.readsInPeriod}',
-                  label: 'Read',
+                  value: "${displayStats.readsInPeriod}",
+                  label: "Read",
                   color: theme.colorScheme.primary,
                 ),
               ),
@@ -365,8 +449,8 @@ class _ReadStatsCards extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   icon: Icons.percent,
-                  value: '${displayStats.readPercent.toStringAsFixed(0)}%',
-                  label: 'Read %',
+                  value: "${displayStats.readPercent.toStringAsFixed(0)}%",
+                  label: "Read %",
                   color: theme.colorScheme.secondary,
                 ),
               ),
@@ -380,8 +464,8 @@ class _ReadStatsCards extends ConsumerWidget {
                   icon: Icons.star_half,
                   value: displayStats.averageRating > 0
                       ? displayStats.averageRating.toStringAsFixed(1)
-                      : '--',
-                  label: 'Rating',
+                      : "--",
+                  label: "Rating",
                   color: theme.colorScheme.tertiary,
                 ),
               ),
@@ -389,8 +473,8 @@ class _ReadStatsCards extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   icon: Icons.local_fire_department,
-                  value: '${displayStats.streakDays}',
-                  label: 'Day Streak',
+                  value: "${displayStats.streakDays}",
+                  label: "Day Streak",
                   color: theme.colorScheme.primary,
                 ),
               ),
@@ -429,7 +513,7 @@ class _ReadTrendsChart extends ConsumerWidget {
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: EmptyContentState(
           icon: Icons.show_chart_outlined,
-          message: 'No reading trends yet.',
+          message: "No reading trends yet.",
         ),
       ),
       data: (trends) {
@@ -439,12 +523,12 @@ class _ReadTrendsChart extends ConsumerWidget {
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SectionHeader(title: 'READING TRENDS'),
+                child: SectionHeader(title: "READING TRENDS"),
               ),
               SizedBox(height: 12),
               EmptyContentState(
                 icon: Icons.show_chart_outlined,
-                message: 'No reading trends available.',
+                message: "No reading trends available.",
               ),
             ],
           );
@@ -454,7 +538,7 @@ class _ReadTrendsChart extends ConsumerWidget {
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SectionHeader(title: 'READING TRENDS'),
+              child: SectionHeader(title: "READING TRENDS"),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -496,14 +580,14 @@ class _ReadingHistoryTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Reading History',
+                        "Reading History",
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'View all comics you have read',
+                        "View all comics you have read",
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

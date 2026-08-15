@@ -1,14 +1,14 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/category_series_providers.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
 
 @RoutePage()
 class UnratedScreen extends ConsumerStatefulWidget {
@@ -32,7 +32,7 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
   Widget build(BuildContext context) {
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
-        (category: 'unrated', query: _isSearching ? _searchController.text : ''),
+        (category: "unrated", query: _isSearching ? _searchController.text : ""),
       ),
     );
     final sortOption = ref.watch(
@@ -48,12 +48,12 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search series...',
+                  hintText: "Search series...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close search',
+                    tooltip: "Close search",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -66,12 +66,12 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                   ),
                 ),
               )
-            : const Text('Unrated Comics'),
+            : const Text("Unrated Comics"),
         actions: _isSearching
             ? null
             : [
                 IconButton(
-                  tooltip: 'Search',
+                  tooltip: "Search",
                   onPressed: () => setState(() => _isSearching = true),
                   icon: const Icon(Icons.search),
                 ),
@@ -79,8 +79,8 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
       ),
       body: viewAsync.when(
         loading: () => const AsyncStatePanel.loading(),
-        error: (error, _) => AsyncStatePanel.error(
-          errorMessage: 'Failed to load unrated series',
+        error: (error, _) => const AsyncStatePanel.error(
+          errorMessage: "Failed to load unrated series",
         ),
         data: (view) {
           final filtered = view.series;
@@ -88,14 +88,14 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
           if (filtered.isEmpty) {
             return RefreshIndicator(
               onRefresh: () async => ref.invalidate(unratedSeriesProvider),
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: const [
+              child: const CustomScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                slivers: [
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: EmptyContentState(
                       icon: Icons.star_border_outlined,
-                      message: 'No unrated comics.',
+                      message: "No unrated comics.",
                     ),
                   ),
                 ],
@@ -110,15 +110,15 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                 PinnedListHeader(
                   child: ListHeader(
                     count: filtered.length,
-                    unit: 'series',
-                    pluralUnit: 'series',
+                    unit: "series",
+                    pluralUnit: "series",
                     enabled: true,
-                    sortLabel: seriesSortLabel(sortOption),
+                    sortLabel: contentSortLabel(sortOption),
                     onSortTap: () => showSortBottomSheet(
                       context,
                       ref,
                       SortPreferenceContext.libraryUnrated,
-                      seriesSortLabel,
+                      contentSortLabel,
                     ),
                   ),
                 ),
@@ -128,14 +128,14 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                     return SeriesListTile(
                       series: summary,
                       categoryCount: categoryCounts[summary.id],
-                      categoryLabel: 'unrated',
+                      categoryLabel: "unrated",
                       showProgressBar: true,
                       isFirst: index == 0,
                       isLast: index == filtered.length - 1,
                       onTap: () => context.pushRoute(
                         LibrarySeriesRoute(
                           seriesId: summary.id,
-                          category: 'unrated',
+                          category: "unrated",
                           seriesName: summary.name,
                         ),
                       ),

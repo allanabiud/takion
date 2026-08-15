@@ -1,10 +1,12 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
+/// CRUD and stream queries for the Metron catalog tables, one method family
+/// per entity (issues, series, creators, characters, arcs, teams, universes,
+/// publishers, imprints, reading lists) plus batched stub upserts.
 class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   MetronEntityDao(super.db);
 
-  // ── Issues ──────────────────────────────────────────────────────────────
 
   Future<MetronIssue?> getIssue(int id) async {
     return (select(
@@ -86,7 +88,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     }
   }
 
-  // ── Series ──────────────────────────────────────────────────────────────
 
   Future<MetronSery?> getSeries(int id) async {
     return (select(
@@ -126,10 +127,10 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     if (query.trim().isEmpty) return [];
     final cleanQuery = query
         .trim()
-        .replaceAll('%', '\\%')
-        .replaceAll('_', '\\_');
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
     return (select(attachedDatabase.metronSeries)
-          ..where((t) => t.name.like('%$cleanQuery%'))
+          ..where((t) => t.name.like("%$cleanQuery%"))
           ..orderBy([
             (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
             (t) =>
@@ -184,7 +185,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     });
   }
 
-  // ── Creators ────────────────────────────────────────────────────────────
 
   Future<MetronCreator?> getCreator(int id) async {
     return (select(
@@ -212,7 +212,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-  // ── Characters ──────────────────────────────────────────────────────────
 
   Future<MetronCharacter?> getCharacter(int id) async {
     return (select(
@@ -240,7 +239,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-  // ── Arcs ────────────────────────────────────────────────────────────────
 
   Future<MetronArc?> getArc(int id) async {
     return (select(
@@ -266,7 +264,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     await into(attachedDatabase.metronArcs).insertOnConflictUpdate(companion);
   }
 
-  // ── Teams ───────────────────────────────────────────────────────────────
 
   Future<MetronTeam?> getTeam(int id) async {
     return (select(
@@ -292,7 +289,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     await into(attachedDatabase.metronTeams).insertOnConflictUpdate(companion);
   }
 
-  // ── Universes ───────────────────────────────────────────────────────────
 
   Future<MetronUniverse?> getUniverse(int id) async {
     return (select(
@@ -320,7 +316,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-  // ── Publishers ──────────────────────────────────────────────────────────
 
   Future<MetronPublisher?> getPublisher(int id) async {
     return (select(
@@ -348,7 +343,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-  // ── Imprints ────────────────────────────────────────────────────────────
 
   Future<MetronImprint?> getImprint(int id) async {
     return (select(
@@ -376,7 +370,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-  // ── Reading Lists ───────────────────────────────────────────────────────
 
   Future<MetronReadingList?> getMetronReadingList(int id) async {
     return (select(
@@ -409,7 +402,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         .get();
   }
 
-  // ── Batch Stub Upserts ─────────────────────────────────────────────────
 
   Future<void> upsertIssueStub(
     int id,

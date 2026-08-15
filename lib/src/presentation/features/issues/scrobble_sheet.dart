@@ -1,21 +1,21 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
-import 'package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart';
-import 'package:takion/src/presentation/features/issues/issue_share_util.dart';
-import 'package:takion/src/presentation/features/issues/series_subscription_toggle.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart';
-import 'package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/domain/entities.dart';
+import "dart:async";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
+import "package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart";
+import "package:takion/src/presentation/features/issues/issue_share_util.dart";
+import "package:takion/src/presentation/features/issues/series_subscription_toggle.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
+import "package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/domain/entities.dart";
 
 class _ScrobbleActionIcon extends StatelessWidget {
   const _ScrobbleActionIcon({
@@ -66,7 +66,7 @@ Future<void> showScrobbleSheet({
   String? issueNumber,
   String? imageUrl,
 }) async {
-  final title = sheetTitle ?? 'Issue #$issueId';
+  final title = sheetTitle ?? "Issue #$issueId";
 
   // Series id comes from issue-list data (which always includes it), so the Subscribe tile needs no full details fetch.
   final resolvedSeriesId = seriesId;
@@ -148,7 +148,7 @@ Future<void> showScrobbleSheet({
                       icon: addToCollection
                           ? Icons.inventory_2
                           : Icons.inventory_2_outlined,
-                      label: 'Collected',
+                      label: "Collected",
                       color: toggleColor(addToCollection),
                       onPressed: isSubmitting
                           ? null
@@ -178,14 +178,14 @@ Future<void> showScrobbleSheet({
                                       });
                                     } else if (newValue) {
                                       AppLogger.info(
-                                        'Scrobble: added issue #$issueId to collection',
+                                        "Scrobble: added issue #$issueId to collection",
                                       );
                                       TakionAlerts.libraryAddedToCollection(
                                         context,
                                       );
                                     } else {
                                       AppLogger.info(
-                                        'Scrobble: removed issue #$issueId from collection',
+                                        "Scrobble: removed issue #$issueId from collection",
                                       );
                                     }
                                   });
@@ -196,7 +196,7 @@ Future<void> showScrobbleSheet({
                       icon: markAsRead
                           ? Icons.bookmark_added
                           : Icons.bookmark_added_outlined,
-                      label: 'Read',
+                      label: "Read",
                       color: toggleColor(markAsRead),
                       onPressed: isSubmitting
                           ? null
@@ -229,12 +229,12 @@ Future<void> showScrobbleSheet({
                                       });
                                     } else if (newValue) {
                                       AppLogger.info(
-                                        'Scrobble: marked issue #$issueId as read',
+                                        "Scrobble: marked issue #$issueId as read",
                                       );
                                       TakionAlerts.libraryMarkedAsRead(context);
                                     } else {
                                       AppLogger.info(
-                                        'Scrobble: unmarked issue #$issueId as read',
+                                        "Scrobble: unmarked issue #$issueId as read",
                                       );
                                     }
                                   });
@@ -245,7 +245,7 @@ Future<void> showScrobbleSheet({
                       icon: pullIssue
                           ? Icons.shopping_bag
                           : Icons.shopping_bag_outlined,
-                      label: 'Pull',
+                      label: "Pull",
                       color: toggleColor(pullIssue),
                       onPressed:
                           isSubmitting || isPulling || pullEntryWatch.isLoading
@@ -273,7 +273,7 @@ Future<void> showScrobbleSheet({
                                         status: PullListEntryStatus.skipped,
                                       );
                                   AppLogger.info(
-                                    'Scrobble: dismissed issue #$issueId from pull list',
+                                    "Scrobble: dismissed issue #$issueId from pull list",
                                   );
                                 } else {
                                   await ref
@@ -284,7 +284,7 @@ Future<void> showScrobbleSheet({
                                         releaseDate: releaseDate,
                                       );
                                   AppLogger.info(
-                                    'Scrobble: added issue #$issueId to pull list',
+                                    "Scrobble: added issue #$issueId to pull list",
                                   );
                                   final sub = await ref
                                       .read(subscriptionRepositoryProvider)
@@ -308,24 +308,24 @@ Future<void> showScrobbleSheet({
                                   if (newValue) {
                                     TakionAlerts.success(
                                       context,
-                                      'Added to Pull List',
+                                      "Added to Pull List",
                                     );
                                   } else {
                                     TakionAlerts.info(
                                       context,
-                                      'Dismissed from Pull List',
+                                      "Dismissed from Pull List",
                                     );
                                   }
                                 }
                               } catch (e) {
                                 AppLogger.warning(
-                                  'Failed to update pull list',
+                                  "Failed to update pull list",
                                   error: e,
                                 );
                                 if (context.mounted) {
                                   TakionAlerts.error(
                                     context,
-                                    'Failed to update pull list',
+                                    "Failed to update pull list",
                                   );
                                 }
                               } finally {
@@ -352,7 +352,7 @@ Future<void> showScrobbleSheet({
                       icon: addToWishlist
                           ? Icons.turned_in
                           : Icons.turned_in_not,
-                      label: 'Wishlist',
+                      label: "Wishlist",
                       color: toggleColor(addToWishlist),
                       onPressed: isSubmitting
                           ? null
@@ -455,11 +455,11 @@ Future<void> showScrobbleSheet({
                   ),
                 ListTile(
                   leading: const Icon(Icons.playlist_add),
-                  title: const Text('Add to Reading List'),
+                  title: const Text("Add to Reading List"),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => AddToLocalReadingListBottomSheet.show(
                     context: callerContext,
-                    targetId: 'issue-$issueId',
+                    targetId: "issue-$issueId",
                     isSeries: false,
                   ),
                 ),
@@ -470,7 +470,7 @@ Future<void> showScrobbleSheet({
                   child: isCollected
                       ? ListTile(
                           leading: const Icon(Icons.library_books_outlined),
-                          title: const Text('My Details'),
+                          title: const Text("My Details"),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () => showEditMyDetailsSheet(
                             callerContext,
@@ -487,7 +487,7 @@ Future<void> showScrobbleSheet({
                   child: isRead
                       ? ListTile(
                           leading: const Icon(Icons.history),
-                          title: const Text('Reading History'),
+                          title: const Text("Reading History"),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () => showReadingHistorySheet(
                             callerContext,
@@ -505,7 +505,7 @@ Future<void> showScrobbleSheet({
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.share),
-                  title: const Text('Share'),
+                  title: const Text("Share"),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: isSharing
                       ? null
@@ -513,7 +513,7 @@ Future<void> showScrobbleSheet({
                           setModalState(() => isSharing = true);
                           try {
                             AppLogger.info(
-                              'Share: fetching issue #$issueId details',
+                              "Share: fetching issue #$issueId details",
                             );
                             final repo = ref.read(catalogRepositoryProvider);
                             final details = await repo.getIssueDetails(issueId);
@@ -522,27 +522,27 @@ Future<void> showScrobbleSheet({
 
                             final resourceUrl = details.resourceUrl?.trim();
                             AppLogger.info(
-                              'Share: issue #$issueId resourceUrl=$resourceUrl',
+                              "Share: issue #$issueId resourceUrl=$resourceUrl",
                             );
 
                             if (resourceUrl == null || resourceUrl.isEmpty) {
-                              TakionAlerts.noShareUrl(callerContext, 'issue');
+                              TakionAlerts.noShareUrl(callerContext, "issue");
                               return;
                             }
 
                             await shareIssueResourceUrl(callerContext, details);
                             AppLogger.info(
-                              'Share: completed for issue #$issueId',
+                              "Share: completed for issue #$issueId",
                             );
                           } catch (e) {
                             AppLogger.warning(
-                              'Share: failed for issue #$issueId',
+                              "Share: failed for issue #$issueId",
                               error: e,
                             );
                             if (context.mounted) {
                               TakionAlerts.error(
                                 callerContext,
-                                'Could not load issue details',
+                                "Could not load issue details",
                               );
                             }
                           } finally {
@@ -560,13 +560,13 @@ Future<void> showScrobbleSheet({
                       var cleaned = raw
                           .replaceFirst(
                             RegExp(
-                              r'^(Exception|StateError|DioException|PlatformException): ',
+                              r"^(Exception|StateError|DioException|PlatformException): ",
                             ),
-                            '',
+                            "",
                           )
                           .trim();
                       if (cleaned.isEmpty || cleaned.length > 120) {
-                        cleaned = 'Something went wrong';
+                        cleaned = "Something went wrong";
                       }
                       return cleaned;
                     }(),
@@ -623,7 +623,7 @@ class _SubscribeTileState extends ConsumerState<_SubscribeTile> {
               color: subscribed ? Theme.of(context).colorScheme.error : null,
             ),
       title: Text(
-        subscribed ? 'Unsubscribe from Series' : 'Subscribe to Series',
+        subscribed ? "Unsubscribe from Series" : "Subscribe to Series",
         style: subscribed
             ? TextStyle(color: Theme.of(context).colorScheme.error)
             : null,

@@ -1,10 +1,10 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 final collectedSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
@@ -15,7 +15,7 @@ final collectedSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(
-        ownershipStatus: 'owned',
+        ownershipStatus: "owned",
       );
       final result = rows
           .map(
@@ -30,7 +30,7 @@ final collectedSeriesProvider =
             ),
           )
           .toList();
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
 
@@ -56,7 +56,7 @@ final readSeriesProvider =
             ),
           )
           .toList();
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
 
@@ -69,7 +69,7 @@ final wishlistSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(
-        ownershipStatus: 'wishlist',
+        ownershipStatus: "wishlist",
       );
       final result = rows
           .map(
@@ -84,7 +84,7 @@ final wishlistSeriesProvider =
             ),
           )
           .toList();
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
 
@@ -110,7 +110,7 @@ final unreadSeriesProvider =
             ),
           )
           .toList();
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
 
@@ -136,22 +136,22 @@ final unratedSeriesProvider =
             ),
           )
           .toList();
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
 
 final seriesByCategoryProvider = FutureProvider.autoDispose
     .family<List<CategorySeriesSummary>, String>((ref, category) {
       switch (category) {
-        case 'collected':
+        case "collected":
           return ref.watch(collectedSeriesProvider.future);
-        case 'read':
+        case "read":
           return ref.watch(readSeriesProvider.future);
-        case 'wishlist':
+        case "wishlist":
           return ref.watch(wishlistSeriesProvider.future);
-        case 'unread':
+        case "unread":
           return ref.watch(unreadSeriesProvider.future);
-        case 'unrated':
+        case "unrated":
           return ref.watch(unratedSeriesProvider.future);
         default:
           return Future.value(<CategorySeriesSummary>[]);
@@ -160,15 +160,15 @@ final seriesByCategoryProvider = FutureProvider.autoDispose
 
 SortPreferenceContext _sortContextForCategory(String category) {
   switch (category) {
-    case 'collected':
+    case "collected":
       return SortPreferenceContext.libraryMyComics;
-    case 'read':
+    case "read":
       return SortPreferenceContext.libraryRead;
-    case 'wishlist':
+    case "wishlist":
       return SortPreferenceContext.libraryWishlist;
-    case 'unread':
+    case "unread":
       return SortPreferenceContext.libraryUnread;
-    case 'unrated':
+    case "unrated":
       return SortPreferenceContext.libraryUnrated;
     default:
       return SortPreferenceContext.libraryMyComics;

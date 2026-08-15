@@ -1,64 +1,70 @@
-import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart';
-import 'package:takion/src/data/catalog/datasources/local/series_name_index.dart'
+import "package:dio/dio.dart";
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
+import "package:takion/src/data/catalog/datasources/local/series_name_index.dart"
     as series_index;
-import 'package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/data/catalog/repositories/metron_repository_impl.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
-import 'package:takion/src/data/reading_list/repositories/local_reading_list_local_data_source.dart';
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/data/catalog/repositories/metron_repository_impl.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/data/reading_list/repositories/local_reading_list_local_data_source.dart";
+import "package:takion/src/domain/entities.dart";
 
 class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
-  final List<IssueListDto> arcIssues;
-  bool lastGetArcIssueListBypassConditional = false;
+  final List<IssueListDto> allIssues;
+  int getArcIssueListCalls = 0;
 
-  FakeMetronRemoteDataSource(this.arcIssues);
+  FakeMetronRemoteDataSource(this.allIssues);
 
   @override
   Future<SeriesIssueListResponseDto> getArcIssueList(
     int arcId, {
     Uri? nextUrl,
     int page = 1,
-    int limit = metronDefaultPageSize,
     CancelToken? cancelToken,
     bool bypassConditional = false,
   }) async {
-    lastGetArcIssueListBypassConditional = bypassConditional;
+    getArcIssueListCalls++;
+    final pageNumber = nextUrl != null
+        ? int.tryParse(nextUrl.queryParameters["page"] ?? "") ?? page
+        : page;
+    final start = (pageNumber - 1) * metronDefaultPageSize;
+    final slice = allIssues.skip(start).take(metronDefaultPageSize).toList();
     return SeriesIssueListResponseDto(
-      count: arcIssues.length,
-      next: null,
+      count: allIssues.length,
+      next: start + slice.length < allIssues.length
+          ? "https://metron.example/arc/$arcId/issue_list/?page=${pageNumber + 1}"
+          : null,
       previous: null,
-      results: arcIssues,
+      results: slice,
     );
   }
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    throw UnimplementedError('${invocation.memberName}');
+    throw UnimplementedError("${invocation.memberName}");
   }
 }
 
 IssueListDto _issue(int id, {String? image}) {
   return IssueListDto(
     id: id,
-    number: '$id',
-    series: IssueListSeriesDto(
+    number: "$id",
+    series: const IssueListSeriesDto(
       id: 900,
-      name: 'Test Series',
+      name: "Test Series",
       volume: 1,
       yearBegan: 2026,
     ),
-    coverDate: '2026-10-14',
-    storeDate: '2026-10-14',
+    coverDate: "2026-10-14",
+    storeDate: "2026-10-14",
     image: image,
-    issueName: 'Test Series #$id',
-    modified: '2026-10-01T00:00:00Z',
+    issueName: "Test Series #$id",
+    modified: "2026-10-01T00:00:00Z",
     coverHash: null,
   );
 }
@@ -71,11 +77,11 @@ void main() {
   });
 
   tearDown(() async {
-    await db.customStatement('SELECT 1');
+    await db.customStatement("SELECT 1");
     await db.close();
   });
 
-  test('getArcIssueListAll returns issues and they land in the reading list',
+  test("getArcIssueListAll returns issues and they land in the reading list",
       () async {
     final remote = FakeMetronRemoteDataSource([_issue(1), _issue(2)]);
     final repo = MetronRepositoryImpl(
@@ -91,35 +97,36 @@ void main() {
 
     final readingListRepo = LocalReadingListLocalDataSource(db);
     final list = LocalReadingList(
-      id: 'list-1',
-      title: 'Arc Name',
-      description: '',
+      id: "list-1",
+      title: "Arc Name",
+      description: "",
       isOrdered: true,
       contentType: ListContentType.issue,
       createdAt: DateTime.now().toUtc(),
       updatedAt: DateTime.now().toUtc(),
       items: issues.map(localReadingListItemFromIssueList).toList(),
       metronArcId: 123,
-      metronAttributionSource: 'Metron Arc',
+      metronAttributionSource: "Metron Arc",
       lastSyncedAt: DateTime.now().toUtc(),
     );
     expect(list.items, hasLength(2));
 
     await readingListRepo.createList(list);
 
-    final saved = await db.readingListDao.getById('list-1');
+    final saved = await db.readingListDao.getById("list-1");
     expect(saved, isNotNull);
     expect(saved!.itemsJson, isNotNull);
     expect(saved.itemsJson, isNotEmpty);
 
-    final reloaded = await readingListRepo.getListById('list-1');
+    final reloaded = await readingListRepo.getListById("list-1");
     expect(reloaded, isNotNull);
     expect(reloaded!.items, hasLength(2));
   });
 
-  test('getArcIssueListAll bypasses conditional headers to survive 304s',
-      () async {
-    final remote = FakeMetronRemoteDataSource([_issue(1), _issue(2)]);
+  test("getArcIssueListAll caps the page walk", () async {
+    final remote = FakeMetronRemoteDataSource([
+      for (var i = 1; i <= 301; i++) _issue(i),
+    ]);
     final repo = MetronRepositoryImpl(
       remote,
       MetronLocalDataSourceImpl(db),
@@ -128,8 +135,9 @@ void main() {
       series_index.SeriesNameIndex(db),
     );
 
-    await repo.getArcIssueListAll(123);
+    final issues = await repo.getArcIssueListAll(123);
 
-    expect(remote.lastGetArcIssueListBypassConditional, isTrue);
+    expect(issues, hasLength(metronDefaultPageSize * metronMaxWalkPages));
+    expect(remote.getArcIssueListCalls, metronMaxWalkPages);
   });
 }

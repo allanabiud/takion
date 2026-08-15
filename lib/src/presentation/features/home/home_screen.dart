@@ -1,22 +1,22 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/home/main_screen.dart';
-import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
-import 'package:takion/src/presentation/features/home/providers/home_trending_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/home/main_screen.dart";
+import "package:takion/src/presentation/features/library/providers/continue_reading_provider.dart";
+import "package:takion/src/presentation/features/home/providers/home_trending_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/releases/providers/selected_week_provider.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/presentation/features/issues/scrobble_sheet.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:lucide_icons_flutter/lucide_icons.dart";
 
 @RoutePage()
 class HomeScreen extends ConsumerStatefulWidget {
@@ -137,7 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return IssueCard(
               issueId: issueId,
               imageUrl: issue.image,
-              title: '${issue.series?.name ?? issue.name} #${issue.number}',
+              title: "${issue.series?.name ?? issue.name} #${issue.number}",
               seriesId: issue.series?.id,
               seriesName: issue.series?.name,
               issueNumber: issue.number,
@@ -200,7 +200,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           error: (_, _) => const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Could not load releases right now.'),
+            child: Text("Could not load releases right now."),
           ),
         ),
       ],
@@ -255,7 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Search comics...',
+                                "Search comics...",
                                 style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       color: Theme.of(
@@ -286,7 +286,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 if (suggestions.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('No trending releases available yet.'),
+                    child: Text("No trending releases available yet."),
                   );
                 }
 
@@ -323,7 +323,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ref: ref,
                                     issueId: issueId,
                                     sheetTitle:
-                                        '${series?.name ?? issue.name} #${issue.number}',
+                                        "${series?.name ?? issue.name} #${issue.number}",
                                     seriesId: series?.id,
                                     seriesName: series?.name,
                                     issueNumber: issue.number,
@@ -460,7 +460,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ),
                                           const Spacer(),
                                           Text(
-                                            '${series?.name ?? issue.name} #${issue.number}',
+                                            "${series?.name ?? issue.name} #${issue.number}",
                                             maxLines: 3,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
@@ -568,7 +568,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _stopTrendingAutoScroll();
                 return const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Could not load trending releases right now.'),
+                  child: Text("Could not load trending releases right now."),
                 );
               },
             ),
@@ -579,7 +579,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    'Browse Metron',
+                    "Browse Metron",
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -621,7 +621,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Continue Reading',
+                                "Continue Reading",
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
@@ -685,10 +685,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'Continue Reading',
+                        "Continue Reading",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -699,10 +699,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SizedBox(
                       height: 250,
                       child: ListView.separated(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         scrollDirection: Axis.horizontal,
                         itemCount: 3,
-                        separatorBuilder: (_, _) => SizedBox(width: 12),
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
                         itemBuilder: (_, _) =>
                             const ShimmerWidget(child: IssueCardSkeleton()),
                       ),
@@ -717,8 +717,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _buildWeeklyReleaseSection(
               context: context,
               ref: ref,
-              title: 'This Week\'s Releases',
-              emptyMessage: 'No new releases this week.',
+              title: "This Week's Releases",
+              emptyMessage: "No new releases this week.",
               weekDate: thisWeekStart,
               issuesAsync: thisWeekReleasesAsync,
             ),
@@ -726,8 +726,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _buildWeeklyReleaseSection(
               context: context,
               ref: ref,
-              title: 'Upcoming Releases',
-              emptyMessage: 'No upcoming releases for next week.',
+              title: "Upcoming Releases",
+              emptyMessage: "No upcoming releases for next week.",
               weekDate: nextWeekStart,
               issuesAsync: nextWeekReleasesAsync,
             ),
@@ -742,43 +742,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final actions = [
       (
         Icons.business,
-        'Publishers',
+        "Publishers",
         () => context.pushRoute(const PublisherBrowseRoute()),
       ),
       (
         Icons.auto_stories,
-        'Story Arcs',
+        "Story Arcs",
         () => context.pushRoute(const ArcBrowseRoute()),
       ),
       (
         Icons.list_alt_rounded,
-        'Reading Lists',
+        "Reading Lists",
         () => context.pushRoute(const MetronReadingListBrowserRoute()),
       ),
-      (Icons.groups, 'Teams', () => context.pushRoute(const TeamBrowseRoute())),
+      (Icons.groups, "Teams", () => context.pushRoute(const TeamBrowseRoute())),
       (
         Icons.people,
-        'Characters',
+        "Characters",
         () => context.pushRoute(const CharacterBrowseRoute()),
       ),
       (
         Icons.collections_bookmark,
-        'Series',
+        "Series",
         () => context.pushRoute(const SeriesBrowseRoute()),
       ),
       (
         Icons.language,
-        'Universes',
+        "Universes",
         () => context.pushRoute(const UniverseBrowseRoute()),
       ),
       (
         Icons.business,
-        'Imprints',
+        "Imprints",
         () => context.pushRoute(const ImprintBrowseRoute()),
       ),
       (
         Icons.person,
-        'Creators',
+        "Creators",
         () => context.pushRoute(const CreatorBrowseRoute()),
       ),
     ];

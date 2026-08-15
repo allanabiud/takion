@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' show DateFormat;
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/presentation/features/library/providers/daily_read_activity_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:intl/intl.dart" show DateFormat;
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/presentation/features/library/providers/daily_read_activity_provider.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class StreakCalendarWidget extends ConsumerStatefulWidget {
   const StreakCalendarWidget({super.key});
@@ -64,7 +64,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SectionHeader(title: 'READING ACTIVITY'),
+              const SectionHeader(title: "READING ACTIVITY"),
               const SizedBox(height: 12),
               _buildHeader(theme, currentMonth, earliestMonth),
               const SizedBox(height: 8),
@@ -90,7 +90,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
     return Row(
       children: [
         IconButton(
-          tooltip: 'Previous month',
+          tooltip: "Previous month",
           onPressed: canGoBack ? () => _goToPreviousMonth(earliestMonth) : null,
           icon: const Icon(Icons.chevron_left),
         ),
@@ -115,7 +115,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
           ),
         ),
         IconButton(
-          tooltip: 'Next month',
+          tooltip: "Next month",
           onPressed: canGoForward ? () => _goToNextMonth(currentMonth) : null,
           icon: const Icon(Icons.chevron_right),
         ),
@@ -243,7 +243,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
         ),
         alignment: Alignment.center,
         child: Text(
-          '${date.day}',
+          "${date.day}",
           style: theme.textTheme.bodySmall?.copyWith(
             color: foreground,
             fontWeight: isToday
@@ -259,7 +259,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
     final formatted = DateFormatter.comicDate(date);
     final message = count > 0
         ? '$formatted - $count issue${count == 1 ? '' : 's'} read'
-        : '$formatted - No reads';
+        : "$formatted - No reads";
     TakionAlerts.info(context, message);
   }
 }

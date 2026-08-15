@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class PublisherListDto {
   const PublisherListDto({required this.id, required this.name, this.modified});
@@ -9,16 +9,16 @@ class PublisherListDto {
 
   factory PublisherListDto.fromJson(Map<String, dynamic> json) {
     return PublisherListDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: json['name'] as String? ?? '',
-      modified: json['modified'] as String?,
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: json["name"] as String? ?? "",
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "modified": modified,
   };
 
   PublisherList toEntity() => PublisherList(

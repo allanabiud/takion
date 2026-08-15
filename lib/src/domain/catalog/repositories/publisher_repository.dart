@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "package:dio/dio.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 abstract class PublisherRepository {
   Future<PublisherListPage> getPublisherList({
@@ -11,8 +11,6 @@ abstract class PublisherRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
-
-  Future<int> refreshPublisherListDelta({DateTime? modifiedGt});
 
   Future<PublisherListPage> searchPublishers(
     String query, {

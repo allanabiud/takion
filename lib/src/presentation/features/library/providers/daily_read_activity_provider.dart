@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
 
 final dailyReadActivityProvider =
     FutureProvider.autoDispose<Map<DateTime, int>>((ref) async {

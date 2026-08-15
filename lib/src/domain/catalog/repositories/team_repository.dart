@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "package:dio/dio.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 abstract class TeamRepository {
   Future<TeamListPage> getTeamList({
@@ -11,8 +11,6 @@ abstract class TeamRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
-
-  Future<int> refreshTeamListDelta({DateTime? modifiedGt});
 
   Future<TeamListPage> searchTeams(
     String query, {

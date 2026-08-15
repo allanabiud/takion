@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 class ArcDetailsDto {
   const ArcDetailsDto({
@@ -23,28 +23,28 @@ class ArcDetailsDto {
 
   factory ArcDetailsDto.fromJson(Map<String, dynamic> json) {
     return ArcDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: (json['name'] as String?)?.trim().isNotEmpty == true
-          ? (json['name'] as String)
-          : 'Unknown Arc',
-      desc: json['desc'] as String?,
-      image: json['image'] as String?,
-      cvId: (json['cv_id'] as num?)?.toInt(),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      resourceUrl: json['resource_url'] as String?,
-      modified: json['modified'] as String?,
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: (json["name"] as String?)?.trim().isNotEmpty == true
+          ? (json["name"] as String)
+          : "Unknown Arc",
+      desc: json["desc"] as String?,
+      image: json["image"] as String?,
+      cvId: (json["cv_id"] as num?)?.toInt(),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      resourceUrl: json["resource_url"] as String?,
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'desc': desc,
-    'image': image,
-    'cv_id': cvId,
-    'gcd_id': gcdId,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "desc": desc,
+    "image": image,
+    "cv_id": cvId,
+    "gcd_id": gcdId,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   ArcDetails toEntity() {

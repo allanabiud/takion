@@ -1,11 +1,12 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/performance/performance_metrics.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "dart:async";
+import "package:dio/dio.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/core/performance/performance_metrics.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/refresh_async.dart";
 
-part 'weekly_releases_provider.g.dart';
+part "weekly_releases_provider.g.dart";
 
 @riverpod
 class WeeklyReleases extends _$WeeklyReleases {
@@ -20,32 +21,31 @@ class WeeklyReleases extends _$WeeklyReleases {
     final targetDate = date ?? DateTime.now();
     final repository = ref.watch(catalogRepositoryProvider);
     final result = await AppPerformanceMetrics.instance.trackProvider(
-      'weeklyReleasesProvider',
+      "weeklyReleasesProvider",
       () => repository.getWeeklyReleasesForDate(
         targetDate,
         cancelToken: cancelToken,
       ),
     );
 
-    timer = Timer(const Duration(minutes: 5), () => link.close());
+    timer = Timer(const Duration(minutes: 5), link.close);
     return result;
   }
 
   Future<void> refresh() async {
     final targetDate = date ?? DateTime.now();
-
-    // ignore: invalid_use_of_internal_member
-    state = AsyncLoading<List<IssueList>>().copyWithPrevious(state);
-
-    final newState = await AsyncValue.guard(() async {
-      final repository = ref.read(catalogRepositoryProvider);
-      return repository.getWeeklyReleasesForDate(
-        targetDate,
-        forceRefresh: true,
-        cancelToken: CancelToken(),
-      );
-    });
-    state = newState;
+    await refreshAsync<List<IssueList>>(
+      setState: (value) => state = value,
+      previousState: state,
+      fetch: () async {
+        final repository = ref.read(catalogRepositoryProvider);
+        return repository.getWeeklyReleasesForDate(
+          targetDate,
+          forceRefresh: true,
+          cancelToken: CancelToken(),
+        );
+      },
+    );
   }
 }
 
@@ -65,24 +65,23 @@ class FocReleases extends _$FocReleases {
       cancelToken: cancelToken,
     );
 
-    timer = Timer(const Duration(minutes: 5), () => link.close());
+    timer = Timer(const Duration(minutes: 5), link.close);
     return result;
   }
 
   Future<void> refresh() async {
     final date = this.date;
-
-    // ignore: invalid_use_of_internal_member
-    state = AsyncLoading<List<IssueList>>().copyWithPrevious(state);
-
-    final newState = await AsyncValue.guard(() async {
-      final repository = ref.read(catalogRepositoryProvider);
-      return repository.getFocReleasesForDate(
-        date,
-        forceRefresh: true,
-        cancelToken: CancelToken(),
-      );
-    });
-    state = newState;
+    await refreshAsync<List<IssueList>>(
+      setState: (value) => state = value,
+      previousState: state,
+      fetch: () async {
+        final repository = ref.read(catalogRepositoryProvider);
+        return repository.getFocReleasesForDate(
+          date,
+          forceRefresh: true,
+          cancelToken: CancelToken(),
+        );
+      },
+    );
   }
 }

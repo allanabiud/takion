@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 String? _parseString(dynamic raw) {
   if (raw is String && raw.isNotEmpty) return raw;
@@ -19,16 +19,16 @@ class TeamCreatorRefDto {
 
   factory TeamCreatorRefDto.fromJson(Map<String, dynamic> json) {
     return TeamCreatorRefDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
-      modified: json['modified'] as String?,
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "modified": modified,
   };
 
   TeamCreatorRef toEntity() => TeamCreatorRef(
@@ -51,16 +51,16 @@ class TeamUniverseRefDto {
 
   factory TeamUniverseRefDto.fromJson(Map<String, dynamic> json) {
     return TeamUniverseRefDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
-      modified: json['modified'] as String?,
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
+      modified: json["modified"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "modified": modified,
   };
 
   UniverseNamedRef toEntity() => UniverseNamedRef(id: id, name: name);
@@ -93,30 +93,30 @@ class TeamDetailsDto {
 
   factory TeamDetailsDto.fromJson(Map<String, dynamic> json) {
     return TeamDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
-      desc: _parseString(json['desc']),
-      image: _parseString(json['image']),
-      creators: _parseRefList(json['creators'], TeamCreatorRefDto.fromJson),
-      universes: _parseRefList(json['universes'], TeamUniverseRefDto.fromJson),
-      cvId: (json['cv_id'] as num?)?.toInt(),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      resourceUrl: _parseString(json['resource_url']),
-      modified: _parseString(json['modified']),
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
+      desc: _parseString(json["desc"]),
+      image: _parseString(json["image"]),
+      creators: _parseRefList(json["creators"], TeamCreatorRefDto.fromJson),
+      universes: _parseRefList(json["universes"], TeamUniverseRefDto.fromJson),
+      cvId: (json["cv_id"] as num?)?.toInt(),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      resourceUrl: _parseString(json["resource_url"]),
+      modified: _parseString(json["modified"]),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'desc': desc,
-    'image': image,
-    'creators': creators.map((e) => e.toJson()).toList(),
-    'universes': universes.map((e) => e.toJson()).toList(),
-    'cv_id': cvId,
-    'gcd_id': gcdId,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "desc": desc,
+    "image": image,
+    "creators": creators.map((e) => e.toJson()).toList(),
+    "universes": universes.map((e) => e.toJson()).toList(),
+    "cv_id": cvId,
+    "gcd_id": gcdId,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   TeamDetails toEntity() {

@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "package:dio/dio.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 abstract class CreatorRepository {
   Future<CreatorListPage> getCreatorList({
@@ -11,8 +11,6 @@ abstract class CreatorRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
-
-  Future<int> refreshCreatorListDelta({DateTime? modifiedGt});
 
   Future<CreatorListPage> searchCreators(
     String query, {

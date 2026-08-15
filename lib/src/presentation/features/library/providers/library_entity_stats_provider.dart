@@ -1,17 +1,15 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/library/providers/stats_debounce.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 final libraryEntityStatsProvider =
     StreamProvider.autoDispose<LibraryEntityStats>((ref) {
-      final db = ref.watch(driftDatabaseProvider);
-      final mapper = ref.watch(entityMapperProvider);
+      final localCatalog = ref.watch(localCatalogRepositoryProvider);
       final controller = StreamController<LibraryEntityStats>();
       final debounced = DebouncedWorker();
 
@@ -32,14 +30,9 @@ final libraryEntityStatsProvider =
                     ..addAll(allRead.map((item) => item.metronIssueId)))
                   .toList();
 
-          final issuesMap = await db.metronEntityDao.getIssuesByIds(
+          final cachedDetails = await localCatalog.hydrateIssueDetails(
             insightIssueIds,
           );
-          final issues = <MetronIssue>[
-            for (final issueId in insightIssueIds)
-              if (issuesMap[issueId] != null) issuesMap[issueId]!,
-          ];
-          final cachedDetails = await mapper.batchIssueToEntity(issues);
 
           final missingCreatorIds = <int>{};
           for (final details in cachedDetails) {
@@ -55,10 +48,10 @@ final libraryEntityStatsProvider =
           }
 
           final creatorMap = missingCreatorIds.isNotEmpty
-              ? await db.metronEntityDao.getCreatorsByIds(
+              ? await localCatalog.getCreatorsByIds(
                   missingCreatorIds.toList(),
                 )
-              : <int, MetronCreator>{};
+              : <int, CreatorList>{};
 
           for (final details in cachedDetails) {
             final name = details.publisher?.name.trim();
@@ -96,7 +89,7 @@ final libraryEntityStatsProvider =
                 creatorNames[creatorId] =
                     (daoName != null && daoName.trim().isNotEmpty)
                     ? daoName.trim()
-                    : 'Unknown';
+                    : "Unknown";
               }
               creatorCounts.update(
                 creatorId,
@@ -116,7 +109,7 @@ final libraryEntityStatsProvider =
                   .map(
                     (e) => EntityStat(
                       id: e.key,
-                      name: characterNames[e.key] ?? 'Unknown',
+                      name: characterNames[e.key] ?? "Unknown",
                       count: e.value,
                     ),
                   )
@@ -128,7 +121,7 @@ final libraryEntityStatsProvider =
                   .map(
                     (e) => EntityStat(
                       id: e.key,
-                      name: creatorNames[e.key] ?? 'Unknown',
+                      name: creatorNames[e.key] ?? "Unknown",
                       count: e.value,
                     ),
                   )

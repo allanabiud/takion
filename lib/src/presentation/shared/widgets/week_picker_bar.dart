@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/presentation/features/releases/providers/selected_week_provider.dart";
 
 class WeekPickerBar extends ConsumerWidget {
   const WeekPickerBar({super.key});
@@ -56,7 +56,7 @@ class WeekPickerBar extends ConsumerWidget {
                   const Icon(Icons.calendar_month, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Week of $dateString',
+                    "Week of $dateString",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

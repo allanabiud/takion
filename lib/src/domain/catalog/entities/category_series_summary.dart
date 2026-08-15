@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/collection/entities/entities.dart';
+import "package:takion/src/domain/collection/entities/entities.dart";
 
 class CategorySeriesSummary {
   const CategorySeriesSummary({

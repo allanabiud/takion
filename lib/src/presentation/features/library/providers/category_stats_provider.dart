@@ -1,12 +1,12 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_stats_models.dart';
-import 'package:takion/src/presentation/features/library/providers/stats_debounce.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/features/library/providers/stats_debounce.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 enum CategoryType { owned, read, wishlist }
 
@@ -32,8 +32,7 @@ List<LibraryItem> _filterByCategory(
 
 final categoryInsightsProvider = StreamProvider.autoDispose
     .family<LibraryInsights, CategoryType>((ref, category) {
-      final db = ref.watch(driftDatabaseProvider);
-      final mapper = ref.watch(entityMapperProvider);
+      final localCatalog = ref.watch(localCatalogRepositoryProvider);
       final controller = StreamController<LibraryInsights>();
       final debounced = DebouncedWorker();
 
@@ -77,8 +76,8 @@ final categoryInsightsProvider = StreamProvider.autoDispose
               .toSet()
               .toList();
           final seriesMap = readSeriesIds.isNotEmpty
-              ? await db.metronEntityDao.getSeriesByIds(readSeriesIds)
-              : <int, MetronSery>{};
+              ? await localCatalog.getSeriesByIds(readSeriesIds)
+              : <int, SeriesList>{};
           for (final item in readItems) {
             final series = seriesMap[item.metronSeriesId];
             final seriesName = series?.name.trim();
@@ -109,15 +108,21 @@ final categoryInsightsProvider = StreamProvider.autoDispose
 
           final cachedDetails = <IssueDetails>[];
           for (final issueId in insightIssueIds) {
-            var issue = await db.metronEntityDao.getIssue(issueId);
+            var issue = await localCatalog.getIssue(issueId);
             if (issue == null || !issue.isFullyHydrated) {
               try {
                 await ref.read(metronRepositoryProvider).getIssueDetails(issueId);
-                issue = await db.metronEntityDao.getIssue(issueId);
-              } catch (_) {}
+                issue = await localCatalog.getIssue(issueId);
+              } catch (e) {
+                AppLogger.debug(
+                  "Failed to hydrate issue $issueId for category stats",
+                  error: e,
+                );
+              }
             }
             if (issue != null) {
-              cachedDetails.add(await mapper.issueToEntity(issue));
+              final details = await localCatalog.hydrateIssueDetail(issueId);
+              if (details != null) cachedDetails.add(details);
             }
           }
 
@@ -152,12 +157,12 @@ final categoryInsightsProvider = StreamProvider.autoDispose
               if (rawName != null && rawName.isNotEmpty) {
                 creatorNames[creatorId] = rawName;
               } else {
-                final c = await db.metronEntityDao.getCreator(creatorId);
+                final c = await localCatalog.getCreator(creatorId);
                 final daoName = c?.name;
                 creatorNames[creatorId] =
                     (daoName != null && daoName.trim().isNotEmpty)
                     ? daoName.trim()
-                    : 'Unknown';
+                    : "Unknown";
               }
               creatorCounts.update(
                 creatorId,
@@ -177,7 +182,7 @@ final categoryInsightsProvider = StreamProvider.autoDispose
                   .map(
                     (e) => EntityStat(
                       id: e.key,
-                      name: characterNames[e.key] ?? 'Unknown',
+                      name: characterNames[e.key] ?? "Unknown",
                       count: e.value,
                     ),
                   )
@@ -189,7 +194,7 @@ final categoryInsightsProvider = StreamProvider.autoDispose
                   .map(
                     (e) => EntityStat(
                       id: e.key,
-                      name: creatorNames[e.key] ?? 'Unknown',
+                      name: creatorNames[e.key] ?? "Unknown",
                       count: e.value,
                     ),
                   )

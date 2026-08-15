@@ -1,7 +1,7 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:connectivity_plus/connectivity_plus.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
 enum AppConnectivityStatus { online, offline }
 

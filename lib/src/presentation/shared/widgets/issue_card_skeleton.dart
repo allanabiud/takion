@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/widgets/skeleton.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/skeleton.dart";
 
 /// Mirrors an [IssueCard] instead of using one tall placeholder rectangle.
 class IssueCardSkeleton extends StatelessWidget {

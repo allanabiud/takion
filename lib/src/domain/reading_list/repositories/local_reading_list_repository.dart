@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 abstract class LocalReadingListRepository {
   Future<void> createList(LocalReadingList list);

@@ -1,18 +1,17 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/scrobble_sheet.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/issues/scrobble_sheet.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_details_provider.dart";
 
 class IssueListTile extends ConsumerWidget {
   final IssueList issue;
@@ -53,7 +52,7 @@ class IssueListTile extends ConsumerWidget {
     final isHydrationNeeded =
         allowRemoteHydration &&
         issue.id != null &&
-        (issue.image == null || issue.name.isEmpty || issue.name == 'Unknown');
+        (issue.image == null || issue.name.isEmpty || issue.name == "Unknown");
     final hydratedIssueAsync = isHydrationNeeded
         ? ref.watch(issueDetailsProvider(issue.id!))
         : null;
@@ -61,7 +60,7 @@ class IssueListTile extends ConsumerWidget {
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedImage = issue.id != null
-        ? cache.getCached('issue', issue.id!)
+        ? cache.getCached("issue", issue.id!)
         : null;
 
     final bool isHydrating = hydratedIssueAsync?.isLoading == true;
@@ -106,10 +105,10 @@ class IssueListTile extends ConsumerWidget {
               });
 
     final issueTitle =
-        effectiveIssue.name.contains('#${effectiveIssue.number}') ||
+        effectiveIssue.name.contains("#${effectiveIssue.number}") ||
             effectiveIssue.number.isEmpty
         ? effectiveIssue.name
-        : '${effectiveIssue.name} #${effectiveIssue.number}';
+        : "${effectiveIssue.name} #${effectiveIssue.number}";
     final effectiveOnLongPress =
         onLongPress ??
         (effectiveIssue.id != null
@@ -174,62 +173,16 @@ class IssueListTile extends ConsumerWidget {
         : RepaintBoundary(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: effectiveIssue.image != null
-                  ? CachedNetworkImage(
-                      imageUrl: effectiveIssue.image!,
-                      width: imageWidth,
-                      height: imageHeight,
-                      fit: BoxFit.cover,
-                      memCacheWidth: cacheWidth,
-                      placeholder: (context, url) => Container(
-                        width: imageWidth,
-                        height: imageHeight,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        child: const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        width: imageWidth,
-                        height: imageHeight,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer.withValues(alpha: 0.8),
-                        child: Center(
-                          child: Text(
-                            initials(issueTitle),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  : Container(
-                      width: imageWidth,
-                      height: imageHeight,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withValues(alpha: 0.8),
-                      child: Center(
-                        child: Text(
-                          initials(issueTitle),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+              child: EntityCover(
+                imageUrl: effectiveIssue.image,
+                placeholderLabel: initials(issueTitle),
+                width: imageWidth,
+                height: imageHeight,
+                borderRadius: 0,
+                aspectRatio: imageWidth / imageHeight,
+                cacheWidth: cacheWidth,
+                iconSize: 22,
+              ),
             ),
           );
 
@@ -273,11 +226,11 @@ class IssueListTile extends ConsumerWidget {
                     children: [
                       Text(
                         effectiveIssue.name.contains(
-                                  '#${effectiveIssue.number}',
+                                  "#${effectiveIssue.number}",
                                 ) ||
                                 effectiveIssue.number.isEmpty
                             ? effectiveIssue.name
-                            : '${effectiveIssue.name} #${effectiveIssue.number}',
+                            : "${effectiveIssue.name} #${effectiveIssue.number}",
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:flutter/material.dart";
+import "package:share_plus/share_plus.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 String issueDisplayTitle(IssueDetails issue) {
   final seriesName = issue.series?.name.trim();
@@ -10,15 +10,15 @@ String issueDisplayTitle(IssueDetails issue) {
 
   String baseName;
   if (seriesName != null && seriesName.isNotEmpty && issueNumber.isNotEmpty) {
-    baseName = '$seriesName #$issueNumber';
+    baseName = "$seriesName #$issueNumber";
   } else if (issue.names.isNotEmpty && issue.names.first.trim().isNotEmpty) {
     baseName = issue.names.first.trim();
   } else {
-    baseName = issueNumber.isNotEmpty ? 'Issue #$issueNumber' : 'Issue';
+    baseName = issueNumber.isNotEmpty ? "Issue #$issueNumber" : "Issue";
   }
 
   if (storyTitle != null && storyTitle.isNotEmpty) {
-    return '$baseName: $storyTitle';
+    return "$baseName: $storyTitle";
   }
 
   return baseName;
@@ -30,13 +30,13 @@ Future<void> shareIssueResourceUrl(
 ) async {
   final resourceUrl = issue.resourceUrl?.trim();
   if (resourceUrl == null || resourceUrl.isEmpty) {
-    TakionAlerts.noShareUrl(context, 'issue');
+    TakionAlerts.noShareUrl(context, "issue");
     return;
   }
 
   final uri = Uri.tryParse(resourceUrl);
   if (uri == null) {
-    TakionAlerts.noShareUrl(context, 'issue');
+    TakionAlerts.noShareUrl(context, "issue");
     return;
   }
 

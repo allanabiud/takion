@@ -1,5 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
 
 class ReadingGoal {
   final int target;
@@ -14,11 +15,11 @@ class ReadingGoal {
     );
   }
 
-  Map<String, dynamic> toJson() => {'target': target, 'period': period};
+  Map<String, dynamic> toJson() => {"target": target, "period": period};
 
   factory ReadingGoal.fromJson(Map<String, dynamic> json) => ReadingGoal(
-    target: json['target'] as int,
-    period: json['period'] as String,
+    target: json["target"] as int,
+    period: json["period"] as String,
   );
 }
 
@@ -28,8 +29,8 @@ final readingGoalProvider =
     );
 
 class ReadingGoalNotifier extends AsyncNotifier<ReadingGoal?> {
-  static const _targetKey = 'reading_goal_target';
-  static const _periodKey = 'reading_goal_period';
+  static const _targetKey = SettingsKeys.readingGoalTarget;
+  static const _periodKey = SettingsKeys.readingGoalPeriod;
 
   @override
   Future<ReadingGoal?> build() async {

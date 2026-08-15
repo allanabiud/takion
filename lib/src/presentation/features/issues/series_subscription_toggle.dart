@@ -1,9 +1,9 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "dart:async";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 Future<void> toggleSeriesSubscription({
   required BuildContext context,
@@ -33,9 +33,9 @@ Future<void> toggleSeriesSubscription({
     if (!context.mounted) return;
     (enabled ? TakionAlerts.successWithUndo : TakionAlerts.infoWithUndo)(
       context,
-      enabled ? 'Subscribed' : 'Unsubscribed',
+      enabled ? "Subscribed" : "Unsubscribed",
       icon: Icons.notifications,
-      actionLabel: 'Undo',
+      actionLabel: "Undo",
       onUndo: () async {
         if (enabled) {
           await subscriptionRepository.unsubscribe(seriesId);
@@ -47,7 +47,7 @@ Future<void> toggleSeriesSubscription({
     );
   } catch (error) {
     if (context.mounted) {
-      TakionAlerts.error(context, 'Failed to update subscription');
+      TakionAlerts.error(context, "Failed to update subscription");
     }
   }
 }

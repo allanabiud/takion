@@ -1,4 +1,4 @@
-part of 'metron_repository_impl.dart';
+part of "metron_repository_impl.dart";
 
 mixin _CreatorsRepositoryMixin on _RepositoryState {
   Future<CreatorListPage> getCreatorList({
@@ -35,13 +35,11 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
             final remotePage = nextUrl != null
                 ? await _remoteDataSource.getCreatorList(
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.getCreatorList(
                     page: page,
-                    limit: limit,
                     modifiedGt: modifiedGt,
                     cancelToken: cancelToken,
                   );
@@ -76,13 +74,11 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
         final remotePage = nextUrl != null
             ? await _remoteDataSource.getCreatorList(
                 nextUrl: Uri.parse(nextUrl),
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               )
             : await _remoteDataSource.getCreatorList(
                 page: page,
-                limit: limit,
                 modifiedGt: modifiedGt,
                 cancelToken: cancelToken,
               );
@@ -116,26 +112,6 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       }
       rethrow;
     }
-  }
-
-  Future<int> refreshCreatorListDelta({DateTime? modifiedGt}) async {
-    var page = 1;
-    var synced = 0;
-    while (true) {
-      final result = await getCreatorList(
-        page: page,
-        limit: metronDefaultPageSize,
-        modifiedGt: modifiedGt,
-        forceRefresh: true,
-      );
-      for (final item in result.results) {
-        await getCreatorDetails(item.id, forceRefresh: true);
-        synced++;
-      }
-      if (!result.hasNext) break;
-      page++;
-    }
-    return synced;
   }
 
   Future<CreatorListPage> searchCreators(
@@ -173,13 +149,11 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
                 ? await _remoteDataSource.searchCreators(
                     query,
                     nextUrl: Uri.parse(nextUrl),
-                    limit: limit,
                     cancelToken: cancelToken,
                   )
                 : await _remoteDataSource.searchCreators(
                     query,
                     page: page,
-                    limit: limit,
                     cancelToken: cancelToken,
                   );
             await _localDataSource.cacheCreatorSearchResults(
@@ -192,7 +166,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: nextUrl ?? 'search:creator:$query:$page',
+          cacheKey: nextUrl ?? "search:creator:$query:$page",
           cooldown: MetronCachePolicies.creatorSearchResults.refreshCooldown,
         );
       }
@@ -208,35 +182,36 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     }
 
     try {
-      final remotePage = nextUrl != null
-          ? await _remoteDataSource.searchCreators(
-              query,
-              nextUrl: Uri.parse(nextUrl),
-              limit: limit,
-              cancelToken: cancelToken,
-            )
-          : await _remoteDataSource.searchCreators(
-              query,
-              page: page,
-              limit: limit,
-              cancelToken: cancelToken,
-            );
-      await _localDataSource.cacheCreatorSearchResults(
-        query,
-        remotePage.results,
-        page: page,
-        limit: limit,
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-      );
-      return CreatorListPage(
-        count: remotePage.count,
-        next: remotePage.next,
-        previous: remotePage.previous,
-        results: remotePage.results.map((entry) => entry.toEntity()).toList(),
-        currentPage: page,
-      );
+      final key = nextUrl ?? "$query|$page|$limit|$forceRefresh";
+      return _coalesce(_creatorSearchInFlight, key, () async {
+        final remotePage = nextUrl != null
+            ? await _remoteDataSource.searchCreators(
+                query,
+                nextUrl: Uri.parse(nextUrl),
+                cancelToken: cancelToken,
+              )
+            : await _remoteDataSource.searchCreators(
+                query,
+                page: page,
+                cancelToken: cancelToken,
+              );
+        await _localDataSource.cacheCreatorSearchResults(
+          query,
+          remotePage.results,
+          page: page,
+          limit: limit,
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+        );
+        return CreatorListPage(
+          count: remotePage.count,
+          next: remotePage.next,
+          previous: remotePage.previous,
+          results: remotePage.results.map((entry) => entry.toEntity()).toList(),
+          currentPage: page,
+        );
+      }, timeout: const Duration(seconds: 30));
     } catch (error) {
       if (_isCancelled(error)) rethrow;
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
@@ -259,7 +234,7 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     final cached = await _metronEntityDao.getCreator(creatorId);
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
-      AppPerformanceMetrics.instance.recordCacheHit('creator_details');
+      AppPerformanceMetrics.instance.recordCacheHit("creator_details");
       return _creatorRowToEntity(cached);
     }
 
@@ -272,18 +247,15 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       if (cachedAt != null &&
           MetronCachePolicies.creatorDetails.isFresh(cachedAt, now)) {
         AppPerformanceMetrics.instance.recordCacheHit(
-          'creator_details_response',
+          "creator_details_response",
         );
         final dto = CreatorDetailsDto.fromJson(cachedJson);
         await _upsertCreatorDetails(dto);
-        return _creatorRowToEntity(
-          await _metronEntityDao.getCreator(creatorId) ??
-              (throw StateError('Creator $creatorId not found after upsert')),
-        );
+        return dto.toEntity();
       }
     }
 
-    AppPerformanceMetrics.instance.recordCacheMiss('creator_details');
+    AppPerformanceMetrics.instance.recordCacheMiss("creator_details");
 
     try {
       final response = await _remoteDataSource.getCreatorDetails(creatorId);
@@ -297,13 +269,10 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
           );
           final dto = CreatorDetailsDto.fromJson(cachedJson);
           await _upsertCreatorDetails(dto);
-          return _creatorRowToEntity(
-            await _metronEntityDao.getCreator(creatorId) ??
-                (throw StateError('Creator $creatorId not found')),
-          );
+          return dto.toEntity();
         }
         return _creatorRowToEntity(
-          cached ?? (throw StateError('Creator $creatorId not found')),
+          cached ?? (throw StateError("Creator $creatorId not found")),
         );
       }
       final data = response.data as Map<String, dynamic>;
@@ -318,21 +287,15 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       }
       await _upsertCreatorDetails(dto);
       await _localDataSource.cacheCreatorDetailsResponse(creatorId, data);
-      return _creatorRowToEntity(
-        await _metronEntityDao.getCreator(creatorId) ??
-            (throw StateError('Creator $creatorId not found after upsert')),
-      );
+      return dto.toEntity();
     } catch (e) {
-      AppLogger.error('Failed to fetch creator details', error: e);
+      AppLogger.error("Failed to fetch creator details", error: e);
       final cachedJson =
           await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
       if (cachedJson != null) {
         final dto = CreatorDetailsDto.fromJson(cachedJson);
         await _upsertCreatorDetails(dto);
-        return _creatorRowToEntity(
-          await _metronEntityDao.getCreator(creatorId) ??
-              (throw StateError('Creator $creatorId not found after upsert')),
-        );
+        return dto.toEntity();
       }
       if (cached != null) {
         return _creatorRowToEntity(cached);
@@ -342,22 +305,24 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertCreatorDetails(CreatorDetailsDto dto) async {
-    await _metronEntityDao.upsertCreator(
-      MetronCreatorsCompanion(
-        id: Value(dto.id),
-        name: Value(dto.name),
-        imageUrl: Value(dto.image),
-        description: Value(dto.desc),
-        birth: Value(dto.birth),
-        death: Value(dto.death),
-        aliasJson: Value(dto.alias.isNotEmpty ? jsonEncode(dto.alias) : null),
-        cvId: Value(dto.cvId),
-        gcdId: Value(dto.gcdId),
-        resourceUrl: Value(dto.resourceUrl),
-        modified: Value(dto.modified),
-        isFullyHydrated: const Value(true),
-      ),
-    );
+    await _metronEntityDao.attachedDatabase.transaction(() async {
+      await _metronEntityDao.upsertCreator(
+        MetronCreatorsCompanion(
+          id: Value(dto.id),
+          name: Value(dto.name),
+          imageUrl: Value(dto.image),
+          description: Value(dto.desc),
+          birth: Value(dto.birth),
+          death: Value(dto.death),
+          aliasJson: Value(dto.alias.isNotEmpty ? jsonEncode(dto.alias) : null),
+          cvId: Value(dto.cvId),
+          gcdId: Value(dto.gcdId),
+          resourceUrl: Value(dto.resourceUrl),
+          modified: Value(dto.modified),
+          isFullyHydrated: const Value(true),
+        ),
+      );
+    });
   }
 
   CreatorDetails _creatorRowToEntity(MetronCreator row) {

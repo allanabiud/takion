@@ -1,12 +1,12 @@
-import 'dart:async';
-import 'dart:collection';
-import 'dart:math';
+import "dart:async";
+import "dart:collection";
+import "dart:math";
 
-import 'package:clock/clock.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/core/network/request_priority.dart';
+import "package:clock/clock.dart";
+import "package:dio/dio.dart";
+import "package:flutter/widgets.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/request_priority.dart";
 
 /// Outcome of enqueueing a request with the [MetronRequestScheduler].
 enum RequestDispatch {
@@ -25,10 +25,10 @@ class RateLimitState {
   final int burstReset;
 
   const RateLimitState({
-    this.sustainedLimit = 4800,
-    this.sustainedRemaining = 4800,
+    this.sustainedLimit = 5000,
+    this.sustainedRemaining = 5000,
     this.sustainedReset = 0,
-    this.burstRemaining = 18,
+    this.burstRemaining = 20,
     this.burstReset = 0,
   });
 
@@ -70,8 +70,8 @@ class _ScheduledRequest {
 /// dropped.
 class MetronRequestScheduler {
   MetronRequestScheduler({
-    this.maxRequestsPerMinute = 18,
-    this.fallbackDailyLimit = 4800,
+    this.maxRequestsPerMinute = 20,
+    this.fallbackDailyLimit = 5000,
     this.reservedForeground = 3,
     this.maxConcurrent = 8,
     this.backgroundMaxWait = const Duration(seconds: 30),
@@ -98,10 +98,10 @@ class MetronRequestScheduler {
     Queue<_ScheduledRequest>(),
   ];
 
-  int _sustainedLimit = 4800;
-  int _sustainedRemaining = 4800;
+  int _sustainedLimit = 5000;
+  int _sustainedRemaining = 5000;
   int _sustainedReset = 0;
-  int _burstRemaining = 18;
+  int _burstRemaining = 20;
   int _burstReset = 0;
 
   int _activeRequests = 0;
@@ -198,8 +198,8 @@ class MetronRequestScheduler {
       final req = dropQueue.removeFirst();
       if (!req.completer.isCompleted) {
         AppLogger.debug(
-          'Scheduler dropped P3 request ${req.request.path} (waited '
-          '${backgroundMaxWait.inSeconds}s)',
+          "Scheduler dropped P3 request ${req.request.path} (waited "
+          "${backgroundMaxWait.inSeconds}s)",
         );
         req.completer.complete(RequestDispatch.dropped);
       }
@@ -210,8 +210,8 @@ class MetronRequestScheduler {
       final req = bgQueue.removeFirst();
       req.priority = RequestPriority.normal;
       AppLogger.debug(
-        'Scheduler promoted P2 request ${req.request.path} to foreground '
-        '(waited ${backgroundMaxWait.inSeconds}s)',
+        "Scheduler promoted P2 request ${req.request.path} to foreground "
+        "(waited ${backgroundMaxWait.inSeconds}s)",
       );
       _queue[RequestPriority.normal.level].addLast(req);
     }
@@ -306,21 +306,21 @@ class MetronRequestScheduler {
   void _updateFromHeaders(Map<String, List<String>> headers) {
     final sustainedLimit = _parseIntHeader(
       headers,
-      'x-ratelimit-sustained-limit',
+      "x-ratelimit-sustained-limit",
     );
     final sustainedRemaining = _parseIntHeader(
       headers,
-      'x-ratelimit-sustained-remaining',
+      "x-ratelimit-sustained-remaining",
     );
     final sustainedReset = _parseIntHeader(
       headers,
-      'x-ratelimit-sustained-reset',
+      "x-ratelimit-sustained-reset",
     );
     final burstRemaining = _parseIntHeader(
       headers,
-      'x-ratelimit-burst-remaining',
+      "x-ratelimit-burst-remaining",
     );
-    final burstReset = _parseIntHeader(headers, 'x-ratelimit-burst-reset');
+    final burstReset = _parseIntHeader(headers, "x-ratelimit-burst-reset");
 
     if (sustainedLimit != null) _sustainedLimit = sustainedLimit;
     if (sustainedRemaining != null) _sustainedRemaining = sustainedRemaining;

@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class ReadingListDao extends DatabaseAccessor<AppDatabase> {
   ReadingListDao(super.db);
@@ -60,7 +60,7 @@ class ReadingListDao extends DatabaseAccessor<AppDatabase> {
         attachedDatabase.readingLists,
       )..where((t) => t.id.equals(id))).go();
       await attachedDatabase.syncMetaDao.set(
-        'delete:reading_lists:$id',
+        "delete:reading_lists:$id",
         DateTime.now().toUtc().toIso8601String(),
       );
 
@@ -69,7 +69,7 @@ class ReadingListDao extends DatabaseAccessor<AppDatabase> {
       )..where((t) => t.listId.equals(id))).get();
       for (final item in items) {
         await attachedDatabase.syncMetaDao.set(
-          'delete:reading_list_items:${item.id}',
+          "delete:reading_list_items:${item.id}",
           DateTime.now().toUtc().toIso8601String(),
         );
       }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class HorizontalPreviewSection extends StatelessWidget {
   const HorizontalPreviewSection({
@@ -9,7 +9,7 @@ class HorizontalPreviewSection extends StatelessWidget {
     required this.itemBuilder,
     this.count,
     this.height = 250,
-    this.emptyText = 'No items available.',
+    this.emptyText = "No items available.",
     this.separatorWidth = 12,
   });
 
@@ -36,7 +36,7 @@ class HorizontalPreviewSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  count != null ? '$title ($count)' : title,
+                  count != null ? "$title ($count)" : title,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.primary,

@@ -1,37 +1,40 @@
-import 'dart:convert';
-import 'dart:io';
+/// Local Drift database: user state (library, pulls, activity), normalized
+/// Metron catalog metadata, junction tables, and API/image cache.
+library;
 
-import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart'
+import "dart:convert";
+import "dart:io";
+
+import "package:drift/drift.dart";
+import "package:drift/native.dart";
+import "package:path_provider/path_provider.dart";
+import "package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart"
     show applyWorkaroundToOpenSqlite3OnOldAndroidVersions;
 
-import 'daos/library_item_dao.dart';
-import 'daos/read_log_dao.dart';
-import 'daos/pull_list_dao.dart';
-import 'daos/subscription_dao.dart';
-import 'daos/activity_dao.dart';
-import 'daos/reading_list_dao.dart';
-import 'daos/favorite_dao.dart';
-import 'daos/api_cache_dao.dart';
-import 'daos/image_cache_dao.dart';
-import 'daos/superhero_character_cache_dao.dart';
-import 'daos/settings_dao.dart';
-import 'daos/series_name_dao.dart';
-import 'daos/sync_meta_dao.dart';
-import 'daos/metron_entity_dao.dart';
-import 'daos/junction_dao.dart';
+import "daos/library_item_dao.dart";
+import "daos/read_log_dao.dart";
+import "daos/pull_list_dao.dart";
+import "daos/subscription_dao.dart";
+import "daos/activity_dao.dart";
+import "daos/reading_list_dao.dart";
+import "daos/favorite_dao.dart";
+import "daos/api_cache_dao.dart";
+import "daos/image_cache_dao.dart";
+import "daos/superhero_character_cache_dao.dart";
+import "daos/settings_dao.dart";
+import "daos/series_name_dao.dart";
+import "daos/sync_meta_dao.dart";
+import "daos/metron_entity_dao.dart";
+import "daos/junction_dao.dart";
 
-part 'database.g.dart';
+part "database.g.dart";
 
-// ── User State Tables (existing) ──────────────────────────────────────────
 
-@TableIndex(name: 'idx_lib_issue', columns: {#metronIssueId})
-@TableIndex(name: 'idx_lib_series', columns: {#metronSeriesId})
-@TableIndex(name: 'idx_lib_read', columns: {#isRead})
-@TableIndex(name: 'idx_lib_status', columns: {#ownershipStatus})
-@TableIndex(name: 'idx_lib_status_read', columns: {#ownershipStatus, #isRead})
+@TableIndex(name: "idx_lib_issue", columns: {#metronIssueId})
+@TableIndex(name: "idx_lib_series", columns: {#metronSeriesId})
+@TableIndex(name: "idx_lib_read", columns: {#isRead})
+@TableIndex(name: "idx_lib_status", columns: {#ownershipStatus})
+@TableIndex(name: "idx_lib_status_read", columns: {#ownershipStatus, #isRead})
 class LibraryItems extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -55,7 +58,7 @@ class LibraryItems extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@TableIndex(name: 'idx_readlog_item', columns: {#collectionItemId})
+@TableIndex(name: "idx_readlog_item", columns: {#collectionItemId})
 class LibraryReadLogs extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -68,10 +71,10 @@ class LibraryReadLogs extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@TableIndex(name: 'idx_pull_issue', columns: {#metronIssueId})
-@TableIndex(name: 'idx_pull_series', columns: {#metronSeriesId})
-@TableIndex(name: 'idx_pull_release', columns: {#releaseDate})
-@TableIndex(name: 'idx_pull_release_status', columns: {#releaseDate, #entryStatus})
+@TableIndex(name: "idx_pull_issue", columns: {#metronIssueId})
+@TableIndex(name: "idx_pull_series", columns: {#metronSeriesId})
+@TableIndex(name: "idx_pull_release", columns: {#releaseDate})
+@TableIndex(name: "idx_pull_release_status", columns: {#releaseDate, #entryStatus})
 class PullListEntries extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -88,7 +91,7 @@ class PullListEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@TableIndex(name: 'idx_sub_series', columns: {#metronSeriesId})
+@TableIndex(name: "idx_sub_series", columns: {#metronSeriesId})
 class SeriesSubscriptions extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -103,11 +106,11 @@ class SeriesSubscriptions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@TableIndex(name: 'idx_activity_series', columns: {#seriesId})
-@TableIndex(name: 'idx_activity_issue', columns: {#issueId})
-@TableIndex(name: 'idx_activity_event_time', columns: {#eventType, #timestamp})
-@TableIndex(name: 'idx_activity_timestamp', columns: {#timestamp})
-@TableIndex(name: 'idx_activity_series_timestamp', columns: {#seriesId, #timestamp})
+@TableIndex(name: "idx_activity_series", columns: {#seriesId})
+@TableIndex(name: "idx_activity_issue", columns: {#issueId})
+@TableIndex(name: "idx_activity_event_time", columns: {#eventType, #timestamp})
+@TableIndex(name: "idx_activity_timestamp", columns: {#timestamp})
+@TableIndex(name: "idx_activity_series_timestamp", columns: {#seriesId, #timestamp})
 class ActivityEvents extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -118,6 +121,7 @@ class ActivityEvents extends Table {
   TextColumn get issueNumber => text().nullable()();
   TextColumn get imageUrl => text().nullable()();
   TextColumn get metadata => text().nullable()();
+  TextColumn get batchId => text().nullable()();
   TextColumn get timestamp => text()();
 
   @override
@@ -145,7 +149,7 @@ class ReadingLists extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@TableIndex(name: 'idx_rli_list', columns: {#listId})
+@TableIndex(name: "idx_rli_list", columns: {#listId})
 class ReadingListItems extends Table {
   TextColumn get id => text()();
   TextColumn get listId => text()();
@@ -206,9 +210,8 @@ class FavoriteReadingLists extends Table {
   Set<Column> get primaryKey => {readingListId};
 }
 
-// ── Metron Entity Tables (new normalized metadata) ────────────────────────
 
-@TableIndex(name: 'idx_metron_issues_series', columns: {#seriesId})
+@TableIndex(name: "idx_metron_issues_series", columns: {#seriesId})
 class MetronIssues extends Table {
   IntColumn get id => integer()();
   TextColumn get number => text()();
@@ -239,7 +242,7 @@ class MetronIssues extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@TableIndex(name: 'idx_metron_series_name', columns: {#name})
+@TableIndex(name: "idx_metron_series_name", columns: {#name})
 class MetronSeries extends Table {
   IntColumn get id => integer()();
   TextColumn get name => text()();
@@ -410,9 +413,8 @@ class MetronReadingLists extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ── Junction Tables (logical references, no FK constraints) ─────────────
 
-@TableIndex(name: 'idx_issue_creators_creator', columns: {#creatorId})
+@TableIndex(name: "idx_issue_creators_creator", columns: {#creatorId})
 class IssueCreators extends Table {
   IntColumn get issueId => integer()();
   IntColumn get creatorId => integer()();
@@ -423,7 +425,7 @@ class IssueCreators extends Table {
   Set<Column> get primaryKey => {issueId, creatorId};
 }
 
-@TableIndex(name: 'idx_issue_characters_character', columns: {#characterId})
+@TableIndex(name: "idx_issue_characters_character", columns: {#characterId})
 class IssueCharacters extends Table {
   IntColumn get issueId => integer()();
   IntColumn get characterId => integer()();
@@ -433,7 +435,7 @@ class IssueCharacters extends Table {
   Set<Column> get primaryKey => {issueId, characterId};
 }
 
-@TableIndex(name: 'idx_issue_arcs_arc', columns: {#arcId})
+@TableIndex(name: "idx_issue_arcs_arc", columns: {#arcId})
 class IssueArcs extends Table {
   IntColumn get issueId => integer()();
   IntColumn get arcId => integer()();
@@ -443,7 +445,7 @@ class IssueArcs extends Table {
   Set<Column> get primaryKey => {issueId, arcId};
 }
 
-@TableIndex(name: 'idx_issue_teams_team', columns: {#teamId})
+@TableIndex(name: "idx_issue_teams_team", columns: {#teamId})
 class IssueTeams extends Table {
   IntColumn get issueId => integer()();
   IntColumn get teamId => integer()();
@@ -453,7 +455,7 @@ class IssueTeams extends Table {
   Set<Column> get primaryKey => {issueId, teamId};
 }
 
-@TableIndex(name: 'idx_issue_universes_universe', columns: {#universeId})
+@TableIndex(name: "idx_issue_universes_universe", columns: {#universeId})
 class IssueUniverses extends Table {
   IntColumn get issueId => integer()();
   IntColumn get universeId => integer()();
@@ -543,7 +545,7 @@ class TeamUniverses extends Table {
   Set<Column> get primaryKey => {teamId, universeId};
 }
 
-@TableIndex(name: 'idx_mrli_list', columns: {#listId})
+@TableIndex(name: "idx_mrli_list", columns: {#listId})
 class MetronReadingListItems extends Table {
   IntColumn get listId => integer()();
   IntColumn get targetId => integer()();
@@ -554,7 +556,6 @@ class MetronReadingListItems extends Table {
   Set<Column> get primaryKey => {listId, targetId};
 }
 
-// ── API Cache & Support Tables (existing) ─────────────────────────────────
 
 class ApiCache extends Table {
   TextColumn get cacheKey => text()();
@@ -685,19 +686,19 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       beforeOpen: (details) async {
-        await customStatement('PRAGMA journal_mode=WAL');
-        await customStatement('PRAGMA synchronous=NORMAL');
-        await customStatement('PRAGMA cache_size=-16000');
-        await customStatement('PRAGMA mmap_size=268435456');
-        await customStatement('PRAGMA busy_timeout=5000');
-        await customStatement('PRAGMA temp_store=MEMORY');
-        await customStatement('PRAGMA optimize');
+        await customStatement("PRAGMA journal_mode=WAL");
+        await customStatement("PRAGMA synchronous=NORMAL");
+        await customStatement("PRAGMA cache_size=-16000");
+        await customStatement("PRAGMA mmap_size=268435456");
+        await customStatement("PRAGMA busy_timeout=5000");
+        await customStatement("PRAGMA temp_store=MEMORY");
+        await customStatement("PRAGMA optimize");
       },
       onUpgrade: (m, from, to) async {
         if (from < 2) {
@@ -739,13 +740,16 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(readingListItems, readingListItems.createdAt);
           await m.addColumn(readingListItems, readingListItems.updatedAt);
           await _backfillReadingListItemTimestamps();
-          await syncMetaDao.deleteByKey('last_uploaded_timestamp');
+          await syncMetaDao.deleteByKey("last_uploaded_timestamp");
         }
         if (from < 9) {
           await m.addColumn(readingLists, readingLists.metronArcId);
         }
         if (from < 10) {
           await m.createTable(superheroCharacterCache);
+        }
+        if (from < 11) {
+          await m.addColumn(activityEvents, activityEvents.batchId);
         }
       },
     );
@@ -755,8 +759,8 @@ class AppDatabase extends _$AppDatabase {
     final cachedRows = await (select(apiCache)
           ..where(
             (t) =>
-                t.cacheKey.like('series_details:%') |
-                t.cacheKey.like('issue_details:%'),
+                t.cacheKey.like("series_details:%") |
+                t.cacheKey.like("issue_details:%"),
           ))
         .get();
 
@@ -767,17 +771,17 @@ class AppDatabase extends _$AppDatabase {
       try {
         final json = jsonDecode(payload) as Map<String, dynamic>;
         final Map<String, dynamic>? seriesType;
-        if (row.cacheKey.startsWith('series_details:')) {
-          final st = json['series_type'];
+        if (row.cacheKey.startsWith("series_details:")) {
+          final st = json["series_type"];
           seriesType = st is Map<String, dynamic> ? st : null;
         } else {
-          final series = json['series'];
-          final st = series is Map<String, dynamic> ? series['series_type'] : null;
+          final series = json["series"];
+          final st = series is Map<String, dynamic> ? series["series_type"] : null;
           seriesType = st is Map<String, dynamic> ? st : null;
         }
         if (seriesType != null) {
-          final id = seriesType['id'];
-          final name = seriesType['name'];
+          final id = seriesType["id"];
+          final name = seriesType["name"];
           if (id is int && name is String && name.trim().isNotEmpty) {
             namesById.putIfAbsent(id, () => name);
           }
@@ -817,7 +821,7 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File('${dbFolder.path}/takion.sqlite');
+    final file = File("${dbFolder.path}/takion.sqlite");
 
     await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
 

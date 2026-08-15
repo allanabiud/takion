@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/continue_reading_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
+import "package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart";
+import "package:takion/src/presentation/features/library/providers/continue_reading_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 enum BulkAction {
   addToPullList,
@@ -49,7 +49,7 @@ Future<void> showBulkScanActionsSheet(
   bool isApplying = false;
   TakionBottomSheet.show<void>(
     context: context,
-    title: 'Bulk Actions (${issueIds.length} issues)',
+    title: "Bulk Actions (${issueIds.length} issues)",
     isScrollControlled: true,
     child: StatefulBuilder(
       builder: (context, setSheetState) {
@@ -60,7 +60,7 @@ Future<void> showBulkScanActionsSheet(
             children: [
               _ActionCheckboxTile(
                 icon: Icons.shopping_bag_outlined,
-                title: 'Add to Pull List',
+                title: "Add to Pull List",
                 selected: actionsState[BulkAction.addToPullList]!.selected,
                 onChanged: (value) {
                   setSheetState(() {
@@ -70,7 +70,7 @@ Future<void> showBulkScanActionsSheet(
               ),
               _ActionCheckboxTile(
                 icon: Icons.inventory_2_outlined,
-                title: 'Add to Collection',
+                title: "Add to Collection",
                 selected: actionsState[BulkAction.addToCollection]!.selected,
                 onChanged: (value) {
                   setSheetState(() {
@@ -83,7 +83,7 @@ Future<void> showBulkScanActionsSheet(
               ),
               _ActionCheckboxTile(
                 icon: Icons.bookmark_added_outlined,
-                title: 'Mark as Read',
+                title: "Mark as Read",
                 selected: actionsState[BulkAction.markAsRead]!.selected,
                 onChanged: (value) {
                   setSheetState(() {
@@ -93,7 +93,7 @@ Future<void> showBulkScanActionsSheet(
               ),
               _ActionCheckboxTile(
                 icon: Icons.turned_in_not,
-                title: 'Add to Wishlist',
+                title: "Add to Wishlist",
                 selected: actionsState[BulkAction.addToWishlist]!.selected,
                 onChanged: (value) {
                   setSheetState(() {
@@ -144,7 +144,7 @@ Future<void> showBulkScanActionsSheet(
                             setSheetState(() => isApplying = false);
                             TakionAlerts.info(
                               context,
-                              'Select at least one action',
+                              "Select at least one action",
                             );
                             return;
                           }
@@ -171,7 +171,7 @@ Future<void> showBulkScanActionsSheet(
                           ),
                         )
                       : const Icon(Icons.check),
-                  label: Text(isApplying ? 'Applying...' : 'APPLY'),
+                  label: Text(isApplying ? "Applying..." : "APPLY"),
                 ),
               ),
               const SizedBox(height: 16),
@@ -201,9 +201,9 @@ Future<void> _applyBulkActions(
   final selectedActions = actions.entries
       .where((e) => e.value.selected)
       .map((e) => e.key.name)
-      .join(', ');
+      .join(", ");
   AppLogger.info(
-    'BulkActions: applying [$selectedActions] to $totalCount issues',
+    "BulkActions: applying [$selectedActions] to $totalCount issues",
   );
 
   try {
@@ -231,11 +231,16 @@ Future<void> _applyBulkActions(
           try {
             final details = await catalogRepo.getIssueDetails(issueId);
             seriesId = details.series?.id;
-          } catch (_) {}
+          } catch (e) {
+            AppLogger.debug(
+              "Failed to resolve series for bulk scan issue $issueId",
+              error: e,
+            );
+          }
         }
         if (seriesId == null || seriesId <= 0) {
           errorCount++;
-          errorMessages.add('Issue $issueId: no linked series');
+          errorMessages.add("Issue $issueId: no linked series");
           continue;
         }
 
@@ -290,27 +295,37 @@ Future<void> _applyBulkActions(
 
           final activityRepo = ref.read(activityRepositoryProvider);
           final imageCache = ref.read(entityImageCacheProvider);
-          String seriesName = 'Unknown Series';
-          String issueNumber = '#$issueId';
+          String seriesName = "Unknown Series";
+          String issueNumber = "#$issueId";
           String? imageUrl;
           try {
-            imageUrl = await imageCache.get('issue', issueId);
-          } catch (_) {}
+            imageUrl = await imageCache.get("issue", issueId);
+          } catch (e) {
+            AppLogger.debug(
+              "Failed to read cached image during bulk scan",
+              error: e,
+            );
+          }
           if (imageUrl == null || imageUrl.isEmpty) {
             try {
               final details = await catalogRepo.getIssueDetails(issueId);
-              seriesName = details.series?.name ?? 'Unknown Series';
+              seriesName = details.series?.name ?? "Unknown Series";
               issueNumber = details.number;
               imageUrl = details.image;
-            } catch (_) {}
+            } catch (e) {
+              AppLogger.debug(
+                "Failed to load issue details during bulk scan",
+                error: e,
+              );
+            }
           }
 
           if (wantCollection &&
               existing?.ownershipStatus != LibraryOwnershipStatus.owned) {
             await activityRepo.addEvent(
               LibraryActivityEvent(
-                id: 'act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}',
-                userId: 'local-user',
+                id: "act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}",
+                userId: "local-user",
                 type: ActivityEventType.collected,
                 issueId: issueId,
                 seriesId: seriesId,
@@ -326,8 +341,8 @@ Future<void> _applyBulkActions(
               existing?.ownershipStatus != LibraryOwnershipStatus.wishlist) {
             await activityRepo.addEvent(
               LibraryActivityEvent(
-                id: 'act-wsh-$issueId-${DateTime.now().microsecondsSinceEpoch}',
-                userId: 'local-user',
+                id: "act-wsh-$issueId-${DateTime.now().microsecondsSinceEpoch}",
+                userId: "local-user",
                 type: ActivityEventType.wishlisted,
                 issueId: issueId,
                 seriesId: seriesId,
@@ -342,8 +357,8 @@ Future<void> _applyBulkActions(
           if (wantRead && !wasRead) {
             await activityRepo.addEvent(
               LibraryActivityEvent(
-                id: 'act-read-$issueId-${DateTime.now().microsecondsSinceEpoch}',
-                userId: 'local-user',
+                id: "act-read-$issueId-${DateTime.now().microsecondsSinceEpoch}",
+                userId: "local-user",
                 type: ActivityEventType.read,
                 issueId: issueId,
                 seriesId: seriesId,
@@ -375,7 +390,7 @@ Future<void> _applyBulkActions(
         successCount++;
       } catch (e) {
         errorCount++;
-        errorMessages.add('Issue $issueId: $e');
+        errorMessages.add("Issue $issueId: $e");
       }
     }
 
@@ -398,24 +413,24 @@ Future<void> _applyBulkActions(
     if (!context.mounted) return;
 
     AppLogger.info(
-      'BulkActions: result $successCount/$totalCount succeeded, $errorCount failed',
+      "BulkActions: result $successCount/$totalCount succeeded, $errorCount failed",
     );
 
     if (errorCount == 0) {
       if (successCount > 0) {
         onApplied?.call();
       }
-      TakionAlerts.success(context, '$successCount/$totalCount issues updated');
+      TakionAlerts.success(context, "$successCount/$totalCount issues updated");
     } else {
-      final sample = errorMessages.take(3).join('\n');
+      final sample = errorMessages.take(3).join("\n");
       TakionAlerts.error(
         context,
-        '$successCount updated, $errorCount failed\n$sample',
+        "$successCount updated, $errorCount failed\n$sample",
       );
     }
   } catch (e) {
     if (!context.mounted) return;
-    TakionAlerts.safeError(context, e, userMessage: 'Bulk action failed');
+    TakionAlerts.safeError(context, e, userMessage: "Bulk action failed");
   }
 }
 

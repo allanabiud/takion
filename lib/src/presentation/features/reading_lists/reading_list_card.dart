@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_cover.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_cover.dart";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart";
 
 class ReadingListCard extends ConsumerWidget {
   final LocalReadingList list;
@@ -46,17 +46,17 @@ class ReadingListCard extends ConsumerWidget {
     String contentTypeLabel;
     switch (list.contentType) {
       case ListContentType.series:
-        contentTypeLabel = 'Series';
+        contentTypeLabel = "Series";
         break;
       case ListContentType.issue:
-        contentTypeLabel = 'Issues';
+        contentTypeLabel = "Issues";
         break;
     }
 
     final itemCount = list.items.length;
     final unitLabel = list.contentType == ListContentType.series
-        ? 'Series'
-        : 'Issues';
+        ? "Series"
+        : "Issues";
 
     final cardChild = Stack(
       children: [
@@ -107,7 +107,7 @@ class ReadingListCard extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    'Added',
+                                    "Added",
                                     style: TextStyle(
                                       color: Theme.of(
                                         context,
@@ -142,12 +142,12 @@ class ReadingListCard extends ConsumerWidget {
                             Text(
                               isMetronBrowse && !alreadyExists
                                   ? [
-                                      if ((list.metronListType ?? '').isNotEmpty)
+                                      if ((list.metronListType ?? "").isNotEmpty)
                                         list.metronListType,
-                                      if ((list.metronAttributionSource ?? '').isNotEmpty)
+                                      if ((list.metronAttributionSource ?? "").isNotEmpty)
                                         list.metronAttributionSource,
-                                    ].join(' • ')
-                                  : '$itemCount $unitLabel • $contentTypeLabel',
+                                    ].join(" • ")
+                                  : "$itemCount $unitLabel • $contentTypeLabel",
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -196,7 +196,7 @@ class ReadingListCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${averageRating!.toStringAsFixed(1)}'
+                                  "${averageRating!.toStringAsFixed(1)}"
                                   '${ratingCount != null && ratingCount! > 0 ? " ($ratingCount)" : ""}',
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(fontWeight: FontWeight.bold),
@@ -218,7 +218,7 @@ class ReadingListCard extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              'Completed',
+                              "Completed",
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -245,7 +245,7 @@ class ReadingListCard extends ConsumerWidget {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
-                                  '${(progress * 100).toInt()}% Done',
+                                  "${(progress * 100).toInt()}% Done",
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),

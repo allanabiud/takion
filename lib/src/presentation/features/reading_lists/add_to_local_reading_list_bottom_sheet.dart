@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/reading_lists/create_or_import_local_reading_list_sheet.dart';
-import 'package:takion/src/presentation/features/reading_lists/reading_list_card.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/reading_lists/create_or_import_local_reading_list_sheet.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_card.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 class AddToLocalReadingListBottomSheet extends ConsumerStatefulWidget {
   final String targetId;
@@ -25,7 +25,7 @@ class AddToLocalReadingListBottomSheet extends ConsumerStatefulWidget {
   }) {
     return TakionBottomSheet.show<void>(
       context: context,
-      title: 'Add to reading list',
+      title: "Add to reading list",
       child: AddToLocalReadingListBottomSheet(
         targetId: targetId,
         isSeries: isSeries,
@@ -40,21 +40,21 @@ class AddToLocalReadingListBottomSheet extends ConsumerStatefulWidget {
 
 class _AddToLocalReadingListBottomSheetState
     extends ConsumerState<AddToLocalReadingListBottomSheet> {
-  String _searchQuery = '';
+  String _searchQuery = "";
   final Set<String> _selectedListIds = {};
   bool _isAdding = false;
 
   String get _normalizedTargetId {
     final normalized = widget.targetId.trim().toLowerCase();
-    final expectedPrefix = widget.isSeries ? 'series-' : 'issue-';
+    final expectedPrefix = widget.isSeries ? "series-" : "issue-";
     if (normalized.startsWith(expectedPrefix)) return normalized;
 
-    final alternatePrefix = widget.isSeries ? 'issue-' : 'series-';
+    final alternatePrefix = widget.isSeries ? "issue-" : "series-";
     if (normalized.startsWith(alternatePrefix)) {
-      return '$expectedPrefix${normalized.substring(alternatePrefix.length)}';
+      return "$expectedPrefix${normalized.substring(alternatePrefix.length)}";
     }
 
-    return '$expectedPrefix$normalized';
+    return "$expectedPrefix$normalized";
   }
 
   Future<void> _addItems() async {
@@ -89,15 +89,15 @@ class _AddToLocalReadingListBottomSheetState
       ref.invalidate(localReadingListsProvider);
       if (mounted) {
         if (addedCount == 0 && skippedCount > 0) {
-          TakionAlerts.info(context, 'Already in all selected lists');
+          TakionAlerts.info(context, "Already in all selected lists");
           Navigator.of(context).pop();
           return;
         }
 
         if (skippedCount > 0) {
-          TakionAlerts.success(context, 'Added to $addedCount List(s)');
+          TakionAlerts.success(context, "Added to $addedCount List(s)");
         } else {
-          TakionAlerts.success(context, 'Added to Reading List(s)');
+          TakionAlerts.success(context, "Added to Reading List(s)");
         }
         Navigator.of(context).pop();
       }
@@ -106,7 +106,7 @@ class _AddToLocalReadingListBottomSheetState
         TakionAlerts.safeError(
           context,
           e,
-          userMessage: 'Failed to add to reading list',
+          userMessage: "Failed to add to reading list",
         );
       }
     } finally {
@@ -133,7 +133,7 @@ class _AddToLocalReadingListBottomSheetState
           error: (err, stack) => Text(
             TakionAlerts.cleanError(
               err,
-              fallback: 'Failed to add to reading list',
+              fallback: "Failed to add to reading list",
             ),
           ),
           data: (lists) {
@@ -154,14 +154,14 @@ class _AddToLocalReadingListBottomSheetState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No Reading Lists.',
+                      "No Reading Lists.",
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Create one to get started.',
+                      "Create one to get started.",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -177,7 +177,7 @@ class _AddToLocalReadingListBottomSheetState
                           );
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Create Reading List'),
+                        label: const Text("Create Reading List"),
                       ),
                     ),
                   ],
@@ -198,7 +198,7 @@ class _AddToLocalReadingListBottomSheetState
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text(
-                    'No matching lists found',
+                    "No matching lists found",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -214,7 +214,7 @@ class _AddToLocalReadingListBottomSheetState
                 TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
                   decoration: const InputDecoration(
-                    hintText: 'Search reading lists',
+                    hintText: "Search reading lists",
                     prefixIcon: Icon(Icons.search),
                   ),
                 ),
@@ -241,7 +241,7 @@ class _AddToLocalReadingListBottomSheetState
                         alreadyExists: alreadyExists,
                         onTap: () {
                           if (alreadyExists) {
-                            TakionAlerts.info(context, 'Already in this list');
+                            TakionAlerts.info(context, "Already in this list");
                             return;
                           }
                           setState(() {
@@ -270,7 +270,7 @@ class _AddToLocalReadingListBottomSheetState
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Add'),
+                        : const Text("Add"),
                   ),
                 ),
               ],

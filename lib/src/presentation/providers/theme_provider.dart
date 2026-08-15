@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
+import "package:flutter/material.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
 
-part 'theme_provider.freezed.dart';
-part 'theme_provider.g.dart';
+part "theme_provider.freezed.dart";
+part "theme_provider.g.dart";
 
 @freezed
 abstract class ThemeSettings with _$ThemeSettings {
@@ -16,8 +17,8 @@ abstract class ThemeSettings with _$ThemeSettings {
 
 @riverpod
 class ThemeNotifier extends _$ThemeNotifier {
-  static const _themeKey = 'theme_mode';
-  static const _blackKey = 'dark_is_true_black';
+  static const _themeKey = SettingsKeys.themeMode;
+  static const _blackKey = SettingsKeys.darkIsTrueBlack;
 
   @override
   FutureOr<ThemeSettings> build() async {

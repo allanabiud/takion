@@ -1,9 +1,8 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:takion/src/data/catalog/dto/dto.dart';
-import 'package:takion/src/domain/entities.dart';
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:takion/src/data/catalog/dto/dto.dart";
+import "package:takion/src/domain/entities.dart";
 
-part 'issue_list_dto.freezed.dart';
-part 'issue_list_dto.g.dart';
+part "issue_list_dto.freezed.dart";
 
 @freezed
 abstract class IssueListDto with _$IssueListDto {
@@ -11,12 +10,12 @@ abstract class IssueListDto with _$IssueListDto {
     required int id,
     required String number,
     required IssueListSeriesDto? series,
-    @JsonKey(name: 'cover_date') String? coverDate,
-    @JsonKey(name: 'store_date') String? storeDate,
+    @JsonKey(name: "cover_date") String? coverDate,
+    @JsonKey(name: "store_date") String? storeDate,
     required String? image,
-    @JsonKey(name: 'issue') String? issueName,
+    @JsonKey(name: "issue") String? issueName,
     String? modified,
-    @JsonKey(name: 'cover_hash') String? coverHash,
+    @JsonKey(name: "cover_hash") String? coverHash,
   }) = _IssueListDto;
 
   factory IssueListDto.fromJson(Map<String, dynamic> json) {
@@ -34,22 +33,36 @@ abstract class IssueListDto with _$IssueListDto {
       if (issue == null) return null;
       if (issue is String) return issue;
       if (issue is Map) {
-        return issue['name']?.toString() ?? issue['issue']?.toString();
+        return issue["name"]?.toString() ?? issue["issue"]?.toString();
       }
       return issue.toString();
     }
 
     return IssueListDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      number: json['number']?.toString() ?? '',
-      series: parseSeries(json['series']),
-      coverDate: json['cover_date']?.toString(),
-      storeDate: json['store_date']?.toString(),
-      image: json['image']?.toString(),
-      issueName: parseIssueName(json['issue']),
-      modified: json['modified']?.toString(),
-      coverHash: json['cover_hash']?.toString(),
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      number: json["number"]?.toString() ?? "",
+      series: parseSeries(json["series"]),
+      coverDate: json["cover_date"]?.toString(),
+      storeDate: json["store_date"]?.toString(),
+      image: json["image"]?.toString(),
+      issueName: parseIssueName(json["issue"]),
+      modified: json["modified"]?.toString(),
+      coverHash: json["cover_hash"]?.toString(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "number": number,
+      "series": series?.toJson(),
+      "cover_date": coverDate,
+      "store_date": storeDate,
+      "image": image,
+      "issue": issueName,
+      "modified": modified,
+      "cover_hash": coverHash,
+    };
   }
 
   const IssueListDto._();

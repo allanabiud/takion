@@ -1,6 +1,10 @@
-import 'package:takion/src/domain/entities.dart';
+import "dart:async";
+
+import "package:takion/src/domain/entities.dart";
 
 abstract class PullListRepository {
+  Stream<PullListEntry?> watchEntryByIssueId(int metronIssueId);
+
   Future<List<PullListEntry>> listEntries({
     DateTime? fromDate,
     DateTime? toDate,

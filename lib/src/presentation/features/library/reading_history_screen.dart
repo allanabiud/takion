@@ -1,16 +1,16 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/reading_history_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:intl/intl.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/reading_history_provider.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 enum HistoryFilter { day, week, month, year }
 
@@ -62,13 +62,13 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
           break;
         case HistoryFilter.week:
           final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
-          key = 'Week of ${DateFormatter.comicDate(startOfWeek)}';
+          key = "Week of ${DateFormatter.comicDate(startOfWeek)}";
           break;
         case HistoryFilter.month:
           key = DateFormat.yMMMM().format(date);
           break;
         case HistoryFilter.year:
-          key = DateFormatter.isoDateTime(date).split('-').first;
+          key = DateFormatter.isoDateTime(date).split("-").first;
           break;
       }
       grouped.putIfAbsent(key, () => []).add(entry);
@@ -81,20 +81,20 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
     final historyAsync = ref.watch(readingHistoryCollectionItemsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reading History')),
+      appBar: AppBar(title: const Text("Reading History")),
       body: historyAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => AsyncStatePanel.error(
           errorMessage: TakionAlerts.cleanError(
             error,
-            fallback: 'Failed to load reading history',
+            fallback: "Failed to load reading history",
           ),
         ),
         data: (entries) {
           if (entries.isEmpty) {
             return const EmptyContentState(
               icon: Icons.history_outlined,
-              message: 'No history.',
+              message: "No history.",
             );
           }
 
@@ -166,8 +166,8 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
                             final issue = item.item.issue;
                             final issueList = IssueList(
                               id: issue?.id,
-                              name: issue?.series?.name ?? 'Unknown',
-                              number: issue?.number ?? '',
+                              name: issue?.series?.name ?? "Unknown",
+                              number: issue?.number ?? "",
                               series: issue?.series != null
                                   ? Series(
                                       id: issue!.series!.id ?? 0,

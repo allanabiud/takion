@@ -1,21 +1,21 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
 
 Map<int, Map<String, dynamic>> _computeCollectionStatusMap(
   List<Map<String, dynamic>> itemsJson,
 ) {
   final map = <int, Map<String, dynamic>>{};
   for (final item in itemsJson) {
-    final issueId = item['metronIssueId'] as int;
+    final issueId = item["metronIssueId"] as int;
     if (issueId <= 0) continue;
-    final ownershipStatus = item['ownershipStatus'] as String;
+    final ownershipStatus = item["ownershipStatus"] as String;
     map[issueId] = {
-      'isCollected': ownershipStatus == 'owned',
-      'isWishlisted': ownershipStatus == 'wishlist',
-      'isRead': item['isRead'] as bool,
-      'rating': item['rating'],
+      "isCollected": ownershipStatus == "owned",
+      "isWishlisted": ownershipStatus == "wishlist",
+      "isRead": item["isRead"] as bool,
+      "rating": item["rating"],
     };
   }
   return map;
@@ -30,10 +30,10 @@ final collectionStatusCacheProvider =
         final itemsJson = rows
             .map(
               (row) => <String, dynamic>{
-                'metronIssueId': row.metronIssueId,
-                'ownershipStatus': row.ownershipStatus,
-                'isRead': row.isRead,
-                'rating': row.rating,
+                "metronIssueId": row.metronIssueId,
+                "ownershipStatus": row.ownershipStatus,
+                "isRead": row.isRead,
+                "rating": row.rating,
               },
             )
             .toList(growable: false);
@@ -47,10 +47,10 @@ final collectionStatusCacheProvider =
           (issueId, value) => MapEntry(
             issueId,
             IssueCollectionStatus(
-              isCollected: (value['isCollected'] as bool?) ?? false,
-              isWishlisted: (value['isWishlisted'] as bool?) ?? false,
-              isRead: (value['isRead'] as bool?) ?? false,
-              rating: value['rating'] as int?,
+              isCollected: (value["isCollected"] as bool?) ?? false,
+              isWishlisted: (value["isWishlisted"] as bool?) ?? false,
+              isRead: (value["isRead"] as bool?) ?? false,
+              rating: value["rating"] as int?,
             ),
           ),
         );

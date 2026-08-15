@@ -25,6 +25,7 @@ class LibraryActivityEvent {
     this.issueNumber,
     this.imageUrl,
     required this.timestamp,
+    this.batchId,
     this.metadata,
   });
 
@@ -37,5 +38,6 @@ class LibraryActivityEvent {
   final String? issueNumber;
   final String? imageUrl;
   final DateTime timestamp;
+  final String? batchId;
   final Map<String, dynamic>? metadata;
 }

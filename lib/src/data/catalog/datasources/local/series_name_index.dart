@@ -1,4 +1,4 @@
-import 'package:takion/src/data/common/drift/database.dart' as db;
+import "package:takion/src/data/common/drift/database.dart" as db;
 
 class SeriesNameIndex {
   SeriesNameIndex(this._database);
@@ -75,17 +75,17 @@ class SeriesNameIndex {
   }
 
   String _cleanQuery(String query) {
-    return query.trim().toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
+    return query.trim().toLowerCase().replaceAll(RegExp(r"[^\w\s]"), "");
   }
 
   List<String> _tokenize(String name) {
     return _cleanQuery(
       name,
-    ).split(RegExp(r'\s+')).where((t) => t.length >= 2).toList();
+    ).split(RegExp(r"\s+")).where((t) => t.length >= 2).toList();
   }
 
   String _normalize(String name) {
-    return _cleanQuery(name).replaceAll(RegExp(r'\s+'), '');
+    return _cleanQuery(name).replaceAll(RegExp(r"\s+"), "");
   }
 
   int _levenshtein(String a, String b) {
@@ -97,7 +97,7 @@ class SeriesNameIndex {
     if (b.isEmpty) return a.length;
 
     final prev = List<int>.generate(b.length + 1, (i) => i);
-    var curr = List<int>.filled(b.length + 1, 0);
+    final curr = List<int>.filled(b.length + 1, 0);
 
     for (var i = 0; i < a.length; i++) {
       curr[0] = i + 1;

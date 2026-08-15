@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/core/constants/pagination.dart';
+import "package:dio/dio.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/core/constants/pagination.dart";
 
 abstract class CharacterRepository {
   Future<CharacterListPage> searchCharacters(
@@ -20,8 +20,6 @@ abstract class CharacterRepository {
     CancelToken? cancelToken,
     bool forceRefresh = false,
   });
-
-  Future<int> refreshCharacterListDelta({DateTime? modifiedGt});
 
   Future<CharacterDetails> getCharacterDetails(
     int characterId, {

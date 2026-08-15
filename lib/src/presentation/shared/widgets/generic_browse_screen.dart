@@ -1,10 +1,10 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/browse/providers/browse_providers.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/browse_paged_list_screen.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/browse/providers/browse_providers.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/browse_paged_list_screen.dart";
 
 class GenericBrowseScreen<T> extends ConsumerStatefulWidget {
   const GenericBrowseScreen({
@@ -15,7 +15,7 @@ class GenericBrowseScreen<T> extends ConsumerStatefulWidget {
     required this.emptyMessage,
     required this.emptyIcon,
     required this.errorPrefix,
-    this.searchHint = 'Filter by name...',
+    this.searchHint = "Filter by name...",
     this.refreshNotifierGetter,
   });
 
@@ -67,11 +67,11 @@ class _GenericBrowseScreenState<T>
         try {
           final count = await widget.refreshNotifierGetter!(ref, _filter);
           if (count > 0 && context.mounted) {
-            TakionAlerts.info(context, 'Updated $count items');
+            TakionAlerts.info(context, "Updated $count items");
           }
         } catch (e) {
           if (context.mounted) {
-            TakionAlerts.safeError(context, e, userMessage: 'Refresh failed');
+            TakionAlerts.safeError(context, e, userMessage: "Refresh failed");
           }
         }
       },
@@ -159,7 +159,7 @@ class _SearchHeaderState extends State<_SearchHeader> {
                 icon: const Icon(Icons.clear, size: 20),
                 onPressed: () {
                   widget.controller.clear();
-                  widget.onChanged('');
+                  widget.onChanged("");
                 },
               ),
             const SizedBox(width: 4),

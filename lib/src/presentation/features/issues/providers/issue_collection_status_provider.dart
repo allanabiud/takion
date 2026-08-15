@@ -1,6 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
+import "package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart";
 
 final collectionIssueStatusMapProvider = collectionStatusCacheProvider;
 

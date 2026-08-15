@@ -1,9 +1,9 @@
-import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/core/cache/cache_header_store.dart';
-import 'package:takion/src/core/network/conditional_interceptor.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:dio/dio.dart";
+import "package:drift/native.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/core/cache/cache_header_store.dart";
+import "package:takion/src/core/network/conditional_interceptor.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class CapturingHandler extends RequestInterceptorHandler {
   RequestOptions? captured;
@@ -31,35 +31,35 @@ void main() {
 
   RequestOptions requestOptions({Map<String, dynamic> extra = const {}}) {
     return RequestOptions(
-      method: 'GET',
-      path: 'https://metron.cloud/api/arc/1/issue_list/?page=1',
+      method: "GET",
+      path: "https://metron.cloud/api/arc/1/issue_list/?page=1",
       extra: extra,
     );
   }
 
-  test('attaches If-None-Match when an ETag is cached', () async {
-    await store.store(db, 'https://metron.cloud/api/arc/1/issue_list/?page=1',
+  test("attaches If-None-Match when an ETag is cached", () async {
+    await store.store(db, "https://metron.cloud/api/arc/1/issue_list/?page=1",
         etag: '"abc"');
 
     final handler = CapturingHandler();
     interceptor.onRequest(requestOptions(), handler);
 
     expect(handler.captured, isNotNull);
-    expect(handler.captured!.headers['If-None-Match'], '"abc"');
+    expect(handler.captured!.headers["If-None-Match"], '"abc"');
   });
 
-  test('skips conditional headers when bypass_conditional is set', () async {
-    await store.store(db, 'https://metron.cloud/api/arc/1/issue_list/?page=1',
+  test("skips conditional headers when bypass_conditional is set", () async {
+    await store.store(db, "https://metron.cloud/api/arc/1/issue_list/?page=1",
         etag: '"abc"');
 
     final handler = CapturingHandler();
     interceptor.onRequest(
-      requestOptions(extra: {'bypass_conditional': true}),
+      requestOptions(extra: {"bypass_conditional": true}),
       handler,
     );
 
     expect(handler.captured, isNotNull);
-    expect(handler.captured!.headers['If-None-Match'], isNull);
-    expect(handler.captured!.headers['If-Modified-Since'], isNull);
+    expect(handler.captured!.headers["If-None-Match"], isNull);
+    expect(handler.captured!.headers["If-Modified-Since"], isNull);
   });
 }

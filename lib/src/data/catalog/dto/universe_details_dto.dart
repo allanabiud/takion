@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 String? _parseString(dynamic raw) {
   if (raw is String && raw.isNotEmpty) return raw;
@@ -14,12 +14,12 @@ class UniversePublisherRefDto {
 
   factory UniversePublisherRefDto.fromJson(Map<String, dynamic> json) {
     return UniversePublisherRefDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
     );
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
 
   UniverseNamedRef toEntity() => UniverseNamedRef(id: id, name: name);
 }
@@ -49,32 +49,32 @@ class UniverseDetailsDto {
 
   factory UniverseDetailsDto.fromJson(Map<String, dynamic> json) {
     return UniverseDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      publisher: json['publisher'] != null
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      publisher: json["publisher"] != null
           ? UniversePublisherRefDto.fromJson(
-              Map<String, dynamic>.from(json['publisher']),
+              Map<String, dynamic>.from(json["publisher"]),
             )
           : null,
-      name: _parseString(json['name']) ?? '',
-      designation: _parseString(json['designation']),
-      desc: _parseString(json['desc']),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      image: _parseString(json['image']),
-      resourceUrl: _parseString(json['resource_url']),
-      modified: _parseString(json['modified']),
+      name: _parseString(json["name"]) ?? "",
+      designation: _parseString(json["designation"]),
+      desc: _parseString(json["desc"]),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      image: _parseString(json["image"]),
+      resourceUrl: _parseString(json["resource_url"]),
+      modified: _parseString(json["modified"]),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'publisher': publisher?.toJson(),
-    'name': name,
-    'designation': designation,
-    'desc': desc,
-    'gcd_id': gcdId,
-    'image': image,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "publisher": publisher?.toJson(),
+    "name": name,
+    "designation": designation,
+    "desc": desc,
+    "gcd_id": gcdId,
+    "image": image,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   UniverseDetails toEntity() {

@@ -1,41 +1,41 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/core/cache/user_state_cache.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
 class LocalPullListRepository implements PullListRepository {
   LocalPullListRepository(this._database, this._cache);
 
-  static const _localUserId = 'local-user';
+  static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final UserStateCache _cache;
 
-  String _idForIssue(int issueId) => 'pull-$issueId';
+  String _idForIssue(int issueId) => "pull-$issueId";
 
   String _statusToRaw(PullListEntryStatus value) {
     switch (value) {
       case PullListEntryStatus.upcoming:
-        return 'upcoming';
+        return "upcoming";
       case PullListEntryStatus.missing:
-        return 'missing';
+        return "missing";
       case PullListEntryStatus.owned:
-        return 'owned';
+        return "owned";
       case PullListEntryStatus.skipped:
-        return 'skipped';
+        return "skipped";
     }
   }
 
   PullListEntryStatus _statusFromRaw(String value) {
     switch (value) {
-      case 'missing':
+      case "missing":
         return PullListEntryStatus.missing;
-      case 'owned':
+      case "owned":
         return PullListEntryStatus.owned;
-      case 'skipped':
+      case "skipped":
         return PullListEntryStatus.skipped;
-      case 'upcoming':
+      case "upcoming":
       default:
         return PullListEntryStatus.upcoming;
     }
@@ -44,17 +44,17 @@ class LocalPullListRepository implements PullListRepository {
   String _sourceToRaw(PullListEntrySource value) {
     switch (value) {
       case PullListEntrySource.subscription:
-        return 'subscription';
+        return "subscription";
       case PullListEntrySource.manual:
-        return 'manual';
+        return "manual";
     }
   }
 
   PullListEntrySource _sourceFromRaw(String value) {
     switch (value) {
-      case 'manual':
+      case "manual":
         return PullListEntrySource.manual;
-      case 'subscription':
+      case "subscription":
       default:
         return PullListEntrySource.subscription;
     }
@@ -73,6 +73,13 @@ class LocalPullListRepository implements PullListRepository {
       createdAt: DateTime.parse(d.createdAt),
       updatedAt: DateTime.parse(d.updatedAt),
     );
+  }
+
+  @override
+  Stream<PullListEntry?> watchEntryByIssueId(int metronIssueId) {
+    return _database.pullListDao
+        .watchByIssueId(metronIssueId)
+        .map((row) => row == null ? null : _toDomain(row));
   }
 
   @override
@@ -155,7 +162,7 @@ class LocalPullListRepository implements PullListRepository {
     final current = await getEntryByIssueId(metronIssueId);
     if (current == null) {
       throw StateError(
-        'Pull list entry does not exist for issue $metronIssueId',
+        "Pull list entry does not exist for issue $metronIssueId",
       );
     }
     final updated = PullListEntry(

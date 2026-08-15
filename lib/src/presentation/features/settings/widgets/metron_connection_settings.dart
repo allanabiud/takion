@@ -1,16 +1,16 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/date_formatter.dart';
-import 'package:takion/src/core/network/metron_account_service.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/network/metron_account_service.dart";
 
-import 'package:takion/src/presentation/features/settings/providers/metron_account_provider.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/providers/rate_limit_status_provider.dart';
-import 'package:takion/src/presentation/providers/auth_provider.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
+import "package:takion/src/presentation/features/settings/providers/metron_account_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/providers/rate_limit_status_provider.dart";
+import "package:takion/src/core/auth/auth_provider.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
 
 Future<void> disconnectMetronAccount(
   BuildContext context,
@@ -20,13 +20,13 @@ Future<void> disconnectMetronAccount(
   ref.invalidate(metronConnectionProvider);
   ref.invalidate(authStateProvider);
   if (!context.mounted) return;
-  TakionAlerts.info(context, 'Disconnected');
+  TakionAlerts.info(context, "Disconnected");
 }
 
 void showMetronConnectionSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Metron',
+    title: "Metron",
     child: const _MetronConnectionContent(),
   );
 }
@@ -75,7 +75,7 @@ class _MetronConnectionContentState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ACCOUNT',
+                "ACCOUNT",
                 style: theme.textTheme.labelSmall?.copyWith(
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.bold,
@@ -103,10 +103,10 @@ class _MetronConnectionContentState
                     );
                   },
                   child: buildMetronAccountCard(
-                    key: ValueKey('metron_card_$isConnected'),
+                    key: ValueKey("metron_card_$isConnected"),
                     context: context,
                     isConnected: isConnected,
-                    maskedToken: _maskedToken ?? '',
+                    maskedToken: _maskedToken ?? "",
                     onConnect: () {
                       Navigator.of(context).pop();
                       context.pushRoute(const AuthorizeMetronRoute());
@@ -143,7 +143,7 @@ class _ApiUsageCard extends ConsumerWidget {
       _ => theme.colorScheme.error,
     };
 
-    return buildSettingsGroup(context, 'API Usage', [
+    return buildSettingsGroup(context, "API Usage", [
       Row(
         children: [
           Expanded(
@@ -151,14 +151,14 @@ class _ApiUsageCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${state.sustainedRemaining}',
+                  "${state.sustainedRemaining}",
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: progressColor,
                   ),
                 ),
                 Text(
-                  'of ${state.sustainedLimit} requests remaining',
+                  "of ${state.sustainedLimit} requests remaining",
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -173,7 +173,7 @@ class _ApiUsageCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              '${state.burstRemaining}/min',
+              "${state.burstRemaining}/min",
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: progressColor,
@@ -204,7 +204,7 @@ class _ApiUsageCard extends ConsumerWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                'Reset ${DateFormatter.relativeDetailed(DateTime.fromMillisecondsSinceEpoch(state.sustainedReset * 1000))}',
+                "Reset ${DateFormatter.relativeDetailed(DateTime.fromMillisecondsSinceEpoch(state.sustainedReset * 1000))}",
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

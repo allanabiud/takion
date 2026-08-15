@@ -1,12 +1,11 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
-import 'package:takion/src/presentation/features/library/providers/favorites_provider.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class PersonListTile extends ConsumerWidget {
   final int? characterId;
@@ -41,10 +40,10 @@ class PersonListTile extends ConsumerWidget {
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedCharImage = characterId != null
-        ? cache.getCached('character', characterId!)
+        ? cache.getCached("character", characterId!)
         : null;
     final cachedCreatorImage = creatorId != null
-        ? cache.getCached('creator', creatorId!)
+        ? cache.getCached("creator", creatorId!)
         : null;
     final effectiveImageUrl = imageUrl ?? cachedCharImage ?? cachedCreatorImage;
 
@@ -91,24 +90,18 @@ class PersonListTile extends ConsumerWidget {
                           child: SizedBox(
                             width: 60,
                             height: 60,
-                            child:
-                                effectiveImageUrl != null &&
-                                    effectiveImageUrl.isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: effectiveImageUrl,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        _initialsAvatar(theme),
-                                    errorWidget: (context, url, error) =>
-                                        imageErrorPlaceholder(
-                                          context,
-                                          url,
-                                          error,
-                                          label: initials(name),
-                                          iconSize: 22,
-                                        ),
-                                  )
-                                : _initialsAvatar(theme),
+                            child: EntityCover(
+                              imageUrl: effectiveImageUrl,
+                              placeholderLabel: initials(name),
+                              width: 60,
+                              height: 60,
+                              borderRadius: 0,
+                              aspectRatio: 1,
+                              iconSize: 22,
+                              circular: true,
+                              fadeInDuration: Duration.zero,
+                              fadeOutDuration: Duration.zero,
+                            ),
                           ),
                         ),
                         if (isFav)
@@ -170,27 +163,6 @@ class PersonListTile extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _initialsAvatar(ThemeData theme) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          initials(name),
-          style: TextStyle(
-            color: theme.colorScheme.primary,
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ),
     );
   }

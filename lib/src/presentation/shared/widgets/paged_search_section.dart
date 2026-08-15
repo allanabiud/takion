@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
 
 class PagedSearchSection<T> extends ConsumerWidget {
   const PagedSearchSection({
@@ -71,7 +71,7 @@ class PagedSearchSection<T> extends ConsumerWidget {
                         PinnedListHeader(
                           child: ListHeader(
                             count: totalCount,
-                            unit: 'result',
+                            unit: "result",
                             pageCount: items.length,
                             sortLabel: sortLabelFn(sortOption),
                             onSortTap: () => showSortBottomSheet(
@@ -103,7 +103,7 @@ class PagedSearchSection<T> extends ConsumerWidget {
                         PinnedListHeader(
                           child: ListHeader(
                             count: totalCount,
-                            unit: 'result',
+                            unit: "result",
                             pageCount: items.length,
                             sortLabel: sortLabelFn(sortOption),
                             onSortTap: isLoading
@@ -155,7 +155,7 @@ class PagedSearchSection<T> extends ConsumerWidget {
                   Expanded(
                     child: Center(
                       child: Text(
-                        'Page $currentPage of $totalPages',
+                        "Page $currentPage of $totalPages",
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),

@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class JunctionDao extends DatabaseAccessor<AppDatabase> {
   JunctionDao(super.db);
@@ -65,24 +65,6 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     await batch((b) {
       b.insertAllOnConflictUpdate(attachedDatabase.issueUniverses, entries);
     });
-  }
-
-  Future<void> insertIgnoreIssueImprint(IssueImprintsCompanion entry) async {
-    await into(attachedDatabase.issueImprints).insertOnConflictUpdate(entry);
-  }
-
-  Future<void> insertIgnoreSeriesArc(SeriesArcsCompanion entry) async {
-    await into(attachedDatabase.seriesArcs).insertOnConflictUpdate(entry);
-  }
-
-  Future<void> insertIgnoreSeriesTeam(SeriesTeamsCompanion entry) async {
-    await into(attachedDatabase.seriesTeams).insertOnConflictUpdate(entry);
-  }
-
-  Future<void> insertIgnoreSeriesUniverse(
-    SeriesUniversesCompanion entry,
-  ) async {
-    await into(attachedDatabase.seriesUniverses).insertOnConflictUpdate(entry);
   }
 
   Future<void> insertIgnoreAssociatedSeries(

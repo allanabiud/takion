@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class ExpandableDescription extends StatefulWidget {
   const ExpandableDescription({super.key, required this.description});
@@ -53,7 +53,7 @@ class _ExpandableDescriptionState extends State<ExpandableDescription> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader(title: 'SUMMARY'),
+                const SectionHeader(title: "SUMMARY"),
                 const SizedBox(height: 8),
                 ClipRect(
                   child: AnimatedAlign(
@@ -77,7 +77,7 @@ class _ExpandableDescriptionState extends State<ExpandableDescription> {
                       ),
                     ),
                     child: Text(
-                      _isExpanded ? 'Tap to read less' : 'Tap to read more',
+                      _isExpanded ? "Tap to read less" : "Tap to read more",
                       key: ValueKey(_isExpanded),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,

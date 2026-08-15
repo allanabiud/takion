@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_items_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 
 class ContinueReadingSuggestion {
   const ContinueReadingSuggestion({
@@ -27,12 +27,12 @@ Map<String, dynamic> _filterContinueReadingData(
 
   for (var i = 0; i < itemsJson.length; i++) {
     final item = itemsJson[i];
-    final isRead = item['isRead'] as bool;
-    final issueId = item['metronIssueId'] as int;
+    final isRead = item["isRead"] as bool;
+    final issueId = item["metronIssueId"] as int;
     if (isRead) {
       allReadIssueIds.add(issueId);
     }
-    if (item['ownershipStatus'] == 'owned' && isRead) {
+    if (item["ownershipStatus"] == "owned" && isRead) {
       collectedReadIndices.add(i);
     }
   }
@@ -42,10 +42,10 @@ Map<String, dynamic> _filterContinueReadingData(
 
   for (final idx in collectedReadIndices) {
     final item = itemsJson[idx];
-    final seriesId = item['metronSeriesId'] as int;
-    final issueId = item['metronIssueId'] as int;
-    final firstReadAt = item['firstReadAt'] as String?;
-    final updatedAt = item['updatedAt'] as String;
+    final seriesId = item["metronSeriesId"] as int;
+    final issueId = item["metronIssueId"] as int;
+    final firstReadAt = item["firstReadAt"] as String?;
+    final updatedAt = item["updatedAt"] as String;
     final ts = firstReadAt ?? updatedAt;
 
     final existing = latestReadAtBySeries[seriesId];
@@ -61,15 +61,15 @@ Map<String, dynamic> _filterContinueReadingData(
     );
 
   return {
-    'collectedReadIndices': collectedReadIndices,
-    'allReadIssueIds': allReadIssueIds.toList(),
-    'latestReadAtBySeries': latestReadAtBySeries.map(
+    "collectedReadIndices": collectedReadIndices,
+    "allReadIssueIds": allReadIssueIds.toList(),
+    "latestReadAtBySeries": latestReadAtBySeries.map(
       (k, v) => MapEntry(k.toString(), v),
     ),
-    'latestReadIssueIdBySeries': latestReadIssueIdBySeries.map(
+    "latestReadIssueIdBySeries": latestReadIssueIdBySeries.map(
       (k, v) => MapEntry(k.toString(), v),
     ),
-    'recentSeriesIds': recentSeriesIds,
+    "recentSeriesIds": recentSeriesIds,
   };
 }
 
@@ -123,34 +123,34 @@ Future<List<ContinueReadingSuggestion>> _computeContinueReadingSuggestions(
   final itemsJson = libraryItems
       .map(
         (item) => <String, dynamic>{
-          'metronIssueId': item.metronIssueId,
-          'metronSeriesId': item.metronSeriesId,
-          'ownershipStatus': item.ownershipStatus.name,
-          'isRead': item.isRead,
-          'firstReadAt': item.firstReadAt?.toIso8601String(),
-          'updatedAt': item.updatedAt.toIso8601String(),
+          "metronIssueId": item.metronIssueId,
+          "metronSeriesId": item.metronSeriesId,
+          "ownershipStatus": item.ownershipStatus.name,
+          "isRead": item.isRead,
+          "firstReadAt": item.firstReadAt?.toIso8601String(),
+          "updatedAt": item.updatedAt.toIso8601String(),
         },
       )
       .toList(growable: false);
 
   final filtered = await compute(_filterContinueReadingData, itemsJson);
 
-  final collectedReadIndices = (filtered['collectedReadIndices'] as List)
+  final collectedReadIndices = (filtered["collectedReadIndices"] as List)
       .cast<int>();
   if (collectedReadIndices.isEmpty) return const [];
 
-  final allReadIssueIds = (filtered['allReadIssueIds'] as List)
+  final allReadIssueIds = (filtered["allReadIssueIds"] as List)
       .cast<int>()
       .toSet();
 
-  final latestReadAtBySeries = (filtered['latestReadAtBySeries'] as Map).map(
+  final latestReadAtBySeries = (filtered["latestReadAtBySeries"] as Map).map(
     (k, v) => MapEntry(int.parse(k as String), DateTime.parse(v as String)),
   );
   final latestReadIssueIdBySeries =
-      (filtered['latestReadIssueIdBySeries'] as Map).map(
+      (filtered["latestReadIssueIdBySeries"] as Map).map(
         (k, v) => MapEntry(int.parse(k as String), v as int),
       );
-  final recentSeriesIds = (filtered['recentSeriesIds'] as List).cast<int>();
+  final recentSeriesIds = (filtered["recentSeriesIds"] as List).cast<int>();
 
   final seriesIdsToResolve = maxSeriesCount == null
       ? recentSeriesIds
@@ -189,7 +189,7 @@ final continueReadingAllSuggestionsProvider =
       try {
         return await _computeContinueReadingSuggestions(ref);
       } catch (e) {
-        AppLogger.error('Failed to compute continue reading', error: e);
+        AppLogger.error("Failed to compute continue reading", error: e);
         return const [];
       }
     });

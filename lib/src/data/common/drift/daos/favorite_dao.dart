@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class FavoriteDao extends DatabaseAccessor<AppDatabase> {
   FavoriteDao(super.db);
@@ -32,7 +32,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.favoriteSeries,
         )..where((t) => t.metronSeriesId.equals(metronSeriesId))).go();
         await attachedDatabase.syncMetaDao.set(
-          'delete:favorite_series:$metronSeriesId',
+          "delete:favorite_series:$metronSeriesId",
           DateTime.now().toUtc().toIso8601String(),
         );
       });
@@ -46,7 +46,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           ),
         );
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:favorite_series:$metronSeriesId',
+          "delete:favorite_series:$metronSeriesId",
         );
       });
     }
@@ -80,7 +80,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.favoriteIssues,
         )..where((t) => t.metronIssueId.equals(metronIssueId))).go();
         await attachedDatabase.syncMetaDao.set(
-          'delete:favorite_issues:$metronIssueId',
+          "delete:favorite_issues:$metronIssueId",
           DateTime.now().toUtc().toIso8601String(),
         );
       });
@@ -94,7 +94,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           ),
         );
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:favorite_issues:$metronIssueId',
+          "delete:favorite_issues:$metronIssueId",
         );
       });
     }
@@ -124,7 +124,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.favoriteCharacters,
         )..where((t) => t.metronCharacterId.equals(metronCharacterId))).go();
         await attachedDatabase.syncMetaDao.set(
-          'delete:favorite_characters:$metronCharacterId',
+          "delete:favorite_characters:$metronCharacterId",
           DateTime.now().toUtc().toIso8601String(),
         );
       });
@@ -138,7 +138,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           ),
         );
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:favorite_characters:$metronCharacterId',
+          "delete:favorite_characters:$metronCharacterId",
         );
       });
     }
@@ -166,7 +166,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.favoriteCreators,
         )..where((t) => t.metronCreatorId.equals(metronCreatorId))).go();
         await attachedDatabase.syncMetaDao.set(
-          'delete:favorite_creators:$metronCreatorId',
+          "delete:favorite_creators:$metronCreatorId",
           DateTime.now().toUtc().toIso8601String(),
         );
       });
@@ -180,7 +180,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           ),
         );
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:favorite_creators:$metronCreatorId',
+          "delete:favorite_creators:$metronCreatorId",
         );
       });
     }
@@ -210,7 +210,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           attachedDatabase.favoriteReadingLists,
         )..where((t) => t.readingListId.equals(readingListId))).go();
         await attachedDatabase.syncMetaDao.set(
-          'delete:favorite_reading_lists:$readingListId',
+          "delete:favorite_reading_lists:$readingListId",
           DateTime.now().toUtc().toIso8601String(),
         );
       });
@@ -224,7 +224,7 @@ class FavoriteDao extends DatabaseAccessor<AppDatabase> {
           ),
         );
         await attachedDatabase.syncMetaDao.deleteByKey(
-          'delete:favorite_reading_lists:$readingListId',
+          "delete:favorite_reading_lists:$readingListId",
         );
       });
     }

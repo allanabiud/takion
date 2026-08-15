@@ -1,13 +1,12 @@
-import 'package:flutter/foundation.dart' show compute;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/data/common/drift/database.dart' hide LibraryItem;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/presentation/features/library/providers/category_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/collection_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart';
+import "package:flutter/foundation.dart" show compute;
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/presentation/features/library/providers/category_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
+import "package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart";
 
 const _maxHydrationConcurrency = 4;
 const _isolateHydrationThreshold = 500;
@@ -59,7 +58,7 @@ CollectionItem toCollectionItem(
         id: seriesId,
         name: (seriesName != null && seriesName.trim().isNotEmpty)
             ? seriesName.trim()
-            : '',
+            : "",
         volume: seriesVolume,
         yearBegan: seriesYearBegan,
       ),
@@ -94,7 +93,7 @@ Future<List<CollectionItem>> hydrateLibraryItems(
   bool applyPriceBackfill = true,
 }) async {
   if (items.isEmpty) return <CollectionItem>[];
-  final db = ref.read(driftDatabaseProvider);
+  final localCatalog = ref.read(localCatalogRepositoryProvider);
 
   final issueIds = <int>{};
   final seriesIds = <int>{};
@@ -103,15 +102,13 @@ Future<List<CollectionItem>> hydrateLibraryItems(
     if (item.metronSeriesId > 0) seriesIds.add(item.metronSeriesId);
   }
 
-  final issues = await db.metronEntityDao.getIssuesByIds(issueIds.toList());
+  final issues = await localCatalog.getIssuesByIds(issueIds.toList());
   for (final issue in issues.values) {
     if (issue.seriesId != null && issue.seriesId! > 0) {
       seriesIds.add(issue.seriesId!);
     }
   }
-  final seriesMap = await db.metronEntityDao.getSeriesByIds(
-    seriesIds.toList(),
-  );
+  final seriesMap = await localCatalog.getSeriesByIds(seriesIds.toList());
 
   final (results, priceBackfill) = items.length > _isolateHydrationThreshold
       ? await compute(
@@ -133,7 +130,7 @@ Future<List<CollectionItem>> hydrateLibraryItems(
       ref.invalidate(libraryRecentlyFinishedProvider);
       ref.invalidate(categoryInsightsProvider);
     } catch (e) {
-      AppLogger.warning('Failed to batch backfill cover prices', error: e);
+      AppLogger.warning("Failed to batch backfill cover prices", error: e);
     }
   }
 
@@ -144,8 +141,8 @@ class _HydrationBatch {
   const _HydrationBatch(this.items, this.issues, this.seriesMap, this.applyPriceBackfill);
 
   final List<LibraryItem> items;
-  final Map<int, MetronIssue> issues;
-  final Map<int, MetronSery> seriesMap;
+  final Map<int, LocalIssue> issues;
+  final Map<int, SeriesList> seriesMap;
   final bool applyPriceBackfill;
 }
 
@@ -157,7 +154,7 @@ class _HydrationBatch {
 
   for (final item in batch.items) {
     final issue = batch.issues[item.metronIssueId];
-    MetronSery? series;
+    SeriesList? series;
     if (issue?.seriesId != null) {
       series = batch.seriesMap[issue!.seriesId];
     }
@@ -180,11 +177,11 @@ class _HydrationBatch {
         series?.name,
         series?.volume,
         series?.yearBegan,
-        issue?.number ?? '',
+        issue?.number ?? "",
         issue?.imageUrl,
-        issue?.coverDate != null ? DateTime.tryParse(issue!.coverDate!) : null,
-        issue?.storeDate != null ? DateTime.tryParse(issue!.storeDate!) : null,
-        issue?.modified != null ? DateTime.tryParse(issue!.modified!) : null,
+        issue?.coverDate,
+        issue?.storeDate,
+        issue?.modified,
       ),
     );
   }

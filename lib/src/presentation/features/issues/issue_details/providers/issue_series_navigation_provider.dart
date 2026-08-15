@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_details_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_details_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 class IssueSeriesNavArgs {
   const IssueSeriesNavArgs({required this.seriesId, required this.issueId});
@@ -95,15 +95,15 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
           .watch(issueDetailsProvider(args.issueId))
           .asData
           ?.value;
-      final targetNumber = issueDetails?.number ?? '';
+      final targetNumber = issueDetails?.number ?? "";
       final targetDate = issueDetails?.coverDate ?? issueDetails?.storeDate;
 
       int comparePosition(IssueList item) {
         final itemNum = double.tryParse(
-          item.number.replaceAll(RegExp(r'[^0-9.]'), ''),
+          item.number.replaceAll(RegExp(r"[^0-9.]"), ""),
         );
         final targetNum = double.tryParse(
-          targetNumber.replaceAll(RegExp(r'[^0-9.]'), ''),
+          targetNumber.replaceAll(RegExp(r"[^0-9.]"), ""),
         );
 
         if (itemNum != null && targetNum != null && itemNum != targetNum) {
@@ -120,7 +120,7 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
       }
 
       final targetNumeric = double.tryParse(
-        targetNumber.replaceAll(RegExp(r'[^0-9.]'), ''),
+        targetNumber.replaceAll(RegExp(r"[^0-9.]"), ""),
       );
 
       if (targetNumeric != null && targetNumeric > 0) {

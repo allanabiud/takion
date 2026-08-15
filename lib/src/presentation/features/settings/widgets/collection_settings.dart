@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/settings/providers/settings_provider.dart';
-import 'package:takion/src/presentation/features/settings/widgets/settings_helpers.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
+import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
 
 void showCollectionSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: 'Library',
+    title: "Library",
     child: Consumer(
       builder: (context, ref, _) {
         final formatAsync = ref.watch(collectionDefaultFormatProvider);
@@ -20,7 +20,7 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildSettingsGroup(context, 'Default Format', [
+              buildSettingsGroup(context, "Default Format", [
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
@@ -35,11 +35,11 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Format',
+                              "Format",
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              'Applied when adding new collection items',
+                              "Applied when adding new collection items",
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: Theme.of(
@@ -67,19 +67,19 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
                     children: [
                       RadioListTile<CollectionDefaultFormat>(
                         value: CollectionDefaultFormat.digital,
-                        title: const Text('Digital'),
+                        title: const Text("Digital"),
                         contentPadding: EdgeInsets.zero,
                         enabled: !formatAsync.isLoading,
                       ),
                       RadioListTile<CollectionDefaultFormat>(
                         value: CollectionDefaultFormat.print,
-                        title: const Text('Print'),
+                        title: const Text("Print"),
                         contentPadding: EdgeInsets.zero,
                         enabled: !formatAsync.isLoading,
                       ),
                       RadioListTile<CollectionDefaultFormat>(
                         value: CollectionDefaultFormat.both,
-                        title: const Text('Both'),
+                        title: const Text("Both"),
                         contentPadding: EdgeInsets.zero,
                         enabled: !formatAsync.isLoading,
                       ),
@@ -88,15 +88,15 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
                 ),
               ]),
               const SizedBox(height: 16),
-              buildSettingsGroup(context, 'Automation', [
+              buildSettingsGroup(context, "Automation", [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text(
-                    'Auto-Collect on Read',
+                    "Auto-Collect on Read",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: const Text(
-                    'Automatically add to collection when marked as read',
+                    "Automatically add to collection when marked as read",
                   ),
                   value: ref.watch(autoCollectOnReadProvider).value ?? false,
                   onChanged: (v) => ref
@@ -107,11 +107,11 @@ void showCollectionSettings(BuildContext context, WidgetRef ref) {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text(
-                    'Auto-Pull to Collection',
+                    "Auto-Pull to Collection",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: const Text(
-                    'Automatically move released pull list items to owned collection',
+                    "Automatically move released pull list items to owned collection",
                   ),
                   value: ref.watch(autoPullToCollectionProvider).value ?? false,
                   onChanged: (v) => ref

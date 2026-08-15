@@ -1,11 +1,11 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/presentation/features/releases/providers/selected_week_provider.dart';
-import 'package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/releases/providers/selected_week_provider.dart";
+import "package:takion/src/presentation/features/releases/providers/weekly_releases_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 @RoutePage()
 class WeeklyReleasesScreen extends ConsumerWidget {
@@ -20,24 +20,24 @@ class WeeklyReleasesScreen extends ConsumerWidget {
     final issuesAsync = ref.watch(weeklyReleasesProvider(selectedDate));
 
     return PagedIssueListScaffold(
-      title: 'Weekly Releases',
+      title: "Weekly Releases",
       issuesAsync: issuesAsync,
       transformIssues: (issues) => sortIssues(issues, sortOption),
       header: issuesAsync.maybeWhen(
         data: (issues) => ListHeader(
           count: issues.length,
-          unit: 'issue',
-          sortLabel: issueSortLabel(sortOption),
+          unit: "issue",
+          sortLabel: contentSortLabel(sortOption),
           onSortTap: () => showSortBottomSheet(
             context,
             ref,
             SortPreferenceContext.releasesWeekly,
-            issueSortLabel,
+            contentSortLabel,
           ),
         ),
         orElse: () => null,
       ),
-      emptyMessage: 'No weekly releases for this week.',
+      emptyMessage: "No weekly releases for this week.",
       emptyIcon: Icons.new_releases_outlined,
     );
   }

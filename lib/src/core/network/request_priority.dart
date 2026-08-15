@@ -1,6 +1,6 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:dio/dio.dart';
+import "package:dio/dio.dart";
 
 /// Marks work running in a background zone so the request scheduler can treat
 /// it as lower priority than user-facing (foreground) requests.
@@ -10,7 +10,7 @@ const backgroundZoneKey = #opencode_background;
 const priorityZoneKey = #opencode_request_priority;
 
 /// `options.extra` key for an explicit [RequestPriority] override.
-const requestPriorityExtraKey = 'request_priority';
+const requestPriorityExtraKey = "request_priority";
 
 /// Priority classes for outgoing Metron API requests.
 ///

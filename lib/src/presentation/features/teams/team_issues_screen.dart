@@ -1,212 +1,46 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/constants/pagination.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_details_provider.dart';
-import 'package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/teams/providers/team_details_provider.dart";
+import "package:takion/src/presentation/features/teams/providers/team_issue_list_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/shared/widgets/entity_paged_list_screen.dart";
 
 @RoutePage()
-class TeamIssuesScreen extends ConsumerStatefulWidget {
+class TeamIssuesScreen extends ConsumerWidget {
   const TeamIssuesScreen({super.key, @pathParam required this.teamId});
 
   final int teamId;
 
   @override
-  ConsumerState<TeamIssuesScreen> createState() => _TeamIssuesScreenState();
-}
-
-class _TeamIssuesScreenState extends ConsumerState<TeamIssuesScreen> {
-  int _page = 1;
-  CharacterIssueListPage? _lastPage;
-  int _totalPages = 1;
-  final _overlapHandle = SliverOverlapAbsorberHandle();
-
-  @override
-  void dispose() {
-    _overlapHandle.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sortOption = ref.watch(
-      sortPreferenceForContextProvider(SortPreferenceContext.teamIssues),
-    );
-    final teamAsync = ref.watch(teamDetailsProvider(widget.teamId));
-    final teamName = teamAsync.asData?.value.name ?? '';
-    final args = TeamIssueListArgs(teamId: widget.teamId, page: _page);
-    final issuesAsync = ref.watch(teamIssueListProvider(args));
-    final isLoading = issuesAsync.isLoading;
-
-    if (issuesAsync.hasValue) {
-      _lastPage = issuesAsync.value;
-      _totalPages =
-          ((issuesAsync.value!.count - 1) ~/ metronDefaultPageSize) + 1;
-    }
-
-    final body = issuesAsync.when(
-      loading: () {
-        if (_lastPage != null) {
-          return _buildContent(
-            context,
-            ref,
-            _lastPage!,
-            sortOption,
-            isLoading: true,
-          );
-        }
-        return const AsyncStatePanel.loading();
-      },
-      error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: 'Failed to load issues'),
-      data: (issuePage) =>
-          _buildContent(context, ref, issuePage, sortOption, isLoading: false),
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Issues'),
-            if (teamName.isNotEmpty)
-              Text(
-                teamName,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-          ],
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamName =
+        ref.watch(teamDetailsProvider(teamId)).asData?.value.name ?? "";
+    return EntityPagedListScreen<CharacterIssueListPage, IssueList>(
+      title: "Issues",
+      subtitle: teamName,
+      unit: "issue",
+      sortContext: SortPreferenceContext.teamIssues,
+      sortLabel: contentSortLabel,
+      sortItems: sortIssues,
+      watchPage: (ref, page) => ref.watch(
+        teamIssueListProvider(TeamIssueListArgs(teamId: teamId, page: page)),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(teamIssueListProvider(args));
-        },
-        child: body,
+      invalidatePage: (ref, page) => ref.invalidate(
+        teamIssueListProvider(TeamIssueListArgs(teamId: teamId, page: page)),
       ),
-      bottomNavigationBar: _totalPages > 1
-          ? BottomAppBar(
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: isLoading || !_pageHasPrevious
-                        ? null
-                        : () => setState(() => _page--),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        'Page $_page of $_totalPages',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: isLoading || !_pageHasNext
-                        ? null
-                        : () => setState(() => _page++),
-                  ),
-                ],
-              ),
-            )
-          : null,
-    );
-  }
-
-  bool get _pageHasPrevious => _lastPage?.hasPrevious ?? false;
-
-  bool get _pageHasNext => _lastPage?.hasNext ?? false;
-
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    CharacterIssueListPage issuePage,
-    ContentSortOption sortOption, {
-    required bool isLoading,
-  }) {
-    final sortedIssues = sortIssues(issuePage.results, sortOption);
-    final issueCount = issuePage.count;
-
-    return CustomScrollView(
-      slivers: [
-        SliverOverlapAbsorber(
-          handle: _overlapHandle,
-          sliver: PinnedListHeader(
-            isLoading: isLoading,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ListHeader(
-                  count: issueCount,
-                  unit: 'issue',
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const VerticalDivider(width: 1, thickness: 1),
-                      TextButton.icon(
-                        onPressed: isLoading
-                            ? null
-                            : () {
-                                showSortBottomSheet(
-                                  context,
-                                  ref,
-                                  SortPreferenceContext.teamIssues,
-                                  issueSortLabel,
-                                );
-                              },
-                        icon: const Icon(Icons.swap_vert),
-                        label: Text(issueSortLabel(sortOption)),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: LinearProgressIndicator(minHeight: 2),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        SliverOverlapInjector(handle: _overlapHandle),
-        sortedIssues.isEmpty && !isLoading
-            ? SliverFillRemaining(
-                hasScrollBody: false,
-                child: EmptyContentState(
-                  icon: Icons.menu_book_outlined,
-                  message: 'No issues available.',
-                ),
-              )
-            : SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final issue = sortedIssues[index];
-                  return Opacity(
-                    opacity: isLoading ? 0.6 : 1.0,
-                    child: IssueListTile(
-                      issue: issue,
-                      isFirst: index == 0,
-                      isLast: index == sortedIssues.length - 1,
-                    ),
-                  );
-                }, childCount: sortedIssues.length),
-              ),
-      ],
+      countOf: (page) => page.count,
+      resultsOf: (page) => page.results,
+      hasNextOf: (page) => page.hasNext,
+      hasPreviousOf: (page) => page.hasPrevious,
+      pageSizeOf: (page) => page.realPageSize,
+      tileBuilder: (context, issue, {required isFirst, required isLast}) =>
+          IssueListTile(issue: issue, isFirst: isFirst, isLast: isLast),
+      emptyMessage: "No issues available.",
+      emptyIcon: Icons.menu_book_outlined,
+      errorMessage: "Failed to load issues",
     );
   }
 }

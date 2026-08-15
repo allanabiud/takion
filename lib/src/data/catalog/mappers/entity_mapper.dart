@@ -1,8 +1,8 @@
-import 'dart:convert';
-import 'package:takion/src/data/common/drift/daos/junction_dao.dart';
-import 'package:takion/src/data/common/drift/daos/metron_entity_dao.dart';
-import 'package:takion/src/data/common/drift/database.dart';
-import 'package:takion/src/domain/entities.dart';
+import "dart:convert";
+import "package:takion/src/data/common/drift/daos/junction_dao.dart";
+import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/data/common/drift/database.dart";
+import "package:takion/src/domain/entities.dart";
 
 class EntityMapper {
   final MetronEntityDao _entityDao;
@@ -148,7 +148,7 @@ class EntityMapper {
       for (final j in characterJunctions)
         IssueDetailsParticipation(
           id: j.characterId,
-          name: lookups.characterById[j.characterId]?.name ?? '',
+          name: lookups.characterById[j.characterId]?.name ?? "",
         ),
     ];
 
@@ -157,7 +157,7 @@ class EntityMapper {
       for (final j in arcJunctions)
         IssueDetailsParticipation(
           id: j.arcId,
-          name: lookups.arcById[j.arcId]?.name ?? '',
+          name: lookups.arcById[j.arcId]?.name ?? "",
         ),
     ];
 
@@ -166,7 +166,7 @@ class EntityMapper {
       for (final j in teamJunctions)
         IssueDetailsParticipation(
           id: j.teamId,
-          name: lookups.teamById[j.teamId]?.name ?? '',
+          name: lookups.teamById[j.teamId]?.name ?? "",
         ),
     ];
 
@@ -175,7 +175,7 @@ class EntityMapper {
       for (final j in universeJunctions)
         IssueDetailsParticipation(
           id: j.universeId,
-          name: lookups.universeById[j.universeId]?.name ?? '',
+          name: lookups.universeById[j.universeId]?.name ?? "",
         ),
     ];
 
@@ -188,7 +188,7 @@ class EntityMapper {
           creatorId: j.creatorId,
           roles: j.role != null
               ? j.role!
-                    .split(', ')
+                    .split(", ")
                     .map((r) => IssueDetailsCreditRole(id: 0, name: r))
                     .toList()
               : const [],
@@ -272,7 +272,7 @@ class EntityMapper {
     for (final j in creatorJunctions) {
       final c = await _entityDao.getCreator(j.creatorId);
       creators.add(
-        CharacterDetailsNamedRef(id: j.creatorId, name: c?.name ?? ''),
+        CharacterDetailsNamedRef(id: j.creatorId, name: c?.name ?? ""),
       );
     }
 
@@ -280,7 +280,7 @@ class EntityMapper {
     final teams = <CharacterDetailsNamedRef>[];
     for (final j in teamJunctions) {
       final t = await _entityDao.getTeam(j.teamId);
-      teams.add(CharacterDetailsNamedRef(id: j.teamId, name: t?.name ?? ''));
+      teams.add(CharacterDetailsNamedRef(id: j.teamId, name: t?.name ?? ""));
     }
 
     final universeJunctions = await _junctionDao.getCharacterUniverses(
@@ -290,14 +290,14 @@ class EntityMapper {
     for (final j in universeJunctions) {
       final u = await _entityDao.getUniverse(j.universeId);
       universes.add(
-        CharacterDetailsNamedRef(id: j.universeId, name: u?.name ?? ''),
+        CharacterDetailsNamedRef(id: j.universeId, name: u?.name ?? ""),
       );
     }
 
     return CharacterDetails(
       id: row.id,
       name: row.name,
-      slug: '',
+      slug: "",
       alias: row.aliasJson,
       desc: row.description,
       image: row.imageUrl,
@@ -349,14 +349,14 @@ class EntityMapper {
     final creators = <TeamCreatorRef>[];
     for (final j in creatorJunctions) {
       final c = await _entityDao.getCreator(j.creatorId);
-      creators.add(TeamCreatorRef(id: j.creatorId, name: c?.name ?? ''));
+      creators.add(TeamCreatorRef(id: j.creatorId, name: c?.name ?? ""));
     }
 
     final universeJunctions = await _junctionDao.getTeamUniverses(teamId);
     final universes = <UniverseNamedRef>[];
     for (final j in universeJunctions) {
       final u = await _entityDao.getUniverse(j.universeId);
-      universes.add(UniverseNamedRef(id: j.universeId, name: u?.name ?? ''));
+      universes.add(UniverseNamedRef(id: j.universeId, name: u?.name ?? ""));
     }
 
     return TeamDetails(
@@ -378,7 +378,7 @@ class EntityMapper {
       id: row.id,
       name: row.name,
       publisher: row.publisherId != null
-          ? UniverseNamedRef(id: row.publisherId!, name: '')
+          ? UniverseNamedRef(id: row.publisherId!, name: "")
           : null,
       designation: row.designation,
       desc: row.description,
@@ -394,7 +394,7 @@ class EntityMapper {
       id: row.id,
       name: row.name,
       publisher: row.publisherId != null
-          ? ImprintNamedRef(id: row.publisherId!, name: '')
+          ? ImprintNamedRef(id: row.publisherId!, name: "")
           : null,
       founded: row.founded,
       desc: row.description,

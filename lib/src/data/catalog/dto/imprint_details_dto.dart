@@ -1,4 +1,4 @@
-import 'package:takion/src/domain/entities.dart';
+import "package:takion/src/domain/entities.dart";
 
 String? _parseString(dynamic raw) {
   if (raw is String && raw.isNotEmpty) return raw;
@@ -14,12 +14,12 @@ class ImprintPublisherRefDto {
 
   factory ImprintPublisherRefDto.fromJson(Map<String, dynamic> json) {
     return ImprintPublisherRefDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
     );
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
 
   ImprintNamedRef toEntity() => ImprintNamedRef(id: id, name: name);
 }
@@ -51,34 +51,34 @@ class ImprintDetailsDto {
 
   factory ImprintDetailsDto.fromJson(Map<String, dynamic> json) {
     return ImprintDetailsDto(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      name: _parseString(json['name']) ?? '',
-      publisher: json['publisher'] != null
+      id: (json["id"] as num?)?.toInt() ?? 0,
+      name: _parseString(json["name"]) ?? "",
+      publisher: json["publisher"] != null
           ? ImprintPublisherRefDto.fromJson(
-              Map<String, dynamic>.from(json['publisher']),
+              Map<String, dynamic>.from(json["publisher"]),
             )
           : null,
-      founded: (json['founded'] as num?)?.toInt(),
-      desc: _parseString(json['desc']),
-      image: _parseString(json['image']),
-      cvId: (json['cv_id'] as num?)?.toInt(),
-      gcdId: (json['gcd_id'] as num?)?.toInt(),
-      resourceUrl: _parseString(json['resource_url']),
-      modified: _parseString(json['modified']),
+      founded: (json["founded"] as num?)?.toInt(),
+      desc: _parseString(json["desc"]),
+      image: _parseString(json["image"]),
+      cvId: (json["cv_id"] as num?)?.toInt(),
+      gcdId: (json["gcd_id"] as num?)?.toInt(),
+      resourceUrl: _parseString(json["resource_url"]),
+      modified: _parseString(json["modified"]),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'publisher': publisher?.toJson(),
-    'founded': founded,
-    'desc': desc,
-    'image': image,
-    'cv_id': cvId,
-    'gcd_id': gcdId,
-    'resource_url': resourceUrl,
-    'modified': modified,
+    "id": id,
+    "name": name,
+    "publisher": publisher?.toJson(),
+    "founded": founded,
+    "desc": desc,
+    "image": image,
+    "cv_id": cvId,
+    "gcd_id": gcdId,
+    "resource_url": resourceUrl,
+    "modified": modified,
   };
 
   ImprintDetails toEntity() {

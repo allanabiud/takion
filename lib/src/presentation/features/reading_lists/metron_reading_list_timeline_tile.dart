@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/issues/issue_list_tile.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
-import 'package:timelines_plus/timelines_plus.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart";
+import "package:timelines_plus/timelines_plus.dart";
 
 class MetronReadingListTimelineTile extends ConsumerWidget {
   const MetronReadingListTimelineTile({
@@ -38,7 +38,7 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
 
     final cachedMetadataAsync = ref.watch(
       readingListItemCachedMetadataProvider((
-        targetId: 'issue-${item.issueId}',
+        targetId: "issue-${item.issueId}",
         isSeries: false,
       )),
     );
@@ -51,10 +51,10 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
             id: cachedIssue.id,
             name: cachedIssue.series?.name.trim().isNotEmpty == true
                 ? cachedIssue.series!.name
-                : (seriesName != null && seriesName.isNotEmpty ? seriesName : 'Issue'),
+                : (seriesName != null && seriesName.isNotEmpty ? seriesName : "Issue"),
             number: cachedIssue.number.isNotEmpty == true
                 ? cachedIssue.number
-                : (issueNumber ?? ''),
+                : (issueNumber ?? ""),
             series: cachedIssue.series == null
                 ? (item.seriesId != null && seriesName != null && seriesName.isNotEmpty
                     ? Series(
@@ -77,8 +77,8 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
           )
         : IssueList(
             id: item.issueId,
-            name: seriesName != null && seriesName.isNotEmpty ? seriesName : 'Issue',
-            number: issueNumber ?? '',
+            name: seriesName != null && seriesName.isNotEmpty ? seriesName : "Issue",
+            number: issueNumber ?? "",
             series:
                 item.seriesId != null && seriesName != null && seriesName.isNotEmpty
                 ? Series(
@@ -112,7 +112,7 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
                 ? const Icon(Icons.check, size: 16, color: Colors.white)
                 : Center(
                     child: Text(
-                      '$index',
+                      "$index",
                       style: TextStyle(
                         color: theme.colorScheme.outline,
                         fontWeight: FontWeight.bold,

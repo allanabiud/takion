@@ -1,10 +1,13 @@
-import 'dart:async';
-import 'package:takion/src/domain/entities.dart';
+import "dart:async";
+import "package:takion/src/domain/entities.dart";
 
 abstract class ActivityRepository {
   Future<void> addEvent(LibraryActivityEvent event);
 
-  Future<void> batchAddEvents(List<LibraryActivityEvent> events);
+  Future<void> batchAddEvents(
+    List<LibraryActivityEvent> events, {
+    String? batchId,
+  });
 
   Future<List<LibraryActivityEvent>> listEvents({
     int limit = 50,

@@ -1,1 +1,1 @@
-export 'series_subscription.dart';
+export "series_subscription.dart";

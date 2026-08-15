@@ -1,15 +1,15 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 final cachedSeriesIssueCountProvider = StreamProvider.autoDispose
     .family<int?, int>((ref, id) {
       ref.keepAlive();
-      final db = ref.read(driftDatabaseProvider);
-      return db.metronEntityDao.watchSeries(id).map((row) => row?.issueCount);
+      final localCatalog = ref.watch(localCatalogRepositoryProvider);
+      return localCatalog.watchSeries(id).map((row) => row?.issueCount);
     });
 
 /// Exposes the complete series response instead of a reduced database row.
@@ -23,13 +23,13 @@ final seriesDetailsProvider = FutureProvider.autoDispose
           .watch(metronRepositoryProvider)
           .getSeriesDetails(id);
       if (series.image != null && series.image!.trim().isNotEmpty) {
-        ref.read(entityImageCacheProvider).set('series', id, series.image!);
+        ref.read(entityImageCacheProvider).set("series", id, series.image!);
         ref
             .read(entityImageVersionProvider.notifier)
             .update((value) => value + 1);
       }
 
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return series;
     });
 
@@ -44,12 +44,12 @@ final seriesFullDetailsProvider = FutureProvider.autoDispose
           .watch(metronRepositoryProvider)
           .getSeriesDetails(id);
       if (series.image != null && series.image!.trim().isNotEmpty) {
-        ref.read(entityImageCacheProvider).set('series', id, series.image!);
+        ref.read(entityImageCacheProvider).set("series", id, series.image!);
         ref
             .read(entityImageVersionProvider.notifier)
             .update((value) => value + 1);
       }
 
-      timer = Timer(const Duration(minutes: 5), () => link.close());
+      timer = Timer(const Duration(minutes: 5), link.close);
       return series;
     });

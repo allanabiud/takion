@@ -1,12 +1,12 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/search/providers/search_state_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/search/providers/search_state_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:lucide_icons_flutter/lucide_icons.dart";
 
 @RoutePage()
 class MainScreen extends ConsumerStatefulWidget {
@@ -18,7 +18,7 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class MainScreenState extends ConsumerState<MainScreen>
     with SingleTickerProviderStateMixin {
-  final titles = const ['Home', 'Releases', 'Library'];
+  final titles = const ["Home", "Releases", "Library"];
 
   late AnimationController _animController;
   late CurvedAnimation _anim;
@@ -55,15 +55,15 @@ class MainScreenState extends ConsumerState<MainScreen>
     final target = ref.read(searchStateProvider).target;
     ref.read(searchStateProvider.notifier).addHistory(query);
     final choice = switch (target) {
-      SearchTarget.series => 'Series',
-      SearchTarget.issues => 'Issues',
-      SearchTarget.characters => 'Characters',
-      SearchTarget.creators => 'Creators',
-      SearchTarget.universes => 'Universes',
-      SearchTarget.imprints => 'Imprints',
-      SearchTarget.teams => 'Teams',
-      SearchTarget.publishers => 'Publishers',
-      SearchTarget.arcs => 'Arcs',
+      SearchTarget.series => "Series",
+      SearchTarget.issues => "Issues",
+      SearchTarget.characters => "Characters",
+      SearchTarget.creators => "Creators",
+      SearchTarget.universes => "Universes",
+      SearchTarget.imprints => "Imprints",
+      SearchTarget.teams => "Teams",
+      SearchTarget.publishers => "Publishers",
+      SearchTarget.arcs => "Arcs",
     };
     _searchFocusNode.unfocus();
     context.pushRoute(SearchResultsRoute(query: query, searchChoice: choice));
@@ -137,7 +137,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                     width: 32,
                     height: 32,
                     child: SvgPicture.asset(
-                      'assets/branding/takion_logo.svg',
+                      "assets/branding/takion_logo.svg",
                       fit: BoxFit.contain,
                       colorFilter: ColorFilter.mode(
                         Theme.of(context).colorScheme.primary,
@@ -152,7 +152,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Rubik',
+                  fontFamily: "Rubik",
                 ),
               ),
               actions: [
@@ -182,7 +182,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'You are offline',
+                          "You are offline",
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -207,7 +207,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                           child: Row(
                             children: [
                               Text(
-                                'Syncing with Google Drive',
+                                "Syncing with Google Drive",
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
                                       color: Theme.of(
@@ -232,17 +232,17 @@ class MainScreenState extends ConsumerState<MainScreen>
                     NavigationDestination(
                       icon: Icon(Icons.home_outlined),
                       selectedIcon: Icon(Icons.home),
-                      label: 'Home',
+                      label: "Home",
                     ),
                     NavigationDestination(
                       icon: Icon(Icons.new_releases_outlined),
                       selectedIcon: Icon(Icons.new_releases),
-                      label: 'Releases',
+                      label: "Releases",
                     ),
                     NavigationDestination(
                       icon: Icon(Icons.collections_bookmark_outlined),
                       selectedIcon: Icon(Icons.collections_bookmark),
-                      label: 'Library',
+                      label: "Library",
                     ),
                   ],
                 ),
@@ -263,7 +263,7 @@ class MainScreenState extends ConsumerState<MainScreen>
           IgnorePointer(ignoring: _overlayVisible, child: mainContent),
           if (_overlayVisible)
             GestureDetector(
-              onTap: () => _dismissSearch(),
+              onTap: _dismissSearch,
               child: AnimatedBuilder(
                 animation: _anim,
                 builder: (context, _) {
@@ -321,15 +321,15 @@ class MainScreenState extends ConsumerState<MainScreen>
 
   String _searchHintForTarget(SearchTarget target) {
     return switch (target) {
-      SearchTarget.series => 'Search series...',
-      SearchTarget.issues => 'Search issues...',
-      SearchTarget.characters => 'Search characters...',
-      SearchTarget.creators => 'Search creators...',
-      SearchTarget.universes => 'Search universes...',
-      SearchTarget.imprints => 'Search imprints...',
-      SearchTarget.teams => 'Search teams...',
-      SearchTarget.publishers => 'Search publishers...',
-      SearchTarget.arcs => 'Search arcs...',
+      SearchTarget.series => "Search series...",
+      SearchTarget.issues => "Search issues...",
+      SearchTarget.characters => "Search characters...",
+      SearchTarget.creators => "Search creators...",
+      SearchTarget.universes => "Search universes...",
+      SearchTarget.imprints => "Search imprints...",
+      SearchTarget.teams => "Search teams...",
+      SearchTarget.publishers => "Search publishers...",
+      SearchTarget.arcs => "Search arcs...",
     };
   }
 
@@ -341,10 +341,10 @@ class MainScreenState extends ConsumerState<MainScreen>
       children: [
         const SizedBox(width: 8),
         IconButton(
-          tooltip: 'Back',
+          tooltip: "Back",
           icon: const Icon(Icons.arrow_back),
           color: Theme.of(context).colorScheme.onSurfaceVariant,
-          onPressed: () => _dismissSearch(),
+          onPressed: _dismissSearch,
         ),
         Expanded(
           child: TextField(
@@ -363,16 +363,14 @@ class MainScreenState extends ConsumerState<MainScreen>
         ),
         if (showClearButton)
           IconButton(
-            tooltip: 'Clear',
+            tooltip: "Clear",
             icon: const Icon(Icons.close, size: 24),
-            onPressed: () {
-              _searchController.clear();
-            },
+            onPressed: _searchController.clear,
           )
         else
           const SizedBox(width: 48),
         IconButton(
-          tooltip: 'Scan barcode',
+          tooltip: "Scan barcode",
           icon: const Icon(LucideIcons.scanBarcode),
           color: Theme.of(context).colorScheme.onSurfaceVariant,
           onPressed: () => context.pushRoute(const BarcodeScannerRoute()),
@@ -415,7 +413,7 @@ class MainScreenState extends ConsumerState<MainScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Search in:',
+            "Search in:",
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -429,15 +427,15 @@ class MainScreenState extends ConsumerState<MainScreen>
             children: List.generate(SearchTarget.values.length, (i) {
               final t = SearchTarget.values[i];
               final label = switch (t) {
-                SearchTarget.series => 'Series',
-                SearchTarget.issues => 'Issues',
-                SearchTarget.characters => 'Characters',
-                SearchTarget.creators => 'Creators',
-                SearchTarget.universes => 'Universes',
-                SearchTarget.imprints => 'Imprints',
-                SearchTarget.teams => 'Teams',
-                SearchTarget.publishers => 'Publishers',
-                SearchTarget.arcs => 'Arcs',
+                SearchTarget.series => "Series",
+                SearchTarget.issues => "Issues",
+                SearchTarget.characters => "Characters",
+                SearchTarget.creators => "Creators",
+                SearchTarget.universes => "Universes",
+                SearchTarget.imprints => "Imprints",
+                SearchTarget.teams => "Teams",
+                SearchTarget.publishers => "Publishers",
+                SearchTarget.arcs => "Arcs",
               };
               return Padding(
                 padding: EdgeInsets.only(
@@ -463,7 +461,7 @@ class MainScreenState extends ConsumerState<MainScreen>
           child: state.history.isEmpty
               ? const EmptyContentState(
                   icon: Icons.history_outlined,
-                  message: 'No search history.',
+                  message: "No search history.",
                 )
               : ListView.builder(
                   itemCount: state.history.length,
@@ -476,7 +474,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            tooltip: 'Fill search field',
+                            tooltip: "Fill search field",
                             icon: const Icon(Icons.north_west),
                             onPressed: () {
                               _searchController.text = item;
@@ -487,7 +485,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                             },
                           ),
                           IconButton(
-                            tooltip: 'Delete from history',
+                            tooltip: "Delete from history",
                             icon: const Icon(Icons.delete_outline),
                             onPressed: () {
                               ref

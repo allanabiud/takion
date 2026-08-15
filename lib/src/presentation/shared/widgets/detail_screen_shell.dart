@@ -1,15 +1,15 @@
-import 'dart:ui';
+import "dart:ui";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/shared/alerts/takion_alerts.dart';
-import 'package:takion/src/presentation/shared/widgets/image_error_placeholder.dart';
-import 'package:takion/src/core/logging/app_logger.dart';
-import 'package:takion/src/domain/common/string_extensions.dart';
+import "package:auto_route/auto_route.dart";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
+import "package:takion/src/presentation/shared/widgets/image_error_placeholder.dart";
+import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/domain/common/string_extensions.dart";
 
 class DetailScreenShell<T> extends ConsumerWidget {
   const DetailScreenShell({
@@ -213,7 +213,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
         child: Text(
           TakionAlerts.cleanError(
             error,
-            fallback: 'Failed to load $entityType details',
+            fallback: "Failed to load $entityType details",
           ),
         ),
       ),
@@ -521,7 +521,7 @@ class _CachedImageWithFallback extends StatelessWidget {
       placeholder: placeholder,
       errorWidget: (context, url, error) {
         AppLogger.warning(
-          'SuperHero/Primary character image failed to load for URL: $url',
+          "SuperHero/Primary character image failed to load for URL: $url",
           error: error,
         );
         final fallback = fallbackImageUrl;
@@ -535,7 +535,7 @@ class _CachedImageWithFallback extends StatelessWidget {
           placeholder: placeholder,
           errorWidget: (context, fallbackUrl, fallbackError) {
             AppLogger.warning(
-              'Fallback character image also failed to load for URL: $fallbackUrl',
+              "Fallback character image also failed to load for URL: $fallbackUrl",
               error: fallbackError,
             );
             return errorWidget(context, fallbackUrl, fallbackError);

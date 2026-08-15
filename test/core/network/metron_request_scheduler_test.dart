@@ -1,9 +1,9 @@
-import 'package:clock/clock.dart';
-import 'package:dio/dio.dart';
-import 'package:fake_async/fake_async.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:takion/src/core/network/metron_request_scheduler.dart';
-import 'package:takion/src/core/network/request_priority.dart';
+import "package:clock/clock.dart";
+import "package:dio/dio.dart";
+import "package:fake_async/fake_async.dart";
+import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/core/network/metron_request_scheduler.dart";
+import "package:takion/src/core/network/request_priority.dart";
 
 class _Tracked {
   _Tracked(Future<RequestDispatch> future, this.path, this.onSent) {
@@ -28,11 +28,11 @@ void main() {
   late MetronRequestScheduler scheduler;
   final dispatchOrder = <String>[];
 
-  setUp(() => dispatchOrder.clear());
+  setUp(dispatchOrder.clear);
 
   _Tracked enqueue(
     RequestPriority priority, {
-    String path = '/x/',
+    String path = "/x/",
   }) {
     return _Tracked(
       scheduler.enqueue(
@@ -48,8 +48,8 @@ void main() {
     scheduler.requestCompleted();
   }
 
-  group('MetronRequestScheduler', () {
-    test('P0 dispatches before queued P2/P3 (preemption)', () {
+  group("MetronRequestScheduler", () {
+    test("P0 dispatches before queued P2/P3 (preemption)", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 18,
@@ -57,9 +57,9 @@ void main() {
         );
 
         // First request dispatches immediately, filling the single slot.
-        final p3 = enqueue(RequestPriority.drop, path: '/p3');
-        final p2 = enqueue(RequestPriority.background, path: '/p2');
-        final p0 = enqueue(RequestPriority.high, path: '/p0');
+        final p3 = enqueue(RequestPriority.drop, path: "/p3");
+        final p2 = enqueue(RequestPriority.background, path: "/p2");
+        final p0 = enqueue(RequestPriority.high, path: "/p0");
 
         async.flushMicrotasks();
         expect(p3.sent, isTrue);
@@ -75,20 +75,20 @@ void main() {
         completeRequest();
         async.flushMicrotasks();
         expect(p2.sent, isTrue);
-        expect(dispatchOrder, ['/p3', '/p0', '/p2']);
+        expect(dispatchOrder, ["/p3", "/p0", "/p2"]);
       });
     });
 
-    test('FIFO within a priority class', () {
+    test("FIFO within a priority class", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 18,
           maxConcurrent: 1,
         );
 
-        final a = enqueue(RequestPriority.normal, path: '/a');
-        final b = enqueue(RequestPriority.normal, path: '/b');
-        final c = enqueue(RequestPriority.normal, path: '/c');
+        final a = enqueue(RequestPriority.normal, path: "/a");
+        final b = enqueue(RequestPriority.normal, path: "/b");
+        final c = enqueue(RequestPriority.normal, path: "/c");
 
         async.flushMicrotasks();
         expect(a.sent, isTrue);
@@ -100,12 +100,12 @@ void main() {
         completeRequest();
         async.flushMicrotasks();
         expect(c.sent, isTrue);
-        expect(dispatchOrder, ['/a', '/b', '/c']);
+        expect(dispatchOrder, ["/a", "/b", "/c"]);
       });
     });
 
-    test('background reservation is honored: foreground served while '
-        'background is capped', () {
+    test("background reservation is honored: foreground served while "
+        "background is capped", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 3,
@@ -113,9 +113,9 @@ void main() {
         );
 
         // Background cap = 3 - 1 = 2.
-        final bg1 = enqueue(RequestPriority.background, path: '/bg1');
-        final bg2 = enqueue(RequestPriority.background, path: '/bg2');
-        final bg3 = enqueue(RequestPriority.background, path: '/bg3');
+        final bg1 = enqueue(RequestPriority.background, path: "/bg1");
+        final bg2 = enqueue(RequestPriority.background, path: "/bg2");
+        final bg3 = enqueue(RequestPriority.background, path: "/bg3");
 
         async.flushMicrotasks();
         expect(bg1.sent, isTrue);
@@ -123,7 +123,7 @@ void main() {
         expect(bg3.done, isFalse);
 
         // A foreground request is still served from the reserved slot.
-        final fg = enqueue(RequestPriority.normal, path: '/fg');
+        final fg = enqueue(RequestPriority.normal, path: "/fg");
         async.flushMicrotasks();
         expect(fg.sent, isTrue);
 
@@ -133,16 +133,16 @@ void main() {
       });
     });
 
-    test('foreground shares the hard per-minute cap', () {
+    test("foreground shares the hard per-minute cap", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 2,
           reservedForeground: 1,
         );
 
-        final fg1 = enqueue(RequestPriority.normal, path: '/fg1');
-        final fg2 = enqueue(RequestPriority.normal, path: '/fg2');
-        final fg3 = enqueue(RequestPriority.normal, path: '/fg3');
+        final fg1 = enqueue(RequestPriority.normal, path: "/fg1");
+        final fg2 = enqueue(RequestPriority.normal, path: "/fg2");
+        final fg3 = enqueue(RequestPriority.normal, path: "/fg3");
 
         async.flushMicrotasks();
         expect(fg1.sent, isTrue);
@@ -154,7 +154,7 @@ void main() {
       });
     });
 
-    test('P3 request is dropped after backgroundMaxWait', () {
+    test("P3 request is dropped after backgroundMaxWait", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 1,
@@ -164,12 +164,12 @@ void main() {
         );
 
         // Blocker consumes the only budget slot.
-        final blocker = enqueue(RequestPriority.normal, path: '/blocker');
+        final blocker = enqueue(RequestPriority.normal, path: "/blocker");
         async.flushMicrotasks();
         expect(blocker.sent, isTrue);
 
         // P3 queues behind the full budget, then hits its deadline.
-        final p3 = enqueue(RequestPriority.drop, path: '/p3');
+        final p3 = enqueue(RequestPriority.drop, path: "/p3");
         async.flushMicrotasks();
         expect(p3.done, isFalse);
 
@@ -178,7 +178,7 @@ void main() {
       });
     });
 
-    test('P2 request is promoted to foreground instead of being dropped', () {
+    test("P2 request is promoted to foreground instead of being dropped", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 1,
@@ -187,11 +187,11 @@ void main() {
           backgroundMaxWait: const Duration(seconds: 30),
         );
 
-        final blocker = enqueue(RequestPriority.normal, path: '/blocker');
+        final blocker = enqueue(RequestPriority.normal, path: "/blocker");
         async.flushMicrotasks();
         expect(blocker.sent, isTrue);
 
-        final p2 = enqueue(RequestPriority.background, path: '/p2');
+        final p2 = enqueue(RequestPriority.background, path: "/p2");
         async.flushMicrotasks();
         expect(p2.done, isFalse);
 
@@ -199,11 +199,11 @@ void main() {
         // survives; it dispatches once the blocker's budget window expires.
         async.elapse(const Duration(minutes: 1, seconds: 1));
         expect(p2.sent, isTrue);
-        expect(dispatchOrder, ['/blocker', '/p2']);
+        expect(dispatchOrder, ["/blocker", "/p2"]);
       });
     });
 
-    test('sustained budget exhaustion delays dispatch until reset', () {
+    test("sustained budget exhaustion delays dispatch until reset", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 18,
@@ -213,11 +213,11 @@ void main() {
         // Simulate a near-exhausted sustained budget from response headers.
         final resetSeconds = clock.now().millisecondsSinceEpoch ~/ 1000 + 60;
         scheduler.onResponse({
-          'x-ratelimit-sustained-remaining': ['0'],
-          'x-ratelimit-sustained-reset': ['$resetSeconds'],
+          "x-ratelimit-sustained-remaining": ["0"],
+          "x-ratelimit-sustained-reset": ["$resetSeconds"],
         });
 
-        final req = enqueue(RequestPriority.normal, path: '/req');
+        final req = enqueue(RequestPriority.normal, path: "/req");
         async.flushMicrotasks();
         expect(req.done, isFalse);
 

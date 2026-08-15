@@ -1,9 +1,9 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:drift/drift.dart';
-import 'package:takion/src/data/common/drift/database.dart' as db;
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/domain/repositories.dart';
+import "package:drift/drift.dart";
+import "package:takion/src/data/common/drift/database.dart" as db;
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/domain/repositories.dart";
 
 class LocalActivityRepository implements ActivityRepository {
   LocalActivityRepository(this._database);
@@ -21,6 +21,7 @@ class LocalActivityRepository implements ActivityRepository {
       issueNumber: d.issueNumber,
       imageUrl: d.imageUrl,
       timestamp: DateTime.parse(d.timestamp),
+      batchId: d.batchId,
       metadata: d.metadata != null && d.metadata!.isNotEmpty
           ? jsonDecode(d.metadata!) as Map<String, dynamic>
           : null,
@@ -28,7 +29,7 @@ class LocalActivityRepository implements ActivityRepository {
   }
 
   String _metadataToRaw(Map<String, dynamic>? metadata) {
-    if (metadata == null || metadata.isEmpty) return '';
+    if (metadata == null || metadata.isEmpty) return "";
     return jsonEncode(metadata);
   }
 
@@ -44,6 +45,7 @@ class LocalActivityRepository implements ActivityRepository {
         seriesName: Value(event.seriesName),
         issueNumber: Value(event.issueNumber),
         imageUrl: Value(event.imageUrl),
+        batchId: Value(event.batchId),
         metadata: Value(_metadataToRaw(event.metadata)),
         timestamp: Value(event.timestamp.toIso8601String()),
       ),
@@ -51,8 +53,13 @@ class LocalActivityRepository implements ActivityRepository {
   }
 
   @override
-  Future<void> batchAddEvents(List<LibraryActivityEvent> events) async {
+  Future<void> batchAddEvents(
+    List<LibraryActivityEvent> events, {
+    String? batchId,
+  }) async {
     if (events.isEmpty) return;
+    final effectiveBatchId =
+        batchId ?? "batch_${DateTime.now().millisecondsSinceEpoch}";
     final companions = events
         .map(
           (event) => db.ActivityEventsCompanion(
@@ -64,6 +71,7 @@ class LocalActivityRepository implements ActivityRepository {
             seriesName: Value(event.seriesName),
             issueNumber: Value(event.issueNumber),
             imageUrl: Value(event.imageUrl),
+            batchId: Value(event.batchId ?? effectiveBatchId),
             metadata: Value(_metadataToRaw(event.metadata)),
             timestamp: Value(event.timestamp.toIso8601String()),
           ),

@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart';
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart';
-import 'package:takion/src/core/cache/entity_image_cache.dart';
-import 'package:takion/src/presentation/features/issues/issue_card.dart';
-import 'package:takion/src/presentation/features/series/series_card.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
+import "package:takion/src/presentation/features/issues/issue_card.dart";
+import "package:takion/src/presentation/features/series/series_card.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
-import 'package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart';
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart";
 
-import 'package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart';
-import 'package:takion/src/presentation/features/library/providers/pulls_provider.dart';
+import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 
 class ReadingListGridItem extends ConsumerWidget {
   final LocalReadingListItem item;
@@ -78,7 +78,7 @@ class ReadingListGridItem extends ConsumerWidget {
                     data: (metadata) {
                       final id =
                           int.tryParse(
-                            item.targetId.replaceAll(RegExp(r'\D'), ''),
+                            item.targetId.replaceAll(RegExp(r"\D"), ""),
                           ) ??
                           0;
                       if (item.isSeries) {
@@ -97,7 +97,7 @@ class ReadingListGridItem extends ConsumerWidget {
                         } else {
                           series = SeriesList(
                             id: id,
-                            name: id > 0 ? 'Series #$id' : 'Series',
+                            name: id > 0 ? "Series #$id" : "Series",
                             yearBegan: null,
                             volume: null,
                           );
@@ -118,15 +118,15 @@ class ReadingListGridItem extends ConsumerWidget {
                           issuePullListEntryProvider(id),
                         );
 
-                        String title = id > 0 ? 'Issue #$id' : 'Issue';
+                        String title = id > 0 ? "Issue #$id" : "Issue";
                         String? imageUrl;
                         int? seriesId;
 
                         if (metadata is IssueDetails) {
-                          final seriesName = metadata.series?.name ?? '';
+                          final seriesName = metadata.series?.name ?? "";
                           title = seriesName.isNotEmpty
-                              ? '$seriesName #${metadata.number}'
-                              : 'Issue #${metadata.number}';
+                              ? "$seriesName #${metadata.number}"
+                              : "Issue #${metadata.number}";
                           imageUrl = metadata.image;
                           seriesId = metadata.series?.id;
                         } else {
@@ -135,13 +135,13 @@ class ReadingListGridItem extends ConsumerWidget {
                           if (storedName != null && storedName.isNotEmpty) {
                             title = storedNumber != null &&
                                     storedNumber.isNotEmpty
-                                ? '$storedName #$storedNumber'
+                                ? "$storedName #$storedNumber"
                                 : storedName;
                           }
                           seriesId = item.seriesId;
                           ref.watch(entityImageVersionProvider);
                           final cache = ref.read(entityImageCacheProvider);
-                          final cachedImage = cache.getCached('issue', id);
+                          final cachedImage = cache.getCached("issue", id);
                           imageUrl = cachedImage;
                         }
 
@@ -197,14 +197,14 @@ class ReadingListGridItem extends ConsumerWidget {
                     error: (error, stack) {
                       final id =
                           int.tryParse(
-                            item.targetId.replaceAll(RegExp(r'\D'), ''),
+                            item.targetId.replaceAll(RegExp(r"\D"), ""),
                           ) ??
                           0;
                       if (item.isSeries) {
                         return SeriesCard(
                           series: SeriesList(
                             id: id,
-                            name: id > 0 ? 'Series #$id' : 'Series',
+                            name: id > 0 ? "Series #$id" : "Series",
                             yearBegan: null,
                             volume: null,
                           ),
@@ -218,7 +218,7 @@ class ReadingListGridItem extends ConsumerWidget {
                         return IssueCard(
                           issueId: id > 0 ? id : null,
                           imageUrl: null,
-                          title: id > 0 ? 'Issue #$id' : 'Issue',
+                          title: id > 0 ? "Issue #$id" : "Issue",
                           onTap: onTap,
                           width: double.infinity,
                           isRead: effectiveIsRead,

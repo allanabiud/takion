@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class ShimmerWidget extends StatefulWidget {
   const ShimmerWidget({super.key, required this.child});

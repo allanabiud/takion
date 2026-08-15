@@ -1,13 +1,13 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/network/superhero_account_service.dart';
-import 'package:takion/src/core/network/superhero_dio_provider.dart';
-import 'package:takion/src/core/storage/drift_database_provider.dart';
-import 'package:takion/src/data/integrations/superhero/superhero_character_repository_impl.dart';
-import 'package:takion/src/data/integrations/superhero/superhero_remote_data_source.dart';
-import 'package:takion/src/domain/integrations/entities/entities.dart';
-import 'package:takion/src/domain/integrations/repositories/repositories.dart';
-import 'package:takion/src/presentation/features/characters/providers/character_details_provider.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/network/superhero_account_service.dart";
+import "package:takion/src/core/network/superhero_dio_provider.dart";
+import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/data/integrations/superhero/superhero_character_repository_impl.dart";
+import "package:takion/src/data/integrations/superhero/superhero_remote_data_source.dart";
+import "package:takion/src/domain/integrations/entities/entities.dart";
+import "package:takion/src/domain/integrations/repositories/repositories.dart";
+import "package:takion/src/presentation/features/characters/providers/character_details_provider.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 
 final superheroEnabledProvider =
     AsyncNotifierProvider<SuperHeroEnabledNotifier, bool>(
@@ -15,16 +15,16 @@ final superheroEnabledProvider =
     );
 
 class SuperHeroEnabledNotifier extends AsyncNotifier<bool> {
-  static const _key = 'superhero_integration_enabled';
+  static const _key = "superhero_integration_enabled";
 
   @override
   Future<bool> build() async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
     final row = await dao.getString(_key);
     if (row != null) {
-      return row.toLowerCase() == 'true';
+      return row.toLowerCase() == "true";
     }
-    final token = await dao.getString('superhero_api_token');
+    final token = await dao.getString("superhero_api_token");
     return token != null && token.trim().isNotEmpty;
   }
 
@@ -41,7 +41,7 @@ final superheroUseImageProvider =
     );
 
 class SuperHeroUseImageNotifier extends AsyncNotifier<bool> {
-  static const _key = 'superhero_use_image';
+  static const _key = "superhero_use_image";
 
   @override
   Future<bool> build() async {
@@ -62,7 +62,7 @@ final superheroUsePowerstatsProvider =
     );
 
 class SuperHeroUsePowerstatsNotifier extends AsyncNotifier<bool> {
-  static const _key = 'superhero_use_powerstats';
+  static const _key = "superhero_use_powerstats";
 
   @override
   Future<bool> build() async {

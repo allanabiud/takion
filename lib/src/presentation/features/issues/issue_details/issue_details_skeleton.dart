@@ -1,7 +1,7 @@
-import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
+import "dart:ui";
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class IssueDetailsSkeleton extends StatelessWidget {
   const IssueDetailsSkeleton({super.key, this.imageUrl});
@@ -93,8 +93,8 @@ class IssueDetailsSkeleton extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(
                 flex: 3,
                 child: SkeletonBox(height: 48, borderRadius: 12),

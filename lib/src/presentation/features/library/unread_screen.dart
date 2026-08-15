@@ -1,16 +1,16 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/presentation/features/library/providers/category_series_providers.dart';
-import 'package:takion/src/presentation/shared/widgets/async_state_panel.dart';
-import 'package:takion/src/presentation/shared/widgets/empty_content_state.dart';
-import 'package:takion/src/presentation/shared/widgets/components.dart';
-import 'package:takion/src/presentation/features/series/series_list_tile.dart';
-import 'package:takion/src/presentation/providers/providers.dart';
-import 'package:takion/src/domain/common/content_sorting.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/presentation/features/library/providers/category_series_providers.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/domain/common/content_sorting.dart";
 
 @RoutePage()
 class UnreadScreen extends ConsumerStatefulWidget {
@@ -24,7 +24,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounceTimer;
-  String _debouncedSearchQuery = '';
+  String _debouncedSearchQuery = "";
 
   @override
   void dispose() {
@@ -51,7 +51,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
     );
     final viewAsync = ref.watch(
       categorySeriesViewProvider(
-        (category: 'unread', query: _isSearching ? _debouncedSearchQuery : ''),
+        (category: "unread", query: _isSearching ? _debouncedSearchQuery : ""),
       ),
     );
 
@@ -64,12 +64,12 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                 autofocus: true,
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
-                  hintText: 'Search series...',
+                  hintText: "Search series...",
                   border: InputBorder.none,
                   isDense: true,
                   filled: false,
                   suffixIcon: IconButton(
-                    tooltip: 'Close search',
+                    tooltip: "Close search",
                     iconSize: 28,
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.close),
@@ -77,19 +77,19 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                       _searchDebounceTimer?.cancel();
                       setState(() {
                         _isSearching = false;
-                        _debouncedSearchQuery = '';
+                        _debouncedSearchQuery = "";
                         _searchController.clear();
                       });
                     },
                   ),
                 ),
               )
-            : const Text('Unread Comics'),
+            : const Text("Unread Comics"),
         actions: _isSearching
             ? null
             : [
                 IconButton(
-                  tooltip: 'Search',
+                  tooltip: "Search",
                   onPressed: () => setState(() => _isSearching = true),
                   icon: const Icon(Icons.search),
                 ),
@@ -98,21 +98,21 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
       body: viewAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) =>
-            AsyncStatePanel.error(errorMessage: 'Failed to load unread series'),
+            const AsyncStatePanel.error(errorMessage: "Failed to load unread series"),
         data: (view) {
           final filtered = view.series;
           final categoryCounts = view.categoryCounts;
           if (filtered.isEmpty) {
             return RefreshIndicator(
               onRefresh: () async => ref.invalidate(unreadSeriesProvider),
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: const [
+              child: const CustomScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                slivers: [
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: EmptyContentState(
                       icon: Icons.bookmark_added_outlined,
-                      message: 'No unread comics in your collection.',
+                      message: "No unread comics in your collection.",
                     ),
                   ),
                 ],
@@ -127,15 +127,15 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                 PinnedListHeader(
                   child: ListHeader(
                     count: filtered.length,
-                    unit: 'series',
-                    pluralUnit: 'series',
+                    unit: "series",
+                    pluralUnit: "series",
                     enabled: true,
-                    sortLabel: seriesSortLabel(sortOption),
+                    sortLabel: contentSortLabel(sortOption),
                     onSortTap: () => showSortBottomSheet(
                       context,
                       ref,
                       SortPreferenceContext.libraryUnread,
-                      seriesSortLabel,
+                      contentSortLabel,
                     ),
                   ),
                 ),
@@ -145,14 +145,14 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                     return SeriesListTile(
                       series: summary,
                       categoryCount: categoryCounts[summary.id],
-                      categoryLabel: 'unread',
+                      categoryLabel: "unread",
                       showProgressBar: true,
                       isFirst: index == 0,
                       isLast: index == filtered.length - 1,
                       onTap: () => context.pushRoute(
                         LibrarySeriesRoute(
                           seriesId: summary.id,
-                          category: 'unread',
+                          category: "unread",
                           seriesName: summary.name,
                         ),
                       ),

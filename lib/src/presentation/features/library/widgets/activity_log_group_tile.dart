@@ -1,12 +1,13 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:takion/src/core/router/app_router.gr.dart';
-import 'package:takion/src/domain/entities.dart';
-import 'package:takion/src/presentation/shared/widgets/entity_cover.dart';
-import 'package:takion/src/presentation/features/library/activity_log_group.dart';
-import 'package:timelines_plus/timelines_plus.dart';
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/shared/widgets/entity_cover.dart";
+import "package:takion/src/presentation/features/library/activity_log_group.dart";
+import "package:takion/src/presentation/features/library/widgets/activity_group_details_sheet.dart";
+import "package:timelines_plus/timelines_plus.dart";
 
 class ActivityLogGroupTile extends ConsumerWidget {
   final ActivityLogGroup group;
@@ -70,9 +71,7 @@ class ActivityLogGroupTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    DateFormat(
-                      'h:mm a · MMM d, yyyy',
-                    ).format(group.latestTimestamp.toLocal()),
+                    DateFormatter.comicTimeDate(group.latestTimestamp),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
@@ -107,6 +106,13 @@ class ActivityLogGroupTile extends ConsumerWidget {
 
     if (coverEntries.isEmpty) return const SizedBox.shrink();
 
+    final maxVisibleCovers = 5;
+    final visibleEntries = coverEntries.length <= maxVisibleCovers
+        ? coverEntries
+        : coverEntries.sublist(0, maxVisibleCovers);
+    final hasMore = coverEntries.length > maxVisibleCovers;
+    final moreCount = coverEntries.length - maxVisibleCovers;
+
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: SizedBox(
@@ -114,13 +120,34 @@ class ActivityLogGroupTile extends ConsumerWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          itemCount: coverEntries.length,
+          itemCount: visibleEntries.length + (hasMore ? 1 : 0),
           separatorBuilder: (_, _) => const SizedBox(width: 6),
           itemBuilder: (context, index) {
-            final entry = coverEntries[index];
+            if (hasMore && index == visibleEntries.length) {
+              return GestureDetector(
+                onTap: () => showActivityGroupDetailsSheet(context, group),
+                child: Container(
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "+$moreCount",
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+            final entry = visibleEntries[index];
             return GestureDetector(
               onTap: () =>
-                  context.pushRoute(IssueDetailsRoute(issueId: entry.issueId)),
+                  context.pushRoute(IssueDetailsRoute(issueId: entry.issueId, initialImageUrl: entry.url)),
               child: SizedBox(
                 width: 48,
                 child: ClipRRect(
@@ -142,19 +169,35 @@ class ActivityLogGroupTile extends ConsumerWidget {
 
   String _titleForGroup() {
     final count = group.count;
+    final seriesName = group.seriesName?.trim().isNotEmpty == true
+        ? group.seriesName!.trim()
+        : null;
+
     switch (group.type) {
       case ActivityEventType.collected:
-        return 'Added $count ${count == 1 ? 'issue' : 'issues'} to collection';
+        return seriesName != null
+            ? 'Added $count ${count == 1 ? 'issue' : 'issues'} of $seriesName to collection'
+            : 'Added $count ${count == 1 ? 'issue' : 'issues'} to collection';
       case ActivityEventType.uncollected:
-        return 'Removed $count ${count == 1 ? 'issue' : 'issues'} from collection';
+        return seriesName != null
+            ? 'Removed $count ${count == 1 ? 'issue' : 'issues'} of $seriesName from collection'
+            : 'Removed $count ${count == 1 ? 'issue' : 'issues'} from collection';
       case ActivityEventType.read:
-        return 'Read $count ${count == 1 ? 'issue' : 'issues'}';
+        return seriesName != null
+            ? 'Read $count ${count == 1 ? 'issue' : 'issues'} of $seriesName'
+            : 'Read $count ${count == 1 ? 'issue' : 'issues'}';
       case ActivityEventType.unread:
-        return 'Marked $count ${count == 1 ? 'issue' : 'issues'} as unread';
+        return seriesName != null
+            ? 'Marked $count ${count == 1 ? 'issue' : 'issues'} of $seriesName as unread'
+            : 'Marked $count ${count == 1 ? 'issue' : 'issues'} as unread';
       case ActivityEventType.wishlisted:
-        return 'Added $count ${count == 1 ? 'issue' : 'issues'} to wishlist';
+        return seriesName != null
+            ? 'Added $count ${count == 1 ? 'issue' : 'issues'} of $seriesName to wishlist'
+            : 'Added $count ${count == 1 ? 'issue' : 'issues'} to wishlist';
       case ActivityEventType.unwishlisted:
-        return 'Removed $count ${count == 1 ? 'issue' : 'issues'} from wishlist';
+        return seriesName != null
+            ? 'Removed $count ${count == 1 ? 'issue' : 'issues'} of $seriesName from wishlist'
+            : 'Removed $count ${count == 1 ? 'issue' : 'issues'} from wishlist';
       case ActivityEventType.rated:
         return 'Rated $count ${count == 1 ? 'issue' : 'issues'}';
       case ActivityEventType.subscribed:
@@ -166,9 +209,13 @@ class ActivityLogGroupTile extends ConsumerWidget {
       case ActivityEventType.unfavorited:
         return 'Unfavorited $count ${count == 1 ? 'item' : 'items'}';
       case ActivityEventType.pulled:
-        return 'Added $count ${count == 1 ? 'issue' : 'issues'} to pull list';
+        return seriesName != null
+            ? 'Added $count ${count == 1 ? 'issue' : 'issues'} of $seriesName to pull list'
+            : 'Added $count ${count == 1 ? 'issue' : 'issues'} to pull list';
       case ActivityEventType.unpulled:
-        return 'Removed $count ${count == 1 ? 'issue' : 'issues'} from pull list';
+        return seriesName != null
+            ? 'Removed $count ${count == 1 ? 'issue' : 'issues'} of $seriesName from pull list'
+            : 'Removed $count ${count == 1 ? 'issue' : 'issues'} from pull list';
     }
   }
 
