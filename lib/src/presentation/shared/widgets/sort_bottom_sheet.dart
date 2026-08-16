@@ -32,6 +32,8 @@ Future<void> showSortBottomSheet(
         mainAxisSize: MainAxisSize.min,
         children: ContentSortOption.values.map((option) {
           return RadioListTile<ContentSortOption>(
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
             title: Text(labelBuilder(option)),
             value: option,
           );

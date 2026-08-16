@@ -14,7 +14,7 @@ class PinnedListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverPersistentHeader(
-      pinned: true,
+      pinned: false,
       floating: true,
       delegate: PinnedListHeaderDelegate(child: child, isLoading: isLoading),
     );
