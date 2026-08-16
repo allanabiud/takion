@@ -706,6 +706,42 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              Builder(
+                builder: (context) {
+                  final targetCount = selectedMode == SeriesIssueSelectionMode.range
+                      ? (selectedEnd - selectedStart + 1).clamp(0, totalIssues)
+                      : totalIssues;
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.touch_app_outlined,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "$targetCount ${targetCount == 1 ? 'issue' : 'issues'} will be updated",
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [

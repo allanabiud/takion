@@ -166,33 +166,56 @@ class MainScreenState extends ConsumerState<MainScreen>
             bottomNavigationBar: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isOffline)
-                  Container(
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: isOffline ? 32 : 0,
+                  margin: isOffline
+                      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+                      : EdgeInsets.zero,
+                  decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.errorContainer,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withValues(alpha: 0.3),
+                      width: 1,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.wifi_off_outlined,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onErrorContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "You are offline",
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: isOffline
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.wifi_off_outlined,
+                                size: 14,
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onErrorContainer,
                               ),
-                        ),
-                      ],
-                    ),
-                  ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "You are offline — cached database mode",
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onErrorContainer,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
                 if (syncState.isSyncing)
                   Container(
                     color: Theme.of(context).colorScheme.surfaceContainer,
