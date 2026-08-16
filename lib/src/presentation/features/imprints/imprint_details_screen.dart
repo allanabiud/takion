@@ -118,7 +118,7 @@ class _ImprintInfoSection extends StatelessWidget {
       InfoGridItem(label: "Name", value: details.name),
       if (details.founded != null)
         InfoGridItem(label: "Founded", value: "${details.founded}"),
-      if (details.publisher != null)
+      if (details.publisher?.name.isNotEmpty == true)
         InfoGridItem(label: "Publisher", value: details.publisher!.name),
     ];
 
