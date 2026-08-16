@@ -355,7 +355,7 @@ Future<void> _showCategoryBulkSheet(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Action", style: theme.textTheme.labelLarge),
+              Text("Action", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               if (category == "unrated")
                 RatingPicker(
@@ -371,11 +371,11 @@ Future<void> _showCategoryBulkSheet(
               else
                 Row(
                   children: [
-                    Icon(
-                      Icons.mark_email_read_outlined,
-                      size: 20,
-                      color: theme.colorScheme.primary,
-                    ),
+                     Icon(
+                       Icons.bookmark_added,
+                       size: 20,
+                       color: theme.colorScheme.primary,
+                     ),
                     const SizedBox(width: 8),
                     Text(
                       "Mark as Read",
@@ -386,7 +386,7 @@ Future<void> _showCategoryBulkSheet(
                   ],
                 ),
               const SizedBox(height: 16),
-              Text("Selection method", style: theme.textTheme.labelLarge),
+              Text("Selection method", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
@@ -428,7 +428,7 @@ Future<void> _showCategoryBulkSheet(
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Issue range", style: theme.textTheme.labelLarge),
+                        Text("Issue range", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
                         Text(
                           "#$startIssueNumber – #$endIssueNumber",
                           style: theme.textTheme.bodyMedium?.copyWith(

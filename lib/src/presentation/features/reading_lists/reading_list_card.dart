@@ -121,10 +121,18 @@ class ReadingListCard extends ConsumerWidget {
                             if (isFavorite)
                               Padding(
                                 padding: const EdgeInsets.only(right: 8),
-                                child: Icon(
-                                  Icons.favorite,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.primary,
+                                child: Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Icon(
+                                    Icons.favorite,
+                                    size: 13,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  ),
                                 ),
                               ),
                             Icon(

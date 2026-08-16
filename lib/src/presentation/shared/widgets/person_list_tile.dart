@@ -109,15 +109,11 @@ class PersonListTile extends ConsumerWidget {
                             top: 0,
                             right: 0,
                             child: Container(
-                              width: 20,
-                              height: 20,
+                              width: 22,
+                              height: 22,
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.primaryContainer,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: theme.colorScheme.surface,
-                                  width: 1.5,
-                                ),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(
                                 Icons.favorite,

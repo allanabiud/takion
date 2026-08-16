@@ -23,4 +23,5 @@ abstract class SettingsKeys {
   static const String readingGoalPeriod = "reading_goal_period";
   static const String subscriptionPullReconcileLastRunMs = "subscription_pull_reconcile_last_run_ms";
   static const String subscriptionPullReconcileBrowseLastRunMs = "subscription_pull_reconcile_browse_last_run_ms";
+  static const String lastSeenChangelogVersion = "last_seen_changelog_version";
 }

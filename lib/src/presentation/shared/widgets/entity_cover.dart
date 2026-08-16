@@ -120,15 +120,15 @@ class EntityCover extends StatelessWidget {
                 Positioned(top: 4, left: 4, child: RoleBadge(role: role!)),
               if (isFavorite)
                 Positioned(
-                  top: 4,
-                  right: 4,
+                  top: 3,
+                  right: 3,
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(
                         alpha: 0.8,
                       ),
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Icon(
                       Icons.favorite,

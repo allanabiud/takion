@@ -567,7 +567,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Action", style: Theme.of(context).textTheme.labelLarge),
+              Text("Action", style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               RadioGroup<SeriesIssueBulkOperation>(
                 groupValue: selectedOperation,
@@ -592,7 +592,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
               const SizedBox(height: 16),
               Text(
                 "Selection method",
-                style: Theme.of(context).textTheme.labelLarge,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -628,7 +628,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   children: [
                     Text(
                       "Apply to",
-                      style: Theme.of(context).textTheme.labelLarge,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -667,7 +667,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                       children: [
                         Text(
                           "Issue range",
-                          style: Theme.of(context).textTheme.labelLarge,
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           "#$startIssueNumber – #$endIssueNumber",
