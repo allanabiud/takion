@@ -129,8 +129,23 @@ class DriveSyncService {
     }
   }
 
-  Future<void> triggerSync({bool ignoreThrottle = false}) async {
+  Future<bool> isThrottled({
+    Duration minInterval = const Duration(minutes: 5),
+  }) async {
+    final lastAttempt = await _db.syncMetaDao.get("last_sync_attempt");
+    if (lastAttempt == null) return false;
+    final lastAttemptTime = DateTime.tryParse(lastAttempt);
+    if (lastAttemptTime == null) return false;
+    return DateTime.now().difference(lastAttemptTime) < minInterval;
+  }
+
+  Future<bool> triggerSync({bool ignoreThrottle = false}) async {
     AppLogger.info("Drive sync triggered (ignoreThrottle: $ignoreThrottle)");
+
+    if (!ignoreThrottle && await isThrottled()) {
+      AppLogger.info("Sync skipped: throttled (< 5m since last sync attempt)");
+      return false;
+    }
 
     final lockRaw = await _db.syncMetaDao.get("sync_in_progress");
     if (lockRaw != null) {
@@ -140,7 +155,7 @@ class DriveSyncService {
           DateTime.now().difference(lockTime) > const Duration(minutes: 10);
       if (!isStale) {
         AppLogger.info("Sync skipped: another sync is already in progress");
-        return;
+        return false;
       }
       AppLogger.warning("Stale sync lock detected, clearing before proceeding");
     }
@@ -150,25 +165,13 @@ class DriveSyncService {
     );
 
     try {
-      await _triggerSync(ignoreThrottle: ignoreThrottle);
+      return await _triggerSync();
     } finally {
       await _db.syncMetaDao.deleteByKey("sync_in_progress");
     }
   }
 
-  Future<void> _triggerSync({required bool ignoreThrottle}) async {
-    if (!ignoreThrottle) {
-      final lastAttempt = await _db.syncMetaDao.get("last_sync_attempt");
-      if (lastAttempt != null) {
-        final lastAttemptTime = DateTime.tryParse(lastAttempt);
-        if (lastAttemptTime != null &&
-            DateTime.now().difference(lastAttemptTime) <
-                const Duration(minutes: 5)) {
-          AppLogger.info("Sync skipped: throttled");
-          return;
-        }
-      }
-    }
+  Future<bool> _triggerSync() async {
     await _db.syncMetaDao.set(
       "last_sync_attempt",
       DateTime.now().toUtc().toIso8601String(),
@@ -332,15 +335,28 @@ class DriveSyncService {
       AppLogger.info("No changes to sync");
     }
 
-    // Keep the full snapshot on Drive current so it always holds the complete
-    // dataset (missing snapshot, local changes, or applied remote changes).
+    // Keep the full snapshot on Drive current: only refresh if full file is missing,
+    // or if a full snapshot refresh hasn't occurred in > 24 hours.
     final fullFileId = await _guarded(
       "folder",
       () => _restClient.findFileId(_fullFileName),
     );
-    if (fullFileId == null || hasLocalChanges || remoteChangesApplied) {
+    final lastFullUploadRaw = await _db.syncMetaDao.get(
+      "last_full_snapshot_upload",
+    );
+    final lastFullUpload = lastFullUploadRaw == null
+        ? null
+        : DateTime.tryParse(lastFullUploadRaw);
+    final isFullSnapshotStale = lastFullUpload == null ||
+        DateTime.now().difference(lastFullUpload) > const Duration(hours: 24);
+
+    if (fullFileId == null ||
+        (isFullSnapshotStale && (hasLocalChanges || remoteChangesApplied))) {
       AppLogger.info("Refreshing full snapshot on Drive");
-      final fullPayload = await _guarded("extract", () => _extractor.extractDelta(null));
+      final fullPayload = await _guarded(
+        "extract",
+        () => _extractor.extractDelta(null),
+      );
       final jsonBytes = utf8.encode(jsonEncode(fullPayload));
       await _guarded(
         "upload",
@@ -349,7 +365,13 @@ class DriveSyncService {
           Uint8List.fromList(jsonBytes),
         ),
       );
+      await _db.syncMetaDao.set(
+        "last_full_snapshot_upload",
+        DateTime.now().toUtc().toIso8601String(),
+      );
     }
+
+    return true;
   }
 
   /// Downloads and applies a remote snapshot/delta file, returning the
