@@ -21,6 +21,7 @@ import "package:takion/src/domain/common/content_sorting.dart";
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
 import "package:takion/src/presentation/features/series/series_list_tile.dart";
+import "package:takion/src/presentation/features/search/providers/search_state_provider.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 @RoutePage()
@@ -43,6 +44,16 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   final TextEditingController _filterController = TextEditingController();
   bool _isFiltering = false;
   int _page = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (mounted && widget.query.trim().isNotEmpty) {
+        ref.read(searchStateProvider.notifier).addHistory(widget.query);
+      }
+    });
+  }
   int _seriesCoverFetchLimit = seriesCoverFetchBudgetPerSession;
   bool _seriesCoverLimitUpdateScheduled = false;
   IssueSearchPage? _lastIssuePage;
