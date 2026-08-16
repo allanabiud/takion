@@ -280,7 +280,6 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                         seriesId: seriesId,
                         seriesName: match.seriesName,
                         seriesYear: match.yearBegan,
-                        totalIssues: total,
                         categoryIssues: categoryIssues,
                         category: category,
                       );
@@ -307,7 +306,6 @@ Future<void> _showCategoryBulkSheet(
   required int seriesId,
   required String seriesName,
   int? seriesYear,
-  required int totalIssues,
   required List<CollectionItem> categoryIssues,
   required String category,
 }) async {
@@ -322,33 +320,34 @@ Future<void> _showCategoryBulkSheet(
   }).toList();
 
   final canSelectRange = candidates.length > 1;
-  var useRange = false;
-  var useManualRange = false;
-  var selectedRange = RangeValues(1, candidates.length.toDouble());
+  var selectedMode = SeriesIssueSelectionMode.predefined;
+  var rangeStart = 1;
+  var rangeEnd = candidates.length;
   var selectedRating = 0;
   var isApplying = false;
 
-  await showModalBottomSheet<void>(
+  TakionBottomSheet.show<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (modalContext) => StatefulBuilder(
+    title: seriesYear != null ? "$seriesName ($seriesYear)" : seriesName,
+    child: StatefulBuilder(
       builder: (context, setModalState) {
         final theme = Theme.of(context);
-        final selectedStart = selectedRange.start.round();
-        final selectedEnd = selectedRange.end.round();
-        final selectedCount = useRange
-            ? (selectedRange.end - selectedRange.start + 1).round()
+        final selectedStart = rangeStart;
+        final selectedEnd = rangeEnd;
+        final selectedCount =
+            selectedMode == SeriesIssueSelectionMode.range
+            ? rangeEnd - rangeStart + 1
             : candidates.length;
+        final startIssueNumber = candidates[selectedStart - 1].issueNumber;
+        final endIssueNumber = candidates[selectedEnd - 1].issueNumber;
 
-        String actionLabel() {
-          if (category == "unrated") {
-            return selectedRating > 0 ? "Rate $selectedCount" : "Rate All";
-          }
-          return useRange ? "Mark $selectedCount as Read" : "Mark All as Read";
+        String previewAction() {
+          return category == "unrated" ? "Rate Issues" : "Mark as Read";
+        }
+
+        String buttonLabel() {
+          if (category == "unrated") return "Rate";
+          return "Mark as Read";
         }
 
         return SingleChildScrollView(
@@ -356,215 +355,179 @@ Future<void> _showCategoryBulkSheet(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (category == "unrated") ...[
-                Text("Action", style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Rate Issues",
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      RatingPicker(
-                        selectedRating: selectedRating,
-                        enabled: !isApplying,
-                        onChanged: (rating) {
-                          setModalState(() => selectedRating = rating);
-                        },
-                        onReset: () {
-                          setModalState(() => selectedRating = 0);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                Text("Action", style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    "Mark as Read",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Apply To", style: theme.textTheme.labelLarge),
-                  if (canSelectRange)
-                    TextButton(
-                      onPressed: isApplying
-                          ? null
-                          : () {
-                              setModalState(() {
-                                useRange = !useRange;
-                                if (!useRange) {
-                                  selectedRange = RangeValues(
-                                    1,
-                                    candidates.length.toDouble(),
-                                  );
-                                }
-                              });
-                            },
-                      child: Text(useRange ? "Select All" : "Select Range"),
-                    ),
-                ],
-              ),
+              Text("Action", style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
-              if (!useRange)
-                Text(
-                  "All ${candidates.length} issues in this series",
-                  style: theme.textTheme.bodyMedium,
+              if (category == "unrated")
+                RatingPicker(
+                  selectedRating: selectedRating,
+                  enabled: !isApplying,
+                  onChanged: (rating) {
+                    setModalState(() => selectedRating = rating);
+                  },
+                  onReset: () {
+                    setModalState(() => selectedRating = 0);
+                  },
                 )
-              else ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Issue Range",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: isApplying
-                                ? null
-                                : () {
-                                    setModalState(() {
-                                      useManualRange = !useManualRange;
-                                    });
-                                  },
-                            child: Text(
-                              useManualRange ? "Use Slider" : "Manual Entry",
-                            ),
-                          ),
-                        ],
+              else
+                Row(
+                  children: [
+                    Icon(
+                      Icons.mark_email_read_outlined,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Mark as Read",
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      if (useManualRange)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<int>(
-                                initialValue: selectedStart,
-                                decoration: const InputDecoration(
-                                  labelText: "From",
-                                  isDense: true,
-                                ),
-                                items: [
-                                  for (
-                                    var idx = 0;
-                                    idx < candidates.length;
-                                    idx++
-                                  )
-                                    DropdownMenuItem(
-                                      value: idx + 1,
-                                      child: Text(
-                                        "#${candidates[idx].issueNumber}",
-                                      ),
-                                    ),
-                                ],
-                                onChanged: (val) {
-                                  if (val == null) return;
-                                  setModalState(() {
-                                    selectedRange = RangeValues(
-                                      val.toDouble(),
-                                      selectedRange.end.clamp(
-                                        val.toDouble(),
-                                        candidates.length.toDouble(),
-                                      ),
-                                    );
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButtonFormField<int>(
-                                initialValue: selectedEnd,
-                                decoration: const InputDecoration(
-                                  labelText: "To",
-                                  isDense: true,
-                                ),
-                                items: [
-                                  for (
-                                    var idx = selectedStart - 1;
-                                    idx < candidates.length;
-                                    idx++
-                                  )
-                                    DropdownMenuItem(
-                                      value: idx + 1,
-                                      child: Text(
-                                        "#${candidates[idx].issueNumber}",
-                                      ),
-                                    ),
-                                ],
-                                onChanged: (val) {
-                                  if (val == null) return;
-                                  setModalState(() {
-                                    selectedRange = RangeValues(
-                                      selectedRange.start,
-                                      val.toDouble(),
-                                    );
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        RangeSlider(
-                          min: 1,
-                          max: candidates.length.toDouble(),
-                          divisions: candidates.length > 1
-                              ? (candidates.length - 1).clamp(1, 100)
-                              : null,
-                          labels: RangeLabels("$selectedStart", "$selectedEnd"),
-                          values: selectedRange,
-                          onChanged: isApplying
-                              ? null
-                              : (value) {
-                                  setModalState(() {
-                                    selectedRange = RangeValues(
-                                      value.start.roundToDouble(),
-                                      value.end.roundToDouble(),
-                                    );
-                                  });
-                                },
-                        ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              const SizedBox(height: 16),
+              Text("Selection method", style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<SeriesIssueSelectionMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: SeriesIssueSelectionMode.predefined,
+                      label: Text("All"),
+                    ),
+                    ButtonSegment(
+                      value: SeriesIssueSelectionMode.range,
+                      label: Text("Issue range"),
+                    ),
+                  ],
+                  selected: {selectedMode},
+                  showSelectedIcon: false,
+                  multiSelectionEnabled: false,
+                  emptySelectionAllowed: false,
+                  onSelectionChanged: isApplying
+                      ? null
+                      : (selection) {
+                          final value = selection.firstOrNull;
+                          if (value == null) return;
+                          setModalState(() {
+                            selectedMode = value;
+                            if (value == SeriesIssueSelectionMode.predefined) {
+                              rangeStart = 1;
+                              rangeEnd = candidates.length;
+                            }
+                          });
+                        },
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (selectedMode == SeriesIssueSelectionMode.range)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Issue range", style: theme.textTheme.labelLarge),
+                        Text(
+                          "#$startIssueNumber – #$endIssueNumber",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: startIssueNumber,
+                            decoration: const InputDecoration(
+                              labelText: "From issue #",
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            enabled: !isApplying,
+                            onChanged: (v) {
+                              if (v.isEmpty) return;
+                              final idx = findClosestIssueIndex(
+                                candidates,
+                                v,
+                                startAfter: null,
+                              );
+                              if (idx != null && idx + 1 <= rangeEnd) {
+                                setModalState(() {
+                                  rangeStart = idx + 1;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: endIssueNumber,
+                            decoration: const InputDecoration(
+                              labelText: "To issue #",
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            enabled: !isApplying,
+                            onChanged: (v) {
+                              if (v.isEmpty) return;
+                              final idx = findClosestIssueIndex(
+                                candidates,
+                                v,
+                                startAfter: rangeStart - 1,
+                              );
+                              if (idx != null &&
+                                  idx + 1 <= candidates.length) {
+                                setModalState(() {
+                                  rangeEnd = idx + 1;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.35,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      previewAction(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "$selectedCount ${selectedCount == 1 ? 'Issue' : 'Issues'}",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -577,7 +540,10 @@ Future<void> _showCategoryBulkSheet(
                   const Spacer(),
                   if (category == "unrated") ...[
                     FilledButton(
-                      onPressed: isApplying || selectedRating == 0
+                      onPressed:
+                          isApplying ||
+                              selectedCount == 0 ||
+                              selectedRating == 0
                           ? null
                           : () async {
                               setModalState(() => isApplying = true);
@@ -588,7 +554,10 @@ Future<void> _showCategoryBulkSheet(
                                 var affected = 0;
                                 final now = DateTime.now().toUtc();
 
-                                final issuesToRate = useRange && canSelectRange
+                                final issuesToRate =
+                                    selectedMode ==
+                                            SeriesIssueSelectionMode.range &&
+                                        canSelectRange
                                     ? candidates
                                           .where(
                                             (c) =>
@@ -660,11 +629,11 @@ Future<void> _showCategoryBulkSheet(
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(actionLabel()),
+                          : Text(buttonLabel()),
                     ),
                   ] else ...[
                     FilledButton(
-                      onPressed: isApplying
+                      onPressed: isApplying || selectedCount == 0
                           ? null
                           : () async {
                               setModalState(() => isApplying = true);
@@ -676,17 +645,29 @@ Future<void> _showCategoryBulkSheet(
                                   seriesName: seriesName,
                                   operation:
                                       SeriesIssueBulkOperation.markAsRead,
-                                  selectionMode: useRange && canSelectRange
+                                  selectionMode:
+                                      selectedMode ==
+                                              SeriesIssueSelectionMode.range &&
+                                          canSelectRange
                                       ? SeriesIssueSelectionMode.range
                                       : SeriesIssueSelectionMode.predefined,
                                   issues: candidates,
-                                  subset: !useRange || !canSelectRange
+                                  subset:
+                                      !(selectedMode ==
+                                              SeriesIssueSelectionMode.range &&
+                                          canSelectRange)
                                       ? SeriesIssueSubset.all
                                       : null,
-                                  startOrderIndex: useRange && canSelectRange
+                                  startOrderIndex:
+                                      selectedMode ==
+                                              SeriesIssueSelectionMode.range &&
+                                          canSelectRange
                                       ? selectedStart
                                       : null,
-                                  endOrderIndex: useRange && canSelectRange
+                                  endOrderIndex:
+                                      selectedMode ==
+                                              SeriesIssueSelectionMode.range &&
+                                          canSelectRange
                                       ? selectedEnd
                                       : null,
                                 );
@@ -705,7 +686,7 @@ Future<void> _showCategoryBulkSheet(
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(actionLabel()),
+                          : Text(buttonLabel()),
                     ),
                   ],
                 ],
