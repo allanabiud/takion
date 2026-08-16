@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 /// Shared favorite toggle with undo snackbar for entity detail screens.
@@ -13,6 +14,7 @@ mixin FavoriteToggleActions {
     required Future<void> Function() toggle,
   }) async {
     try {
+      HapticFeedback.lightImpact();
       final wasFavorite = await isFavorite;
       await toggle();
       if (context.mounted) {

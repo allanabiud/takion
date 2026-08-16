@@ -24,6 +24,7 @@ class IssueCard extends ConsumerWidget {
   final int? seriesId;
   final String? seriesName;
   final String? issueNumber;
+  final String? heroTag;
 
   const IssueCard({
     super.key,
@@ -42,6 +43,7 @@ class IssueCard extends ConsumerWidget {
     this.seriesId,
     this.seriesName,
     this.issueNumber,
+    this.heroTag,
   });
 
   @override
@@ -76,84 +78,95 @@ class IssueCard extends ConsumerWidget {
     final effectiveOnLongPress =
         onLongPress ??
         (issueId != null
-            ? () => showScrobbleSheet(
-                context: context,
-                ref: ref,
-                issueId: issueId!,
-                sheetTitle: title,
-                seriesId: seriesId,
-                seriesName: seriesName,
-                issueNumber: issueNumber,
-                imageUrl: imageUrl,
-              )
+            ? () {
+                Feedback.forLongPress(context);
+                showScrobbleSheet(
+                  context: context,
+                  ref: ref,
+                  issueId: issueId!,
+                  sheetTitle: title,
+                  seriesId: seriesId,
+                  seriesName: seriesName,
+                  issueNumber: issueNumber,
+                  imageUrl: imageUrl,
+                );
+              }
             : null);
 
-    return SizedBox(
-      width: width,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: effectiveOnLongPress,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Card(
-              margin: EdgeInsets.zero,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  EntityCover(
-                    imageUrl: imageUrl,
-                    placeholderLabel: initials(title),
-                    isFavorite: isFavorite,
-                    isRead: effectiveIsRead,
-                    role: role,
-                    cacheWidth: cacheWidth,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(compact ? 4 : 6),
-                    child: compact
-                        ? FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: StatusIndicatorIcons(
-                              isCollected: effectiveIsCollected,
-                              isRead: effectiveIsRead,
-                              isPulled: effectiveIsPulled,
-                              isWishlisted: effectiveIsWishlisted,
-                              iconSize: 14,
-                              spacing: 4,
-                            ),
-                          )
-                        : StatusIndicatorIcons(
-                            isCollected: effectiveIsCollected,
-                            isRead: effectiveIsRead,
-                            isPulled: effectiveIsPulled,
-                            isWishlisted: effectiveIsWishlisted,
-                            iconSize: 16,
-                            spacing: 8,
-                          ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: compact ? 4 : 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: compact
-                  ? theme.textTheme.labelSmall?.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    )
-                  : theme.textTheme.labelLarge?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+    Widget cardContent = Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          EntityCover(
+            imageUrl: imageUrl,
+            placeholderLabel: initials(title),
+            isFavorite: isFavorite,
+            isRead: effectiveIsRead,
+            role: role,
+            cacheWidth: cacheWidth,
+          ),
+          Padding(
+            padding: EdgeInsets.all(compact ? 4 : 6),
+            child: compact
+                ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: StatusIndicatorIcons(
+                      isCollected: effectiveIsCollected,
+                      isRead: effectiveIsRead,
+                      isPulled: effectiveIsPulled,
+                      isWishlisted: effectiveIsWishlisted,
+                      iconSize: 14,
+                      spacing: 4,
                     ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+                  )
+                : StatusIndicatorIcons(
+                    isCollected: effectiveIsCollected,
+                    isRead: effectiveIsRead,
+                    isPulled: effectiveIsPulled,
+                    isWishlisted: effectiveIsWishlisted,
+                    iconSize: 16,
+                    spacing: 8,
+                  ),
+          ),
+        ],
+      ),
+    );
+
+    if (heroTag != null) {
+      cardContent = Hero(tag: heroTag!, child: cardContent);
+    }
+
+    return RepaintBoundary(
+      child: SizedBox(
+        width: width,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: effectiveOnLongPress,
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              cardContent,
+              SizedBox(height: compact ? 4 : 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: compact
+                    ? theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      )
+                    : theme.textTheme.labelLarge?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
