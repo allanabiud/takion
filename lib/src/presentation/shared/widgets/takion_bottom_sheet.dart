@@ -15,7 +15,7 @@ class TakionBottomSheet extends StatelessWidget {
     this.actions,
     this.titleHeader,
     this.showHandle = true,
-    this.horizontalPadding = 24,
+    this.horizontalPadding = 16,
   });
 
   @override
@@ -29,7 +29,7 @@ class TakionBottomSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         left: horizontalPadding,
         right: horizontalPadding,
-        top: 12,
+        top: 10,
         bottom:
             viewInsets.bottom +
             (viewInsets.bottom > 0 ? 8 : safeAreaBottom + 8),
@@ -41,9 +41,9 @@ class TakionBottomSheet extends StatelessWidget {
           if (showHandle)
             Center(
               child: Container(
-                width: 40,
+                width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
@@ -68,7 +68,7 @@ class TakionBottomSheet extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
           Flexible(child: child),
         ],
       ),
@@ -88,7 +88,7 @@ class TakionBottomSheet extends StatelessWidget {
       isScrollControlled: isScrollControlled,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => TakionBottomSheet(
         title: title,
