@@ -37,51 +37,57 @@ class LibraryScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Row(
                 children: [
-                  ActionCard(
-                    icon: Icons.inventory_2_outlined,
-                    value: statsAsync.when(
-                      data: (stats) => stats.totalQuantity.toString(),
-                      loading: () => "--",
-                      error: (_, _) => "!",
+                  Expanded(
+                    child: ActionCard(
+                      icon: Icons.inventory_2_outlined,
+                      value: statsAsync.when(
+                        data: (stats) => stats.totalQuantity.toString(),
+                        loading: () => "--",
+                        error: (_, _) => "!",
+                      ),
+                      label: "Comics",
+                      onTap: () {
+                        context.pushRoute(const MyComicsRoute());
+                      },
                     ),
-                    label: "Comics",
-                    onTap: () {
-                      context.pushRoute(const MyComicsRoute());
-                    },
                   ),
-                  const SizedBox(width: 4),
-                  ActionCard(
-                    icon: Icons.bookmark_added,
-                    value: statsAsync.when(
-                      data: (stats) => stats.readCount.toString(),
-                      loading: () => "--",
-                      error: (_, _) => "!",
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ActionCard(
+                      icon: Icons.bookmark_added,
+                      value: statsAsync.when(
+                        data: (stats) => stats.readCount.toString(),
+                        loading: () => "--",
+                        error: (_, _) => "!",
+                      ),
+                      label: "Read",
+                      onTap: () {
+                        context.pushRoute(const ReadRoute());
+                      },
                     ),
-                    label: "Read",
-                    onTap: () {
-                      context.pushRoute(const ReadRoute());
-                    },
                   ),
-                  const SizedBox(width: 4),
-                  ActionCard(
-                    icon: Icons.turned_in_not,
-                    value: statsAsync.when(
-                      data: (stats) => stats.wishlistCount.toString(),
-                      loading: () => "--",
-                      error: (_, _) => "!",
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ActionCard(
+                      icon: Icons.turned_in_not,
+                      value: statsAsync.when(
+                        data: (stats) => stats.wishlistCount.toString(),
+                        loading: () => "--",
+                        error: (_, _) => "!",
+                      ),
+                      label: "Wishlist",
+                      onTap: () {
+                        context.pushRoute(const WishlistRoute());
+                      },
                     ),
-                    label: "Wishlist",
-                    onTap: () {
-                      context.pushRoute(const WishlistRoute());
-                    },
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             CompactListSection(
               title: "Lists",
               items: [

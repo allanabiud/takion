@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
 import "package:takion/src/presentation/shared/widgets/pinned_list_header.dart";
 
-class PagedListScaffold extends StatelessWidget {
+class PagedListScaffold extends StatefulWidget {
   const PagedListScaffold({
     super.key,
     required this.onRefresh,
@@ -43,22 +43,65 @@ class PagedListScaffold extends StatelessWidget {
   final double bottomSpacing;
 
   @override
+  State<PagedListScaffold> createState() => _PagedListScaffoldState();
+}
+
+class _PagedListScaffoldState extends State<PagedListScaffold> {
+  late final ScrollController _scrollController;
+  bool _showScrollToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      final shouldShow = _scrollController.offset > 400;
+      if (shouldShow != _showScrollToTop) {
+        setState(() {
+          _showScrollToTop = shouldShow;
+        });
+      }
+    }
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final hasPagination = totalPages > 1;
-    final showInlineLoading = isLoading && itemCount > 0;
+    final hasPagination = widget.totalPages > 1;
+    final showInlineLoading = widget.isLoading && widget.itemCount > 0;
 
     final body = RefreshIndicator(
-      onRefresh: onRefresh,
-      child: (isLoading && itemCount == 0 && skeleton != null)
-          ? skeleton!
-          : (itemCount == 0 && !isLoading)
+      onRefresh: widget.onRefresh,
+      child: (widget.isLoading && widget.itemCount == 0 && widget.skeleton != null)
+          ? widget.skeleton!
+          : (widget.itemCount == 0 && !widget.isLoading)
           ? _EmptyState(
-              header: header,
-              emptyIcon: emptyIcon,
-              emptyMessage: emptyMessage,
+              header: widget.header,
+              emptyIcon: widget.emptyIcon,
+              emptyMessage: widget.emptyMessage,
             )
-          : (isLoading && itemCount == 0)
-          ? _LoadingEmptyState(header: header)
+          : (widget.isLoading && widget.itemCount == 0)
+          ? _LoadingEmptyState(header: widget.header)
           : _buildScrollableContent(
               context,
               showInlineLoading: showInlineLoading,
@@ -78,18 +121,25 @@ class PagedListScaffold extends StatelessWidget {
             ),
         ],
       ),
+      floatingActionButton: _showScrollToTop
+          ? FloatingActionButton.small(
+              heroTag: null,
+              onPressed: _scrollToTop,
+              child: const Icon(Icons.arrow_upward),
+            )
+          : null,
       bottomNavigationBar: hasPagination
           ? BottomAppBar(
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
-                    onPressed: isLoading || !hasPrevious ? null : onPrevious,
+                    onPressed: widget.isLoading || !widget.hasPrevious ? null : widget.onPrevious,
                   ),
                   Expanded(
                     child: Center(
                       child: Text(
-                        "Page $currentPage of $totalPages",
+                        "Page ${widget.currentPage} of ${widget.totalPages}",
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -98,7 +148,7 @@ class PagedListScaffold extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: isLoading || !hasNext ? null : onNext,
+                    onPressed: widget.isLoading || !widget.hasNext ? null : widget.onNext,
                   ),
                 ],
               ),
@@ -111,32 +161,33 @@ class PagedListScaffold extends StatelessWidget {
     BuildContext context, {
     required bool showInlineLoading,
   }) {
-    if (gridCrossAxisCount != null) {
+    if (widget.gridCrossAxisCount != null) {
       final grid = SliverPadding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
         sliver: SliverGrid(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: gridCrossAxisCount!,
+            crossAxisCount: widget.gridCrossAxisCount!,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: gridChildAspectRatio,
+            childAspectRatio: widget.gridChildAspectRatio,
           ),
           delegate: SliverChildBuilderDelegate(
-            itemBuilder,
-            childCount: itemCount,
+            widget.itemBuilder,
+            childCount: widget.itemCount,
           ),
         ),
       );
 
-      if (header != null) {
+      if (widget.header != null) {
         return CustomScrollView(
+          controller: _scrollController,
           slivers: [
             PinnedListHeader(
               isLoading: showInlineLoading,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  header!,
+                  widget.header!,
                   if (showInlineLoading)
                     const Padding(
                       padding: EdgeInsets.symmetric(
@@ -149,29 +200,31 @@ class PagedListScaffold extends StatelessWidget {
               ),
             ),
             grid,
-            SliverToBoxAdapter(child: SizedBox(height: bottomSpacing)),
+            SliverToBoxAdapter(child: SizedBox(height: widget.bottomSpacing)),
           ],
         );
       }
 
       return CustomScrollView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           grid,
-          SliverToBoxAdapter(child: SizedBox(height: bottomSpacing)),
+          SliverToBoxAdapter(child: SizedBox(height: widget.bottomSpacing)),
         ],
       );
     }
 
-    if (header != null) {
+    if (widget.header != null) {
       return CustomScrollView(
+        controller: _scrollController,
         slivers: [
           PinnedListHeader(
             isLoading: showInlineLoading,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                header!,
+                widget.header!,
                 if (showInlineLoading)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -182,8 +235,8 @@ class PagedListScaffold extends StatelessWidget {
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              itemBuilder,
-              childCount: itemCount,
+              widget.itemBuilder,
+              childCount: widget.itemCount,
             ),
           ),
         ],
@@ -191,10 +244,11 @@ class PagedListScaffold extends StatelessWidget {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 12),
-      itemCount: itemCount,
-      itemBuilder: itemBuilder,
+      itemCount: widget.itemCount,
+      itemBuilder: widget.itemBuilder,
     );
   }
 }
