@@ -353,27 +353,28 @@ class _SeriesProgressBar extends ConsumerWidget {
   }
 
   Widget _buildProgress(BuildContext context, int owned, double percent) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: percent,
                 minHeight: 6,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
+                color: theme.colorScheme.primary,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
               ),
             ),
           ),
           const SizedBox(width: 8),
           Text(
             "$owned/$total",
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
