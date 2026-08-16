@@ -126,7 +126,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
     }
   }
 
-  Future<void> _runDriveAutoSyncIfEnabled() async {
+  Future<void> _runDriveAutoSyncIfEnabled({bool ignoreThrottle = false}) async {
     if (!mounted) return;
     final container = ProviderScope.containerOf(context, listen: false);
     final syncNotifier = ref.read(driveSyncProvider.notifier);
@@ -142,19 +142,26 @@ class _TakionAppState extends ConsumerState<TakionApp>
       AppLogger.info("Drive auto sync skipped: no account");
       return;
     }
+    if (!ignoreThrottle && await driveService.isThrottled()) {
+      AppLogger.info("Drive auto sync skipped: throttled (< 5m since last sync attempt)");
+      return;
+    }
     AppLogger.info("Drive auto sync triggered");
     syncNotifier.setSyncing(true);
     try {
-      await driveService.triggerSync();
-      await syncNotifier.updateLastSync();
-      syncNotifier.clearError();
-      invalidateCacheBackedProvidersForAutoSync(container.invalidate);
-      AppLogger.info("Drive auto sync completed");
+      final ran = await driveService.triggerSync(ignoreThrottle: ignoreThrottle);
+      if (ran) {
+        await syncNotifier.updateLastSync();
+        syncNotifier.clearError();
+        invalidateCacheBackedProvidersForAutoSync(container.invalidate);
+        AppLogger.info("Drive auto sync completed successfully");
+      }
     } catch (e) {
       AppLogger.warning("Background sync failed", error: e);
       syncNotifier.setError(e.toString());
+    } finally {
+      syncNotifier.setSyncing(false);
     }
-    syncNotifier.setSyncing(false);
   }
 
   Future<void> _scheduleWeeklyPullNotification() async {
