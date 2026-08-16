@@ -10,11 +10,31 @@ import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
 @RoutePage()
-class ContinueReadingScreen extends ConsumerWidget {
+class ContinueReadingScreen extends ConsumerStatefulWidget {
   const ContinueReadingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ContinueReadingScreen> createState() =>
+      _ContinueReadingScreenState();
+}
+
+class _ContinueReadingScreenState extends ConsumerState<ContinueReadingScreen> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.continueReading),
     );
@@ -22,6 +42,7 @@ class ContinueReadingScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Continue Reading")),
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: suggestionsAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => const AsyncStatePanel.error(
@@ -44,6 +65,7 @@ class ContinueReadingScreen extends ConsumerWidget {
           }
 
           return CustomScrollView(
+            controller: _scrollController,
             slivers: [
               PinnedListHeader(
                 child: ListHeader(

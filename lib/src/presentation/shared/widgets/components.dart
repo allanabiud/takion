@@ -26,6 +26,7 @@ export "person_card.dart";
 export "person_list_tile.dart";
 export "rating_picker.dart";
 export "role_badge.dart";
+export "scroll_to_top_fab.dart";
 export "section_header.dart";
 export "section_subtitle_header.dart";
 export "shimmer_widget.dart";

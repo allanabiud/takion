@@ -11,11 +11,30 @@ import "package:takion/src/presentation/features/reading_lists/reading_list_card
 import "package:takion/src/presentation/features/series/series_list_tile.dart";
 
 @RoutePage()
-class FavoritesScreen extends ConsumerWidget {
+class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
@@ -33,13 +52,14 @@ class FavoritesScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        floatingActionButton: ScrollToTopFab(controller: _scrollController),
+        body: TabBarView(
           children: [
-            _FavoriteIssuesTab(),
-            _FavoriteSeriesTab(),
-            _FavoriteCharactersTab(),
-            _FavoriteCreatorsTab(),
-            _FavoriteReadingListsTab(),
+            _FavoriteIssuesTab(controller: _scrollController),
+            _FavoriteSeriesTab(controller: _scrollController),
+            _FavoriteCharactersTab(controller: _scrollController),
+            _FavoriteCreatorsTab(controller: _scrollController),
+            _FavoriteReadingListsTab(controller: _scrollController),
           ],
         ),
       ),
@@ -48,7 +68,9 @@ class FavoritesScreen extends ConsumerWidget {
 }
 
 class _FavoriteSeriesTab extends ConsumerWidget {
-  const _FavoriteSeriesTab();
+  const _FavoriteSeriesTab({required this.controller});
+
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,6 +86,7 @@ class _FavoriteSeriesTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: controller,
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: seriesList.length,
           itemBuilder: (context, index) {
@@ -87,7 +110,9 @@ class _FavoriteSeriesTab extends ConsumerWidget {
 }
 
 class _FavoriteIssuesTab extends ConsumerWidget {
-  const _FavoriteIssuesTab();
+  const _FavoriteIssuesTab({required this.controller});
+
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -103,6 +128,7 @@ class _FavoriteIssuesTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: controller,
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: issuesList.length,
           itemBuilder: (context, index) {
@@ -125,7 +151,9 @@ class _FavoriteIssuesTab extends ConsumerWidget {
 }
 
 class _FavoriteReadingListsTab extends ConsumerWidget {
-  const _FavoriteReadingListsTab();
+  const _FavoriteReadingListsTab({required this.controller});
+
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -141,6 +169,7 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: controller,
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: readingLists.length,
           itemBuilder: (context, index) {
@@ -166,7 +195,9 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
 }
 
 class _FavoriteCreatorsTab extends ConsumerWidget {
-  const _FavoriteCreatorsTab();
+  const _FavoriteCreatorsTab({required this.controller});
+
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -182,6 +213,7 @@ class _FavoriteCreatorsTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: controller,
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: creators.length,
           itemBuilder: (context, index) {
@@ -205,7 +237,9 @@ class _FavoriteCreatorsTab extends ConsumerWidget {
 }
 
 class _FavoriteCharactersTab extends ConsumerWidget {
-  const _FavoriteCharactersTab();
+  const _FavoriteCharactersTab({required this.controller});
+
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -221,6 +255,7 @@ class _FavoriteCharactersTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: controller,
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: characters.length,
           itemBuilder: (context, index) {

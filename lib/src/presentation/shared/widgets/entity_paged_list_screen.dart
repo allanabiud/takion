@@ -91,9 +91,17 @@ class _EntityPagedListScreenState<T, TItem>
   T? _lastPage;
   int _totalPages = 1;
   final _overlapHandle = SliverOverlapAbsorberHandle();
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _overlapHandle.dispose();
     super.dispose();
   }
@@ -158,6 +166,7 @@ class _EntityPagedListScreenState<T, TItem>
         ),
         actions: widget.appBarActions,
       ),
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: widget.enableRefresh
           ? RefreshIndicator(
               onRefresh: () async {
@@ -212,6 +221,7 @@ class _EntityPagedListScreenState<T, TItem>
     final count = widget.countOf(page);
 
     return CustomScrollView(
+      controller: _scrollController,
       slivers: [
         SliverOverlapAbsorber(
           handle: _overlapHandle,

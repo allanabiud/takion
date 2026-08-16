@@ -152,8 +152,22 @@ class _WishlistBrowseTab extends ConsumerStatefulWidget {
 
 class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
     with AutomaticKeepAliveClientMixin {
+  late final ScrollController _scrollController;
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,44 +211,54 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(wishlistSeriesProvider),
-          child: CustomScrollView(
-            slivers: [
-              PinnedListHeader(
-                child: ListHeader(
-                  count: filtered.length,
-                  unit: "series",
-                  pluralUnit: "series",
-                  enabled: true,
-                  sortLabel: contentSortLabel(sortOption),
-                  onSortTap: () => showSortBottomSheet(
-                    context,
-                    ref,
-                    SortPreferenceContext.libraryWishlist,
-                    contentSortLabel,
-                  ),
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final summary = filtered[index];
-                  return RepaintBoundary(
-                    child: SeriesListTile(
-                      series: summary,
-                      categoryCount: categoryCounts[summary.id],
-                      categoryLabel: "wishlist",
-                      showProgressBar: true,
-                      isFirst: index == 0,
-                      isLast: index == filtered.length - 1,
-                      onTap: () => context.pushRoute(
-                        LibrarySeriesRoute(
-                          seriesId: summary.id,
-                          category: "wishlist",
-                          seriesName: summary.name,
-                        ),
+          child: Stack(
+            children: [
+              CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  PinnedListHeader(
+                    child: ListHeader(
+                      count: filtered.length,
+                      unit: "series",
+                      pluralUnit: "series",
+                      enabled: true,
+                      sortLabel: contentSortLabel(sortOption),
+                      onSortTap: () => showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.libraryWishlist,
+                        contentSortLabel,
                       ),
                     ),
-                  );
-                }, childCount: filtered.length),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final summary = filtered[index];
+                      return RepaintBoundary(
+                        child: SeriesListTile(
+                          series: summary,
+                          categoryCount: categoryCounts[summary.id],
+                          categoryLabel: "wishlist",
+                          showProgressBar: true,
+                          isFirst: index == 0,
+                          isLast: index == filtered.length - 1,
+                          onTap: () => context.pushRoute(
+                            LibrarySeriesRoute(
+                              seriesId: summary.id,
+                              category: "wishlist",
+                              seriesName: summary.name,
+                            ),
+                          ),
+                        ),
+                      );
+                    }, childCount: filtered.length),
+                  ),
+                ],
+              ),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: ScrollToTopFab(controller: _scrollController),
               ),
             ],
           ),
