@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:file_picker/file_picker.dart";
+import "package:package_info_plus/package_info_plus.dart";
 import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/network/metron_account_service.dart";
@@ -81,6 +82,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finishSetup() async {
     final settingsDao = ref.read(driftDatabaseProvider).settingsDao;
     await settingsDao.setBool(_seenOnboardingKey, true);
+    final info = await PackageInfo.fromPlatform();
+    await settingsDao.setString(
+      SettingsKeys.lastSeenChangelogVersion,
+      info.version,
+    );
     ShortcutHandler.enableShortcuts();
     if (!mounted || !context.mounted) return;
     await context.router.replaceAll([const MainRoute()]);

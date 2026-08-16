@@ -275,10 +275,18 @@ class IssueListTile extends ConsumerWidget {
                             ),
                             if (isFavorite) ...[
                               const SizedBox(width: 8),
-                              Icon(
-                                Icons.favorite,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Icon(
+                                  Icons.favorite,
+                                  size: 13,
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
                               ),
                             ],
                             const Spacer(),

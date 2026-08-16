@@ -2,9 +2,12 @@ import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/flutter_svg.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/presentation/features/search/providers/search_state_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 
@@ -93,6 +96,23 @@ class MainScreenState extends ConsumerState<MainScreen>
       }
     });
     _searchController.addListener(_onSearchChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final info = await PackageInfo.fromPlatform();
+      final dao = ref.read(driftDatabaseProvider).settingsDao;
+      final lastSeen = await dao.getString(
+        SettingsKeys.lastSeenChangelogVersion,
+      );
+      if (lastSeen != info.version) {
+        await dao.setString(
+          SettingsKeys.lastSeenChangelogVersion,
+          info.version,
+        );
+        if (!mounted) return;
+        showChangelogSheet(context);
+      }
+    });
   }
 
   @override
@@ -208,8 +228,9 @@ class MainScreenState extends ConsumerState<MainScreen>
                       ? Container(
                           width: double.infinity,
                           color: Theme.of(context).colorScheme.surfaceContainer,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                           child: Column(
+                             mainAxisSize: MainAxisSize.min,
+                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.symmetric(
