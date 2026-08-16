@@ -235,7 +235,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
 
     if (!forceRefresh && cached != null && cached.isFullyHydrated) {
       AppPerformanceMetrics.instance.recordCacheHit("imprint_details");
-      return _imprintRowToEntity(cached);
+      return await _imprintRowToEntity(cached);
     }
 
     final cachedJson =
@@ -251,7 +251,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
         );
         final dto = ImprintDetailsDto.fromJson(cachedJson);
         await _upsertImprintDetails(dto);
-        return _imprintRowToEntity(
+        return await _imprintRowToEntity(
           await _metronEntityDao.getImprint(imprintId) ??
               (throw StateError("Imprint $imprintId not found after upsert")),
         );
@@ -272,12 +272,12 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
           );
           final dto = ImprintDetailsDto.fromJson(cachedJson);
           await _upsertImprintDetails(dto);
-          return _imprintRowToEntity(
+          return await _imprintRowToEntity(
             await _metronEntityDao.getImprint(imprintId) ??
                 (throw StateError("Imprint $imprintId not found after upsert")),
           );
         }
-        return _imprintRowToEntity(
+        return await _imprintRowToEntity(
           cached ?? (throw StateError("Imprint $imprintId not found")),
         );
       }
@@ -289,11 +289,11 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
           cached.modified != null &&
           dto.modified != null &&
           cached.modified == dto.modified) {
-        return _imprintRowToEntity(cached);
+        return await _imprintRowToEntity(cached);
       }
       await _upsertImprintDetails(dto);
       await _localDataSource.cacheImprintDetailsResponse(imprintId, data);
-      return _imprintRowToEntity(
+      return await _imprintRowToEntity(
         await _metronEntityDao.getImprint(imprintId) ??
             (throw StateError("Imprint $imprintId not found after upsert")),
       );
@@ -304,13 +304,13 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       if (cachedJson != null) {
         final dto = ImprintDetailsDto.fromJson(cachedJson);
         await _upsertImprintDetails(dto);
-        return _imprintRowToEntity(
+        return await _imprintRowToEntity(
           await _metronEntityDao.getImprint(imprintId) ??
               (throw StateError("Imprint $imprintId not found after upsert")),
         );
       }
       if (cached != null) {
-        return _imprintRowToEntity(cached);
+        return await _imprintRowToEntity(cached);
       }
       rethrow;
     }
@@ -343,13 +343,20 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     );
   }
 
-  ImprintDetails _imprintRowToEntity(MetronImprint row) {
+  Future<ImprintDetails> _imprintRowToEntity(MetronImprint row) async {
+    ImprintNamedRef? publisher;
+    if (row.publisherId != null) {
+      final p = await _metronEntityDao.getPublisher(row.publisherId!);
+      publisher = ImprintNamedRef(
+        id: row.publisherId!,
+        name: p?.name ?? "",
+      );
+    }
+
     return ImprintDetails(
       id: row.id,
       name: row.name,
-      publisher: row.publisherId != null
-          ? ImprintNamedRef(id: row.publisherId!, name: "")
-          : null,
+      publisher: publisher,
       founded: row.founded,
       desc: row.description,
       image: row.imageUrl,
