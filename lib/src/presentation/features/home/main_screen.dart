@@ -216,19 +216,11 @@ class MainScreenState extends ConsumerState<MainScreen>
                                   horizontal: 16,
                                   vertical: 6,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      "Syncing with Google Drive",
-                                      style: Theme.of(context).textTheme.labelSmall,
-                                    ),
-                                    const Spacer(),
-                                    const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  ],
+                                child: Text(
+                                  "Syncing with Google Drive",
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelSmall,
                                 ),
                               ),
                               const LinearProgressIndicator(minHeight: 2),
