@@ -21,9 +21,17 @@ class UnratedScreen extends ConsumerStatefulWidget {
 class _UnratedScreenState extends ConsumerState<UnratedScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -77,6 +85,7 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                 ),
               ],
       ),
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: viewAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) => const AsyncStatePanel.error(
@@ -106,6 +115,7 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(unratedSeriesProvider),
             child: CustomScrollView(
+              controller: _scrollController,
               slivers: [
                 PinnedListHeader(
                   child: ListHeader(

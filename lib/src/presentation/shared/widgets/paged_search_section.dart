@@ -4,7 +4,7 @@ import "package:takion/src/domain/common/content_sorting.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
 
-class PagedSearchSection<T> extends ConsumerWidget {
+class PagedSearchSection<T> extends ConsumerStatefulWidget {
   const PagedSearchSection({
     super.key,
     required this.items,
@@ -54,31 +54,53 @@ class PagedSearchSection<T> extends ConsumerWidget {
   final void Function(int index, int total)? onItemIndexed;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hasPagination = totalPages > 1;
+  ConsumerState<PagedSearchSection<T>> createState() =>
+      _PagedSearchSectionState<T>();
+}
+
+class _PagedSearchSectionState<T>
+    extends ConsumerState<PagedSearchSection<T>> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPagination = widget.totalPages > 1;
 
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: items.isEmpty && !isLoading
+          child: widget.items.isEmpty && !widget.isLoading
               ? RefreshIndicator(
-                  onRefresh: onRefresh,
+                  onRefresh: widget.onRefresh,
                   child: CustomScrollView(
+                    controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      if (!isFiltering)
+                      if (!widget.isFiltering)
                         PinnedListHeader(
                           child: ListHeader(
-                            count: totalCount,
+                            count: widget.totalCount,
                             unit: "result",
-                            pageCount: items.length,
-                            sortLabel: sortLabelFn(sortOption),
+                            pageCount: widget.items.length,
+                            sortLabel: widget.sortLabelFn(widget.sortOption),
                             onSortTap: () => showSortBottomSheet(
                               context,
                               ref,
-                              sortContext,
-                              sortLabelFn,
+                              widget.sortContext,
+                              widget.sortLabelFn,
                             ),
                           ),
                         ),
@@ -87,8 +109,8 @@ class PagedSearchSection<T> extends ConsumerWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: EmptyContentState(
-                            icon: emptyIcon,
-                            message: emptyMessage,
+                            icon: widget.emptyIcon,
+                            message: widget.emptyMessage,
                           ),
                         ),
                       ),
@@ -96,41 +118,44 @@ class PagedSearchSection<T> extends ConsumerWidget {
                   ),
                 )
               : RefreshIndicator(
-                  onRefresh: onRefresh,
+                  onRefresh: widget.onRefresh,
                   child: CustomScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      if (!isFiltering)
+                      if (!widget.isFiltering)
                         PinnedListHeader(
                           child: ListHeader(
-                            count: totalCount,
+                            count: widget.totalCount,
                             unit: "result",
-                            pageCount: items.length,
-                            sortLabel: sortLabelFn(sortOption),
-                            onSortTap: isLoading
+                            pageCount: widget.items.length,
+                            sortLabel: widget.sortLabelFn(widget.sortOption),
+                            onSortTap: widget.isLoading
                                 ? null
                                 : () => showSortBottomSheet(
                                     context,
                                     ref,
-                                    sortContext,
-                                    sortLabelFn,
+                                    widget.sortContext,
+                                    widget.sortLabelFn,
                                   ),
                           ),
                         ),
                       SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final item = items[index];
-                          onItemIndexed?.call(index, items.length);
+                        delegate:
+                            SliverChildBuilderDelegate((context, index) {
+                          final item = widget.items[index];
+                          widget.onItemIndexed?.call(index, widget.items.length);
                           return Opacity(
-                            opacity: isLoading ? 0.6 : 1.0,
-                            child: itemBuilder(
+                            opacity: widget.isLoading ? 0.6 : 1.0,
+                            child: widget.itemBuilder(
                               context,
                               index,
                               item,
                               index == 0,
-                              index == items.length - 1,
+                              index == widget.items.length - 1,
                             ),
                           );
-                        }, childCount: items.length),
+                        }, childCount: widget.items.length),
                       ),
                     ],
                   ),
@@ -142,20 +167,21 @@ class PagedSearchSection<T> extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: body,
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       bottomNavigationBar: hasPagination
           ? BottomAppBar(
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
-                    onPressed: isLoading || !hasPrevious
+                    onPressed: widget.isLoading || !widget.hasPrevious
                         ? null
-                        : onPreviousPage,
+                        : widget.onPreviousPage,
                   ),
                   Expanded(
                     child: Center(
                       child: Text(
-                        "Page $currentPage of $totalPages",
+                        "Page ${widget.currentPage} of ${widget.totalPages}",
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -164,7 +190,9 @@ class PagedSearchSection<T> extends ConsumerWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: isLoading || !hasNext ? null : onNextPage,
+                    onPressed: widget.isLoading || !widget.hasNext
+                        ? null
+                        : widget.onNextPage,
                   ),
                 ],
               ),

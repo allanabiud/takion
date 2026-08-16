@@ -257,57 +257,66 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(readSeriesProvider),
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              PinnedListHeader(
-                child: ListHeader(
-                  count: filtered.length,
-                  unit: "series",
-                  pluralUnit: "series",
-                  enabled: true,
-                  sortLabel: contentSortLabel(sortOption),
-                  onSortTap: () => showSortBottomSheet(
-                    context,
-                    ref,
-                    SortPreferenceContext.libraryRead,
-                    contentSortLabel,
-                  ),
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  if (index >= visible.length) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    );
-                  }
-                  final summary = visible[index];
-                  return RepaintBoundary(
-                    child: SeriesListTile(
-                      series: summary,
-                      categoryCount: categoryCounts[summary.id],
-                      categoryLabel: "read",
-                      showProgressBar: true,
-                      isFirst: index == 0,
-                      isLast: !hasMore && index == visible.length - 1,
-                      onTap: () => context.pushRoute(
-                        LibrarySeriesRoute(
-                          seriesId: summary.id,
-                          category: "read",
-                          seriesName: summary.name,
-                        ),
+          child: Stack(
+            children: [
+              CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  PinnedListHeader(
+                    child: ListHeader(
+                      count: filtered.length,
+                      unit: "series",
+                      pluralUnit: "series",
+                      enabled: true,
+                      sortLabel: contentSortLabel(sortOption),
+                      onSortTap: () => showSortBottomSheet(
+                        context,
+                        ref,
+                        SortPreferenceContext.libraryRead,
+                        contentSortLabel,
                       ),
                     ),
-                  );
-                }, childCount: hasMore ? visible.length + 1 : visible.length),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (index >= visible.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      final summary = visible[index];
+                      return RepaintBoundary(
+                        child: SeriesListTile(
+                          series: summary,
+                          categoryCount: categoryCounts[summary.id],
+                          categoryLabel: "read",
+                          showProgressBar: true,
+                          isFirst: index == 0,
+                          isLast: !hasMore && index == visible.length - 1,
+                          onTap: () => context.pushRoute(
+                            LibrarySeriesRoute(
+                              seriesId: summary.id,
+                              category: "read",
+                              seriesName: summary.name,
+                            ),
+                          ),
+                        ),
+                      );
+                    }, childCount: hasMore ? visible.length + 1 : visible.length),
+                  ),
+                ],
+              ),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: ScrollToTopFab(controller: _scrollController),
               ),
             ],
           ),

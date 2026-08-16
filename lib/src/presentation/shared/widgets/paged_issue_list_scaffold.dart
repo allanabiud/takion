@@ -6,7 +6,7 @@ import "package:takion/src/presentation/shared/widgets/empty_content_state.dart"
 import "package:takion/src/presentation/features/issues/issue_list_tile.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class PagedIssueListScaffold extends StatelessWidget {
+class PagedIssueListScaffold extends StatefulWidget {
   const PagedIssueListScaffold({
     super.key,
     required this.title,
@@ -31,56 +31,78 @@ class PagedIssueListScaffold extends StatelessWidget {
   static List<IssueList> _identity(List<IssueList> issues) => issues;
 
   @override
+  State<PagedIssueListScaffold> createState() => _PagedIssueListScaffoldState();
+}
+
+class _PagedIssueListScaffoldState extends State<PagedIssueListScaffold> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
-        actions: appBarActions,
-        bottom: issuesAsync.isLoading
+        title: Text(widget.title),
+        actions: widget.appBarActions,
+        bottom: widget.issuesAsync.isLoading
             ? const PreferredSize(
                 preferredSize: Size.fromHeight(4),
                 child: LinearProgressIndicator(),
               )
             : null,
       ),
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: Column(
         children: [
           const WeekPickerBar(),
           Expanded(
-            child: issuesAsync.when(
+            child: widget.issuesAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (error, _) => AsyncStatePanel.error(
                 errorMessage:
-                    errorTextBuilder?.call(error) ?? "Something went wrong",
+                    widget.errorTextBuilder?.call(error) ?? "Something went wrong",
               ),
               data: (issues) {
-                final visibleIssues = transformIssues(issues);
+                final visibleIssues = widget.transformIssues(issues);
                 if (visibleIssues.isEmpty) {
                   return Column(
                     children: [
-                      if (header != null)
+                      if (widget.header != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
-                          child: header,
+                          child: widget.header,
                         ),
                       Expanded(
                         child: EmptyContentState(
-                          icon: emptyIcon,
-                          message: emptyMessage,
+                          icon: widget.emptyIcon,
+                          message: widget.emptyMessage,
                         ),
                       ),
                     ],
                   );
                 }
 
-                if (header != null) {
+                if (widget.header != null) {
                   return _PinnedIssueList(
-                    header: header!,
+                    controller: _scrollController,
+                    header: widget.header!,
                     issues: visibleIssues,
                   );
                 }
 
                 return ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.only(bottom: 12),
                   itemCount: visibleIssues.length,
                   itemBuilder: (context, index) {
@@ -102,14 +124,20 @@ class PagedIssueListScaffold extends StatelessWidget {
 }
 
 class _PinnedIssueList extends StatelessWidget {
-  const _PinnedIssueList({required this.header, required this.issues});
+  const _PinnedIssueList({
+    required this.controller,
+    required this.header,
+    required this.issues,
+  });
 
+  final ScrollController controller;
   final Widget header;
   final List<IssueList> issues;
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
+      controller: controller,
       slivers: [
         PinnedListHeader(child: header),
         SliverList(

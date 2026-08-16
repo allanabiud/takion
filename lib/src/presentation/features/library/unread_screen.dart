@@ -25,10 +25,18 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounceTimer;
   String _debouncedSearchQuery = "";
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
 
   @override
   void dispose() {
     _searchDebounceTimer?.cancel();
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -95,6 +103,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                 ),
               ],
       ),
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: viewAsync.when(
         loading: () => const AsyncStatePanel.loading(),
         error: (error, _) =>
@@ -123,6 +132,7 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(unreadSeriesProvider),
             child: CustomScrollView(
+              controller: _scrollController,
               slivers: [
                 PinnedListHeader(
                   child: ListHeader(

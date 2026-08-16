@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
 import "package:takion/src/presentation/shared/widgets/pinned_list_header.dart";
+import "package:takion/src/presentation/shared/widgets/scroll_to_top_fab.dart";
 
 class PagedListScaffold extends StatefulWidget {
   const PagedListScaffold({
@@ -48,41 +49,17 @@ class PagedListScaffold extends StatefulWidget {
 
 class _PagedListScaffoldState extends State<PagedListScaffold> {
   late final ScrollController _scrollController;
-  bool _showScrollToTop = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.hasClients) {
-      final shouldShow = _scrollController.offset > 400;
-      if (shouldShow != _showScrollToTop) {
-        setState(() {
-          _showScrollToTop = shouldShow;
-        });
-      }
-    }
-  }
-
-  void _scrollToTop() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
-    }
   }
 
   @override
@@ -121,13 +98,7 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
             ),
         ],
       ),
-      floatingActionButton: _showScrollToTop
-          ? FloatingActionButton.small(
-              heroTag: null,
-              onPressed: _scrollToTop,
-              child: const Icon(Icons.arrow_upward),
-            )
-          : null,
+      floatingActionButton: ScrollToTopFab(controller: _scrollController),
       bottomNavigationBar: hasPagination
           ? BottomAppBar(
               child: Row(
