@@ -699,8 +699,10 @@ Future<void> showSeriesIssueBulkActionsSheet({
                         ),
                       const SizedBox(height: 4),
                       Text(
-                        "Selected: #$startIssueNumber - #$endIssueNumber ($selectedStart to $selectedEnd of $totalIssues)",
-                        style: Theme.of(context).textTheme.bodySmall,
+                        "Range boundary: #$startIssueNumber → #$endIssueNumber (Items $selectedStart–$selectedEnd of $totalIssues)",
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),
@@ -712,6 +714,10 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   final targetCount = selectedMode == SeriesIssueSelectionMode.range
                       ? (selectedEnd - selectedStart + 1).clamp(0, totalIssues)
                       : totalIssues;
+
+                  final summaryText = selectedMode == SeriesIssueSelectionMode.range
+                      ? "$targetCount ${targetCount == 1 ? 'issue' : 'issues'} selected in range (#$startIssueNumber → #$endIssueNumber)"
+                      : "$targetCount ${targetCount == 1 ? 'issue' : 'issues'} matched by filter (${subsetLabel(selectedSubset).toLowerCase()})";
 
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -725,16 +731,18 @@ Future<void> showSeriesIssueBulkActionsSheet({
                     child: Row(
                       children: [
                         Icon(
-                          Icons.touch_app_outlined,
-                          size: 16,
+                          Icons.fact_check_outlined,
+                          size: 18,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          "$targetCount ${targetCount == 1 ? 'issue' : 'issues'} will be updated",
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            summaryText,
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
