@@ -93,6 +93,40 @@ bool matchesSubset({
   }
 }
 
+int countAffectedIssue({
+  required SeriesIssueSelectionMode selectionMode,
+  required List<SeriesIssueBulkCandidate> issues,
+  required Map<int, LibraryItem> existingByIssueId,
+  SeriesIssueSubset? subset,
+  int? startOrderIndex,
+  int? endOrderIndex,
+}) {
+  if (selectionMode == SeriesIssueSelectionMode.range) {
+    if (startOrderIndex == null || endOrderIndex == null) return 0;
+    final start = startOrderIndex.clamp(1, issues.length);
+    final end = endOrderIndex.clamp(start, issues.length);
+    return end - start + 1;
+  }
+
+  final activeSubset = subset;
+  if (activeSubset == null) return 0;
+  var count = 0;
+  for (final issue in issues) {
+    final existing = existingByIssueId[issue.issueId];
+    final isCollected =
+        existing?.ownershipStatus == LibraryOwnershipStatus.owned;
+    final isRead = existing?.isRead ?? false;
+    if (matchesSubset(
+      subset: activeSubset,
+      isCollected: isCollected,
+      isRead: isRead,
+    )) {
+      count++;
+    }
+  }
+  return count;
+}
+
 Future<void> applySeriesIssueBulkAction({
   required BuildContext context,
   required WidgetRef ref,
@@ -378,11 +412,12 @@ Future<void> showSeriesIssueBulkActionsSheet({
   var isLoading = true;
   var hasStarted = false;
   List<SeriesIssueBulkCandidate> issues = [];
+  Map<int, LibraryItem> existingByIssueId = {};
   var selectedOperation = SeriesIssueBulkOperation.addToCollection;
   var selectedMode = SeriesIssueSelectionMode.predefined;
   var selectedSubset = SeriesIssueSubset.all;
-  var selectedRange = const RangeValues(1, 1);
-  var useManualRange = false;
+  var rangeStart = 1;
+  var rangeEnd = 1;
   var isApplying = false;
 
   TakionBottomSheet.show<void>(
@@ -402,10 +437,18 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   TakionAlerts.info(context, "No issues found");
                   return;
                 }
+                final existingItems = await ref
+                    .read(libraryRepositoryProvider)
+                    .getItemsBySeriesId(seriesId);
+                if (!context.mounted) return;
+                existingByIssueId = {
+                  for (final e in existingItems) e.metronIssueId: e,
+                };
                 setModalState(() {
                   issues = fetched;
                   totalIssues = fetched.length;
-                  selectedRange = RangeValues(1, totalIssues.toDouble());
+                  rangeStart = 1;
+                  rangeEnd = totalIssues;
                   isLoading = false;
                 });
               } catch (error) {
@@ -497,10 +540,27 @@ Future<void> showSeriesIssueBulkActionsSheet({
           selectedSubset = availableSubsets.first;
         }
 
-        final selectedStart = selectedRange.start.round();
-        final selectedEnd = selectedRange.end.round();
+        final selectedStart = rangeStart;
+        final selectedEnd = rangeEnd;
         final startIssueNumber = issues[selectedStart - 1].issueNumber;
         final endIssueNumber = issues[selectedEnd - 1].issueNumber;
+        final affectedCount = countAffectedIssue(
+          selectionMode: selectedMode,
+          issues: issues,
+          existingByIssueId: existingByIssueId,
+          subset:
+              selectedMode == SeriesIssueSelectionMode.predefined
+              ? selectedSubset
+              : null,
+          startOrderIndex:
+              selectedMode == SeriesIssueSelectionMode.range
+              ? selectedStart
+              : null,
+          endOrderIndex:
+              selectedMode == SeriesIssueSelectionMode.range
+              ? selectedEnd
+              : null,
+        );
 
         return SingleChildScrollView(
           child: Column(
@@ -562,193 +622,150 @@ Future<void> showSeriesIssueBulkActionsSheet({
                 ),
               ),
               const SizedBox(height: 12),
-              if (selectedMode == SeriesIssueSelectionMode.predefined) ...[
-                Text("Apply to", style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: availableSubsets
-                      .map(
-                        (value) => ChoiceChip(
-                          label: Text(
-                            subsetLabel(value),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          selected: value == selectedSubset,
-                          shape: const StadiumBorder(),
-                          onSelected: isApplying
-                              ? null
-                              : (_) {
-                                  setModalState(() {
-                                    selectedSubset = value;
-                                  });
-                                },
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-              if (selectedMode == SeriesIssueSelectionMode.range) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Issue range: #$startIssueNumber - #$endIssueNumber",
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          TextButton(
-                            onPressed: isApplying
-                                ? null
-                                : () {
-                                    setModalState(() {
-                                      useManualRange = !useManualRange;
-                                    });
-                                  },
-                            child: Text(
-                              useManualRange ? "Use Slider" : "Use Inputs",
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (useManualRange)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                initialValue: startIssueNumber,
-                                decoration: const InputDecoration(
-                                  labelText: "From issue #",
-                                  isDense: true,
-                                ),
-                                keyboardType: TextInputType.number,
-                                enabled: !isApplying,
-                                onChanged: (v) {
-                                  if (v.isEmpty) return;
-                                  final idx = findClosestIssueIndex(
-                                    issues,
-                                    v,
-                                    startAfter: null,
-                                  );
-                                  if (idx != null && idx + 1 <= selectedEnd) {
-                                    setModalState(() {
-                                      selectedRange = RangeValues(
-                                        (idx + 1).toDouble(),
-                                        selectedRange.end,
-                                      );
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                initialValue: endIssueNumber,
-                                decoration: const InputDecoration(
-                                  labelText: "To issue #",
-                                  isDense: true,
-                                ),
-                                keyboardType: TextInputType.number,
-                                enabled: !isApplying,
-                                onChanged: (v) {
-                                  if (v.isEmpty) return;
-                                  final idx = findClosestIssueIndex(
-                                    issues,
-                                    v,
-                                    startAfter: selectedStart - 1,
-                                  );
-                                  if (idx != null && idx + 1 <= totalIssues) {
-                                    setModalState(() {
-                                      selectedRange = RangeValues(
-                                        selectedRange.start,
-                                        (idx + 1).toDouble(),
-                                      );
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        RangeSlider(
-                          min: 1,
-                          max: totalIssues.toDouble(),
-                          divisions: totalIssues > 1
-                              ? (totalIssues - 1).clamp(1, 100)
-                              : null,
-                          labels: RangeLabels("$selectedStart", "$selectedEnd"),
-                          values: selectedRange,
-                          onChanged: isApplying
-                              ? null
-                              : (value) {
-                                  setModalState(() {
-                                    selectedRange = RangeValues(
-                                      value.start.roundToDouble(),
-                                      value.end.roundToDouble(),
-                                    );
-                                  });
-                                },
-                        ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Range boundary: #$startIssueNumber → #$endIssueNumber (Items $selectedStart–$selectedEnd of $totalIssues)",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Builder(
-                builder: (context) {
-                  final targetCount = selectedMode == SeriesIssueSelectionMode.range
-                      ? (selectedEnd - selectedStart + 1).clamp(0, totalIssues)
-                      : totalIssues;
-
-                  final summaryText = selectedMode == SeriesIssueSelectionMode.range
-                      ? "$targetCount ${targetCount == 1 ? 'issue' : 'issues'} selected in range (#$startIssueNumber → #$endIssueNumber)"
-                      : "$targetCount ${targetCount == 1 ? 'issue' : 'issues'} matched by filter (${subsetLabel(selectedSubset).toLowerCase()})";
-
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
-                          .withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(8),
+              if (selectedMode == SeriesIssueSelectionMode.predefined)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Apply to",
+                      style: Theme.of(context).textTheme.labelLarge,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.fact_check_outlined,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            summaryText,
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: availableSubsets
+                          .map(
+                            (value) => ChoiceChip(
+                              label: Text(
+                                subsetLabel(value),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              selected: value == selectedSubset,
+                              shape: const StadiumBorder(),
+                              onSelected: isApplying
+                                  ? null
+                                  : (_) {
+                                      setModalState(() {
+                                        selectedSubset = value;
+                                      });
+                                    },
                             ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Issue range",
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        Text(
+                          "#$startIssueNumber – #$endIssueNumber",
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: startIssueNumber,
+                            decoration: const InputDecoration(
+                              labelText: "From issue #",
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            enabled: !isApplying,
+                            onChanged: (v) {
+                              if (v.isEmpty) return;
+                              final idx = findClosestIssueIndex(
+                                issues,
+                                v,
+                                startAfter: null,
+                              );
+                              if (idx != null && idx + 1 <= rangeEnd) {
+                                setModalState(() {
+                                  rangeStart = idx + 1;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: endIssueNumber,
+                            decoration: const InputDecoration(
+                              labelText: "To issue #",
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            enabled: !isApplying,
+                            onChanged: (v) {
+                              if (v.isEmpty) return;
+                              final idx = findClosestIssueIndex(
+                                issues,
+                                v,
+                                startAfter: rangeStart - 1,
+                              );
+                              if (idx != null && idx + 1 <= totalIssues) {
+                                setModalState(() {
+                                  rangeEnd = idx + 1;
+                                });
+                              }
+                            },
                           ),
                         ),
                       ],
                     ),
-                  );
-                },
+                  ],
+                ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      operationLabel(selectedOperation),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "$affectedCount ${affectedCount == 1 ? 'Issue' : 'Issues'}",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -761,7 +778,7 @@ Future<void> showSeriesIssueBulkActionsSheet({
                   ),
                   const Spacer(),
                   FilledButton(
-                    onPressed: isApplying
+                    onPressed: isApplying || affectedCount == 0
                         ? null
                         : () async {
                             setModalState(() {
