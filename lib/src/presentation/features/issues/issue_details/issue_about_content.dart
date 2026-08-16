@@ -325,7 +325,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: creator != null && creator.isNotEmpty
                   ? creator
                   : "Unknown Creator",
-              subtitle: roles.isNotEmpty ? roles.first : null,
+              subtitle: roles.isNotEmpty ? roles.join(", ") : null,
               width: 95,
             );
           },
