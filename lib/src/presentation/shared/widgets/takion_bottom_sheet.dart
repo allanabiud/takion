@@ -43,7 +43,7 @@ class TakionBottomSheet extends StatelessWidget {
               child: Container(
                 width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 10),
+                margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
@@ -68,7 +68,7 @@ class TakionBottomSheet extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Flexible(child: child),
         ],
       ),
