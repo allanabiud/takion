@@ -11,7 +11,14 @@ final seriesCoverImageProvider = StreamProvider.autoDispose
       final entityCache = ref.read(entityImageCacheProvider);
       final repository = ref.watch(metronRepositoryProvider);
 
-      unawaited(repository.getSeriesIssueList(seriesId, page: 1, limit: 1));
+      unawaited(
+        repository.getSeriesIssueList(
+          seriesId,
+          page: 1,
+          limit: 1,
+          ordering: "-cover_date",
+        ),
+      );
 
       return localCatalog.watchSeriesCoverUrl(seriesId).map((coverUrl) {
         if (coverUrl != null && coverUrl.trim().isNotEmpty) {

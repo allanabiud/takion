@@ -41,13 +41,16 @@ Future<List<SeriesIssueBulkCandidate>> allSeriesIssues(
   var page = 1;
   var orderIndex = 1;
   final issues = <SeriesIssueBulkCandidate>[];
+  final visitedPages = <int>{};
 
   while (true) {
+    if (!visitedPages.add(page)) break;
     final issuePage = await metronRepository.getSeriesIssueList(
       seriesId,
       page: page,
-      limit: 500,
     );
+    if (issuePage.results.isEmpty) break;
+
     for (final issue in issuePage.results) {
       final issueId = issue.id;
       if (issueId != null) {
@@ -64,7 +67,7 @@ Future<List<SeriesIssueBulkCandidate>> allSeriesIssues(
       }
     }
     final nextPage = issuePage.nextPage;
-    if (nextPage == null) break;
+    if (nextPage == null || nextPage <= page) break;
     page = nextPage;
   }
 
@@ -391,19 +394,29 @@ Future<void> showSeriesIssueBulkActionsSheet({
           if (!hasStarted) {
             hasStarted = true;
             WidgetsBinding.instance.addPostFrameCallback((_) async {
-              final fetched = await allSeriesIssues(ref, seriesId);
-              if (!context.mounted) return;
-              if (fetched.isEmpty) {
+              try {
+                final fetched = await allSeriesIssues(ref, seriesId);
+                if (!context.mounted) return;
+                if (fetched.isEmpty) {
+                  Navigator.of(context).pop();
+                  TakionAlerts.info(context, "No issues found");
+                  return;
+                }
+                setModalState(() {
+                  issues = fetched;
+                  totalIssues = fetched.length;
+                  selectedRange = RangeValues(1, totalIssues.toDouble());
+                  isLoading = false;
+                });
+              } catch (error) {
+                if (!context.mounted) return;
                 Navigator.of(context).pop();
-                TakionAlerts.info(context, "No issues found");
-                return;
+                TakionAlerts.safeError(
+                  context,
+                  error,
+                  userMessage: "Failed to load series issues",
+                );
               }
-              setModalState(() {
-                issues = fetched;
-                totalIssues = fetched.length;
-                selectedRange = RangeValues(1, totalIssues.toDouble());
-                isLoading = false;
-              });
             });
           }
           return const SizedBox(

@@ -79,34 +79,52 @@ final subscriptionSeriesCardProvider = StreamProvider
       final seriesName = seriesAsync.value?.name;
 
       return localCatalog.watchIssuesBySeries(seriesId).map((issues) {
-        String? mostRecentImage;
         String? nextIssueImage;
         DateTime? nextIssueDate;
+        String? mostRecentPublishedImage;
+        String? latestAnyImage;
+
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
 
         for (final issue in issues) {
           final imageUrl = issue.imageUrl?.trim();
           final hasImage = imageUrl != null && imageUrl.isNotEmpty;
-          if (mostRecentImage == null && hasImage) {
-            mostRecentImage = issue.imageUrl;
+          if (latestAnyImage == null && hasImage) {
+            latestAnyImage = imageUrl;
           }
 
           final releaseDate = issue.storeDate ?? issue.coverDate;
-          if (releaseDate == null) continue;
+          if (releaseDate == null) {
+            if (mostRecentPublishedImage == null && hasImage) {
+              mostRecentPublishedImage = imageUrl;
+            }
+            continue;
+          }
+
           final day = DateTime(
             releaseDate.year,
             releaseDate.month,
             releaseDate.day,
           );
-          if (day.isBefore(today)) continue;
-          if (nextIssueDate != null && !day.isBefore(nextIssueDate)) continue;
-          nextIssueDate = day;
-          nextIssueImage = hasImage ? issue.imageUrl : null;
+
+          if (day.isBefore(today)) {
+            if (mostRecentPublishedImage == null && hasImage) {
+              mostRecentPublishedImage = imageUrl;
+            }
+          } else {
+            if (nextIssueDate == null || day.isBefore(nextIssueDate)) {
+              nextIssueDate = day;
+              nextIssueImage = hasImage ? imageUrl : null;
+            }
+          }
         }
 
+        final effectiveImage =
+            nextIssueImage ?? mostRecentPublishedImage ?? latestAnyImage;
+
         return SubscriptionSeriesCardData(
-          mostRecentIssueImage: nextIssueImage ?? mostRecentImage,
+          mostRecentIssueImage: effectiveImage,
           nextIssueDate: nextIssueDate,
           seriesName: seriesName,
         );

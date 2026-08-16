@@ -9,7 +9,24 @@ final cachedSeriesIssueCountProvider = StreamProvider.autoDispose
     .family<int?, int>((ref, id) {
       ref.keepAlive();
       final localCatalog = ref.watch(localCatalogRepositoryProvider);
-      return localCatalog.watchSeries(id).map((row) => row?.issueCount);
+      final repository = ref.watch(metronRepositoryProvider);
+
+      return localCatalog.watchSeries(id).map((row) {
+        final count = row?.issueCount;
+        if (count == null || count <= 0) {
+          unawaited(
+            repository.getSeriesDetails(id).catchError(
+              (_) => SeriesDetails(
+                id: id,
+                name: "",
+                volume: null,
+                yearBegan: null,
+              ),
+            ),
+          );
+        }
+        return count;
+      });
     });
 
 /// Exposes the complete series response instead of a reduced database row.

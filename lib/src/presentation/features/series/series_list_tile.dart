@@ -93,7 +93,7 @@ class SeriesListTile extends ConsumerWidget {
     final totalIssuesCount =
         remoteIssueCount ??
         cachedIssueCountAsync.asData?.value ??
-        series.issueCount;
+        (categoryCount != null ? null : series.issueCount);
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);
     final cachedImage = cache.getCached("series", series.id);

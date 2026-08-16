@@ -48,6 +48,7 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         List<IssueList> issues,
         int idx,
         int totalCount,
+        int effectivePageSize,
       ) async {
         int? prevId = idx > 0 ? issues[idx - 1].id : null;
         int? nextId = idx < issues.length - 1 ? issues[idx + 1].id : null;
@@ -60,7 +61,7 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         }
 
         if (nextId == null) {
-          final totalPages = ((totalCount - 1) ~/ pageSize) + 1;
+          final totalPages = ((totalCount - 1) ~/ effectivePageSize) + 1;
           if (page < totalPages) {
             final next = await fetchPage(page + 1);
             if (next.results.isNotEmpty) {
@@ -81,30 +82,42 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
       }
 
       final page1Issues = page1.results;
+      final actualPageSize =
+          page1.realPageSize ??
+          (page1.results.isNotEmpty ? page1.results.length : pageSize);
+
       final idx1 = findIssue(page1Issues);
       if (idx1 != null) {
-        return buildResult(1, page1Issues, idx1, page1.count);
+        return buildResult(1, page1Issues, idx1, page1.count, actualPageSize);
       }
 
-      final actualPageSize =
-          page1.results.isNotEmpty ? page1.results.length : pageSize;
       final totalPages = ((page1.count - 1) ~/ actualPageSize) + 1;
       if (totalPages <= 1) return const IssueSeriesNavResult();
 
-      final issueDetails = ref
-          .watch(issueDetailsProvider(args.issueId))
-          .asData
-          ?.value;
+      IssueDetails? issueDetails =
+          ref.watch(issueDetailsProvider(args.issueId)).asData?.value;
+      if (issueDetails == null) {
+        try {
+          issueDetails = await ref.watch(
+            issueDetailsProvider(args.issueId).future,
+          );
+        } catch (_) {
+          // Proceed with best-effort position matching if issue details fetch fails
+        }
+      }
+
       final targetNumber = issueDetails?.number ?? "";
       final targetDate = issueDetails?.coverDate ?? issueDetails?.storeDate;
 
+      double? parseNumericNumber(String numStr) {
+        final match = RegExp(r"^\d+(?:\.\d+)?").firstMatch(numStr.trim());
+        if (match == null) return null;
+        return double.tryParse(match.group(0)!);
+      }
+
       int comparePosition(IssueList item) {
-        final itemNum = double.tryParse(
-          item.number.replaceAll(RegExp(r"[^0-9.]"), ""),
-        );
-        final targetNum = double.tryParse(
-          targetNumber.replaceAll(RegExp(r"[^0-9.]"), ""),
-        );
+        final itemNum = parseNumericNumber(item.number);
+        final targetNum = parseNumericNumber(targetNumber);
 
         if (itemNum != null && targetNum != null && itemNum != targetNum) {
           return itemNum.compareTo(targetNum);
@@ -119,9 +132,7 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         return item.number.compareTo(targetNumber);
       }
 
-      final targetNumeric = double.tryParse(
-        targetNumber.replaceAll(RegExp(r"[^0-9.]"), ""),
-      );
+      final targetNumeric = parseNumericNumber(targetNumber);
 
       if (targetNumeric != null && targetNumeric > 0) {
         final estPage = (targetNumeric / actualPageSize).ceil().clamp(
@@ -131,7 +142,13 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         final estPageData = await fetchPage(estPage);
         final estIdx = findIssue(estPageData.results);
         if (estIdx != null) {
-          return buildResult(estPage, estPageData.results, estIdx, page1.count);
+          return buildResult(
+            estPage,
+            estPageData.results,
+            estIdx,
+            page1.count,
+            actualPageSize,
+          );
         }
       }
 
@@ -149,7 +166,7 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
 
         final idx = findIssue(issues);
         if (idx != null) {
-          return buildResult(mid, issues, idx, page1.count);
+          return buildResult(mid, issues, idx, page1.count, actualPageSize);
         }
 
         final firstCmp = comparePosition(issues.first);
@@ -171,6 +188,7 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
                   scanData.results,
                   scanIdx,
                   page1.count,
+                  actualPageSize,
                 );
               }
             }
@@ -179,15 +197,18 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         }
       }
 
-      final lastPageData = await fetchPage(totalPages);
-      final lastIdx = findIssue(lastPageData.results);
-      if (lastIdx != null) {
-        return buildResult(
-          totalPages,
-          lastPageData.results,
-          lastIdx,
-          page1.count,
-        );
+      for (int scanPage = 2; scanPage <= totalPages; scanPage++) {
+        final scanData = await fetchPage(scanPage);
+        final scanIdx = findIssue(scanData.results);
+        if (scanIdx != null) {
+          return buildResult(
+            scanPage,
+            scanData.results,
+            scanIdx,
+            page1.count,
+            actualPageSize,
+          );
+        }
       }
 
       return const IssueSeriesNavResult();

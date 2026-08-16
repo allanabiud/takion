@@ -59,6 +59,7 @@ class SubscriptionCardsHydrater {
                 seriesId,
                 page: 1,
                 limit: _issueFetchLimit,
+                ordering: "-cover_date",
               );
               _retryAttempts.remove(seriesId);
             } catch (e) {
