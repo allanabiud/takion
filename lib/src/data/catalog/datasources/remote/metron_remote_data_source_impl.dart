@@ -639,9 +639,26 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
             cancelToken: cancelToken,
           );
 
-    return SeriesIssueListResponseDto.fromJson(
-      jsonToMap(response.data),
-    );
+    if (response.statusCode == 304) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+        message: "304 Not Modified",
+      );
+    }
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+        message:
+            "Unexpected response type ${data.runtimeType} for series issue list",
+      );
+    }
+
+    return SeriesIssueListResponseDto.fromJson(data);
   }
 
   @override

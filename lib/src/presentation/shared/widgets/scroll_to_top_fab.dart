@@ -48,11 +48,23 @@ class _ScrollToTopFabState extends State<ScrollToTopFab> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_show) return const SizedBox.shrink();
-    return FloatingActionButton(
-      heroTag: null,
-      onPressed: _scrollToTop,
-      child: const Icon(Icons.arrow_upward, size: 26),
+    return IgnorePointer(
+      ignoring: !_show,
+      child: AnimatedOpacity(
+        opacity: _show ? 1 : 0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: AnimatedScale(
+          scale: _show ? 1 : 0.5,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          child: FloatingActionButton(
+            heroTag: null,
+            onPressed: _scrollToTop,
+            child: const Icon(Icons.arrow_upward, size: 26),
+          ),
+        ),
+      ),
     );
   }
 }

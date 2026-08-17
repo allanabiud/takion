@@ -30,16 +30,11 @@ class SeriesIssueListArgs {
 
 @riverpod
 class SeriesIssueList extends _$SeriesIssueList {
-  bool _forceRefresh = false;
-
   @override
   Future<SeriesIssueListPage> build(SeriesIssueListArgs args) async {
     final link = ref.keepAlive();
     Timer? timer;
     ref.onDispose(() => timer?.cancel());
-
-    final forceRefresh = _forceRefresh;
-    _forceRefresh = false;
 
     final repository = ref.watch(metronRepositoryProvider);
     final cancelToken = CancelToken();
@@ -56,7 +51,6 @@ class SeriesIssueList extends _$SeriesIssueList {
       page: 1,
       limit: metronDefaultPageSize,
       cancelToken: cancelToken,
-      forceRefresh: forceRefresh,
     );
 
     final pageSize = page1.realPageSize ?? metronDefaultPageSize;
@@ -73,7 +67,6 @@ class SeriesIssueList extends _$SeriesIssueList {
           page: targetPage,
           limit: metronDefaultPageSize,
           cancelToken: cancelToken,
-          forceRefresh: forceRefresh,
         );
         if (resultPage.results.isEmpty && page1.count > 0) {
           AppLogger.warning(
@@ -92,7 +85,6 @@ class SeriesIssueList extends _$SeriesIssueList {
           page: args.page,
           limit: metronDefaultPageSize,
           cancelToken: cancelToken,
-          forceRefresh: forceRefresh,
         );
       }
     }
@@ -104,15 +96,42 @@ class SeriesIssueList extends _$SeriesIssueList {
       results: resultPage.results,
       currentPage: args.page,
       realPageSize: page1.realPageSize,
-      next: args.page < totalPages
-          ? "placeholder?page=${args.page + 1}"
-          : null,
+      next: args.page < totalPages ? "placeholder?page=${args.page + 1}" : null,
       previous: args.page > 1 ? "placeholder?page=${args.page - 1}" : null,
     );
   }
 
   Future<void> refresh() async {
-    _forceRefresh = true;
+    final repository = ref.read(metronRepositoryProvider);
+    final sortOption = ref.read(
+      sortPreferenceForContextProvider(
+        SortPreferenceContext.seriesDetailsIssues,
+      ),
+    );
+
+    final page1 = await repository.getSeriesIssueList(
+      args.seriesId,
+      page: 1,
+      limit: metronDefaultPageSize,
+      forceRefresh: true,
+    );
+
+    final pageSize = page1.realPageSize ?? metronDefaultPageSize;
+    final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
+
+    final backingPage = sortOption == ContentSortOption.dateNewest
+        ? totalPages - args.page + 1
+        : args.page;
+
+    if (backingPage != 1) {
+      await repository.getSeriesIssueList(
+        args.seriesId,
+        page: backingPage,
+        limit: metronDefaultPageSize,
+        forceRefresh: true,
+      );
+    }
+
     ref.invalidateSelf();
   }
 }

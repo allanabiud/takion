@@ -530,6 +530,20 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
         storeDateLte: storeDateLte,
       );
       if (cachedDtos != null && cachedDtos.isNotEmpty && cachedMeta != null) {
+        if (error is DioException && error.response?.statusCode == 304) {
+          await _localDataSource.cacheSeriesIssueListResults(
+            seriesId,
+            cachedDtos,
+            page: page,
+            limit: limit,
+            count: cachedMeta.count,
+            next: cachedMeta.next,
+            previous: cachedMeta.previous,
+            ordering: ordering,
+            storeDateGte: storeDateGte,
+            storeDateLte: storeDateLte,
+          );
+        }
         return SeriesIssueListPage(
           count: cachedMeta.count,
           next: cachedMeta.next,
