@@ -109,7 +109,9 @@ class TakionAlerts {
         cleaned.length > 120 ||
         cleaned.contains("file://") ||
         cleaned.contains("package:") ||
-        cleaned.contains("dart:")) {
+        cleaned.contains("dart:") ||
+        cleaned.contains("is not a subtype of type") ||
+        cleaned.contains("in type cast")) {
       cleaned = fallback;
     }
 

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2026-08-17
+
+### Added
+
+- Animated app bar title that slides continuously between Home, Releases and Library tabs.
+
+### Changed
+
+- Made series issue list pull-to-refresh robust so a failed refresh no longer clears the list.
+- Improved scroll-to-top FAB with smooth fade/scale in and out.
+- Increased favorite indicator contrast on covers.
+
+### Fixed
+
+- Fixed type cast crash when the Metron API returns a 304 Not Modified for series issue lists.
+- Added friendly fallback for unexpected type cast errors.
+
 ## [1.3.0] - 2026-08-16
 
 ### Added

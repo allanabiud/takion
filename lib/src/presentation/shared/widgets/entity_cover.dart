@@ -126,7 +126,7 @@ class EntityCover extends StatelessWidget {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.8,
+                        alpha: 0.95,
                       ),
                       borderRadius: BorderRadius.circular(4),
                     ),

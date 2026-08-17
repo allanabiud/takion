@@ -7,6 +7,7 @@ import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/presentation/features/search/providers/search_state_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/shared/widgets/animated_app_bar_title.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
@@ -167,8 +168,8 @@ class MainScreenState extends ConsumerState<MainScreen>
                   ),
                 ),
               ),
-              title: Text(
-                titles[tabsRouter.activeIndex],
+              title: AnimatedAppBarTitle(
+                title: titles[tabsRouter.activeIndex],
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
