@@ -108,73 +108,66 @@ final teamDetailsIssuesProvider = FutureProvider.autoDispose
       Timer? timer;
       ref.onDispose(() => timer?.cancel());
 
-      final page1 = await ref.watch(
-        teamIssueListProvider(
-          TeamIssueListArgs(teamId: teamId, page: 1),
-        ).future,
+      final repository = ref.watch(catalogRepositoryProvider);
+
+      final page1 = await repository.getTeamIssueList(
+        teamId,
+        page: 1,
       );
 
       final pageSize = page1.realPageSize ?? metronDefaultPageSize;
       final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
 
-      final results = <IssueList>[...page1.results];
-
-      Future<CharacterIssueListPage>? page2Future;
-      if (page1.nextPage != null && page1.nextPage! <= totalPages) {
-        page2Future = ref.watch(
-          teamIssueListProvider(
-            TeamIssueListArgs(teamId: teamId, page: page1.nextPage!),
-          ).future,
-        );
+      final resultsMap = <int, IssueList>{};
+      for (final issue in page1.results) {
+        if (issue.id != null) {
+          resultsMap[issue.id!] = issue;
+        }
       }
 
-      final rawLastPage = totalPages;
-      final knownMaxPage = page1.nextPage ?? 1;
+      final futures = <Future<CharacterIssueListPage>>[];
 
-      Future<CharacterIssueListPage>? lastPageFuture;
-      if (rawLastPage > knownMaxPage) {
-        lastPageFuture = ref.watch(
-          teamIssueListProvider(
-            TeamIssueListArgs(teamId: teamId, page: rawLastPage),
-          ).future,
-        );
-      }
-
-      final futures = <Future<List<IssueList>>>[];
-      if (page2Future != null) {
+      if (totalPages > 1) {
         futures.add(
-          page2Future.then((p) => p.results).catchError((e) {
-            AppLogger.debug(
-              "Failed to fetch team page 2, falling back to empty",
-              error: e,
-            );
-            return <IssueList>[];
+          repository
+              .getTeamIssueList(teamId, page: totalPages)
+              .catchError((e) {
+            AppLogger.debug("Failed to fetch team last page", error: e);
+            return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
           }),
         );
       }
-      if (lastPageFuture != null) {
+
+      if (totalPages > 2) {
         futures.add(
-          lastPageFuture.then((p) => p.results).catchError((e) {
+          repository
+              .getTeamIssueList(teamId, page: totalPages - 1)
+              .catchError((e) {
             AppLogger.debug(
-              "Failed to fetch team last page, falling back to empty",
+              "Failed to fetch team penultimate page",
               error: e,
             );
-            return <IssueList>[];
+            return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
           }),
         );
       }
 
       if (futures.isNotEmpty) {
-        final allResults = await Future.wait(futures);
-        for (final list in allResults) {
-          results.addAll(list);
+        final pages = await Future.wait(futures);
+        for (final p in pages) {
+          for (final issue in p.results) {
+            if (issue.id != null) {
+              resultsMap[issue.id!] = issue;
+            }
+          }
         }
       }
 
       timer = Timer(const Duration(minutes: 5), link.close);
+
       return CharacterIssueListPage(
         count: page1.count,
-        results: results,
+        results: resultsMap.values.toList(),
         currentPage: 1,
         realPageSize: page1.realPageSize,
       );

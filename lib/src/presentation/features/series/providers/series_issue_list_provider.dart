@@ -142,66 +142,58 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
       Timer? timer;
       ref.onDispose(() => timer?.cancel());
 
-      final page1 = await ref.watch(
-        seriesIssueListProvider(
-          SeriesIssueListArgs(seriesId: seriesId, page: 1),
-        ).future,
+      final repository = ref.watch(metronRepositoryProvider);
+
+      final page1 = await repository.getSeriesIssueList(
+        seriesId,
+        page: 1,
       );
 
       final pageSize = page1.realPageSize ?? metronDefaultPageSize;
       final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
 
-      final results = <IssueList>[...page1.results];
-
-      Future<SeriesIssueListPage>? page2Future;
-      if (page1.nextPage != null && page1.nextPage! <= totalPages) {
-        page2Future = ref.watch(
-          seriesIssueListProvider(
-            SeriesIssueListArgs(seriesId: seriesId, page: page1.nextPage!),
-          ).future,
-        );
+      final resultsMap = <int, IssueList>{};
+      for (final issue in page1.results) {
+        if (issue.id != null) {
+          resultsMap[issue.id!] = issue;
+        }
       }
 
-      final rawLastPage = totalPages;
-      final knownMaxPage = page1.nextPage ?? 1;
+      final futures = <Future<SeriesIssueListPage>>[];
 
-      Future<SeriesIssueListPage>? lastPageFuture;
-      if (rawLastPage > knownMaxPage) {
-        lastPageFuture = ref.watch(
-          seriesIssueListProvider(
-            SeriesIssueListArgs(seriesId: seriesId, page: rawLastPage),
-          ).future,
-        );
-      }
-
-      final futures = <Future<List<IssueList>>>[];
-      if (page2Future != null) {
+      if (totalPages > 1) {
         futures.add(
-          page2Future.then((p) => p.results).catchError((e) {
-            AppLogger.debug(
-              "Failed to fetch series page 2, falling back to empty",
-              error: e,
-            );
-            return <IssueList>[];
+          repository
+              .getSeriesIssueList(seriesId, page: totalPages)
+              .catchError((e) {
+            AppLogger.debug("Failed to fetch series last page", error: e);
+            return const SeriesIssueListPage(count: 0, results: [], currentPage: 1);
           }),
         );
       }
-      if (lastPageFuture != null) {
+
+      if (totalPages > 2) {
         futures.add(
-          lastPageFuture.then((p) => p.results).catchError((e) {
+          repository
+              .getSeriesIssueList(seriesId, page: totalPages - 1)
+              .catchError((e) {
             AppLogger.debug(
-              "Failed to fetch series last page, falling back to empty",
+              "Failed to fetch series penultimate page",
               error: e,
             );
-            return <IssueList>[];
+            return const SeriesIssueListPage(count: 0, results: [], currentPage: 1);
           }),
         );
       }
 
       if (futures.isNotEmpty) {
-        final allResults = await Future.wait(futures);
-        for (final list in allResults) {
-          results.addAll(list);
+        final pages = await Future.wait(futures);
+        for (final p in pages) {
+          for (final issue in p.results) {
+            if (issue.id != null) {
+              resultsMap[issue.id!] = issue;
+            }
+          }
         }
       }
 
@@ -209,7 +201,7 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
 
       return SeriesIssueListPage(
         count: page1.count,
-        results: results,
+        results: resultsMap.values.toList(),
         currentPage: 1,
         realPageSize: page1.realPageSize,
       );

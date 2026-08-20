@@ -108,71 +108,66 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
       Timer? timer;
       ref.onDispose(() => timer?.cancel());
 
-      final page1 = await ref.watch(
-        arcIssueListProvider(ArcIssueListArgs(arcId: arcId, page: 1)).future,
+      final repository = ref.watch(catalogRepositoryProvider);
+
+      final page1 = await repository.getArcIssueList(
+        arcId,
+        page: 1,
       );
 
       final pageSize = page1.realPageSize ?? metronDefaultPageSize;
       final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
 
-      final results = <IssueList>[...page1.results];
-
-      Future<ArcIssueListPage>? page2Future;
-      if (page1.nextPage != null && page1.nextPage! <= totalPages) {
-        page2Future = ref.watch(
-          arcIssueListProvider(
-            ArcIssueListArgs(arcId: arcId, page: page1.nextPage!),
-          ).future,
-        );
+      final resultsMap = <int, IssueList>{};
+      for (final issue in page1.results) {
+        if (issue.id != null) {
+          resultsMap[issue.id!] = issue;
+        }
       }
 
-      final rawLastPage = totalPages;
-      final knownMaxPage = page1.nextPage ?? 1;
+      final futures = <Future<ArcIssueListPage>>[];
 
-      Future<ArcIssueListPage>? lastPageFuture;
-      if (rawLastPage > knownMaxPage) {
-        lastPageFuture = ref.watch(
-          arcIssueListProvider(
-            ArcIssueListArgs(arcId: arcId, page: rawLastPage),
-          ).future,
-        );
-      }
-
-      final futures = <Future<List<IssueList>>>[];
-      if (page2Future != null) {
+      if (totalPages > 1) {
         futures.add(
-          page2Future.then((p) => p.results).catchError((e) {
-            AppLogger.debug(
-              "Failed to fetch arc page 2, falling back to empty",
-              error: e,
-            );
-            return <IssueList>[];
+          repository
+              .getArcIssueList(arcId, page: totalPages)
+              .catchError((e) {
+            AppLogger.debug("Failed to fetch arc last page", error: e);
+            return const ArcIssueListPage(count: 0, results: [], currentPage: 1);
           }),
         );
       }
-      if (lastPageFuture != null) {
+
+      if (totalPages > 2) {
         futures.add(
-          lastPageFuture.then((p) => p.results).catchError((e) {
+          repository
+              .getArcIssueList(arcId, page: totalPages - 1)
+              .catchError((e) {
             AppLogger.debug(
-              "Failed to fetch arc last page, falling back to empty",
+              "Failed to fetch arc penultimate page",
               error: e,
             );
-            return <IssueList>[];
+            return const ArcIssueListPage(count: 0, results: [], currentPage: 1);
           }),
         );
       }
 
       if (futures.isNotEmpty) {
-        final allResults = await Future.wait(futures);
-        for (final list in allResults) {
-          results.addAll(list);
+        final pages = await Future.wait(futures);
+        for (final p in pages) {
+          for (final issue in p.results) {
+            if (issue.id != null) {
+              resultsMap[issue.id!] = issue;
+            }
+          }
         }
       }
 
       timer = Timer(const Duration(minutes: 5), link.close);
+
       return ArcIssueListPage(
         count: page1.count,
-        results: results,
+        results: resultsMap.values.toList(),
         currentPage: 1,
         realPageSize: page1.realPageSize,
       );

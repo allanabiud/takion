@@ -92,49 +92,53 @@ class AppearancePage extends ConsumerWidget {
               color: theme.colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: accentSchemes.map((scheme) {
-                final schemeData = FlexColor.schemes[scheme];
-                final primary = schemeData?.light.primary ?? Colors.blue;
-                final selected = currentScheme == scheme;
-                final luminance = primary.computeLuminance();
-                final tickColor = luminance > 0.5
-                    ? Colors.black87
-                    : Colors.white;
-                return GestureDetector(
-                  onTap: () =>
-                      ref.read(accentSchemeProvider.notifier).setScheme(scheme),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      borderRadius: BorderRadius.circular(12),
-                      border: selected
-                          ? Border.all(
-                              color: theme.colorScheme.onSurface,
-                              width: 3,
-                            )
-                          : null,
-                      boxShadow: selected
-                          ? [
-                              BoxShadow(
-                                color: primary.withValues(alpha: 0.39),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ]
+            child: SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 12,
+                children: accentSchemes.map((scheme) {
+                  final schemeData = FlexColor.schemes[scheme];
+                  final primary = schemeData?.light.primary ?? Colors.blue;
+                  final selected = currentScheme == scheme;
+                  final luminance = primary.computeLuminance();
+                  final tickColor = luminance > 0.5
+                      ? Colors.black87
+                      : Colors.white;
+                  return GestureDetector(
+                    onTap: () => ref
+                        .read(accentSchemeProvider.notifier)
+                        .setScheme(scheme),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.circular(12),
+                        border: selected
+                            ? Border.all(
+                                color: theme.colorScheme.onSurface,
+                                width: 3,
+                              )
+                            : null,
+                        boxShadow: selected
+                            ? [
+                                BoxShadow(
+                                  color: primary.withValues(alpha: 0.39),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: selected
+                          ? Icon(Icons.check, color: tickColor, size: 22)
                           : null,
                     ),
-                    child: selected
-                        ? Icon(Icons.check, color: tickColor, size: 22)
-                        : null,
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
           ),
           const SizedBox(height: 16),
