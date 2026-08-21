@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/presentation/shared/widgets/section_header.dart";
 
 class DatabaseIdsSection extends StatelessWidget {
@@ -49,7 +50,7 @@ class DatabaseIdsSection extends StatelessWidget {
     if (gcdId != null) addEntry("GCD", "$gcdId");
 
     final formattedDate = modifiedAt != null
-        ? '${modifiedAt!.day.toString().padLeft(2, '0')}/${modifiedAt!.month.toString().padLeft(2, '0')}/${modifiedAt!.year}'
+        ? DateFormatter.isoDateTime(modifiedAt!)
         : null;
 
     return Column(
@@ -60,10 +61,8 @@ class DatabaseIdsSection extends StatelessWidget {
         Wrap(spacing: 6, runSpacing: 6, children: entries),
         if (formattedDate != null) ...[
           const SizedBox(height: 16),
-          const SectionHeader(title: "LAST MODIFIED"),
-          const SizedBox(height: 12),
           Text(
-            formattedDate,
+            "Last modified: $formattedDate",
             style: theme.textTheme.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
               color: theme.colorScheme.onSurfaceVariant,

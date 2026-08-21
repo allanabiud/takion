@@ -150,8 +150,49 @@ List<IssueList> sortIssues(
     issues,
     sortOption: sortOption,
     nameOf: (i) => i.name,
-    dateOf: (i) => i.storeDate ?? i.coverDate ?? i.modified,
+    dateOf: (i) =>
+        i.storeDate ??
+        i.coverDate ??
+        (i.series?.yearBegan != null && i.series!.yearBegan! > 0
+            ? DateTime(i.series!.yearBegan!)
+            : null),
   );
+}
+
+List<IssueList> selectRecentIssues(
+  List<IssueList> issues, {
+  int targetCount = 5,
+}) {
+  final sortedNewest = sortIssues(issues, ContentSortOption.dateNewest);
+  return sortedNewest.take(targetCount).toList();
+}
+
+List<IssueList> selectRecentDistinctSeriesIssues(
+  List<IssueList> issues, {
+  int targetCount = 5,
+}) {
+  final sortedNewest = sortIssues(issues, ContentSortOption.dateNewest);
+  final seenSeries = <int>{};
+  final selected = <IssueList>[];
+
+  for (final issue in sortedNewest) {
+    final sId = issue.series?.id;
+    if (sId != null && sId > 0) {
+      if (seenSeries.add(sId)) {
+        selected.add(issue);
+        if (selected.length >= targetCount) return selected;
+      }
+    }
+  }
+
+  for (final issue in sortedNewest) {
+    if (!selected.contains(issue)) {
+      selected.add(issue);
+      if (selected.length >= targetCount) break;
+    }
+  }
+
+  return selected;
 }
 
 List<SeriesList> sortSeries(
@@ -208,10 +249,10 @@ String _collectionItemName(CollectionItem item) {
 }
 
 DateTime? _collectionItemDate(CollectionItem item) {
-  return item.modified ??
-      item.purchaseDate ??
+  return item.purchaseDate ??
       item.issue?.storeDate ??
       item.issue?.coverDate ??
+      item.modified ??
       item.issue?.modified;
 }
 

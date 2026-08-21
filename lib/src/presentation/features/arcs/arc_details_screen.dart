@@ -230,7 +230,7 @@ class _ArcDetailsScreenState
     final description = details.desc?.trim();
     final hasDescription = description != null && description.isNotEmpty;
     if (hasDescription) {
-      yield const SliverToBoxAdapter(child: SizedBox(height: 16));
+      yield const SliverToBoxAdapter(child: SizedBox(height: 20));
       yield SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -238,8 +238,9 @@ class _ArcDetailsScreenState
         ),
       );
     }
+    yield const SliverToBoxAdapter(child: SizedBox(height: 20));
     yield SliverToBoxAdapter(child: _ArcIssuesSection(arcId: details.id));
-    yield const SliverToBoxAdapter(child: SizedBox(height: 16));
+    yield const SliverToBoxAdapter(child: SizedBox(height: 20));
     yield SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -271,7 +272,7 @@ class _ArcIssuesSection extends ConsumerWidget {
             const SectionHeader(title: "Issues"),
             const SizedBox(height: 12),
             SizedBox(
-              height: 280,
+              height: 256,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 4,
@@ -310,7 +311,7 @@ class _ArcIssuesSection extends ConsumerWidget {
                 title: "",
                 onViewAll: null,
                 itemCount: page.results.length,
-                height: 250,
+                height: 256,
                 emptyText: "No issues available.",
                 itemBuilder: (context, index) {
                   final issue = page.results[index];

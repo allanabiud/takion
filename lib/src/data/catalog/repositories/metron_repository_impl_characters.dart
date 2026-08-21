@@ -457,6 +457,14 @@ mixin _CharactersRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertCharacterDetails(CharacterDetailsDto dto) async {
+    if (dto.name.trim().isNotEmpty) {
+      _metadataCache?.indexCharacter(dto.id, dto.name.trim());
+    }
+    for (final c in dto.creators) {
+      if (c.id > 0 && c.name.trim().isNotEmpty) {
+        _metadataCache?.indexCreator(c.id, c.name.trim());
+      }
+    }
     await _metronEntityDao.attachedDatabase.transaction(() async {
       await _metronEntityDao.upsertCharacter(
         MetronCharactersCompanion(

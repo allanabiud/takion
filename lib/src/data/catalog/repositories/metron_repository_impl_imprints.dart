@@ -317,6 +317,12 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertImprintDetails(ImprintDetailsDto dto) async {
+    if (dto.name.trim().isNotEmpty) {
+      _metadataCache?.indexImprint(dto.id, dto.name.trim());
+    }
+    if (dto.publisher != null && dto.publisher!.id > 0 && dto.publisher!.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(dto.publisher!.id, dto.publisher!.name.trim());
+    }
     if (dto.publisher != null) {
       await _metronEntityDao.upsertPublisher(
         MetronPublishersCompanion(

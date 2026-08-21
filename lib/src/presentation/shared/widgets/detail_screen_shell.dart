@@ -223,6 +223,8 @@ class DetailScreenShell<T> extends ConsumerWidget {
   Widget _buildData(BuildContext context, WidgetRef ref, T data) {
     final theme = Theme.of(context);
     final scaffoldBg = theme.colorScheme.surface;
+    final isRevalidating =
+        asyncValue.isRefreshing || (asyncValue.isLoading && asyncValue.hasValue);
     final imageUrl = toImageUrl(data);
     final fallbackImageUrl = toFallbackImageUrl?.call(data);
     final heroTag = toHeroTag(data);
@@ -321,6 +323,49 @@ class DetailScreenShell<T> extends ConsumerWidget {
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     actions: [
+                      if (isRevalidating)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHigh
+                                    .withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Updating...",
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       if (appBarTrailingAction != null)
                         appBarTrailingAction!(data)
                       else

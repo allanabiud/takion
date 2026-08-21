@@ -50,7 +50,7 @@ final class IssueSearchProvider
   }
 }
 
-String _$issueSearchHash() => r'77d73b4887a16b74b05c8c8ec3b783650f60ab84';
+String _$issueSearchHash() => r'8f2266db1776632243a27b1f24f3b707e7a21ce0';
 
 final class IssueSearchFamily extends $Family
     with

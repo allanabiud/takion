@@ -50,7 +50,7 @@ final class ImprintSearchProvider
   }
 }
 
-String _$imprintSearchHash() => r'900cf6c5887777b7cbe32e377298acd20af1ab9e';
+String _$imprintSearchHash() => r'086c79f15f9ee0e4a1a425c3ce70c73cd81d0676';
 
 final class ImprintSearchFamily extends $Family
     with

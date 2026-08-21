@@ -62,6 +62,13 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
     super.dispose();
   }
 
+  void _changePage(VoidCallback action) {
+    action();
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasPagination = widget.totalPages > 1;
@@ -90,12 +97,19 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
       body: Stack(
         children: [
           body,
-          if (showInlineLoading)
+          if (showInlineLoading) ...[
             Positioned.fill(
               child: IgnorePointer(
                 child: ColoredBox(color: Colors.black.withValues(alpha: 0.02)),
               ),
             ),
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(minHeight: 3),
+            ),
+          ],
         ],
       ),
       floatingActionButton: ScrollToTopFab(controller: _scrollController),
@@ -105,7 +119,9 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
-                    onPressed: widget.isLoading || !widget.hasPrevious ? null : widget.onPrevious,
+                    onPressed: widget.isLoading || !widget.hasPrevious
+                        ? null
+                        : () => _changePage(widget.onPrevious),
                   ),
                   Expanded(
                     child: Center(
@@ -119,7 +135,9 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: widget.isLoading || !widget.hasNext ? null : widget.onNext,
+                    onPressed: widget.isLoading || !widget.hasNext
+                        ? null
+                        : () => _changePage(widget.onNext),
                   ),
                 ],
               ),
@@ -154,21 +172,7 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
           controller: _scrollController,
           slivers: [
             PinnedListHeader(
-              isLoading: showInlineLoading,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  widget.header!,
-                  if (showInlineLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: LinearProgressIndicator(minHeight: 2),
-                    ),
-                ],
-              ),
+              child: widget.header!,
             ),
             grid,
             SliverToBoxAdapter(child: SizedBox(height: widget.bottomSpacing)),
@@ -191,18 +195,7 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
         controller: _scrollController,
         slivers: [
           PinnedListHeader(
-            isLoading: showInlineLoading,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                widget.header!,
-                if (showInlineLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: LinearProgressIndicator(minHeight: 2),
-                  ),
-              ],
-            ),
+            child: widget.header!,
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate(

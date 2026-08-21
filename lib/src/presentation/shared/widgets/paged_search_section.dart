@@ -164,9 +164,27 @@ class _PagedSearchSectionState<T>
       ],
     );
 
+    void changePage(VoidCallback? action) {
+      action?.call();
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: body,
+      body: Stack(
+        children: [
+          body,
+          if (widget.isLoading && widget.items.isNotEmpty)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+        ],
+      ),
       floatingActionButton: ScrollToTopFab(controller: _scrollController),
       bottomNavigationBar: hasPagination
           ? BottomAppBar(
@@ -176,7 +194,7 @@ class _PagedSearchSectionState<T>
                     icon: const Icon(Icons.chevron_left),
                     onPressed: widget.isLoading || !widget.hasPrevious
                         ? null
-                        : widget.onPreviousPage,
+                        : () => changePage(widget.onPreviousPage),
                   ),
                   Expanded(
                     child: Center(
@@ -192,7 +210,7 @@ class _PagedSearchSectionState<T>
                     icon: const Icon(Icons.chevron_right),
                     onPressed: widget.isLoading || !widget.hasNext
                         ? null
-                        : widget.onNextPage,
+                        : () => changePage(widget.onNextPage),
                   ),
                 ],
               ),

@@ -17,6 +17,7 @@ import "package:takion/src/data/common/drift/database.dart"
     hide MetronReadingListItem, SeriesNameIndex;
 import "package:takion/src/data/common/drift/daos/junction_dao.dart";
 import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
+import "package:takion/src/core/cache/metron_metadata_cache.dart";
 import "package:takion/src/data/catalog/dto/dto.dart";
 import "package:takion/src/data/reading_list/dto/dto.dart";
 import "package:takion/src/domain/entities.dart";
@@ -39,6 +40,7 @@ mixin _RepositoryState {
   MetronLocalDataSource get _localDataSource;
   MetronEntityDao get _metronEntityDao;
   JunctionDao get _junctionDao;
+  MetronMetadataCache? get _metadataCache;
   DateTime Function() get _now;
   Map<String, Future<List<IssueList>>> get _weeklyInFlight;
   Map<String, Future<IssueDetails>> get _issueDetailsInFlight;
@@ -140,6 +142,9 @@ mixin _RepositoryState {
             isFullyHydrated: const Value(false),
           ),
         );
+        if (series.name.trim().isNotEmpty) {
+          _metadataCache?.indexSeries(series.id!, series.name.trim());
+        }
       }
     }
 
@@ -216,6 +221,9 @@ mixin _RepositoryState {
           isFullyHydrated: const Value(false),
         ),
       );
+      if (dto.series.trim().isNotEmpty) {
+        _metadataCache?.indexSeries(dto.id, dto.series.trim());
+      }
     }
     if (seriesStubs.isNotEmpty) {
       unawaited(_metronEntityDao.upsertSeriesStubsBatch(seriesStubs));
@@ -246,6 +254,8 @@ class MetronRepositoryImpl
   final MetronEntityDao _metronEntityDao;
   @override
   final JunctionDao _junctionDao;
+  @override
+  final MetronMetadataCache? _metadataCache;
   @override
   final DateTime Function() _now;
   @override
@@ -342,8 +352,10 @@ class MetronRepositoryImpl
     this._metronEntityDao,
     this._junctionDao,
     this._seriesNameIndex, {
+    MetronMetadataCache? metadataCache,
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now;
+  })  : _metadataCache = metadataCache,
+        _now = now ?? DateTime.now;
 
   @override
   Future<T> _coalesce<T>(

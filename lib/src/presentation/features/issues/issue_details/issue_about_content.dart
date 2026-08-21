@@ -348,7 +348,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Characters",
           itemCount: characters.length,
-          height: 130,
+          height: 136,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final character = characters[index];
@@ -377,7 +377,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Teams",
           itemCount: teams.length,
-          height: 155,
+          height: 152,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final team = teams[index];
@@ -408,7 +408,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Arcs",
           itemCount: arcs.length,
-          height: 155,
+          height: 152,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final arc = arcs[index];
@@ -439,7 +439,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Universes",
           itemCount: universes.length,
-          height: 140,
+          height: 136,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final universe = universes[index];
@@ -505,118 +505,67 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         ? "${currencySymbol(currency)}$priceValue"
         : null;
 
-    final allItems = <InfoGridItem>[
-      // Format / Pages / Price / Volume / Rating
-      if (seriesType != null) InfoGridItem(label: "Format", value: seriesType),
-      if (pages != null) InfoGridItem(label: "Pages", value: "$pages"),
-      if (price != null) InfoGridItem(label: "Price", value: price),
-      if (widget.issue.series?.volume != null)
-        InfoGridItem(label: "Volume", value: "${widget.issue.series!.volume}"),
+    final allItems = <DetailPropertyItem>[
+      // Format / Rating / Price / Pages / Volume
+      if (seriesType != null)
+        DetailPropertyItem(
+          label: "Format",
+          badge: FormatBadge(format: seriesType),
+        ),
       if (rating != null && rating.isNotEmpty)
-        InfoGridItem(label: "Rating", value: rating),
+        DetailPropertyItem(
+          label: "Rating",
+          badge: ContentRatingBadge(rating: rating),
+        ),
+      if (price != null) DetailPropertyItem(label: "Cover Price", value: price),
+      if (pages != null) DetailPropertyItem(label: "Page Count", value: "$pages pages"),
+      if (widget.issue.series?.volume != null)
+        DetailPropertyItem(
+          label: "Volume",
+          value: "Vol. ${widget.issue.series!.volume}",
+        ),
       if (widget.issue.altNumber != null &&
           widget.issue.altNumber!.trim().isNotEmpty)
-        InfoGridItem(label: "Alt Number", value: widget.issue.altNumber!),
+        DetailPropertyItem(
+          label: "Alt Issue Number",
+          value: widget.issue.altNumber!,
+        ),
       // Dates
-      if (widget.issue.focDate != null)
-        InfoGridItem(
-          label: "FOC Date",
-          value: formatDate(widget.issue.focDate)!,
+      if (widget.issue.storeDate != null)
+        DetailPropertyItem(
+          label: "In-Store Date",
+          value: formatDate(widget.issue.storeDate)!,
         ),
       if (widget.issue.coverDate != null)
-        InfoGridItem(
+        DetailPropertyItem(
           label: "Cover Date",
           value: formatDate(widget.issue.coverDate)!,
         ),
-      if (widget.issue.storeDate != null)
-        InfoGridItem(
-          label: "Store Date",
-          value: formatDate(widget.issue.storeDate)!,
+      if (widget.issue.focDate != null)
+        DetailPropertyItem(
+          label: "FOC Date",
+          value: formatDate(widget.issue.focDate)!,
         ),
       // Product codes
       if (distributorSku != null && distributorSku.isNotEmpty)
-        InfoGridItem(label: "Distributor SKU", value: distributorSku),
-      if (upcIsbn != null) InfoGridItem(label: "UPC / ISBN", value: upcIsbn),
+        DetailPropertyItem(
+          label: "Distributor SKU",
+          value: distributorSku,
+          copyableValue: distributorSku,
+        ),
+      if (upcIsbn != null)
+        DetailPropertyItem(
+          label: "UPC / ISBN",
+          value: upcIsbn,
+          copyableValue: upcIsbn,
+        ),
     ];
 
     if (allItems.isEmpty) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
-
-    Widget gridCell(InfoGridItem item) {
-      final label = Text(
-        item.label.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
-        ),
-      );
-      final value = Text(
-        item.value,
-        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      );
-      if (item.icon != null) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              item.icon,
-              size: 20,
-              color: theme.colorScheme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [label, const SizedBox(height: 2), value],
-              ),
-            ),
-          ],
-        );
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [label, const SizedBox(height: 2), value],
-      );
-    }
-
-    Widget buildItems(List<InfoGridItem> items) {
-      final rows = <Widget>[];
-      var i = 0;
-      while (i < items.length) {
-        final item = items[i];
-        if (item.spanFull) {
-          rows.add(gridCell(item));
-          i++;
-        } else {
-          final row = <Widget>[Expanded(child: gridCell(item))];
-          if (i + 1 < items.length && !items[i + 1].spanFull) {
-            row.add(const SizedBox(width: 8));
-            row.add(Expanded(child: gridCell(items[i + 1])));
-            i += 2;
-          } else {
-            row.add(const Spacer(flex: 2));
-            i++;
-          }
-          rows.add(Row(children: row));
-        }
-        if (i < items.length) {
-          rows.add(const SizedBox(height: 10));
-        }
-      }
-      return Column(children: rows);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: "DETAILS"),
-        const SizedBox(height: 12),
-        buildItems(allItems),
-      ],
+    return DetailsPropertyCard(
+      title: "DETAILS",
+      items: allItems,
     );
   }
 
@@ -708,66 +657,55 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasCreators) ...[
           _buildSectionCard(context, _buildCreatorsSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasCharacters) ...[
           _buildSectionCard(context, _buildCharactersSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasTeams) ...[
           _buildSectionCard(context, _buildTeamsSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasUniverses) ...[
           _buildSectionCard(context, _buildUniversesSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasArcs) ...[
           _buildSectionCard(context, _buildArcsSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasStories) ...[
           _buildSectionCard(context, _buildStoriesSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasAdditionalInfo) ...[
           _buildAdditionalInformationSection(context),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasReprints) ...[
           _buildSectionCard(context, _buildReprintsSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasImprint) ...[
           _buildSectionCard(context, _buildImprintSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         if (hasGenres) ...[
           _buildSectionCard(context, _buildGenresSection(context)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
         DatabaseIdsSection(
           metronId: widget.issue.id,
           comicVineId: widget.issue.cvId,
           gcdId: widget.issue.gcdId,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          "Last modified: ${_formatModified(widget.issue.modified)}",
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+          modifiedAt: widget.issue.modified,
         ),
       ],
     );
-  }
-
-  String _formatModified(DateTime? dateTime) {
-    if (dateTime == null) return "Unknown";
-    return DateFormatter.isoDateTime(dateTime);
   }
 }

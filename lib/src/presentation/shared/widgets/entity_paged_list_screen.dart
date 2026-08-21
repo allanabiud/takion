@@ -116,8 +116,24 @@ class _EntityPagedListScreenState<T, TItem>
     return lastPage == null ? false : widget.hasNextOf(lastPage);
   }
 
+  void _changePage(int newPage) {
+    setState(() => _page = newPage);
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(
+      sortPreferenceForContextProvider(widget.sortContext),
+      (prev, next) {
+        if (prev != null && prev != next) {
+          _changePage(1);
+        }
+      },
+    );
+
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(widget.sortContext),
     );
@@ -165,6 +181,12 @@ class _EntityPagedListScreenState<T, TItem>
           ],
         ),
         actions: widget.appBarActions,
+        bottom: isLoading
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(minHeight: 2),
+              )
+            : null,
       ),
       floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: widget.enableRefresh
@@ -187,7 +209,7 @@ class _EntityPagedListScreenState<T, TItem>
                     icon: const Icon(Icons.chevron_left),
                     onPressed: isLoading || !_pageHasPrevious
                         ? null
-                        : () => setState(() => _page--),
+                        : () => _changePage(_page - 1),
                   ),
                   Expanded(
                     child: Center(
@@ -203,7 +225,7 @@ class _EntityPagedListScreenState<T, TItem>
                     icon: const Icon(Icons.chevron_right),
                     onPressed: isLoading || !_pageHasNext
                         ? null
-                        : () => setState(() => _page++),
+                        : () => _changePage(_page + 1),
                   ),
                 ],
               ),
@@ -226,31 +248,19 @@ class _EntityPagedListScreenState<T, TItem>
         SliverOverlapAbsorber(
           handle: _overlapHandle,
           sliver: PinnedListHeader(
-            isLoading: isLoading,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ListHeader(
-                  count: count,
-                  unit: widget.unit,
-                  pluralUnit: widget.pluralUnit,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  enabled: !isLoading,
-                  sortLabel: widget.sortLabel(sortOption),
-                  onSortTap: () => showSortBottomSheet(
-                    context,
-                    ref,
-                    widget.sortContext,
-                    widget.sortLabel,
-                  ),
-                ),
-                if (isLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: LinearProgressIndicator(minHeight: 2),
-                  ),
-              ],
+            child: ListHeader(
+              count: count,
+              unit: widget.unit,
+              pluralUnit: widget.pluralUnit,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              enabled: !isLoading,
+              sortLabel: widget.sortLabel(sortOption),
+              onSortTap: () => showSortBottomSheet(
+                context,
+                ref,
+                widget.sortContext,
+                widget.sortLabel,
+              ),
             ),
           ),
         ),

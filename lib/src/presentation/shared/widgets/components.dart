@@ -8,6 +8,7 @@ export "compact_list_section.dart";
 export "compact_list_tile.dart";
 export "detail_screen_shell.dart";
 export "detail_screen_skeleton.dart";
+export "details_property_card.dart";
 export "entity_card.dart";
 export "entity_cover.dart";
 export "entity_detail_actions.dart";

@@ -89,11 +89,13 @@ class SeriesIssueList extends _$SeriesIssueList {
       }
     }
 
+    final sortedResults = sortIssues(resultPage.results, sortOption);
+
     timer = Timer(const Duration(minutes: 5), link.close);
 
     return SeriesIssueListPage(
       count: page1.count,
-      results: resultPage.results,
+      results: sortedResults,
       currentPage: args.page,
       realPageSize: page1.realPageSize,
       next: args.page < totalPages ? "placeholder?page=${args.page + 1}" : null,
@@ -159,40 +161,40 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
         }
       }
 
-      final futures = <Future<SeriesIssueListPage>>[];
-
       if (totalPages > 1) {
-        futures.add(
-          repository
-              .getSeriesIssueList(seriesId, page: totalPages)
-              .catchError((e) {
-            AppLogger.debug("Failed to fetch series last page", error: e);
-            return const SeriesIssueListPage(count: 0, results: [], currentPage: 1);
-          }),
-        );
-      }
-
-      if (totalPages > 2) {
-        futures.add(
-          repository
-              .getSeriesIssueList(seriesId, page: totalPages - 1)
-              .catchError((e) {
-            AppLogger.debug(
-              "Failed to fetch series penultimate page",
-              error: e,
+        try {
+          var lastPage = await repository.getSeriesIssueList(
+            seriesId,
+            page: totalPages,
+          );
+          if (lastPage.results.isEmpty && totalPages > 1) {
+            lastPage = await repository.getSeriesIssueList(
+              seriesId,
+              page: totalPages - 1,
             );
-            return const SeriesIssueListPage(count: 0, results: [], currentPage: 1);
-          }),
-        );
-      }
-
-      if (futures.isNotEmpty) {
-        final pages = await Future.wait(futures);
-        for (final p in pages) {
-          for (final issue in p.results) {
+          }
+          for (final issue in lastPage.results) {
             if (issue.id != null) {
               resultsMap[issue.id!] = issue;
             }
+          }
+        } catch (e) {
+          AppLogger.debug("Failed to fetch series last page", error: e);
+        }
+
+        if (totalPages > 2) {
+          try {
+            final prevPage = await repository.getSeriesIssueList(
+              seriesId,
+              page: totalPages - 1,
+            );
+            for (final issue in prevPage.results) {
+              if (issue.id != null) {
+                resultsMap[issue.id!] = issue;
+              }
+            }
+          } catch (e) {
+            AppLogger.debug("Failed to fetch series penultimate page", error: e);
           }
         }
       }

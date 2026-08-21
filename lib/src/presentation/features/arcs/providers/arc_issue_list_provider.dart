@@ -57,20 +57,30 @@ final arcIssueListProvider = FutureProvider.autoDispose
 
       ArcIssueListPage resultPage;
       if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
-        final targetPage = totalPages - args.page + 1;
+        var targetPage = totalPages - args.page + 1;
+        targetPage = targetPage.clamp(1, totalPages);
         if (targetPage == 1) {
           resultPage = page1;
         } else {
-          resultPage = await repository.getArcIssueList(
-            args.arcId,
-            page: targetPage,
-            limit: args.limit,
-            cancelToken: cancelToken,
-          );
-          if (resultPage.results.isEmpty && page1.count > 0) {
+          try {
+            resultPage = await repository.getArcIssueList(
+              args.arcId,
+              page: targetPage,
+              limit: args.limit,
+              cancelToken: cancelToken,
+            );
+            if (resultPage.results.isEmpty && page1.count > 0 && targetPage > 1) {
+              resultPage = await repository.getArcIssueList(
+                args.arcId,
+                page: targetPage - 1,
+                limit: args.limit,
+                cancelToken: cancelToken,
+              );
+            }
+          } catch (e) {
             AppLogger.warning(
-              "ArcIssueList: page $targetPage returned empty for arc "
-              "${args.arcId} (count ${page1.count}). Falling back to page 1.",
+              "ArcIssueList: error fetching target page $targetPage, falling back to page 1",
+              error: e,
             );
             resultPage = page1;
           }
@@ -88,11 +98,13 @@ final arcIssueListProvider = FutureProvider.autoDispose
         }
       }
 
+      final sortedResults = sortIssues(resultPage.results, sortOption);
+
       timer = Timer(const Duration(minutes: 5), link.close);
 
       return ArcIssueListPage(
         count: page1.count,
-        results: resultPage.results,
+        results: sortedResults,
         currentPage: args.page,
         realPageSize: page1.realPageSize,
         next: args.page < totalPages
@@ -125,40 +137,40 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
         }
       }
 
-      final futures = <Future<ArcIssueListPage>>[];
-
       if (totalPages > 1) {
-        futures.add(
-          repository
-              .getArcIssueList(arcId, page: totalPages)
-              .catchError((e) {
-            AppLogger.debug("Failed to fetch arc last page", error: e);
-            return const ArcIssueListPage(count: 0, results: [], currentPage: 1);
-          }),
-        );
-      }
-
-      if (totalPages > 2) {
-        futures.add(
-          repository
-              .getArcIssueList(arcId, page: totalPages - 1)
-              .catchError((e) {
-            AppLogger.debug(
-              "Failed to fetch arc penultimate page",
-              error: e,
+        try {
+          var lastPage = await repository.getArcIssueList(
+            arcId,
+            page: totalPages,
+          );
+          if (lastPage.results.isEmpty && totalPages > 1) {
+            lastPage = await repository.getArcIssueList(
+              arcId,
+              page: totalPages - 1,
             );
-            return const ArcIssueListPage(count: 0, results: [], currentPage: 1);
-          }),
-        );
-      }
-
-      if (futures.isNotEmpty) {
-        final pages = await Future.wait(futures);
-        for (final p in pages) {
-          for (final issue in p.results) {
+          }
+          for (final issue in lastPage.results) {
             if (issue.id != null) {
               resultsMap[issue.id!] = issue;
             }
+          }
+        } catch (e) {
+          AppLogger.debug("Failed to fetch arc last page", error: e);
+        }
+
+        if (totalPages > 2) {
+          try {
+            final prevPage = await repository.getArcIssueList(
+              arcId,
+              page: totalPages - 1,
+            );
+            for (final issue in prevPage.results) {
+              if (issue.id != null) {
+                resultsMap[issue.id!] = issue;
+              }
+            }
+          } catch (e) {
+            AppLogger.debug("Failed to fetch arc penultimate page", error: e);
           }
         }
       }

@@ -103,7 +103,7 @@ class _CharacterDetailsScreenState
     final isIssuesLoading = issueListAsync.isLoading;
 
     final previewIssues = allIssues.isNotEmpty
-        ? sortIssues(allIssues, ContentSortOption.dateNewest).take(5).toList()
+        ? selectRecentIssues(allIssues, targetCount: 5)
         : <IssueList>[];
 
     return DetailScreenShell<CharacterDetails>(
@@ -170,7 +170,7 @@ class _CharacterDetailsScreenState
 
         return [
           if (hasDescription) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -179,7 +179,7 @@ class _CharacterDetailsScreenState
             ),
           ],
           if (showStats) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -213,7 +213,7 @@ class _CharacterDetailsScreenState
             ),
           ],
           if (showFirstAppearance) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -226,17 +226,14 @@ class _CharacterDetailsScreenState
             ),
           ],
           if (hasCreators) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _CharacterCreatorsCard(creators: data.creators),
-              ),
+              child: _CharacterCreatorsCard(creators: data.creators),
             ),
           ],
           if (usePowerstats &&
               (isSuperHeroLoading || superhero?.powerstats != null)) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -248,8 +245,8 @@ class _CharacterDetailsScreenState
               ),
             ),
           ],
-          if (hasIssues || isIssuesLoading || issueListAsync.hasError) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          if (hasIssues || isIssuesLoading || issueListAsync.hasError || totalIssueCount > 0) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -275,7 +272,7 @@ class _CharacterDetailsScreenState
                             ),
                             const SizedBox(height: 12),
                             SizedBox(
-                              height: 250,
+                              height: 256,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: 5,
@@ -303,7 +300,7 @@ class _CharacterDetailsScreenState
                             title: "",
                             onViewAll: null,
                             itemCount: previewIssues.length,
-                            height: 250,
+                            height: 256,
                             emptyText: "No issues available.",
                             itemBuilder: (context, index) {
                               final issue = previewIssues[index];
@@ -335,72 +332,79 @@ class _CharacterDetailsScreenState
             ),
           ],
           if (hasTeams) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SectionHeader(title: "TEAMS"),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 160,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  itemCount: data.teams.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 4),
-                  itemBuilder: (context, index) {
-                    final team = data.teams[index];
-                    return EntityCard(
-                      entityType: "team",
-                      entityId: team.id,
-                      name: team.name,
-                      width: 110,
-                      onTap: () =>
-                          context.pushRoute(TeamDetailsRoute(teamId: team.id)),
-                    );
-                  },
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SectionHeader(title: "TEAMS"),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 152,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: data.teams.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final team = data.teams[index];
+                        return EntityCard(
+                          entityType: "team",
+                          entityId: team.id,
+                          name: team.name,
+                          width: 110,
+                          onTap: () => context.pushRoute(
+                            TeamDetailsRoute(teamId: team.id),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
           if (hasUniverses) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SectionHeader(title: "UNIVERSES"),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 130,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  itemCount: data.universes.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 4),
-                  itemBuilder: (context, index) {
-                    final universe = data.universes[index];
-                    return EntityCard(
-                      entityType: "universe",
-                      entityId: universe.id,
-                      name: universe.name,
-                      width: 140,
-                      imageHeight: 80,
-                      onTap: () => context.pushRoute(
-                        UniverseDetailsRoute(universeId: universe.id),
-                      ),
-                    );
-                  },
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SectionHeader(title: "UNIVERSES"),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 136,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: data.universes.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final universe = data.universes[index];
+                        return EntityCard(
+                          entityType: "universe",
+                          entityId: universe.id,
+                          name: universe.name,
+                          width: 140,
+                          imageHeight: 80,
+                          onTap: () => context.pushRoute(
+                            UniverseDetailsRoute(universeId: universe.id),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -423,15 +427,18 @@ class _CharacterCreatorsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: "CREATORS"),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SectionHeader(title: "CREATORS"),
+        ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 130,
+          height: 136,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: creators.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 0),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final creator = creators[index];
               return PersonCard(
@@ -658,34 +665,32 @@ class _CharacterInfoCard extends StatelessWidget {
 
   final CharacterDetails details;
 
-  String? _modifiedValue() {
-    final modified = details.modified;
-    if (modified == null) return null;
-    return DateFormatter.isoDateTime(modified);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final modifiedValue = _modifiedValue();
-    final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
+    final detailItems = <DetailPropertyItem>[
+      if (details.alias != null && details.alias!.trim().isNotEmpty)
+        DetailPropertyItem(
+          label: "Aliases",
+          value: details.alias!.trim(),
+        ),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (detailItems.isNotEmpty) ...[
+          DetailsPropertyCard(
+            title: "DETAILS",
+            items: detailItems,
+          ),
+          const SizedBox(height: 16),
+        ],
         DatabaseIdsSection(
           metronId: details.id,
           comicVineId: details.cvId,
           gcdId: details.gcdId,
+          modifiedAt: details.modified,
         ),
-        if (hasModified) ...[
-          const SizedBox(height: 8),
-          Text(
-            "Last modified: $modifiedValue",
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-          ),
-        ],
       ],
     );
   }

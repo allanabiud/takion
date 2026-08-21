@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IssueListSeriesDto {
 
- String get name; int get volume;@JsonKey(name: 'year_began') int get yearBegan; int? get id;
+ String get name; int get volume;@JsonKey(name: "year_began") int get yearBegan; int? get id;
 /// Create a copy of IssueListSeriesDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $IssueListSeriesDtoCopyWith<$Res>  {
   factory $IssueListSeriesDtoCopyWith(IssueListSeriesDto value, $Res Function(IssueListSeriesDto) _then) = _$IssueListSeriesDtoCopyWithImpl;
 @useResult
 $Res call({
- String name, int volume,@JsonKey(name: 'year_began') int yearBegan, int? id
+ String name, int volume,@JsonKey(name: "year_began") int yearBegan, int? id
 });
 
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  int volume, @JsonKey(name: 'year_began')  int yearBegan,  int? id)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  int volume, @JsonKey(name: "year_began")  int yearBegan,  int? id)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueListSeriesDto() when $default != null:
 return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
@@ -174,7 +174,7 @@ return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  int volume, @JsonKey(name: 'year_began')  int yearBegan,  int? id)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  int volume, @JsonKey(name: "year_began")  int yearBegan,  int? id)  $default,) {final _that = this;
 switch (_that) {
 case _IssueListSeriesDto():
 return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
@@ -194,7 +194,7 @@ return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  int volume, @JsonKey(name: 'year_began')  int yearBegan,  int? id)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  int volume, @JsonKey(name: "year_began")  int yearBegan,  int? id)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueListSeriesDto() when $default != null:
 return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
@@ -209,12 +209,12 @@ return $default(_that.name,_that.volume,_that.yearBegan,_that.id);case _:
 
 
 class _IssueListSeriesDto extends IssueListSeriesDto {
-  const _IssueListSeriesDto({required this.name, required this.volume, @JsonKey(name: 'year_began') required this.yearBegan, this.id}): super._();
+  const _IssueListSeriesDto({required this.name, required this.volume, @JsonKey(name: "year_began") required this.yearBegan, this.id}): super._();
   
 
 @override final  String name;
 @override final  int volume;
-@override@JsonKey(name: 'year_began') final  int yearBegan;
+@override@JsonKey(name: "year_began") final  int yearBegan;
 @override final  int? id;
 
 /// Create a copy of IssueListSeriesDto
@@ -247,7 +247,7 @@ abstract mixin class _$IssueListSeriesDtoCopyWith<$Res> implements $IssueListSer
   factory _$IssueListSeriesDtoCopyWith(_IssueListSeriesDto value, $Res Function(_IssueListSeriesDto) _then) = __$IssueListSeriesDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String name, int volume,@JsonKey(name: 'year_began') int yearBegan, int? id
+ String name, int volume,@JsonKey(name: "year_began") int yearBegan, int? id
 });
 
 

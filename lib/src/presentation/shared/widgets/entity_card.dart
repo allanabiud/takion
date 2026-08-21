@@ -45,7 +45,7 @@ class EntityCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(borderRadius),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,

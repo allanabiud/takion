@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IssueDetailsDto {
 
- int get id; IssueDetailsNamedRefDto? get publisher; IssueDetailsNamedRefDto? get imprint; IssueDetailsSeriesDto? get series; String get number;@JsonKey(name: 'alt_number') String? get altNumber; String? get title;@JsonKey(name: 'name') List<String> get names;@JsonKey(name: 'cover_date') String? get coverDate;@JsonKey(name: 'store_date') String? get storeDate;@JsonKey(name: 'foc_date') String? get focDate; String? get price;@JsonKey(name: 'price_currency') String? get priceCurrency; IssueDetailsNamedRefDto? get rating; String? get sku; String? get isbn; String? get upc;@JsonKey(name: 'page') int? get page;@JsonKey(name: 'desc') String? get description; String? get image;@JsonKey(name: 'cover_hash') String? get coverHash;@JsonKey(name: 'arcs') List<IssueDetailsParticipationDto> get arcs;@JsonKey(name: 'credits') List<IssueDetailsCreditDto> get credits;@JsonKey(name: 'characters') List<IssueDetailsParticipationDto> get characters;@JsonKey(name: 'teams') List<IssueDetailsParticipationDto> get teams;@JsonKey(name: 'universes') List<IssueDetailsParticipationDto> get universes;@JsonKey(name: 'reprints') List<IssueDetailsReprintDto> get reprints;@JsonKey(name: 'variants') List<IssueDetailsVariantDto> get variants;@JsonKey(name: 'cv_id') int? get cvId;@JsonKey(name: 'gcd_id') int? get gcdId;@JsonKey(name: 'resource_url') String? get resourceUrl; String? get modified;
+ int get id; IssueDetailsNamedRefDto? get publisher; IssueDetailsNamedRefDto? get imprint; IssueDetailsSeriesDto? get series; String get number;@JsonKey(name: "alt_number") String? get altNumber; String? get title;@JsonKey(name: "name") List<String> get names;@JsonKey(name: "cover_date") String? get coverDate;@JsonKey(name: "store_date") String? get storeDate;@JsonKey(name: "foc_date") String? get focDate; String? get price;@JsonKey(name: "price_currency") String? get priceCurrency; IssueDetailsNamedRefDto? get rating; String? get sku; String? get isbn; String? get upc;@JsonKey(name: "page") int? get page;@JsonKey(name: "desc") String? get description; String? get image;@JsonKey(name: "cover_hash") String? get coverHash;@JsonKey(name: "arcs") List<IssueDetailsParticipationDto> get arcs;@JsonKey(name: "credits") List<IssueDetailsCreditDto> get credits;@JsonKey(name: "characters") List<IssueDetailsParticipationDto> get characters;@JsonKey(name: "teams") List<IssueDetailsParticipationDto> get teams;@JsonKey(name: "universes") List<IssueDetailsParticipationDto> get universes;@JsonKey(name: "reprints") List<IssueDetailsReprintDto> get reprints;@JsonKey(name: "variants") List<IssueDetailsVariantDto> get variants;@JsonKey(name: "cv_id") int? get cvId;@JsonKey(name: "gcd_id") int? get gcdId;@JsonKey(name: "resource_url") String? get resourceUrl; String? get modified;
 /// Create a copy of IssueDetailsDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $IssueDetailsDtoCopyWith<$Res>  {
   factory $IssueDetailsDtoCopyWith(IssueDetailsDto value, $Res Function(IssueDetailsDto) _then) = _$IssueDetailsDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, IssueDetailsNamedRefDto? publisher, IssueDetailsNamedRefDto? imprint, IssueDetailsSeriesDto? series, String number,@JsonKey(name: 'alt_number') String? altNumber, String? title,@JsonKey(name: 'name') List<String> names,@JsonKey(name: 'cover_date') String? coverDate,@JsonKey(name: 'store_date') String? storeDate,@JsonKey(name: 'foc_date') String? focDate, String? price,@JsonKey(name: 'price_currency') String? priceCurrency, IssueDetailsNamedRefDto? rating, String? sku, String? isbn, String? upc,@JsonKey(name: 'page') int? page,@JsonKey(name: 'desc') String? description, String? image,@JsonKey(name: 'cover_hash') String? coverHash,@JsonKey(name: 'arcs') List<IssueDetailsParticipationDto> arcs,@JsonKey(name: 'credits') List<IssueDetailsCreditDto> credits,@JsonKey(name: 'characters') List<IssueDetailsParticipationDto> characters,@JsonKey(name: 'teams') List<IssueDetailsParticipationDto> teams,@JsonKey(name: 'universes') List<IssueDetailsParticipationDto> universes,@JsonKey(name: 'reprints') List<IssueDetailsReprintDto> reprints,@JsonKey(name: 'variants') List<IssueDetailsVariantDto> variants,@JsonKey(name: 'cv_id') int? cvId,@JsonKey(name: 'gcd_id') int? gcdId,@JsonKey(name: 'resource_url') String? resourceUrl, String? modified
+ int id, IssueDetailsNamedRefDto? publisher, IssueDetailsNamedRefDto? imprint, IssueDetailsSeriesDto? series, String number,@JsonKey(name: "alt_number") String? altNumber, String? title,@JsonKey(name: "name") List<String> names,@JsonKey(name: "cover_date") String? coverDate,@JsonKey(name: "store_date") String? storeDate,@JsonKey(name: "foc_date") String? focDate, String? price,@JsonKey(name: "price_currency") String? priceCurrency, IssueDetailsNamedRefDto? rating, String? sku, String? isbn, String? upc,@JsonKey(name: "page") int? page,@JsonKey(name: "desc") String? description, String? image,@JsonKey(name: "cover_hash") String? coverHash,@JsonKey(name: "arcs") List<IssueDetailsParticipationDto> arcs,@JsonKey(name: "credits") List<IssueDetailsCreditDto> credits,@JsonKey(name: "characters") List<IssueDetailsParticipationDto> characters,@JsonKey(name: "teams") List<IssueDetailsParticipationDto> teams,@JsonKey(name: "universes") List<IssueDetailsParticipationDto> universes,@JsonKey(name: "reprints") List<IssueDetailsReprintDto> reprints,@JsonKey(name: "variants") List<IssueDetailsVariantDto> variants,@JsonKey(name: "cv_id") int? cvId,@JsonKey(name: "gcd_id") int? gcdId,@JsonKey(name: "resource_url") String? resourceUrl, String? modified
 });
 
 
@@ -232,7 +232,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  IssueDetailsNamedRefDto? publisher,  IssueDetailsNamedRefDto? imprint,  IssueDetailsSeriesDto? series,  String number, @JsonKey(name: 'alt_number')  String? altNumber,  String? title, @JsonKey(name: 'name')  List<String> names, @JsonKey(name: 'cover_date')  String? coverDate, @JsonKey(name: 'store_date')  String? storeDate, @JsonKey(name: 'foc_date')  String? focDate,  String? price, @JsonKey(name: 'price_currency')  String? priceCurrency,  IssueDetailsNamedRefDto? rating,  String? sku,  String? isbn,  String? upc, @JsonKey(name: 'page')  int? page, @JsonKey(name: 'desc')  String? description,  String? image, @JsonKey(name: 'cover_hash')  String? coverHash, @JsonKey(name: 'arcs')  List<IssueDetailsParticipationDto> arcs, @JsonKey(name: 'credits')  List<IssueDetailsCreditDto> credits, @JsonKey(name: 'characters')  List<IssueDetailsParticipationDto> characters, @JsonKey(name: 'teams')  List<IssueDetailsParticipationDto> teams, @JsonKey(name: 'universes')  List<IssueDetailsParticipationDto> universes, @JsonKey(name: 'reprints')  List<IssueDetailsReprintDto> reprints, @JsonKey(name: 'variants')  List<IssueDetailsVariantDto> variants, @JsonKey(name: 'cv_id')  int? cvId, @JsonKey(name: 'gcd_id')  int? gcdId, @JsonKey(name: 'resource_url')  String? resourceUrl,  String? modified)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  IssueDetailsNamedRefDto? publisher,  IssueDetailsNamedRefDto? imprint,  IssueDetailsSeriesDto? series,  String number, @JsonKey(name: "alt_number")  String? altNumber,  String? title, @JsonKey(name: "name")  List<String> names, @JsonKey(name: "cover_date")  String? coverDate, @JsonKey(name: "store_date")  String? storeDate, @JsonKey(name: "foc_date")  String? focDate,  String? price, @JsonKey(name: "price_currency")  String? priceCurrency,  IssueDetailsNamedRefDto? rating,  String? sku,  String? isbn,  String? upc, @JsonKey(name: "page")  int? page, @JsonKey(name: "desc")  String? description,  String? image, @JsonKey(name: "cover_hash")  String? coverHash, @JsonKey(name: "arcs")  List<IssueDetailsParticipationDto> arcs, @JsonKey(name: "credits")  List<IssueDetailsCreditDto> credits, @JsonKey(name: "characters")  List<IssueDetailsParticipationDto> characters, @JsonKey(name: "teams")  List<IssueDetailsParticipationDto> teams, @JsonKey(name: "universes")  List<IssueDetailsParticipationDto> universes, @JsonKey(name: "reprints")  List<IssueDetailsReprintDto> reprints, @JsonKey(name: "variants")  List<IssueDetailsVariantDto> variants, @JsonKey(name: "cv_id")  int? cvId, @JsonKey(name: "gcd_id")  int? gcdId, @JsonKey(name: "resource_url")  String? resourceUrl,  String? modified)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDetailsDto() when $default != null:
 return $default(_that.id,_that.publisher,_that.imprint,_that.series,_that.number,_that.altNumber,_that.title,_that.names,_that.coverDate,_that.storeDate,_that.focDate,_that.price,_that.priceCurrency,_that.rating,_that.sku,_that.isbn,_that.upc,_that.page,_that.description,_that.image,_that.coverHash,_that.arcs,_that.credits,_that.characters,_that.teams,_that.universes,_that.reprints,_that.variants,_that.cvId,_that.gcdId,_that.resourceUrl,_that.modified);case _:
@@ -253,7 +253,7 @@ return $default(_that.id,_that.publisher,_that.imprint,_that.series,_that.number
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  IssueDetailsNamedRefDto? publisher,  IssueDetailsNamedRefDto? imprint,  IssueDetailsSeriesDto? series,  String number, @JsonKey(name: 'alt_number')  String? altNumber,  String? title, @JsonKey(name: 'name')  List<String> names, @JsonKey(name: 'cover_date')  String? coverDate, @JsonKey(name: 'store_date')  String? storeDate, @JsonKey(name: 'foc_date')  String? focDate,  String? price, @JsonKey(name: 'price_currency')  String? priceCurrency,  IssueDetailsNamedRefDto? rating,  String? sku,  String? isbn,  String? upc, @JsonKey(name: 'page')  int? page, @JsonKey(name: 'desc')  String? description,  String? image, @JsonKey(name: 'cover_hash')  String? coverHash, @JsonKey(name: 'arcs')  List<IssueDetailsParticipationDto> arcs, @JsonKey(name: 'credits')  List<IssueDetailsCreditDto> credits, @JsonKey(name: 'characters')  List<IssueDetailsParticipationDto> characters, @JsonKey(name: 'teams')  List<IssueDetailsParticipationDto> teams, @JsonKey(name: 'universes')  List<IssueDetailsParticipationDto> universes, @JsonKey(name: 'reprints')  List<IssueDetailsReprintDto> reprints, @JsonKey(name: 'variants')  List<IssueDetailsVariantDto> variants, @JsonKey(name: 'cv_id')  int? cvId, @JsonKey(name: 'gcd_id')  int? gcdId, @JsonKey(name: 'resource_url')  String? resourceUrl,  String? modified)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  IssueDetailsNamedRefDto? publisher,  IssueDetailsNamedRefDto? imprint,  IssueDetailsSeriesDto? series,  String number, @JsonKey(name: "alt_number")  String? altNumber,  String? title, @JsonKey(name: "name")  List<String> names, @JsonKey(name: "cover_date")  String? coverDate, @JsonKey(name: "store_date")  String? storeDate, @JsonKey(name: "foc_date")  String? focDate,  String? price, @JsonKey(name: "price_currency")  String? priceCurrency,  IssueDetailsNamedRefDto? rating,  String? sku,  String? isbn,  String? upc, @JsonKey(name: "page")  int? page, @JsonKey(name: "desc")  String? description,  String? image, @JsonKey(name: "cover_hash")  String? coverHash, @JsonKey(name: "arcs")  List<IssueDetailsParticipationDto> arcs, @JsonKey(name: "credits")  List<IssueDetailsCreditDto> credits, @JsonKey(name: "characters")  List<IssueDetailsParticipationDto> characters, @JsonKey(name: "teams")  List<IssueDetailsParticipationDto> teams, @JsonKey(name: "universes")  List<IssueDetailsParticipationDto> universes, @JsonKey(name: "reprints")  List<IssueDetailsReprintDto> reprints, @JsonKey(name: "variants")  List<IssueDetailsVariantDto> variants, @JsonKey(name: "cv_id")  int? cvId, @JsonKey(name: "gcd_id")  int? gcdId, @JsonKey(name: "resource_url")  String? resourceUrl,  String? modified)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsDto():
 return $default(_that.id,_that.publisher,_that.imprint,_that.series,_that.number,_that.altNumber,_that.title,_that.names,_that.coverDate,_that.storeDate,_that.focDate,_that.price,_that.priceCurrency,_that.rating,_that.sku,_that.isbn,_that.upc,_that.page,_that.description,_that.image,_that.coverHash,_that.arcs,_that.credits,_that.characters,_that.teams,_that.universes,_that.reprints,_that.variants,_that.cvId,_that.gcdId,_that.resourceUrl,_that.modified);case _:
@@ -273,7 +273,7 @@ return $default(_that.id,_that.publisher,_that.imprint,_that.series,_that.number
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  IssueDetailsNamedRefDto? publisher,  IssueDetailsNamedRefDto? imprint,  IssueDetailsSeriesDto? series,  String number, @JsonKey(name: 'alt_number')  String? altNumber,  String? title, @JsonKey(name: 'name')  List<String> names, @JsonKey(name: 'cover_date')  String? coverDate, @JsonKey(name: 'store_date')  String? storeDate, @JsonKey(name: 'foc_date')  String? focDate,  String? price, @JsonKey(name: 'price_currency')  String? priceCurrency,  IssueDetailsNamedRefDto? rating,  String? sku,  String? isbn,  String? upc, @JsonKey(name: 'page')  int? page, @JsonKey(name: 'desc')  String? description,  String? image, @JsonKey(name: 'cover_hash')  String? coverHash, @JsonKey(name: 'arcs')  List<IssueDetailsParticipationDto> arcs, @JsonKey(name: 'credits')  List<IssueDetailsCreditDto> credits, @JsonKey(name: 'characters')  List<IssueDetailsParticipationDto> characters, @JsonKey(name: 'teams')  List<IssueDetailsParticipationDto> teams, @JsonKey(name: 'universes')  List<IssueDetailsParticipationDto> universes, @JsonKey(name: 'reprints')  List<IssueDetailsReprintDto> reprints, @JsonKey(name: 'variants')  List<IssueDetailsVariantDto> variants, @JsonKey(name: 'cv_id')  int? cvId, @JsonKey(name: 'gcd_id')  int? gcdId, @JsonKey(name: 'resource_url')  String? resourceUrl,  String? modified)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  IssueDetailsNamedRefDto? publisher,  IssueDetailsNamedRefDto? imprint,  IssueDetailsSeriesDto? series,  String number, @JsonKey(name: "alt_number")  String? altNumber,  String? title, @JsonKey(name: "name")  List<String> names, @JsonKey(name: "cover_date")  String? coverDate, @JsonKey(name: "store_date")  String? storeDate, @JsonKey(name: "foc_date")  String? focDate,  String? price, @JsonKey(name: "price_currency")  String? priceCurrency,  IssueDetailsNamedRefDto? rating,  String? sku,  String? isbn,  String? upc, @JsonKey(name: "page")  int? page, @JsonKey(name: "desc")  String? description,  String? image, @JsonKey(name: "cover_hash")  String? coverHash, @JsonKey(name: "arcs")  List<IssueDetailsParticipationDto> arcs, @JsonKey(name: "credits")  List<IssueDetailsCreditDto> credits, @JsonKey(name: "characters")  List<IssueDetailsParticipationDto> characters, @JsonKey(name: "teams")  List<IssueDetailsParticipationDto> teams, @JsonKey(name: "universes")  List<IssueDetailsParticipationDto> universes, @JsonKey(name: "reprints")  List<IssueDetailsReprintDto> reprints, @JsonKey(name: "variants")  List<IssueDetailsVariantDto> variants, @JsonKey(name: "cv_id")  int? cvId, @JsonKey(name: "gcd_id")  int? gcdId, @JsonKey(name: "resource_url")  String? resourceUrl,  String? modified)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsDto() when $default != null:
 return $default(_that.id,_that.publisher,_that.imprint,_that.series,_that.number,_that.altNumber,_that.title,_that.names,_that.coverDate,_that.storeDate,_that.focDate,_that.price,_that.priceCurrency,_that.rating,_that.sku,_that.isbn,_that.upc,_that.page,_that.description,_that.image,_that.coverHash,_that.arcs,_that.credits,_that.characters,_that.teams,_that.universes,_that.reprints,_that.variants,_that.cvId,_that.gcdId,_that.resourceUrl,_that.modified);case _:
@@ -288,7 +288,7 @@ return $default(_that.id,_that.publisher,_that.imprint,_that.series,_that.number
 @JsonSerializable()
 
 class _IssueDetailsDto extends IssueDetailsDto {
-  const _IssueDetailsDto({required this.id, this.publisher, this.imprint, this.series, required this.number, @JsonKey(name: 'alt_number') this.altNumber, this.title, @JsonKey(name: 'name') final  List<String> names = const <String>[], @JsonKey(name: 'cover_date') this.coverDate, @JsonKey(name: 'store_date') this.storeDate, @JsonKey(name: 'foc_date') this.focDate, this.price, @JsonKey(name: 'price_currency') this.priceCurrency, this.rating, this.sku, this.isbn, this.upc, @JsonKey(name: 'page') this.page, @JsonKey(name: 'desc') this.description, this.image, @JsonKey(name: 'cover_hash') this.coverHash, @JsonKey(name: 'arcs') final  List<IssueDetailsParticipationDto> arcs = const <IssueDetailsParticipationDto>[], @JsonKey(name: 'credits') final  List<IssueDetailsCreditDto> credits = const <IssueDetailsCreditDto>[], @JsonKey(name: 'characters') final  List<IssueDetailsParticipationDto> characters = const <IssueDetailsParticipationDto>[], @JsonKey(name: 'teams') final  List<IssueDetailsParticipationDto> teams = const <IssueDetailsParticipationDto>[], @JsonKey(name: 'universes') final  List<IssueDetailsParticipationDto> universes = const <IssueDetailsParticipationDto>[], @JsonKey(name: 'reprints') final  List<IssueDetailsReprintDto> reprints = const <IssueDetailsReprintDto>[], @JsonKey(name: 'variants') final  List<IssueDetailsVariantDto> variants = const <IssueDetailsVariantDto>[], @JsonKey(name: 'cv_id') this.cvId, @JsonKey(name: 'gcd_id') this.gcdId, @JsonKey(name: 'resource_url') this.resourceUrl, this.modified}): _names = names,_arcs = arcs,_credits = credits,_characters = characters,_teams = teams,_universes = universes,_reprints = reprints,_variants = variants,super._();
+  const _IssueDetailsDto({required this.id, this.publisher, this.imprint, this.series, required this.number, @JsonKey(name: "alt_number") this.altNumber, this.title, @JsonKey(name: "name") final  List<String> names = const <String>[], @JsonKey(name: "cover_date") this.coverDate, @JsonKey(name: "store_date") this.storeDate, @JsonKey(name: "foc_date") this.focDate, this.price, @JsonKey(name: "price_currency") this.priceCurrency, this.rating, this.sku, this.isbn, this.upc, @JsonKey(name: "page") this.page, @JsonKey(name: "desc") this.description, this.image, @JsonKey(name: "cover_hash") this.coverHash, @JsonKey(name: "arcs") final  List<IssueDetailsParticipationDto> arcs = const <IssueDetailsParticipationDto>[], @JsonKey(name: "credits") final  List<IssueDetailsCreditDto> credits = const <IssueDetailsCreditDto>[], @JsonKey(name: "characters") final  List<IssueDetailsParticipationDto> characters = const <IssueDetailsParticipationDto>[], @JsonKey(name: "teams") final  List<IssueDetailsParticipationDto> teams = const <IssueDetailsParticipationDto>[], @JsonKey(name: "universes") final  List<IssueDetailsParticipationDto> universes = const <IssueDetailsParticipationDto>[], @JsonKey(name: "reprints") final  List<IssueDetailsReprintDto> reprints = const <IssueDetailsReprintDto>[], @JsonKey(name: "variants") final  List<IssueDetailsVariantDto> variants = const <IssueDetailsVariantDto>[], @JsonKey(name: "cv_id") this.cvId, @JsonKey(name: "gcd_id") this.gcdId, @JsonKey(name: "resource_url") this.resourceUrl, this.modified}): _names = names,_arcs = arcs,_credits = credits,_characters = characters,_teams = teams,_universes = universes,_reprints = reprints,_variants = variants,super._();
   factory _IssueDetailsDto.fromJson(Map<String, dynamic> json) => _$IssueDetailsDtoFromJson(json);
 
 @override final  int id;
@@ -296,80 +296,80 @@ class _IssueDetailsDto extends IssueDetailsDto {
 @override final  IssueDetailsNamedRefDto? imprint;
 @override final  IssueDetailsSeriesDto? series;
 @override final  String number;
-@override@JsonKey(name: 'alt_number') final  String? altNumber;
+@override@JsonKey(name: "alt_number") final  String? altNumber;
 @override final  String? title;
  final  List<String> _names;
-@override@JsonKey(name: 'name') List<String> get names {
+@override@JsonKey(name: "name") List<String> get names {
   if (_names is EqualUnmodifiableListView) return _names;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_names);
 }
 
-@override@JsonKey(name: 'cover_date') final  String? coverDate;
-@override@JsonKey(name: 'store_date') final  String? storeDate;
-@override@JsonKey(name: 'foc_date') final  String? focDate;
+@override@JsonKey(name: "cover_date") final  String? coverDate;
+@override@JsonKey(name: "store_date") final  String? storeDate;
+@override@JsonKey(name: "foc_date") final  String? focDate;
 @override final  String? price;
-@override@JsonKey(name: 'price_currency') final  String? priceCurrency;
+@override@JsonKey(name: "price_currency") final  String? priceCurrency;
 @override final  IssueDetailsNamedRefDto? rating;
 @override final  String? sku;
 @override final  String? isbn;
 @override final  String? upc;
-@override@JsonKey(name: 'page') final  int? page;
-@override@JsonKey(name: 'desc') final  String? description;
+@override@JsonKey(name: "page") final  int? page;
+@override@JsonKey(name: "desc") final  String? description;
 @override final  String? image;
-@override@JsonKey(name: 'cover_hash') final  String? coverHash;
+@override@JsonKey(name: "cover_hash") final  String? coverHash;
  final  List<IssueDetailsParticipationDto> _arcs;
-@override@JsonKey(name: 'arcs') List<IssueDetailsParticipationDto> get arcs {
+@override@JsonKey(name: "arcs") List<IssueDetailsParticipationDto> get arcs {
   if (_arcs is EqualUnmodifiableListView) return _arcs;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_arcs);
 }
 
  final  List<IssueDetailsCreditDto> _credits;
-@override@JsonKey(name: 'credits') List<IssueDetailsCreditDto> get credits {
+@override@JsonKey(name: "credits") List<IssueDetailsCreditDto> get credits {
   if (_credits is EqualUnmodifiableListView) return _credits;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_credits);
 }
 
  final  List<IssueDetailsParticipationDto> _characters;
-@override@JsonKey(name: 'characters') List<IssueDetailsParticipationDto> get characters {
+@override@JsonKey(name: "characters") List<IssueDetailsParticipationDto> get characters {
   if (_characters is EqualUnmodifiableListView) return _characters;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_characters);
 }
 
  final  List<IssueDetailsParticipationDto> _teams;
-@override@JsonKey(name: 'teams') List<IssueDetailsParticipationDto> get teams {
+@override@JsonKey(name: "teams") List<IssueDetailsParticipationDto> get teams {
   if (_teams is EqualUnmodifiableListView) return _teams;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_teams);
 }
 
  final  List<IssueDetailsParticipationDto> _universes;
-@override@JsonKey(name: 'universes') List<IssueDetailsParticipationDto> get universes {
+@override@JsonKey(name: "universes") List<IssueDetailsParticipationDto> get universes {
   if (_universes is EqualUnmodifiableListView) return _universes;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_universes);
 }
 
  final  List<IssueDetailsReprintDto> _reprints;
-@override@JsonKey(name: 'reprints') List<IssueDetailsReprintDto> get reprints {
+@override@JsonKey(name: "reprints") List<IssueDetailsReprintDto> get reprints {
   if (_reprints is EqualUnmodifiableListView) return _reprints;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_reprints);
 }
 
  final  List<IssueDetailsVariantDto> _variants;
-@override@JsonKey(name: 'variants') List<IssueDetailsVariantDto> get variants {
+@override@JsonKey(name: "variants") List<IssueDetailsVariantDto> get variants {
   if (_variants is EqualUnmodifiableListView) return _variants;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_variants);
 }
 
-@override@JsonKey(name: 'cv_id') final  int? cvId;
-@override@JsonKey(name: 'gcd_id') final  int? gcdId;
-@override@JsonKey(name: 'resource_url') final  String? resourceUrl;
+@override@JsonKey(name: "cv_id") final  int? cvId;
+@override@JsonKey(name: "gcd_id") final  int? gcdId;
+@override@JsonKey(name: "resource_url") final  String? resourceUrl;
 @override final  String? modified;
 
 /// Create a copy of IssueDetailsDto
@@ -405,7 +405,7 @@ abstract mixin class _$IssueDetailsDtoCopyWith<$Res> implements $IssueDetailsDto
   factory _$IssueDetailsDtoCopyWith(_IssueDetailsDto value, $Res Function(_IssueDetailsDto) _then) = __$IssueDetailsDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, IssueDetailsNamedRefDto? publisher, IssueDetailsNamedRefDto? imprint, IssueDetailsSeriesDto? series, String number,@JsonKey(name: 'alt_number') String? altNumber, String? title,@JsonKey(name: 'name') List<String> names,@JsonKey(name: 'cover_date') String? coverDate,@JsonKey(name: 'store_date') String? storeDate,@JsonKey(name: 'foc_date') String? focDate, String? price,@JsonKey(name: 'price_currency') String? priceCurrency, IssueDetailsNamedRefDto? rating, String? sku, String? isbn, String? upc,@JsonKey(name: 'page') int? page,@JsonKey(name: 'desc') String? description, String? image,@JsonKey(name: 'cover_hash') String? coverHash,@JsonKey(name: 'arcs') List<IssueDetailsParticipationDto> arcs,@JsonKey(name: 'credits') List<IssueDetailsCreditDto> credits,@JsonKey(name: 'characters') List<IssueDetailsParticipationDto> characters,@JsonKey(name: 'teams') List<IssueDetailsParticipationDto> teams,@JsonKey(name: 'universes') List<IssueDetailsParticipationDto> universes,@JsonKey(name: 'reprints') List<IssueDetailsReprintDto> reprints,@JsonKey(name: 'variants') List<IssueDetailsVariantDto> variants,@JsonKey(name: 'cv_id') int? cvId,@JsonKey(name: 'gcd_id') int? gcdId,@JsonKey(name: 'resource_url') String? resourceUrl, String? modified
+ int id, IssueDetailsNamedRefDto? publisher, IssueDetailsNamedRefDto? imprint, IssueDetailsSeriesDto? series, String number,@JsonKey(name: "alt_number") String? altNumber, String? title,@JsonKey(name: "name") List<String> names,@JsonKey(name: "cover_date") String? coverDate,@JsonKey(name: "store_date") String? storeDate,@JsonKey(name: "foc_date") String? focDate, String? price,@JsonKey(name: "price_currency") String? priceCurrency, IssueDetailsNamedRefDto? rating, String? sku, String? isbn, String? upc,@JsonKey(name: "page") int? page,@JsonKey(name: "desc") String? description, String? image,@JsonKey(name: "cover_hash") String? coverHash,@JsonKey(name: "arcs") List<IssueDetailsParticipationDto> arcs,@JsonKey(name: "credits") List<IssueDetailsCreditDto> credits,@JsonKey(name: "characters") List<IssueDetailsParticipationDto> characters,@JsonKey(name: "teams") List<IssueDetailsParticipationDto> teams,@JsonKey(name: "universes") List<IssueDetailsParticipationDto> universes,@JsonKey(name: "reprints") List<IssueDetailsReprintDto> reprints,@JsonKey(name: "variants") List<IssueDetailsVariantDto> variants,@JsonKey(name: "cv_id") int? cvId,@JsonKey(name: "gcd_id") int? gcdId,@JsonKey(name: "resource_url") String? resourceUrl, String? modified
 });
 
 
@@ -781,7 +781,7 @@ as String,
 /// @nodoc
 mixin _$IssueDetailsSeriesDto {
 
- int get id; String get name;@JsonKey(name: 'sort_name') String? get sortName; int? get volume;@JsonKey(name: 'year_began') int? get yearBegan;@JsonKey(name: 'series_type') IssueDetailsNamedRefDto? get seriesType; List<IssueDetailsNamedRefDto> get genres;
+ int get id; String get name;@JsonKey(name: "sort_name") String? get sortName; int? get volume;@JsonKey(name: "year_began") int? get yearBegan;@JsonKey(name: "series_type") IssueDetailsNamedRefDto? get seriesType; List<IssueDetailsNamedRefDto> get genres;
 /// Create a copy of IssueDetailsSeriesDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -814,7 +814,7 @@ abstract mixin class $IssueDetailsSeriesDtoCopyWith<$Res>  {
   factory $IssueDetailsSeriesDtoCopyWith(IssueDetailsSeriesDto value, $Res Function(IssueDetailsSeriesDto) _then) = _$IssueDetailsSeriesDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String name,@JsonKey(name: 'sort_name') String? sortName, int? volume,@JsonKey(name: 'year_began') int? yearBegan,@JsonKey(name: 'series_type') IssueDetailsNamedRefDto? seriesType, List<IssueDetailsNamedRefDto> genres
+ int id, String name,@JsonKey(name: "sort_name") String? sortName, int? volume,@JsonKey(name: "year_began") int? yearBegan,@JsonKey(name: "series_type") IssueDetailsNamedRefDto? seriesType, List<IssueDetailsNamedRefDto> genres
 });
 
 
@@ -937,7 +937,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: 'sort_name')  String? sortName,  int? volume, @JsonKey(name: 'year_began')  int? yearBegan, @JsonKey(name: 'series_type')  IssueDetailsNamedRefDto? seriesType,  List<IssueDetailsNamedRefDto> genres)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: "sort_name")  String? sortName,  int? volume, @JsonKey(name: "year_began")  int? yearBegan, @JsonKey(name: "series_type")  IssueDetailsNamedRefDto? seriesType,  List<IssueDetailsNamedRefDto> genres)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDetailsSeriesDto() when $default != null:
 return $default(_that.id,_that.name,_that.sortName,_that.volume,_that.yearBegan,_that.seriesType,_that.genres);case _:
@@ -958,7 +958,7 @@ return $default(_that.id,_that.name,_that.sortName,_that.volume,_that.yearBegan,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: 'sort_name')  String? sortName,  int? volume, @JsonKey(name: 'year_began')  int? yearBegan, @JsonKey(name: 'series_type')  IssueDetailsNamedRefDto? seriesType,  List<IssueDetailsNamedRefDto> genres)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: "sort_name")  String? sortName,  int? volume, @JsonKey(name: "year_began")  int? yearBegan, @JsonKey(name: "series_type")  IssueDetailsNamedRefDto? seriesType,  List<IssueDetailsNamedRefDto> genres)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsSeriesDto():
 return $default(_that.id,_that.name,_that.sortName,_that.volume,_that.yearBegan,_that.seriesType,_that.genres);case _:
@@ -978,7 +978,7 @@ return $default(_that.id,_that.name,_that.sortName,_that.volume,_that.yearBegan,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name, @JsonKey(name: 'sort_name')  String? sortName,  int? volume, @JsonKey(name: 'year_began')  int? yearBegan, @JsonKey(name: 'series_type')  IssueDetailsNamedRefDto? seriesType,  List<IssueDetailsNamedRefDto> genres)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name, @JsonKey(name: "sort_name")  String? sortName,  int? volume, @JsonKey(name: "year_began")  int? yearBegan, @JsonKey(name: "series_type")  IssueDetailsNamedRefDto? seriesType,  List<IssueDetailsNamedRefDto> genres)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsSeriesDto() when $default != null:
 return $default(_that.id,_that.name,_that.sortName,_that.volume,_that.yearBegan,_that.seriesType,_that.genres);case _:
@@ -993,15 +993,15 @@ return $default(_that.id,_that.name,_that.sortName,_that.volume,_that.yearBegan,
 @JsonSerializable()
 
 class _IssueDetailsSeriesDto extends IssueDetailsSeriesDto {
-  const _IssueDetailsSeriesDto({required this.id, required this.name, @JsonKey(name: 'sort_name') this.sortName, this.volume, @JsonKey(name: 'year_began') this.yearBegan, @JsonKey(name: 'series_type') this.seriesType, final  List<IssueDetailsNamedRefDto> genres = const <IssueDetailsNamedRefDto>[]}): _genres = genres,super._();
+  const _IssueDetailsSeriesDto({required this.id, required this.name, @JsonKey(name: "sort_name") this.sortName, this.volume, @JsonKey(name: "year_began") this.yearBegan, @JsonKey(name: "series_type") this.seriesType, final  List<IssueDetailsNamedRefDto> genres = const <IssueDetailsNamedRefDto>[]}): _genres = genres,super._();
   factory _IssueDetailsSeriesDto.fromJson(Map<String, dynamic> json) => _$IssueDetailsSeriesDtoFromJson(json);
 
 @override final  int id;
 @override final  String name;
-@override@JsonKey(name: 'sort_name') final  String? sortName;
+@override@JsonKey(name: "sort_name") final  String? sortName;
 @override final  int? volume;
-@override@JsonKey(name: 'year_began') final  int? yearBegan;
-@override@JsonKey(name: 'series_type') final  IssueDetailsNamedRefDto? seriesType;
+@override@JsonKey(name: "year_began") final  int? yearBegan;
+@override@JsonKey(name: "series_type") final  IssueDetailsNamedRefDto? seriesType;
  final  List<IssueDetailsNamedRefDto> _genres;
 @override@JsonKey() List<IssueDetailsNamedRefDto> get genres {
   if (_genres is EqualUnmodifiableListView) return _genres;
@@ -1043,7 +1043,7 @@ abstract mixin class _$IssueDetailsSeriesDtoCopyWith<$Res> implements $IssueDeta
   factory _$IssueDetailsSeriesDtoCopyWith(_IssueDetailsSeriesDto value, $Res Function(_IssueDetailsSeriesDto) _then) = __$IssueDetailsSeriesDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name,@JsonKey(name: 'sort_name') String? sortName, int? volume,@JsonKey(name: 'year_began') int? yearBegan,@JsonKey(name: 'series_type') IssueDetailsNamedRefDto? seriesType, List<IssueDetailsNamedRefDto> genres
+ int id, String name,@JsonKey(name: "sort_name") String? sortName, int? volume,@JsonKey(name: "year_began") int? yearBegan,@JsonKey(name: "series_type") IssueDetailsNamedRefDto? seriesType, List<IssueDetailsNamedRefDto> genres
 });
 
 
@@ -1627,7 +1627,7 @@ as String,
 /// @nodoc
 mixin _$IssueDetailsCreditDto {
 
- int get id; String? get creator;@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> get roles;@JsonKey(name: 'creator_id') int? get creatorId;
+ int get id; String? get creator;@JsonKey(name: "role") List<IssueDetailsCreditRoleDto> get roles;@JsonKey(name: "creator_id") int? get creatorId;
 /// Create a copy of IssueDetailsCreditDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1660,7 +1660,7 @@ abstract mixin class $IssueDetailsCreditDtoCopyWith<$Res>  {
   factory $IssueDetailsCreditDtoCopyWith(IssueDetailsCreditDto value, $Res Function(IssueDetailsCreditDto) _then) = _$IssueDetailsCreditDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String? creator,@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> roles,@JsonKey(name: 'creator_id') int? creatorId
+ int id, String? creator,@JsonKey(name: "role") List<IssueDetailsCreditRoleDto> roles,@JsonKey(name: "creator_id") int? creatorId
 });
 
 
@@ -1768,7 +1768,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? creator, @JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles, @JsonKey(name: 'creator_id')  int? creatorId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? creator, @JsonKey(name: "role")  List<IssueDetailsCreditRoleDto> roles, @JsonKey(name: "creator_id")  int? creatorId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDetailsCreditDto() when $default != null:
 return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
@@ -1789,7 +1789,7 @@ return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? creator, @JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles, @JsonKey(name: 'creator_id')  int? creatorId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? creator, @JsonKey(name: "role")  List<IssueDetailsCreditRoleDto> roles, @JsonKey(name: "creator_id")  int? creatorId)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsCreditDto():
 return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
@@ -1809,7 +1809,7 @@ return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? creator, @JsonKey(name: 'role')  List<IssueDetailsCreditRoleDto> roles, @JsonKey(name: 'creator_id')  int? creatorId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? creator, @JsonKey(name: "role")  List<IssueDetailsCreditRoleDto> roles, @JsonKey(name: "creator_id")  int? creatorId)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDetailsCreditDto() when $default != null:
 return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
@@ -1824,19 +1824,19 @@ return $default(_that.id,_that.creator,_that.roles,_that.creatorId);case _:
 @JsonSerializable()
 
 class _IssueDetailsCreditDto extends IssueDetailsCreditDto {
-  const _IssueDetailsCreditDto({required this.id, this.creator, @JsonKey(name: 'role') final  List<IssueDetailsCreditRoleDto> roles = const <IssueDetailsCreditRoleDto>[], @JsonKey(name: 'creator_id') this.creatorId}): _roles = roles,super._();
+  const _IssueDetailsCreditDto({required this.id, this.creator, @JsonKey(name: "role") final  List<IssueDetailsCreditRoleDto> roles = const <IssueDetailsCreditRoleDto>[], @JsonKey(name: "creator_id") this.creatorId}): _roles = roles,super._();
   factory _IssueDetailsCreditDto.fromJson(Map<String, dynamic> json) => _$IssueDetailsCreditDtoFromJson(json);
 
 @override final  int id;
 @override final  String? creator;
  final  List<IssueDetailsCreditRoleDto> _roles;
-@override@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> get roles {
+@override@JsonKey(name: "role") List<IssueDetailsCreditRoleDto> get roles {
   if (_roles is EqualUnmodifiableListView) return _roles;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_roles);
 }
 
-@override@JsonKey(name: 'creator_id') final  int? creatorId;
+@override@JsonKey(name: "creator_id") final  int? creatorId;
 
 /// Create a copy of IssueDetailsCreditDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1871,7 +1871,7 @@ abstract mixin class _$IssueDetailsCreditDtoCopyWith<$Res> implements $IssueDeta
   factory _$IssueDetailsCreditDtoCopyWith(_IssueDetailsCreditDto value, $Res Function(_IssueDetailsCreditDto) _then) = __$IssueDetailsCreditDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String? creator,@JsonKey(name: 'role') List<IssueDetailsCreditRoleDto> roles,@JsonKey(name: 'creator_id') int? creatorId
+ int id, String? creator,@JsonKey(name: "role") List<IssueDetailsCreditRoleDto> roles,@JsonKey(name: "creator_id") int? creatorId
 });
 
 

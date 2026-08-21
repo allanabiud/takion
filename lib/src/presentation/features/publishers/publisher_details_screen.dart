@@ -1,7 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/publishers/providers/publisher_details_provider.dart";
@@ -88,7 +87,7 @@ class _PublisherDetailsScreenState
     final description = details.desc?.trim();
     final hasDescription = description != null && description.isNotEmpty;
     if (hasDescription) {
-      yield const SliverToBoxAdapter(child: SizedBox(height: 16));
+      yield const SliverToBoxAdapter(child: SizedBox(height: 20));
       yield SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -96,11 +95,11 @@ class _PublisherDetailsScreenState
         ),
       );
     }
-    yield const SliverToBoxAdapter(child: SizedBox(height: 16));
+    yield const SliverToBoxAdapter(child: SizedBox(height: 20));
     yield SliverToBoxAdapter(
       child: _PublisherSeriesSection(publisherId: details.id),
     );
-    yield const SliverToBoxAdapter(child: SizedBox(height: 16));
+    yield const SliverToBoxAdapter(child: SizedBox(height: 20));
     yield SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -129,7 +128,7 @@ class _PublisherSeriesSection extends ConsumerWidget {
               const SectionHeader(title: "Series"),
               const SizedBox(height: 12),
               SizedBox(
-                height: 250,
+                height: 256,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: 4,
@@ -137,7 +136,7 @@ class _PublisherSeriesSection extends ConsumerWidget {
                     padding: EdgeInsets.only(right: 12),
                     child: SkeletonBox(
                       width: 120,
-                      height: 250,
+                      height: 256,
                       borderRadius: 8,
                     ),
                   ),
@@ -169,7 +168,7 @@ class _PublisherSeriesSection extends ConsumerWidget {
                 title: "",
                 onViewAll: null,
                 itemCount: previewCount,
-                height: 250,
+                height: 256,
                 emptyText: "No series available.",
                 itemBuilder: (context, index) {
                   final series = seriesPage.results[index];
@@ -197,45 +196,29 @@ class _PublisherInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final modifiedValue = _modifiedValue();
-    final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
-
-    final contentItems = <InfoGridItem>[
-      InfoGridItem(label: "Name", value: details.name),
+    final contentItems = <DetailPropertyItem>[
+      DetailPropertyItem(label: "Publisher Name", value: details.name),
       if (details.founded != null)
-        InfoGridItem(label: "Founded", value: "${details.founded}"),
-      if (details.country != null)
-        InfoGridItem(label: "Country", value: details.country!),
+        DetailPropertyItem(label: "Founded", value: "${details.founded}"),
+      if (details.country != null && details.country!.trim().isNotEmpty)
+        DetailPropertyItem(label: "Country", value: details.country!.trim()),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: "DETAILS"),
-        const SizedBox(height: 12),
-        InfoGrid(items: contentItems),
-        const SizedBox(height: 16),
+        DetailsPropertyCard(
+          title: "DETAILS",
+          items: contentItems,
+        ),
+        const SizedBox(height: 20),
         DatabaseIdsSection(
           metronId: details.id,
           comicVineId: details.cvId,
           gcdId: details.gcdId,
+          modifiedAt: details.modified,
         ),
-        if (hasModified) ...[
-          const SizedBox(height: 8),
-          Text(
-            "Last modified: $modifiedValue",
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-          ),
-        ],
       ],
     );
-  }
-
-  String? _modifiedValue() {
-    final modified = details.modified;
-    if (modified == null) return null;
-    return DateFormatter.isoDateTime(modified);
   }
 }

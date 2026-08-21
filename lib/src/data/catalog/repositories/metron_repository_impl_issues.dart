@@ -547,6 +547,25 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertIssueDetails(IssueDetailsDto dto) async {
+    if (dto.series != null && dto.series!.id > 0 && dto.series!.name.trim().isNotEmpty) {
+      _metadataCache?.indexSeries(dto.series!.id, dto.series!.name.trim());
+    }
+    if (dto.publisher != null && dto.publisher!.id > 0 && dto.publisher!.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(dto.publisher!.id, dto.publisher!.name.trim());
+    }
+    if (dto.imprint != null && dto.imprint!.id > 0 && dto.imprint!.name.trim().isNotEmpty) {
+      _metadataCache?.indexImprint(dto.imprint!.id, dto.imprint!.name.trim());
+    }
+    for (final char in dto.characters) {
+      if (char.id > 0 && char.name.trim().isNotEmpty) {
+        _metadataCache?.indexCharacter(char.id, char.name.trim());
+      }
+    }
+    for (final credit in dto.credits) {
+      if (credit.id > 0 && credit.creator?.trim().isNotEmpty == true) {
+        _metadataCache?.indexCreator(credit.id, credit.creator!.trim());
+      }
+    }
     await _metronEntityDao.attachedDatabase.transaction(() async {
       if (dto.publisher != null && dto.publisher!.id > 0) {
         await _metronEntityDao.upsertPublisher(

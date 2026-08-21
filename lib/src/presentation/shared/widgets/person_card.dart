@@ -65,7 +65,7 @@ class PersonCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(10),
       onTap: effectiveOnTap,
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,

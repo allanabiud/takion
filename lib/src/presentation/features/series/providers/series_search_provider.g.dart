@@ -50,7 +50,7 @@ final class SeriesSearchProvider
   }
 }
 
-String _$seriesSearchHash() => r'53f0d65219876cebb21cb20086671cc7f485d157';
+String _$seriesSearchHash() => r'082af19cde501cb00049abea494edfa25e60d626';
 
 final class SeriesSearchFamily extends $Family
     with

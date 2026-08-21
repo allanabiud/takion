@@ -8,7 +8,7 @@ class HorizontalPreviewSection extends StatelessWidget {
     required this.itemCount,
     required this.itemBuilder,
     this.count,
-    this.height = 250,
+    this.height = 256,
     this.emptyText = "No items available.",
     this.separatorWidth = 12,
   });

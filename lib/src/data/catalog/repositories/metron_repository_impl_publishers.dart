@@ -433,6 +433,9 @@ mixin _PublishersRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertPublisherDetails(PublisherDetailsDto dto) async {
+    if (dto.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(dto.id, dto.name.trim());
+    }
     await _metronEntityDao.upsertPublisher(
       MetronPublishersCompanion(
         id: Value(dto.id),

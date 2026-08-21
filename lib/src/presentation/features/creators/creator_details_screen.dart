@@ -104,7 +104,7 @@ class _CreatorDetailsScreenState
 
         return [
           if (hasDescription) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -112,7 +112,7 @@ class _CreatorDetailsScreenState
               ),
             ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -135,47 +135,36 @@ class _CreatorInfoCard extends StatelessWidget {
     return DateFormatter.comicDate(date);
   }
 
-  String? _modifiedValue() {
-    final modified = details.modified;
-    if (modified == null) return null;
-    return DateFormatter.isoDateTime(modified);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final modifiedValue = _modifiedValue();
-    final hasModified = modifiedValue != null && modifiedValue.isNotEmpty;
     final birthValue = _dateValue(details.birth);
     final deathValue = _dateValue(details.death);
 
-    final contentItems = <InfoGridItem>[
-      if (birthValue != null) InfoGridItem(label: "Birth", value: birthValue),
-      if (deathValue != null) InfoGridItem(label: "Death", value: deathValue),
+    final contentItems = <DetailPropertyItem>[
+      if (birthValue != null)
+        DetailPropertyItem(label: "Birth Date", value: birthValue),
+      if (deathValue != null)
+        DetailPropertyItem(label: "Date of Passing", value: deathValue),
+      if (details.alias.isNotEmpty)
+        DetailPropertyItem(label: "Aliases", value: details.alias.join(", ")),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (contentItems.isNotEmpty) ...[
-          const SectionHeader(title: "DETAILS"),
-          const SizedBox(height: 12),
-          InfoGrid(items: contentItems),
-          const SizedBox(height: 16),
+          DetailsPropertyCard(
+            title: "DETAILS",
+            items: contentItems,
+          ),
+          const SizedBox(height: 20),
         ],
         DatabaseIdsSection(
           metronId: details.id,
           comicVineId: details.cvId,
           gcdId: details.gcdId,
+          modifiedAt: details.modified,
         ),
-        if (hasModified) ...[
-          const SizedBox(height: 8),
-          Text(
-            "Last modified: $modifiedValue",
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-          ),
-        ],
       ],
     );
   }

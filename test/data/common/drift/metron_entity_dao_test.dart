@@ -185,5 +185,28 @@ void main() {
       expect(row, isNotNull);
       expect(row!.isFullyHydrated, isTrue);
     });
+
+    test("publisher & imprint stub upserts insert rows correctly", () async {
+      await db.metronEntityDao.upsertPublisherStubsBatch([
+        MetronPublishersCompanion.insert(
+          id: const Value(10),
+          name: "DC Comics",
+          isFullyHydrated: const Value(false),
+        ),
+      ]);
+      await db.metronEntityDao.upsertImprintStubsBatch([
+        MetronImprintsCompanion.insert(
+          id: const Value(20),
+          name: "Vertigo",
+          isFullyHydrated: const Value(false),
+        ),
+      ]);
+
+      final publishers = await db.metronEntityDao.getAllPublisherNames();
+      final imprints = await db.metronEntityDao.getAllImprintNames();
+
+      expect(publishers[10], equals("DC Comics"));
+      expect(imprints[20], equals("Vertigo"));
+    });
   });
 }

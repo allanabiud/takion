@@ -562,6 +562,15 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
 
   Future<void> _upsertSeriesDetails(SeriesDetailsDto dto) async {
     final coverUrl = await _metronEntityDao.computeSeriesCoverUrl(dto.id);
+    if (dto.name.trim().isNotEmpty) {
+      _metadataCache?.indexSeries(dto.id, dto.name.trim());
+    }
+    if (dto.publisher != null && dto.publisher!.id > 0 && dto.publisher!.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(dto.publisher!.id, dto.publisher!.name.trim());
+    }
+    if (dto.imprint != null && dto.imprint!.id > 0 && dto.imprint!.name.trim().isNotEmpty) {
+      _metadataCache?.indexImprint(dto.imprint!.id, dto.imprint!.name.trim());
+    }
     await _metronEntityDao.attachedDatabase.transaction(() async {
       if (dto.publisher != null && dto.publisher!.id > 0) {
         await _metronEntityDao.upsertPublisher(

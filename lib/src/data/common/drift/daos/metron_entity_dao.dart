@@ -575,4 +575,108 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
       }
     });
   }
+
+  Future<void> upsertPublisherStubsBatch(
+    List<MetronPublishersCompanion> stubs,
+  ) async {
+    if (stubs.isEmpty) return;
+    await batch((b) {
+      for (final stub in stubs) {
+        b.insert(
+          attachedDatabase.metronPublishers,
+          stub,
+          onConflict: DoUpdate(
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> upsertImprintStubsBatch(
+    List<MetronImprintsCompanion> stubs,
+  ) async {
+    if (stubs.isEmpty) return;
+    await batch((b) {
+      for (final stub in stubs) {
+        b.insert(
+          attachedDatabase.metronImprints,
+          stub,
+          onConflict: DoUpdate(
+            (_) => stub.copyWith(isFullyHydrated: const Value.absent()),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<Map<int, String>> getAllSeriesNames() async {
+    final rows = await (selectOnly(attachedDatabase.metronSeries)
+          ..addColumns([
+            attachedDatabase.metronSeries.id,
+            attachedDatabase.metronSeries.name,
+          ]))
+        .get();
+    return {
+      for (final row in rows)
+        row.read(attachedDatabase.metronSeries.id)!:
+            row.read(attachedDatabase.metronSeries.name) ?? "",
+    };
+  }
+
+  Future<Map<int, String>> getAllPublisherNames() async {
+    final rows = await (selectOnly(attachedDatabase.metronPublishers)
+          ..addColumns([
+            attachedDatabase.metronPublishers.id,
+            attachedDatabase.metronPublishers.name,
+          ]))
+        .get();
+    return {
+      for (final row in rows)
+        row.read(attachedDatabase.metronPublishers.id)!:
+            row.read(attachedDatabase.metronPublishers.name) ?? "",
+    };
+  }
+
+  Future<Map<int, String>> getAllCharacterNames() async {
+    final rows = await (selectOnly(attachedDatabase.metronCharacters)
+          ..addColumns([
+            attachedDatabase.metronCharacters.id,
+            attachedDatabase.metronCharacters.name,
+          ]))
+        .get();
+    return {
+      for (final row in rows)
+        row.read(attachedDatabase.metronCharacters.id)!:
+            row.read(attachedDatabase.metronCharacters.name) ?? "",
+    };
+  }
+
+  Future<Map<int, String>> getAllCreatorNames() async {
+    final rows = await (selectOnly(attachedDatabase.metronCreators)
+          ..addColumns([
+            attachedDatabase.metronCreators.id,
+            attachedDatabase.metronCreators.name,
+          ]))
+        .get();
+    return {
+      for (final row in rows)
+        row.read(attachedDatabase.metronCreators.id)!:
+            row.read(attachedDatabase.metronCreators.name) ?? "",
+    };
+  }
+
+  Future<Map<int, String>> getAllImprintNames() async {
+    final rows = await (selectOnly(attachedDatabase.metronImprints)
+          ..addColumns([
+            attachedDatabase.metronImprints.id,
+            attachedDatabase.metronImprints.name,
+          ]))
+        .get();
+    return {
+      for (final row in rows)
+        row.read(attachedDatabase.metronImprints.id)!:
+            row.read(attachedDatabase.metronImprints.name) ?? "",
+    };
+  }
 }

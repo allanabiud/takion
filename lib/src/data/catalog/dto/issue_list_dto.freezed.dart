@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IssueListDto {
 
- int get id; String get number; IssueListSeriesDto? get series;@JsonKey(name: 'cover_date') String? get coverDate;@JsonKey(name: 'store_date') String? get storeDate; String? get image;@JsonKey(name: 'issue') String? get issueName; String? get modified;@JsonKey(name: 'cover_hash') String? get coverHash;
+ int get id; String get number; IssueListSeriesDto? get series;@JsonKey(name: "cover_date") String? get coverDate;@JsonKey(name: "store_date") String? get storeDate; String? get image;@JsonKey(name: "issue") String? get issueName; String? get modified;@JsonKey(name: "cover_hash") String? get coverHash;
 /// Create a copy of IssueListDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $IssueListDtoCopyWith<$Res>  {
   factory $IssueListDtoCopyWith(IssueListDto value, $Res Function(IssueListDto) _then) = _$IssueListDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String number, IssueListSeriesDto? series,@JsonKey(name: 'cover_date') String? coverDate,@JsonKey(name: 'store_date') String? storeDate, String? image,@JsonKey(name: 'issue') String? issueName, String? modified,@JsonKey(name: 'cover_hash') String? coverHash
+ int id, String number, IssueListSeriesDto? series,@JsonKey(name: "cover_date") String? coverDate,@JsonKey(name: "store_date") String? storeDate, String? image,@JsonKey(name: "issue") String? issueName, String? modified,@JsonKey(name: "cover_hash") String? coverHash
 });
 
 
@@ -170,7 +170,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String number,  IssueListSeriesDto? series, @JsonKey(name: 'cover_date')  String? coverDate, @JsonKey(name: 'store_date')  String? storeDate,  String? image, @JsonKey(name: 'issue')  String? issueName,  String? modified, @JsonKey(name: 'cover_hash')  String? coverHash)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String number,  IssueListSeriesDto? series, @JsonKey(name: "cover_date")  String? coverDate, @JsonKey(name: "store_date")  String? storeDate,  String? image, @JsonKey(name: "issue")  String? issueName,  String? modified, @JsonKey(name: "cover_hash")  String? coverHash)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueListDto() when $default != null:
 return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDate,_that.image,_that.issueName,_that.modified,_that.coverHash);case _:
@@ -191,7 +191,7 @@ return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String number,  IssueListSeriesDto? series, @JsonKey(name: 'cover_date')  String? coverDate, @JsonKey(name: 'store_date')  String? storeDate,  String? image, @JsonKey(name: 'issue')  String? issueName,  String? modified, @JsonKey(name: 'cover_hash')  String? coverHash)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String number,  IssueListSeriesDto? series, @JsonKey(name: "cover_date")  String? coverDate, @JsonKey(name: "store_date")  String? storeDate,  String? image, @JsonKey(name: "issue")  String? issueName,  String? modified, @JsonKey(name: "cover_hash")  String? coverHash)  $default,) {final _that = this;
 switch (_that) {
 case _IssueListDto():
 return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDate,_that.image,_that.issueName,_that.modified,_that.coverHash);case _:
@@ -211,7 +211,7 @@ return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDa
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String number,  IssueListSeriesDto? series, @JsonKey(name: 'cover_date')  String? coverDate, @JsonKey(name: 'store_date')  String? storeDate,  String? image, @JsonKey(name: 'issue')  String? issueName,  String? modified, @JsonKey(name: 'cover_hash')  String? coverHash)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String number,  IssueListSeriesDto? series, @JsonKey(name: "cover_date")  String? coverDate, @JsonKey(name: "store_date")  String? storeDate,  String? image, @JsonKey(name: "issue")  String? issueName,  String? modified, @JsonKey(name: "cover_hash")  String? coverHash)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueListDto() when $default != null:
 return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDate,_that.image,_that.issueName,_that.modified,_that.coverHash);case _:
@@ -226,18 +226,18 @@ return $default(_that.id,_that.number,_that.series,_that.coverDate,_that.storeDa
 
 
 class _IssueListDto extends IssueListDto {
-  const _IssueListDto({required this.id, required this.number, required this.series, @JsonKey(name: 'cover_date') this.coverDate, @JsonKey(name: 'store_date') this.storeDate, required this.image, @JsonKey(name: 'issue') this.issueName, this.modified, @JsonKey(name: 'cover_hash') this.coverHash}): super._();
+  const _IssueListDto({required this.id, required this.number, required this.series, @JsonKey(name: "cover_date") this.coverDate, @JsonKey(name: "store_date") this.storeDate, required this.image, @JsonKey(name: "issue") this.issueName, this.modified, @JsonKey(name: "cover_hash") this.coverHash}): super._();
   
 
 @override final  int id;
 @override final  String number;
 @override final  IssueListSeriesDto? series;
-@override@JsonKey(name: 'cover_date') final  String? coverDate;
-@override@JsonKey(name: 'store_date') final  String? storeDate;
+@override@JsonKey(name: "cover_date") final  String? coverDate;
+@override@JsonKey(name: "store_date") final  String? storeDate;
 @override final  String? image;
-@override@JsonKey(name: 'issue') final  String? issueName;
+@override@JsonKey(name: "issue") final  String? issueName;
 @override final  String? modified;
-@override@JsonKey(name: 'cover_hash') final  String? coverHash;
+@override@JsonKey(name: "cover_hash") final  String? coverHash;
 
 /// Create a copy of IssueListDto
 /// with the given fields replaced by the non-null parameter values.
@@ -269,7 +269,7 @@ abstract mixin class _$IssueListDtoCopyWith<$Res> implements $IssueListDtoCopyWi
   factory _$IssueListDtoCopyWith(_IssueListDto value, $Res Function(_IssueListDto) _then) = __$IssueListDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String number, IssueListSeriesDto? series,@JsonKey(name: 'cover_date') String? coverDate,@JsonKey(name: 'store_date') String? storeDate, String? image,@JsonKey(name: 'issue') String? issueName, String? modified,@JsonKey(name: 'cover_hash') String? coverHash
+ int id, String number, IssueListSeriesDto? series,@JsonKey(name: "cover_date") String? coverDate,@JsonKey(name: "store_date") String? storeDate, String? image,@JsonKey(name: "issue") String? issueName, String? modified,@JsonKey(name: "cover_hash") String? coverHash
 });
 
 

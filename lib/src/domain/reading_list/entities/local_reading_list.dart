@@ -3,7 +3,6 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:takion/src/domain/catalog/entities/entities.dart";
 
 part "local_reading_list.freezed.dart";
-part "local_reading_list.g.dart";
 
 enum ListContentType { series, issue }
 
@@ -48,6 +47,24 @@ abstract class LocalReadingListItem with _$LocalReadingListItem {
           ? DateTime.tryParse(json["storeDate"].toString())
           : null,
     );
+  }
+}
+
+extension LocalReadingListItemJson on LocalReadingListItem {
+  Map<String, dynamic> toJson() {
+    return {
+      "targetId": targetId,
+      "isSeries": isSeries,
+      "role": role.name,
+      "isRead": isRead,
+      "seriesName": seriesName,
+      "seriesVolume": seriesVolume,
+      "issueNumber": issueNumber,
+      "seriesId": seriesId,
+      "yearBegan": yearBegan,
+      "coverDate": coverDate?.toIso8601String(),
+      "storeDate": storeDate?.toIso8601String(),
+    };
   }
 }
 
@@ -108,6 +125,28 @@ abstract class LocalReadingList with _$LocalReadingList {
           ? DateTime.tryParse(json["lastSyncedAt"].toString())
           : null,
     );
+  }
+}
+
+extension LocalReadingListJson on LocalReadingList {
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "title": title,
+      "description": description,
+      "isOrdered": isOrdered,
+      "contentType": contentType.name,
+      "createdAt": createdAt.toIso8601String(),
+      "updatedAt": updatedAt.toIso8601String(),
+      "items": items.map((i) => i.toJson()).toList(),
+      "metronSourceId": metronSourceId,
+      "metronArcId": metronArcId,
+      "metronAttributionSource": metronAttributionSource,
+      "metronAttributionUrl": metronAttributionUrl,
+      "metronImageUrl": metronImageUrl,
+      "metronListType": metronListType,
+      "lastSyncedAt": lastSyncedAt?.toIso8601String(),
+    };
   }
 }
 

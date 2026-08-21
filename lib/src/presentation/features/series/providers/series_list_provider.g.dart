@@ -50,7 +50,7 @@ final class SeriesListProvider
   }
 }
 
-String _$seriesListHash() => r'da47ee5f43c1e3f8ed93e13e3dfe6c437f972eb1';
+String _$seriesListHash() => r'1d471f7db0604d703adfee35177fc136ca1c1070';
 
 final class SeriesListFamily extends $Family
     with

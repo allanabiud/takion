@@ -50,7 +50,7 @@ final class TeamSearchProvider
   }
 }
 
-String _$teamSearchHash() => r'0f3062d1f45f4356584339acf7d4487a6bf2a646';
+String _$teamSearchHash() => r'c7f96ca3b4508c589b4b1ffe319180bb3a1c5a89';
 
 final class TeamSearchFamily extends $Family
     with

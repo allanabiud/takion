@@ -50,7 +50,7 @@ final class ArcSearchProvider
   }
 }
 
-String _$arcSearchHash() => r'fe71050ed29447e7753a87531862ca391f86157b';
+String _$arcSearchHash() => r'03b7cca57b5203780de0dfde102c915cdda2607e';
 
 final class ArcSearchFamily extends $Family
     with

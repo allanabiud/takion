@@ -11,7 +11,6 @@ part of 'local_reading_list.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$LocalReadingListItem {
 
@@ -22,8 +21,6 @@ mixin _$LocalReadingListItem {
 @pragma('vm:prefer-inline')
 $LocalReadingListItemCopyWith<LocalReadingListItem> get copyWith => _$LocalReadingListItemCopyWithImpl<LocalReadingListItem>(this as LocalReadingListItem, _$identity);
 
-  /// Serializes this LocalReadingListItem to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber)&&(identical(other.seriesId, seriesId) || other.seriesId == seriesId)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber,seriesId,yearBegan,coverDate,storeDate);
 
@@ -216,11 +213,11 @@ return $default(_that.targetId,_that.isSeries,_that.role,_that.isRead,_that.seri
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _LocalReadingListItem implements LocalReadingListItem {
   const _LocalReadingListItem({required this.targetId, required this.isSeries, required this.role, required this.isRead, this.seriesName, this.seriesVolume, this.issueNumber, this.seriesId, this.yearBegan, this.coverDate, this.storeDate});
-  factory _LocalReadingListItem.fromJson(Map<String, dynamic> json) => _$LocalReadingListItemFromJson(json);
+  
 
 @override final  String targetId;
 @override final  bool isSeries;
@@ -240,17 +237,14 @@ class _LocalReadingListItem implements LocalReadingListItem {
 @pragma('vm:prefer-inline')
 _$LocalReadingListItemCopyWith<_LocalReadingListItem> get copyWith => __$LocalReadingListItemCopyWithImpl<_LocalReadingListItem>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$LocalReadingListItemToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingListItem&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.isSeries, isSeries) || other.isSeries == isSeries)&&(identical(other.role, role) || other.role == role)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.seriesName, seriesName) || other.seriesName == seriesName)&&(identical(other.seriesVolume, seriesVolume) || other.seriesVolume == seriesVolume)&&(identical(other.issueNumber, issueNumber) || other.issueNumber == issueNumber)&&(identical(other.seriesId, seriesId) || other.seriesId == seriesId)&&(identical(other.yearBegan, yearBegan) || other.yearBegan == yearBegan)&&(identical(other.coverDate, coverDate) || other.coverDate == coverDate)&&(identical(other.storeDate, storeDate) || other.storeDate == storeDate));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,targetId,isSeries,role,isRead,seriesName,seriesVolume,issueNumber,seriesId,yearBegan,coverDate,storeDate);
 
@@ -304,7 +298,6 @@ as DateTime?,
 
 }
 
-
 /// @nodoc
 mixin _$LocalReadingList {
 
@@ -315,8 +308,6 @@ mixin _$LocalReadingList {
 @pragma('vm:prefer-inline')
 $LocalReadingListCopyWith<LocalReadingList> get copyWith => _$LocalReadingListCopyWithImpl<LocalReadingList>(this as LocalReadingList, _$identity);
 
-  /// Serializes this LocalReadingList to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -324,7 +315,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronArcId, metronArcId) || other.metronArcId == metronArcId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(items),metronSourceId,metronArcId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt);
 
@@ -513,11 +504,11 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _LocalReadingList implements LocalReadingList {
   const _LocalReadingList({required this.id, required this.title, required this.description, required this.isOrdered, required this.contentType, required this.createdAt, required this.updatedAt, required final  List<LocalReadingListItem> items, this.metronSourceId, this.metronArcId, this.metronAttributionSource, this.metronAttributionUrl, this.metronImageUrl, this.metronListType, this.lastSyncedAt}): _items = items;
-  factory _LocalReadingList.fromJson(Map<String, dynamic> json) => _$LocalReadingListFromJson(json);
+  
 
 @override final  String id;
 @override final  String title;
@@ -547,17 +538,14 @@ class _LocalReadingList implements LocalReadingList {
 @pragma('vm:prefer-inline')
 _$LocalReadingListCopyWith<_LocalReadingList> get copyWith => __$LocalReadingListCopyWithImpl<_LocalReadingList>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$LocalReadingListToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronArcId, metronArcId) || other.metronArcId == metronArcId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(_items),metronSourceId,metronArcId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt);
 

@@ -50,7 +50,7 @@ final class UniverseSearchProvider
   }
 }
 
-String _$universeSearchHash() => r'd2ed5866d0db6b4479f1f5d03ddd9bbfea06d2c7';
+String _$universeSearchHash() => r'0143c9fac55898ad88905e23465e4297460932b6';
 
 final class UniverseSearchFamily extends $Family
     with

@@ -2,7 +2,6 @@ import "package:auto_route/auto_route.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/common/content_sorting.dart";
 import "package:takion/src/domain/entities.dart";
@@ -381,14 +380,9 @@ class _SeriesDetailsScreenState
             .toList();
         final showAssociated = associated.isNotEmpty;
 
-        String? modifiedValue(DateTime? modified) {
-          if (modified == null) return null;
-          return DateFormatter.isoDateTime(modified);
-        }
-
         return [
           if (showDescription) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -396,7 +390,7 @@ class _SeriesDetailsScreenState
               ),
             ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -416,10 +410,10 @@ class _SeriesDetailsScreenState
                   const SizedBox(height: 12),
                   if (isIssuesLoading)
                     SizedBox(
-                      height: 250,
+                      height: 256,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.zero,
                         itemCount: 6,
                         separatorBuilder: (_, _) => const SizedBox(width: 8),
                         itemBuilder: (_, _) =>
@@ -428,7 +422,7 @@ class _SeriesDetailsScreenState
                     )
                   else if (issuesPreviewAsync.hasError)
                     SizedBox(
-                      height: 200,
+                      height: 220,
                       child: AsyncStatePanel.error(
                         errorMessage: "Failed to load issues",
                         onRetry: () => ref.invalidate(
@@ -441,7 +435,7 @@ class _SeriesDetailsScreenState
                       title: "",
                       onViewAll: null,
                       itemCount: issuesPreview.length,
-                      height: 250,
+                      height: 256,
                       emptyText: "No issues available.",
                       itemBuilder: (context, index) {
                         final issue = issuesPreview[index];
@@ -471,7 +465,7 @@ class _SeriesDetailsScreenState
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -479,7 +473,7 @@ class _SeriesDetailsScreenState
             ),
           ),
           if (showAssociated) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -488,7 +482,7 @@ class _SeriesDetailsScreenState
             ),
           ],
           if (d.genres.isNotEmpty) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -497,7 +491,7 @@ class _SeriesDetailsScreenState
             ),
           ],
           ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -505,20 +499,7 @@ class _SeriesDetailsScreenState
                   metronId: d.id,
                   comicVineId: d.cvId,
                   gcdId: d.gcdId,
-                ),
-              ),
-            ),
-          ],
-          if (modifiedValue(d.modified) != null) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  "Last modified: ${modifiedValue(d.modified)}",
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                  modifiedAt: d.modified,
                 ),
               ),
             ),

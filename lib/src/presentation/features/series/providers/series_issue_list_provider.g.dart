@@ -50,7 +50,7 @@ final class SeriesIssueListProvider
   }
 }
 
-String _$seriesIssueListHash() => r'b78531907ae6d91c813a14e6ec4d21919205ccad';
+String _$seriesIssueListHash() => r'f8e4c32c54002970470f840ec27d426521ca22ac';
 
 final class SeriesIssueListFamily extends $Family
     with

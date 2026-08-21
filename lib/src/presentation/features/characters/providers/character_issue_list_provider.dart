@@ -31,6 +31,42 @@ class CharacterIssueListArgs {
   int get hashCode => Object.hash(characterId, page, limit);
 }
 
+Future<CharacterIssueListPage> _fetchValidIssuePage(
+  Future<CharacterIssueListPage> Function(int page) fetcher, {
+  required int targetPage,
+  required int fallbackPage,
+  CharacterIssueListPage? fallbackPageData,
+}) async {
+  if (targetPage == fallbackPage) {
+    if (fallbackPageData != null) return fallbackPageData;
+    try {
+      return await fetcher(fallbackPage);
+    } catch (_) {
+      return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
+    }
+  }
+  final minPage = (targetPage - metronMaxWalkPages + 1).clamp(1, targetPage);
+  for (var p = targetPage; p >= minPage; p--) {
+    if (p == fallbackPage && fallbackPageData != null) {
+      if (fallbackPageData.results.isNotEmpty) return fallbackPageData;
+    }
+    try {
+      final res = await fetcher(p);
+      if (res.results.isNotEmpty) return res;
+    } catch (e) {
+      AppLogger.debug("fetchValidIssuePage: page $p failed", error: e);
+    }
+  }
+  if (fallbackPageData != null) {
+    return fallbackPageData;
+  }
+  try {
+    return await fetcher(fallbackPage);
+  } catch (_) {
+    return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
+  }
+}
+
 final characterIssueListProvider = FutureProvider.autoDispose
     .family<CharacterIssueListPage, CharacterIssueListArgs>((ref, args) async {
       final link = ref.keepAlive();
@@ -57,24 +93,22 @@ final characterIssueListProvider = FutureProvider.autoDispose
 
       CharacterIssueListPage resultPage;
       if (sortOption == ContentSortOption.dateNewest && totalPages > 1) {
-        final targetPage = totalPages - args.page + 1;
+        var targetPage = totalPages - args.page + 1;
+        targetPage = targetPage.clamp(1, totalPages);
         if (targetPage == 1) {
           resultPage = page1;
         } else {
-          resultPage = await repository.getCharacterIssueList(
-            args.characterId,
-            page: targetPage,
-            limit: args.limit,
-            cancelToken: cancelToken,
+          resultPage = await _fetchValidIssuePage(
+            (p) => repository.getCharacterIssueList(
+              args.characterId,
+              page: p,
+              limit: args.limit,
+              cancelToken: cancelToken,
+            ),
+            targetPage: targetPage,
+            fallbackPage: 1,
+            fallbackPageData: page1,
           );
-          if (resultPage.results.isEmpty && page1.count > 0) {
-            AppLogger.warning(
-              "CharacterIssueList: page $targetPage returned empty for "
-              "character ${args.characterId} (count ${page1.count}). "
-              "Falling back to page 1.",
-            );
-            resultPage = page1;
-          }
         }
       } else {
         if (args.page == 1) {
@@ -89,11 +123,13 @@ final characterIssueListProvider = FutureProvider.autoDispose
         }
       }
 
+      final sortedResults = sortIssues(resultPage.results, sortOption);
+
       timer = Timer(const Duration(minutes: 5), link.close);
 
       return CharacterIssueListPage(
         count: page1.count,
-        results: resultPage.results,
+        results: sortedResults,
         currentPage: args.page,
         realPageSize: page1.realPageSize,
         next: args.page < totalPages
@@ -126,37 +162,41 @@ final characterDetailsIssuesProvider = FutureProvider.autoDispose
         }
       }
 
-      final futures = <Future<CharacterIssueListPage>>[];
-
       if (totalPages > 1) {
-        futures.add(
-          repository
-              .getCharacterIssueList(characterId, page: totalPages)
-              .catchError((e) {
-            AppLogger.debug("Failed to fetch character last page", error: e);
-            return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
-          }),
+        final lastPage = await _fetchValidIssuePage(
+          (p) => repository.getCharacterIssueList(characterId, page: p),
+          targetPage: totalPages,
+          fallbackPage: 1,
+          fallbackPageData: page1,
         );
-      }
+        for (final issue in lastPage.results) {
+          if (issue.id != null) {
+            resultsMap[issue.id!] = issue;
+          }
+        }
 
-      if (totalPages > 2) {
-        futures.add(
-          repository
-              .getCharacterIssueList(characterId, page: totalPages - 1)
-              .catchError((e) {
-            AppLogger.debug(
-              "Failed to fetch character penultimate page",
-              error: e,
-            );
-            return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
-          }),
-        );
-      }
+        if (totalPages > 2) {
+          final penultPage = await _fetchValidIssuePage(
+            (p) => repository.getCharacterIssueList(characterId, page: p),
+            targetPage: totalPages - 1,
+            fallbackPage: 1,
+            fallbackPageData: page1,
+          );
+          for (final issue in penultPage.results) {
+            if (issue.id != null) {
+              resultsMap[issue.id!] = issue;
+            }
+          }
+        }
 
-      if (futures.isNotEmpty) {
-        final pages = await Future.wait(futures);
-        for (final p in pages) {
-          for (final issue in p.results) {
+        if (totalPages > 3) {
+          final antepenultPage = await _fetchValidIssuePage(
+            (p) => repository.getCharacterIssueList(characterId, page: p),
+            targetPage: totalPages - 2,
+            fallbackPage: 1,
+            fallbackPageData: page1,
+          );
+          for (final issue in antepenultPage.results) {
             if (issue.id != null) {
               resultsMap[issue.id!] = issue;
             }
@@ -170,6 +210,6 @@ final characterDetailsIssuesProvider = FutureProvider.autoDispose
         count: page1.count,
         results: resultsMap.values.toList(),
         currentPage: 1,
-        realPageSize: page1.realPageSize,
+        realPageSize: pageSize,
       );
     });
