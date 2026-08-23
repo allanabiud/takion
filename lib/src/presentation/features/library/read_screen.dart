@@ -152,10 +152,7 @@ class _ReadBrowseTab extends ConsumerStatefulWidget {
   final bool isSearching;
   final String searchQuery;
 
-  const _ReadBrowseTab({
-    required this.isSearching,
-    required this.searchQuery,
-  });
+  const _ReadBrowseTab({required this.isSearching, required this.searchQuery});
 
   @override
   ConsumerState<_ReadBrowseTab> createState() => _ReadBrowseTabState();
@@ -198,24 +195,20 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
   Widget build(BuildContext context) {
     super.build(context);
     final viewAsync = ref.watch(
-      categorySeriesViewProvider(
-        (
-          category: "read",
-          query: widget.isSearching ? widget.searchQuery : "",
-        ),
-      ),
+      categorySeriesViewProvider((
+        category: "read",
+        query: widget.isSearching ? widget.searchQuery : "",
+      )),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryRead),
     );
 
     ref.listen(
-      categorySeriesViewProvider(
-        (
-          category: "read",
-          query: widget.isSearching ? widget.searchQuery : "",
-        ),
-      ),
+      categorySeriesViewProvider((
+        category: "read",
+        query: widget.isSearching ? widget.searchQuery : "",
+      )),
       (previous, next) {
         if (previous?.value != next.value &&
             _visibleCount != _initialVisibleCount) {
@@ -226,8 +219,9 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
 
     return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
-      error: (error, _) =>
-          const AsyncStatePanel.error(errorMessage: "Failed to load read series"),
+      error: (error, _) => const AsyncStatePanel.error(
+        errorMessage: "Failed to load read series",
+      ),
       data: (view) {
         final filtered = view.series;
         final categoryCounts = view.categoryCounts;
@@ -278,38 +272,43 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
                     ),
                   ),
                   SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      if (index >= visible.length) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          child: Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index >= visible.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        final summary = visible[index];
+                        return RepaintBoundary(
+                          child: SeriesListTile(
+                            series: summary,
+                            categoryCount: categoryCounts[summary.id],
+                            categoryLabel: "read",
+                            showProgressBar: true,
+                            isFirst: index == 0,
+                            isLast: !hasMore && index == visible.length - 1,
+                            onTap: () => context.pushRoute(
+                              LibrarySeriesRoute(
+                                seriesId: summary.id,
+                                category: "read",
+                                seriesName: summary.name,
+                              ),
                             ),
                           ),
                         );
-                      }
-                      final summary = visible[index];
-                      return RepaintBoundary(
-                        child: SeriesListTile(
-                          series: summary,
-                          categoryCount: categoryCounts[summary.id],
-                          categoryLabel: "read",
-                          showProgressBar: true,
-                          isFirst: index == 0,
-                          isLast: !hasMore && index == visible.length - 1,
-                          onTap: () => context.pushRoute(
-                            LibrarySeriesRoute(
-                              seriesId: summary.id,
-                              category: "read",
-                              seriesName: summary.name,
-                            ),
-                          ),
-                        ),
-                      );
-                    }, childCount: hasMore ? visible.length + 1 : visible.length),
+                      },
+                      childCount: hasMore ? visible.length + 1 : visible.length,
+                    ),
                   ),
                 ],
               ),
@@ -380,7 +379,7 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
               ),
             ),
             const SizedBox(height: 16),
-            _ReadStatsCards(filter: _filter),
+            ReadStatsCards(filter: _filter),
             const SizedBox(height: 24),
             _ReadTrendsChart(filter: _filter),
             const SizedBox(height: 24),
@@ -396,49 +395,32 @@ class _ReadStatsTabState extends ConsumerState<_ReadStatsTab>
   }
 }
 
-class _ReadStatsCards extends ConsumerWidget {
+class ReadStatsCards extends ConsumerStatefulWidget {
   final LibraryFilter filter;
 
-  const _ReadStatsCards({required this.filter});
+  const ReadStatsCards({super.key, required this.filter});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(libraryBasicStatsProvider(filter));
+  ConsumerState<ReadStatsCards> createState() => _ReadStatsCardsState();
+}
+
+class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
+  LibraryBasicStats? _lastKnownStats;
+
+  @override
+  Widget build(BuildContext context) {
+    final statsAsync = ref.watch(libraryBasicStatsProvider(widget.filter));
     final theme = Theme.of(context);
 
-    // Use previous data during reloads/errors so stat cards never disappear.
-    final stats = statsAsync.hasValue ? statsAsync.value : null;
-
-    // Only show shimmer on the very first load when no data exists yet.
-    if (stats == null && statsAsync.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ShimmerWidget(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: SkeletonBox(height: 80)),
-                  SizedBox(width: 8),
-                  Expanded(child: SkeletonBox(height: 80)),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(child: SkeletonBox(height: 80)),
-                  SizedBox(width: 8),
-                  Expanded(child: SkeletonBox(height: 80)),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
+    if (statsAsync.hasValue) {
+      _lastKnownStats = statsAsync.value;
     }
 
-    // Always render the cards – use zero stats as a fallback.
-    final displayStats = stats ?? LibraryBasicStats.zero(filter);
+    // Preserve last known stats across filter switches for smooth count transitions.
+    final displayStats =
+        _lastKnownStats ??
+        (statsAsync.hasValue ? statsAsync.value : null) ??
+        LibraryBasicStats.zero(widget.filter);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

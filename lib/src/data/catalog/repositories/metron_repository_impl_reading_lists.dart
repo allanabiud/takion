@@ -77,7 +77,8 @@ mixin _ReadingListsRepositoryMixin on _RepositoryState {
               previous: remotePage.previous,
             );
           },
-          cacheKey: 'reading_list:${nextUrl ?? "$page"}|$filtersKey|$modifiedGt',
+          cacheKey:
+              'reading_list:${nextUrl ?? "$page"}|$filtersKey|$modifiedGt',
           cooldown: MetronCachePolicies.readingList.refreshCooldown,
         );
       }

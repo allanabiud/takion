@@ -39,9 +39,10 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
   @override
   Widget build(BuildContext context) {
     final viewAsync = ref.watch(
-      categorySeriesViewProvider(
-        (category: "unrated", query: _isSearching ? _searchController.text : ""),
-      ),
+      categorySeriesViewProvider((
+        category: "unrated",
+        query: _isSearching ? _searchController.text : "",
+      )),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryUnrated),

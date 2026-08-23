@@ -58,8 +58,7 @@ class PagedSearchSection<T> extends ConsumerStatefulWidget {
       _PagedSearchSectionState<T>();
 }
 
-class _PagedSearchSectionState<T>
-    extends ConsumerState<PagedSearchSection<T>> {
+class _PagedSearchSectionState<T> extends ConsumerState<PagedSearchSection<T>> {
   late final ScrollController _scrollController;
 
   @override
@@ -141,10 +140,12 @@ class _PagedSearchSectionState<T>
                           ),
                         ),
                       SliverList(
-                        delegate:
-                            SliverChildBuilderDelegate((context, index) {
+                        delegate: SliverChildBuilderDelegate((context, index) {
                           final item = widget.items[index];
-                          widget.onItemIndexed?.call(index, widget.items.length);
+                          widget.onItemIndexed?.call(
+                            index,
+                            widget.items.length,
+                          );
                           return Opacity(
                             opacity: widget.isLoading ? 0.6 : 1.0,
                             child: widget.itemBuilder(

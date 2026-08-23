@@ -9,13 +9,7 @@ import "package:takion/src/presentation/providers/providers.dart";
 
 int? _defaultPageSize(Object? _) => null;
 
-/// Generic paged entity list screen (issues, series, …) with a pinned count +
-/// sort header, pull-to-refresh, and BottomAppBar page navigation.
-///
-/// The three entity issue list screens and the publisher series screen are
-/// byte-identical except for the entity name, provider wiring, sort options,
-/// and tile. This widget captures the shared scaffold; feature screens become
-/// thin wrappers that supply those details.
+/// Generic paged entity list screen with sorting, pull-to-refresh, and bottom navigation.
 class EntityPagedListScreen<T, TItem> extends ConsumerStatefulWidget {
   const EntityPagedListScreen({
     super.key,
@@ -51,9 +45,6 @@ class EntityPagedListScreen<T, TItem> extends ConsumerStatefulWidget {
   final List<TItem> Function(T page) resultsOf;
   final bool Function(T page) hasNextOf;
   final bool Function(T page) hasPreviousOf;
-
-  /// Per-page result count as reported by the API, when known. When null the
-  /// default page size is assumed.
   final int? Function(T page) pageSizeOf;
   final SortPreferenceContext sortContext;
   final String Function(ContentSortOption option) sortLabel;
@@ -73,11 +64,7 @@ class EntityPagedListScreen<T, TItem> extends ConsumerStatefulWidget {
   final String? pluralUnit;
   final bool enableRefresh;
   final double? emptyHeight;
-
-  /// Optional [AppBar] actions (e.g. a bulk-select entry point).
   final List<Widget>? appBarActions;
-
-  /// Optional refresh override; when null, [invalidatePage] is used.
   final Future<void> Function(WidgetRef ref, int page)? onRefresh;
 
   @override
@@ -125,14 +112,14 @@ class _EntityPagedListScreenState<T, TItem>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(
-      sortPreferenceForContextProvider(widget.sortContext),
-      (prev, next) {
-        if (prev != null && prev != next) {
-          _changePage(1);
-        }
-      },
-    );
+    ref.listen(sortPreferenceForContextProvider(widget.sortContext), (
+      prev,
+      next,
+    ) {
+      if (prev != null && prev != next) {
+        _changePage(1);
+      }
+    });
 
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(widget.sortContext),

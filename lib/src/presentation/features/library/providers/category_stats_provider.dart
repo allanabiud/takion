@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
@@ -55,7 +54,8 @@ final categoryInsightsProvider = StreamProvider.autoDispose
               : filteredLibrary
                     .where(
                       (item) =>
-                          item.ownershipStatus == LibraryOwnershipStatus.wishlist,
+                          item.ownershipStatus ==
+                          LibraryOwnershipStatus.wishlist,
                     )
                     .length;
 
@@ -69,7 +69,9 @@ final categoryInsightsProvider = StreamProvider.autoDispose
 
           final readSeries = <String, int>{};
           final readSeriesYear = <String, int?>{};
-          final readItems = filteredLibrary.where((item) => item.isRead).toList();
+          final readItems = filteredLibrary
+              .where((item) => item.isRead)
+              .toList();
           final readSeriesIds = readItems
               .map((item) => item.metronSeriesId)
               .where((id) => id > 0)
@@ -82,7 +84,11 @@ final categoryInsightsProvider = StreamProvider.autoDispose
             final series = seriesMap[item.metronSeriesId];
             final seriesName = series?.name.trim();
             if (seriesName == null || seriesName.isEmpty) continue;
-            readSeries.update(seriesName, (value) => value + 1, ifAbsent: () => 1);
+            readSeries.update(
+              seriesName,
+              (value) => value + 1,
+              ifAbsent: () => 1,
+            );
             if (!readSeriesYear.containsKey(seriesName)) {
               readSeriesYear[seriesName] = series?.yearBegan;
             }
@@ -104,27 +110,31 @@ final categoryInsightsProvider = StreamProvider.autoDispose
           final creatorNames = <int, String>{};
           final insightIssueIds = filteredLibrary
               .map((item) => item.metronIssueId)
-              .toSet();
+              .where((id) => id > 0)
+              .toSet()
+              .toList();
 
-          final cachedDetails = <IssueDetails>[];
-          for (final issueId in insightIssueIds) {
-            var issue = await localCatalog.getIssue(issueId);
-            if (issue == null || !issue.isFullyHydrated) {
-              try {
-                await ref.read(metronRepositoryProvider).getIssueDetails(issueId);
-                issue = await localCatalog.getIssue(issueId);
-              } catch (e) {
-                AppLogger.debug(
-                  "Failed to hydrate issue $issueId for category stats",
-                  error: e,
-                );
+          final cachedDetails = await localCatalog.hydrateIssueDetails(
+            insightIssueIds,
+          );
+
+          final missingCreatorIds = <int>{};
+          for (final details in cachedDetails) {
+            for (final credit in details.credits) {
+              final creatorId =
+                  (credit.creatorId != null && credit.creatorId! > 0)
+                  ? credit.creatorId!
+                  : credit.id;
+              final rawName = credit.creator?.trim();
+              if (creatorId > 0 && (rawName == null || rawName.isEmpty)) {
+                missingCreatorIds.add(creatorId);
               }
             }
-            if (issue != null) {
-              final details = await localCatalog.hydrateIssueDetail(issueId);
-              if (details != null) cachedDetails.add(details);
-            }
           }
+
+          final creatorMap = missingCreatorIds.isNotEmpty
+              ? await localCatalog.getCreatorsByIds(missingCreatorIds.toList())
+              : <int, CreatorList>{};
 
           for (final details in cachedDetails) {
             final name = details.publisher?.name.trim();
@@ -147,7 +157,8 @@ final categoryInsightsProvider = StreamProvider.autoDispose
             }
             final seenCreatorIds = <int>{};
             for (final credit in details.credits) {
-              final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
+              final creatorId =
+                  (credit.creatorId != null && credit.creatorId! > 0)
                   ? credit.creatorId!
                   : credit.id;
               if (creatorId <= 0 || !seenCreatorIds.add(creatorId)) {
@@ -157,7 +168,7 @@ final categoryInsightsProvider = StreamProvider.autoDispose
               if (rawName != null && rawName.isNotEmpty) {
                 creatorNames[creatorId] = rawName;
               } else {
-                final c = await localCatalog.getCreator(creatorId);
+                final c = creatorMap[creatorId];
                 final daoName = c?.name;
                 creatorNames[creatorId] =
                     (daoName != null && daoName.trim().isNotEmpty)
@@ -203,26 +214,28 @@ final categoryInsightsProvider = StreamProvider.autoDispose
           final topCreators = allCreators.take(5).toList();
 
           if (!controller.isClosed) {
-            controller.add(LibraryInsights(
-              totalOwned: totalOwned,
-              readPercent: readPercent,
-              wishlistCount: wishlistCount,
-              subscriptionsCount: 0,
-              pullsInPeriod: 0,
-              readsInPeriod: readCount,
-              topPublishers: topPublishers,
-              topCharacters: topCharacters,
-              allCharacters: allCharacters,
-              topCreators: topCreators,
-              allCreators: allCreators,
-              streakDays: 0,
-              averageRating: averageRating,
-              mostReadSeries: mostReadSeries,
-              mostReadSeriesYear: mostReadSeriesYear,
-              readingTrends: <ReadingTrendPoint>[],
-              recentlyFinished: <CollectionItem>[],
-              filter: LibraryFilter.allTime,
-            ));
+            controller.add(
+              LibraryInsights(
+                totalOwned: totalOwned,
+                readPercent: readPercent,
+                wishlistCount: wishlistCount,
+                subscriptionsCount: 0,
+                pullsInPeriod: 0,
+                readsInPeriod: readCount,
+                topPublishers: topPublishers,
+                topCharacters: topCharacters,
+                allCharacters: allCharacters,
+                topCreators: topCreators,
+                allCreators: allCreators,
+                streakDays: 0,
+                averageRating: averageRating,
+                mostReadSeries: mostReadSeries,
+                mostReadSeriesYear: mostReadSeriesYear,
+                readingTrends: <ReadingTrendPoint>[],
+                recentlyFinished: <CollectionItem>[],
+                filter: LibraryFilter.allTime,
+              ),
+            );
           }
         } catch (e) {
           if (!controller.isClosed) {
@@ -231,18 +244,24 @@ final categoryInsightsProvider = StreamProvider.autoDispose
         }
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(
-        allLibraryItemsProvider,
-        (_, next) {
-          next.whenOrNull(data: (libraryItems) {
+      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
+        _,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (libraryItems) {
             debounced.schedule(() => computeStats(libraryItems));
-          });
-        },
-      );
-
-      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        debounced.schedule(() => computeStats(libraryItems));
+          },
+        );
       });
+
+      ref
+          .read(allLibraryItemsProvider)
+          .whenOrNull(
+            data: (libraryItems) {
+              debounced.schedule(() => computeStats(libraryItems));
+            },
+          );
 
       ref.onDispose(() {
         debounced.cancel();

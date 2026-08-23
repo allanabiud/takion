@@ -30,10 +30,7 @@ void main() {
 
   setUp(dispatchOrder.clear);
 
-  _Tracked enqueue(
-    RequestPriority priority, {
-    String path = "/x/",
-  }) {
+  _Tracked enqueue(RequestPriority priority, {String path = "/x/"}) {
     return _Tracked(
       scheduler.enqueue(
         request: RequestOptions(path: path),
@@ -56,7 +53,6 @@ void main() {
           maxConcurrent: 1,
         );
 
-        // First request dispatches immediately, filling the single slot.
         final p3 = enqueue(RequestPriority.drop, path: "/p3");
         final p2 = enqueue(RequestPriority.background, path: "/p2");
         final p0 = enqueue(RequestPriority.high, path: "/p0");
@@ -66,7 +62,6 @@ void main() {
         expect(p2.done, isFalse);
         expect(p0.done, isFalse);
 
-        // Free the slot: the queued P0 jumps ahead of the queued P2.
         completeRequest();
         async.flushMicrotasks();
         expect(p0.sent, isTrue);
@@ -112,7 +107,6 @@ void main() {
           reservedForeground: 1,
         );
 
-        // Background cap = 3 - 1 = 2.
         final bg1 = enqueue(RequestPriority.background, path: "/bg1");
         final bg2 = enqueue(RequestPriority.background, path: "/bg2");
         final bg3 = enqueue(RequestPriority.background, path: "/bg3");
@@ -122,12 +116,10 @@ void main() {
         expect(bg2.sent, isTrue);
         expect(bg3.done, isFalse);
 
-        // A foreground request is still served from the reserved slot.
         final fg = enqueue(RequestPriority.normal, path: "/fg");
         async.flushMicrotasks();
         expect(fg.sent, isTrue);
 
-        // Advancing a minute lets the queued background request through.
         async.elapse(const Duration(minutes: 1, seconds: 1));
         expect(bg3.sent, isTrue);
       });
@@ -163,12 +155,10 @@ void main() {
           backgroundMaxWait: const Duration(seconds: 30),
         );
 
-        // Blocker consumes the only budget slot.
         final blocker = enqueue(RequestPriority.normal, path: "/blocker");
         async.flushMicrotasks();
         expect(blocker.sent, isTrue);
 
-        // P3 queues behind the full budget, then hits its deadline.
         final p3 = enqueue(RequestPriority.drop, path: "/p3");
         async.flushMicrotasks();
         expect(p3.done, isFalse);
@@ -195,8 +185,6 @@ void main() {
         async.flushMicrotasks();
         expect(p2.done, isFalse);
 
-        // Past its background deadline, P2 is promoted to foreground and
-        // survives; it dispatches once the blocker's budget window expires.
         async.elapse(const Duration(minutes: 1, seconds: 1));
         expect(p2.sent, isTrue);
         expect(dispatchOrder, ["/blocker", "/p2"]);
@@ -210,7 +198,6 @@ void main() {
           maxConcurrent: 8,
         );
 
-        // Simulate a near-exhausted sustained budget from response headers.
         final resetSeconds = clock.now().millisecondsSinceEpoch ~/ 1000 + 60;
         scheduler.onResponse({
           "x-ratelimit-sustained-remaining": ["0"],

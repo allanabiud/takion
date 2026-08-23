@@ -234,11 +234,18 @@ class _CombinedCategoryHeader extends ConsumerWidget {
                     const SizedBox(height: 6),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: percent,
-                        minHeight: 8,
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0.0, end: percent),
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, animPercent, _) {
+                          return LinearProgressIndicator(
+                            value: animPercent.clamp(0.0, 1.0),
+                            minHeight: 8,
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -334,8 +341,7 @@ Future<void> _showCategoryBulkSheet(
         final theme = Theme.of(context);
         final selectedStart = rangeStart;
         final selectedEnd = rangeEnd;
-        final selectedCount =
-            selectedMode == SeriesIssueSelectionMode.range
+        final selectedCount = selectedMode == SeriesIssueSelectionMode.range
             ? rangeEnd - rangeStart + 1
             : candidates.length;
         final startIssueNumber = candidates[selectedStart - 1].issueNumber;
@@ -355,7 +361,12 @@ Future<void> _showCategoryBulkSheet(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Action", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                "Action",
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               if (category == "unrated")
                 RatingPicker(
@@ -371,11 +382,11 @@ Future<void> _showCategoryBulkSheet(
               else
                 Row(
                   children: [
-                     Icon(
-                       Icons.bookmark_added,
-                       size: 20,
-                       color: theme.colorScheme.primary,
-                     ),
+                    Icon(
+                      Icons.bookmark_added,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       "Mark as Read",
@@ -386,7 +397,12 @@ Future<void> _showCategoryBulkSheet(
                   ],
                 ),
               const SizedBox(height: 16),
-              Text("Selection method", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                "Selection method",
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
@@ -428,7 +444,12 @@ Future<void> _showCategoryBulkSheet(
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Issue range", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          "Issue range",
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
                           "#$startIssueNumber – #$endIssueNumber",
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -481,8 +502,7 @@ Future<void> _showCategoryBulkSheet(
                                 v,
                                 startAfter: rangeStart - 1,
                               );
-                              if (idx != null &&
-                                  idx + 1 <= candidates.length) {
+                              if (idx != null && idx + 1 <= candidates.length) {
                                 setModalState(() {
                                   rangeEnd = idx + 1;
                                 });

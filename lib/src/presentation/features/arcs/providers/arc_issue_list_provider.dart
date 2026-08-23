@@ -69,7 +69,9 @@ final arcIssueListProvider = FutureProvider.autoDispose
               limit: args.limit,
               cancelToken: cancelToken,
             );
-            if (resultPage.results.isEmpty && page1.count > 0 && targetPage > 1) {
+            if (resultPage.results.isEmpty &&
+                page1.count > 0 &&
+                targetPage > 1) {
               resultPage = await repository.getArcIssueList(
                 args.arcId,
                 page: targetPage - 1,
@@ -122,10 +124,7 @@ final arcDetailsIssuesProvider = FutureProvider.autoDispose
 
       final repository = ref.watch(catalogRepositoryProvider);
 
-      final page1 = await repository.getArcIssueList(
-        arcId,
-        page: 1,
-      );
+      final page1 = await repository.getArcIssueList(arcId, page: 1);
 
       final pageSize = page1.realPageSize ?? metronDefaultPageSize;
       final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;

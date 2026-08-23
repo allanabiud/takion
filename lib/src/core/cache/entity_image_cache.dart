@@ -1,5 +1,3 @@
-import "dart:collection";
-
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
@@ -22,10 +20,7 @@ class EntityImageCache {
 
   final db.AppDatabase database;
   final EntityImageVersionNotifier? versionNotifier;
-  final _cache = LinkedHashMap<String, String>(
-    hashCode: (k) => k.hashCode,
-    equals: (a, b) => a == b,
-  );
+  final _cache = <String, String>{};
 
   Future<String?> get(String entityType, int id) async {
     final key = "$entityType:$id";

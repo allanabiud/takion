@@ -52,8 +52,8 @@ void main() {
     await dbA.favoriteDao.toggleCreator(302);
 
     final secondDelta = await serviceA.extractDelta(since);
-    final inserts = (secondDelta["tables"] as Map)["favorite_creators"]
-        ["inserts"] as List;
+    final inserts =
+        (secondDelta["tables"] as Map)["favorite_creators"]["inserts"] as List;
     expect(inserts, hasLength(1));
     expect(inserts.first["metronCreatorId"], 302);
   });
@@ -70,130 +70,142 @@ void main() {
     expect(await dbB.favoriteDao.getAllCreators(), isEmpty);
   });
 
-  test("extractDelta(since) sets fromTimestamp watermark and version 2", () async {
-    await dbA.favoriteDao.toggleCreator(801);
-    final first = await serviceA.extractDelta(null);
-    expect(first["version"], 2);
-    final since = DateTime.parse(first["toTimestamp"] as String);
+  test(
+    "extractDelta(since) sets fromTimestamp watermark and version 2",
+    () async {
+      await dbA.favoriteDao.toggleCreator(801);
+      final first = await serviceA.extractDelta(null);
+      expect(first["version"], 2);
+      final since = DateTime.parse(first["toTimestamp"] as String);
 
-    await dbA.favoriteDao.toggleCreator(802);
+      await dbA.favoriteDao.toggleCreator(802);
 
-    final second = await serviceA.extractDelta(since);
-    expect(second["version"], 2);
-    expect(second["fromTimestamp"], since.toUtc().toIso8601String());
-    final inserts = (second["tables"] as Map)["favorite_creators"]
-        ["inserts"] as List;
-    expect(inserts, hasLength(1));
-    expect(inserts.first["metronCreatorId"], 802);
-  });
+      final second = await serviceA.extractDelta(since);
+      expect(second["version"], 2);
+      expect(second["fromTimestamp"], since.toUtc().toIso8601String());
+      final inserts =
+          (second["tables"] as Map)["favorite_creators"]["inserts"] as List;
+      expect(inserts, hasLength(1));
+      expect(inserts.first["metronCreatorId"], 802);
+    },
+  );
 
-  test("applyDelta skips v2 deltas already covered by the remote watermark", () async {
-    final t1 = DateTime.now().toUtc().toIso8601String();
-    final first = {
-      "version": 2,
-      "deviceId": "device-a",
-      "fromTimestamp": null,
-      "toTimestamp": t1,
-      "tables": {
-        "favorite_creators": {
-          "inserts": [
-            {"metronCreatorId": 701, "createdAt": t1, "updatedAt": t1},
-          ],
-          "updates": <Map<String, dynamic>>[],
-          "deletes": <String>[],
+  test(
+    "applyDelta skips v2 deltas already covered by the remote watermark",
+    () async {
+      final t1 = DateTime.now().toUtc().toIso8601String();
+      final first = {
+        "version": 2,
+        "deviceId": "device-a",
+        "fromTimestamp": null,
+        "toTimestamp": t1,
+        "tables": {
+          "favorite_creators": {
+            "inserts": [
+              {"metronCreatorId": 701, "createdAt": t1, "updatedAt": t1},
+            ],
+            "updates": <Map<String, dynamic>>[],
+            "deletes": <String>[],
+          },
         },
-      },
-    };
-    await serviceB.applyDelta(first);
-    expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
+      };
+      await serviceB.applyDelta(first);
+      expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
 
-    final stale = {
-      "version": 2,
-      "deviceId": "device-a",
-      "fromTimestamp": t1,
-      "toTimestamp": t1,
-      "tables": {
-        "favorite_creators": {
-          "inserts": [
-            {"metronCreatorId": 702, "createdAt": t1, "updatedAt": t1},
-          ],
-          "updates": <Map<String, dynamic>>[],
-          "deletes": <String>[],
+      final stale = {
+        "version": 2,
+        "deviceId": "device-a",
+        "fromTimestamp": t1,
+        "toTimestamp": t1,
+        "tables": {
+          "favorite_creators": {
+            "inserts": [
+              {"metronCreatorId": 702, "createdAt": t1, "updatedAt": t1},
+            ],
+            "updates": <Map<String, dynamic>>[],
+            "deletes": <String>[],
+          },
         },
-      },
-    };
-    await serviceB.applyDelta(stale);
-    // 702 must NOT be applied: the delta is fully covered by the watermark.
-    expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
-  });
+      };
+      await serviceB.applyDelta(stale);
+      expect(await dbB.favoriteDao.getAllCreators(), hasLength(1));
+    },
+  );
 
-  test("reading_list_items remote row overwrites local when its updatedAt is newer", () async {
-    final past = DateTime.now()
-        .toUtc()
-        .subtract(const Duration(hours: 1))
-        .toIso8601String();
-    final now = DateTime.now().toUtc().toIso8601String();
-    await dbB.into(dbB.readingListItems).insert(
-      ReadingListItemsCompanion.insert(
-        id: "item-x",
-        listId: "list-1",
-        targetId: "ser-1",
-        isSeries: true,
-        role: "main",
-        isRead: false,
-        sortOrder: 0,
-        createdAt: Value(past),
-        updatedAt: Value(past),
-      ),
-    );
+  test(
+    "reading_list_items remote row overwrites local when its updatedAt is newer",
+    () async {
+      final past = DateTime.now()
+          .toUtc()
+          .subtract(const Duration(hours: 1))
+          .toIso8601String();
+      final now = DateTime.now().toUtc().toIso8601String();
+      await dbB
+          .into(dbB.readingListItems)
+          .insert(
+            ReadingListItemsCompanion.insert(
+              id: "item-x",
+              listId: "list-1",
+              targetId: "ser-1",
+              isSeries: true,
+              role: "main",
+              isRead: false,
+              sortOrder: 0,
+              createdAt: Value(past),
+              updatedAt: Value(past),
+            ),
+          );
 
-    final snapshot = {
-      "version": 2,
-      "deviceId": "device-a",
-      "toTimestamp": now,
-      "tables": {
-        "reading_list_items": {
-          "inserts": [
-            {
-              "id": "item-x",
-              "listId": "list-1",
-              "targetId": "ser-1",
-              "isSeries": true,
-              "role": "main",
-              "isRead": true,
-              "sortOrder": 5,
-              "createdAt": now,
-              "updatedAt": now,
-            },
-          ],
-          "updates": <Map<String, dynamic>>[],
-          "deletes": <String>[],
+      final snapshot = {
+        "version": 2,
+        "deviceId": "device-a",
+        "toTimestamp": now,
+        "tables": {
+          "reading_list_items": {
+            "inserts": [
+              {
+                "id": "item-x",
+                "listId": "list-1",
+                "targetId": "ser-1",
+                "isSeries": true,
+                "role": "main",
+                "isRead": true,
+                "sortOrder": 5,
+                "createdAt": now,
+                "updatedAt": now,
+              },
+            ],
+            "updates": <Map<String, dynamic>>[],
+            "deletes": <String>[],
+          },
         },
-      },
-    };
-    await serviceB.applyDelta(snapshot);
+      };
+      await serviceB.applyDelta(snapshot);
 
-    final rows = await dbB.select(dbB.readingListItems).get();
-    expect(rows, hasLength(1));
-    expect(rows.first.isRead, isTrue);
-    expect(rows.first.sortOrder, 5);
-  });
+      final rows = await dbB.select(dbB.readingListItems).get();
+      expect(rows, hasLength(1));
+      expect(rows.first.isRead, isTrue);
+      expect(rows.first.sortOrder, 5);
+    },
+  );
 
   test("extractDelta(since) omits unchanged reading_list_items", () async {
     final now = DateTime.now().toUtc().toIso8601String();
-    await dbA.into(dbA.readingListItems).insert(
-      ReadingListItemsCompanion.insert(
-        id: "item-1",
-        listId: "list-1",
-        targetId: "ser-1",
-        isSeries: true,
-        role: "main",
-        isRead: false,
-        sortOrder: 0,
-        createdAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+    await dbA
+        .into(dbA.readingListItems)
+        .insert(
+          ReadingListItemsCompanion.insert(
+            id: "item-1",
+            listId: "list-1",
+            targetId: "ser-1",
+            isSeries: true,
+            role: "main",
+            isRead: false,
+            sortOrder: 0,
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
 
     final full = await serviceA.extractDelta(null);
     expect(
@@ -211,19 +223,21 @@ void main() {
 
   test("reading_list_items delete propagates to the other device", () async {
     final now = DateTime.now().toUtc().toIso8601String();
-    await dbA.into(dbA.readingListItems).insert(
-      ReadingListItemsCompanion.insert(
-        id: "item-del",
-        listId: "list-1",
-        targetId: "ser-1",
-        isSeries: true,
-        role: "main",
-        isRead: false,
-        sortOrder: 0,
-        createdAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+    await dbA
+        .into(dbA.readingListItems)
+        .insert(
+          ReadingListItemsCompanion.insert(
+            id: "item-del",
+            listId: "list-1",
+            targetId: "ser-1",
+            isSeries: true,
+            role: "main",
+            isRead: false,
+            sortOrder: 0,
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
     final deltaA = await serviceA.extractDelta(null);
     await serviceB.applyDelta(deltaA);
     expect(await dbB.select(dbB.readingListItems).get(), hasLength(1));

@@ -76,9 +76,7 @@ class PeriodicSyncManager {
   Future<void> init() async {
     if (_initialized) return;
     try {
-      await Workmanager().initialize(
-        callbackDispatcher,
-      );
+      await Workmanager().initialize(callbackDispatcher);
       _initialized = true;
       AppLogger.info("PeriodicSyncManager initialized successfully");
     } catch (e) {
@@ -97,9 +95,7 @@ class PeriodicSyncManager {
         periodicSyncTaskName,
         frequency: interval.duration,
         existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ),
+        constraints: Constraints(networkType: NetworkType.connected),
       );
       AppLogger.info(
         "Scheduled background periodic sync with interval: ${interval.label}",

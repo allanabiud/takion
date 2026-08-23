@@ -30,50 +30,55 @@ void main() {
       expect(row.isFullyHydrated, isFalse);
     });
 
-    test("creators stub upsert preserves isFullyHydrated on conflict", () async {
-      await db.metronCreators.insertOnConflictUpdate(
-        const MetronCreatorsCompanion(
-          id: Value(1),
-          name: Value("Grant Morrison"),
-          isFullyHydrated: Value(true),
-        ),
-      );
+    test(
+      "creators stub upsert preserves isFullyHydrated on conflict",
+      () async {
+        await db.metronCreators.insertOnConflictUpdate(
+          const MetronCreatorsCompanion(
+            id: Value(1),
+            name: Value("Grant Morrison"),
+            isFullyHydrated: Value(true),
+          ),
+        );
 
-      await db.metronEntityDao.upsertCreatorStubsBatch([
-        MetronCreatorsCompanion.insert(
-          name: "Grant Morrison",
-          id: const Value(1),
-          isFullyHydrated: const Value(false),
-        ),
-      ]);
+        await db.metronEntityDao.upsertCreatorStubsBatch([
+          MetronCreatorsCompanion.insert(
+            name: "Grant Morrison",
+            id: const Value(1),
+            isFullyHydrated: const Value(false),
+          ),
+        ]);
 
-      final row = await db.metronEntityDao.getCreator(1);
-      expect(row, isNotNull);
-      expect(row!.isFullyHydrated, isTrue);
-    });
+        final row = await db.metronEntityDao.getCreator(1);
+        expect(row, isNotNull);
+        expect(row!.isFullyHydrated, isTrue);
+      },
+    );
 
-    test("characters stub upsert preserves isFullyHydrated on conflict",
-        () async {
-      await db.metronCharacters.insertOnConflictUpdate(
-        const MetronCharactersCompanion(
-          id: Value(1),
-          name: Value("Batman"),
-          isFullyHydrated: Value(true),
-        ),
-      );
+    test(
+      "characters stub upsert preserves isFullyHydrated on conflict",
+      () async {
+        await db.metronCharacters.insertOnConflictUpdate(
+          const MetronCharactersCompanion(
+            id: Value(1),
+            name: Value("Batman"),
+            isFullyHydrated: Value(true),
+          ),
+        );
 
-      await db.metronEntityDao.upsertCharacterStubsBatch([
-        MetronCharactersCompanion.insert(
-          name: "Batman",
-          id: const Value(1),
-          isFullyHydrated: const Value(false),
-        ),
-      ]);
+        await db.metronEntityDao.upsertCharacterStubsBatch([
+          MetronCharactersCompanion.insert(
+            name: "Batman",
+            id: const Value(1),
+            isFullyHydrated: const Value(false),
+          ),
+        ]);
 
-      final row = await db.metronEntityDao.getCharacter(1);
-      expect(row, isNotNull);
-      expect(row!.isFullyHydrated, isTrue);
-    });
+        final row = await db.metronEntityDao.getCharacter(1);
+        expect(row, isNotNull);
+        expect(row!.isFullyHydrated, isTrue);
+      },
+    );
 
     test("arcs stub upsert preserves isFullyHydrated on conflict", () async {
       await db.metronArcs.insertOnConflictUpdate(
@@ -119,28 +124,30 @@ void main() {
       expect(row!.isFullyHydrated, isTrue);
     });
 
-    test("universes stub upsert preserves isFullyHydrated on conflict",
-        () async {
-      await db.metronUniverses.insertOnConflictUpdate(
-        const MetronUniversesCompanion(
-          id: Value(1),
-          name: Value("DC Universe"),
-          isFullyHydrated: Value(true),
-        ),
-      );
+    test(
+      "universes stub upsert preserves isFullyHydrated on conflict",
+      () async {
+        await db.metronUniverses.insertOnConflictUpdate(
+          const MetronUniversesCompanion(
+            id: Value(1),
+            name: Value("DC Universe"),
+            isFullyHydrated: Value(true),
+          ),
+        );
 
-      await db.metronEntityDao.upsertUniverseStubsBatch([
-        MetronUniversesCompanion.insert(
-          name: "DC Universe",
-          id: const Value(1),
-          isFullyHydrated: const Value(false),
-        ),
-      ]);
+        await db.metronEntityDao.upsertUniverseStubsBatch([
+          MetronUniversesCompanion.insert(
+            name: "DC Universe",
+            id: const Value(1),
+            isFullyHydrated: const Value(false),
+          ),
+        ]);
 
-      final row = await db.metronEntityDao.getUniverse(1);
-      expect(row, isNotNull);
-      expect(row!.isFullyHydrated, isTrue);
-    });
+        final row = await db.metronEntityDao.getUniverse(1);
+        expect(row, isNotNull);
+        expect(row!.isFullyHydrated, isTrue);
+      },
+    );
 
     test("series stub upsert preserves isFullyHydrated on conflict", () async {
       await db.metronSeries.insertOnConflictUpdate(

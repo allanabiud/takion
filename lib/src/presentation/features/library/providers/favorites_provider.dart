@@ -204,10 +204,11 @@ final isReadingListFavoriteProvider = StreamProvider.family<bool, String>((
       .watchIsReadingListFavorite(listId);
 });
 
-final favoriteCharactersListProvider =
-    StreamProvider<List<FavoriteCharacter>>((ref) {
-      return ref.watch(favoritesRepositoryProvider).watchCharacters();
-    });
+final favoriteCharactersListProvider = StreamProvider<List<FavoriteCharacter>>((
+  ref,
+) {
+  return ref.watch(favoritesRepositoryProvider).watchCharacters();
+});
 
 final favoriteCharactersFullListProvider = FutureProvider<List<CharacterList>>((
   ref,
@@ -300,5 +301,7 @@ final isCreatorFavoriteProvider = StreamProvider.family<bool, int>((
   ref,
   creatorId,
 ) {
-  return ref.watch(favoritesRepositoryProvider).watchIsCreatorFavorite(creatorId);
+  return ref
+      .watch(favoritesRepositoryProvider)
+      .watchIsCreatorFavorite(creatorId);
 });

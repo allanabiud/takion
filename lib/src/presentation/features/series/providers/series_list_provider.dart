@@ -44,12 +44,10 @@ class SeriesList extends _$SeriesList {
 
   Future<int> refresh({DateTime? modifiedGt}) async {
     final settings = ref.read(settingsProvider.notifier);
-    final lastSync = modifiedGt ??
-        await settings.getListSyncTimestamp("series_list");
+    final lastSync =
+        modifiedGt ?? await settings.getListSyncTimestamp("series_list");
     final repository = ref.read(metronRepositoryProvider);
-    final count = await repository.refreshSeriesListDelta(
-      modifiedGt: lastSync,
-    );
+    final count = await repository.refreshSeriesListDelta(modifiedGt: lastSync);
     await settings.setListSyncTimestamp("series_list", DateTime.now());
     ref.invalidateSelf();
     return count;
@@ -58,6 +56,6 @@ class SeriesList extends _$SeriesList {
 
 final currentSeriesListProvider =
     Provider.autoDispose<AsyncValue<SeriesListPage>>((ref) {
-  final page = ref.watch(selectedSeriesListPageProvider);
-  return ref.watch(seriesListProvider(page));
-});
+      final page = ref.watch(selectedSeriesListPageProvider);
+      return ref.watch(seriesListProvider(page));
+    });

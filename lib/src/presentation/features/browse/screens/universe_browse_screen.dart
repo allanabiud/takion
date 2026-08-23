@@ -13,7 +13,8 @@ class UniverseBrowseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GenericBrowseScreen<UniverseList>(
       title: "Browse Universes",
-      providerBuilder: (ref, filter) => ref.watch(universeBrowseProvider(filter)),
+      providerBuilder: (ref, filter) =>
+          ref.watch(universeBrowseProvider(filter)),
       refreshNotifierGetter: (ref, filter) =>
           ref.read(universeBrowseProvider(filter).notifier).refresh(),
       emptyMessage: "No universes found.",

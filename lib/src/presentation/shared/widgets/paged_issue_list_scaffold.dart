@@ -71,7 +71,8 @@ class _PagedIssueListScaffoldState extends State<PagedIssueListScaffold> {
               loading: () => const SizedBox.shrink(),
               error: (error, _) => AsyncStatePanel.error(
                 errorMessage:
-                    widget.errorTextBuilder?.call(error) ?? "Something went wrong",
+                    widget.errorTextBuilder?.call(error) ??
+                    "Something went wrong",
               ),
               data: (issues) {
                 final visibleIssues = widget.transformIssues(issues);

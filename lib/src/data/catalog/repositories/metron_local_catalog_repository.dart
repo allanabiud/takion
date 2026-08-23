@@ -30,8 +30,12 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
       seriesId: row.seriesId,
       number: row.number,
       imageUrl: row.imageUrl,
-      coverDate: row.coverDate != null ? DateTime.tryParse(row.coverDate!) : null,
-      storeDate: row.storeDate != null ? DateTime.tryParse(row.storeDate!) : null,
+      coverDate: row.coverDate != null
+          ? DateTime.tryParse(row.coverDate!)
+          : null,
+      storeDate: row.storeDate != null
+          ? DateTime.tryParse(row.storeDate!)
+          : null,
       modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
       price: row.price,
       isFullyHydrated: row.isFullyHydrated,
@@ -55,7 +59,9 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
   @override
   Future<Map<int, SeriesList>> getSeriesByIds(List<int> seriesIds) async {
     final rows = await _entityDao.getSeriesByIds(seriesIds);
-    return {for (final entry in rows.entries) entry.key: _seriesToDomain(entry.value)};
+    return {
+      for (final entry in rows.entries) entry.key: _seriesToDomain(entry.value),
+    };
   }
 
   @override
@@ -67,7 +73,9 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
   @override
   Future<Map<int, LocalIssue>> getIssuesByIds(List<int> issueIds) async {
     final rows = await _entityDao.getIssuesByIds(issueIds);
-    return {for (final entry in rows.entries) entry.key: _issueToDomain(entry.value)};
+    return {
+      for (final entry in rows.entries) entry.key: _issueToDomain(entry.value),
+    };
   }
 
   @override
@@ -79,7 +87,10 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
   @override
   Future<Map<int, CreatorList>> getCreatorsByIds(List<int> creatorIds) async {
     final rows = await _entityDao.getCreatorsByIds(creatorIds);
-    return {for (final entry in rows.entries) entry.key: _creatorToDomain(entry.value)};
+    return {
+      for (final entry in rows.entries)
+        entry.key: _creatorToDomain(entry.value),
+    };
   }
 
   @override
@@ -93,9 +104,9 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
 
   @override
   Stream<SeriesList?> watchSeries(int seriesId) {
-    return _entityDao.watchSeries(seriesId).map(
-      (row) => row == null ? null : _seriesToDomain(row),
-    );
+    return _entityDao
+        .watchSeries(seriesId)
+        .map((row) => row == null ? null : _seriesToDomain(row));
   }
 
   @override
@@ -114,23 +125,23 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
 
   @override
   Stream<SeriesDetails?> watchSeriesDetails(int seriesId) {
-    return _entityDao.watchSeries(seriesId).asyncMap(
-      (row) => row == null ? null : _mapper.seriesToEntity(row),
-    );
+    return _entityDao
+        .watchSeries(seriesId)
+        .asyncMap((row) => row == null ? null : _mapper.seriesToEntity(row));
   }
 
   @override
   Stream<IssueDetails?> watchIssueDetails(int issueId) {
-    return _entityDao.watchIssue(issueId).asyncMap(
-      (row) => row == null ? null : _mapper.issueToEntity(row),
-    );
+    return _entityDao
+        .watchIssue(issueId)
+        .asyncMap((row) => row == null ? null : _mapper.issueToEntity(row));
   }
 
   @override
   Stream<List<LocalIssue>> watchIssuesBySeries(int seriesId) {
-    return _entityDao.watchIssuesBySeries(seriesId).map(
-      (rows) => rows.map(_issueToDomain).toList(),
-    );
+    return _entityDao
+        .watchIssuesBySeries(seriesId)
+        .map((rows) => rows.map(_issueToDomain).toList());
   }
 
   @override

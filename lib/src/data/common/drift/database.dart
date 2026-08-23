@@ -29,7 +29,6 @@ import "daos/junction_dao.dart";
 
 part "database.g.dart";
 
-
 @TableIndex(name: "idx_lib_issue", columns: {#metronIssueId})
 @TableIndex(name: "idx_lib_series", columns: {#metronSeriesId})
 @TableIndex(name: "idx_lib_read", columns: {#isRead})
@@ -74,7 +73,10 @@ class LibraryReadLogs extends Table {
 @TableIndex(name: "idx_pull_issue", columns: {#metronIssueId})
 @TableIndex(name: "idx_pull_series", columns: {#metronSeriesId})
 @TableIndex(name: "idx_pull_release", columns: {#releaseDate})
-@TableIndex(name: "idx_pull_release_status", columns: {#releaseDate, #entryStatus})
+@TableIndex(
+  name: "idx_pull_release_status",
+  columns: {#releaseDate, #entryStatus},
+)
 class PullListEntries extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -110,7 +112,10 @@ class SeriesSubscriptions extends Table {
 @TableIndex(name: "idx_activity_issue", columns: {#issueId})
 @TableIndex(name: "idx_activity_event_time", columns: {#eventType, #timestamp})
 @TableIndex(name: "idx_activity_timestamp", columns: {#timestamp})
-@TableIndex(name: "idx_activity_series_timestamp", columns: {#seriesId, #timestamp})
+@TableIndex(
+  name: "idx_activity_series_timestamp",
+  columns: {#seriesId, #timestamp},
+)
 class ActivityEvents extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -209,7 +214,6 @@ class FavoriteReadingLists extends Table {
   @override
   Set<Column> get primaryKey => {readingListId};
 }
-
 
 @TableIndex(name: "idx_metron_issues_series", columns: {#seriesId})
 class MetronIssues extends Table {
@@ -413,7 +417,6 @@ class MetronReadingLists extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-
 @TableIndex(name: "idx_issue_creators_creator", columns: {#creatorId})
 class IssueCreators extends Table {
   IntColumn get issueId => integer()();
@@ -555,7 +558,6 @@ class MetronReadingListItems extends Table {
   @override
   Set<Column> get primaryKey => {listId, targetId};
 }
-
 
 class ApiCache extends Table {
   TextColumn get cacheKey => text()();
@@ -756,13 +758,13 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> _backfillSeriesTypeNames() async {
-    final cachedRows = await (select(apiCache)
-          ..where(
-            (t) =>
-                t.cacheKey.like("series_details:%") |
-                t.cacheKey.like("issue_details:%"),
-          ))
-        .get();
+    final cachedRows =
+        await (select(apiCache)..where(
+              (t) =>
+                  t.cacheKey.like("series_details:%") |
+                  t.cacheKey.like("issue_details:%"),
+            ))
+            .get();
 
     final namesById = <int, String>{};
     for (final row in cachedRows) {
@@ -776,7 +778,9 @@ class AppDatabase extends _$AppDatabase {
           seriesType = st is Map<String, dynamic> ? st : null;
         } else {
           final series = json["series"];
-          final st = series is Map<String, dynamic> ? series["series_type"] : null;
+          final st = series is Map<String, dynamic>
+              ? series["series_type"]
+              : null;
           seriesType = st is Map<String, dynamic> ? st : null;
         }
         if (seriesType != null) {
@@ -793,9 +797,7 @@ class AppDatabase extends _$AppDatabase {
 
     for (final entry in namesById.entries) {
       await (update(metronSeries)
-            ..where(
-              (t) => t.id.equals(entry.key) & t.seriesTypeName.isNull(),
-            ))
+            ..where((t) => t.id.equals(entry.key) & t.seriesTypeName.isNull()))
           .write(MetronSeriesCompanion(seriesTypeName: Value(entry.value)));
     }
   }
@@ -807,12 +809,10 @@ class AppDatabase extends _$AppDatabase {
     final items = await (select(readingListItems)).get();
     for (final item in items) {
       final ts = listUpdatedAt[item.listId] ?? fallback;
-      await (update(readingListItems)..where((t) => t.id.equals(item.id)))
-          .write(
-        ReadingListItemsCompanion(
-          createdAt: Value(ts),
-          updatedAt: Value(ts),
-        ),
+      await (update(
+        readingListItems,
+      )..where((t) => t.id.equals(item.id))).write(
+        ReadingListItemsCompanion(createdAt: Value(ts), updatedAt: Value(ts)),
       );
     }
   }

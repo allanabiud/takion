@@ -18,7 +18,9 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
         .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
         .toList();
     final wishlistCount = libraryItems
-        .where((item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist)
+        .where(
+          (item) => item.ownershipStatus == LibraryOwnershipStatus.wishlist,
+        )
         .length;
     final readCount = libraryItems.where((item) => item.isRead).length;
     final unreadCount = collectedItems.where((item) => !item.isRead).length;
@@ -41,19 +43,21 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     final currencyFormat = NumberFormat("#,##0.00");
 
     if (!controller.isClosed) {
-      controller.add(CollectionStats(
-        totalItems: collectedItems.length,
-        totalQuantity: collectedItems.fold<int>(
-          0,
-          (sum, item) => sum + item.quantityOwned,
+      controller.add(
+        CollectionStats(
+          totalItems: collectedItems.length,
+          totalQuantity: collectedItems.fold<int>(
+            0,
+            (sum, item) => sum + item.quantityOwned,
+          ),
+          totalValue: "\$${currencyFormat.format(totalValue)}",
+          readCount: readCount,
+          unreadCount: unreadCount,
+          unratedCount: unratedCount,
+          wishlistCount: wishlistCount,
+          byFormat: const <CollectionStatsByFormat>[],
         ),
-        totalValue: "\$${currencyFormat.format(totalValue)}",
-        readCount: readCount,
-        unreadCount: unreadCount,
-        unratedCount: unratedCount,
-        wishlistCount: wishlistCount,
-        byFormat: const <CollectionStatsByFormat>[],
-      ));
+      );
     }
   }
 
@@ -72,36 +76,49 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
       ..addAll(newPrices);
   }
 
-  ref.listen<AsyncValue<List<LibraryItem>>>(
-    allLibraryItemsProvider,
-    (_, next) {
-      if (!next.hasValue) return;
-      // Debounce rapid-fire emissions during bulk operations.
-      debounced.schedule(() => computeStats(next.value!));
-    },
-  );
-
-  ref.listen<AsyncValue<List<LocalIssue>>>(
-    metronIssuesStreamProvider,
-    (_, next) {
-      if (!next.hasValue) return;
-      refreshIssuePrices(next.value!);
-      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        computeStats(libraryItems);
-      });
-    },
-  );
-
-  ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-    computeStats(libraryItems);
+  ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (_, next) {
+    if (!next.hasValue) return;
+    // Debounce rapid-fire emissions during bulk operations.
+    debounced.schedule(() => computeStats(next.value!));
   });
 
-  ref.read(metronIssuesStreamProvider).whenOrNull(data: (issues) {
-    refreshIssuePrices(issues);
-    ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-      computeStats(libraryItems);
-    });
+  ref.listen<AsyncValue<List<LocalIssue>>>(metronIssuesStreamProvider, (
+    _,
+    next,
+  ) {
+    if (!next.hasValue) return;
+    refreshIssuePrices(next.value!);
+    ref
+        .read(allLibraryItemsProvider)
+        .whenOrNull(
+          data: (libraryItems) {
+            computeStats(libraryItems);
+          },
+        );
   });
+
+  ref
+      .read(allLibraryItemsProvider)
+      .whenOrNull(
+        data: (libraryItems) {
+          computeStats(libraryItems);
+        },
+      );
+
+  ref
+      .read(metronIssuesStreamProvider)
+      .whenOrNull(
+        data: (issues) {
+          refreshIssuePrices(issues);
+          ref
+              .read(allLibraryItemsProvider)
+              .whenOrNull(
+                data: (libraryItems) {
+                  computeStats(libraryItems);
+                },
+              );
+        },
+      );
 
   ref.onDispose(() {
     debounced.cancel();

@@ -279,7 +279,10 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
             }
           }
         } catch (e) {
-          AppLogger.debug("Failed to load issue details for read event", error: e);
+          AppLogger.debug(
+            "Failed to load issue details for read event",
+            error: e,
+          );
         }
         await activityRepository.addEvent(
           LibraryActivityEvent(

@@ -312,7 +312,8 @@ class _MetronReadingListDetailScreenState
                 EntityDetailActions(
                   onRefresh: _refreshMetronReadingListData,
                   onShare: () => shareResourceUrl(context, detail),
-                  onOpenInBrowser: () => openResourceUrlInBrowser(context, detail),
+                  onOpenInBrowser: () =>
+                      openResourceUrlInBrowser(context, detail),
                 ),
               ],
             ),
@@ -477,9 +478,7 @@ class _MetronReadingListDetailScreenState
               const SizedBox(height: 20),
               const Row(
                 children: [
-                  Expanded(
-                    child: SkeletonBox(height: 14, borderRadius: 4),
-                  ),
+                  Expanded(child: SkeletonBox(height: 14, borderRadius: 4)),
                   SizedBox(width: 8),
                   SkeletonBox(width: 40, height: 14, borderRadius: 4),
                 ],
@@ -513,11 +512,7 @@ class _MetronReadingListDetailScreenState
                   padding: EdgeInsets.only(bottom: 16),
                   child: Row(
                     children: [
-                      SkeletonBox(
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                      ),
+                      SkeletonBox(width: 24, height: 24, borderRadius: 12),
                       SizedBox(width: 12),
                       SkeletonBox(width: 60, height: 85, borderRadius: 6),
                       SizedBox(width: 12),

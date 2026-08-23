@@ -166,7 +166,10 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
 
         if (readEventsToAdd.isNotEmpty) {
           final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
-          await activityRepository.batchAddEvents(readEventsToAdd, batchId: batchId);
+          await activityRepository.batchAddEvents(
+            readEventsToAdd,
+            batchId: batchId,
+          );
         }
       } finally {
         keepAlive.close();

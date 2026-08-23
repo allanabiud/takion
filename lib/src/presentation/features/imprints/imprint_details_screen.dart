@@ -25,8 +25,7 @@ class ImprintDetailsScreen extends ConsumerStatefulWidget {
       _ImprintDetailsScreenState();
 }
 
-class _ImprintDetailsScreenState
-    extends ConsumerState<ImprintDetailsScreen>
+class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen>
     with
         ResourceUrlActions<ImprintDetails>,
         DetailRefreshActions<ImprintDetails> {
@@ -124,10 +123,7 @@ class _ImprintInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DetailsPropertyCard(
-          title: "DETAILS",
-          items: contentItems,
-        ),
+        DetailsPropertyCard(title: "DETAILS", items: contentItems),
         const SizedBox(height: 20),
         DatabaseIdsSection(
           metronId: details.id,

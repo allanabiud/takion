@@ -71,8 +71,8 @@ final seriesStreamProvider = StreamProvider.autoDispose
     });
 
 /// Reads a subscription's cover, series name, and next release purely from the local cache (no network).
-final subscriptionSeriesCardProvider = StreamProvider
-    .family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
+final subscriptionSeriesCardProvider =
+    StreamProvider.family<SubscriptionSeriesCardData?, int>((ref, seriesId) {
       ref.keepAlive();
       final localCatalog = ref.watch(localCatalogRepositoryProvider);
       final seriesAsync = ref.watch(seriesStreamProvider(seriesId));

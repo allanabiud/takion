@@ -22,8 +22,8 @@ class SeriesSubscriptionCard extends ConsumerWidget {
     final nextIssueDate = cardDataAsync.value?.nextIssueDate;
     final displayName =
         (cardDataAsync.value?.seriesName?.trim().isNotEmpty ?? false)
-            ? cardDataAsync.value!.seriesName!
-            : series.name;
+        ? cardDataAsync.value!.seriesName!
+        : series.name;
 
     final effectiveOnTap =
         onTap ??
@@ -39,8 +39,9 @@ class SeriesSubscriptionCard extends ConsumerWidget {
           builder: (context, constraints) {
             final rawWidth =
                 constraints.maxWidth * MediaQuery.of(context).devicePixelRatio;
-            final cacheWidth =
-                rawWidth > 0 ? ((rawWidth / 50).ceil() * 50) : null;
+            final cacheWidth = rawWidth > 0
+                ? ((rawWidth / 50).ceil() * 50)
+                : null;
             return Stack(
               fit: StackFit.expand,
               children: [
@@ -101,8 +102,9 @@ class SeriesSubscriptionCard extends ConsumerWidget {
     String displayName,
   ) {
     final hasImage = mostRecentImage != null && mostRecentImage.isNotEmpty;
-    final validCacheWidth =
-        (cacheWidth != null && cacheWidth > 0) ? cacheWidth : null;
+    final validCacheWidth = (cacheWidth != null && cacheWidth > 0)
+        ? cacheWidth
+        : null;
     return Positioned.fill(
       child: EntityCover(
         imageUrl: hasImage ? mostRecentImage : null,

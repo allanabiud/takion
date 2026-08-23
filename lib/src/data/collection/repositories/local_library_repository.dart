@@ -104,9 +104,9 @@ class LocalLibraryRepository implements LibraryRepository {
 
   @override
   Stream<List<LibraryItem>> watchItems() {
-    return _database.libraryItemDao
-        .watchAll()
-        .map((rows) => rows.map(_toDomain).toList());
+    return _database.libraryItemDao.watchAll().map(
+      (rows) => rows.map(_toDomain).toList(),
+    );
   }
 
   @override

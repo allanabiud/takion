@@ -32,7 +32,10 @@ void main() {
     storeDate: DateTime(2020, 1, 15),
   );
 
-  LocalReadingList arcList({int arcId = 42, List<LocalReadingListItem>? items}) {
+  LocalReadingList arcList({
+    int arcId = 42,
+    List<LocalReadingListItem>? items,
+  }) {
     final now = DateTime.now();
     return LocalReadingList(
       id: "arc-list",

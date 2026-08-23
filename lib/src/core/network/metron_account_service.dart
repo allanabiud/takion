@@ -8,7 +8,6 @@ import "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/common/drift/daos/settings_dao.dart";
 
 final metronAccountServiceProvider = Provider<MetronAccountService>((ref) {
-
   final db = ref.watch(driftDatabaseProvider);
   final dio = ref.watch(dioProvider);
   return MetronAccountService(db.settingsDao, dio);
@@ -16,14 +15,12 @@ final metronAccountServiceProvider = Provider<MetronAccountService>((ref) {
 
 enum MetronConnectionStatus { valid, missing, invalid, unreachable }
 
-
 class MetronAccountService {
   final SettingsDao _settingsDao;
   final Dio _dio;
 
   static const String _apiTokenKey = SettingsKeys.metronApiToken;
   static const Duration _cacheDuration = AppDurations.defaultKeepAlive;
-
 
   MetronConnectionStatus? _cachedStatus;
   DateTime? _cachedAt;

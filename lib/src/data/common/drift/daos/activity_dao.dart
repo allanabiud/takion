@@ -39,17 +39,15 @@ class ActivityDao extends DatabaseAccessor<AppDatabase> {
     if (issueIds.isEmpty) return;
     final now = DateTime.now().toUtc().toIso8601String();
 
-    final rows = await (select(attachedDatabase.activityEvents)
-          ..where(
-            (t) {
+    final rows =
+        await (select(attachedDatabase.activityEvents)..where((t) {
               final expr = t.issueId.isIn(issueIds);
               if (eventType != null) {
                 return expr & t.eventType.equals(eventType);
               }
               return expr;
-            },
-          ))
-        .get();
+            }))
+            .get();
     if (rows.isEmpty) return;
 
     final ids = rows.map((r) => r.id).toList();

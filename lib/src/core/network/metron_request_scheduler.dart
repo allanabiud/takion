@@ -8,14 +8,7 @@ import "package:flutter/widgets.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/network/request_priority.dart";
 
-/// Outcome of enqueueing a request with the [MetronRequestScheduler].
-enum RequestDispatch {
-  /// The request was handed to the network layer.
-  sent,
-
-  /// The request was dropped because the budget was tight (see P3 semantics).
-  dropped,
-}
+enum RequestDispatch { sent, dropped }
 
 class RateLimitState {
   final int sustainedLimit;
@@ -58,16 +51,6 @@ class _ScheduledRequest {
   final Completer<RequestDispatch> completer;
 }
 
-/// Owns the per-minute request budget and dispatches queued requests by
-/// priority. Replaces the sleep-until-budget FIFO gate in
-/// `RateLimitInterceptor`.
-///
-/// The dispatcher sends the highest-priority eligible request whenever a slot
-/// frees. Background (P2/P3) work is capped at `maxRequestsPerMinute -
-/// reservedForeground` slots per minute, so a background burst can never starve
-/// the foreground reservation. P2 requests waiting longer than
-/// [backgroundMaxWait] are promoted to foreground priority; P3 requests are
-/// dropped.
 class MetronRequestScheduler {
   MetronRequestScheduler({
     this.maxRequestsPerMinute = 20,
@@ -125,9 +108,6 @@ class MetronRequestScheduler {
       _sustainedRemaining <= 0 &&
       _sustainedReset > clock.now().millisecondsSinceEpoch ~/ 1000;
 
-  /// Queues [request] for dispatch. Resolves with [RequestDispatch.sent] once
-  /// the request is handed to the network, or [RequestDispatch.dropped] if the
-  /// scheduler gave up on it (P3 background deadline).
   Future<RequestDispatch> enqueue({
     required RequestOptions request,
     required RequestPriority priority,
@@ -145,7 +125,6 @@ class MetronRequestScheduler {
     return completer.future;
   }
 
-  /// Notifies the scheduler that a dispatched request finished.
   void requestCompleted() {
     _activeRequests = max(0, _activeRequests - 1);
     _pump();
@@ -194,7 +173,8 @@ class MetronRequestScheduler {
     final deadline = now.subtract(backgroundMaxWait);
 
     final dropQueue = _queue[RequestPriority.drop.level];
-    while (dropQueue.isNotEmpty && dropQueue.first.enqueuedAt.isBefore(deadline)) {
+    while (dropQueue.isNotEmpty &&
+        dropQueue.first.enqueuedAt.isBefore(deadline)) {
       final req = dropQueue.removeFirst();
       if (!req.completer.isCompleted) {
         AppLogger.debug(

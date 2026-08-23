@@ -91,10 +91,9 @@ void main() {
   });
 
   test("searchIssuesByUpcPrefix caps the page walk", () async {
-    final remote = FakeMetronRemoteDataSource(
-      [for (var i = 1; i <= 40; i++) _issue(i)],
-      10,
-    );
+    final remote = FakeMetronRemoteDataSource([
+      for (var i = 1; i <= 40; i++) _issue(i),
+    ], 10);
     final repo = MetronRepositoryImpl(
       remote,
       MetronLocalDataSourceImpl(db),

@@ -44,7 +44,7 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
                       "${metrics.totalApiRequests}",
                     ),
                     buildSettingsRow(
-                      "Rate Limit Hits (429)",
+                      "Rate Limit Hits",
                       "${metrics.http429Count}",
                       color: metrics.http429Count > 0 ? Colors.red : null,
                     ),
@@ -149,7 +149,7 @@ void showPerformanceMetrics(BuildContext context, WidgetRef ref) {
                   const SizedBox(height: 16),
                   buildSettingsGroup(
                     context,
-                    "Provider Latency (Avg)",
+                    "Provider Latency",
                     metrics.providerCalls.isEmpty
                         ? [
                             const Text(

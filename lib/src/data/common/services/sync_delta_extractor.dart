@@ -3,8 +3,6 @@ import "dart:math" as math;
 import "package:drift/drift.dart";
 import "package:takion/src/data/common/drift/database.dart";
 
-/// Builds the sync payload (inserts/updates/deletes per table) that is
-/// uploaded to Drive, either as a delta since [since] or as a full snapshot.
 class SyncDeltaExtractor {
   const SyncDeltaExtractor(this._db);
 

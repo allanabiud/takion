@@ -146,10 +146,7 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
 
       final repository = ref.watch(metronRepositoryProvider);
 
-      final page1 = await repository.getSeriesIssueList(
-        seriesId,
-        page: 1,
-      );
+      final page1 = await repository.getSeriesIssueList(seriesId, page: 1);
 
       final pageSize = page1.realPageSize ?? metronDefaultPageSize;
       final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;
@@ -194,7 +191,10 @@ final seriesDetailsIssuesProvider = FutureProvider.autoDispose
               }
             }
           } catch (e) {
-            AppLogger.debug("Failed to fetch series penultimate page", error: e);
+            AppLogger.debug(
+              "Failed to fetch series penultimate page",
+              error: e,
+            );
           }
         }
       }

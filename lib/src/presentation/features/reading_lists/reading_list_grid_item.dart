@@ -133,8 +133,8 @@ class ReadingListGridItem extends ConsumerWidget {
                           final storedName = item.seriesName?.trim();
                           final storedNumber = item.issueNumber?.trim();
                           if (storedName != null && storedName.isNotEmpty) {
-                            title = storedNumber != null &&
-                                    storedNumber.isNotEmpty
+                            title =
+                                storedNumber != null && storedNumber.isNotEmpty
                                 ? "$storedName #$storedNumber"
                                 : storedName;
                           }

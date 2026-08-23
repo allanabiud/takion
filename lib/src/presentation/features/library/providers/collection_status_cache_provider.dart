@@ -38,10 +38,7 @@ final collectionStatusCacheProvider =
             )
             .toList(growable: false);
 
-        final resultMap = await compute(
-          _computeCollectionStatusMap,
-          itemsJson,
-        );
+        final resultMap = await compute(_computeCollectionStatusMap, itemsJson);
 
         return resultMap.map(
           (issueId, value) => MapEntry(

@@ -10,9 +10,7 @@ const _expandedSize = 0.95;
 const _githubChangelogUrl =
     "https://github.com/allanabiud/takion/blob/master/CHANGELOG.md";
 
-final _releaseHeadingRegex = RegExp(
-  r"^\[([^\]]+)\]\s*[-–—]\s*(.+)$",
-);
+final _releaseHeadingRegex = RegExp(r"^\[([^\]]+)\]\s*[-–—]\s*(.+)$");
 
 Future<void> showChangelogSheet(BuildContext context) {
   return showModalBottomSheet<void>(
@@ -134,9 +132,7 @@ class _ChangelogSheetState extends State<_ChangelogSheet> {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 32),
                               child: Center(
-                                child: Text(
-                                  "Couldn't load the changelog.",
-                                ),
+                                child: Text("Couldn't load the changelog."),
                               ),
                             );
                           }
@@ -159,9 +155,7 @@ class _ChangelogSheetState extends State<_ChangelogSheet> {
                             child: MarkdownBody(
                               data: _prepareChangelog(snapshot.data!),
                               styleSheet: _changelogStyleSheet(theme),
-                              builders: {
-                                "h2": _ReleaseHeadingBuilder(),
-                              },
+                              builders: {"h2": _ReleaseHeadingBuilder()},
                               onTapLink: (text, href, title) {
                                 final uri = Uri.tryParse(href ?? "");
                                 if (uri != null) {
@@ -205,8 +199,14 @@ class _ChangelogSheetState extends State<_ChangelogSheet> {
         fontWeight: FontWeight.w600,
       ),
       h1: base.h1?.copyWith(color: primary, fontWeight: FontWeight.bold),
-      h3: base.h3?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.bold),
-      h4: base.h4?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.bold),
+      h3: base.h3?.copyWith(
+        color: theme.colorScheme.secondary,
+        fontWeight: FontWeight.bold,
+      ),
+      h4: base.h4?.copyWith(
+        color: theme.colorScheme.secondary,
+        fontWeight: FontWeight.bold,
+      ),
       listBullet: (base.listBullet ?? const TextStyle()).copyWith(
         color: theme.colorScheme.secondary,
       ),
@@ -263,10 +263,7 @@ class _ReleaseHeadingBuilder extends MarkdownElementBuilder {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isFirst) ...[
-            Container(
-              height: 1,
-              color: theme.colorScheme.outlineVariant,
-            ),
+            Container(height: 1, color: theme.colorScheme.outlineVariant),
             const SizedBox(height: 16),
           ],
           Row(
@@ -308,9 +305,7 @@ class _ViewOnGithubButton extends StatelessWidget {
     return Material(
       color: theme.colorScheme.primaryContainer,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onPressed,

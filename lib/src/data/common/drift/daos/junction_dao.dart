@@ -186,13 +186,16 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     List<int> issueIds,
   ) async {
     if (issueIds.isEmpty) return {};
-    final rows = await (select(attachedDatabase.issueCharacters)
-          ..where((t) => t.issueId.isIn(issueIds))
-          ..orderBy([
-            (u) =>
-                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
-          ]))
-        .get();
+    final rows =
+        await (select(attachedDatabase.issueCharacters)
+              ..where((t) => t.issueId.isIn(issueIds))
+              ..orderBy([
+                (u) => OrderingTerm(
+                  expression: u.sortOrder,
+                  mode: OrderingMode.asc,
+                ),
+              ]))
+            .get();
     return _groupByIssue(rows, (row) => row.issueId);
   }
 
@@ -210,13 +213,16 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     List<int> issueIds,
   ) async {
     if (issueIds.isEmpty) return {};
-    final rows = await (select(attachedDatabase.issueCreators)
-          ..where((t) => t.issueId.isIn(issueIds))
-          ..orderBy([
-            (u) =>
-                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
-          ]))
-        .get();
+    final rows =
+        await (select(attachedDatabase.issueCreators)
+              ..where((t) => t.issueId.isIn(issueIds))
+              ..orderBy([
+                (u) => OrderingTerm(
+                  expression: u.sortOrder,
+                  mode: OrderingMode.asc,
+                ),
+              ]))
+            .get();
     return _groupByIssue(rows, (row) => row.issueId);
   }
 
@@ -234,13 +240,16 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     List<int> issueIds,
   ) async {
     if (issueIds.isEmpty) return {};
-    final rows = await (select(attachedDatabase.issueArcs)
-          ..where((t) => t.issueId.isIn(issueIds))
-          ..orderBy([
-            (u) =>
-                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
-          ]))
-        .get();
+    final rows =
+        await (select(attachedDatabase.issueArcs)
+              ..where((t) => t.issueId.isIn(issueIds))
+              ..orderBy([
+                (u) => OrderingTerm(
+                  expression: u.sortOrder,
+                  mode: OrderingMode.asc,
+                ),
+              ]))
+            .get();
     return _groupByIssue(rows, (row) => row.issueId);
   }
 
@@ -258,13 +267,16 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     List<int> issueIds,
   ) async {
     if (issueIds.isEmpty) return {};
-    final rows = await (select(attachedDatabase.issueTeams)
-          ..where((t) => t.issueId.isIn(issueIds))
-          ..orderBy([
-            (u) =>
-                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
-          ]))
-        .get();
+    final rows =
+        await (select(attachedDatabase.issueTeams)
+              ..where((t) => t.issueId.isIn(issueIds))
+              ..orderBy([
+                (u) => OrderingTerm(
+                  expression: u.sortOrder,
+                  mode: OrderingMode.asc,
+                ),
+              ]))
+            .get();
     return _groupByIssue(rows, (row) => row.issueId);
   }
 
@@ -282,13 +294,16 @@ class JunctionDao extends DatabaseAccessor<AppDatabase> {
     List<int> issueIds,
   ) async {
     if (issueIds.isEmpty) return {};
-    final rows = await (select(attachedDatabase.issueUniverses)
-          ..where((t) => t.issueId.isIn(issueIds))
-          ..orderBy([
-            (u) =>
-                OrderingTerm(expression: u.sortOrder, mode: OrderingMode.asc),
-          ]))
-        .get();
+    final rows =
+        await (select(attachedDatabase.issueUniverses)
+              ..where((t) => t.issueId.isIn(issueIds))
+              ..orderBy([
+                (u) => OrderingTerm(
+                  expression: u.sortOrder,
+                  mode: OrderingMode.asc,
+                ),
+              ]))
+            .get();
     return _groupByIssue(rows, (row) => row.issueId);
   }
 

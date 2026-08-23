@@ -44,9 +44,9 @@ class LocalFavoritesRepository implements FavoritesRepository {
 
   @override
   Stream<List<FavoriteSeries>> watchSeries() {
-    return _database.favoriteDao
-        .watchAllSeries()
-        .map((rows) => rows.map(_seriesToDomain).toList());
+    return _database.favoriteDao.watchAllSeries().map(
+      (rows) => rows.map(_seriesToDomain).toList(),
+    );
   }
 
   @override
@@ -75,16 +75,16 @@ class LocalFavoritesRepository implements FavoritesRepository {
 
   @override
   Stream<List<FavoriteIssue>> watchIssues() {
-    return _database.favoriteDao
-        .watchAllIssues()
-        .map((rows) => rows.map(_issueToDomain).toList());
+    return _database.favoriteDao.watchAllIssues().map(
+      (rows) => rows.map(_issueToDomain).toList(),
+    );
   }
 
   @override
   Stream<Set<int>> watchIssueIds() {
-    return _database.favoriteDao
-        .watchAllIssues()
-        .map((rows) => rows.map((r) => r.metronIssueId).toSet());
+    return _database.favoriteDao.watchAllIssues().map(
+      (rows) => rows.map((r) => r.metronIssueId).toSet(),
+    );
   }
 
   @override
@@ -113,9 +113,9 @@ class LocalFavoritesRepository implements FavoritesRepository {
 
   @override
   Stream<List<FavoriteReadingList>> watchReadingLists() {
-    return _database.favoriteDao
-        .watchAllReadingLists()
-        .map((rows) => rows.map(_readingListToDomain).toList());
+    return _database.favoriteDao.watchAllReadingLists().map(
+      (rows) => rows.map(_readingListToDomain).toList(),
+    );
   }
 
   @override
@@ -144,9 +144,9 @@ class LocalFavoritesRepository implements FavoritesRepository {
 
   @override
   Stream<List<FavoriteCharacter>> watchCharacters() {
-    return _database.favoriteDao
-        .watchAllCharacters()
-        .map((rows) => rows.map(_characterToDomain).toList());
+    return _database.favoriteDao.watchAllCharacters().map(
+      (rows) => rows.map(_characterToDomain).toList(),
+    );
   }
 
   @override
@@ -177,9 +177,9 @@ class LocalFavoritesRepository implements FavoritesRepository {
 
   @override
   Stream<List<FavoriteCreator>> watchCreators() {
-    return _database.favoriteDao
-        .watchAllCreators()
-        .map((rows) => rows.map(_creatorToDomain).toList());
+    return _database.favoriteDao.watchAllCreators().map(
+      (rows) => rows.map(_creatorToDomain).toList(),
+    );
   }
 
   @override

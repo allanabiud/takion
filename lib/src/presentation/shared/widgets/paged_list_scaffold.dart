@@ -76,7 +76,8 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
 
     final body = RefreshIndicator(
       onRefresh: widget.onRefresh,
-      child: (widget.isLoading && widget.itemCount == 0 && widget.skeleton != null)
+      child:
+          (widget.isLoading && widget.itemCount == 0 && widget.skeleton != null)
           ? widget.skeleton!
           : (widget.itemCount == 0 && !widget.isLoading)
           ? _EmptyState(
@@ -171,9 +172,7 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
         return CustomScrollView(
           controller: _scrollController,
           slivers: [
-            PinnedListHeader(
-              child: widget.header!,
-            ),
+            PinnedListHeader(child: widget.header!),
             grid,
             SliverToBoxAdapter(child: SizedBox(height: widget.bottomSpacing)),
           ],
@@ -194,9 +193,7 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
       return CustomScrollView(
         controller: _scrollController,
         slivers: [
-          PinnedListHeader(
-            child: widget.header!,
-          ),
+          PinnedListHeader(child: widget.header!),
           SliverList(
             delegate: SliverChildBuilderDelegate(
               widget.itemBuilder,

@@ -15,6 +15,18 @@ class LibraryItemStatusRow {
   final int? rating;
 }
 
+class HydratedLibraryItemRow {
+  const HydratedLibraryItemRow({
+    required this.libraryItem,
+    this.issue,
+    this.series,
+  });
+
+  final LibraryItem libraryItem;
+  final MetronIssue? issue;
+  final MetronSery? series;
+}
+
 class SeriesSummaryDataRow {
   const SeriesSummaryDataRow({
     required this.seriesId,
@@ -22,6 +34,7 @@ class SeriesSummaryDataRow {
     this.volume,
     this.yearBegan,
     this.issueCount,
+    this.computedCoverUrl,
     required this.categoryCount,
   });
 
@@ -30,6 +43,7 @@ class SeriesSummaryDataRow {
   final int? volume;
   final int? yearBegan;
   final int? issueCount;
+  final String? computedCoverUrl;
   final int categoryCount;
 }
 
@@ -50,6 +64,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         attachedDatabase.metronSeries.volume,
         attachedDatabase.metronSeries.yearBegan,
         attachedDatabase.metronSeries.issueCount,
+        attachedDatabase.metronSeries.computedCoverUrl,
       ])
       ..join([
         leftOuterJoin(
@@ -69,7 +84,10 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       query.where(attachedDatabase.libraryItems.isRead.equals(isRead));
     }
     if (isUnrated == true) {
-      query.where(attachedDatabase.libraryItems.rating.isNull());
+      query.where(
+        attachedDatabase.libraryItems.rating.isNull() |
+            attachedDatabase.libraryItems.rating.isSmallerOrEqualValue(0),
+      );
     }
 
     query.where(
@@ -86,6 +104,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       final vol = row.read(attachedDatabase.metronSeries.volume);
       final year = row.read(attachedDatabase.metronSeries.yearBegan);
       final totalIssues = row.read(attachedDatabase.metronSeries.issueCount);
+      final coverUrl = row.read(attachedDatabase.metronSeries.computedCoverUrl);
       final catCount = row.read(countCol) ?? 0;
 
       return SeriesSummaryDataRow(
@@ -96,6 +115,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         volume: vol,
         yearBegan: year,
         issueCount: totalIssues,
+        computedCoverUrl: coverUrl,
         categoryCount: catCount,
       );
     }).toList();
@@ -136,7 +156,8 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       query.where((t) => t.isRead.equals(isRead));
     }
     query.where(
-      (t) => (t.updatedAt.equals(cursorUpdatedAt) &
+      (t) =>
+          (t.updatedAt.equals(cursorUpdatedAt) &
               t.id.isBiggerThan(Constant(cursorId))) |
           t.updatedAt.isBiggerThan(Constant(cursorUpdatedAt)),
     );
@@ -160,6 +181,125 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.isRead.equals(isRead))).watch();
   }
 
+  Stream<List<HydratedLibraryItemRow>> watchHydratedItems({
+    String? ownershipStatus,
+    bool? isRead,
+    bool? isUnrated,
+  }) {
+    final query = select(attachedDatabase.libraryItems).join([
+      leftOuterJoin(
+        attachedDatabase.metronIssues,
+        attachedDatabase.metronIssues.id.equalsExp(
+          attachedDatabase.libraryItems.metronIssueId,
+        ),
+      ),
+      leftOuterJoin(
+        attachedDatabase.metronSeries,
+        attachedDatabase.metronSeries.id.equalsExp(
+          attachedDatabase.libraryItems.metronSeriesId,
+        ),
+      ),
+    ]);
+
+    if (ownershipStatus != null) {
+      query.where(
+        attachedDatabase.libraryItems.ownershipStatus.equals(ownershipStatus),
+      );
+    }
+    if (isRead != null) {
+      query.where(attachedDatabase.libraryItems.isRead.equals(isRead));
+    }
+    if (isUnrated == true) {
+      query.where(
+        attachedDatabase.libraryItems.rating.isNull() |
+            attachedDatabase.libraryItems.rating.isSmallerOrEqualValue(0),
+      );
+    }
+
+    query.orderBy([
+      OrderingTerm(
+        expression: attachedDatabase.libraryItems.updatedAt,
+        mode: OrderingMode.desc,
+      ),
+      OrderingTerm(
+        expression: attachedDatabase.libraryItems.id,
+        mode: OrderingMode.desc,
+      ),
+    ]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return HydratedLibraryItemRow(
+          libraryItem: row.readTable(attachedDatabase.libraryItems),
+          issue: row.readTableOrNull(attachedDatabase.metronIssues),
+          series: row.readTableOrNull(attachedDatabase.metronSeries),
+        );
+      }).toList();
+    });
+  }
+
+  Future<List<HydratedLibraryItemRow>> getHydratedItems({
+    String? ownershipStatus,
+    bool? isRead,
+    bool? isUnrated,
+    int? limit,
+    int? offset,
+  }) async {
+    final query = select(attachedDatabase.libraryItems).join([
+      leftOuterJoin(
+        attachedDatabase.metronIssues,
+        attachedDatabase.metronIssues.id.equalsExp(
+          attachedDatabase.libraryItems.metronIssueId,
+        ),
+      ),
+      leftOuterJoin(
+        attachedDatabase.metronSeries,
+        attachedDatabase.metronSeries.id.equalsExp(
+          attachedDatabase.libraryItems.metronSeriesId,
+        ),
+      ),
+    ]);
+
+    if (ownershipStatus != null) {
+      query.where(
+        attachedDatabase.libraryItems.ownershipStatus.equals(ownershipStatus),
+      );
+    }
+    if (isRead != null) {
+      query.where(attachedDatabase.libraryItems.isRead.equals(isRead));
+    }
+    if (isUnrated == true) {
+      query.where(
+        attachedDatabase.libraryItems.rating.isNull() |
+            attachedDatabase.libraryItems.rating.isSmallerOrEqualValue(0),
+      );
+    }
+
+    query.orderBy([
+      OrderingTerm(
+        expression: attachedDatabase.libraryItems.updatedAt,
+        mode: OrderingMode.desc,
+      ),
+      OrderingTerm(
+        expression: attachedDatabase.libraryItems.id,
+        mode: OrderingMode.desc,
+      ),
+    ]);
+
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+
+    final rows = await query.get();
+    return rows.map((row) {
+      return HydratedLibraryItemRow(
+        libraryItem: row.readTable(attachedDatabase.libraryItems),
+        issue: row.readTableOrNull(attachedDatabase.metronIssues),
+        series: row.readTableOrNull(attachedDatabase.metronSeries),
+      );
+    }).toList();
+  }
+
   Future<List<LibraryItemStatusRow>> getStatusRows() async {
     final query = selectOnly(attachedDatabase.libraryItems)
       ..addColumns([
@@ -172,13 +312,10 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     return [
       for (final row in rows)
         LibraryItemStatusRow(
-          metronIssueId: row.read(
-                attachedDatabase.libraryItems.metronIssueId,
-              ) ??
-              0,
-          ownershipStatus: row.read(
-                attachedDatabase.libraryItems.ownershipStatus,
-              ) ??
+          metronIssueId:
+              row.read(attachedDatabase.libraryItems.metronIssueId) ?? 0,
+          ownershipStatus:
+              row.read(attachedDatabase.libraryItems.ownershipStatus) ??
               "notOwned",
           isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
           rating: row.read(attachedDatabase.libraryItems.rating),
@@ -198,13 +335,10 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       (rows) => [
         for (final row in rows)
           LibraryItemStatusRow(
-            metronIssueId: row.read(
-                  attachedDatabase.libraryItems.metronIssueId,
-                ) ??
-                0,
-            ownershipStatus: row.read(
-                  attachedDatabase.libraryItems.ownershipStatus,
-                ) ??
+            metronIssueId:
+                row.read(attachedDatabase.libraryItems.metronIssueId) ?? 0,
+            ownershipStatus:
+                row.read(attachedDatabase.libraryItems.ownershipStatus) ??
                 "notOwned",
             isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
             rating: row.read(attachedDatabase.libraryItems.rating),
@@ -239,10 +373,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   Future<Map<int, int>> getOwnedCountsBySeries(List<int> seriesIds) async {
     if (seriesIds.isEmpty) return {};
     final query = selectOnly(attachedDatabase.libraryItems)
-      ..addColumns([
-        attachedDatabase.libraryItems.metronSeriesId,
-        countAll(),
-      ])
+      ..addColumns([attachedDatabase.libraryItems.metronSeriesId, countAll()])
       ..where(
         attachedDatabase.libraryItems.metronSeriesId.isIn(seriesIds) &
             attachedDatabase.libraryItems.ownershipStatus.equals("owned"),

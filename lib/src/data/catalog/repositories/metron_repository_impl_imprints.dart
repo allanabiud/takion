@@ -238,11 +238,13 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       return await _imprintRowToEntity(cached);
     }
 
-    final cachedJson =
-        await _localDataSource.getCachedImprintDetailsResponse(imprintId);
+    final cachedJson = await _localDataSource.getCachedImprintDetailsResponse(
+      imprintId,
+    );
     if (cachedJson != null && !forceRefresh) {
-      final cachedAt =
-          await _localDataSource.getCachedImprintDetailsCachedAt(imprintId);
+      final cachedAt = await _localDataSource.getCachedImprintDetailsCachedAt(
+        imprintId,
+      );
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.imprintDetails.isFresh(cachedAt, now)) {
@@ -263,8 +265,8 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     try {
       final response = await _remoteDataSource.getImprintDetails(imprintId);
       if (response.statusCode == 304) {
-        final cachedJson =
-            await _localDataSource.getCachedImprintDetailsResponse(imprintId);
+        final cachedJson = await _localDataSource
+            .getCachedImprintDetailsResponse(imprintId);
         if (cachedJson != null) {
           await _localDataSource.cacheImprintDetailsResponse(
             imprintId,
@@ -299,8 +301,9 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
       );
     } catch (e) {
       AppLogger.error("Failed to fetch imprint details", error: e);
-      final cachedJson =
-          await _localDataSource.getCachedImprintDetailsResponse(imprintId);
+      final cachedJson = await _localDataSource.getCachedImprintDetailsResponse(
+        imprintId,
+      );
       if (cachedJson != null) {
         final dto = ImprintDetailsDto.fromJson(cachedJson);
         await _upsertImprintDetails(dto);
@@ -320,8 +323,13 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     if (dto.name.trim().isNotEmpty) {
       _metadataCache?.indexImprint(dto.id, dto.name.trim());
     }
-    if (dto.publisher != null && dto.publisher!.id > 0 && dto.publisher!.name.trim().isNotEmpty) {
-      _metadataCache?.indexPublisher(dto.publisher!.id, dto.publisher!.name.trim());
+    if (dto.publisher != null &&
+        dto.publisher!.id > 0 &&
+        dto.publisher!.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(
+        dto.publisher!.id,
+        dto.publisher!.name.trim(),
+      );
     }
     if (dto.publisher != null) {
       await _metronEntityDao.upsertPublisher(
@@ -353,10 +361,7 @@ mixin _ImprintsRepositoryMixin on _RepositoryState {
     ImprintNamedRef? publisher;
     if (row.publisherId != null) {
       final p = await _metronEntityDao.getPublisher(row.publisherId!);
-      publisher = ImprintNamedRef(
-        id: row.publisherId!,
-        name: p?.name ?? "",
-      );
+      publisher = ImprintNamedRef(id: row.publisherId!, name: p?.name ?? "");
     }
 
     return ImprintDetails(

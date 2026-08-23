@@ -346,9 +346,7 @@ class _StateActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
         minimumSize: const Size(0, 56),
         textStyle: theme.textTheme.titleMedium,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onPressed: onPressed,
       child: Row(
@@ -358,11 +356,7 @@ class _StateActionButton extends StatelessWidget {
           Icon(icon, size: 20),
           const SizedBox(width: 6),
           Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),

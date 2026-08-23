@@ -95,10 +95,7 @@ class RatingPicker extends StatelessWidget {
             children: [
               stars(),
               if (showReset)
-                Positioned(
-                  left: -(iconSize + 12),
-                  child: resetButton(),
-                ),
+                Positioned(left: -(iconSize + 12), child: resetButton()),
             ],
           ),
         );

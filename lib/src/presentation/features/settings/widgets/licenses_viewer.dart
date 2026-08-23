@@ -119,78 +119,68 @@ class _LicensesSheetState extends State<_LicensesSheet> {
                   )
                 else
                   SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final entry = _licenses![index];
-                        final isExpanded = _expandedIndices.contains(index);
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final entry = _licenses![index];
+                      final isExpanded = _expandedIndices.contains(index);
 
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isExpanded) {
-                                    _expandedIndices.remove(index);
-                                  } else {
-                                    _expandedIndices.add(index);
-                                  }
-                                });
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 14,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        entry.packages.join(", "),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ),
-                                    Icon(
-                                      isExpanded
-                                          ? Icons.keyboard_arrow_up
-                                          : Icons.keyboard_arrow_down,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ],
-                                ),
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                if (isExpanded) {
+                                  _expandedIndices.remove(index);
+                                } else {
+                                  _expandedIndices.add(index);
+                                }
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 14,
                               ),
-                            ),
-                            if (isExpanded)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  24,
-                                  0,
-                                  24,
-                                  16,
-                                ),
-                                child: SelectableText(
-                                  entry.paragraphs
-                                      .map((p) => p.text)
-                                      .join("\n"),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    height: 1.5,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      entry.packages.join(", "),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    isExpanded
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (isExpanded)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                              child: SelectableText(
+                                entry.paragraphs.map((p) => p.text).join("\n"),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  height: 1.5,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                            Divider(
-                              height: 1,
-                              indent: isExpanded ? 0 : 24,
-                              color: theme.colorScheme.outlineVariant,
                             ),
-                          ],
-                        );
-                      },
-                      childCount: _licenses!.length,
-                    ),
+                          Divider(
+                            height: 1,
+                            indent: isExpanded ? 0 : 24,
+                            color: theme.colorScheme.outlineVariant,
+                          ),
+                        ],
+                      );
+                    }, childCount: _licenses!.length),
                   ),
               ],
             ),

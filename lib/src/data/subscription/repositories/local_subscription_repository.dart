@@ -28,9 +28,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   }
 
   @override
-  Stream<SeriesSubscription?> watchSubscriptionBySeriesId(
-    int metronSeriesId,
-  ) {
+  Stream<SeriesSubscription?> watchSubscriptionBySeriesId(int metronSeriesId) {
     return _database.subscriptionDao
         .watchBySeriesId(metronSeriesId)
         .map((row) => row == null ? null : _toDomain(row));

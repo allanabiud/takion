@@ -37,8 +37,7 @@ class CharacterDetailsScreen extends ConsumerStatefulWidget {
       _CharacterDetailsScreenState();
 }
 
-class _CharacterDetailsScreenState
-    extends ConsumerState<CharacterDetailsScreen>
+class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
     with
         ResourceUrlActions<CharacterDetails>,
         FavoriteToggleActions,
@@ -71,7 +70,9 @@ class _CharacterDetailsScreenState
   Future<void> _toggleFavorite() {
     return toggleFavoriteWithUndo(
       context,
-      isFavorite: ref.read(isCharacterFavoriteProvider(widget.characterId).future),
+      isFavorite: ref.read(
+        isCharacterFavoriteProvider(widget.characterId).future,
+      ),
       toggle: () async {
         final repository = ref.read(favoritesRepositoryProvider);
         await repository.toggleCharacterFavorite(widget.characterId);
@@ -139,10 +140,7 @@ class _CharacterDetailsScreenState
         DateTime? issueDate(IssueList issue) =>
             issue.storeDate ?? issue.coverDate;
 
-        final dates = allIssues
-            .map(issueDate)
-            .where((d) => d != null)
-            .toList();
+        final dates = allIssues.map(issueDate).where((d) => d != null).toList();
         dates.sort();
         final dateRange = dates.isNotEmpty
             ? "${dates.first!.year} – ${dates.last!.year}"
@@ -245,7 +243,10 @@ class _CharacterDetailsScreenState
               ),
             ),
           ],
-          if (hasIssues || isIssuesLoading || issueListAsync.hasError || totalIssueCount > 0) ...[
+          if (hasIssues ||
+              isIssuesLoading ||
+              issueListAsync.hasError ||
+              totalIssueCount > 0) ...[
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
@@ -669,20 +670,14 @@ class _CharacterInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final detailItems = <DetailPropertyItem>[
       if (details.alias != null && details.alias!.trim().isNotEmpty)
-        DetailPropertyItem(
-          label: "Aliases",
-          value: details.alias!.trim(),
-        ),
+        DetailPropertyItem(label: "Aliases", value: details.alias!.trim()),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (detailItems.isNotEmpty) ...[
-          DetailsPropertyCard(
-            title: "DETAILS",
-            items: detailItems,
-          ),
+          DetailsPropertyCard(title: "DETAILS", items: detailItems),
           const SizedBox(height: 16),
         ],
         DatabaseIdsSection(

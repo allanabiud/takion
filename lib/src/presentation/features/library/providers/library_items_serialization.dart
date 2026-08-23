@@ -87,6 +87,88 @@ CollectionItem toCollectionItem(
   );
 }
 
+CollectionItem hydratedRowToCollectionItem(
+  dynamic row, {
+  Map<int, double>? priceBackfill,
+}) {
+  final d = row.libraryItem;
+  final issue = row.issue;
+  final series = row.series;
+
+  if (priceBackfill != null &&
+      d.pricePaid == null &&
+      issue != null &&
+      issue.price != null) {
+    final coverPrice = double.tryParse(issue.price!);
+    if (coverPrice != null && coverPrice > 0) {
+      priceBackfill[d.metronIssueId] = coverPrice;
+    }
+  }
+
+  final domainItem = LibraryItem(
+    id: d.id,
+    userId: d.userId,
+    metronIssueId: d.metronIssueId,
+    metronSeriesId: d.metronSeriesId,
+    ownershipStatus: d.ownershipStatus == "owned"
+        ? LibraryOwnershipStatus.owned
+        : (d.ownershipStatus == "wishlist"
+              ? LibraryOwnershipStatus.wishlist
+              : LibraryOwnershipStatus.notOwned),
+    isRead: d.isRead,
+    rating: d.rating,
+    purchaseDate: d.purchaseDate != null
+        ? DateTime.tryParse(d.purchaseDate!)
+        : null,
+    pricePaid: d.pricePaid,
+    quantityOwned: d.quantityOwned,
+    format: d.format == "digital"
+        ? LibraryItemFormat.digital
+        : (d.format == "both"
+              ? LibraryItemFormat.both
+              : LibraryItemFormat.print),
+    firstReadAt: d.firstReadAt != null
+        ? DateTime.tryParse(d.firstReadAt!)
+        : null,
+    conditionGrade: d.conditionGrade,
+    acquiredOn: d.acquiredOn != null ? DateTime.tryParse(d.acquiredOn!) : null,
+    notes: d.notes,
+    createdAt: DateTime.tryParse(d.createdAt) ?? DateTime.now(),
+    updatedAt: DateTime.tryParse(d.updatedAt) ?? DateTime.now(),
+  );
+
+  return toCollectionItem(
+    domainItem,
+    series?.id ?? (d.metronSeriesId > 0 ? d.metronSeriesId : null),
+    series?.name,
+    series?.volume,
+    series?.yearBegan,
+    issue?.number ?? "",
+    issue?.imageUrl,
+    issue?.coverDate != null ? DateTime.tryParse(issue!.coverDate!) : null,
+    issue?.storeDate != null ? DateTime.tryParse(issue!.storeDate!) : null,
+    issue?.modified != null ? DateTime.tryParse(issue!.modified!) : null,
+  );
+}
+
+void schedulePriceBackfill(Ref ref, Map<int, double> priceBackfill) {
+  if (priceBackfill.isEmpty) return;
+  Future.microtask(() async {
+    try {
+      final repo = ref.read(libraryRepositoryProvider);
+      await repo.batchUpdatePricePaid(priceBackfill);
+      ref.invalidate(collectionStatsProvider);
+      ref.invalidate(libraryBasicStatsProvider);
+      ref.invalidate(libraryEntityStatsProvider);
+      ref.invalidate(libraryReadingTrendsProvider);
+      ref.invalidate(libraryRecentlyFinishedProvider);
+      ref.invalidate(categoryInsightsProvider);
+    } catch (e) {
+      AppLogger.warning("Failed to batch backfill cover prices", error: e);
+    }
+  });
+}
+
 Future<List<CollectionItem>> hydrateLibraryItems(
   Ref ref,
   List<LibraryItem> items, {
@@ -138,7 +220,12 @@ Future<List<CollectionItem>> hydrateLibraryItems(
 }
 
 class _HydrationBatch {
-  const _HydrationBatch(this.items, this.issues, this.seriesMap, this.applyPriceBackfill);
+  const _HydrationBatch(
+    this.items,
+    this.issues,
+    this.seriesMap,
+    this.applyPriceBackfill,
+  );
 
   final List<LibraryItem> items;
   final Map<int, LocalIssue> issues;

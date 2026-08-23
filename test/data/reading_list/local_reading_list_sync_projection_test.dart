@@ -40,21 +40,24 @@ void main() {
         isRead: false,
       );
 
-  test("createList mirrors items into reading_list_items with timestamps", () async {
-    await repository.createList(
-      listWithItems([item("series-1"), item("series-2")]),
-    );
+  test(
+    "createList mirrors items into reading_list_items with timestamps",
+    () async {
+      await repository.createList(
+        listWithItems([item("series-1"), item("series-2")]),
+      );
 
-    final rows = await db.select(db.readingListItems).get();
-    expect(rows, hasLength(2));
-    expect(rows[0].id, "list-1:series-1");
-    expect(rows[1].id, "list-1:series-2");
-    expect(rows[0].listId, "list-1");
-    expect(rows[0].targetId, "series-1");
-    expect(rows[0].sortOrder, 0);
-    expect(rows[0].createdAt, isNotNull);
-    expect(rows[0].updatedAt, isNotNull);
-  });
+      final rows = await db.select(db.readingListItems).get();
+      expect(rows, hasLength(2));
+      expect(rows[0].id, "list-1:series-1");
+      expect(rows[1].id, "list-1:series-2");
+      expect(rows[0].listId, "list-1");
+      expect(rows[0].targetId, "series-1");
+      expect(rows[0].sortOrder, 0);
+      expect(rows[0].createdAt, isNotNull);
+      expect(rows[0].updatedAt, isNotNull);
+    },
+  );
 
   test("addItemToList creates a new syncable row", () async {
     await repository.createList(listWithItems([item("series-1")]));
@@ -63,8 +66,10 @@ void main() {
     final rows = await db.select(db.readingListItems).get();
     expect(rows, hasLength(2));
     expect(rows.map((r) => r.targetId).toSet(), {"series-1", "series-2"});
-    expect(rows.firstWhere((r) => r.targetId == "series-2").updatedAt,
-        isNotNull);
+    expect(
+      rows.firstWhere((r) => r.targetId == "series-2").updatedAt,
+      isNotNull,
+    );
   });
 
   test("removeItemFromList deletes the row and records a tombstone", () async {

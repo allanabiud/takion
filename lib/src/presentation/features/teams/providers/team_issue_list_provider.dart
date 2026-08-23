@@ -42,7 +42,11 @@ Future<CharacterIssueListPage> _fetchValidIssuePage(
     try {
       return await fetcher(fallbackPage);
     } catch (_) {
-      return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
+      return const CharacterIssueListPage(
+        count: 0,
+        results: [],
+        currentPage: 1,
+      );
     }
   }
   final minPage = (targetPage - metronMaxWalkPages + 1).clamp(1, targetPage);
@@ -147,10 +151,7 @@ final teamDetailsIssuesProvider = FutureProvider.autoDispose
 
       final repository = ref.watch(catalogRepositoryProvider);
 
-      final page1 = await repository.getTeamIssueList(
-        teamId,
-        page: 1,
-      );
+      final page1 = await repository.getTeamIssueList(teamId, page: 1);
 
       final pageSize = page1.realPageSize ?? metronDefaultPageSize;
       final totalPages = pageSize > 0 ? (page1.count / pageSize).ceil() : 1;

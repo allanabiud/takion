@@ -35,10 +35,7 @@ class HomeContentCache {
     if (row == null) return null;
     try {
       final decoded = jsonDecode(row.payload) as List;
-      return decoded
-          .whereType<Map>()
-          .map(Map<String, dynamic>.from)
-          .toList();
+      return decoded.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (_) {
       return null;
     }

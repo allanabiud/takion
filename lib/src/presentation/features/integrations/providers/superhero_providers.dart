@@ -77,28 +77,28 @@ class SuperHeroUsePowerstatsNotifier extends AsyncNotifier<bool> {
   }
 }
 
-final superheroConnectionProvider = FutureProvider<SuperHeroConnectionStatus>(
-  (ref) async {
-    final service = ref.watch(superheroAccountServiceProvider);
-    return service.validateStoredConnection();
-  },
-);
+final superheroConnectionProvider = FutureProvider<SuperHeroConnectionStatus>((
+  ref,
+) async {
+  final service = ref.watch(superheroAccountServiceProvider);
+  return service.validateStoredConnection();
+});
 
 final superheroCharacterRepositoryProvider =
     Provider<SuperHeroCharacterRepository>((ref) {
-  final db = ref.watch(driftDatabaseProvider);
-  final service = ref.watch(superheroAccountServiceProvider);
-  return SuperHeroCharacterRepositoryImpl(
-    remoteDataSource: SuperHeroRemoteDataSourceImpl(
-      ref.watch(superheroDioProvider),
-    ),
-    cacheDao: db.superheroCharacterCacheDao,
-    getToken: service.getStoredToken,
-  );
-});
+      final db = ref.watch(driftDatabaseProvider);
+      final service = ref.watch(superheroAccountServiceProvider);
+      return SuperHeroCharacterRepositoryImpl(
+        remoteDataSource: SuperHeroRemoteDataSourceImpl(
+          ref.watch(superheroDioProvider),
+        ),
+        cacheDao: db.superheroCharacterCacheDao,
+        getToken: service.getStoredToken,
+      );
+    });
 
-final superheroCharacterProvider =
-    FutureProvider.autoDispose.family<SuperHeroCharacter?, int>((ref, id) {
+final superheroCharacterProvider = FutureProvider.autoDispose
+    .family<SuperHeroCharacter?, int>((ref, id) {
       final enabled = ref.watch(superheroEnabledProvider).value ?? false;
       final usePowerstats =
           ref.watch(superheroUsePowerstatsProvider).value ?? false;

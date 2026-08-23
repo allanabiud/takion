@@ -145,7 +145,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                             builder: (context) => AlertDialog(
                               title: const Text("Clear All Cache?"),
                               content: const Text(
-                                "This will remove all fetched cached data and images. Your account and preferences remain.",
+                                "This will remove all cached data and images. Your account and preferences remain.",
                               ),
                               actions: [
                                 TextButton(

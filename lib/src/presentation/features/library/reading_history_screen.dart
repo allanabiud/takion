@@ -24,10 +24,7 @@ class ReadingHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _AnimatedExpandable extends StatelessWidget {
-  const _AnimatedExpandable({
-    required this.expanded,
-    required this.child,
-  });
+  const _AnimatedExpandable({required this.expanded, required this.child});
 
   final bool expanded;
   final Widget child;

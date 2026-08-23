@@ -238,17 +238,17 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       return _arcRowToEntity(cached);
     }
 
-    final cachedJson =
-        await _localDataSource.getCachedArcDetailsResponse(arcId);
+    final cachedJson = await _localDataSource.getCachedArcDetailsResponse(
+      arcId,
+    );
     if (cachedJson != null && !forceRefresh) {
-      final cachedAt =
-          await _localDataSource.getCachedArcDetailsCachedAt(arcId);
+      final cachedAt = await _localDataSource.getCachedArcDetailsCachedAt(
+        arcId,
+      );
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.arcDetails.isFresh(cachedAt, now)) {
-        AppPerformanceMetrics.instance.recordCacheHit(
-          "arc_details_response",
-        );
+        AppPerformanceMetrics.instance.recordCacheHit("arc_details_response");
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);
         return dto.toEntity();
@@ -260,8 +260,9 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     try {
       final response = await _remoteDataSource.getArcDetails(arcId);
       if (response.statusCode == 304) {
-        final cachedJson =
-            await _localDataSource.getCachedArcDetailsResponse(arcId);
+        final cachedJson = await _localDataSource.getCachedArcDetailsResponse(
+          arcId,
+        );
         if (cachedJson != null) {
           await _localDataSource.cacheArcDetailsResponse(arcId, cachedJson);
           final dto = ArcDetailsDto.fromJson(cachedJson);
@@ -286,8 +287,9 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
       return dto.toEntity();
     } catch (e) {
       AppLogger.error("Failed to fetch arc details", error: e);
-      final cachedJson =
-          await _localDataSource.getCachedArcDetailsResponse(arcId);
+      final cachedJson = await _localDataSource.getCachedArcDetailsResponse(
+        arcId,
+      );
       if (cachedJson != null) {
         final dto = ArcDetailsDto.fromJson(cachedJson);
         await _upsertArcDetails(dto);

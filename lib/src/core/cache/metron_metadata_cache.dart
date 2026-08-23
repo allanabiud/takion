@@ -85,4 +85,3 @@ class MetronMetadataCache {
 final metronMetadataCacheProvider = Provider<MetronMetadataCache>((ref) {
   return MetronMetadataCache();
 });
-

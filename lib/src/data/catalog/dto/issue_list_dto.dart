@@ -22,7 +22,9 @@ abstract class IssueListDto with _$IssueListDto {
     IssueListSeriesDto? parseSeries(dynamic s) {
       if (s == null) return null;
       if (s is Map<String, dynamic>) return IssueListSeriesDto.fromJson(s);
-      if (s is Map) return IssueListSeriesDto.fromJson(Map<String, dynamic>.from(s));
+      if (s is Map) {
+        return IssueListSeriesDto.fromJson(Map<String, dynamic>.from(s));
+      }
       if (s is String && s.trim().isNotEmpty) {
         return IssueListSeriesDto(name: s.trim(), volume: 1, yearBegan: 0);
       }

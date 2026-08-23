@@ -291,74 +291,70 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
     final diagnosticsAsync = ref.watch(syncDiagnosticsProvider);
     final diagnostics = diagnosticsAsync.value;
 
-    return buildSettingsGroup(
-      context,
-      "Recent Logs",
-      [
-        if (diagnostics != null && diagnostics.lastErrorTime != null) ...[
-          _statRow(
-            context,
-            "Last Failure",
-            DateFormatter.relativeDetailed(diagnostics.lastErrorTime!),
+    return buildSettingsGroup(context, "Recent Logs", [
+      if (diagnostics != null && diagnostics.lastErrorTime != null) ...[
+        _statRow(
+          context,
+          "Last Failure",
+          DateFormatter.relativeDetailed(diagnostics.lastErrorTime!),
+        ),
+        if (diagnostics.lastPhase != null)
+          _statRow(context, "Failed During", diagnostics.lastPhase!),
+        if (diagnostics.lastError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: Text(
+              diagnostics.lastError!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
           ),
-          if (diagnostics.lastPhase != null)
-            _statRow(context, "Failed During", diagnostics.lastPhase!),
-          if (diagnostics.lastError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2, bottom: 4),
-              child: Text(
-                diagnostics.lastError!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
+        if (diagnostics.lastErrorDetail != null &&
+            diagnostics.lastErrorDetail != diagnostics.lastError)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              diagnostics.lastErrorDetail!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          if (diagnostics.lastErrorDetail != null &&
-              diagnostics.lastErrorDetail != diagnostics.lastError)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                diagnostics.lastErrorDetail!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          const Divider(height: 16),
-        ],
+          ),
+        const Divider(height: 16),
+      ],
+      _buildPreviewToggle(
+        context,
+        expanded: _syncPreviewExpanded,
+        showLabel: "Show sync preview",
+        hideLabel: "Hide sync preview",
+        onTap: () =>
+            setState(() => _syncPreviewExpanded = !_syncPreviewExpanded),
+      ),
+      if (_syncPreviewExpanded) ...[
+        const SizedBox(height: 4),
+        _buildSyncPreview(context, diagnosticsAsync),
+      ],
+      if (logLines.isNotEmpty) ...[
+        const Divider(height: 1),
         _buildPreviewToggle(
           context,
-          expanded: _syncPreviewExpanded,
-          showLabel: "Show sync preview",
-          hideLabel: "Hide sync preview",
-          onTap: () =>
-              setState(() => _syncPreviewExpanded = !_syncPreviewExpanded),
+          expanded: _previewExpanded,
+          showLabel: "Show preview",
+          hideLabel: "Hide preview",
+          onTap: () => setState(() => _previewExpanded = !_previewExpanded),
         ),
-        if (_syncPreviewExpanded) ...[
+        if (_previewExpanded) ...[
           const SizedBox(height: 4),
-          _buildSyncPreview(context, diagnosticsAsync),
-        ],
-        if (logLines.isNotEmpty) ...[
-          const Divider(height: 1),
-          _buildPreviewToggle(
+          _buildPreviewBody(
             context,
-            expanded: _previewExpanded,
-            showLabel: "Show preview",
-            hideLabel: "Hide preview",
-            onTap: () => setState(() => _previewExpanded = !_previewExpanded),
+            logLines
+                .sublist(0, logLines.length > 50 ? 50 : logLines.length)
+                .join("\n"),
           ),
-          if (_previewExpanded) ...[
-            const SizedBox(height: 4),
-            _buildPreviewBody(
-              context,
-              logLines
-                  .sublist(0, logLines.length > 50 ? 50 : logLines.length)
-                  .join("\n"),
-            ),
-          ],
         ],
       ],
-    );
+    ]);
   }
 
   Widget _buildPreviewToggle(
@@ -401,9 +397,7 @@ class _DeviceLogsBodyState extends ConsumerState<_DeviceLogsBody> {
       constraints: const BoxConstraints(maxHeight: 300),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.3,
-        ),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: SingleChildScrollView(

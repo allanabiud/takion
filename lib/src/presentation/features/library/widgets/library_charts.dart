@@ -1,6 +1,7 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 
 class ReadingTrendChart extends StatelessWidget {
   const ReadingTrendChart({super.key, required this.data});
@@ -199,11 +200,18 @@ class StatBarTable extends StatelessWidget {
                     child: Stack(
                       children: [
                         Container(color: barColor.withValues(alpha: 0.12)),
-                        FractionallySizedBox(
-                          widthFactor: fraction,
-                          child: Container(
-                            color: barColor.withValues(alpha: 0.7),
-                          ),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.0, end: fraction),
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, animFraction, _) {
+                            return FractionallySizedBox(
+                              widthFactor: animFraction.clamp(0.0, 1.0),
+                              child: Container(
+                                color: barColor.withValues(alpha: 0.7),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -213,9 +221,8 @@ class StatBarTable extends StatelessWidget {
               const SizedBox(width: 8),
               SizedBox(
                 width: 32,
-                child: Text(
-                  "${item.value}",
-                  textAlign: TextAlign.right,
+                child: AnimatedCounterText(
+                  value: item.value,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,

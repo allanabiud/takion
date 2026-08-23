@@ -48,9 +48,6 @@ class SeriesInfoCard extends StatelessWidget {
         ),
     ];
 
-    return DetailsPropertyCard(
-      title: "DETAILS",
-      items: contentItems,
-    );
+    return DetailsPropertyCard(title: "DETAILS", items: contentItems);
   }
 }

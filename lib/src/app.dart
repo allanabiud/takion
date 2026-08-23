@@ -143,13 +143,17 @@ class _TakionAppState extends ConsumerState<TakionApp>
       return;
     }
     if (!ignoreThrottle && await driveService.isThrottled()) {
-      AppLogger.info("Drive auto sync skipped: throttled (< 5m since last sync attempt)");
+      AppLogger.info(
+        "Drive auto sync skipped: throttled (< 5m since last sync attempt)",
+      );
       return;
     }
     AppLogger.info("Drive auto sync triggered");
     syncNotifier.setSyncing(true);
     try {
-      final ran = await driveService.triggerSync(ignoreThrottle: ignoreThrottle);
+      final ran = await driveService.triggerSync(
+        ignoreThrottle: ignoreThrottle,
+      );
       if (ran) {
         await syncNotifier.updateLastSync();
         syncNotifier.clearError();

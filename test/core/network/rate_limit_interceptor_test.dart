@@ -31,25 +31,27 @@ void main() {
           reservedForeground: 1,
         );
 
-        // Exhaust the background budget (cap = 3 - 1 = 2).
         final bg1 = run(interceptor, background: true);
         final bg2 = run(interceptor, background: true);
-        // A third background request must wait for the reservation.
         final bg3 = run(interceptor, background: true);
 
         async.flushMicrotasks();
         expect(bg1.isCompleted, isTrue);
         expect(bg2.isCompleted, isTrue);
-        expect(bg3.isCompleted, isFalse,
-            reason: "background budget must be capped at 2");
+        expect(
+          bg3.isCompleted,
+          isFalse,
+          reason: "background budget must be capped at 2",
+        );
 
-        // A foreground request is still served from the reserved slot.
         final fg = run(interceptor, background: false);
         async.flushMicrotasks();
-        expect(fg.isCompleted, isTrue,
-            reason: "foreground must bypass background budget cap");
+        expect(
+          fg.isCompleted,
+          isTrue,
+          reason: "foreground must bypass background budget cap",
+        );
 
-        // Advancing a minute lets the queued background request through.
         async.elapse(const Duration(minutes: 1, seconds: 1));
         expect(bg3.isCompleted, isTrue);
       });
@@ -64,14 +66,16 @@ void main() {
 
         final fg1 = run(interceptor);
         final fg2 = run(interceptor);
-        // Third foreground request is held by the hard cap.
         final fg3 = run(interceptor);
 
         async.flushMicrotasks();
         expect(fg1.isCompleted, isTrue);
         expect(fg2.isCompleted, isTrue);
-        expect(fg3.isCompleted, isFalse,
-            reason: "total budget (2) applies to foreground too");
+        expect(
+          fg3.isCompleted,
+          isFalse,
+          reason: "total budget (2) applies to foreground too",
+        );
 
         async.elapse(const Duration(minutes: 1, seconds: 1));
         expect(fg3.isCompleted, isTrue);
@@ -80,9 +84,7 @@ void main() {
 
     test("optimistic decrement and header parsing update state", () {
       fakeAsync((async) {
-        final interceptor = RateLimitInterceptor(
-          maxRequestsPerMinute: 18,
-        );
+        final interceptor = RateLimitInterceptor(maxRequestsPerMinute: 18);
 
         final options = RequestOptions(path: "/series/");
         final handler = RequestInterceptorHandler();

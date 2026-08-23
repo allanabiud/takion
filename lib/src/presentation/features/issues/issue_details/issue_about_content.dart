@@ -518,7 +518,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
           badge: ContentRatingBadge(rating: rating),
         ),
       if (price != null) DetailPropertyItem(label: "Cover Price", value: price),
-      if (pages != null) DetailPropertyItem(label: "Page Count", value: "$pages pages"),
+      if (pages != null)
+        DetailPropertyItem(label: "Page Count", value: "$pages pages"),
       if (widget.issue.series?.volume != null)
         DetailPropertyItem(
           label: "Volume",
@@ -563,10 +564,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
 
     if (allItems.isEmpty) return const SizedBox.shrink();
 
-    return DetailsPropertyCard(
-      title: "DETAILS",
-      items: allItems,
-    );
+    return DetailsPropertyCard(title: "DETAILS", items: allItems);
   }
 
   Widget _buildImprintSection(BuildContext context) {

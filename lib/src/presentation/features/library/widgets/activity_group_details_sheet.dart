@@ -19,9 +19,9 @@ Future<void> showActivityGroupDetailsSheet(
       children: [
         Text(
           _titleForSheet(group),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
@@ -40,7 +40,10 @@ Future<void> showActivityGroupDetailsSheet(
       itemBuilder: (context, index) {
         final event = group.events[index];
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 0,
+            vertical: 4,
+          ),
           leading: SizedBox(
             width: 40,
             child: EntityCover(
@@ -51,11 +54,12 @@ Future<void> showActivityGroupDetailsSheet(
             ),
           ),
           title: Text(
-            event.issueNumber?.trim().isNotEmpty == true && event.seriesName?.trim().isNotEmpty == true
+            event.issueNumber?.trim().isNotEmpty == true &&
+                    event.seriesName?.trim().isNotEmpty == true
                 ? "${event.seriesName!.trim()} #${event.issueNumber!.trim()}"
                 : event.issueNumber?.trim().isNotEmpty == true
-                    ? "#${event.issueNumber!.trim()}"
-                    : "Issue #${event.issueId}",
+                ? "#${event.issueNumber!.trim()}"
+                : "Issue #${event.issueId}",
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           onTap: () {

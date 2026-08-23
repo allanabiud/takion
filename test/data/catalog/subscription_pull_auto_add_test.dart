@@ -91,57 +91,65 @@ void main() {
     );
   }
 
-  test("ingesting an issue for a subscribed auto-add series creates a pull entry",
-      () async {
-    final remote = FakeMetronRemoteDataSource();
-    final repo = buildRepo(remote);
-    final subscriptionRepo = LocalSubscriptionRepository(db, UserStateCache());
+  test(
+    "ingesting an issue for a subscribed auto-add series creates a pull entry",
+    () async {
+      final remote = FakeMetronRemoteDataSource();
+      final repo = buildRepo(remote);
+      final subscriptionRepo = LocalSubscriptionRepository(
+        db,
+        UserStateCache(),
+      );
 
-    await subscriptionRepo.subscribe(
-      metronSeriesId: 900,
-      autoAddToPullList: true,
-    );
+      await subscriptionRepo.subscribe(
+        metronSeriesId: 900,
+        autoAddToPullList: true,
+      );
 
-    final page = await repo.getIssueList(
-      modifiedGt: DateTime.utc(2026, 10, 1),
-    );
-    expect(page.results.map((i) => i.id), [501]);
+      final page = await repo.getIssueList(
+        modifiedGt: DateTime.utc(2026, 10, 1),
+      );
+      expect(page.results.map((i) => i.id), [501]);
 
-    final entry = await waitForPullEntry(db, 501);
-    expect(entry, isNotNull);
-    expect(entry!.metronSeriesId, 900);
-    expect(entry.entryStatus, "upcoming");
-    expect(entry.source, "subscription");
-    expect(entry.releaseDate, isNotNull);
-  });
+      final entry = await waitForPullEntry(db, 501);
+      expect(entry, isNotNull);
+      expect(entry!.metronSeriesId, 900);
+      expect(entry.entryStatus, "upcoming");
+      expect(entry.source, "subscription");
+      expect(entry.releaseDate, isNotNull);
+    },
+  );
 
-  test("ingesting an issue for a subscribed non-auto-add series does not pull",
-      () async {
-    final remote = FakeMetronRemoteDataSource();
-    final repo = buildRepo(remote);
-    final subscriptionRepo = LocalSubscriptionRepository(db, UserStateCache());
+  test(
+    "ingesting an issue for a subscribed non-auto-add series does not pull",
+    () async {
+      final remote = FakeMetronRemoteDataSource();
+      final repo = buildRepo(remote);
+      final subscriptionRepo = LocalSubscriptionRepository(
+        db,
+        UserStateCache(),
+      );
 
-    await subscriptionRepo.subscribe(
-      metronSeriesId: 900,
-      autoAddToPullList: false,
-    );
+      await subscriptionRepo.subscribe(
+        metronSeriesId: 900,
+        autoAddToPullList: false,
+      );
 
-    final page = await repo.getIssueList(
-      modifiedGt: DateTime.utc(2026, 10, 1),
-    );
-    expect(page.results.map((i) => i.id), [501]);
+      final page = await repo.getIssueList(
+        modifiedGt: DateTime.utc(2026, 10, 1),
+      );
+      expect(page.results.map((i) => i.id), [501]);
 
-    final entry = await db.pullListDao.getByIssueId(501);
-    expect(entry, isNull);
-  });
+      final entry = await db.pullListDao.getByIssueId(501);
+      expect(entry, isNull);
+    },
+  );
 
   test("ingesting an issue for an unsubscribed series does not pull", () async {
     final remote = FakeMetronRemoteDataSource();
     final repo = buildRepo(remote);
 
-    final page = await repo.getIssueList(
-      modifiedGt: DateTime.utc(2026, 10, 1),
-    );
+    final page = await repo.getIssueList(modifiedGt: DateTime.utc(2026, 10, 1));
     expect(page.results.map((i) => i.id), [501]);
 
     final entry = await db.pullListDao.getByIssueId(501);

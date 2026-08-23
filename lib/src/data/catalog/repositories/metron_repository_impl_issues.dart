@@ -547,13 +547,22 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertIssueDetails(IssueDetailsDto dto) async {
-    if (dto.series != null && dto.series!.id > 0 && dto.series!.name.trim().isNotEmpty) {
+    if (dto.series != null &&
+        dto.series!.id > 0 &&
+        dto.series!.name.trim().isNotEmpty) {
       _metadataCache?.indexSeries(dto.series!.id, dto.series!.name.trim());
     }
-    if (dto.publisher != null && dto.publisher!.id > 0 && dto.publisher!.name.trim().isNotEmpty) {
-      _metadataCache?.indexPublisher(dto.publisher!.id, dto.publisher!.name.trim());
+    if (dto.publisher != null &&
+        dto.publisher!.id > 0 &&
+        dto.publisher!.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(
+        dto.publisher!.id,
+        dto.publisher!.name.trim(),
+      );
     }
-    if (dto.imprint != null && dto.imprint!.id > 0 && dto.imprint!.name.trim().isNotEmpty) {
+    if (dto.imprint != null &&
+        dto.imprint!.id > 0 &&
+        dto.imprint!.name.trim().isNotEmpty) {
       _metadataCache?.indexImprint(dto.imprint!.id, dto.imprint!.name.trim());
     }
     for (final char in dto.characters) {
@@ -594,9 +603,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
             volume: Value(dto.series!.volume),
             yearBegan: Value(dto.series!.yearBegan),
             seriesTypeId: Value(dto.series!.seriesType?.id),
-            seriesTypeName: Value(
-              dto.series!.seriesType?.name,
-            ),
+            seriesTypeName: Value(dto.series!.seriesType?.name),
             isFullyHydrated: const Value(false),
           ),
         );
@@ -668,12 +675,16 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         );
       }
 
-      final validCreators = dto.credits.map((credit) {
-        final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
-            ? credit.creatorId!
-            : credit.id;
-        return (credit: credit, creatorId: creatorId);
-      }).where((entry) => entry.creatorId > 0).toList();
+      final validCreators = dto.credits
+          .map((credit) {
+            final creatorId =
+                (credit.creatorId != null && credit.creatorId! > 0)
+                ? credit.creatorId!
+                : credit.id;
+            return (credit: credit, creatorId: creatorId);
+          })
+          .where((entry) => entry.creatorId > 0)
+          .toList();
 
       if (validCreators.isNotEmpty) {
         await _metronEntityDao.upsertCreatorStubsBatch(

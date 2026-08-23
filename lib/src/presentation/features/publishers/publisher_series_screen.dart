@@ -47,11 +47,7 @@ class PublisherSeriesScreen extends ConsumerWidget {
       hasNextOf: (page) => page.hasNext,
       hasPreviousOf: (page) => page.hasPrevious,
       tileBuilder: (context, series, {required isFirst, required isLast}) =>
-          SeriesListTile(
-            series: series,
-            isFirst: isFirst,
-            isLast: isLast,
-          ),
+          SeriesListTile(series: series, isFirst: isFirst, isLast: isLast),
       emptyMessage: "No series available.",
       emptyIcon: Icons.collections_bookmark_outlined,
       errorMessage: "Failed to load series",

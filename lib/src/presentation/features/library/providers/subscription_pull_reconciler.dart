@@ -14,8 +14,10 @@ DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 class SubscriptionPullReconciler {
   SubscriptionPullReconciler(this.ref);
 
-  static const _lastRunEpochKey = SettingsKeys.subscriptionPullReconcileLastRunMs;
-  static const _browseRunEpochKey = SettingsKeys.subscriptionPullReconcileBrowseLastRunMs;
+  static const _lastRunEpochKey =
+      SettingsKeys.subscriptionPullReconcileLastRunMs;
+  static const _browseRunEpochKey =
+      SettingsKeys.subscriptionPullReconcileBrowseLastRunMs;
   static const _throttleWindow = Duration(hours: 12);
   static const _browseCooldown = Duration(minutes: 30);
   static const _subscriptionPageSize = 200;
@@ -93,10 +95,9 @@ class SubscriptionPullReconciler {
     final lastBrowseEpochStr = await dao.getString(_browseRunEpochKey);
     final lastBrowseEpoch = int.tryParse(lastBrowseEpochStr ?? "");
     if (lastBrowseEpoch != null &&
-        DateTime.now()
-                .difference(
-                  DateTime.fromMillisecondsSinceEpoch(lastBrowseEpoch),
-                ) <
+        DateTime.now().difference(
+              DateTime.fromMillisecondsSinceEpoch(lastBrowseEpoch),
+            ) <
             _browseCooldown) {
       return const ReconcileResult(upserted: 0, issueIds: []);
     }

@@ -93,7 +93,10 @@ abstract class LocalReadingList with _$LocalReadingList {
     final items = rawItems is List
         ? rawItems
               .whereType<Map>()
-              .map((e) => LocalReadingListItem.fromJson(Map<String, dynamic>.from(e)))
+              .map(
+                (e) =>
+                    LocalReadingListItem.fromJson(Map<String, dynamic>.from(e)),
+              )
               .toList()
         : <LocalReadingListItem>[];
 

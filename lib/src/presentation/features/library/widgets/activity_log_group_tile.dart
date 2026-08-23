@@ -146,8 +146,12 @@ class ActivityLogGroupTile extends ConsumerWidget {
             }
             final entry = visibleEntries[index];
             return GestureDetector(
-              onTap: () =>
-                  context.pushRoute(IssueDetailsRoute(issueId: entry.issueId, initialImageUrl: entry.url)),
+              onTap: () => context.pushRoute(
+                IssueDetailsRoute(
+                  issueId: entry.issueId,
+                  initialImageUrl: entry.url,
+                ),
+              ),
               child: SizedBox(
                 width: 48,
                 child: ClipRRect(

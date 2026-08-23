@@ -13,7 +13,8 @@ class CharacterBrowseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GenericBrowseScreen<CharacterList>(
       title: "Browse Characters",
-      providerBuilder: (ref, filter) => ref.watch(characterBrowseProvider(filter)),
+      providerBuilder: (ref, filter) =>
+          ref.watch(characterBrowseProvider(filter)),
       refreshNotifierGetter: (ref, filter) =>
           ref.read(characterBrowseProvider(filter).notifier).refresh(),
       emptyMessage: "No characters found.",

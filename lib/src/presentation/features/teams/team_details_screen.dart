@@ -29,8 +29,7 @@ class TeamDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<TeamDetailsScreen> createState() => _TeamDetailsScreenState();
 }
 
-class _TeamDetailsScreenState
-    extends ConsumerState<TeamDetailsScreen>
+class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
     with ResourceUrlActions<TeamDetails>, DetailRefreshActions<TeamDetails> {
   @override
   String? resourceUrlOf(TeamDetails details) => details.resourceUrl;
@@ -212,9 +211,8 @@ class _TeamDetailsScreenState
                 height: 220,
                 child: AsyncStatePanel.error(
                   errorMessage: "Failed to load issues",
-                  onRetry: () => ref.invalidate(
-                    teamDetailsIssuesProvider(widget.teamId),
-                  ),
+                  onRetry: () =>
+                      ref.invalidate(teamDetailsIssuesProvider(widget.teamId)),
                 ),
               )
             else

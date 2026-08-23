@@ -134,161 +134,173 @@ class SeriesListTile extends ConsumerWidget {
           top: isFirst ? 12 : 2,
           bottom: isLast ? 12 : 0,
         ),
-      child: Column(
-        children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: effectiveOnTap,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    heroTag != null ? Hero(tag: heroTag!, child: cover) : cover,
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Builder(
-                            builder: (context) {
-                              final formattedType = series.seriesType != null
-                                  ? _formatSeriesType(series.seriesType!)
-                                  : "";
-                              return Text(
-                                formattedType.isNotEmpty
-                                    ? "${series.name} ($formattedType)"
-                                    : series.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                '${series.yearBegan ?? 'Unknown'}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "•",
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                categoryCount != null
-                                    ? '$categoryCount / ${totalIssuesCount ?? '…'} ${totalIssuesCount == 1 ? 'issue' : 'issues'}'
-                                    : '${totalIssuesCount ?? '…'} ${totalIssuesCount == 1 ? 'issue' : 'issues'}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                          if (showProgressBar &&
-                              totalIssuesCount != null &&
-                              totalIssuesCount > 0)
-                            _SeriesProgressBar(
-                              seriesId: series.id,
-                              total: totalIssuesCount,
-                              categoryCount: categoryCount,
-                              ownedCount: ownedCount,
+        child: Column(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: effectiveOnTap,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      heroTag != null
+                          ? Hero(tag: heroTag!, child: cover)
+                          : cover,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Builder(
+                              builder: (context) {
+                                final formattedType = series.seriesType != null
+                                    ? _formatSeriesType(series.seriesType!)
+                                    : "";
+                                return Text(
+                                  formattedType.isNotEmpty
+                                      ? "${series.name} ($formattedType)"
+                                      : series.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              },
                             ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              if (isSubscribed)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.notifications_active,
-                                        size: 12,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "SUBSCRIBED",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 10,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else
-                                Icon(
-                                  Icons.notifications_none_outlined,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.outline,
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  '${series.yearBegan ?? 'Unknown'}',
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
-                              if (isRead == true) ...[
                                 const SizedBox(width: 8),
-                                Icon(
-                                  Icons.bookmark_added,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.primary,
+                                Text(
+                                  "•",
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  categoryCount != null
+                                      ? '$categoryCount / ${totalIssuesCount ?? '…'} ${totalIssuesCount == 1 ? 'issue' : 'issues'}'
+                                      : '${totalIssuesCount ?? '…'} ${totalIssuesCount == 1 ? 'issue' : 'issues'}',
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
-                              if (isFavorite) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 22,
-                                  height: 22,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(5),
+                            ),
+                            if (showProgressBar &&
+                                totalIssuesCount != null &&
+                                totalIssuesCount > 0)
+                              _SeriesProgressBar(
+                                seriesId: series.id,
+                                total: totalIssuesCount,
+                                categoryCount: categoryCount,
+                                ownedCount: ownedCount,
+                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                if (isSubscribed)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.notifications_active,
+                                          size: 12,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          "SUBSCRIBED",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 10,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                else
+                                  Icon(
+                                    Icons.notifications_none_outlined,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
                                   ),
-                                  child: Icon(
-                                    Icons.favorite,
-                                    size: 13,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                if (isRead == true) ...[
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.bookmark_added,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
-                                ),
+                                ],
+                                if (isFavorite) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Icon(
+                                      Icons.favorite,
+                                      size: 13,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                ],
+                                if (role != null &&
+                                    role != ItemRole.standard) ...[
+                                  const SizedBox(width: 8),
+                                  RoleBadge(role: role!),
+                                ],
                               ],
-                              if (role != null &&
-                                  role != ItemRole.standard) ...[
-                                const SizedBox(width: 8),
-                                RoleBadge(role: role!),
-                              ],
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }
@@ -319,12 +331,19 @@ class _SeriesProgressBar extends ConsumerWidget {
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: percent,
-                  minHeight: 6,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.0, end: percent),
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animPercent, _) {
+                    return LinearProgressIndicator(
+                      value: animPercent.clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                    );
+                  },
                 ),
               ),
             ),
@@ -369,11 +388,18 @@ class _SeriesProgressBar extends ConsumerWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: percent,
-                minHeight: 6,
-                color: theme.colorScheme.primary,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: percent),
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                builder: (context, animPercent, _) {
+                  return LinearProgressIndicator(
+                    value: animPercent.clamp(0.0, 1.0),
+                    minHeight: 6,
+                    color: theme.colorScheme.primary,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  );
+                },
               ),
             ),
           ),

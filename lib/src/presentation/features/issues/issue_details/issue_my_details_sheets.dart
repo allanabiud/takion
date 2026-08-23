@@ -461,7 +461,10 @@ void showReadingHistorySheet(BuildContext context, WidgetRef ref, int issueId) {
                   child: FilledButton.tonalIcon(
                     onPressed: () => showLogReadPicker(context, ref, issueId),
                     icon: const Icon(Icons.add, size: 18, weight: 700),
-                    label: const Text("Log Read", style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      "Log Read",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],

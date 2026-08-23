@@ -27,9 +27,10 @@ class PublisherDetailsScreen extends ConsumerStatefulWidget {
       _PublisherDetailsScreenState();
 }
 
-class _PublisherDetailsScreenState
-    extends ConsumerState<PublisherDetailsScreen>
-    with ResourceUrlActions<PublisherDetails>, DetailRefreshActions<PublisherDetails> {
+class _PublisherDetailsScreenState extends ConsumerState<PublisherDetailsScreen>
+    with
+        ResourceUrlActions<PublisherDetails>,
+        DetailRefreshActions<PublisherDetails> {
   @override
   String? resourceUrlOf(PublisherDetails details) => details.resourceUrl;
 
@@ -207,10 +208,7 @@ class _PublisherInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DetailsPropertyCard(
-          title: "DETAILS",
-          items: contentItems,
-        ),
+        DetailsPropertyCard(title: "DETAILS", items: contentItems),
         const SizedBox(height: 20),
         DatabaseIdsSection(
           metronId: details.id,

@@ -16,8 +16,11 @@ class PublisherSearch extends _$PublisherSearch {
     return performPaginatedSearch(
       ref: ref,
       args: args,
-      emptyResult:
-          const PublisherListPage(results: [], count: 0, currentPage: 1),
+      emptyResult: const PublisherListPage(
+        results: [],
+        count: 0,
+        currentPage: 1,
+      ),
       searchFetcher: repository.searchPublishers,
     );
   }

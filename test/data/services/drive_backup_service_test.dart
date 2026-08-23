@@ -83,7 +83,6 @@ void main() {
 
     await syncService.applyDelta(payload);
 
-    // Local row (now) is newer than remote (past), so it must not be deleted.
     final creators = await db.favoriteDao.getAllCreators();
     expect(creators.length, equals(1));
     expect(creators.first.metronCreatorId, equals(303));
@@ -124,145 +123,160 @@ void main() {
     expect(rows.first.updatedAt, now);
   });
 
-  test("applyDelta keeps local reading_list_items row when it is newer (LWW)", () async {
-    final past = DateTime.now()
-        .toUtc()
-        .subtract(const Duration(hours: 1))
-        .toIso8601String();
-    final now = DateTime.now().toUtc().toIso8601String();
+  test(
+    "applyDelta keeps local reading_list_items row when it is newer (LWW)",
+    () async {
+      final past = DateTime.now()
+          .toUtc()
+          .subtract(const Duration(hours: 1))
+          .toIso8601String();
+      final now = DateTime.now().toUtc().toIso8601String();
 
-    await db.into(db.readingListItems).insert(
-      ReadingListItemsCompanion.insert(
-        id: "list-1:ser-1",
-        listId: "list-1",
-        targetId: "ser-1",
-        isSeries: true,
-        role: "main",
-        isRead: true,
-        sortOrder: 9,
-        createdAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+      await db
+          .into(db.readingListItems)
+          .insert(
+            ReadingListItemsCompanion.insert(
+              id: "list-1:ser-1",
+              listId: "list-1",
+              targetId: "ser-1",
+              isSeries: true,
+              role: "main",
+              isRead: true,
+              sortOrder: 9,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
 
-    final payload = {
-      "version": 2,
-      "deviceId": "remote-device-123",
-      "toTimestamp": now,
-      "tables": {
-        "reading_list_items": {
-          "inserts": [
-            {
-              "id": "list-1:ser-1",
-              "listId": "list-1",
-              "targetId": "ser-1",
-              "isSeries": true,
-              "role": "main",
-              "isRead": false,
-              "sortOrder": 1,
-              "createdAt": past,
-              "updatedAt": past,
-            },
-          ],
-          "updates": <Map<String, dynamic>>[],
-          "deletes": <String>[],
+      final payload = {
+        "version": 2,
+        "deviceId": "remote-device-123",
+        "toTimestamp": now,
+        "tables": {
+          "reading_list_items": {
+            "inserts": [
+              {
+                "id": "list-1:ser-1",
+                "listId": "list-1",
+                "targetId": "ser-1",
+                "isSeries": true,
+                "role": "main",
+                "isRead": false,
+                "sortOrder": 1,
+                "createdAt": past,
+                "updatedAt": past,
+              },
+            ],
+            "updates": <Map<String, dynamic>>[],
+            "deletes": <String>[],
+          },
         },
-      },
-    };
+      };
 
-    await syncService.applyDelta(payload);
+      await syncService.applyDelta(payload);
 
-    final rows = await db.select(db.readingListItems).get();
-    expect(rows, hasLength(1));
-    expect(rows.first.isRead, isTrue);
-    expect(rows.first.sortOrder, 9);
-  });
+      final rows = await db.select(db.readingListItems).get();
+      expect(rows, hasLength(1));
+      expect(rows.first.isRead, isTrue);
+      expect(rows.first.sortOrder, 9);
+    },
+  );
 
-  test("applyDelta deletes reading_list_items row when remote delete is newer", () async {
-    final past = DateTime.now()
-        .toUtc()
-        .subtract(const Duration(hours: 1))
-        .toIso8601String();
-    final now = DateTime.now().toUtc().toIso8601String();
+  test(
+    "applyDelta deletes reading_list_items row when remote delete is newer",
+    () async {
+      final past = DateTime.now()
+          .toUtc()
+          .subtract(const Duration(hours: 1))
+          .toIso8601String();
+      final now = DateTime.now().toUtc().toIso8601String();
 
-    await db.into(db.readingListItems).insert(
-      ReadingListItemsCompanion.insert(
-        id: "list-1:ser-1",
-        listId: "list-1",
-        targetId: "ser-1",
-        isSeries: true,
-        role: "main",
-        isRead: false,
-        sortOrder: 0,
-        createdAt: Value(past),
-        updatedAt: Value(past),
-      ),
-    );
+      await db
+          .into(db.readingListItems)
+          .insert(
+            ReadingListItemsCompanion.insert(
+              id: "list-1:ser-1",
+              listId: "list-1",
+              targetId: "ser-1",
+              isSeries: true,
+              role: "main",
+              isRead: false,
+              sortOrder: 0,
+              createdAt: Value(past),
+              updatedAt: Value(past),
+            ),
+          );
 
-    final payload = {
-      "version": 2,
-      "deviceId": "remote-device-123",
-      "toTimestamp": now,
-      "tables": {
-        "reading_list_items": {
-          "inserts": <Map<String, dynamic>>[],
-          "updates": <Map<String, dynamic>>[],
-          "deletes": <String>["list-1:ser-1"],
+      final payload = {
+        "version": 2,
+        "deviceId": "remote-device-123",
+        "toTimestamp": now,
+        "tables": {
+          "reading_list_items": {
+            "inserts": <Map<String, dynamic>>[],
+            "updates": <Map<String, dynamic>>[],
+            "deletes": <String>["list-1:ser-1"],
+          },
         },
-      },
-    };
+      };
 
-    await syncService.applyDelta(payload);
+      await syncService.applyDelta(payload);
 
-    expect(await db.select(db.readingListItems).get(), isEmpty);
-  });
+      expect(await db.select(db.readingListItems).get(), isEmpty);
+    },
+  );
 
-  test("applyDelta applies remote row when timestamps are equal (LWW tie-break)", () async {
-    final now = DateTime.now().toUtc().toIso8601String();
-    await db.into(db.readingListItems).insert(
-      ReadingListItemsCompanion.insert(
-        id: "list-1:ser-1",
-        listId: "list-1",
-        targetId: "ser-1",
-        isSeries: true,
-        role: "main",
-        isRead: false,
-        sortOrder: 1,
-        createdAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+  test(
+    "applyDelta applies remote row when timestamps are equal (LWW tie-break)",
+    () async {
+      final now = DateTime.now().toUtc().toIso8601String();
+      await db
+          .into(db.readingListItems)
+          .insert(
+            ReadingListItemsCompanion.insert(
+              id: "list-1:ser-1",
+              listId: "list-1",
+              targetId: "ser-1",
+              isSeries: true,
+              role: "main",
+              isRead: false,
+              sortOrder: 1,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
 
-    final payload = {
-      "version": 2,
-      "deviceId": "remote-device-123",
-      "toTimestamp": now,
-      "tables": {
-        "reading_list_items": {
-          "inserts": [
-            {
-              "id": "list-1:ser-1",
-              "listId": "list-1",
-              "targetId": "ser-1",
-              "isSeries": true,
-              "role": "main",
-              "isRead": true,
-              "sortOrder": 5,
-              "createdAt": now,
-              "updatedAt": now,
-            },
-          ],
-          "updates": <Map<String, dynamic>>[],
-          "deletes": <String>[],
+      final payload = {
+        "version": 2,
+        "deviceId": "remote-device-123",
+        "toTimestamp": now,
+        "tables": {
+          "reading_list_items": {
+            "inserts": [
+              {
+                "id": "list-1:ser-1",
+                "listId": "list-1",
+                "targetId": "ser-1",
+                "isSeries": true,
+                "role": "main",
+                "isRead": true,
+                "sortOrder": 5,
+                "createdAt": now,
+                "updatedAt": now,
+              },
+            ],
+            "updates": <Map<String, dynamic>>[],
+            "deletes": <String>[],
+          },
         },
-      },
-    };
+      };
 
-    await syncService.applyDelta(payload);
+      await syncService.applyDelta(payload);
 
-    final rows = await db.select(db.readingListItems).get();
-    expect(rows, hasLength(1));
-    expect(rows.first.isRead, isTrue);
-    expect(rows.first.sortOrder, 5);
-  });
+      final rows = await db.select(db.readingListItems).get();
+      expect(rows, hasLength(1));
+      expect(rows.first.isRead, isTrue);
+      expect(rows.first.sortOrder, 5);
+    },
+  );
 }

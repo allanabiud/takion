@@ -50,28 +50,26 @@ class SubscriptionCardsHydrater {
     if (missingIds.isEmpty) return;
 
     final failedIds = <int>[];
-    await _runInBackground(() => mapWithConcurrency(
-          missingIds,
-          (seriesId) async {
-            try {
-              await repository.getSeriesDetails(seriesId);
-              await repository.getSeriesIssueList(
-                seriesId,
-                page: 1,
-                limit: _issueFetchLimit,
-                ordering: "-cover_date",
-              );
-              _retryAttempts.remove(seriesId);
-            } catch (e) {
-              failedIds.add(seriesId);
-              AppLogger.warning(
-                "Failed to hydrate subscription card for series $seriesId",
-                error: e,
-              );
-            }
-          },
-          maxConcurrency: _maxHydrationConcurrency,
-        ));
+    await _runInBackground(
+      () => mapWithConcurrency(missingIds, (seriesId) async {
+        try {
+          await repository.getSeriesDetails(seriesId);
+          await repository.getSeriesIssueList(
+            seriesId,
+            page: 1,
+            limit: _issueFetchLimit,
+            ordering: "-cover_date",
+          );
+          _retryAttempts.remove(seriesId);
+        } catch (e) {
+          failedIds.add(seriesId);
+          AppLogger.warning(
+            "Failed to hydrate subscription card for series $seriesId",
+            error: e,
+          );
+        }
+      }, maxConcurrency: _maxHydrationConcurrency),
+    );
 
     if (failedIds.isNotEmpty) {
       _scheduleRetry(failedIds);

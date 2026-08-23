@@ -78,7 +78,10 @@ void main() {
 
   test("exact normalized name match wins over other results", () async {
     final remote = FakeSuperHeroRemoteDataSource({
-      "batman": _response([_hero(name: "Batman Beyond"), _hero(name: "Batman")]),
+      "batman": _response([
+        _hero(name: "Batman Beyond"),
+        _hero(name: "Batman"),
+      ]),
     });
 
     final repo = buildRepo(remote);
@@ -105,9 +108,7 @@ void main() {
   });
 
   test("returns null when search returns no results", () async {
-    final remote = FakeSuperHeroRemoteDataSource({
-      "unknown": _response([]),
-    });
+    final remote = FakeSuperHeroRemoteDataSource({"unknown": _response([])});
 
     final repo = buildRepo(remote);
     final result = await repo.getCharacter(3, "Unknown Character");

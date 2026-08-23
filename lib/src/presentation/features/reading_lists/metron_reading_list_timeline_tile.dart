@@ -51,19 +51,23 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
             id: cachedIssue.id,
             name: cachedIssue.series?.name.trim().isNotEmpty == true
                 ? cachedIssue.series!.name
-                : (seriesName != null && seriesName.isNotEmpty ? seriesName : "Issue"),
+                : (seriesName != null && seriesName.isNotEmpty
+                      ? seriesName
+                      : "Issue"),
             number: cachedIssue.number.isNotEmpty == true
                 ? cachedIssue.number
                 : (issueNumber ?? ""),
             series: cachedIssue.series == null
-                ? (item.seriesId != null && seriesName != null && seriesName.isNotEmpty
-                    ? Series(
-                        id: item.seriesId!,
-                        name: seriesName,
-                        volume: item.seriesVolume,
-                        yearBegan: null,
-                      )
-                    : null)
+                ? (item.seriesId != null &&
+                          seriesName != null &&
+                          seriesName.isNotEmpty
+                      ? Series(
+                          id: item.seriesId!,
+                          name: seriesName,
+                          volume: item.seriesVolume,
+                          yearBegan: null,
+                        )
+                      : null)
                 : Series(
                     id: cachedIssue.series!.id,
                     name: cachedIssue.series!.name,
@@ -77,10 +81,14 @@ class MetronReadingListTimelineTile extends ConsumerWidget {
           )
         : IssueList(
             id: item.issueId,
-            name: seriesName != null && seriesName.isNotEmpty ? seriesName : "Issue",
+            name: seriesName != null && seriesName.isNotEmpty
+                ? seriesName
+                : "Issue",
             number: issueNumber ?? "",
             series:
-                item.seriesId != null && seriesName != null && seriesName.isNotEmpty
+                item.seriesId != null &&
+                    seriesName != null &&
+                    seriesName.isNotEmpty
                 ? Series(
                     id: item.seriesId!,
                     name: seriesName,

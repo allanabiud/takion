@@ -1,24 +1,11 @@
-import "dart:collection";
-
 import "package:takion/src/domain/entities.dart";
 
 class UserStateCache {
   static const int _maxEntries = 500;
 
-  final _libraryItems = LinkedHashMap<int, LibraryItem>(
-    hashCode: (k) => k,
-    equals: (a, b) => a == b,
-  );
-
-  final _pullListEntries = LinkedHashMap<int, PullListEntry>(
-    hashCode: (k) => k,
-    equals: (a, b) => a == b,
-  );
-
-  final _subscriptions = LinkedHashMap<int, SeriesSubscription>(
-    hashCode: (k) => k,
-    equals: (a, b) => a == b,
-  );
+  final _libraryItems = <int, LibraryItem>{};
+  final _pullListEntries = <int, PullListEntry>{};
+  final _subscriptions = <int, SeriesSubscription>{};
 
   LibraryItem? getLibraryItem(int issueId) {
     final item = _libraryItems[issueId];
@@ -95,7 +82,7 @@ class UserStateCache {
     _subscriptions.clear();
   }
 
-  void _evictOldest(LinkedHashMap map) {
+  void _evictOldest(Map map) {
     final oldest = map.keys.first;
     map.remove(oldest);
   }

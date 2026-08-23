@@ -238,17 +238,17 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       return _teamRowToEntity(teamId);
     }
 
-    final cachedJson =
-        await _localDataSource.getCachedTeamDetailsResponse(teamId);
+    final cachedJson = await _localDataSource.getCachedTeamDetailsResponse(
+      teamId,
+    );
     if (cachedJson != null && !forceRefresh) {
-      final cachedAt =
-          await _localDataSource.getCachedTeamDetailsCachedAt(teamId);
+      final cachedAt = await _localDataSource.getCachedTeamDetailsCachedAt(
+        teamId,
+      );
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.teamDetails.isFresh(cachedAt, now)) {
-        AppPerformanceMetrics.instance.recordCacheHit(
-          "team_details_response",
-        );
+        AppPerformanceMetrics.instance.recordCacheHit("team_details_response");
         final dto = TeamDetailsDto.fromJson(cachedJson);
         await _upsertTeamDetails(dto);
         return dto.toEntity();
@@ -260,8 +260,9 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
     try {
       final response = await _remoteDataSource.getTeamDetails(teamId);
       if (response.statusCode == 304) {
-        final cachedJson =
-            await _localDataSource.getCachedTeamDetailsResponse(teamId);
+        final cachedJson = await _localDataSource.getCachedTeamDetailsResponse(
+          teamId,
+        );
         if (cachedJson != null) {
           await _localDataSource.cacheTeamDetailsResponse(teamId, cachedJson);
           final dto = TeamDetailsDto.fromJson(cachedJson);
@@ -269,7 +270,9 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
           return dto.toEntity();
         }
         return await _teamRowToEntity(
-          cached != null ? teamId : (throw StateError("Team $teamId not found")),
+          cached != null
+              ? teamId
+              : (throw StateError("Team $teamId not found")),
         );
       }
       final data = response.data as Map<String, dynamic>;
@@ -287,8 +290,9 @@ mixin _TeamsRepositoryMixin on _RepositoryState {
       return dto.toEntity();
     } catch (e) {
       AppLogger.error("Failed to fetch team details", error: e);
-      final cachedJson =
-          await _localDataSource.getCachedTeamDetailsResponse(teamId);
+      final cachedJson = await _localDataSource.getCachedTeamDetailsResponse(
+        teamId,
+      );
       if (cachedJson != null) {
         final dto = TeamDetailsDto.fromJson(cachedJson);
         await _upsertTeamDetails(dto);

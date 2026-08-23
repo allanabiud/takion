@@ -240,28 +240,25 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
   }
 
   Future<int> refreshSeriesListDelta({DateTime? modifiedGt}) {
-    return runZoned(
-      () async {
-        var page = 1;
-        var synced = 0;
-        while (true) {
-          final result = await getSeriesList(
-            page: page,
-            limit: metronDefaultPageSize,
-            modifiedGt: modifiedGt,
-            forceRefresh: true,
-          );
-          for (final item in result.results) {
-            await getSeriesDetails(item.id, forceRefresh: true);
-            synced++;
-          }
-          if (!result.hasNext) break;
-          page++;
+    return runZoned(() async {
+      var page = 1;
+      var synced = 0;
+      while (true) {
+        final result = await getSeriesList(
+          page: page,
+          limit: metronDefaultPageSize,
+          modifiedGt: modifiedGt,
+          forceRefresh: true,
+        );
+        for (final item in result.results) {
+          await getSeriesDetails(item.id, forceRefresh: true);
+          synced++;
         }
-        return synced;
-      },
-      zoneValues: {backgroundZoneKey: true},
-    );
+        if (!result.hasNext) break;
+        page++;
+      }
+      return synced;
+    }, zoneValues: {backgroundZoneKey: true});
   }
 
   Future<SeriesDetails> getSeriesDetails(
@@ -565,10 +562,17 @@ mixin _SeriesRepositoryMixin on _RepositoryState {
     if (dto.name.trim().isNotEmpty) {
       _metadataCache?.indexSeries(dto.id, dto.name.trim());
     }
-    if (dto.publisher != null && dto.publisher!.id > 0 && dto.publisher!.name.trim().isNotEmpty) {
-      _metadataCache?.indexPublisher(dto.publisher!.id, dto.publisher!.name.trim());
+    if (dto.publisher != null &&
+        dto.publisher!.id > 0 &&
+        dto.publisher!.name.trim().isNotEmpty) {
+      _metadataCache?.indexPublisher(
+        dto.publisher!.id,
+        dto.publisher!.name.trim(),
+      );
     }
-    if (dto.imprint != null && dto.imprint!.id > 0 && dto.imprint!.name.trim().isNotEmpty) {
+    if (dto.imprint != null &&
+        dto.imprint!.id > 0 &&
+        dto.imprint!.name.trim().isNotEmpty) {
       _metadataCache?.indexImprint(dto.imprint!.id, dto.imprint!.name.trim());
     }
     await _metronEntityDao.attachedDatabase.transaction(() async {

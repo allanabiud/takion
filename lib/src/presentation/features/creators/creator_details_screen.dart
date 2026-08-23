@@ -27,8 +27,7 @@ class CreatorDetailsScreen extends ConsumerStatefulWidget {
       _CreatorDetailsScreenState();
 }
 
-class _CreatorDetailsScreenState
-    extends ConsumerState<CreatorDetailsScreen>
+class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen>
     with
         ResourceUrlActions<CreatorDetails>,
         FavoriteToggleActions,
@@ -153,10 +152,7 @@ class _CreatorInfoCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (contentItems.isNotEmpty) ...[
-          DetailsPropertyCard(
-            title: "DETAILS",
-            items: contentItems,
-          ),
+          DetailsPropertyCard(title: "DETAILS", items: contentItems),
           const SizedBox(height: 20),
         ],
         DatabaseIdsSection(

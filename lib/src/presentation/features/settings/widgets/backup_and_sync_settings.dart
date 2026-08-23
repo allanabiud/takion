@@ -309,7 +309,8 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     } else if (lastSuccess != null) {
       icon = Icons.check_circle_outline;
       color = theme.colorScheme.primary;
-      text = "Last sync successful · ${DateFormatter.relativeShort(lastSuccess)}";
+      text =
+          "Last sync successful · ${DateFormatter.relativeShort(lastSuccess)}";
     } else {
       icon = Icons.info_outline;
       color = theme.colorScheme.onSurfaceVariant;

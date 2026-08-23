@@ -58,9 +58,10 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
       sortPreferenceForContextProvider(SortPreferenceContext.libraryUnread),
     );
     final viewAsync = ref.watch(
-      categorySeriesViewProvider(
-        (category: "unread", query: _isSearching ? _debouncedSearchQuery : ""),
-      ),
+      categorySeriesViewProvider((
+        category: "unread",
+        query: _isSearching ? _debouncedSearchQuery : "",
+      )),
     );
 
     return Scaffold(
@@ -106,8 +107,9 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
       floatingActionButton: ScrollToTopFab(controller: _scrollController),
       body: viewAsync.when(
         loading: () => const AsyncStatePanel.loading(),
-        error: (error, _) =>
-            const AsyncStatePanel.error(errorMessage: "Failed to load unread series"),
+        error: (error, _) => const AsyncStatePanel.error(
+          errorMessage: "Failed to load unread series",
+        ),
         data: (view) {
           final filtered = view.series;
           final categoryCounts = view.categoryCounts;

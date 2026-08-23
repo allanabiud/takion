@@ -54,6 +54,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       }
     });
   }
+
   int _seriesCoverFetchLimit = seriesCoverFetchBudgetPerSession;
   bool _seriesCoverLimitUpdateScheduled = false;
   IssueSearchPage? _lastIssuePage;
@@ -82,22 +83,34 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
   Future<void> _forceRefreshResults() async {
     if (_isCharacterSearch) {
-      await ref.read(characterSearchProvider(_currentSearchArgs).notifier).refresh();
+      await ref
+          .read(characterSearchProvider(_currentSearchArgs).notifier)
+          .refresh();
     } else if (_isCreatorSearch) {
-      await ref.read(creatorSearchProvider(_currentSearchArgs).notifier).refresh();
+      await ref
+          .read(creatorSearchProvider(_currentSearchArgs).notifier)
+          .refresh();
     } else if (_isUniverseSearch) {
-      await ref.read(universeSearchProvider(_currentSearchArgs).notifier).refresh();
+      await ref
+          .read(universeSearchProvider(_currentSearchArgs).notifier)
+          .refresh();
     } else if (_isImprintSearch) {
-      await ref.read(imprintSearchProvider(_currentSearchArgs).notifier).refresh();
+      await ref
+          .read(imprintSearchProvider(_currentSearchArgs).notifier)
+          .refresh();
     } else if (_isTeamSearch) {
       await ref.read(teamSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isPublisherSearch) {
-      await ref.read(publisherSearchProvider(_currentSearchArgs).notifier).refresh();
+      await ref
+          .read(publisherSearchProvider(_currentSearchArgs).notifier)
+          .refresh();
     } else if (_isArcSearch) {
       await ref.read(arcSearchProvider(_currentSearchArgs).notifier).refresh();
     } else if (_isSeriesSearch) {
       try {
-        await ref.read(seriesSearchProvider(_currentSearchArgs).notifier).refresh();
+        await ref
+            .read(seriesSearchProvider(_currentSearchArgs).notifier)
+            .refresh();
       } catch (e) {
         if (mounted) {
           TakionAlerts.safeError(context, e, userMessage: "Refresh failed");
@@ -105,7 +118,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       }
     } else {
       try {
-        await ref.read(issueSearchProvider(_currentSearchArgs).notifier).refresh();
+        await ref
+            .read(issueSearchProvider(_currentSearchArgs).notifier)
+            .refresh();
       } catch (e) {
         if (mounted) {
           TakionAlerts.safeError(context, e, userMessage: "Refresh failed");

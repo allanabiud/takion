@@ -25,7 +25,10 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
       if (decoded is List) {
         items = decoded
             .whereType<Map>()
-            .map((e) => LocalReadingListItem.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) =>
+                  LocalReadingListItem.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
       } else {
         items = <LocalReadingListItem>[];
@@ -101,18 +104,18 @@ class LocalReadingListLocalDataSource implements LocalReadingListRepository {
     ];
     await _database.readingListDao.upsertItems(companions);
 
-    final existingRows = await (_database.select(_database.readingListItems)
-          ..where((t) => t.listId.equals(list.id)))
-        .get();
+    final existingRows = await (_database.select(
+      _database.readingListItems,
+    )..where((t) => t.listId.equals(list.id))).get();
     for (final row in existingRows) {
       if (!currentTargets.contains(row.targetId)) {
         await _database.syncMetaDao.set(
           "delete:reading_list_items:${row.id}",
           now,
         );
-        await (_database.delete(_database.readingListItems)
-              ..where((t) => t.id.equals(row.id)))
-            .go();
+        await (_database.delete(
+          _database.readingListItems,
+        )..where((t) => t.id.equals(row.id))).go();
       }
     }
   }

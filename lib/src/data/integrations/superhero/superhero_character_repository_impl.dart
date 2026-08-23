@@ -10,20 +10,17 @@ import "package:takion/src/domain/integrations/entities/entities.dart";
 import "package:takion/src/domain/integrations/repositories/repositories.dart";
 
 String normalizeSuperHeroName(String name) {
-  return name
-      .toLowerCase()
-      .replaceAll(RegExp(r"[^a-z0-9]"), "");
+  return name.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "");
 }
 
-class SuperHeroCharacterRepositoryImpl
-    implements SuperHeroCharacterRepository {
+class SuperHeroCharacterRepositoryImpl implements SuperHeroCharacterRepository {
   SuperHeroCharacterRepositoryImpl({
     required SuperHeroRemoteDataSource remoteDataSource,
     required SuperheroCharacterCacheDao cacheDao,
     required Future<String?> Function() getToken,
-  })  : _remoteDataSource = remoteDataSource,
-        _cacheDao = cacheDao,
-        _getToken = getToken;
+  }) : _remoteDataSource = remoteDataSource,
+       _cacheDao = cacheDao,
+       _getToken = getToken;
 
   static const Duration _cacheTtl = Duration(days: 7);
 
@@ -55,9 +52,7 @@ class SuperHeroCharacterRepositoryImpl
     if (clean.isNotEmpty) addQuery(clean);
 
     if (metronAlias != null && metronAlias.trim().isNotEmpty) {
-      addQuery(
-        metronAlias.replaceAll(RegExp(r"\s*\([^)]*\)"), "").trim(),
-      );
+      addQuery(metronAlias.replaceAll(RegExp(r"\s*\([^)]*\)"), "").trim());
     }
 
     final parenMatch = RegExp(r"\(([^)]+)\)").firstMatch(metronName);
@@ -99,14 +94,17 @@ class SuperHeroCharacterRepositoryImpl
   ) {
     int score = 0;
     final candNorm = normalizeSuperHeroName(candidate.name);
-    final candFullNorm =
-        candidate.fullName != null ? normalizeSuperHeroName(candidate.fullName!) : null;
+    final candFullNorm = candidate.fullName != null
+        ? normalizeSuperHeroName(candidate.fullName!)
+        : null;
     final cleanNorm = normalizeSuperHeroName(cleanName);
     final fullNorm = normalizeSuperHeroName(metronName);
-    final parenNorm =
-        parentheticalName != null ? normalizeSuperHeroName(parentheticalName) : null;
-    final aliasNorm =
-        metronAlias != null ? normalizeSuperHeroName(metronAlias) : null;
+    final parenNorm = parentheticalName != null
+        ? normalizeSuperHeroName(parentheticalName)
+        : null;
+    final aliasNorm = metronAlias != null
+        ? normalizeSuperHeroName(metronAlias)
+        : null;
 
     // Full-Name matching (SuperHero API biography full-name matches Metron name, e.g. "Terry McGinnis")
     if (candFullNorm != null && candFullNorm.isNotEmpty) {
@@ -122,9 +120,13 @@ class SuperHeroCharacterRepositoryImpl
       score += 250;
     } else if (fullNorm.isNotEmpty && candNorm == fullNorm) {
       score += 230;
-    } else if (aliasNorm != null && aliasNorm.isNotEmpty && candNorm == aliasNorm) {
+    } else if (aliasNorm != null &&
+        aliasNorm.isNotEmpty &&
+        candNorm == aliasNorm) {
       score += 250;
-    } else if (parenNorm != null && parenNorm.isNotEmpty && candNorm == parenNorm) {
+    } else if (parenNorm != null &&
+        parenNorm.isNotEmpty &&
+        candNorm == parenNorm) {
       score += 200;
     } else if (cleanNorm.isNotEmpty &&
         (candNorm.startsWith(cleanNorm) || cleanNorm.startsWith(candNorm))) {
@@ -161,9 +163,7 @@ class SuperHeroCharacterRepositoryImpl
     bool forceRefresh = false,
   }) async {
     if (!forceRefresh) {
-      final cached = await _cacheDao.getByMetronCharacterId(
-        metronCharacterId,
-      );
+      final cached = await _cacheDao.getByMetronCharacterId(metronCharacterId);
       if (cached != null &&
           DateTime.now().difference(cached.updatedAt) < _cacheTtl) {
         AppLogger.info(
@@ -184,8 +184,9 @@ class SuperHeroCharacterRepositoryImpl
       metronAlias: metronAlias,
     );
     final cleanName = _cleanName(metronName);
-    final parentheticalName =
-        RegExp(r"\(([^)]+)\)").firstMatch(metronName)?.group(1)?.trim();
+    final parentheticalName = RegExp(
+      r"\(([^)]+)\)",
+    ).firstMatch(metronName)?.group(1)?.trim();
 
     AppLogger.info(
       'SuperHero searching API for character "$metronName" (alias: "$metronAlias") with variants: $searchQueries',
@@ -254,10 +255,7 @@ class SuperHeroCharacterRepositoryImpl
 
       return match;
     } on Exception catch (e) {
-      AppLogger.warning(
-        'SuperHero search failed for "$metronName"',
-        error: e,
-      );
+      AppLogger.warning('SuperHero search failed for "$metronName"', error: e);
       return null;
     }
   }

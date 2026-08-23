@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 
 class StatCard extends StatelessWidget {
   const StatCard({
@@ -40,14 +41,12 @@ class StatCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  value,
+                AnimatedCounterText(
+                  text: value,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   label,

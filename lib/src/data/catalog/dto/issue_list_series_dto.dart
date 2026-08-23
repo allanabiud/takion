@@ -22,12 +22,7 @@ abstract class IssueListSeriesDto with _$IssueListSeriesDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      "name": name,
-      "volume": volume,
-      "year_began": yearBegan,
-      "id": id,
-    };
+    return {"name": name, "volume": volume, "year_began": yearBegan, "id": id};
   }
 
   const IssueListSeriesDto._();

@@ -4,7 +4,7 @@ import "package:takion/src/core/storage/drift_database_provider.dart";
 
 class ReadingGoal {
   final int target;
-  final String period; // 'monthly' or 'yearly'
+  final String period;
 
   const ReadingGoal({required this.target, required this.period});
 

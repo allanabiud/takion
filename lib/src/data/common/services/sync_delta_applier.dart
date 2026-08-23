@@ -2,8 +2,6 @@ import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/data/common/drift/database.dart";
 
-/// Applies a remote sync payload (full snapshot or delta) to the local
-/// database, including LWW conflict resolution and delete-tombstone handling.
 class SyncDeltaApplier {
   const SyncDeltaApplier(this._db);
 
@@ -33,7 +31,7 @@ class SyncDeltaApplier {
     final fromTimestamp = payload["fromTimestamp"] as String?;
     final remoteToTimestamp = payload["toTimestamp"] as String?;
 
-    // v1 and v2-null-fromTimestamp are full snapshots (always apply); real deltas are skipped if already applied.
+    // Full snapshots always apply; already-seen deltas do not.
     final isDelta = version == 2 && fromTimestamp != null;
     if (isDelta && remoteDeviceId != null && remoteToTimestamp != null) {
       final watermark = await _getRemoteWatermark(remoteDeviceId);
@@ -55,7 +53,6 @@ class SyncDeltaApplier {
         final tableName = tableEntry.key;
         final tableData = tableEntry.value as Map<String, dynamic>;
 
-        // Skip unknown tables gracefully.
         if (!knownTableNames.contains(tableName)) {
           AppLogger.warning("Unknown table in sync payload: $tableName");
           continue;
@@ -282,8 +279,7 @@ class SyncDeltaApplier {
           final remoteTs = DateTime.tryParse(remoteTsVal);
           if (localTs != null && remoteTs != null) {
             if (remoteTs.isBefore(localTs)) {
-              // Local is strictly newer — keep it (LWW). Equal timestamps
-              // resolve in favor of the remote row.
+              // Equal timestamps resolve in favor of the remote row.
               return;
             }
           }
@@ -319,7 +315,6 @@ class SyncDeltaApplier {
       parsedPk = int.tryParse(pkValue) ?? pkValue;
     }
 
-    // Skip the delete if the local row is newer than the remote snapshot.
     if (remoteToTimestamp != null) {
       final tsFieldName = _getTimestampFieldName(tableName);
       if (tsFieldName != null) {
@@ -341,7 +336,6 @@ class SyncDeltaApplier {
           if (localTs != null &&
               remoteTs != null &&
               localTs.isAfter(remoteTs)) {
-            // Local row is newer — keep it.
             return;
           }
         }

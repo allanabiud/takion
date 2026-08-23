@@ -126,7 +126,10 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       return const IssueSearchResponseDto(count: 0, results: []);
     }
 
-    final queryParameters = <String, dynamic>{"series_name": normalized, "page": page};
+    final queryParameters = <String, dynamic>{
+      "series_name": normalized,
+      "page": page,
+    };
     if (modifiedGt != null) {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }

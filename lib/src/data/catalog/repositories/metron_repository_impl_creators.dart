@@ -238,11 +238,13 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       return _creatorRowToEntity(cached);
     }
 
-    final cachedJson =
-        await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
+    final cachedJson = await _localDataSource.getCachedCreatorDetailsResponse(
+      creatorId,
+    );
     if (cachedJson != null && !forceRefresh) {
-      final cachedAt =
-          await _localDataSource.getCachedCreatorDetailsCachedAt(creatorId);
+      final cachedAt = await _localDataSource.getCachedCreatorDetailsCachedAt(
+        creatorId,
+      );
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.creatorDetails.isFresh(cachedAt, now)) {
@@ -260,8 +262,8 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
     try {
       final response = await _remoteDataSource.getCreatorDetails(creatorId);
       if (response.statusCode == 304) {
-        final cachedJson =
-            await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
+        final cachedJson = await _localDataSource
+            .getCachedCreatorDetailsResponse(creatorId);
         if (cachedJson != null) {
           await _localDataSource.cacheCreatorDetailsResponse(
             creatorId,
@@ -290,8 +292,9 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
       return dto.toEntity();
     } catch (e) {
       AppLogger.error("Failed to fetch creator details", error: e);
-      final cachedJson =
-          await _localDataSource.getCachedCreatorDetailsResponse(creatorId);
+      final cachedJson = await _localDataSource.getCachedCreatorDetailsResponse(
+        creatorId,
+      );
       if (cachedJson != null) {
         final dto = CreatorDetailsDto.fromJson(cachedJson);
         await _upsertCreatorDetails(dto);

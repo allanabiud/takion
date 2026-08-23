@@ -354,8 +354,8 @@ class MetronRepositoryImpl
     this._seriesNameIndex, {
     MetronMetadataCache? metadataCache,
     DateTime Function()? now,
-  })  : _metadataCache = metadataCache,
-        _now = now ?? DateTime.now;
+  }) : _metadataCache = metadataCache,
+       _now = now ?? DateTime.now;
 
   @override
   Future<T> _coalesce<T>(

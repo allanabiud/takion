@@ -25,8 +25,7 @@ class UniverseDetailsScreen extends ConsumerStatefulWidget {
       _UniverseDetailsScreenState();
 }
 
-class _UniverseDetailsScreenState
-    extends ConsumerState<UniverseDetailsScreen>
+class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen>
     with
         ResourceUrlActions<UniverseDetails>,
         DetailRefreshActions<UniverseDetails> {
@@ -125,10 +124,7 @@ class _UniverseInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DetailsPropertyCard(
-          title: "DETAILS",
-          items: contentItems,
-        ),
+        DetailsPropertyCard(title: "DETAILS", items: contentItems),
         const SizedBox(height: 20),
         DatabaseIdsSection(
           metronId: details.id,

@@ -84,9 +84,13 @@ class CharacterBrowse extends _$CharacterBrowse {
   Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
     ref,
     filter,
-    named: (repo) =>
-        repo.searchCharacters(filter.name!, page: filter.page, forceRefresh: true),
-    list: (repo) => repo.getCharacterList(page: filter.page, forceRefresh: true),
+    named: (repo) => repo.searchCharacters(
+      filter.name!,
+      page: filter.page,
+      forceRefresh: true,
+    ),
+    list: (repo) =>
+        repo.getCharacterList(page: filter.page, forceRefresh: true),
   );
 }
 
@@ -138,9 +142,13 @@ class PublisherBrowse extends _$PublisherBrowse {
   Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
     ref,
     filter,
-    named: (repo) =>
-        repo.searchPublishers(filter.name!, page: filter.page, forceRefresh: true),
-    list: (repo) => repo.getPublisherList(page: filter.page, forceRefresh: true),
+    named: (repo) => repo.searchPublishers(
+      filter.name!,
+      page: filter.page,
+      forceRefresh: true,
+    ),
+    list: (repo) =>
+        repo.getPublisherList(page: filter.page, forceRefresh: true),
   );
 }
 
@@ -219,8 +227,11 @@ class UniverseBrowse extends _$UniverseBrowse {
   Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
     ref,
     filter,
-    named: (repo) =>
-        repo.searchUniverses(filter.name!, page: filter.page, forceRefresh: true),
+    named: (repo) => repo.searchUniverses(
+      filter.name!,
+      page: filter.page,
+      forceRefresh: true,
+    ),
     list: (repo) => repo.getUniverseList(page: filter.page, forceRefresh: true),
   );
 }
@@ -246,8 +257,11 @@ class ImprintBrowse extends _$ImprintBrowse {
   Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
     ref,
     filter,
-    named: (repo) =>
-        repo.searchImprints(filter.name!, page: filter.page, forceRefresh: true),
+    named: (repo) => repo.searchImprints(
+      filter.name!,
+      page: filter.page,
+      forceRefresh: true,
+    ),
     list: (repo) => repo.getImprintList(page: filter.page, forceRefresh: true),
   );
 }
@@ -273,8 +287,11 @@ class CreatorBrowse extends _$CreatorBrowse {
   Future<int> refresh({DateTime? modifiedGt}) => _refreshCurrentPage(
     ref,
     filter,
-    named: (repo) =>
-        repo.searchCreators(filter.name!, page: filter.page, forceRefresh: true),
+    named: (repo) => repo.searchCreators(
+      filter.name!,
+      page: filter.page,
+      forceRefresh: true,
+    ),
     list: (repo) => repo.getCreatorList(page: filter.page, forceRefresh: true),
   );
 }

@@ -181,9 +181,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
 
   Future<void> updateSyncIntervalEnabled(bool value) async {
     await ensureInitialized();
-    AppLogger.info(
-      'Drive sync interval ${value ? 'enabled' : 'disabled'}',
-    );
+    AppLogger.info('Drive sync interval ${value ? 'enabled' : 'disabled'}');
     final db = ref.read(driftDatabaseProvider);
     await db.settingsDao.setBool(_intervalEnabledKey, value);
     state = state.copyWith(syncIntervalEnabled: value);

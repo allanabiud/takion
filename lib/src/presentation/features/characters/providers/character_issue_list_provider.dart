@@ -42,7 +42,11 @@ Future<CharacterIssueListPage> _fetchValidIssuePage(
     try {
       return await fetcher(fallbackPage);
     } catch (_) {
-      return const CharacterIssueListPage(count: 0, results: [], currentPage: 1);
+      return const CharacterIssueListPage(
+        count: 0,
+        results: [],
+        currentPage: 1,
+      );
     }
   }
   final minPage = (targetPage - metronMaxWalkPages + 1).clamp(1, targetPage);

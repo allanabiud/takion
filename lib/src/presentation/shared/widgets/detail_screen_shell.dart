@@ -224,7 +224,8 @@ class DetailScreenShell<T> extends ConsumerWidget {
     final theme = Theme.of(context);
     final scaffoldBg = theme.colorScheme.surface;
     final isRevalidating =
-        asyncValue.isRefreshing || (asyncValue.isLoading && asyncValue.hasValue);
+        asyncValue.isRefreshing ||
+        (asyncValue.isLoading && asyncValue.hasValue);
     final imageUrl = toImageUrl(data);
     final fallbackImageUrl = toFallbackImageUrl?.call(data);
     final heroTag = toHeroTag(data);
@@ -338,8 +339,9 @@ class DetailScreenShell<T> extends ConsumerWidget {
                                     .withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: theme.colorScheme.primary
-                                      .withValues(alpha: 0.3),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                 ),
                               ),
                               child: Row(

@@ -2,7 +2,6 @@ import "package:flutter/material.dart";
 import "package:takion/src/presentation/shared/widgets/shimmer_widget.dart";
 import "package:takion/src/presentation/shared/widgets/skeleton.dart";
 
-/// Mirrors a [SeriesListTile] layout during loading states.
 class SeriesListTileSkeleton extends StatelessWidget {
   const SeriesListTileSkeleton({super.key});
 

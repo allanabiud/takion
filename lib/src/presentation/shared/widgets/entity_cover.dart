@@ -24,7 +24,7 @@ class EntityCover extends StatelessWidget {
   final Duration fadeOutDuration;
   final bool circular;
   final Widget Function(BuildContext context, String url, Object error)?
-      errorBuilder;
+  errorBuilder;
   final PlaceholderWidgetBuilder? placeholder;
 
   const EntityCover({
@@ -72,14 +72,16 @@ class EntityCover extends StatelessWidget {
                       memCacheHeight: cacheHeight,
                       fadeInDuration: fadeInDuration,
                       fadeOutDuration: fadeOutDuration,
-                      placeholder: placeholder ??
+                      placeholder:
+                          placeholder ??
                           (context, url) => Container(
                             color: theme.colorScheme.surfaceContainerHighest,
                             child: const Center(
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
-                      errorWidget: errorBuilder ??
+                      errorWidget:
+                          errorBuilder ??
                           (context, url, error) => imageErrorPlaceholder(
                             context,
                             url,
@@ -146,11 +148,7 @@ class EntityCover extends StatelessWidget {
 
     if (circular) {
       cover = ClipOval(
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: cover,
-        ),
+        child: SizedBox(width: width, height: height, child: cover),
       );
     } else if (width != null || height != null) {
       cover = SizedBox(width: width, height: height, child: cover);

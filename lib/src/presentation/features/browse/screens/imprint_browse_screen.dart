@@ -13,7 +13,8 @@ class ImprintBrowseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GenericBrowseScreen<ImprintList>(
       title: "Browse Imprints",
-      providerBuilder: (ref, filter) => ref.watch(imprintBrowseProvider(filter)),
+      providerBuilder: (ref, filter) =>
+          ref.watch(imprintBrowseProvider(filter)),
       refreshNotifierGetter: (ref, filter) =>
           ref.read(imprintBrowseProvider(filter).notifier).refresh(),
       emptyMessage: "No imprints found.",

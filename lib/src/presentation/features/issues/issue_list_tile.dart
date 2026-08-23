@@ -246,10 +246,10 @@ class IssueListTile extends ConsumerWidget {
                               if (hasStoreDate)
                                 Expanded(
                                   child: Text(
-                                    DateFormatter.comicDate(
-                                      effectiveStoreDate,
-                                    ),
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    DateFormatter.comicDate(effectiveStoreDate),
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -279,13 +279,17 @@ class IssueListTile extends ConsumerWidget {
                                 width: 22,
                                 height: 22,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Icon(
                                   Icons.favorite,
                                   size: 13,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
                                 ),
                               ),
                             ],

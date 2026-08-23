@@ -31,10 +31,14 @@ class SeriesIssuesScreen extends ConsumerWidget {
       sortLabel: contentSortLabel,
       sortItems: sortIssues,
       watchPage: (ref, page) => ref.watch(
-        seriesIssueListProvider(SeriesIssueListArgs(seriesId: seriesId, page: page)),
+        seriesIssueListProvider(
+          SeriesIssueListArgs(seriesId: seriesId, page: page),
+        ),
       ),
       invalidatePage: (ref, page) => ref.invalidate(
-        seriesIssueListProvider(SeriesIssueListArgs(seriesId: seriesId, page: page)),
+        seriesIssueListProvider(
+          SeriesIssueListArgs(seriesId: seriesId, page: page),
+        ),
       ),
       onRefresh: (ref, page) async {
         try {

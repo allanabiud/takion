@@ -84,7 +84,9 @@ class PowerStatsRadarCard extends StatelessWidget {
                     dataEntries: [
                       for (final value in values) RadarEntry(value: value),
                     ],
-                    fillColor: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    fillColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.25,
+                    ),
                     borderColor: theme.colorScheme.primary,
                     borderWidth: 2.5,
                     entryRadius: 4,
@@ -97,11 +99,15 @@ class PowerStatsRadarCard extends StatelessWidget {
                   width: 1.5,
                 ),
                 gridBorderData: BorderSide(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   width: 1,
                 ),
                 tickBorderData: BorderSide(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
                   width: 1,
                 ),
                 tickCount: 5,

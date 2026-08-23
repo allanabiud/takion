@@ -25,7 +25,6 @@ void main() {
       "Schedules for today at 8:00 PM if current time is before 8:00 PM on target day",
       () {
         final location = tz.getLocation("America/New_York");
-        // Set to Wednesday 10:00 AM
         final now = tz.TZDateTime(location, 2026, 7, 29, 10, 0);
 
         int daysUntil = NotificationDay.wednesday.dartWeekday - now.weekday;
@@ -54,7 +53,6 @@ void main() {
       "Schedules for next week at 8:00 PM if current time is past 8:00 PM on target day",
       () {
         final location = tz.getLocation("America/New_York");
-        // Set to Wednesday 8:30 PM (20:30)
         final now = tz.TZDateTime(location, 2026, 7, 29, 20, 30);
 
         int daysUntil = NotificationDay.wednesday.dartWeekday - now.weekday;
@@ -86,7 +84,6 @@ void main() {
         "Asia/Tokyo",
       ]) {
         final location = tz.getLocation(tzName);
-        // Set to Tuesday July 28 21:00 (past 8:00 PM)
         final now = tz.TZDateTime(location, 2026, 7, 28, 21, 0);
 
         int daysUntil = NotificationDay.tuesday.dartWeekday - now.weekday;

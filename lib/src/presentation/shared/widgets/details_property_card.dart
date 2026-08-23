@@ -117,7 +117,8 @@ class _PropertyRow extends StatelessWidget {
             flex: 3,
             child: Align(
               alignment: Alignment.centerRight,
-              child: item.badge ??
+              child:
+                  item.badge ??
                   Text(
                     item.value ?? "",
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -202,7 +203,9 @@ class PublicationStatusBadge extends StatelessWidget {
     } else if (lower.contains("cancelled") || lower.contains("canceled")) {
       dotColor = const Color(0xFFC62828);
       bgColor = const Color(0xFFC62828).withValues(alpha: 0.12);
-    } else if (lower.contains("one-shot") || lower.contains("oneshot") || lower.contains("limited")) {
+    } else if (lower.contains("one-shot") ||
+        lower.contains("oneshot") ||
+        lower.contains("limited")) {
       dotColor = const Color(0xFF6A1B9A);
       bgColor = const Color(0xFF6A1B9A).withValues(alpha: 0.12);
     } else {
@@ -222,10 +225,7 @@ class PublicationStatusBadge extends StatelessWidget {
           Container(
             width: 7,
             height: 7,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(
@@ -254,11 +254,17 @@ class ContentRatingBadge extends StatelessWidget {
     final lower = rating.toLowerCase();
 
     Color color;
-    if (lower.contains("mature") || lower.contains("18+") || lower.contains("explicit")) {
+    if (lower.contains("mature") ||
+        lower.contains("18+") ||
+        lower.contains("explicit")) {
       color = const Color(0xFFD32F2F);
-    } else if (lower.contains("teen") || lower.contains("13+") || lower.contains("12+")) {
+    } else if (lower.contains("teen") ||
+        lower.contains("13+") ||
+        lower.contains("12+")) {
       color = const Color(0xFFE65100);
-    } else if (lower.contains("all") || lower.contains("everyone") || lower.contains("kids")) {
+    } else if (lower.contains("all") ||
+        lower.contains("everyone") ||
+        lower.contains("kids")) {
       color = const Color(0xFF2E7D32);
     } else {
       color = theme.colorScheme.primary;

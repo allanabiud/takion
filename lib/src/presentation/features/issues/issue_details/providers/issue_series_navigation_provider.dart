@@ -94,8 +94,10 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
       final totalPages = ((page1.count - 1) ~/ actualPageSize) + 1;
       if (totalPages <= 1) return const IssueSeriesNavResult();
 
-      IssueDetails? issueDetails =
-          ref.watch(issueDetailsProvider(args.issueId)).asData?.value;
+      IssueDetails? issueDetails = ref
+          .watch(issueDetailsProvider(args.issueId))
+          .asData
+          ?.value;
       if (issueDetails == null) {
         try {
           issueDetails = await ref.watch(

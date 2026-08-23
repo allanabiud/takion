@@ -53,32 +53,30 @@ class ApiCacheDao extends DatabaseAccessor<AppDatabase> {
   Future<int> deleteStaleEntries() async {
     final now = DateTime.now().toUtc();
     final deleted =
-        await (delete(attachedDatabase.apiCache)..where(
-              (t) {
-                final searchKeys = _searchCachePrefixes
-                    .map((prefix) => t.cacheKey.like("$prefix:%"))
-                    .reduce((a, b) => a | b);
-                return searchKeys &
-                        t.cachedAt.isSmallerThan(
-                          Constant(now.subtract(const Duration(hours: 3))),
-                        ) |
-                    t.cacheKey.like("weekly_releases:%") &
-                        t.cachedAt.isSmallerThan(
-                          Constant(now.subtract(const Duration(hours: 24))),
-                        ) |
-                    t.cacheKey.like("issue_details:%") &
-                        t.cachedAt.isSmallerThan(
-                          Constant(now.subtract(const Duration(hours: 24))),
-                        ) |
-                    t.cacheKey.like("series_details:%") &
-                        t.cachedAt.isSmallerThan(
-                          Constant(now.subtract(const Duration(hours: 48))),
-                        ) |
-                    t.cachedAt.isSmallerThan(
-                      Constant(now.subtract(const Duration(days: 7))),
-                    );
-              },
-            ))
+        await (delete(attachedDatabase.apiCache)..where((t) {
+              final searchKeys = _searchCachePrefixes
+                  .map((prefix) => t.cacheKey.like("$prefix:%"))
+                  .reduce((a, b) => a | b);
+              return searchKeys &
+                      t.cachedAt.isSmallerThan(
+                        Constant(now.subtract(const Duration(hours: 3))),
+                      ) |
+                  t.cacheKey.like("weekly_releases:%") &
+                      t.cachedAt.isSmallerThan(
+                        Constant(now.subtract(const Duration(hours: 24))),
+                      ) |
+                  t.cacheKey.like("issue_details:%") &
+                      t.cachedAt.isSmallerThan(
+                        Constant(now.subtract(const Duration(hours: 24))),
+                      ) |
+                  t.cacheKey.like("series_details:%") &
+                      t.cachedAt.isSmallerThan(
+                        Constant(now.subtract(const Duration(hours: 48))),
+                      ) |
+                  t.cachedAt.isSmallerThan(
+                    Constant(now.subtract(const Duration(days: 7))),
+                  );
+            }))
             .go();
     return deleted;
   }

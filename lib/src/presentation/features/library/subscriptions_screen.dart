@@ -117,8 +117,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           }
           return _buildSkeletonList();
         },
-        error: (error, _) =>
-            const AsyncStatePanel.error(errorMessage: "Failed to load subscriptions"),
+        error: (error, _) => const AsyncStatePanel.error(
+          errorMessage: "Failed to load subscriptions",
+        ),
         data: (pageData) {
           final filtered = _filteredPage(pageData, query);
           return _buildContent(filtered, sortOption, isLoading: false);
@@ -198,7 +199,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         final series = sortedResults[index];
         return Opacity(
           opacity: isLoading ? 0.6 : 1.0,
-          child: SeriesSubscriptionCard(key: ValueKey(series.id), series: series),
+          child: SeriesSubscriptionCard(
+            key: ValueKey(series.id),
+            series: series,
+          ),
         );
       },
       emptyMessage: "No subscriptions.",

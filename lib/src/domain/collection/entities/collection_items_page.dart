@@ -26,6 +26,6 @@ class CollectionItemsPage {
 
   int? get nextPage => _extractPage(next, defaultToFirstPage: false);
   int? get previousPage => _extractPage(previous, defaultToFirstPage: true);
-  bool get hasNext => nextPage != null;
-  bool get hasPrevious => previousPage != null;
+  bool get hasNext => next != null;
+  bool get hasPrevious => previous != null;
 }

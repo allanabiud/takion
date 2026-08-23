@@ -34,7 +34,9 @@ class PersonCard extends ConsumerWidget {
 
     final hasCharacterId = characterId != null;
     final hasCreatorId = creatorId != null;
-    final entityType = hasCharacterId ? "character" : (hasCreatorId ? "creator" : null);
+    final entityType = hasCharacterId
+        ? "character"
+        : (hasCreatorId ? "creator" : null);
     final entityId = characterId ?? creatorId;
 
     final isFav =

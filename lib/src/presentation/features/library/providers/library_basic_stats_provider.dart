@@ -133,7 +133,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
 
       Future<void> emitStats(List<LibraryItem> libraryItems) async {
         try {
-          // Fall back to empty subscriptions if the provider is unavailable (e.g. disposed mid-navigation).
+          // Fall back to empty subscriptions if provider is unavailable.
           List<SeriesSubscription> subscriptions;
           try {
             subscriptions = await ref.read(activeSubscriptionsProvider.future);
@@ -275,7 +275,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
             );
           }
         } catch (e) {
-          // Never forward errors to the stream – emit zero stats so cards stay visible.
+          // Emit zero stats on error so cards remain visible.
           if (!controller.isClosed) {
             controller.add(LibraryBasicStats.zero(filter));
           }
@@ -298,7 +298,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
           .read(allLibraryItemsProvider)
           .whenOrNull(
             data: (libraryItems) {
-              debounced.schedule(() => emitStats(libraryItems));
+              emitStats(libraryItems);
             },
           );
 
@@ -363,7 +363,7 @@ final libraryReadingTrendsProvider = StreamProvider.autoDispose
           .read(allLibraryItemsProvider)
           .whenOrNull(
             data: (libraryItems) {
-              debounced.schedule(() => computeTrends(libraryItems));
+              computeTrends(libraryItems);
             },
           );
 
@@ -416,7 +416,7 @@ final libraryRecentlyFinishedProvider = StreamProvider.autoDispose
           .read(allLibraryItemsProvider)
           .whenOrNull(
             data: (libraryItems) {
-              debounced.schedule(() => computeRecent(libraryItems));
+              computeRecent(libraryItems);
             },
           );
 

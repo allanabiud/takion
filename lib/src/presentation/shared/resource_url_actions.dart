@@ -3,11 +3,6 @@ import "package:share_plus/share_plus.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:url_launcher/url_launcher.dart";
 
-/// Shared share / open-in-browser actions for Metron resource URLs.
-///
-/// Implementers supply the URL + display label + share subject for their
-/// specific entity type, then delegate to [shareResourceUrl] /
-/// [openResourceUrlInBrowser] from their detail screen state.
 mixin ResourceUrlActions<T> {
   String? resourceUrlOf(T details);
   String get resourceLabel;

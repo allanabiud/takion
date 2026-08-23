@@ -160,8 +160,7 @@ class _MyComicsBrowseTab extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_MyComicsBrowseTab> createState() =>
-      _MyComicsBrowseTabState();
+  ConsumerState<_MyComicsBrowseTab> createState() => _MyComicsBrowseTabState();
 }
 
 class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab>
@@ -201,24 +200,20 @@ class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab>
   Widget build(BuildContext context) {
     super.build(context);
     final viewAsync = ref.watch(
-      categorySeriesViewProvider(
-        (
-          category: "collected",
-          query: widget.isSearching ? widget.searchQuery : "",
-        ),
-      ),
+      categorySeriesViewProvider((
+        category: "collected",
+        query: widget.isSearching ? widget.searchQuery : "",
+      )),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryMyComics),
     );
 
     ref.listen(
-      categorySeriesViewProvider(
-        (
-          category: "collected",
-          query: widget.isSearching ? widget.searchQuery : "",
-        ),
-      ),
+      categorySeriesViewProvider((
+        category: "collected",
+        query: widget.isSearching ? widget.searchQuery : "",
+      )),
       (previous, next) {
         if (previous?.value != next.value &&
             _visibleCount != _initialVisibleCount) {
@@ -259,9 +254,7 @@ class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab>
         final visible = filtered.sublist(0, visibleCount);
         final hasMore = visibleCount < filtered.length;
         final ownedCountsAsync = ref.watch(
-          seriesOwnedCountsProvider(
-            [for (final s in visible) s.id],
-          ),
+          seriesOwnedCountsProvider([for (final s in visible) s.id]),
         );
 
         return RefreshIndicator(
@@ -287,39 +280,44 @@ class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab>
                     ),
                   ),
                   SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      if (index >= visible.length) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          child: Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index >= visible.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        final summary = visible[index];
+                        return RepaintBoundary(
+                          child: SeriesListTile(
+                            series: summary,
+                            categoryCount: categoryCounts[summary.id],
+                            categoryLabel: "collected",
+                            ownedCount: ownedCountsAsync.value?[summary.id],
+                            showProgressBar: true,
+                            isFirst: index == 0,
+                            isLast: !hasMore && index == visible.length - 1,
+                            onTap: () => context.pushRoute(
+                              LibrarySeriesRoute(
+                                seriesId: summary.id,
+                                category: "collected",
+                                seriesName: summary.name,
+                              ),
                             ),
                           ),
                         );
-                      }
-                      final summary = visible[index];
-                      return RepaintBoundary(
-                        child: SeriesListTile(
-                          series: summary,
-                          categoryCount: categoryCounts[summary.id],
-                          categoryLabel: "collected",
-                          ownedCount: ownedCountsAsync.value?[summary.id],
-                          showProgressBar: true,
-                          isFirst: index == 0,
-                          isLast: !hasMore && index == visible.length - 1,
-                          onTap: () => context.pushRoute(
-                            LibrarySeriesRoute(
-                              seriesId: summary.id,
-                              category: "collected",
-                              seriesName: summary.name,
-                            ),
-                          ),
-                        ),
-                      );
-                    }, childCount: hasMore ? visible.length + 1 : visible.length),
+                      },
+                      childCount: hasMore ? visible.length + 1 : visible.length,
+                    ),
                   ),
                 ],
               ),
@@ -392,7 +390,7 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab>
               ),
             ),
             const SizedBox(height: 16),
-            _StatsOverviewCards(filter: _filter),
+            StatsOverviewCards(filter: _filter),
             const SizedBox(height: 24),
             _TopPublishersSection(),
             const SizedBox(height: 24),
@@ -408,50 +406,33 @@ class _MyComicsStatsTabState extends ConsumerState<_MyComicsStatsTab>
   }
 }
 
-class _StatsOverviewCards extends ConsumerWidget {
+class StatsOverviewCards extends ConsumerStatefulWidget {
   final LibraryFilter filter;
 
-  const _StatsOverviewCards({required this.filter});
+  const StatsOverviewCards({super.key, required this.filter});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(filter));
+  ConsumerState<StatsOverviewCards> createState() => _StatsOverviewCardsState();
+}
+
+class _StatsOverviewCardsState extends ConsumerState<StatsOverviewCards> {
+  LibraryBasicStats? _lastKnownStats;
+
+  @override
+  Widget build(BuildContext context) {
+    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(widget.filter));
     final collectionStatsAsync = ref.watch(collectionStatsProvider);
     final theme = Theme.of(context);
 
-    // Use previous data during reloads/errors so stat cards never disappear.
-    final stats = basicStatsAsync.hasValue ? basicStatsAsync.value : null;
-
-    // Only show shimmer on the very first load when no data exists yet.
-    if (stats == null && basicStatsAsync.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ShimmerWidget(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: SkeletonBox(height: 80)),
-                  SizedBox(width: 8),
-                  Expanded(child: SkeletonBox(height: 80)),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(child: SkeletonBox(height: 80)),
-                  SizedBox(width: 8),
-                  Expanded(child: SkeletonBox(height: 80)),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
+    if (basicStatsAsync.hasValue) {
+      _lastKnownStats = basicStatsAsync.value;
     }
 
-    // Always render the cards – use zero stats as a fallback.
-    final displayStats = stats ?? LibraryBasicStats.zero(filter);
+    // Preserve last known stats across filter switches for smooth count transitions.
+    final displayStats =
+        _lastKnownStats ??
+        (basicStatsAsync.hasValue ? basicStatsAsync.value : null) ??
+        LibraryBasicStats.zero(widget.filter);
     final value = collectionStatsAsync.hasValue
         ? collectionStatsAsync.value!.totalValue
         : r"$0.00";
@@ -726,9 +707,7 @@ class _TopCreatorsSection extends ConsumerWidget {
                 title: "TOP CREATORS",
                 onViewAll: entityStats.allCreators.length > 5
                     ? () => context.router.push(
-                        TopCreatorsRoute(
-                          creators: entityStats.allCreators,
-                        ),
+                        TopCreatorsRoute(creators: entityStats.allCreators),
                       )
                     : null,
               ),

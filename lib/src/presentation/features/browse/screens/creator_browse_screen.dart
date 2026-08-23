@@ -13,7 +13,8 @@ class CreatorBrowseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GenericBrowseScreen<CreatorList>(
       title: "Browse Creators",
-      providerBuilder: (ref, filter) => ref.watch(creatorBrowseProvider(filter)),
+      providerBuilder: (ref, filter) =>
+          ref.watch(creatorBrowseProvider(filter)),
       refreshNotifierGetter: (ref, filter) =>
           ref.read(creatorBrowseProvider(filter).notifier).refresh(),
       emptyMessage: "No creators found.",

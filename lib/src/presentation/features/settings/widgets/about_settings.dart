@@ -105,7 +105,9 @@ class _AboutBody extends ConsumerWidget {
                                 Icon(
                                   Icons.chevron_right,
                                   size: 18,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ],
                               if (debugEnabled) ...[
@@ -255,9 +257,9 @@ class _DeveloperAction extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
                 subtitle,

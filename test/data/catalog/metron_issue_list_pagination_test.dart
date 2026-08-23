@@ -117,15 +117,18 @@ void main() {
     },
   );
 
-  test("getIssueList serves a fresh cached page 1 without re-fetching", () async {
-    final remote = FakeMetronRemoteDataSource([202]);
-    final repo = buildRepo(remote);
-    final modifiedGt = DateTime.utc(2026, 9, 1);
+  test(
+    "getIssueList serves a fresh cached page 1 without re-fetching",
+    () async {
+      final remote = FakeMetronRemoteDataSource([202]);
+      final repo = buildRepo(remote);
+      final modifiedGt = DateTime.utc(2026, 9, 1);
 
-    await repo.getIssueList(modifiedGt: modifiedGt);
-    final cached = await repo.getIssueList(modifiedGt: modifiedGt);
+      await repo.getIssueList(modifiedGt: modifiedGt);
+      final cached = await repo.getIssueList(modifiedGt: modifiedGt);
 
-    expect(cached.results.map((i) => i.id), [1]);
-    expect(remote.getIssueListCalls, 1);
-  });
+      expect(cached.results.map((i) => i.id), [1]);
+      expect(remote.getIssueListCalls, 1);
+    },
+  );
 }

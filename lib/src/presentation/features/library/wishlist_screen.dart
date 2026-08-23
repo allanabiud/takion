@@ -173,12 +173,10 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
   Widget build(BuildContext context) {
     super.build(context);
     final viewAsync = ref.watch(
-      categorySeriesViewProvider(
-        (
-          category: "wishlist",
-          query: widget.isSearching ? widget.searchQuery : "",
-        ),
-      ),
+      categorySeriesViewProvider((
+        category: "wishlist",
+        query: widget.isSearching ? widget.searchQuery : "",
+      )),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryWishlist),
@@ -186,8 +184,9 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
 
     return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
-      error: (error, _) =>
-          const AsyncStatePanel.error(errorMessage: "Failed to load wishlist series"),
+      error: (error, _) => const AsyncStatePanel.error(
+        errorMessage: "Failed to load wishlist series",
+      ),
       data: (view) {
         final filtered = view.series;
         final categoryCounts = view.categoryCounts;

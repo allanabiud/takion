@@ -18,19 +18,13 @@ abstract class LocalCatalogRepository {
 
   Future<Map<int, CreatorList>> getCreatorsByIds(List<int> creatorIds);
 
-  Future<List<LocalIssue>> getIssuesBySeries(
-    int seriesId, {
-    int limit = 200,
-  });
+  Future<List<LocalIssue>> getIssuesBySeries(int seriesId, {int limit = 200});
 
   Stream<SeriesList?> watchSeries(int seriesId);
 
   Stream<String?> watchSeriesCoverUrl(int seriesId);
 
-  Future<List<SeriesList>> searchSeriesLocally(
-    String query, {
-    int limit = 50,
-  });
+  Future<List<SeriesList>> searchSeriesLocally(String query, {int limit = 50});
 
   /// Fully-hydrated (characters, credits, publisher) stream for a series row.
   Stream<SeriesDetails?> watchSeriesDetails(int seriesId);

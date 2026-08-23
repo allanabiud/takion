@@ -30,8 +30,7 @@ class ArcDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<ArcDetailsScreen> createState() => _ArcDetailsScreenState();
 }
 
-class _ArcDetailsScreenState
-    extends ConsumerState<ArcDetailsScreen>
+class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
     with ResourceUrlActions<ArcDetails>, DetailRefreshActions<ArcDetails> {
   LocalReadingList? _localList;
   bool _isLoadingImport = false;

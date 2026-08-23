@@ -81,47 +81,49 @@ void main() {
     await db.close();
   });
 
-  test("getArcIssueListAll returns issues and they land in the reading list",
-      () async {
-    final remote = FakeMetronRemoteDataSource([_issue(1), _issue(2)]);
-    final repo = MetronRepositoryImpl(
-      remote,
-      MetronLocalDataSourceImpl(db),
-      MetronEntityDao(db),
-      JunctionDao(db),
-      series_index.SeriesNameIndex(db),
-    );
+  test(
+    "getArcIssueListAll returns issues and they land in the reading list",
+    () async {
+      final remote = FakeMetronRemoteDataSource([_issue(1), _issue(2)]);
+      final repo = MetronRepositoryImpl(
+        remote,
+        MetronLocalDataSourceImpl(db),
+        MetronEntityDao(db),
+        JunctionDao(db),
+        series_index.SeriesNameIndex(db),
+      );
 
-    final issues = await repo.getArcIssueListAll(123);
-    expect(issues.map((i) => i.id), [1, 2]);
+      final issues = await repo.getArcIssueListAll(123);
+      expect(issues.map((i) => i.id), [1, 2]);
 
-    final readingListRepo = LocalReadingListLocalDataSource(db);
-    final list = LocalReadingList(
-      id: "list-1",
-      title: "Arc Name",
-      description: "",
-      isOrdered: true,
-      contentType: ListContentType.issue,
-      createdAt: DateTime.now().toUtc(),
-      updatedAt: DateTime.now().toUtc(),
-      items: issues.map(localReadingListItemFromIssueList).toList(),
-      metronArcId: 123,
-      metronAttributionSource: "Metron Arc",
-      lastSyncedAt: DateTime.now().toUtc(),
-    );
-    expect(list.items, hasLength(2));
+      final readingListRepo = LocalReadingListLocalDataSource(db);
+      final list = LocalReadingList(
+        id: "list-1",
+        title: "Arc Name",
+        description: "",
+        isOrdered: true,
+        contentType: ListContentType.issue,
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+        items: issues.map(localReadingListItemFromIssueList).toList(),
+        metronArcId: 123,
+        metronAttributionSource: "Metron Arc",
+        lastSyncedAt: DateTime.now().toUtc(),
+      );
+      expect(list.items, hasLength(2));
 
-    await readingListRepo.createList(list);
+      await readingListRepo.createList(list);
 
-    final saved = await db.readingListDao.getById("list-1");
-    expect(saved, isNotNull);
-    expect(saved!.itemsJson, isNotNull);
-    expect(saved.itemsJson, isNotEmpty);
+      final saved = await db.readingListDao.getById("list-1");
+      expect(saved, isNotNull);
+      expect(saved!.itemsJson, isNotNull);
+      expect(saved.itemsJson, isNotEmpty);
 
-    final reloaded = await readingListRepo.getListById("list-1");
-    expect(reloaded, isNotNull);
-    expect(reloaded!.items, hasLength(2));
-  });
+      final reloaded = await readingListRepo.getListById("list-1");
+      expect(reloaded, isNotNull);
+      expect(reloaded!.items, hasLength(2));
+    },
+  );
 
   test("getArcIssueListAll caps the page walk", () async {
     final remote = FakeMetronRemoteDataSource([

@@ -220,17 +220,25 @@ List<T> _sortByNameOnly<T>(
   );
 }
 
-List<CharacterList> sortCharacters(List<CharacterList> items, ContentSortOption option) =>
-    _sortByNameOnly(items, option, (c) => c.name);
+List<CharacterList> sortCharacters(
+  List<CharacterList> items,
+  ContentSortOption option,
+) => _sortByNameOnly(items, option, (c) => c.name);
 
-List<CreatorList> sortCreators(List<CreatorList> items, ContentSortOption option) =>
-    _sortByNameOnly(items, option, (c) => c.name);
+List<CreatorList> sortCreators(
+  List<CreatorList> items,
+  ContentSortOption option,
+) => _sortByNameOnly(items, option, (c) => c.name);
 
-List<UniverseList> sortUniverses(List<UniverseList> items, ContentSortOption option) =>
-    _sortByNameOnly(items, option, (u) => u.name);
+List<UniverseList> sortUniverses(
+  List<UniverseList> items,
+  ContentSortOption option,
+) => _sortByNameOnly(items, option, (u) => u.name);
 
-List<ImprintList> sortImprints(List<ImprintList> items, ContentSortOption option) =>
-    _sortByNameOnly(items, option, (i) => i.name);
+List<ImprintList> sortImprints(
+  List<ImprintList> items,
+  ContentSortOption option,
+) => _sortByNameOnly(items, option, (i) => i.name);
 
 List<TeamList> sortTeams(List<TeamList> items, ContentSortOption option) =>
     _sortByNameOnly(items, option, (t) => t.name);
@@ -238,8 +246,10 @@ List<TeamList> sortTeams(List<TeamList> items, ContentSortOption option) =>
 List<ArcList> sortArcs(List<ArcList> items, ContentSortOption option) =>
     _sortByNameOnly(items, option, (a) => a.name);
 
-List<PublisherList> sortPublishers(List<PublisherList> items, ContentSortOption option) =>
-    _sortByNameOnly(items, option, (p) => p.name);
+List<PublisherList> sortPublishers(
+  List<PublisherList> items,
+  ContentSortOption option,
+) => _sortByNameOnly(items, option, (p) => p.name);
 
 String _collectionItemName(CollectionItem item) {
   final seriesName = item.issue?.series?.name.trim() ?? "";

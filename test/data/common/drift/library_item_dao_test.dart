@@ -84,7 +84,6 @@ void main() {
         _item(issueId: 7, ownershipStatus: "owned"),
       ]);
 
-      // Wait for the DB stream to propagate through the provider, including the async status-map computation.
       final deadline = DateTime.now().add(const Duration(seconds: 5));
       while (DateTime.now().isBefore(deadline)) {
         await pumpEventQueue();
@@ -99,6 +98,74 @@ void main() {
       expect(lastEmission?[7]?.isCollected, isTrue);
 
       sub.close();
+    });
+  });
+
+  group("watchHydratedItems and getHydratedItems", () {
+    test("returns joined items with issue and series metadata", () async {
+      final now = DateTime.now().toUtc().toIso8601String();
+      await db.metronEntityDao.upsertSeriesStubsBatch([
+        MetronSeriesCompanion.insert(
+          id: const Value(100),
+          name: "Batman",
+          volume: const Value(1),
+          yearBegan: const Value(1940),
+          issueCount: const Value(713),
+          computedCoverUrl: const Value(
+            "https://metron.cloud/media/batman.jpg",
+          ),
+        ),
+      ]);
+
+      await db.metronEntityDao.upsertIssueStubsBatch([
+        MetronIssuesCompanion.insert(
+          id: const Value(500),
+          seriesId: const Value(100),
+          number: "1",
+          imageUrl: const Value("https://metron.cloud/media/issue1.jpg"),
+        ),
+      ]);
+
+      await db.libraryItemDao.batchUpsert([
+        LibraryItemsCompanion(
+          id: const Value("lib-500"),
+          userId: const Value("local-user"),
+          metronIssueId: const Value(500),
+          metronSeriesId: const Value(100),
+          ownershipStatus: const Value("owned"),
+          isRead: const Value(true),
+          rating: const Value(5),
+          format: const Value("print"),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      ]);
+
+      final hydrated = await db.libraryItemDao.getHydratedItems(
+        ownershipStatus: "owned",
+      );
+      expect(hydrated, hasLength(1));
+      expect(hydrated.first.libraryItem.metronIssueId, 500);
+      expect(hydrated.first.issue?.number, "1");
+      expect(
+        hydrated.first.issue?.imageUrl,
+        "https://metron.cloud/media/issue1.jpg",
+      );
+      expect(hydrated.first.series?.name, "Batman");
+      expect(
+        hydrated.first.series?.computedCoverUrl,
+        "https://metron.cloud/media/batman.jpg",
+      );
+
+      final seriesSummaries = await db.libraryItemDao
+          .getSeriesSummariesByCategory(ownershipStatus: "owned");
+      expect(seriesSummaries, hasLength(1));
+      expect(seriesSummaries.first.seriesId, 100);
+      expect(seriesSummaries.first.seriesName, "Batman");
+      expect(
+        seriesSummaries.first.computedCoverUrl,
+        "https://metron.cloud/media/batman.jpg",
+      );
     });
   });
 }

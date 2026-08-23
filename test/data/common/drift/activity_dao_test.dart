@@ -53,32 +53,40 @@ void main() {
     expect(remaining.map((e) => e.id).toSet(), {"evt-2", "evt-3"});
   });
 
-  test("deleteByIssueIds records markers for all matching events without eventType",
-      () async {
-    final now = DateTime.now().toUtc().toIso8601String();
-    await db.activityDao.batchInsert([
-      ActivityEventsCompanion.insert(
-        id: "evt-1",
-        userId: "u",
-        seriesId: const Value(1),
-        issueId: const Value(10),
-        eventType: "added",
-        timestamp: now,
-      ),
-      ActivityEventsCompanion.insert(
-        id: "evt-2",
-        userId: "u",
-        seriesId: const Value(1),
-        issueId: const Value(10),
-        eventType: "removed",
-        timestamp: now,
-      ),
-    ]);
+  test(
+    "deleteByIssueIds records markers for all matching events without eventType",
+    () async {
+      final now = DateTime.now().toUtc().toIso8601String();
+      await db.activityDao.batchInsert([
+        ActivityEventsCompanion.insert(
+          id: "evt-1",
+          userId: "u",
+          seriesId: const Value(1),
+          issueId: const Value(10),
+          eventType: "added",
+          timestamp: now,
+        ),
+        ActivityEventsCompanion.insert(
+          id: "evt-2",
+          userId: "u",
+          seriesId: const Value(1),
+          issueId: const Value(10),
+          eventType: "removed",
+          timestamp: now,
+        ),
+      ]);
 
-    await db.activityDao.deleteByIssueIds([10]);
+      await db.activityDao.deleteByIssueIds([10]);
 
-    expect(await db.syncMetaDao.get("delete:activity_events:evt-1"), isNotNull);
-    expect(await db.syncMetaDao.get("delete:activity_events:evt-2"), isNotNull);
-    expect(await db.select(db.activityEvents).get(), isEmpty);
-  });
+      expect(
+        await db.syncMetaDao.get("delete:activity_events:evt-1"),
+        isNotNull,
+      );
+      expect(
+        await db.syncMetaDao.get("delete:activity_events:evt-2"),
+        isNotNull,
+      );
+      expect(await db.select(db.activityEvents).get(), isEmpty);
+    },
+  );
 }

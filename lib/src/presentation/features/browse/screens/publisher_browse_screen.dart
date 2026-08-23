@@ -13,7 +13,8 @@ class PublisherBrowseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GenericBrowseScreen<PublisherList>(
       title: "Browse Publishers",
-      providerBuilder: (ref, filter) => ref.watch(publisherBrowseProvider(filter)),
+      providerBuilder: (ref, filter) =>
+          ref.watch(publisherBrowseProvider(filter)),
       refreshNotifierGetter: (ref, filter) =>
           ref.read(publisherBrowseProvider(filter).notifier).refresh(),
       emptyMessage: "No publishers found.",

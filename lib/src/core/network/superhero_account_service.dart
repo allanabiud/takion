@@ -6,13 +6,13 @@ import "package:takion/src/core/network/superhero_dio_provider.dart";
 import "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/common/drift/daos/settings_dao.dart";
 
-final superheroAccountServiceProvider = Provider<SuperHeroAccountService>(
-  (ref) {
-    final db = ref.watch(driftDatabaseProvider);
-    final dio = ref.watch(superheroDioProvider);
-    return SuperHeroAccountService(db.settingsDao, dio);
-  },
-);
+final superheroAccountServiceProvider = Provider<SuperHeroAccountService>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  final dio = ref.watch(superheroDioProvider);
+  return SuperHeroAccountService(db.settingsDao, dio);
+});
 
 enum SuperHeroConnectionStatus { valid, missing, invalid, unreachable }
 
@@ -22,8 +22,6 @@ class SuperHeroAccountService {
 
   static const String _apiTokenKey = SettingsKeys.superheroApiToken;
 
-
-
   SuperHeroAccountService(this._settingsDao, this._dio);
 
   Future<bool> verifyToken(String token) async {
@@ -31,19 +29,14 @@ class SuperHeroAccountService {
     if (trimmedToken.isEmpty) return false;
 
     try {
-      final response = await _dio.get(
-        "$trimmedToken/search/batman",
-      );
+      final response = await _dio.get("$trimmedToken/search/batman");
       final data = response.data;
       if (data is Map<String, dynamic>) {
         return data["response"] == "success";
       }
       return false;
     } on DioException catch (error) {
-      AppLogger.warning(
-        "SuperHero token verification failed",
-        error: error,
-      );
+      AppLogger.warning("SuperHero token verification failed", error: error);
       return false;
     }
   }
@@ -62,10 +55,7 @@ class SuperHeroAccountService {
     }
 
     await _settingsDao.setString(_apiTokenKey, trimmedToken);
-    await _settingsDao.setBool(
-      SettingsKeys.superheroIntegrationEnabled,
-      true,
-    );
+    await _settingsDao.setBool(SettingsKeys.superheroIntegrationEnabled, true);
     AppLogger.info("SuperHero connected and integration enabled");
     return true;
   }
@@ -81,13 +71,9 @@ class SuperHeroAccountService {
 
   Future<void> disconnect() async {
     await _settingsDao.deleteByKey(_apiTokenKey);
-    await _settingsDao.setBool(
-      SettingsKeys.superheroIntegrationEnabled,
-      false,
-    );
+    await _settingsDao.setBool(SettingsKeys.superheroIntegrationEnabled, false);
     AppLogger.info("SuperHero disconnected and integration disabled");
   }
-
 
   Future<SuperHeroConnectionStatus> validateStoredConnection() async {
     final token = await getStoredToken();

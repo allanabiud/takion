@@ -1,16 +1,6 @@
 import "package:flutter/material.dart";
 
-/// App bar title that animates between values in a continuous conveyor motion.
-///
-/// When [title] changes, the outgoing title slides upward out of view while the
-/// incoming title slides up into place from below. Unlike an `AnimatedSwitcher`
-/// cross-fade, both titles move in the same direction and never linger fading,
-/// so tab switches read as one smooth push.
-///
-/// The widget lays out to the wider of the outgoing/incoming titles and centers
-/// each title horizontally inside it. Because the box itself is centered by the
-/// [AppBar], the incoming title stays centered throughout the animation (no
-/// horizontal drift), and titles keep their natural width (no ellipsis).
+/// App bar title that animates between text values vertically.
 class AnimatedAppBarTitle extends StatefulWidget {
   const AnimatedAppBarTitle({
     super.key,
@@ -75,12 +65,8 @@ class _AnimatedAppBarTitleState extends State<AnimatedAppBarTitle>
     return Size(painter.width, painter.height);
   }
 
-  Text _title(String text, TextStyle style) => Text(
-    text,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    style: style,
-  );
+  Text _title(String text, TextStyle style) =>
+      Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
 
   @override
   Widget build(BuildContext context) {

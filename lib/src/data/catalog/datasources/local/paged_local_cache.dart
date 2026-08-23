@@ -2,7 +2,6 @@ import "dart:convert";
 
 import "package:takion/src/data/common/drift/database.dart";
 
-/// Page metadata (count/next/previous) shared by every cached list page.
 class PageCacheMeta {
   const PageCacheMeta({required this.count, this.next, this.previous});
 
@@ -11,10 +10,6 @@ class PageCacheMeta {
   final String? previous;
 }
 
-/// Generic "cache a JSON list page with pagination meta" storage for the
-/// Metron catalog. One instance per resource (issue_search, series_list, ...);
-/// the key passed by callers is the resource-specific suffix baked on top of
-/// [cacheKeyPrefix].
 class PagedLocalCache<T> {
   PagedLocalCache({
     required AppDatabase db,
@@ -31,8 +26,6 @@ class PagedLocalCache<T> {
   final T Function(Map<String, dynamic>) fromJson;
   final Map<String, dynamic> Function(T) toJson;
 
-  /// Whether [cache] also writes the `meta:` row. Disabled for resources that
-  /// only ever store the list (weekly/FOC releases).
   final bool withMeta;
 
   Future<void> cache(
@@ -97,7 +90,6 @@ class PagedLocalCache<T> {
   }
 }
 
-/// Generic raw-JSON single-entity cache for detail responses.
 class DetailsLocalCache {
   DetailsLocalCache({
     required AppDatabase db,

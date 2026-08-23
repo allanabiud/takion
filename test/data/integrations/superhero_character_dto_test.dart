@@ -64,8 +64,7 @@ void main() {
         ],
       };
 
-      final character =
-          SuperHeroSearchResponseDto.fromJson(json).results.first;
+      final character = SuperHeroSearchResponseDto.fromJson(json).results.first;
       expect(character.powerstats!.intelligence, 38);
       expect(character.powerstats!.strength, 100);
     });
@@ -90,8 +89,7 @@ void main() {
         ],
       };
 
-      final character =
-          SuperHeroSearchResponseDto.fromJson(json).results.first;
+      final character = SuperHeroSearchResponseDto.fromJson(json).results.first;
       final powerstats = character.powerstats!;
       expect(powerstats.intelligence, isNull);
       expect(powerstats.strength, 50);
@@ -133,8 +131,9 @@ void main() {
         ],
       };
 
-      final entity =
-          SuperHeroSearchResponseDto.fromJson(json).results.first.toEntity();
+      final entity = SuperHeroSearchResponseDto.fromJson(
+        json,
+      ).results.first.toEntity();
       expect(entity.id, 70);
       expect(entity.name, "Batman");
       expect(entity.powerstats!.combat, 100);

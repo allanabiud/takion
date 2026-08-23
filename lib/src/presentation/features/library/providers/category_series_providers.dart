@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/content_sorting.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
@@ -17,19 +18,22 @@ final collectedSeriesProvider =
       final rows = await dao.getSeriesSummariesByCategory(
         ownershipStatus: "owned",
       );
-      final result = rows
-          .map(
-            (r) => CategorySeriesSummary(
-              seriesId: r.seriesId,
-              seriesName: r.seriesName,
-              volume: r.volume,
-              yearBegan: r.yearBegan,
-              categoryCount: r.categoryCount,
-              items: const [],
-              issueCount: r.issueCount,
-            ),
-          )
-          .toList();
+      final cache = ref.read(entityImageCacheProvider);
+      final result = rows.map((r) {
+        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
+          cache.set("series", r.seriesId, r.computedCoverUrl!);
+        }
+        return CategorySeriesSummary(
+          seriesId: r.seriesId,
+          seriesName: r.seriesName,
+          volume: r.volume,
+          yearBegan: r.yearBegan,
+          coverImage: r.computedCoverUrl,
+          categoryCount: r.categoryCount,
+          items: const [],
+          issueCount: r.issueCount,
+        );
+      }).toList();
       timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
@@ -43,19 +47,22 @@ final readSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(isRead: true);
-      final result = rows
-          .map(
-            (r) => CategorySeriesSummary(
-              seriesId: r.seriesId,
-              seriesName: r.seriesName,
-              volume: r.volume,
-              yearBegan: r.yearBegan,
-              categoryCount: r.categoryCount,
-              items: const [],
-              issueCount: r.issueCount,
-            ),
-          )
-          .toList();
+      final cache = ref.read(entityImageCacheProvider);
+      final result = rows.map((r) {
+        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
+          cache.set("series", r.seriesId, r.computedCoverUrl!);
+        }
+        return CategorySeriesSummary(
+          seriesId: r.seriesId,
+          seriesName: r.seriesName,
+          volume: r.volume,
+          yearBegan: r.yearBegan,
+          coverImage: r.computedCoverUrl,
+          categoryCount: r.categoryCount,
+          items: const [],
+          issueCount: r.issueCount,
+        );
+      }).toList();
       timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
@@ -71,19 +78,22 @@ final wishlistSeriesProvider =
       final rows = await dao.getSeriesSummariesByCategory(
         ownershipStatus: "wishlist",
       );
-      final result = rows
-          .map(
-            (r) => CategorySeriesSummary(
-              seriesId: r.seriesId,
-              seriesName: r.seriesName,
-              volume: r.volume,
-              yearBegan: r.yearBegan,
-              categoryCount: r.categoryCount,
-              items: const [],
-              issueCount: r.issueCount,
-            ),
-          )
-          .toList();
+      final cache = ref.read(entityImageCacheProvider);
+      final result = rows.map((r) {
+        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
+          cache.set("series", r.seriesId, r.computedCoverUrl!);
+        }
+        return CategorySeriesSummary(
+          seriesId: r.seriesId,
+          seriesName: r.seriesName,
+          volume: r.volume,
+          yearBegan: r.yearBegan,
+          coverImage: r.computedCoverUrl,
+          categoryCount: r.categoryCount,
+          items: const [],
+          issueCount: r.issueCount,
+        );
+      }).toList();
       timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
@@ -97,19 +107,22 @@ final unreadSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(isRead: false);
-      final result = rows
-          .map(
-            (r) => CategorySeriesSummary(
-              seriesId: r.seriesId,
-              seriesName: r.seriesName,
-              volume: r.volume,
-              yearBegan: r.yearBegan,
-              categoryCount: r.categoryCount,
-              items: const [],
-              issueCount: r.issueCount,
-            ),
-          )
-          .toList();
+      final cache = ref.read(entityImageCacheProvider);
+      final result = rows.map((r) {
+        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
+          cache.set("series", r.seriesId, r.computedCoverUrl!);
+        }
+        return CategorySeriesSummary(
+          seriesId: r.seriesId,
+          seriesName: r.seriesName,
+          volume: r.volume,
+          yearBegan: r.yearBegan,
+          coverImage: r.computedCoverUrl,
+          categoryCount: r.categoryCount,
+          items: const [],
+          issueCount: r.issueCount,
+        );
+      }).toList();
       timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
@@ -123,19 +136,22 @@ final unratedSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(isUnrated: true);
-      final result = rows
-          .map(
-            (r) => CategorySeriesSummary(
-              seriesId: r.seriesId,
-              seriesName: r.seriesName,
-              volume: r.volume,
-              yearBegan: r.yearBegan,
-              categoryCount: r.categoryCount,
-              items: const [],
-              issueCount: r.issueCount,
-            ),
-          )
-          .toList();
+      final cache = ref.read(entityImageCacheProvider);
+      final result = rows.map((r) {
+        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
+          cache.set("series", r.seriesId, r.computedCoverUrl!);
+        }
+        return CategorySeriesSummary(
+          seriesId: r.seriesId,
+          seriesName: r.seriesName,
+          volume: r.volume,
+          yearBegan: r.yearBegan,
+          coverImage: r.computedCoverUrl,
+          categoryCount: r.categoryCount,
+          items: const [],
+          issueCount: r.issueCount,
+        );
+      }).toList();
       timer = Timer(const Duration(minutes: 5), link.close);
       return result;
     });
@@ -175,7 +191,10 @@ SortPreferenceContext _sortContextForCategory(String category) {
   }
 }
 
-typedef CategorySeriesView = ({List<SeriesList> series, Map<int, int> categoryCounts});
+typedef CategorySeriesView = ({
+  List<SeriesList> series,
+  Map<int, int> categoryCounts,
+});
 
 CategorySeriesView _buildSeriesView(
   List<CategorySeriesSummary> summaries,
@@ -205,23 +224,27 @@ CategorySeriesView _buildSeriesView(
 
 final sortedCategorySeriesViewProvider = FutureProvider.autoDispose
     .family<CategorySeriesView, String>((ref, category) async {
-      final summaries =
-          await ref.watch(seriesByCategoryProvider(category).future);
+      final summaries = await ref.watch(
+        seriesByCategoryProvider(category).future,
+      );
       final sortOption = ref.watch(
         sortPreferenceForContextProvider(_sortContextForCategory(category)),
       );
       return _buildSeriesView(summaries, sortOption);
     });
 
-final categorySeriesViewProvider = FutureProvider.autoDispose.family<
-    CategorySeriesView,
-    ({String category, String query})>((ref, arg) async {
-  final view =
-      await ref.watch(sortedCategorySeriesViewProvider(arg.category).future);
-  final query = arg.query.toLowerCase().trim();
-  if (query.isEmpty) return view;
-  final filtered = view.series
-      .where((s) => s.name.toLowerCase().contains(query))
-      .toList();
-  return (series: filtered, categoryCounts: view.categoryCounts);
-});
+final categorySeriesViewProvider = FutureProvider.autoDispose
+    .family<CategorySeriesView, ({String category, String query})>((
+      ref,
+      arg,
+    ) async {
+      final view = await ref.watch(
+        sortedCategorySeriesViewProvider(arg.category).future,
+      );
+      final query = arg.query.toLowerCase().trim();
+      if (query.isEmpty) return view;
+      final filtered = view.series
+          .where((s) => s.name.toLowerCase().contains(query))
+          .toList();
+      return (series: filtered, categoryCounts: view.categoryCounts);
+    });

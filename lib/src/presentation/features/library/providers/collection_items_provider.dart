@@ -1,5 +1,6 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/data/common/drift/daos/library_item_dao.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/library_items_serialization.dart";
 import "package:takion/src/presentation/providers/providers.dart";
@@ -42,9 +43,19 @@ final readLibraryItemsProvider = StreamProvider<List<LibraryItem>>((ref) {
   return ref.watch(libraryRepositoryProvider).watchItemsByIsRead(true);
 });
 
-final metronIssuesStreamProvider = StreamProvider.autoDispose<List<LocalIssue>>((ref) {
-  return ref.watch(localCatalogRepositoryProvider).watchAllIssues();
-});
+final metronIssuesStreamProvider = StreamProvider.autoDispose<List<LocalIssue>>(
+  (ref) {
+    return ref.watch(localCatalogRepositoryProvider).watchAllIssues();
+  },
+);
+
+final hydratedLibraryItemsStreamProvider =
+    StreamProvider<List<HydratedLibraryItemRow>>((ref) {
+      return ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems();
+    });
 
 final collectionItemsProvider = FutureProvider.family<CollectionItemsPage, int>(
   _loadCollectionPage,
@@ -54,16 +65,24 @@ Future<CollectionItemsPage> _loadCollectionPage(Ref ref, int page) async {
   final safePage = page < 1 ? 1 : page;
   final offset = (safePage - 1) * _collectionPageSize;
   final repository = ref.watch(libraryRepositoryProvider);
+  final dao = ref.watch(driftDatabaseProvider).libraryItemDao;
   final totalCount = await repository.getItemCountByOwnershipStatus(
     LibraryOwnershipStatus.owned,
   );
-  final ownedRows = await repository.listItemsByOwnershipStatus(
-    LibraryOwnershipStatus.owned,
+  final hydratedRows = await dao.getHydratedItems(
+    ownershipStatus: "owned",
     limit: _collectionPageSize,
     offset: offset,
   );
 
-  final enriched = await hydrateLibraryItems(ref, ownedRows);
+  final backfill = <int, double>{};
+  final enriched = hydratedRows
+      .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+      .toList();
+
+  if (backfill.isNotEmpty) {
+    schedulePriceBackfill(ref, backfill);
+  }
 
   final totalPages = totalCount == 0
       ? 1
@@ -91,56 +110,134 @@ final currentCollectionItemsProvider = FutureProvider<CollectionItemsPage>((
 
 final allLibraryItemsProvider = libraryItemsStreamProvider;
 
-final allCollectionItemsProvider = FutureProvider<List<CollectionItem>>((
-  ref,
-) async {
-  final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-  final enriched = await hydrateLibraryItems(ref, libraryItems);
-  return enriched.where((item) => item.quantity > 0 || item.isRead).toList();
-});
+final allCollectionItemsProvider =
+    StreamProvider.autoDispose<List<CollectionItem>>((ref) {
+      final stream = ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems();
+      return stream.map((rows) {
+        final backfill = <int, double>{};
+        final items = rows
+            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+            .where((item) => item.quantity > 0 || item.isRead)
+            .toList();
+        if (backfill.isNotEmpty) {
+          schedulePriceBackfill(ref, backfill);
+        }
+        return items;
+      });
+    });
+
+final ownedCollectionItemsProvider =
+    StreamProvider.autoDispose<List<CollectionItem>>((ref) {
+      final stream = ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems(ownershipStatus: "owned");
+      return stream.map((rows) {
+        final backfill = <int, double>{};
+        final items = rows
+            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+            .toList();
+        if (backfill.isNotEmpty) {
+          schedulePriceBackfill(ref, backfill);
+        }
+        return items;
+      });
+    });
+
+final readCollectionItemsProvider =
+    StreamProvider.autoDispose<List<CollectionItem>>((ref) {
+      final stream = ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems(isRead: true);
+      return stream.map((rows) {
+        final backfill = <int, double>{};
+        final items = rows
+            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+            .toList();
+        if (backfill.isNotEmpty) {
+          schedulePriceBackfill(ref, backfill);
+        }
+        return items;
+      });
+    });
+
+final unreadCollectionItemsProvider =
+    StreamProvider.autoDispose<List<CollectionItem>>((ref) {
+      final stream = ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems(isRead: false);
+      return stream.map((rows) {
+        final backfill = <int, double>{};
+        final items = rows
+            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+            .toList();
+        if (backfill.isNotEmpty) {
+          schedulePriceBackfill(ref, backfill);
+        }
+        return items;
+      });
+    });
+
+final unratedCollectionItemsProvider =
+    StreamProvider.autoDispose<List<CollectionItem>>((ref) {
+      final stream = ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems(isRead: true, isUnrated: true);
+      return stream.map((rows) {
+        final backfill = <int, double>{};
+        final items = rows
+            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+            .toList();
+        if (backfill.isNotEmpty) {
+          schedulePriceBackfill(ref, backfill);
+        }
+        return items;
+      });
+    });
+
+final wishlistCollectionItemsProvider =
+    StreamProvider.autoDispose<List<CollectionItem>>((ref) {
+      final stream = ref
+          .watch(driftDatabaseProvider)
+          .libraryItemDao
+          .watchHydratedItems(ownershipStatus: "wishlist");
+      return stream.map((rows) {
+        final backfill = <int, double>{};
+        final items = rows
+            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
+            .toList();
+        if (backfill.isNotEmpty) {
+          schedulePriceBackfill(ref, backfill);
+        }
+        return items;
+      });
+    });
 
 final collectionItemsByOwnershipStatusProvider = FutureProvider.autoDispose
     .family<List<CollectionItem>, LibraryOwnershipStatus>((ref, status) async {
-      final libraryItems = status == LibraryOwnershipStatus.owned
-          ? await ref.watch(ownedLibraryItemsProvider.future)
-          : await ref.watch(allLibraryItemsProvider.future);
-      final filtered = libraryItems
-          .where((item) => item.ownershipStatus == status)
-          .toList();
-      return hydrateLibraryItems(ref, filtered);
+      switch (status) {
+        case LibraryOwnershipStatus.owned:
+          return ref.watch(ownedCollectionItemsProvider.future);
+        case LibraryOwnershipStatus.wishlist:
+          return ref.watch(wishlistCollectionItemsProvider.future);
+        case LibraryOwnershipStatus.notOwned:
+          return ref.watch(allCollectionItemsProvider.future);
+      }
     });
 
 final collectionItemsByReadStatusProvider = FutureProvider.autoDispose
     .family<List<CollectionItem>, bool>((ref, isRead) async {
-      final libraryItems = isRead
-          ? await ref.watch(readLibraryItemsProvider.future)
-          : await ref.watch(allLibraryItemsProvider.future);
-      final filtered = libraryItems
-          .where(
-            (item) =>
-                item.isRead == isRead && (isRead || item.quantityOwned > 0),
-          )
-          .toList();
-      return hydrateLibraryItems(ref, filtered);
-    });
-
-final unratedCollectionItemsProvider =
-    FutureProvider.autoDispose<List<CollectionItem>>((ref) async {
-      final items = await ref.watch(allCollectionItemsProvider.future);
-      return items
-          .where(
-            (item) => item.isRead && (item.rating == null || item.rating! <= 0),
-          )
-          .toList();
-    });
-
-final wishlistCollectionItemsProvider =
-    FutureProvider.autoDispose<List<CollectionItem>>((ref) async {
-      return ref.watch(
-        collectionItemsByOwnershipStatusProvider(
-          LibraryOwnershipStatus.wishlist,
-        ).future,
-      );
+      if (isRead) {
+        return ref.watch(readCollectionItemsProvider.future);
+      } else {
+        return ref.watch(unreadCollectionItemsProvider.future);
+      }
     });
 
 String _normalizeSeriesName(String name) {

@@ -15,14 +15,16 @@ final cachedSeriesIssueCountProvider = StreamProvider.autoDispose
         final count = row?.issueCount;
         if (count == null || count <= 0) {
           unawaited(
-            repository.getSeriesDetails(id).catchError(
-              (_) => SeriesDetails(
-                id: id,
-                name: "",
-                volume: null,
-                yearBegan: null,
-              ),
-            ),
+            repository
+                .getSeriesDetails(id)
+                .catchError(
+                  (_) => SeriesDetails(
+                    id: id,
+                    name: "",
+                    volume: null,
+                    yearBegan: null,
+                  ),
+                ),
           );
         }
         return count;

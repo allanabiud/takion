@@ -10,5 +10,5 @@ Map<String, dynamic> jsonToMap(dynamic data) {
       if (decoded is Map) return Map<String, dynamic>.from(decoded);
     } catch (_) {}
   }
-  return <String, dynamic>{};
+  return {};
 }

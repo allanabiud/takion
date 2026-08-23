@@ -37,17 +37,18 @@ class DriveRestClient {
     Dio? dio,
     http.Client? httpClient,
     Future<String> Function()? accessTokenProvider,
-  })  : _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 10),
-                receiveTimeout: const Duration(seconds: 30),
-                sendTimeout: const Duration(seconds: 30),
-              ),
-            ),
-        _httpClient = httpClient ?? http.Client(),
-        _googleSignIn = GoogleSignIn(scopes: [driveScope]),
-        _accessTokenProvider = accessTokenProvider {
+  }) : _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               connectTimeout: const Duration(seconds: 10),
+               receiveTimeout: const Duration(seconds: 30),
+               sendTimeout: const Duration(seconds: 30),
+             ),
+           ),
+       _httpClient = httpClient ?? http.Client(),
+       _googleSignIn = GoogleSignIn(scopes: [driveScope]),
+       _accessTokenProvider = accessTokenProvider {
     if (dio == null) {
       _dio.interceptors.add(
         InterceptorsWrapper(
@@ -411,10 +412,7 @@ class DriveRestClient {
     return DateTime.parse(timeStr);
   }
 
-  Future<Uint8List?> downloadFile(
-    String fileId, {
-    bool isRetry = false,
-  }) async {
+  Future<Uint8List?> downloadFile(String fileId, {bool isRetry = false}) async {
     final token = await _getAccessToken();
     final response = await _retry("DOWNLOAD $fileId", () async {
       final response = await _dio.get(
@@ -480,9 +478,9 @@ class DriveRestClient {
       request.headers["Content-Type"] = "multipart/related; boundary=$boundary";
       request.bodyBytes = bodyBytes;
 
-      final streamed = await _httpClient.send(request).timeout(
-        const Duration(seconds: 60),
-      );
+      final streamed = await _httpClient
+          .send(request)
+          .timeout(const Duration(seconds: 60));
       final response = await http.Response.fromStream(
         streamed,
       ).timeout(const Duration(seconds: 60));
@@ -548,9 +546,7 @@ class DriveRestClient {
     for (final fileName in [deltaFileName, fullFileName]) {
       final fileId = await findFileId(fileName);
       if (fileId != null) {
-        await _driveDelete(
-          "https://www.googleapis.com/drive/v3/files/$fileId",
-        );
+        await _driveDelete("https://www.googleapis.com/drive/v3/files/$fileId");
       }
     }
   }

@@ -16,7 +16,11 @@ class UniverseSearch extends _$UniverseSearch {
     return performPaginatedSearch(
       ref: ref,
       args: args,
-      emptyResult: const UniverseListPage(results: [], count: 0, currentPage: 1),
+      emptyResult: const UniverseListPage(
+        results: [],
+        count: 0,
+        currentPage: 1,
+      ),
       searchFetcher: repository.searchUniverses,
     );
   }

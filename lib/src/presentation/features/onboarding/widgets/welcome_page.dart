@@ -45,7 +45,8 @@ class WelcomePage extends StatelessWidget {
           _FeatureCard(
             icon: Icons.shopping_bag_outlined,
             title: "Track Pulls",
-            description: "Add comics to your pull list and never miss an issue.",
+            description:
+                "Add comics to your pull list and never miss an issue.",
           ),
           SizedBox(height: 12),
           _FeatureCard(

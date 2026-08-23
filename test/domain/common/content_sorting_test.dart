@@ -29,34 +29,37 @@ IssueList _buildIssue({
 
 void main() {
   group("sortIssues and selectRecentIssues", () {
-    test("sorts by dateNewest using release/cover dates, not modified timestamp", () {
-      final oldIssueModifiedRecently = _buildIssue(
-        id: 1,
-        name: "Old Comic #1",
-        storeDate: DateTime(1963, 5, 1),
-        coverDate: DateTime(1963, 5, 1),
-        modified: DateTime(2026, 8, 1),
-      );
-      final newIssue = _buildIssue(
-        id: 2,
-        name: "New Comic #50",
-        storeDate: DateTime(2025, 12, 1),
-        coverDate: DateTime(2025, 12, 1),
-        modified: DateTime(2025, 12, 2),
-      );
-      final midIssue = _buildIssue(
-        id: 3,
-        name: "Mid Comic #20",
-        storeDate: DateTime(2010, 6, 1),
-        coverDate: DateTime(2010, 6, 1),
-        modified: DateTime(2026, 1, 1),
-      );
+    test(
+      "sorts by dateNewest using release/cover dates, not modified timestamp",
+      () {
+        final oldIssueModifiedRecently = _buildIssue(
+          id: 1,
+          name: "Old Comic #1",
+          storeDate: DateTime(1963, 5, 1),
+          coverDate: DateTime(1963, 5, 1),
+          modified: DateTime(2026, 8, 1),
+        );
+        final newIssue = _buildIssue(
+          id: 2,
+          name: "New Comic #50",
+          storeDate: DateTime(2025, 12, 1),
+          coverDate: DateTime(2025, 12, 1),
+          modified: DateTime(2025, 12, 2),
+        );
+        final midIssue = _buildIssue(
+          id: 3,
+          name: "Mid Comic #20",
+          storeDate: DateTime(2010, 6, 1),
+          coverDate: DateTime(2010, 6, 1),
+          modified: DateTime(2026, 1, 1),
+        );
 
-      final issues = [oldIssueModifiedRecently, newIssue, midIssue];
-      final sorted = sortIssues(issues, ContentSortOption.dateNewest);
+        final issues = [oldIssueModifiedRecently, newIssue, midIssue];
+        final sorted = sortIssues(issues, ContentSortOption.dateNewest);
 
-      expect(sorted.map((i) => i.id).toList(), [2, 3, 1]);
-    });
+        expect(sorted.map((i) => i.id).toList(), [2, 3, 1]);
+      },
+    );
 
     test("selectRecentIssues selects newest issues regardless of series", () {
       final issues = [

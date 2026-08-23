@@ -15,9 +15,7 @@ class EntityMapper {
     return _issueToEntity(row, lookups);
   }
 
-  Future<List<IssueDetails>> batchIssueToEntity(
-    List<MetronIssue> rows,
-  ) async {
+  Future<List<IssueDetails>> batchIssueToEntity(List<MetronIssue> rows) async {
     if (rows.isEmpty) return <IssueDetails>[];
     final lookups = await _buildLookups(rows);
     return rows.map((row) => _issueToEntity(row, lookups)).toList();
@@ -34,14 +32,17 @@ class EntityMapper {
       if (row.imprintId != null) imprintIds.add(row.imprintId!);
     }
 
-    final charactersByIssue =
-        await _junctionDao.getIssueCharactersForIssues(issueIds);
+    final charactersByIssue = await _junctionDao.getIssueCharactersForIssues(
+      issueIds,
+    );
     final arcsByIssue = await _junctionDao.getIssueArcsForIssues(issueIds);
     final teamsByIssue = await _junctionDao.getIssueTeamsForIssues(issueIds);
-    final universesByIssue =
-        await _junctionDao.getIssueUniversesForIssues(issueIds);
-    final creatorsByIssue =
-        await _junctionDao.getIssueCreatorsForIssues(issueIds);
+    final universesByIssue = await _junctionDao.getIssueUniversesForIssues(
+      issueIds,
+    );
+    final creatorsByIssue = await _junctionDao.getIssueCreatorsForIssues(
+      issueIds,
+    );
 
     final characterIds = <int>{};
     final arcIds = <int>{};

@@ -38,8 +38,11 @@ void main() {
   }
 
   test("attaches If-None-Match when an ETag is cached", () async {
-    await store.store(db, "https://metron.cloud/api/arc/1/issue_list/?page=1",
-        etag: '"abc"');
+    await store.store(
+      db,
+      "https://metron.cloud/api/arc/1/issue_list/?page=1",
+      etag: '"abc"',
+    );
 
     final handler = CapturingHandler();
     interceptor.onRequest(requestOptions(), handler);
@@ -49,8 +52,11 @@ void main() {
   });
 
   test("skips conditional headers when bypass_conditional is set", () async {
-    await store.store(db, "https://metron.cloud/api/arc/1/issue_list/?page=1",
-        etag: '"abc"');
+    await store.store(
+      db,
+      "https://metron.cloud/api/arc/1/issue_list/?page=1",
+      etag: '"abc"',
+    );
 
     final handler = CapturingHandler();
     interceptor.onRequest(

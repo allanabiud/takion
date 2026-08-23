@@ -17,10 +17,7 @@ final driveSyncServiceProvider = Provider<DriveSyncService>((ref) {
   return DriveSyncService(db);
 });
 
-/// Orchestrates Google Drive backup/sync for user data:
-/// downloads remote snapshots/deltas, applies them via [SyncDeltaApplier],
-/// extracts local changes via [SyncDeltaExtractor], and uploads via
-/// [DriveRestClient]. Keeps the sync metadata watermarks up to date.
+/// Orchestrates Google Drive backup and sync for user data.
 class DriveSyncService {
   static const _deltaFileName = "takion_delta_v1.json";
   static const _fullFileName = "takion_full_v1.json";
@@ -35,22 +32,20 @@ class DriveSyncService {
     Dio? dio,
     http.Client? httpClient,
     Future<String> Function()? accessTokenProvider,
-  })  : _restClient = DriveRestClient(
-          dio: dio,
-          httpClient: httpClient,
-          accessTokenProvider: accessTokenProvider,
-        ),
-        _extractor = SyncDeltaExtractor(_db),
-        _applier = SyncDeltaApplier(_db);
+  }) : _restClient = DriveRestClient(
+         dio: dio,
+         httpClient: httpClient,
+         accessTokenProvider: accessTokenProvider,
+       ),
+       _extractor = SyncDeltaExtractor(_db),
+       _applier = SyncDeltaApplier(_db);
 
   GoogleSignInAccount? get currentUser => _restClient.currentUser;
   bool get isSignedIn => _restClient.isSignedIn;
 
   Future<GoogleSignInAccount?> signIn() => _restClient.signIn();
 
-  Future<GoogleSignInAccount?> signInSilently({
-    bool reAuthenticate = false,
-  }) =>
+  Future<GoogleSignInAccount?> signInSilently({bool reAuthenticate = false}) =>
       _restClient.signInSilently(reAuthenticate: reAuthenticate);
 
   Future<void> signOut() => _restClient.signOut();
@@ -193,7 +188,7 @@ class DriveSyncService {
     String? remoteToTimestamp;
 
     if (lastSyncTime == null) {
-      // First sync on this device: always prefer the complete full snapshot.
+      // First sync on this device: prefer complete full snapshot.
       final fullFileId = await _guarded(
         "folder",
         () => _restClient.findFileId(_fullFileName),
@@ -203,7 +198,7 @@ class DriveSyncService {
         remoteToTimestamp = await _applyRemoteFile(fullFileId, localDeviceId);
         remoteChangesApplied = remoteToTimestamp != null;
       } else {
-        // No full snapshot exists yet — this device seeds Drive below.
+        // No full snapshot exists yet; seed Drive.
         AppLogger.info("First sync: no full snapshot found, will seed Drive");
       }
     } else if (deltaFileId != null) {
@@ -237,9 +232,7 @@ class DriveSyncService {
                   : DateTime.tryParse(fromTimestamp);
               final hasGap = fromTs != null && fromTs.isAfter(lastSyncTime);
               if (hasGap) {
-                // The delta file only holds the last sync's changes; the local
-                // device missed intermediate deltas, so fall back to the
-                // always-current full snapshot.
+                // Fall back to full snapshot when intermediate deltas were missed.
                 AppLogger.info(
                   "Delta gap detected (from $fromTimestamp, local lastSync "
                   "$lastSyncTime); downloading full snapshot instead",
@@ -258,10 +251,7 @@ class DriveSyncService {
                   AppLogger.warning(
                     "Gap detected but no full snapshot found; applying delta anyway",
                   );
-                  await _guarded(
-                    "apply",
-                    () => _applier.applyDelta(payload),
-                  );
+                  await _guarded("apply", () => _applier.applyDelta(payload));
                   remoteChangesApplied = true;
                   remoteToTimestamp = payload["toTimestamp"] as String?;
                 }
@@ -324,7 +314,8 @@ class DriveSyncService {
       final now = DateTime.parse(nowStr);
       await _guarded(
         "prune",
-        () => _extractor.pruneDeletedRows(now.subtract(const Duration(days: 30))),
+        () =>
+            _extractor.pruneDeletedRows(now.subtract(const Duration(days: 30))),
       );
     } else if (remoteChangesApplied && remoteToTimestamp != null) {
       await _db.syncMetaDao.set("last_sync_timestamp", remoteToTimestamp);
@@ -335,23 +326,12 @@ class DriveSyncService {
       AppLogger.info("No changes to sync");
     }
 
-    // Keep the full snapshot on Drive current: only refresh if full file is missing,
-    // or if a full snapshot refresh hasn't occurred in > 24 hours.
+    // Refresh full snapshot when local/remote changes are applied or file is missing.
     final fullFileId = await _guarded(
       "folder",
       () => _restClient.findFileId(_fullFileName),
     );
-    final lastFullUploadRaw = await _db.syncMetaDao.get(
-      "last_full_snapshot_upload",
-    );
-    final lastFullUpload = lastFullUploadRaw == null
-        ? null
-        : DateTime.tryParse(lastFullUploadRaw);
-    final isFullSnapshotStale = lastFullUpload == null ||
-        DateTime.now().difference(lastFullUpload) > const Duration(hours: 24);
-
-    if (fullFileId == null ||
-        (isFullSnapshotStale && (hasLocalChanges || remoteChangesApplied))) {
+    if (fullFileId == null || hasLocalChanges || remoteChangesApplied) {
       AppLogger.info("Refreshing full snapshot on Drive");
       final fullPayload = await _guarded(
         "extract",
@@ -374,12 +354,8 @@ class DriveSyncService {
     return true;
   }
 
-  /// Downloads and applies a remote snapshot/delta file, returning the
-  /// payload's [toTimestamp] if it was applied, or null if it was skipped.
-  Future<String?> _applyRemoteFile(
-    String fileId,
-    String localDeviceId,
-  ) async {
+  /// Downloads and applies a remote sync file, returning [toTimestamp] if applied.
+  Future<String?> _applyRemoteFile(String fileId, String localDeviceId) async {
     final bytes = await _guarded(
       "download",
       () => _restClient.downloadFile(fileId),
@@ -418,22 +394,21 @@ class DriveSyncService {
 
   Future<void> forceSync() async {
     AppLogger.info("Forcing full sync snapshot upload");
-    final delta = await _guarded("extract", () => _extractor.extractDelta(null));
+    final delta = await _guarded(
+      "extract",
+      () => _extractor.extractDelta(null),
+    );
     final jsonBytes = utf8.encode(jsonEncode(delta));
     await _guarded(
       "upload",
-      () => _restClient.uploadFile(
-        _fullFileName,
-        Uint8List.fromList(jsonBytes),
-      ),
+      () =>
+          _restClient.uploadFile(_fullFileName, Uint8List.fromList(jsonBytes)),
     );
 
     await _guarded(
       "upload",
-      () => _restClient.uploadFile(
-        _deltaFileName,
-        Uint8List.fromList(jsonBytes),
-      ),
+      () =>
+          _restClient.uploadFile(_deltaFileName, Uint8List.fromList(jsonBytes)),
     );
 
     final nowStr = delta["toTimestamp"] as String;

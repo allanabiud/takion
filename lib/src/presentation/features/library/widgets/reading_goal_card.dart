@@ -3,17 +3,25 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart";
 import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class ReadingGoalCard extends ConsumerWidget {
+class ReadingGoalCard extends ConsumerStatefulWidget {
   final LibraryFilter filter;
 
   const ReadingGoalCard({super.key, this.filter = LibraryFilter.month});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReadingGoalCard> createState() => _ReadingGoalCardState();
+}
+
+class _ReadingGoalCardState extends ConsumerState<ReadingGoalCard> {
+  LibraryBasicStats? _lastKnownStats;
+
+  @override
+  Widget build(BuildContext context) {
     final goalAsync = ref.watch(readingGoalProvider);
-    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(filter));
+    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(widget.filter));
 
     return goalAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -21,96 +29,104 @@ class ReadingGoalCard extends ConsumerWidget {
       data: (goal) {
         if (goal == null) return const SizedBox.shrink();
 
-        return basicStatsAsync.when(
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
-          data: (stats) {
-            final progress = stats.readsInPeriod;
-            final target = goal.target;
-            final percent = target > 0
-                ? (progress / target).clamp(0.0, 1.0)
-                : 0.0;
+        if (basicStatsAsync.hasValue) {
+          _lastKnownStats = basicStatsAsync.value;
+        }
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        final stats =
+            _lastKnownStats ??
+            (basicStatsAsync.hasValue ? basicStatsAsync.value : null) ??
+            LibraryBasicStats.zero(widget.filter);
+
+        final progress = stats.readsInPeriod;
+        final target = goal.target;
+        final percent = target > 0 ? (progress / target).clamp(0.0, 1.0) : 0.0;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.emoji_events_outlined,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          "Reading Goal",
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        Text(
-                          "${(percent * 100).toStringAsFixed(0)}%",
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24,
                     ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: percent,
+                    const SizedBox(width: 12),
+                    Text(
+                      "Reading Goal",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    AnimatedCounterText(
+                      value: (percent * 100).round(),
+                      suffix: "%",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.0, end: percent),
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, animPercent, _) {
+                      return LinearProgressIndicator(
+                        value: animPercent.clamp(0.0, 1.0),
                         minHeight: 12,
                         backgroundColor: Theme.of(
                           context,
                         ).colorScheme.surfaceContainerHighest,
-                      ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "$progress / $target issues (${goal.period})",
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text("Edit Goal"),
+                      onPressed: () => _showEditGoalSheet(context, ref, goal),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "$progress / $target issues (${goal.period})",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: const Text("Edit Goal"),
-                          onPressed: () =>
-                              _showEditGoalSheet(context, ref, goal),
-                        ),
-                        const SizedBox(width: 8),
-                        TextButton.icon(
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          label: const Text("Clear"),
-                          onPressed: () async {
-                            await ref
-                                .read(readingGoalProvider.notifier)
-                                .clearGoal();
-                          },
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      label: const Text("Clear"),
+                      onPressed: () async {
+                        await ref
+                            .read(readingGoalProvider.notifier)
+                            .clearGoal();
+                      },
                     ),
                   ],
                 ),
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         );
       },
     );

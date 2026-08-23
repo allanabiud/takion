@@ -16,9 +16,6 @@ class SeriesIssueListPage {
   final List<IssueList> results;
   final int currentPage;
 
-  /// The number of results Metron returns per page, when known (i.e. when the
-  /// response indicated more than one page). Null when the single-page size is
-  /// unknown or only one page exists.
   final int? realPageSize;
 
   int? _extractPage(String? url, {required bool defaultToFirstPage}) {

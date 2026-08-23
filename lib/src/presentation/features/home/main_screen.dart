@@ -34,7 +34,8 @@ class MainScreenState extends ConsumerState<MainScreen>
   bool _overlayVisible = false;
 
   void openSearch() {
-    if (_overlayVisible && _animController.status == AnimationStatus.completed) {
+    if (_overlayVisible &&
+        _animController.status == AnimationStatus.completed) {
       return;
     }
     _overlayVisible = true;
@@ -229,9 +230,9 @@ class MainScreenState extends ConsumerState<MainScreen>
                       ? Container(
                           width: double.infinity,
                           color: Theme.of(context).colorScheme.surfaceContainer,
-                           child: Column(
-                             mainAxisSize: MainAxisSize.min,
-                             crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -240,9 +241,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                                 ),
                                 child: Text(
                                   "Syncing with Google Drive",
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.labelSmall,
+                                  style: Theme.of(context).textTheme.labelSmall,
                                 ),
                               ),
                               const LinearProgressIndicator(minHeight: 2),
@@ -504,9 +503,12 @@ class MainScreenState extends ConsumerState<MainScreen>
                             icon: const Icon(Icons.north_west),
                             onPressed: () {
                               _searchController.text = item;
-                              _searchController.selection = TextSelection.fromPosition(
-                                TextPosition(offset: _searchController.text.length),
-                              );
+                              _searchController.selection =
+                                  TextSelection.fromPosition(
+                                    TextPosition(
+                                      offset: _searchController.text.length,
+                                    ),
+                                  );
                               _searchFocusNode.requestFocus();
                             },
                           ),

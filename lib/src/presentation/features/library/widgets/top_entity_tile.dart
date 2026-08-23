@@ -5,6 +5,7 @@ import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class _TopEntityImageArgs {
@@ -121,8 +122,9 @@ class TopEntityTile extends ConsumerWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text(
-                          '${entity.count} ${entity.count == 1 ? 'issue' : 'issues'}',
+                        AnimatedCounterText(
+                          value: entity.count,
+                          suffix: entity.count == 1 ? " issue" : " issues",
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),

@@ -79,28 +79,32 @@ void main() {
     await db.favoriteDao.toggleCreator(808);
     await db.favoriteDao.toggleSeries(909);
 
-    await db.into(db.libraryItems).insert(
-      LibraryItemsCompanion.insert(
-        id: "lib-500",
-        userId: "local-user",
-        metronIssueId: 500,
-        metronSeriesId: 9,
-        ownershipStatus: "owned",
-        isRead: true,
-        format: "digital",
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
-    await db.into(db.libraryReadLogs).insert(
-      LibraryReadLogsCompanion.insert(
-        id: "log-500",
-        userId: "local-user",
-        collectionItemId: "lib-500",
-        readAt: now,
-        createdAt: now,
-      ),
-    );
+    await db
+        .into(db.libraryItems)
+        .insert(
+          LibraryItemsCompanion.insert(
+            id: "lib-500",
+            userId: "local-user",
+            metronIssueId: 500,
+            metronSeriesId: 9,
+            ownershipStatus: "owned",
+            isRead: true,
+            format: "digital",
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await db
+        .into(db.libraryReadLogs)
+        .insert(
+          LibraryReadLogsCompanion.insert(
+            id: "log-500",
+            userId: "local-user",
+            collectionItemId: "lib-500",
+            readAt: now,
+            createdAt: now,
+          ),
+        );
     await db.readingListDao.upsertList(
       ReadingListsCompanion.insert(
         id: "list-1",
@@ -124,18 +128,20 @@ void main() {
         sortOrder: 0,
       ),
     ]);
-    await db.into(db.activityEvents).insert(
-      ActivityEventsCompanion.insert(
-        id: "act-1",
-        userId: "local-user",
-        seriesId: const Value(9),
-        issueId: const Value(500),
-        eventType: "read",
-        seriesName: const Value("X-Men"),
-        issueNumber: const Value("1"),
-        timestamp: now,
-      ),
-    );
+    await db
+        .into(db.activityEvents)
+        .insert(
+          ActivityEventsCompanion.insert(
+            id: "act-1",
+            userId: "local-user",
+            seriesId: const Value(9),
+            issueId: const Value(500),
+            eventType: "read",
+            seriesName: const Value("X-Men"),
+            issueNumber: const Value("1"),
+            timestamp: now,
+          ),
+        );
 
     final bytes = await backupService.exportBackupData();
     expect(bytes, isNotEmpty);

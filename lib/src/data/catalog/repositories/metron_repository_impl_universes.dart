@@ -238,11 +238,13 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
       return await _universeRowToEntity(cached);
     }
 
-    final cachedJson =
-        await _localDataSource.getCachedUniverseDetailsResponse(universeId);
+    final cachedJson = await _localDataSource.getCachedUniverseDetailsResponse(
+      universeId,
+    );
     if (cachedJson != null && !forceRefresh) {
-      final cachedAt =
-          await _localDataSource.getCachedUniverseDetailsCachedAt(universeId);
+      final cachedAt = await _localDataSource.getCachedUniverseDetailsCachedAt(
+        universeId,
+      );
       final now = _now();
       if (cachedAt != null &&
           MetronCachePolicies.universeDetails.isFresh(cachedAt, now)) {
@@ -260,8 +262,8 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
     try {
       final response = await _remoteDataSource.getUniverseDetails(universeId);
       if (response.statusCode == 304) {
-        final cachedJson =
-            await _localDataSource.getCachedUniverseDetailsResponse(universeId);
+        final cachedJson = await _localDataSource
+            .getCachedUniverseDetailsResponse(universeId);
         if (cachedJson != null) {
           await _localDataSource.cacheUniverseDetailsResponse(
             universeId,
@@ -290,8 +292,8 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
       return dto.toEntity();
     } catch (e) {
       AppLogger.error("Failed to fetch universe details", error: e);
-      final cachedJson =
-          await _localDataSource.getCachedUniverseDetailsResponse(universeId);
+      final cachedJson = await _localDataSource
+          .getCachedUniverseDetailsResponse(universeId);
       if (cachedJson != null) {
         final dto = UniverseDetailsDto.fromJson(cachedJson);
         await _upsertUniverseDetails(dto);
@@ -336,10 +338,7 @@ mixin _UniversesRepositoryMixin on _RepositoryState {
     UniverseNamedRef? publisher;
     if (row.publisherId != null) {
       final p = await _metronEntityDao.getPublisher(row.publisherId!);
-      publisher = UniverseNamedRef(
-        id: row.publisherId!,
-        name: p?.name ?? "",
-      );
+      publisher = UniverseNamedRef(id: row.publisherId!, name: p?.name ?? "");
     }
 
     return UniverseDetails(

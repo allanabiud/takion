@@ -41,8 +41,7 @@ class SeriesDetailsScreen extends ConsumerStatefulWidget {
       _SeriesDetailsScreenState();
 }
 
-class _SeriesDetailsScreenState
-    extends ConsumerState<SeriesDetailsScreen>
+class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
     with
         ResourceUrlActions<SeriesDetails>,
         FavoriteToggleActions,

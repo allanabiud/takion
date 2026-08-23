@@ -14,15 +14,17 @@ DateTime weekEnd(DateTime date) => weekStart(date).add(const Duration(days: 6));
 
 DateTime dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 
-final issuePullListEntryProvider =
-    StreamProvider.family<PullListEntry?, int>((ref, issueId) {
-      final repository = ref.watch(pullListRepositoryProvider);
-      return repository.watchEntryByIssueId(issueId).map((entry) {
-        if (entry == null) return null;
-        if (entry.entryStatus == PullListEntryStatus.skipped) return null;
-        return entry;
-      });
-    });
+final issuePullListEntryProvider = StreamProvider.family<PullListEntry?, int>((
+  ref,
+  issueId,
+) {
+  final repository = ref.watch(pullListRepositoryProvider);
+  return repository.watchEntryByIssueId(issueId).map((entry) {
+    if (entry == null) return null;
+    if (entry.entryStatus == PullListEntryStatus.skipped) return null;
+    return entry;
+  });
+});
 
 final seriesSubscriptionProvider =
     StreamProvider.family<SeriesSubscription?, int>((ref, seriesId) {

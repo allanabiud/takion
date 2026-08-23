@@ -41,11 +41,7 @@ class _FakeDriveStore {
     return null;
   }
 
-  String upsertFile(
-    String name,
-    Uint8List content,
-    DateTime modifiedTime,
-  ) {
+  String upsertFile(String name, Uint8List content, DateTime modifiedTime) {
     final existing = findByName(name);
     if (existing != null) {
       existing.content = content;
@@ -149,17 +145,15 @@ Dio _buildFakeDio(_FakeDriveStore store) {
         if (path == "/drive/v3/files") {
           if (options.method == "GET") {
             final q = uri.queryParameters["q"] ?? "";
-            final isFolderSearch =
-                q.contains("mimeType='application/vnd.google-apps.folder'");
+            final isFolderSearch = q.contains(
+              "mimeType='application/vnd.google-apps.folder'",
+            );
             List<Map<String, String>> matches;
             if (isFolderSearch) {
               matches = store.appFolderId == null
                   ? const []
                   : [
-                      {
-                        "id": store.appFolderId!,
-                        "name": "Takion",
-                      },
+                      {"id": store.appFolderId!, "name": "Takion"},
                     ];
             } else {
               final nameMatch = RegExp(r"name='([^']*)'").firstMatch(q);
@@ -235,9 +229,7 @@ Dio _buildFakeDio(_FakeDriveStore store) {
           }
           if (options.method == "DELETE") {
             store.files.remove(fileId);
-            handler.resolve(
-              Response(requestOptions: options, statusCode: 204),
-            );
+            handler.resolve(Response(requestOptions: options, statusCode: 204));
             return;
           }
         }
@@ -274,75 +266,82 @@ Future<AppDatabase> _freshDb() async {
 
 void main() {
   group("Drive sync flow", () {
-    test("first sync seeds a full snapshot when none exists on Drive", () async {
-      final store = _FakeDriveStore();
-      final dbA = await _freshDb();
-      addTearDown(dbA.close);
-      final serviceA = _buildService(dbA, store);
+    test(
+      "first sync seeds a full snapshot when none exists on Drive",
+      () async {
+        final store = _FakeDriveStore();
+        final dbA = await _freshDb();
+        addTearDown(dbA.close);
+        final serviceA = _buildService(dbA, store);
 
-      await dbA.favoriteDao.toggleCreator(101);
-      await dbA.favoriteDao.toggleCreator(102);
+        await dbA.favoriteDao.toggleCreator(101);
+        await dbA.favoriteDao.toggleCreator(102);
 
-      await serviceA.triggerSync(ignoreThrottle: true);
+        await serviceA.triggerSync(ignoreThrottle: true);
 
-      final full = store.fileJsonByName(_fullFileName);
-      expect(full, isNotNull);
-      final creators = ((full!["tables"] as Map)["favorite_creators"]
-          ["inserts"] as List);
-      expect(creators, hasLength(2));
-      expect(store.fileJsonByName(_deltaFileName), isNotNull);
-    });
+        final full = store.fileJsonByName(_fullFileName);
+        expect(full, isNotNull);
+        final creators =
+            ((full!["tables"] as Map)["favorite_creators"]["inserts"] as List);
+        expect(creators, hasLength(2));
+        expect(store.fileJsonByName(_deltaFileName), isNotNull);
+      },
+    );
 
-    test("new device first sync fetches existing full snapshot and keeps local data",
-        () async {
-      final store = _FakeDriveStore();
-      final dbA = await _freshDb();
-      addTearDown(dbA.close);
-      final serviceA = _buildService(dbA, store);
+    test(
+      "new device first sync fetches existing full snapshot and keeps local data",
+      () async {
+        final store = _FakeDriveStore();
+        final dbA = await _freshDb();
+        addTearDown(dbA.close);
+        final serviceA = _buildService(dbA, store);
 
-      await dbA.favoriteDao.toggleCreator(101);
-      await serviceA.triggerSync(ignoreThrottle: true);
+        await dbA.favoriteDao.toggleCreator(101);
+        await serviceA.triggerSync(ignoreThrottle: true);
 
-      final dbB = await _freshDb();
-      addTearDown(dbB.close);
-      final serviceB = _buildService(dbB, store);
+        final dbB = await _freshDb();
+        addTearDown(dbB.close);
+        final serviceB = _buildService(dbB, store);
 
-      await dbB.favoriteDao.toggleCreator(202);
-      await serviceB.triggerSync(ignoreThrottle: true);
+        await dbB.favoriteDao.toggleCreator(202);
+        await serviceB.triggerSync(ignoreThrottle: true);
 
-      final creators = (await dbB.favoriteDao.getAllCreators())
-          .map((c) => c.metronCreatorId)
-          .toSet();
-      expect(creators, {101, 202});
-    });
+        final creators = (await dbB.favoriteDao.getAllCreators())
+            .map((c) => c.metronCreatorId)
+            .toSet();
+        expect(creators, {101, 202});
+      },
+    );
 
-    test("subsequent sync uploads incremental delta and refreshes full snapshot",
-        () async {
-      final store = _FakeDriveStore();
-      final dbA = await _freshDb();
-      addTearDown(dbA.close);
-      final serviceA = _buildService(dbA, store);
+    test(
+      "subsequent sync uploads incremental delta and refreshes full snapshot",
+      () async {
+        final store = _FakeDriveStore();
+        final dbA = await _freshDb();
+        addTearDown(dbA.close);
+        final serviceA = _buildService(dbA, store);
 
-      await dbA.favoriteDao.toggleCreator(101);
-      await serviceA.triggerSync(ignoreThrottle: true);
+        await dbA.favoriteDao.toggleCreator(101);
+        await serviceA.triggerSync(ignoreThrottle: true);
 
-      await dbA.favoriteDao.toggleCreator(303);
-      await serviceA.triggerSync(ignoreThrottle: true);
+        await dbA.favoriteDao.toggleCreator(303);
+        await serviceA.triggerSync(ignoreThrottle: true);
 
-      final delta = store.fileJsonByName(_deltaFileName)!;
-      final deltaInserts =
-          ((delta["tables"] as Map)["favorite_creators"]["inserts"] as List);
-      expect(deltaInserts, hasLength(1));
-      expect(deltaInserts.first["metronCreatorId"], 303);
+        final delta = store.fileJsonByName(_deltaFileName)!;
+        final deltaInserts =
+            ((delta["tables"] as Map)["favorite_creators"]["inserts"] as List);
+        expect(deltaInserts, hasLength(1));
+        expect(deltaInserts.first["metronCreatorId"], 303);
 
-      final full = store.fileJsonByName(_fullFileName)!;
-      final fullInserts =
-          ((full["tables"] as Map)["favorite_creators"]["inserts"] as List);
-      expect(
-        fullInserts.map((r) => r["metronCreatorId"]).toSet(),
-        {101, 303},
-      );
-    });
+        final full = store.fileJsonByName(_fullFileName)!;
+        final fullInserts =
+            ((full["tables"] as Map)["favorite_creators"]["inserts"] as List);
+        expect(fullInserts.map((r) => r["metronCreatorId"]).toSet(), {
+          101,
+          303,
+        });
+      },
+    );
 
     test("no-op sync does not re-upload when nothing changed", () async {
       final store = _FakeDriveStore();

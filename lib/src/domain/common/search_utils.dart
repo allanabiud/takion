@@ -42,12 +42,13 @@ mixin SearchPageMixin {
   bool get hasPrevious => previousPage != null;
 }
 
-typedef SearchFetcher<T> = Future<T> Function(
-  String query, {
-  required int page,
-  required int limit,
-  CancelToken? cancelToken,
-});
+typedef SearchFetcher<T> =
+    Future<T> Function(
+      String query, {
+      required int page,
+      required int limit,
+      CancelToken? cancelToken,
+    });
 
 Future<T> performPaginatedSearch<T extends SearchPageMixin>({
   required Ref ref,
@@ -58,7 +59,6 @@ Future<T> performPaginatedSearch<T extends SearchPageMixin>({
   Duration keepAliveDuration = AppDurations.defaultKeepAlive,
   int pageSize = metronDefaultPageSize,
 }) async {
-
   if (args.query.trim().isEmpty) return emptyResult;
 
   if (debounceDuration > Duration.zero) {
@@ -81,20 +81,12 @@ Future<T> performPaginatedSearch<T extends SearchPageMixin>({
 
   if (results.previousPage != null) {
     unawaited(
-      searchFetcher(
-        args.query,
-        page: results.previousPage!,
-        limit: pageSize,
-      ),
+      searchFetcher(args.query, page: results.previousPage!, limit: pageSize),
     );
   }
   if (results.nextPage != null) {
     unawaited(
-      searchFetcher(
-        args.query,
-        page: results.nextPage!,
-        limit: pageSize,
-      ),
+      searchFetcher(args.query, page: results.nextPage!, limit: pageSize),
     );
   }
 
@@ -114,5 +106,3 @@ Future<void> performSearchRefresh({
   await searchRefreshFetcher(query, page);
   ref.invalidateSelf();
 }
-
-

@@ -55,7 +55,9 @@ abstract class AppSettings with _$AppSettings {
   }) = _AppSettings;
 }
 
-void invalidateReleaseProviders(void Function(ProviderOrFamily provider) invalidate) {
+void invalidateReleaseProviders(
+  void Function(ProviderOrFamily provider) invalidate,
+) {
   invalidate(weeklyReleasesProvider);
   invalidate(focReleasesProvider);
 }
@@ -90,10 +92,10 @@ void invalidateCacheBackedProvidersForAutoSync(
     invalidate(pullListEntriesForWeekProvider);
     invalidate(pullsIssuesForWeekProvider);
 
-Future.microtask(() {
-        invalidate(seriesIssueListProvider);
-        invalidate(seriesDetailsIssuesProvider);
-        invalidate(seriesListProvider);
+    Future.microtask(() {
+      invalidate(seriesIssueListProvider);
+      invalidate(seriesDetailsIssuesProvider);
+      invalidate(seriesListProvider);
       invalidate(currentSeriesListProvider);
       invalidate(seriesSearchProvider);
       invalidate(readingSuggestionProvider);
@@ -202,10 +204,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   Future<void> setListSyncTimestamp(String key, DateTime timestamp) async {
     final dao = ref.read(driftDatabaseProvider).settingsDao;
-    await dao.setString(
-      "list_sync:$key",
-      timestamp.toUtc().toIso8601String(),
-    );
+    await dao.setString("list_sync:$key", timestamp.toUtc().toIso8601String());
   }
 
   void _invalidateCacheBackedProviders() {

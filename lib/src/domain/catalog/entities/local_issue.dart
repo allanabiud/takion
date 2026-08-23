@@ -1,7 +1,3 @@
-/// Projection of a locally cached Metron issue row.
-///
-/// Exposes only the fields presentation features need from the local
-/// catalog cache, so callers never depend on the Drift row type.
 class LocalIssue {
   const LocalIssue({
     required this.id,

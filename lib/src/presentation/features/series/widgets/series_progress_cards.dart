@@ -108,11 +108,7 @@ class ProgressStatCard extends StatelessWidget {
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,
                 ),
                 Center(
-                  child: Icon(
-                    icon,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
+                  child: Icon(icon, size: 18, color: theme.colorScheme.primary),
                 ),
               ],
             ),

@@ -7,9 +7,8 @@ class SuperheroCharacterCacheDao extends DatabaseAccessor<AppDatabase> {
   Future<SuperheroCharacterCacheData?> getByMetronCharacterId(
     int metronCharacterId,
   ) async {
-    return (select(
-      attachedDatabase.superheroCharacterCache,
-    )..where((t) => t.metronCharacterId.equals(metronCharacterId)))
+    return (select(attachedDatabase.superheroCharacterCache)
+          ..where((t) => t.metronCharacterId.equals(metronCharacterId)))
         .getSingleOrNull();
   }
 

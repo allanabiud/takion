@@ -196,7 +196,6 @@ class _IssueSuggestionSection extends StatelessWidget {
   final String subtitle;
   final AsyncValue<SuggestionIssueTileData?> asyncSuggestion;
 
-
   @override
   Widget build(BuildContext context) {
     return asyncSuggestion.when(
@@ -210,10 +209,7 @@ class _IssueSuggestionSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 16,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
             child: Center(child: CircularProgressIndicator()),
           ),
         ],
@@ -230,10 +226,7 @@ class _IssueSuggestionSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              TakionAlerts.cleanError(
-                error,
-                fallback: "Something went wrong",
-              ),
+              TakionAlerts.cleanError(error, fallback: "Something went wrong"),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -266,4 +259,3 @@ class _IssueSuggestionSection extends StatelessWidget {
     );
   }
 }
-

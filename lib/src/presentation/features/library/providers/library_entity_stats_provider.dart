@@ -16,7 +16,9 @@ final libraryEntityStatsProvider =
       Future<void> computeStats(List<LibraryItem> libraryItems) async {
         try {
           final owned = libraryItems
-              .where((item) => item.ownershipStatus == LibraryOwnershipStatus.owned)
+              .where(
+                (item) => item.ownershipStatus == LibraryOwnershipStatus.owned,
+              )
               .toList();
           final allRead = libraryItems.where((item) => item.isRead).toList();
 
@@ -37,7 +39,8 @@ final libraryEntityStatsProvider =
           final missingCreatorIds = <int>{};
           for (final details in cachedDetails) {
             for (final credit in details.credits) {
-              final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
+              final creatorId =
+                  (credit.creatorId != null && credit.creatorId! > 0)
                   ? credit.creatorId!
                   : credit.id;
               final rawName = credit.creator?.trim();
@@ -48,9 +51,7 @@ final libraryEntityStatsProvider =
           }
 
           final creatorMap = missingCreatorIds.isNotEmpty
-              ? await localCatalog.getCreatorsByIds(
-                  missingCreatorIds.toList(),
-                )
+              ? await localCatalog.getCreatorsByIds(missingCreatorIds.toList())
               : <int, CreatorList>{};
 
           for (final details in cachedDetails) {
@@ -74,7 +75,8 @@ final libraryEntityStatsProvider =
             }
             final seenCreatorIds = <int>{};
             for (final credit in details.credits) {
-              final creatorId = (credit.creatorId != null && credit.creatorId! > 0)
+              final creatorId =
+                  (credit.creatorId != null && credit.creatorId! > 0)
                   ? credit.creatorId!
                   : credit.id;
               if (creatorId <= 0 || !seenCreatorIds.add(creatorId)) {
@@ -130,13 +132,15 @@ final libraryEntityStatsProvider =
           final topCreators = allCreators.take(5).toList();
 
           if (!controller.isClosed) {
-            controller.add(LibraryEntityStats(
-              topPublishers: topPublishers,
-              topCharacters: topCharacters,
-              allCharacters: allCharacters,
-              topCreators: topCreators,
-              allCreators: allCreators,
-            ));
+            controller.add(
+              LibraryEntityStats(
+                topPublishers: topPublishers,
+                topCharacters: topCharacters,
+                allCharacters: allCharacters,
+                topCreators: topCreators,
+                allCreators: allCreators,
+              ),
+            );
           }
         } catch (e) {
           if (!controller.isClosed) {
@@ -145,17 +149,21 @@ final libraryEntityStatsProvider =
         }
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(
-        allLibraryItemsProvider,
-        (_, next) {
-          if (!next.hasValue) return;
-          debounced.schedule(() => computeStats(next.value!));
-        },
-      );
-
-      ref.read(allLibraryItemsProvider).whenOrNull(data: (libraryItems) {
-        debounced.schedule(() => computeStats(libraryItems));
+      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
+        _,
+        next,
+      ) {
+        if (!next.hasValue) return;
+        debounced.schedule(() => computeStats(next.value!));
       });
+
+      ref
+          .read(allLibraryItemsProvider)
+          .whenOrNull(
+            data: (libraryItems) {
+              debounced.schedule(() => computeStats(libraryItems));
+            },
+          );
 
       ref.onDispose(() {
         debounced.cancel();

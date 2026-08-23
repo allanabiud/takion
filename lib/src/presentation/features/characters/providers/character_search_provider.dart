@@ -16,8 +16,11 @@ class CharacterSearch extends _$CharacterSearch {
     return performPaginatedSearch(
       ref: ref,
       args: args,
-      emptyResult:
-          const CharacterListPage(results: [], count: 0, currentPage: 1),
+      emptyResult: const CharacterListPage(
+        results: [],
+        count: 0,
+        currentPage: 1,
+      ),
       searchFetcher: repository.searchCharacters,
     );
   }

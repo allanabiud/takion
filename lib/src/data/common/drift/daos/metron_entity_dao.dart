@@ -7,7 +7,6 @@ import "package:takion/src/data/common/drift/database.dart";
 class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   MetronEntityDao(super.db);
 
-
   Future<MetronIssue?> getIssue(int id) async {
     return (select(
       attachedDatabase.metronIssues,
@@ -22,19 +21,13 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     return {for (final r in rows) r.id: r};
   }
 
-  Future<List<MetronIssue>> getIssuesBySeries(
-    int seriesId, {
-    int limit = 200,
-  }) {
+  Future<List<MetronIssue>> getIssuesBySeries(int seriesId, {int limit = 200}) {
     return (select(attachedDatabase.metronIssues)
           ..where((t) => t.seriesId.equals(seriesId))
           ..orderBy([
-            (t) => OrderingTerm(
-              expression: t.coverDate,
-              mode: OrderingMode.desc,
-            ),
             (t) =>
-                OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+                OrderingTerm(expression: t.coverDate, mode: OrderingMode.desc),
+            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
           ])
           ..limit(limit))
         .get();
@@ -47,12 +40,9 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     return (select(attachedDatabase.metronIssues)
           ..where((t) => t.seriesId.equals(seriesId))
           ..orderBy([
-            (t) => OrderingTerm(
-              expression: t.coverDate,
-              mode: OrderingMode.desc,
-            ),
             (t) =>
-                OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+                OrderingTerm(expression: t.coverDate, mode: OrderingMode.desc),
+            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
           ])
           ..limit(limit))
         .watch();
@@ -87,7 +77,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           .write(MetronSeriesCompanion(computedCoverUrl: Value(coverUrl)));
     }
   }
-
 
   Future<MetronSery?> getSeries(int id) async {
     return (select(
@@ -185,7 +174,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     });
   }
 
-
   Future<MetronCreator?> getCreator(int id) async {
     return (select(
       attachedDatabase.metronCreators,
@@ -211,7 +199,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
       attachedDatabase.metronCreators,
     ).insertOnConflictUpdate(companion);
   }
-
 
   Future<MetronCharacter?> getCharacter(int id) async {
     return (select(
@@ -239,7 +226,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-
   Future<MetronArc?> getArc(int id) async {
     return (select(
       attachedDatabase.metronArcs,
@@ -264,7 +250,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     await into(attachedDatabase.metronArcs).insertOnConflictUpdate(companion);
   }
 
-
   Future<MetronTeam?> getTeam(int id) async {
     return (select(
       attachedDatabase.metronTeams,
@@ -288,7 +273,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   Future<void> upsertTeam(MetronTeamsCompanion companion) async {
     await into(attachedDatabase.metronTeams).insertOnConflictUpdate(companion);
   }
-
 
   Future<MetronUniverse?> getUniverse(int id) async {
     return (select(
@@ -316,7 +300,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-
   Future<MetronPublisher?> getPublisher(int id) async {
     return (select(
       attachedDatabase.metronPublishers,
@@ -343,7 +326,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
     ).insertOnConflictUpdate(companion);
   }
 
-
   Future<MetronImprint?> getImprint(int id) async {
     return (select(
       attachedDatabase.metronImprints,
@@ -369,7 +351,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
       attachedDatabase.metronImprints,
     ).insertOnConflictUpdate(companion);
   }
-
 
   Future<MetronReadingList?> getMetronReadingList(int id) async {
     return (select(
@@ -401,7 +382,6 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
           ]))
         .get();
   }
-
 
   Future<void> upsertIssueStub(
     int id,
@@ -611,12 +591,12 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<Map<int, String>> getAllSeriesNames() async {
-    final rows = await (selectOnly(attachedDatabase.metronSeries)
-          ..addColumns([
-            attachedDatabase.metronSeries.id,
-            attachedDatabase.metronSeries.name,
-          ]))
-        .get();
+    final rows =
+        await (selectOnly(attachedDatabase.metronSeries)..addColumns([
+              attachedDatabase.metronSeries.id,
+              attachedDatabase.metronSeries.name,
+            ]))
+            .get();
     return {
       for (final row in rows)
         row.read(attachedDatabase.metronSeries.id)!:
@@ -625,12 +605,12 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<Map<int, String>> getAllPublisherNames() async {
-    final rows = await (selectOnly(attachedDatabase.metronPublishers)
-          ..addColumns([
-            attachedDatabase.metronPublishers.id,
-            attachedDatabase.metronPublishers.name,
-          ]))
-        .get();
+    final rows =
+        await (selectOnly(attachedDatabase.metronPublishers)..addColumns([
+              attachedDatabase.metronPublishers.id,
+              attachedDatabase.metronPublishers.name,
+            ]))
+            .get();
     return {
       for (final row in rows)
         row.read(attachedDatabase.metronPublishers.id)!:
@@ -639,12 +619,12 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<Map<int, String>> getAllCharacterNames() async {
-    final rows = await (selectOnly(attachedDatabase.metronCharacters)
-          ..addColumns([
-            attachedDatabase.metronCharacters.id,
-            attachedDatabase.metronCharacters.name,
-          ]))
-        .get();
+    final rows =
+        await (selectOnly(attachedDatabase.metronCharacters)..addColumns([
+              attachedDatabase.metronCharacters.id,
+              attachedDatabase.metronCharacters.name,
+            ]))
+            .get();
     return {
       for (final row in rows)
         row.read(attachedDatabase.metronCharacters.id)!:
@@ -653,12 +633,12 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<Map<int, String>> getAllCreatorNames() async {
-    final rows = await (selectOnly(attachedDatabase.metronCreators)
-          ..addColumns([
-            attachedDatabase.metronCreators.id,
-            attachedDatabase.metronCreators.name,
-          ]))
-        .get();
+    final rows =
+        await (selectOnly(attachedDatabase.metronCreators)..addColumns([
+              attachedDatabase.metronCreators.id,
+              attachedDatabase.metronCreators.name,
+            ]))
+            .get();
     return {
       for (final row in rows)
         row.read(attachedDatabase.metronCreators.id)!:
@@ -667,12 +647,12 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<Map<int, String>> getAllImprintNames() async {
-    final rows = await (selectOnly(attachedDatabase.metronImprints)
-          ..addColumns([
-            attachedDatabase.metronImprints.id,
-            attachedDatabase.metronImprints.name,
-          ]))
-        .get();
+    final rows =
+        await (selectOnly(attachedDatabase.metronImprints)..addColumns([
+              attachedDatabase.metronImprints.id,
+              attachedDatabase.metronImprints.name,
+            ]))
+            .get();
     return {
       for (final row in rows)
         row.read(attachedDatabase.metronImprints.id)!:
