@@ -6,6 +6,10 @@ import "package:takion/src/data/common/drift/database.dart";
 import "package:takion/src/data/common/services/local_backup_service.dart";
 
 void main() {
+  setUpAll(() {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  });
+
   late AppDatabase db;
   late LocalBackupService backupService;
 

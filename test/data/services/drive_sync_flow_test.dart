@@ -2,6 +2,7 @@ import "dart:convert";
 import "dart:typed_data";
 
 import "package:dio/dio.dart";
+import "package:drift/drift.dart" show driftRuntimeOptions;
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:http/http.dart" as http;
@@ -265,6 +266,10 @@ Future<AppDatabase> _freshDb() async {
 }
 
 void main() {
+  setUpAll(() {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  });
+
   group("Drive sync flow", () {
     test(
       "first sync seeds a full snapshot when none exists on Drive",

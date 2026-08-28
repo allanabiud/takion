@@ -1,10 +1,14 @@
-import "package:drift/drift.dart" show Value;
+import "package:drift/drift.dart" show Value, driftRuntimeOptions;
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:takion/src/data/common/drift/database.dart";
 import "package:takion/src/data/common/services/drive_backup_service.dart";
 
 void main() {
+  setUpAll(() {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  });
+
   late AppDatabase db;
   late DriveSyncService syncService;
 

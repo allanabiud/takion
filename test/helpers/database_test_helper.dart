@@ -5,6 +5,7 @@ import "package:takion/src/data/common/drift/database.dart";
 
 /// Creates an in-memory [AppDatabase] suitable for isolated unit and DAO testing.
 AppDatabase createInMemoryDatabase() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(() async {
     await db.close();
