@@ -68,7 +68,10 @@ void callbackDispatcher() {
       try {
         await db?.close();
       } catch (closeError) {
-        AppLogger.warning("Error closing background database", error: closeError);
+        AppLogger.warning(
+          "Error closing background database",
+          error: closeError,
+        );
       }
     }
   });
