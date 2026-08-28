@@ -10,7 +10,7 @@ import "package:talker_flutter/talker_flutter.dart";
 import "package:takion/src/core/network/metron_account_service.dart";
 import "package:takion/src/core/notifications/notification_service.dart";
 import "package:takion/src/core/notifications/notification_settings_provider.dart";
-import "package:takion/src/data/common/services/drive_backup_service.dart";
+import "package:takion/src/core/session/session_coordinator.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/core/router/app_router.dart";
 import "package:takion/src/core/router/app_router.gr.dart"
@@ -18,7 +18,6 @@ import "package:takion/src/core/router/app_router.gr.dart"
 import "package:takion/src/core/router/auth_guard.dart";
 import "package:takion/src/core/theme/app_theme.dart";
 import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
-import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
 import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/utils/shortcut_handler.dart";
@@ -34,7 +33,6 @@ class _TakionAppState extends ConsumerState<TakionApp>
     with WidgetsBindingObserver {
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
-  bool _metronCheckedForSession = false;
   bool _hasSeenOnboarding = false;
 
   @override
@@ -81,10 +79,27 @@ class _TakionAppState extends ConsumerState<TakionApp>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      _runMetronConnectionCheckIfNeeded();
-      await _reconcileSubscriptionPullsOnSessionStart();
-      _runDriveAutoSyncIfEnabled();
-      await _scheduleWeeklyPullNotification();
+      final coordinator = ref.read(sessionCoordinatorProvider);
+      final status = await coordinator.validateMetronConnectionIfNeeded();
+      if (!mounted) return;
+
+      if (status == MetronConnectionStatus.invalid) {
+        TakionAlerts.error(
+          context,
+          "Metron connection is invalid. Please reconnect your Metron account.",
+        );
+        _appRouter.replaceAll([const AuthorizeMetronRoute()]);
+        return;
+      }
+
+      await coordinator.reconcileSubscriptionPulls();
+      if (!mounted) return;
+
+      final container = ProviderScope.containerOf(context, listen: false);
+      await coordinator.runDriveAutoSync(
+        onInvalidateCache: container.invalidate,
+      );
+      await scheduleWeeklyPullNotification(ref);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -107,108 +122,6 @@ class _TakionAppState extends ConsumerState<TakionApp>
         });
   }
 
-  Future<void> _reconcileSubscriptionPullsOnSessionStart() async {
-    final authState = ref.read(authStateProvider).value;
-    if (authState != AuthStatus.authenticated) return;
-
-    final service = ref.read(metronAccountServiceProvider);
-    if (!await service.getConnection()) return;
-
-    try {
-      await ref.read(subscriptionPullReconcilerProvider).reconcile();
-    } catch (error) {
-      if (!mounted) return;
-      TakionAlerts.safeError(
-        context,
-        error,
-        userMessage: "Background pull reconciliation failed",
-      );
-    }
-  }
-
-  Future<void> _runDriveAutoSyncIfEnabled({bool ignoreThrottle = false}) async {
-    if (!mounted) return;
-    final container = ProviderScope.containerOf(context, listen: false);
-    final syncNotifier = ref.read(driveSyncProvider.notifier);
-    await syncNotifier.ensureInitialized();
-    final syncState = ref.read(driveSyncProvider);
-    if (!syncState.enabled) {
-      AppLogger.info("Drive auto sync skipped: disabled");
-      return;
-    }
-    final driveService = ref.read(driveSyncServiceProvider);
-    final account = await driveService.signInSilently();
-    if (account == null) {
-      AppLogger.info("Drive auto sync skipped: no account");
-      return;
-    }
-    if (!ignoreThrottle && await driveService.isThrottled()) {
-      AppLogger.info(
-        "Drive auto sync skipped: throttled (< 5m since last sync attempt)",
-      );
-      return;
-    }
-    AppLogger.info("Drive auto sync triggered");
-    syncNotifier.setSyncing(true);
-    try {
-      final ran = await driveService.triggerSync(
-        ignoreThrottle: ignoreThrottle,
-      );
-      if (ran) {
-        await syncNotifier.updateLastSync();
-        syncNotifier.clearError();
-        invalidateCacheBackedProvidersForAutoSync(container.invalidate);
-        AppLogger.info("Drive auto sync completed successfully");
-      }
-    } catch (e) {
-      AppLogger.warning("Background sync failed", error: e);
-      syncNotifier.setError(e.toString());
-    } finally {
-      syncNotifier.setSyncing(false);
-    }
-  }
-
-  Future<void> _scheduleWeeklyPullNotification() async {
-    await scheduleWeeklyPullNotification(ref);
-  }
-
-  Future<void> _runMetronConnectionCheckIfNeeded() async {
-    final authState = ref.read(authStateProvider).value;
-    if (authState != AuthStatus.authenticated || _metronCheckedForSession) {
-      return;
-    }
-
-    _metronCheckedForSession = true;
-    final service = ref.read(metronAccountServiceProvider);
-    final hasStoredConnection = await service.getConnection();
-
-    if (!mounted || !hasStoredConnection) {
-      return;
-    }
-
-    AppLogger.info("Metron session check: stored connection found");
-    final status = await service.validateStoredConnection();
-
-    if (!mounted) return;
-
-    if (status == MetronConnectionStatus.invalid) {
-      AppLogger.warning(
-        "Metron session check: invalid credentials, disconnecting",
-      );
-      await service.disconnect();
-      ref.invalidate(authStateProvider);
-      if (!mounted) return;
-
-      TakionAlerts.error(
-        context,
-        "Metron connection is invalid. Please reconnect your Metron account.",
-      );
-      _appRouter.replaceAll([const AuthorizeMetronRoute()]);
-    } else {
-      AppLogger.info("Metron session check: status=$status");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeAsync = ref.watch(themeProvider);
@@ -217,24 +130,37 @@ class _TakionAppState extends ConsumerState<TakionApp>
     if (_hasSeenOnboarding) {
       ref.listen(currentWeekPullsProvider, (previous, next) {
         if (next.hasValue && mounted) {
-          _scheduleWeeklyPullNotification();
+          scheduleWeeklyPullNotification(ref);
         }
       });
     }
 
-    ref.listen(authStateProvider, (previous, next) {
+    ref.listen(authStateProvider, (previous, next) async {
       if (!next.isLoading && previous?.value != next.value) {
         _appRouter.reevaluateGuards();
+        final coordinator = ref.read(sessionCoordinatorProvider);
+        coordinator.onAuthStatusChanged(previous?.value, next.value);
 
         final current = next.value;
         if (current == AuthStatus.authenticated) {
-          _metronCheckedForSession = false;
-          _runMetronConnectionCheckIfNeeded();
-          _reconcileSubscriptionPullsOnSessionStart().then(
-            (_) => _scheduleWeeklyPullNotification(),
-          );
+          final status = await coordinator.validateMetronConnectionIfNeeded();
+          if (!mounted) return;
+
+          if (status == MetronConnectionStatus.invalid) {
+            final navContext = _appRouter.navigatorKey.currentContext;
+            if (navContext != null && navContext.mounted) {
+              TakionAlerts.error(
+                navContext,
+                "Metron connection is invalid. Please reconnect your Metron account.",
+              );
+            }
+            _appRouter.replaceAll([const AuthorizeMetronRoute()]);
+            return;
+          }
+
+          await coordinator.reconcileSubscriptionPulls();
+          await scheduleWeeklyPullNotification(ref);
         } else if (current == AuthStatus.unauthenticated) {
-          _metronCheckedForSession = false;
           if (previous?.value == AuthStatus.authenticated &&
               _hasSeenOnboarding &&
               mounted) {
@@ -295,9 +221,10 @@ class _TakionAppState extends ConsumerState<TakionApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     AppLogger.debug("App lifecycle state: $state");
     if (state == AppLifecycleState.resumed && mounted) {
-      _scheduleWeeklyPullNotification();
-      ref.read(driftDatabaseProvider).apiCacheDao.deleteStaleEntries();
-      _runDriveAutoSyncIfEnabled();
+      final container = ProviderScope.containerOf(context, listen: false);
+      ref.read(sessionCoordinatorProvider).onAppResumed(
+        onInvalidateCache: container.invalidate,
+      );
     }
   }
 

@@ -1,12 +1,17 @@
-import "dart:math" as math;
-
 import "package:drift/drift.dart";
 import "package:takion/src/data/common/drift/database.dart";
+import "package:uuid/uuid.dart";
 
 class SyncDeltaExtractor {
-  const SyncDeltaExtractor(this._db);
+  const SyncDeltaExtractor(
+    this._db, {
+    this.uuidGenerator,
+    this.clock = DateTime.now,
+  });
 
   final AppDatabase _db;
+  final String Function()? uuidGenerator;
+  final DateTime Function() clock;
 
   Future<Map<String, dynamic>> extractDelta(DateTime? since) async {
     final sinceStr = since?.toUtc().toIso8601String();
@@ -191,7 +196,7 @@ class SyncDeltaExtractor {
       "version": 2,
       "deviceId": await getDeviceId(),
       "fromTimestamp": sinceStr,
-      "toTimestamp": DateTime.now().toUtc().toIso8601String(),
+      "toTimestamp": clock().toUtc().toIso8601String(),
       "tables": tablesData,
     };
   }
@@ -212,27 +217,10 @@ class SyncDeltaExtractor {
   Future<String> getDeviceId() async {
     final existingId = await _db.syncMetaDao.get("local_device_id");
     if (existingId == null) {
-      final newId = _generateUuid();
+      final newId = uuidGenerator?.call() ?? const Uuid().v4();
       await _db.syncMetaDao.set("local_device_id", newId);
       return newId;
     }
     return existingId;
-  }
-
-  String _generateUuid() {
-    final r = math.Random();
-    final parts = [
-      _hex(r, 8),
-      _hex(r, 4),
-      "4${_hex(r, 3)}",
-      (8 + r.nextInt(4)).toRadixString(16) + _hex(r, 3),
-      _hex(r, 12),
-    ];
-    return parts.join("-");
-  }
-
-  String _hex(math.Random r, int len) {
-    final codes = List.generate(len, (_) => r.nextInt(16).toRadixString(16));
-    return codes.join();
   }
 }

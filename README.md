@@ -72,6 +72,12 @@
 
 ---
 
+## 👩‍💻 Development & Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on running code generation (`build_runner`), static analysis, test suites, and quality guidelines.
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
