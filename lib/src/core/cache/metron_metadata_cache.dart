@@ -6,6 +6,10 @@ import "package:takion/src/data/common/drift/daos/metron_entity_dao.dart";
 /// basic entity names and relationships without spawning asynchronous futures or
 /// triggering secondary database queries.
 class MetronMetadataCache {
+  MetronMetadataCache({this.versionNotifier});
+
+  final MetadataVersionNotifier? versionNotifier;
+
   final Map<int, String> _seriesNames = {};
   final Map<int, String> _publisherNames = {};
   final Map<int, String> _characterNames = {};
@@ -18,44 +22,78 @@ class MetronMetadataCache {
   String? getCreatorName(int id) => _creatorNames[id];
   String? getImprintName(int id) => _imprintNames[id];
 
+  void _notify() {
+    versionNotifier?.bump();
+  }
+
   void indexSeries(int id, String name) {
-    if (name.isNotEmpty) _seriesNames[id] = name;
+    if (name.isNotEmpty && _seriesNames[id] != name) {
+      _seriesNames[id] = name;
+      _notify();
+    }
   }
 
   void indexPublisher(int id, String name) {
-    if (name.isNotEmpty) _publisherNames[id] = name;
+    if (name.isNotEmpty && _publisherNames[id] != name) {
+      _publisherNames[id] = name;
+      _notify();
+    }
   }
 
   void indexCharacter(int id, String name) {
-    if (name.isNotEmpty) _characterNames[id] = name;
+    if (name.isNotEmpty && _characterNames[id] != name) {
+      _characterNames[id] = name;
+      _notify();
+    }
   }
 
   void indexCreator(int id, String name) {
-    if (name.isNotEmpty) _creatorNames[id] = name;
+    if (name.isNotEmpty && _creatorNames[id] != name) {
+      _creatorNames[id] = name;
+      _notify();
+    }
   }
 
   void indexImprint(int id, String name) {
-    if (name.isNotEmpty) _imprintNames[id] = name;
+    if (name.isNotEmpty && _imprintNames[id] != name) {
+      _imprintNames[id] = name;
+      _notify();
+    }
   }
 
   void indexBatchSeries(Map<int, String> entries) {
-    _seriesNames.addAll(entries);
+    if (entries.isNotEmpty) {
+      _seriesNames.addAll(entries);
+      _notify();
+    }
   }
 
   void indexBatchPublishers(Map<int, String> entries) {
-    _publisherNames.addAll(entries);
+    if (entries.isNotEmpty) {
+      _publisherNames.addAll(entries);
+      _notify();
+    }
   }
 
   void indexBatchCharacters(Map<int, String> entries) {
-    _characterNames.addAll(entries);
+    if (entries.isNotEmpty) {
+      _characterNames.addAll(entries);
+      _notify();
+    }
   }
 
   void indexBatchCreators(Map<int, String> entries) {
-    _creatorNames.addAll(entries);
+    if (entries.isNotEmpty) {
+      _creatorNames.addAll(entries);
+      _notify();
+    }
   }
 
   void indexBatchImprints(Map<int, String> entries) {
-    _imprintNames.addAll(entries);
+    if (entries.isNotEmpty) {
+      _imprintNames.addAll(entries);
+      _notify();
+    }
   }
 
   Future<void> hydrateFromDatabase(MetronEntityDao entityDao) async {
@@ -70,6 +108,7 @@ class MetronMetadataCache {
     _characterNames.addAll(characters);
     _creatorNames.addAll(creators);
     _imprintNames.addAll(imprints);
+    _notify();
   }
 
   void clear() {
@@ -78,10 +117,26 @@ class MetronMetadataCache {
     _characterNames.clear();
     _creatorNames.clear();
     _imprintNames.clear();
+    _notify();
   }
 }
 
+class MetadataVersionNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() {
+    state++;
+  }
+}
+
+final metronMetadataVersionProvider =
+    NotifierProvider<MetadataVersionNotifier, int>(
+      MetadataVersionNotifier.new,
+    );
+
 /// Global Riverpod provider for [MetronMetadataCache].
 final metronMetadataCacheProvider = Provider<MetronMetadataCache>((ref) {
-  return MetronMetadataCache();
+  final versionNotifier = ref.read(metronMetadataVersionProvider.notifier);
+  return MetronMetadataCache(versionNotifier: versionNotifier);
 });

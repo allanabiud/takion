@@ -1,6 +1,7 @@
 import "dart:async";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/cache/metron_metadata_cache.dart";
+export "package:takion/src/core/cache/metron_metadata_cache.dart";
 import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/core/storage/drift_database_provider.dart";
@@ -24,10 +25,6 @@ import "package:takion/src/domain/repositories.dart";
 
 final userStateCacheProvider = Provider<UserStateCache>((ref) {
   return UserStateCache();
-});
-
-final metronMetadataCacheProvider = Provider<MetronMetadataCache>((ref) {
-  return MetronMetadataCache();
 });
 
 final metronRemoteDataSourceProvider = Provider<MetronRemoteDataSource>((ref) {
