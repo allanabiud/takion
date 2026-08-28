@@ -13,9 +13,10 @@ void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     AppLogger.info("Workmanager background task executing: $taskName");
     WidgetsFlutterBinding.ensureInitialized();
+    AppDatabase? db;
     DriveSyncService? driveService;
     try {
-      final db = AppDatabase();
+      db = AppDatabase();
       final enabled = await db.settingsDao.getBool(
         "drive_sync_enabled",
         defaultValue: false,
@@ -63,6 +64,12 @@ void callbackDispatcher() {
         );
       } catch (_) {}
       return false;
+    } finally {
+      try {
+        await db?.close();
+      } catch (closeError) {
+        AppLogger.warning("Error closing background database", error: closeError);
+      }
     }
   });
 }
