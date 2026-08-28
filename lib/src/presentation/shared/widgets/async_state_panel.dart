@@ -66,17 +66,15 @@ class AsyncStatePanel extends StatelessWidget {
   const AsyncStatePanel.empty({
     super.key,
     required String message,
-    String? title,
-    IconData icon = Icons.inbox_outlined,
+    this.title,
+    this.icon = Icons.inbox_outlined,
     VoidCallback? onAction,
     String actionLabel = "Explore",
     this.padding = const EdgeInsets.all(24),
-  }) : title = title,
-       message = null,
+  }) : message = null,
        errorMessage = message,
        onRetry = onAction,
        retryLabel = actionLabel,
-       icon = icon,
        _isLoading = false,
        _isInline = false;
 
