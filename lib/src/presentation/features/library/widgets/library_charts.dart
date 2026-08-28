@@ -23,6 +23,8 @@ class ReadingTrendChart extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 1.7,
       child: LineChart(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
         LineChartData(
           gridData: FlGridData(
             show: true,
@@ -256,6 +258,8 @@ class PublisherDistributionChart extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 1.5,
       child: BarChart(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
           maxY: maxCount.toDouble(),

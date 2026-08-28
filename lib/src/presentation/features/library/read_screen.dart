@@ -477,71 +477,86 @@ class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
   }
 }
 
-class _ReadTrendsChart extends ConsumerWidget {
+class _ReadTrendsChart extends ConsumerStatefulWidget {
   final LibraryFilter filter;
 
   const _ReadTrendsChart({required this.filter});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trendsAsync = ref.watch(libraryReadingTrendsProvider(filter));
+  ConsumerState<_ReadTrendsChart> createState() => _ReadTrendsChartState();
+}
 
-    return trendsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ShimmerWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeaderSkeleton(),
-              SizedBox(height: 12),
-              SkeletonBox(height: 200),
-            ],
+class _ReadTrendsChartState extends ConsumerState<_ReadTrendsChart> {
+  List<ReadingTrendPoint>? _lastKnownTrends;
+
+  @override
+  Widget build(BuildContext context) {
+    final trendsAsync = ref.watch(libraryReadingTrendsProvider(widget.filter));
+
+    if (trendsAsync.hasValue) {
+      _lastKnownTrends = trendsAsync.value;
+    }
+
+    final trends = _lastKnownTrends ?? trendsAsync.value;
+
+    if (trends == null) {
+      if (trendsAsync.isLoading) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: ShimmerWidget(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeaderSkeleton(),
+                SizedBox(height: 12),
+                SkeletonBox(height: 200),
+              ],
+            ),
           ),
-        ),
-      ),
-      error: (_, _) => const Padding(
+        );
+      }
+      return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: EmptyContentState(
           icon: Icons.show_chart_outlined,
           message: "No reading trends yet.",
         ),
-      ),
-      data: (trends) {
-        if (trends.isEmpty) {
-          return const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SectionHeader(title: "READING TRENDS"),
-              ),
-              SizedBox(height: 12),
-              EmptyContentState(
-                icon: Icons.show_chart_outlined,
-                message: "No reading trends available.",
-              ),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SectionHeader(title: "READING TRENDS"),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                height: 200,
-                child: ReadingTrendChart(data: trends),
-              ),
-            ),
-          ],
-        );
-      },
+      );
+    }
+
+    if (trends.isEmpty) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: SectionHeader(title: "READING TRENDS"),
+          ),
+          SizedBox(height: 12),
+          EmptyContentState(
+            icon: Icons.show_chart_outlined,
+            message: "No reading trends available.",
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SectionHeader(title: "READING TRENDS"),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SizedBox(
+            height: 200,
+            child: ReadingTrendChart(data: trends),
+          ),
+        ),
+      ],
     );
   }
 }
