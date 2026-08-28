@@ -1,4 +1,6 @@
 @Tags(["rollback"])
+library;
+
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:takion/src/data/common/drift/database.dart";
