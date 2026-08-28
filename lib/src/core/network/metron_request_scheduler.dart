@@ -16,6 +16,7 @@ class RateLimitState {
   final int sustainedReset;
   final int burstRemaining;
   final int burstReset;
+  final bool hasObservedHeaders;
 
   const RateLimitState({
     this.sustainedLimit = 5000,
@@ -23,6 +24,7 @@ class RateLimitState {
     this.sustainedReset = 0,
     this.burstRemaining = 20,
     this.burstReset = 0,
+    this.hasObservedHeaders = false,
   });
 
   bool get isSustainedExhausted =>
@@ -86,6 +88,7 @@ class MetronRequestScheduler {
   int _sustainedReset = 0;
   int _burstRemaining = 20;
   int _burstReset = 0;
+  bool _hasObservedHeaders = false;
 
   int _activeRequests = 0;
   Timer? _wakeTimer;
@@ -100,6 +103,7 @@ class MetronRequestScheduler {
     sustainedReset: _sustainedReset,
     burstRemaining: _burstRemaining,
     burstReset: _burstReset,
+    hasObservedHeaders: _hasObservedHeaders,
   );
 
   void _notify() => stateNotifier.value = state;
@@ -302,16 +306,28 @@ class MetronRequestScheduler {
     );
     final burstReset = _parseIntHeader(headers, "x-ratelimit-burst-reset");
 
-    if (sustainedLimit != null) _sustainedLimit = sustainedLimit;
-    if (sustainedRemaining != null) _sustainedRemaining = sustainedRemaining;
+    if (sustainedLimit != null) {
+      _sustainedLimit = sustainedLimit;
+      _hasObservedHeaders = true;
+    }
+    if (sustainedRemaining != null) {
+      _sustainedRemaining = sustainedRemaining;
+      _hasObservedHeaders = true;
+    }
     if (sustainedReset != null) _sustainedReset = sustainedReset;
     if (burstRemaining != null) _burstRemaining = burstRemaining;
     if (burstReset != null) _burstReset = burstReset;
   }
 
   int? _parseIntHeader(Map<String, List<String>> headers, String name) {
-    final value = headers[name]?.firstOrNull;
-    if (value == null) return null;
-    return int.tryParse(value);
+    final target = name.toLowerCase();
+    for (final entry in headers.entries) {
+      if (entry.key.toLowerCase() == target) {
+        final value = entry.value.firstOrNull;
+        if (value == null) return null;
+        return int.tryParse(value);
+      }
+    }
+    return null;
   }
 }

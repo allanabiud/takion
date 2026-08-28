@@ -135,7 +135,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "issue/",
             queryParameters: queryParameters,
@@ -163,7 +163,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "issue/",
             queryParameters: queryParameters,
@@ -186,7 +186,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "series/",
             queryParameters: queryParameters,
@@ -217,7 +217,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "series/",
             queryParameters: queryParameters,
@@ -245,7 +245,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : (storeDateGte != null || storeDateLte != null)
         ? await _dio.get(
             "issue/",
@@ -288,7 +288,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "character/",
             queryParameters: queryParameters,
@@ -313,7 +313,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "character/",
             queryParameters: {"name": normalized, "page": page},
@@ -338,7 +338,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "character/$characterId/issue_list/",
             queryParameters: {"page": page},
@@ -362,7 +362,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "creator/",
             queryParameters: queryParameters,
@@ -386,7 +386,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "creator/",
             queryParameters: {"name": normalized, "page": page},
@@ -415,7 +415,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "universe/",
             queryParameters: queryParameters,
@@ -439,7 +439,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "universe/",
             queryParameters: {"name": normalized, "page": page},
@@ -468,7 +468,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "imprint/",
             queryParameters: queryParameters,
@@ -492,7 +492,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "imprint/",
             queryParameters: {"name": normalized, "page": page},
@@ -522,7 +522,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "team/",
             queryParameters: {"name": normalized, "page": page},
@@ -544,7 +544,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "team/",
             queryParameters: queryParameters,
@@ -566,7 +566,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "team/$teamId/issue_list/",
             queryParameters: {"page": page},
@@ -591,7 +591,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "arc/",
             queryParameters: {"name": normalized, "page": page},
@@ -613,7 +613,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "arc/",
             queryParameters: queryParameters,
@@ -635,7 +635,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "arc/$arcId/issue_list/",
             queryParameters: {"page": page},
@@ -676,7 +676,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
     }
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "publisher/",
             queryParameters: queryParameters,
@@ -700,7 +700,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "publisher/",
             queryParameters: {"name": normalized, "page": page},
@@ -725,7 +725,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "publisher/$publisherId/series_list/",
             queryParameters: {"page": page},
@@ -766,7 +766,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
 
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "reading_list/",
             queryParameters: queryParameters,
@@ -791,7 +791,7 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     CancelToken? cancelToken,
   }) async {
     final response = nextUrl != null
-        ? await _dio.getUri(nextUrl)
+        ? await _dio.getUri(nextUrl, cancelToken: cancelToken)
         : await _dio.get(
             "reading_list/$id/items/",
             queryParameters: {"page": page},
