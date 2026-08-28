@@ -11,7 +11,20 @@ class AsyncStatePanel extends StatelessWidget {
        onRetry = null,
        retryLabel = "Retry",
        icon = null,
-       _isLoading = true;
+       _isLoading = true,
+       _isInline = false;
+
+  const AsyncStatePanel.inlineLoading({
+    super.key,
+    this.message,
+    this.padding = const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+  }) : title = null,
+       errorMessage = null,
+       onRetry = null,
+       retryLabel = "Retry",
+       icon = null,
+       _isLoading = true,
+       _isInline = true;
 
   const AsyncStatePanel.error({
     super.key,
@@ -22,7 +35,50 @@ class AsyncStatePanel extends StatelessWidget {
     this.icon = Icons.error_outline,
     this.padding = const EdgeInsets.all(24),
   }) : message = null,
-       _isLoading = false;
+       _isLoading = false,
+       _isInline = false;
+
+  const AsyncStatePanel.staleOffline({
+    super.key,
+    this.message = "Viewing cached content while offline.",
+    this.title = "Offline Mode",
+    this.onRetry,
+    this.retryLabel = "Refresh",
+    this.icon = Icons.cloud_off_outlined,
+    this.padding = const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+  }) : errorMessage = message,
+       _isLoading = false,
+       _isInline = true;
+
+  const AsyncStatePanel.rateLimitWait({
+    super.key,
+    required int waitSeconds,
+    this.onRetry,
+    this.padding = const EdgeInsets.all(24),
+  }) : title = "Rate Limit Reached",
+       message = null,
+       errorMessage = "Please wait $waitSeconds seconds before retrying.",
+       retryLabel = "Retry Now",
+       icon = Icons.speed_outlined,
+       _isLoading = false,
+       _isInline = false;
+
+  const AsyncStatePanel.empty({
+    super.key,
+    required String message,
+    String? title,
+    IconData icon = Icons.inbox_outlined,
+    VoidCallback? onAction,
+    String actionLabel = "Explore",
+    this.padding = const EdgeInsets.all(24),
+  }) : title = title,
+       message = null,
+       errorMessage = message,
+       onRetry = onAction,
+       retryLabel = actionLabel,
+       icon = icon,
+       _isLoading = false,
+       _isInline = false;
 
   factory AsyncStatePanel.fromFailure({
     Key? key,
@@ -92,6 +148,7 @@ class AsyncStatePanel extends StatelessWidget {
   }
 
   final bool _isLoading;
+  final bool _isInline;
   final String? message;
   final String? title;
   final String? errorMessage;
@@ -102,6 +159,29 @@ class AsyncStatePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_isInline && _isLoading) {
+      return Padding(
+        padding: padding,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            if (message != null) ...[
+              const SizedBox(width: 12),
+              Text(
+                message!,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
     return Center(
       child: Padding(
         padding: padding,

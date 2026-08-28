@@ -75,5 +75,70 @@ void main() {
       expect(find.text("Server Error (503)"), findsOneWidget);
       expect(find.text("Server error (503). Please try again later."), findsOneWidget);
     });
+
+    testWidgets("renders inline loading correctly", (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AsyncStatePanel.inlineLoading(message: "Fetching more..."),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text("Fetching more..."), findsOneWidget);
+    });
+
+    testWidgets("renders stale offline state correctly", (tester) async {
+      var refreshed = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AsyncStatePanel.staleOffline(
+              onRetry: () => refreshed = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text("Offline Mode"), findsOneWidget);
+      expect(find.text("Viewing cached content while offline."), findsOneWidget);
+      expect(find.text("Refresh"), findsOneWidget);
+      await tester.tap(find.text("Refresh"));
+      expect(refreshed, isTrue);
+    });
+
+    testWidgets("renders rateLimitWait state correctly", (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AsyncStatePanel.rateLimitWait(waitSeconds: 45),
+          ),
+        ),
+      );
+
+      expect(find.text("Rate Limit Reached"), findsOneWidget);
+      expect(find.text("Please wait 45 seconds before retrying."), findsOneWidget);
+    });
+
+    testWidgets("renders empty state correctly", (tester) async {
+      var actionFired = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AsyncStatePanel.empty(
+              message: "No comics found in your collection.",
+              actionLabel: "Discover",
+              onAction: () => actionFired = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text("No comics found in your collection."), findsOneWidget);
+      expect(find.text("Discover"), findsOneWidget);
+      await tester.tap(find.text("Discover"));
+      expect(actionFired, isTrue);
+    });
   });
 }
