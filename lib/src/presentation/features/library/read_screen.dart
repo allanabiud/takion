@@ -314,7 +314,7 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
               ),
               Positioned(
                 right: 16,
-                bottom: 16,
+                bottom: 16 + MediaQuery.paddingOf(context).bottom,
                 child: ScrollToTopFab(controller: _scrollController),
               ),
             ],

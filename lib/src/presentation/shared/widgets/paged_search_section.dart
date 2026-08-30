@@ -173,19 +173,7 @@ class _PagedSearchSectionState<T> extends ConsumerState<PagedSearchSection<T>> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          body,
-          if (widget.isLoading && widget.items.isNotEmpty)
-            const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: LinearProgressIndicator(minHeight: 2),
-            ),
-        ],
-      ),
+      body: body,
       floatingActionButton: ScrollToTopFab(controller: _scrollController),
       bottomNavigationBar: hasPagination
           ? BottomAppBar(

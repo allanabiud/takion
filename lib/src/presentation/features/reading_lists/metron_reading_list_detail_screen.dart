@@ -47,22 +47,7 @@ class _MetronReadingListDetailScreenState
   @override
   String shareSubjectOf(MetronReadingListDetail details) => details.name;
 
-  LocalReadingList? _localList;
   bool _isLoadingImport = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkImportStatus());
-  }
-
-  Future<void> _checkImportStatus() async {
-    final repo = ref.read(localReadingListRepositoryProvider);
-    final local = await repo.findByMetronSourceId(widget.id);
-    if (mounted) {
-      setState(() => _localList = local);
-    }
-  }
 
   Future<void> _import() async {
     setState(() => _isLoadingImport = true);
@@ -111,7 +96,6 @@ class _MetronReadingListDetailScreenState
 
       if (mounted) {
         TakionAlerts.success(context, "Reading List Imported");
-        setState(() => _localList = list);
       }
     } catch (e) {
       if (mounted) {
@@ -126,15 +110,13 @@ class _MetronReadingListDetailScreenState
     }
   }
 
-  Future<void> _removeFromLibrary() async {
-    if (_localList == null) return;
-
+  Future<void> _removeFromLibrary(LocalReadingList localList) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Remove from Library"),
         content: Text(
-          'Are you sure you want to remove "${_localList!.title}" from your library?',
+          'Are you sure you want to remove "${localList.title}" from your library?',
         ),
         actions: [
           TextButton(
@@ -156,12 +138,12 @@ class _MetronReadingListDetailScreenState
 
     if (confirmed != true) return;
 
-    final repo = ref.read(localReadingListRepositoryProvider);
-    await repo.deleteList(_localList!.id);
+    await ref
+        .read(localReadingListsProvider.notifier)
+        .deleteList(localList.id);
 
     if (mounted) {
       TakionAlerts.success(context, "Removed from Library");
-      setState(() => _localList = null);
     }
   }
 
@@ -195,7 +177,7 @@ class _MetronReadingListDetailScreenState
   }
 
   Widget _buildActionRow(
-    LocalReadingList list,
+    LocalReadingList? localList,
     MetronReadingListDetail detail,
   ) {
     final theme = Theme.of(context);
@@ -204,7 +186,7 @@ class _MetronReadingListDetailScreenState
       children: [
         Expanded(
           flex: 3,
-          child: _localList != null
+          child: localList != null
               ? FilledButton.icon(
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -215,7 +197,7 @@ class _MetronReadingListDetailScreenState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _removeFromLibrary,
+                  onPressed: () => _removeFromLibrary(localList),
                   icon: const Icon(Icons.delete_outline, size: 22),
                   label: const Text("Remove"),
                 )
@@ -355,6 +337,7 @@ class _MetronReadingListDetailScreenState
     int totalCount,
     ScrollController scrollController,
     MetronReadingListDetail detail,
+    LocalReadingList? localList,
   ) {
     if (items.isEmpty) {
       return CustomScrollView(
@@ -367,7 +350,7 @@ class _MetronReadingListDetailScreenState
               progress: progress,
               readCount: readCount,
               totalCount: totalCount,
-              actions: _buildActionRow(list, detail),
+              actions: _buildActionRow(localList, detail),
             ),
           ),
           const SliverFillRemaining(
@@ -391,7 +374,7 @@ class _MetronReadingListDetailScreenState
             progress: progress,
             readCount: readCount,
             totalCount: totalCount,
-            actions: _buildActionRow(list, detail),
+            actions: _buildActionRow(localList, detail),
           ),
         ),
         SliverList(
@@ -421,6 +404,12 @@ class _MetronReadingListDetailScreenState
   @override
   Widget build(BuildContext context) {
     final dataAsync = ref.watch(metronReadingListDetailProvider(widget.id));
+    final importedLists =
+        ref.watch(localReadingListsProvider).value ?? const <LocalReadingList>[];
+    final localList = importedLists.cast<LocalReadingList?>().firstWhere(
+      (l) => l?.metronSourceId == widget.id,
+      orElse: () => null,
+    );
     final theme = Theme.of(context);
 
     return dataAsync.when(
@@ -576,7 +565,7 @@ class _MetronReadingListDetailScreenState
         }).toList();
 
         final list = LocalReadingList(
-          id: _localList?.id ?? "temp-${widget.id}",
+          id: localList?.id ?? "temp-${widget.id}",
           title: detail.name,
           description: detail.desc ?? "",
           isOrdered: true,
@@ -592,11 +581,11 @@ class _MetronReadingListDetailScreenState
           lastSyncedAt: DateTime.now(),
         );
 
-        final status = _localList != null
+        final status = localList != null
             ? (ref
-                      .watch(readingListEffectiveStatusProvider(_localList!))
+                      .watch(readingListEffectiveStatusProvider(localList))
                       .value ??
-                  (
+                   (
                     readCount: 0,
                     totalCount: readingListItems.length,
                     progress: 0.0,
@@ -634,6 +623,7 @@ class _MetronReadingListDetailScreenState
                       status.totalCount,
                       scrollController,
                       detail,
+                      localList,
                     ),
                   );
                 },

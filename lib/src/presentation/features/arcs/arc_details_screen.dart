@@ -32,22 +32,7 @@ class ArcDetailsScreen extends ConsumerStatefulWidget {
 
 class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
     with ResourceUrlActions<ArcDetails>, DetailRefreshActions<ArcDetails> {
-  LocalReadingList? _localList;
   bool _isLoadingImport = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkImportStatus());
-  }
-
-  Future<void> _checkImportStatus() async {
-    final repo = ref.read(localReadingListRepositoryProvider);
-    final local = await repo.findByMetronArcId(widget.arcId);
-    if (mounted) {
-      setState(() => _localList = local);
-    }
-  }
 
   Future<void> _import() async {
     setState(() => _isLoadingImport = true);
@@ -77,7 +62,6 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
 
       if (mounted) {
         TakionAlerts.success(context, "Reading List Imported");
-        setState(() => _localList = list);
       }
     } catch (e) {
       if (mounted) {
@@ -92,15 +76,13 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
     }
   }
 
-  Future<void> _removeFromLibrary() async {
-    if (_localList == null) return;
-
+  Future<void> _removeFromLibrary(LocalReadingList localList) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Remove from Library"),
         content: Text(
-          'Are you sure you want to remove "${_localList!.title}" from your library?',
+          'Are you sure you want to remove "${localList.title}" from your library?',
         ),
         actions: [
           TextButton(
@@ -122,21 +104,21 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
 
     if (confirmed != true) return;
 
-    final repo = ref.read(localReadingListRepositoryProvider);
-    await repo.deleteList(_localList!.id);
+    await ref
+        .read(localReadingListsProvider.notifier)
+        .deleteList(localList.id);
 
     if (mounted) {
       TakionAlerts.success(context, "Removed from Library");
-      setState(() => _localList = null);
     }
   }
 
-  Widget _buildActionRow() {
+  Widget _buildActionRow(LocalReadingList? localList) {
     final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: _localList != null
+      child: localList != null
           ? FilledButton.icon(
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -147,7 +129,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: _removeFromLibrary,
+              onPressed: () => _removeFromLibrary(localList),
               icon: const Icon(Icons.delete_outline, size: 22),
               label: const Text("Remove from Library"),
             )
@@ -203,6 +185,12 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
   @override
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(arcDetailsProvider(widget.arcId));
+    final importedLists =
+        ref.watch(localReadingListsProvider).value ?? const <LocalReadingList>[];
+    final localList = importedLists.cast<LocalReadingList?>().firstWhere(
+      (l) => l?.metronArcId == widget.arcId,
+      orElse: () => null,
+    );
 
     return DetailScreenShell<ArcDetails>(
       asyncValue: detailsAsync,
@@ -216,7 +204,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>
-          _buildArcSheetSlivers(d, context, ref),
+          _buildArcSheetSlivers(d, context, ref, localList),
     );
   }
 
@@ -224,8 +212,9 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
     ArcDetails details,
     BuildContext context,
     WidgetRef ref,
+    LocalReadingList? localList,
   ) sync* {
-    yield SliverToBoxAdapter(child: _buildActionRow());
+    yield SliverToBoxAdapter(child: _buildActionRow(localList));
     final description = details.desc?.trim();
     final hasDescription = description != null && description.isNotEmpty;
     if (hasDescription) {

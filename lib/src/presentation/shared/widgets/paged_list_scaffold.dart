@@ -98,19 +98,12 @@ class _PagedListScaffoldState extends State<PagedListScaffold> {
       body: Stack(
         children: [
           body,
-          if (showInlineLoading) ...[
+          if (showInlineLoading)
             Positioned.fill(
               child: IgnorePointer(
                 child: ColoredBox(color: Colors.black.withValues(alpha: 0.02)),
               ),
             ),
-            const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: LinearProgressIndicator(minHeight: 3),
-            ),
-          ],
         ],
       ),
       floatingActionButton: ScrollToTopFab(controller: _scrollController),

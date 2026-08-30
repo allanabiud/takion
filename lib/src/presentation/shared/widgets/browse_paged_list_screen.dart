@@ -88,6 +88,8 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
       },
     );
 
+    final showInlineLoading = pageAsync.isLoading && data != null;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -97,6 +99,12 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         actions: widget.appBarActions,
+        bottom: showInlineLoading
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(3),
+                child: LinearProgressIndicator(minHeight: 3),
+              )
+            : null,
       ),
       body: widget.header != null
           ? Column(

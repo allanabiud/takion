@@ -642,23 +642,12 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
             cancelToken: cancelToken,
           );
 
-    if (response.statusCode == 304) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        type: DioExceptionType.badResponse,
-        message: "304 Not Modified",
-      );
+    if (response.statusCode == 304 || response.data == null) {
+      return const SeriesIssueListResponseDto(count: 0, results: []);
     }
     final data = response.data;
     if (data is! Map<String, dynamic>) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        type: DioExceptionType.badResponse,
-        message:
-            "Unexpected response type ${data.runtimeType} for series issue list",
-      );
+      return const SeriesIssueListResponseDto(count: 0, results: []);
     }
 
     return SeriesIssueListResponseDto.fromJson(data);

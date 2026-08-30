@@ -58,6 +58,11 @@ class ReadingListCard extends ConsumerWidget {
         ? "Series"
         : "Issues";
 
+    final attributionSource = list.metronAttributionSource?.trim();
+    final hasAttributionSource =
+        attributionSource != null && attributionSource.isNotEmpty;
+    final metronListType = list.metronListType?.trim();
+
     final cardChild = Stack(
       children: [
         InkWell(
@@ -154,19 +159,18 @@ class ReadingListCard extends ConsumerWidget {
                             Text(
                               isMetronBrowse && !alreadyExists
                                   ? [
-                                      if ((list.metronListType ?? "")
-                                          .isNotEmpty)
-                                        list.metronListType,
-                                      if ((list.metronAttributionSource ?? "")
-                                          .isNotEmpty)
-                                        list.metronAttributionSource,
+                                      if (metronListType != null &&
+                                          metronListType.isNotEmpty)
+                                        metronListType,
+                                      if (hasAttributionSource)
+                                        attributionSource,
                                     ].join(" • ")
                                   : "$itemCount $unitLabel • $contentTypeLabel",
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
-                        if (list.metronAttributionSource != null &&
+                        if (hasAttributionSource &&
                             (!isMetronBrowse || alreadyExists)) ...[
                           const SizedBox(height: 4),
                           Row(
@@ -183,7 +187,7 @@ class ReadingListCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  list.metronAttributionSource!,
+                                  attributionSource,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(

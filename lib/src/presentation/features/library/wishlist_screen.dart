@@ -256,7 +256,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
               ),
               Positioned(
                 right: 16,
-                bottom: 16,
+                bottom: 16 + MediaQuery.paddingOf(context).bottom,
                 child: ScrollToTopFab(controller: _scrollController),
               ),
             ],

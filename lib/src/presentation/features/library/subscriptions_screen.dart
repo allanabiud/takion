@@ -109,6 +109,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                   icon: const Icon(Icons.search),
                 ),
               ],
+        bottom: pageAsync.isLoading && _lastPage != null
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(3),
+                child: LinearProgressIndicator(minHeight: 3),
+              )
+            : null,
       ),
       body: pageAsync.when(
         loading: () {

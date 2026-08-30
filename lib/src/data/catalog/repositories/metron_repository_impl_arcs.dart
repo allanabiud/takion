@@ -365,19 +365,17 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
           cooldown: MetronCachePolicies.arcIssueList.refreshCooldown,
         );
       }
-      if (cachedMeta != null) {
-        return ArcIssueListPage(
-          count: cachedMeta.count,
-          next: cachedMeta.next,
-          previous: cachedMeta.previous,
-          results: cachedDtos.map((entry) => entry.toEntity()).toList(),
-          currentPage: page,
-          realPageSize: _issuePageSize(
-            resultCount: cachedDtos.length,
-            hasNext: cachedMeta.next != null,
-          ),
-        );
-      }
+      return ArcIssueListPage(
+        count: cachedMeta?.count ?? cachedDtos.length,
+        next: cachedMeta?.next,
+        previous: cachedMeta?.previous,
+        results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+        currentPage: page,
+        realPageSize: _issuePageSize(
+          resultCount: cachedDtos.length,
+          hasNext: cachedMeta?.next != null,
+        ),
+      );
     }
 
     try {
@@ -394,6 +392,19 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 page: page,
                 cancelToken: cancelToken,
               );
+        if (remotePage.results.isEmpty && cachedDtos != null && cachedDtos.isNotEmpty) {
+          return ArcIssueListPage(
+            count: cachedMeta?.count ?? cachedDtos.length,
+            next: cachedMeta?.next,
+            previous: cachedMeta?.previous,
+            results: cachedDtos.map((entry) => entry.toEntity()).toList(),
+            currentPage: page,
+            realPageSize: _issuePageSize(
+              resultCount: cachedDtos.length,
+              hasNext: cachedMeta?.next != null,
+            ),
+          );
+        }
         if (_isValidIssueListPage(
           count: remotePage.count,
           resultCount: remotePage.results.length,
@@ -446,22 +457,22 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
     bool forceRefresh = false,
   }) async {
     final allIssues = <IssueList>[];
-    Uri? nextUrl;
+    String? nextUrl;
+    var page = 1;
     var pageCount = 0;
 
     while (pageCount < metronMaxWalkPages) {
-      final page = await _remoteDataSource.getArcIssueList(
+      final pageResult = await getArcIssueList(
         arcId,
+        page: page,
         nextUrl: nextUrl,
+        forceRefresh: forceRefresh,
       );
-      _upsertIssueListStubs(page.results);
-      _indexSeriesNamesFromIssueList(page.results);
-      for (final dto in page.results) {
-        allIssues.add(dto.toEntity());
-      }
+      allIssues.addAll(pageResult.results);
       pageCount++;
-      if (page.next == null) break;
-      nextUrl = Uri.parse(page.next!);
+      if (!pageResult.hasNext || pageResult.next == null) break;
+      nextUrl = pageResult.next;
+      page++;
     }
 
     return allIssues;

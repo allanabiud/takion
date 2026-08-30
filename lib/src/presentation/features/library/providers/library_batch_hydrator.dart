@@ -1,6 +1,7 @@
 import "dart:async";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/data/common/drift/daos/library_item_dao.dart";
 import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 
@@ -15,12 +16,12 @@ class LibraryBatchHydrator {
   final Set<int> _failedIssueIds = <int>{};
   bool _isProcessing = false;
 
-  void onHydratedRowsUpdated(List<dynamic> rows) {
+  void onHydratedRowsUpdated(List<HydratedLibraryItemRow> rows) {
     if (_isProcessing) return;
     _scheduleBatchHydration(rows);
   }
 
-  void _scheduleBatchHydration(List<dynamic> rows) {
+  void _scheduleBatchHydration(List<HydratedLibraryItemRow> rows) {
     _isProcessing = true;
     Future.microtask(() async {
       try {
@@ -33,7 +34,7 @@ class LibraryBatchHydrator {
     });
   }
 
-  Future<void> _processBatch(List<dynamic> rows) async {
+  Future<void> _processBatch(List<HydratedLibraryItemRow> rows) async {
     final metronRepo = _ref.read(metronRepositoryProvider);
 
     final unhydratedBySeries = <int, Set<int>>{};
@@ -42,8 +43,8 @@ class LibraryBatchHydrator {
     for (final row in rows) {
       final libraryItem = row.libraryItem;
       final issue = row.issue;
-      final seriesId = libraryItem.metronSeriesId as int;
-      final issueId = libraryItem.metronIssueId as int;
+      final seriesId = libraryItem.metronSeriesId;
+      final issueId = libraryItem.metronIssueId;
 
       final needsHydration =
           issue == null || issue.imageUrl == null || issue.number.isEmpty;
@@ -113,12 +114,12 @@ final libraryBatchHydratorProvider = Provider.autoDispose<LibraryBatchHydrator>(
   (ref) {
     final hydrator = LibraryBatchHydrator(ref);
 
-    ref.listen<AsyncValue<List<dynamic>>>(hydratedLibraryItemsStreamProvider, (
-      _,
-      next,
-    ) {
-      next.whenData(hydrator.onHydratedRowsUpdated);
-    });
+    ref.listen<AsyncValue<List<HydratedLibraryItemRow>>>(
+      hydratedLibraryItemsStreamProvider,
+      (_, next) {
+        next.whenData(hydrator.onHydratedRowsUpdated);
+      },
+    );
 
     return hydrator;
   },
