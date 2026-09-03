@@ -30,6 +30,8 @@ import "package:takion/src/data/catalog/repositories/metron_repository_impl.dart
 import "package:takion/src/core/sync/offline_queue/offline_queue_processor.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
+import "package:takion/src/data/collection/repositories/metron_collection_repository_impl.dart";
+import "package:takion/src/data/collection/sync/collection_sync_manager.dart";
 import "package:takion/src/domain/repositories.dart";
 
 final userStateCacheProvider = Provider<UserStateCache>((ref) {
@@ -139,10 +141,27 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
   return ref.watch(metronRepositoryProvider);
 });
 
+final metronCollectionRepositoryProvider = Provider<CollectionRepository>((ref) {
+  final remote = ref.watch(metronCollectionRemoteDataSourceProvider);
+  return MetronCollectionRepositoryImpl(remote);
+});
+
+final collectionSyncManagerProvider = Provider<CollectionSyncManager>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final repo = ref.watch(metronCollectionRepositoryProvider);
+  final offlineQueue = ref.watch(offlineWriteQueueProvider);
+  return CollectionSyncManager(
+    database: db,
+    collectionRepository: repo,
+    offlineWriteQueue: offlineQueue,
+  );
+});
+
 final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final cache = ref.watch(userStateCacheProvider);
-  return LocalLibraryRepository(db, cache);
+  final offlineQueue = ref.watch(offlineWriteQueueProvider);
+  return LocalLibraryRepository(db, cache, offlineQueue: offlineQueue);
 });
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {

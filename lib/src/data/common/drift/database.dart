@@ -35,6 +35,11 @@ part "database.g.dart";
 @TableIndex(name: "idx_lib_read", columns: {#isRead})
 @TableIndex(name: "idx_lib_status", columns: {#ownershipStatus})
 @TableIndex(name: "idx_lib_status_read", columns: {#ownershipStatus, #isRead})
+@TableIndex(
+  name: "idx_lib_metron_collection_id",
+  columns: {#metronCollectionId},
+)
+@TableIndex(name: "idx_lib_sync_status", columns: {#syncStatus})
 class LibraryItems extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -42,6 +47,9 @@ class LibraryItems extends Table {
   IntColumn get metronSeriesId => integer()();
   TextColumn get ownershipStatus => text()();
   BoolColumn get isRead => boolean()();
+  IntColumn get metronCollectionId => integer().nullable()();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant("synced"))();
   IntColumn get rating => integer().nullable()();
   TextColumn get purchaseDate => text().nullable()();
   RealColumn get pricePaid => real().nullable()();
@@ -705,7 +713,7 @@ class AppDatabase extends _$AppDatabase {
   late final OfflineQueueDao offlineQueueDao = OfflineQueueDao(this);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration {
@@ -774,6 +782,12 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(offlineWriteQueue);
           await m.createIndex(idxOfflineQueueStatus);
           await m.createIndex(idxOfflineQueueCreated);
+        }
+        if (from < 13) {
+          await m.addColumn(libraryItems, libraryItems.metronCollectionId);
+          await m.addColumn(libraryItems, libraryItems.syncStatus);
+          await m.createIndex(idxLibMetronCollectionId);
+          await m.createIndex(idxLibSyncStatus);
         }
       },
     );

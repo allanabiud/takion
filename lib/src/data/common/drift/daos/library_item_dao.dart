@@ -585,6 +585,53 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     });
   }
 
+  Future<List<LibraryItem>> getUnsyncedItems() async {
+    return (select(attachedDatabase.libraryItems)
+          ..where((t) => t.syncStatus.isNotValue("synced")))
+        .get();
+  }
+
+  Stream<List<LibraryItem>> watchUnsyncedItems() {
+    return (select(attachedDatabase.libraryItems)
+          ..where((t) => t.syncStatus.isNotValue("synced")))
+        .watch();
+  }
+
+  Future<LibraryItem?> getByMetronCollectionId(int metronCollectionId) async {
+    return (select(attachedDatabase.libraryItems)
+          ..where((t) => t.metronCollectionId.equals(metronCollectionId)))
+        .getSingleOrNull();
+  }
+
+  Future<Map<int, LibraryItem>> getByMetronCollectionIds(
+    List<int> metronCollectionIds,
+  ) async {
+    if (metronCollectionIds.isEmpty) return {};
+    final rows = await (select(attachedDatabase.libraryItems)
+          ..where((t) => t.metronCollectionId.isIn(metronCollectionIds)))
+        .get();
+    return {
+      for (final r in rows)
+        if (r.metronCollectionId != null) r.metronCollectionId!: r,
+    };
+  }
+
+  Future<void> updateSyncStatus(
+    String id,
+    String syncStatus, {
+    int? metronCollectionId,
+  }) async {
+    await (update(attachedDatabase.libraryItems)..where((t) => t.id.equals(id)))
+        .write(
+      LibraryItemsCompanion(
+        syncStatus: Value(syncStatus),
+        metronCollectionId: metronCollectionId != null
+            ? Value(metronCollectionId)
+            : const Value.absent(),
+      ),
+    );
+  }
+
   Future<void> insertReadLog(LibraryReadLogsCompanion entry) async {
     await into(attachedDatabase.libraryReadLogs).insert(entry);
   }

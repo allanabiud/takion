@@ -1,16 +1,22 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/domain/repositories.dart";
 
 class LocalLibraryRepository implements LibraryRepository {
-  LocalLibraryRepository(this._database, this._cache);
+  LocalLibraryRepository(
+    this._database,
+    this._cache, {
+    OfflineWriteQueue? offlineQueue,
+  }) : _offlineQueue = offlineQueue;
 
   static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final UserStateCache _cache;
+  final OfflineWriteQueue? _offlineQueue;
 
   String _idForIssue(int issueId) => "lib-$issueId";
 
@@ -71,6 +77,8 @@ class LocalLibraryRepository implements LibraryRepository {
       metronSeriesId: d.metronSeriesId,
       ownershipStatus: _ownershipFromRaw(d.ownershipStatus),
       isRead: d.isRead,
+      metronCollectionId: d.metronCollectionId,
+      syncStatus: d.syncStatus,
       rating: d.rating,
       purchaseDate: d.purchaseDate != null
           ? DateTime.tryParse(d.purchaseDate!)
@@ -187,6 +195,8 @@ class LocalLibraryRepository implements LibraryRepository {
       metronSeriesId: Value(item.metronSeriesId),
       ownershipStatus: Value(_ownershipToRaw(item.ownershipStatus)),
       isRead: Value(item.isRead),
+      metronCollectionId: Value(item.metronCollectionId),
+      syncStatus: Value(item.syncStatus),
       rating: Value(item.rating),
       purchaseDate: Value(item.purchaseDate?.toIso8601String()),
       pricePaid: Value(item.pricePaid),
@@ -273,6 +283,7 @@ class LocalLibraryRepository implements LibraryRepository {
     }
 
     final now = DateTime.now().toUtc();
+    final syncStatus = _offlineQueue != null ? "pending" : (existing?.syncStatus ?? "synced");
     final item = LibraryItem(
       id: existing?.id ?? _idForIssue(metronIssueId),
       userId: _localUserId,
@@ -280,6 +291,8 @@ class LocalLibraryRepository implements LibraryRepository {
       metronSeriesId: metronSeriesId,
       ownershipStatus: ownershipStatus,
       isRead: isRead,
+      metronCollectionId: existing?.metronCollectionId,
+      syncStatus: syncStatus,
       rating: rating,
       purchaseDate: purchaseDate,
       pricePaid: resolvedPricePaid,
@@ -305,6 +318,8 @@ class LocalLibraryRepository implements LibraryRepository {
         metronSeriesId: Value(item.metronSeriesId),
         ownershipStatus: Value(_ownershipToRaw(item.ownershipStatus)),
         isRead: Value(item.isRead),
+        metronCollectionId: Value(item.metronCollectionId),
+        syncStatus: Value(item.syncStatus),
         rating: Value(item.rating),
         purchaseDate: Value(item.purchaseDate?.toIso8601String()),
         pricePaid: Value(item.pricePaid),
@@ -320,6 +335,35 @@ class LocalLibraryRepository implements LibraryRepository {
     );
 
     _cache.setLibraryItem(metronIssueId, item);
+
+    if (_offlineQueue != null && ownershipStatus == LibraryOwnershipStatus.owned) {
+      if (existing?.metronCollectionId != null) {
+        await _offlineQueue.enqueueCollectionUpdate(
+          metronCollectionId: existing!.metronCollectionId!,
+          updates: {
+            "quantity": quantityOwned,
+            "book_format": _formatToRaw(format).toUpperCase(),
+            "grade": ?(conditionGrade != null ? double.tryParse(conditionGrade) : null),
+            "purchase_date": ?purchaseDate?.toIso8601String().split("T").first,
+            "purchase_price": ?resolvedPricePaid,
+            "notes": ?notes,
+            "is_read": isRead,
+            "rating": ?rating,
+          },
+        );
+      } else {
+        await _offlineQueue.enqueueCollectionAdd(
+          issueId: metronIssueId,
+          quantity: quantityOwned,
+          bookFormat: _formatToRaw(format).toUpperCase(),
+          grade: conditionGrade != null ? double.tryParse(conditionGrade) : null,
+          purchaseDate: purchaseDate,
+          purchasePrice: resolvedPricePaid,
+          notes: notes,
+        );
+      }
+    }
+
     return item;
   }
 
@@ -363,6 +407,13 @@ class LocalLibraryRepository implements LibraryRepository {
       ),
     );
 
+    if (_offlineQueue != null) {
+      await _offlineQueue.enqueueScrobble(
+        issueId: metronIssueId,
+        dateRead: readAt,
+      );
+    }
+
     return log;
   }
 
@@ -373,8 +424,15 @@ class LocalLibraryRepository implements LibraryRepository {
 
   @override
   Future<void> deleteItemByIssueId(int metronIssueId) async {
+    final existing = await _database.libraryItemDao.getByIssueId(metronIssueId);
     await _database.libraryItemDao.deleteById(_idForIssue(metronIssueId));
     _cache.removeLibraryItem(metronIssueId);
+
+    if (_offlineQueue != null && existing?.metronCollectionId != null) {
+      await _offlineQueue.enqueueCollectionDelete(
+        metronCollectionId: existing!.metronCollectionId!,
+      );
+    }
   }
 
   @override

@@ -72,6 +72,28 @@ class $LibraryItemsTable extends LibraryItems
       'CHECK ("is_read" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _metronCollectionIdMeta =
+      const VerificationMeta('metronCollectionId');
+  @override
+  late final GeneratedColumn<int> metronCollectionId = GeneratedColumn<int>(
+    'metron_collection_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant("synced"),
+  );
   static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
   @override
   late final GeneratedColumn<int> rating = GeneratedColumn<int>(
@@ -196,6 +218,8 @@ class $LibraryItemsTable extends LibraryItems
     metronSeriesId,
     ownershipStatus,
     isRead,
+    metronCollectionId,
+    syncStatus,
     rating,
     purchaseDate,
     pricePaid,
@@ -273,6 +297,21 @@ class $LibraryItemsTable extends LibraryItems
       );
     } else if (isInserting) {
       context.missing(_isReadMeta);
+    }
+    if (data.containsKey('metron_collection_id')) {
+      context.handle(
+        _metronCollectionIdMeta,
+        metronCollectionId.isAcceptableOrUnknown(
+          data['metron_collection_id']!,
+          _metronCollectionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
     }
     if (data.containsKey('rating')) {
       context.handle(
@@ -391,6 +430,14 @@ class $LibraryItemsTable extends LibraryItems
         DriftSqlType.bool,
         data['${effectivePrefix}is_read'],
       )!,
+      metronCollectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}metron_collection_id'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
       rating: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}rating'],
@@ -451,6 +498,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
   final int metronSeriesId;
   final String ownershipStatus;
   final bool isRead;
+  final int? metronCollectionId;
+  final String syncStatus;
   final int? rating;
   final String? purchaseDate;
   final double? pricePaid;
@@ -469,6 +518,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
     required this.metronSeriesId,
     required this.ownershipStatus,
     required this.isRead,
+    this.metronCollectionId,
+    required this.syncStatus,
     this.rating,
     this.purchaseDate,
     this.pricePaid,
@@ -490,6 +541,10 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
     map['metron_series_id'] = Variable<int>(metronSeriesId);
     map['ownership_status'] = Variable<String>(ownershipStatus);
     map['is_read'] = Variable<bool>(isRead);
+    if (!nullToAbsent || metronCollectionId != null) {
+      map['metron_collection_id'] = Variable<int>(metronCollectionId);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
     if (!nullToAbsent || rating != null) {
       map['rating'] = Variable<int>(rating);
     }
@@ -526,6 +581,10 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
       metronSeriesId: Value(metronSeriesId),
       ownershipStatus: Value(ownershipStatus),
       isRead: Value(isRead),
+      metronCollectionId: metronCollectionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metronCollectionId),
+      syncStatus: Value(syncStatus),
       rating: rating == null && nullToAbsent
           ? const Value.absent()
           : Value(rating),
@@ -566,6 +625,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
       metronSeriesId: serializer.fromJson<int>(json['metronSeriesId']),
       ownershipStatus: serializer.fromJson<String>(json['ownershipStatus']),
       isRead: serializer.fromJson<bool>(json['isRead']),
+      metronCollectionId: serializer.fromJson<int?>(json['metronCollectionId']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
       rating: serializer.fromJson<int?>(json['rating']),
       purchaseDate: serializer.fromJson<String?>(json['purchaseDate']),
       pricePaid: serializer.fromJson<double?>(json['pricePaid']),
@@ -589,6 +650,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
       'metronSeriesId': serializer.toJson<int>(metronSeriesId),
       'ownershipStatus': serializer.toJson<String>(ownershipStatus),
       'isRead': serializer.toJson<bool>(isRead),
+      'metronCollectionId': serializer.toJson<int?>(metronCollectionId),
+      'syncStatus': serializer.toJson<String>(syncStatus),
       'rating': serializer.toJson<int?>(rating),
       'purchaseDate': serializer.toJson<String?>(purchaseDate),
       'pricePaid': serializer.toJson<double?>(pricePaid),
@@ -610,6 +673,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
     int? metronSeriesId,
     String? ownershipStatus,
     bool? isRead,
+    Value<int?> metronCollectionId = const Value.absent(),
+    String? syncStatus,
     Value<int?> rating = const Value.absent(),
     Value<String?> purchaseDate = const Value.absent(),
     Value<double?> pricePaid = const Value.absent(),
@@ -628,6 +693,10 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
     metronSeriesId: metronSeriesId ?? this.metronSeriesId,
     ownershipStatus: ownershipStatus ?? this.ownershipStatus,
     isRead: isRead ?? this.isRead,
+    metronCollectionId: metronCollectionId.present
+        ? metronCollectionId.value
+        : this.metronCollectionId,
+    syncStatus: syncStatus ?? this.syncStatus,
     rating: rating.present ? rating.value : this.rating,
     purchaseDate: purchaseDate.present ? purchaseDate.value : this.purchaseDate,
     pricePaid: pricePaid.present ? pricePaid.value : this.pricePaid,
@@ -656,6 +725,12 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
           ? data.ownershipStatus.value
           : this.ownershipStatus,
       isRead: data.isRead.present ? data.isRead.value : this.isRead,
+      metronCollectionId: data.metronCollectionId.present
+          ? data.metronCollectionId.value
+          : this.metronCollectionId,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
       rating: data.rating.present ? data.rating.value : this.rating,
       purchaseDate: data.purchaseDate.present
           ? data.purchaseDate.value
@@ -689,6 +764,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
           ..write('metronSeriesId: $metronSeriesId, ')
           ..write('ownershipStatus: $ownershipStatus, ')
           ..write('isRead: $isRead, ')
+          ..write('metronCollectionId: $metronCollectionId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('rating: $rating, ')
           ..write('purchaseDate: $purchaseDate, ')
           ..write('pricePaid: $pricePaid, ')
@@ -712,6 +789,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
     metronSeriesId,
     ownershipStatus,
     isRead,
+    metronCollectionId,
+    syncStatus,
     rating,
     purchaseDate,
     pricePaid,
@@ -734,6 +813,8 @@ class LibraryItem extends DataClass implements Insertable<LibraryItem> {
           other.metronSeriesId == this.metronSeriesId &&
           other.ownershipStatus == this.ownershipStatus &&
           other.isRead == this.isRead &&
+          other.metronCollectionId == this.metronCollectionId &&
+          other.syncStatus == this.syncStatus &&
           other.rating == this.rating &&
           other.purchaseDate == this.purchaseDate &&
           other.pricePaid == this.pricePaid &&
@@ -754,6 +835,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
   final Value<int> metronSeriesId;
   final Value<String> ownershipStatus;
   final Value<bool> isRead;
+  final Value<int?> metronCollectionId;
+  final Value<String> syncStatus;
   final Value<int?> rating;
   final Value<String?> purchaseDate;
   final Value<double?> pricePaid;
@@ -773,6 +856,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
     this.metronSeriesId = const Value.absent(),
     this.ownershipStatus = const Value.absent(),
     this.isRead = const Value.absent(),
+    this.metronCollectionId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     this.rating = const Value.absent(),
     this.purchaseDate = const Value.absent(),
     this.pricePaid = const Value.absent(),
@@ -793,6 +878,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
     required int metronSeriesId,
     required String ownershipStatus,
     required bool isRead,
+    this.metronCollectionId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     this.rating = const Value.absent(),
     this.purchaseDate = const Value.absent(),
     this.pricePaid = const Value.absent(),
@@ -821,6 +908,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
     Expression<int>? metronSeriesId,
     Expression<String>? ownershipStatus,
     Expression<bool>? isRead,
+    Expression<int>? metronCollectionId,
+    Expression<String>? syncStatus,
     Expression<int>? rating,
     Expression<String>? purchaseDate,
     Expression<double>? pricePaid,
@@ -841,6 +930,9 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
       if (metronSeriesId != null) 'metron_series_id': metronSeriesId,
       if (ownershipStatus != null) 'ownership_status': ownershipStatus,
       if (isRead != null) 'is_read': isRead,
+      if (metronCollectionId != null)
+        'metron_collection_id': metronCollectionId,
+      if (syncStatus != null) 'sync_status': syncStatus,
       if (rating != null) 'rating': rating,
       if (purchaseDate != null) 'purchase_date': purchaseDate,
       if (pricePaid != null) 'price_paid': pricePaid,
@@ -863,6 +955,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
     Value<int>? metronSeriesId,
     Value<String>? ownershipStatus,
     Value<bool>? isRead,
+    Value<int?>? metronCollectionId,
+    Value<String>? syncStatus,
     Value<int?>? rating,
     Value<String?>? purchaseDate,
     Value<double?>? pricePaid,
@@ -883,6 +977,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
       metronSeriesId: metronSeriesId ?? this.metronSeriesId,
       ownershipStatus: ownershipStatus ?? this.ownershipStatus,
       isRead: isRead ?? this.isRead,
+      metronCollectionId: metronCollectionId ?? this.metronCollectionId,
+      syncStatus: syncStatus ?? this.syncStatus,
       rating: rating ?? this.rating,
       purchaseDate: purchaseDate ?? this.purchaseDate,
       pricePaid: pricePaid ?? this.pricePaid,
@@ -918,6 +1014,12 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
     }
     if (isRead.present) {
       map['is_read'] = Variable<bool>(isRead.value);
+    }
+    if (metronCollectionId.present) {
+      map['metron_collection_id'] = Variable<int>(metronCollectionId.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
     }
     if (rating.present) {
       map['rating'] = Variable<int>(rating.value);
@@ -967,6 +1069,8 @@ class LibraryItemsCompanion extends UpdateCompanion<LibraryItem> {
           ..write('metronSeriesId: $metronSeriesId, ')
           ..write('ownershipStatus: $ownershipStatus, ')
           ..write('isRead: $isRead, ')
+          ..write('metronCollectionId: $metronCollectionId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('rating: $rating, ')
           ..write('purchaseDate: $purchaseDate, ')
           ..write('pricePaid: $pricePaid, ')
@@ -20039,6 +20143,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_lib_status_read',
     'CREATE INDEX idx_lib_status_read ON library_items (ownership_status, is_read)',
   );
+  late final Index idxLibMetronCollectionId = Index(
+    'idx_lib_metron_collection_id',
+    'CREATE INDEX idx_lib_metron_collection_id ON library_items (metron_collection_id)',
+  );
+  late final Index idxLibSyncStatus = Index(
+    'idx_lib_sync_status',
+    'CREATE INDEX idx_lib_sync_status ON library_items (sync_status)',
+  );
   late final Index idxReadlogItem = Index(
     'idx_readlog_item',
     'CREATE INDEX idx_readlog_item ON library_read_logs (collection_item_id)',
@@ -20182,6 +20294,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxLibRead,
     idxLibStatus,
     idxLibStatusRead,
+    idxLibMetronCollectionId,
+    idxLibSyncStatus,
     idxReadlogItem,
     idxPullIssue,
     idxPullSeries,
@@ -20215,6 +20329,8 @@ typedef $$LibraryItemsTableCreateCompanionBuilder =
       required int metronSeriesId,
       required String ownershipStatus,
       required bool isRead,
+      Value<int?> metronCollectionId,
+      Value<String> syncStatus,
       Value<int?> rating,
       Value<String?> purchaseDate,
       Value<double?> pricePaid,
@@ -20236,6 +20352,8 @@ typedef $$LibraryItemsTableUpdateCompanionBuilder =
       Value<int> metronSeriesId,
       Value<String> ownershipStatus,
       Value<bool> isRead,
+      Value<int?> metronCollectionId,
+      Value<String> syncStatus,
       Value<int?> rating,
       Value<String?> purchaseDate,
       Value<double?> pricePaid,
@@ -20286,6 +20404,16 @@ class $$LibraryItemsTableFilterComposer
 
   ColumnFilters<bool> get isRead => $composableBuilder(
     column: $table.isRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get metronCollectionId => $composableBuilder(
+    column: $table.metronCollectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20384,6 +20512,16 @@ class $$LibraryItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get metronCollectionId => $composableBuilder(
+    column: $table.metronCollectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get rating => $composableBuilder(
     column: $table.rating,
     builder: (column) => ColumnOrderings(column),
@@ -20473,6 +20611,16 @@ class $$LibraryItemsTableAnnotationComposer
   GeneratedColumn<bool> get isRead =>
       $composableBuilder(column: $table.isRead, builder: (column) => column);
 
+  GeneratedColumn<int> get metronCollectionId => $composableBuilder(
+    column: $table.metronCollectionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get rating =>
       $composableBuilder(column: $table.rating, builder: (column) => column);
 
@@ -20554,6 +20702,8 @@ class $$LibraryItemsTableTableManager
                 Value<int> metronSeriesId = const Value.absent(),
                 Value<String> ownershipStatus = const Value.absent(),
                 Value<bool> isRead = const Value.absent(),
+                Value<int?> metronCollectionId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
                 Value<int?> rating = const Value.absent(),
                 Value<String?> purchaseDate = const Value.absent(),
                 Value<double?> pricePaid = const Value.absent(),
@@ -20573,6 +20723,8 @@ class $$LibraryItemsTableTableManager
                 metronSeriesId: metronSeriesId,
                 ownershipStatus: ownershipStatus,
                 isRead: isRead,
+                metronCollectionId: metronCollectionId,
+                syncStatus: syncStatus,
                 rating: rating,
                 purchaseDate: purchaseDate,
                 pricePaid: pricePaid,
@@ -20594,6 +20746,8 @@ class $$LibraryItemsTableTableManager
                 required int metronSeriesId,
                 required String ownershipStatus,
                 required bool isRead,
+                Value<int?> metronCollectionId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
                 Value<int?> rating = const Value.absent(),
                 Value<String?> purchaseDate = const Value.absent(),
                 Value<double?> pricePaid = const Value.absent(),
@@ -20613,6 +20767,8 @@ class $$LibraryItemsTableTableManager
                 metronSeriesId: metronSeriesId,
                 ownershipStatus: ownershipStatus,
                 isRead: isRead,
+                metronCollectionId: metronCollectionId,
+                syncStatus: syncStatus,
                 rating: rating,
                 purchaseDate: purchaseDate,
                 pricePaid: pricePaid,
