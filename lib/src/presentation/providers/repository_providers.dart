@@ -32,6 +32,11 @@ import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
 import "package:takion/src/data/collection/repositories/metron_collection_repository_impl.dart";
 import "package:takion/src/data/collection/sync/collection_sync_manager.dart";
+import "package:takion/src/core/migration/collection_migrator.dart";
+import "package:takion/src/core/migration/migration_manager.dart";
+import "package:takion/src/core/migration/migration_state.dart";
+import "package:takion/src/core/migration/pull_list_migrator.dart";
+import "package:takion/src/core/migration/wish_list_migrator.dart";
 import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_manager.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
@@ -272,5 +277,45 @@ final metronSyncStateProvider = StreamProvider<MetronSyncState>((ref) {
   final manager = ref.watch(metronSyncManagerProvider);
   return manager.stateStream;
 });
+
+final collectionMigratorProvider = Provider<CollectionMigrator>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final remote = ref.watch(metronCollectionRemoteDataSourceProvider);
+  return CollectionMigrator(database: db, remoteDataSource: remote);
+});
+
+final pullListMigratorProvider = Provider<PullListMigrator>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final remote = ref.watch(metronPullListRemoteDataSourceProvider);
+  return PullListMigrator(database: db, remoteDataSource: remote);
+});
+
+final wishListMigratorProvider = Provider<WishListMigrator>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final remote = ref.watch(metronWishlistRemoteDataSourceProvider);
+  return WishListMigrator(database: db, remoteDataSource: remote);
+});
+
+final migrationManagerProvider = Provider<MigrationManager>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final colMigrator = ref.watch(collectionMigratorProvider);
+  final pullMigrator = ref.watch(pullListMigratorProvider);
+  final wishMigrator = ref.watch(wishListMigratorProvider);
+
+  final manager = MigrationManager(
+    database: db,
+    collectionMigrator: colMigrator,
+    pullListMigrator: pullMigrator,
+    wishListMigrator: wishMigrator,
+  );
+  ref.onDispose(manager.dispose);
+  return manager;
+});
+
+final migrationProgressProvider = StreamProvider<MigrationProgress>((ref) {
+  final manager = ref.watch(migrationManagerProvider);
+  return manager.progressStream;
+});
+
 
 
