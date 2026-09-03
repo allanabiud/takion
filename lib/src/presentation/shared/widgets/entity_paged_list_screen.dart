@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/core/errors/error_mapper.dart";
 import "package:takion/src/domain/common/content_sorting.dart";
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
@@ -146,8 +147,16 @@ class _EntityPagedListScreenState<T, TItem>
         }
         return const AsyncStatePanel.loading();
       },
-      error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: widget.errorMessage),
+      error: (error, _) => AsyncStatePanel.fromFailure(
+        failure: ErrorMapper.fromException(error),
+        onRetry: () {
+          if (widget.onRefresh != null) {
+            widget.onRefresh!(ref, _page);
+          } else {
+            widget.invalidatePage(ref, _page);
+          }
+        },
+      ),
       data: (page) => _buildContent(page, sortOption, isLoading: false),
     );
 

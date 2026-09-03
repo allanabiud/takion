@@ -27,6 +27,7 @@ class RatingPicker extends StatelessWidget {
         height: iconSize,
         child: IconButton(
           padding: EdgeInsets.zero,
+          tooltip: "Clear rating",
           visualDensity: VisualDensity.compact,
           constraints: BoxConstraints.tightFor(
             width: iconSize,
@@ -49,6 +50,7 @@ class RatingPicker extends StatelessWidget {
           for (var starValue = 1; starValue <= 5; starValue++)
             IconButton(
               padding: EdgeInsets.zero,
+              tooltip: "$starValue ${starValue == 1 ? 'star' : 'stars'}",
               visualDensity: VisualDensity.compact,
               style: IconButton.styleFrom(
                 minimumSize: Size.zero,

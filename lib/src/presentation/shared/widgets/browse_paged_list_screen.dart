@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/pagination.dart";
+import "package:takion/src/core/errors/error_mapper.dart";
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
@@ -81,8 +82,10 @@ class _BrowsePagedListScreenState<T> extends State<BrowsePagedListScreen<T>> {
         }
         return _buildSkeletonList();
       },
-      error: (error, _) =>
-          AsyncStatePanel.error(errorMessage: widget.errorPrefix),
+      error: (error, _) => AsyncStatePanel.fromFailure(
+        failure: ErrorMapper.fromException(error),
+        onRetry: () => widget.onRefresh(),
+      ),
       data: (pageData) {
         return _buildScaffold(pageData, isLoading: false);
       },

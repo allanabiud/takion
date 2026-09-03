@@ -67,12 +67,24 @@ class _WiggleFavoriteButtonState extends State<WiggleFavoriteButton>
     final activeColor = widget.activeColor ?? theme.colorScheme.primary;
     final inactiveColor = widget.inactiveColor ?? theme.colorScheme.outline;
 
+    final tooltip = widget.isFavorite ? "Remove from favorites" : "Add to favorites";
+
     return IconButton(
       iconSize: widget.iconSize,
+      tooltip: tooltip,
       onPressed: _handleTap,
       icon: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
+          final disableAnimations =
+              MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+          if (disableAnimations) {
+            return Icon(
+              widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: widget.isFavorite ? activeColor : inactiveColor,
+              size: widget.iconSize,
+            );
+          }
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Transform.rotate(

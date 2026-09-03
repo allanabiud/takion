@@ -133,6 +133,17 @@ class _AnimatedCounterTextState extends State<AnimatedCounterText>
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (disableAnimations) {
+      return Text(
+        _formatNumber(_targetValue),
+        style: widget.style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, _) {

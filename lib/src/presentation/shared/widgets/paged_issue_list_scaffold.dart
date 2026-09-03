@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/errors/error_mapper.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
@@ -69,10 +70,8 @@ class _PagedIssueListScaffoldState extends State<PagedIssueListScaffold> {
           Expanded(
             child: widget.issuesAsync.when(
               loading: () => const SizedBox.shrink(),
-              error: (error, _) => AsyncStatePanel.error(
-                errorMessage:
-                    widget.errorTextBuilder?.call(error) ??
-                    "Something went wrong",
+              error: (error, _) => AsyncStatePanel.fromFailure(
+                failure: ErrorMapper.fromException(error),
               ),
               data: (issues) {
                 final visibleIssues = widget.transformIssues(issues);
