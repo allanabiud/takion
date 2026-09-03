@@ -9,6 +9,12 @@ export "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
 import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
 import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source_impl.dart";
+import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
+import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source_impl.dart";
+import "package:takion/src/data/pull_list/datasources/remote/metron_pull_list_remote_data_source.dart";
+import "package:takion/src/data/pull_list/datasources/remote/metron_pull_list_remote_data_source_impl.dart";
+import "package:takion/src/data/wishlist/datasources/remote/metron_wishlist_remote_data_source.dart";
+import "package:takion/src/data/wishlist/datasources/remote/metron_wishlist_remote_data_source_impl.dart";
 import "package:takion/src/data/reading_list/repositories/local_reading_list_local_data_source.dart";
 import "package:takion/src/data/catalog/datasources/local/series_name_index.dart";
 import "package:takion/src/data/common/drift/daos/junction_dao.dart";
@@ -30,6 +36,24 @@ final userStateCacheProvider = Provider<UserStateCache>((ref) {
 final metronRemoteDataSourceProvider = Provider<MetronRemoteDataSource>((ref) {
   final dio = ref.watch(dioProvider);
   return MetronRemoteDataSourceImpl(dio);
+});
+
+final metronCollectionRemoteDataSourceProvider =
+    Provider<MetronCollectionRemoteDataSource>((ref) {
+  final dio = ref.watch(dioProvider);
+  return MetronCollectionRemoteDataSourceImpl(dio);
+});
+
+final metronPullListRemoteDataSourceProvider =
+    Provider<MetronPullListRemoteDataSource>((ref) {
+  final dio = ref.watch(dioProvider);
+  return MetronPullListRemoteDataSourceImpl(dio);
+});
+
+final metronWishlistRemoteDataSourceProvider =
+    Provider<MetronWishlistRemoteDataSource>((ref) {
+  final dio = ref.watch(dioProvider);
+  return MetronWishlistRemoteDataSourceImpl(dio);
 });
 
 final metronLocalDataSourceProvider = Provider<MetronLocalDataSource>((ref) {

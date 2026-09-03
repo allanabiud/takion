@@ -6,3 +6,4 @@ export "subscription/entities/entities.dart";
 export "activity/entities/entities.dart";
 export "favorites/entities/entities.dart";
 export "integrations/entities/entities.dart";
+export "wishlist/entities/entities.dart";

@@ -36,3 +36,17 @@ abstract class PullListRepository {
     entries,
   );
 }
+
+abstract class MetronPullListRepository {
+  Future<List<PullListSeriesItem>> getPullListSeries({int page = 1});
+
+  Future<PullListSeriesItem> addSeriesToPullList(int seriesId);
+
+  Future<void> removeSeriesFromPullList(int seriesId);
+
+  Future<List<PullListIssueItem>> getPullListIssues({
+    int page = 1,
+    DateTime? storeDateAfter,
+    DateTime? storeDateBefore,
+  });
+}
