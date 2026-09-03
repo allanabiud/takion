@@ -66,6 +66,8 @@ class LocalPullListRepository implements PullListRepository {
       userId: d.userId,
       metronSeriesId: d.metronSeriesId,
       metronIssueId: d.metronIssueId,
+      metronPullListId: d.metronPullListId,
+      syncStatus: d.syncStatus,
       releaseDate: d.releaseDate,
       entryStatus: _statusFromRaw(d.entryStatus),
       source: _sourceFromRaw(d.source),

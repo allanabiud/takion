@@ -86,11 +86,15 @@ class LibraryReadLogs extends Table {
   name: "idx_pull_release_status",
   columns: {#releaseDate, #entryStatus},
 )
+@TableIndex(name: "idx_pull_sync_status", columns: {#syncStatus})
 class PullListEntries extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
   IntColumn get metronIssueId => integer()();
   IntColumn get metronSeriesId => integer()();
+  IntColumn get metronPullListId => integer().nullable()();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant("synced"))();
   TextColumn get entryStatus => text()();
   DateTimeColumn get releaseDate => dateTime().nullable()();
   TextColumn get source => text()();
@@ -103,10 +107,14 @@ class PullListEntries extends Table {
 }
 
 @TableIndex(name: "idx_sub_series", columns: {#metronSeriesId})
+@TableIndex(name: "idx_sub_sync_status", columns: {#syncStatus})
 class SeriesSubscriptions extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
   IntColumn get metronSeriesId => integer()();
+  IntColumn get metronPullListId => integer().nullable()();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant("synced"))();
   BoolColumn get isActive => boolean()();
   BoolColumn get autoAddPull => boolean().withDefault(const Constant(false))();
   TextColumn get subscribedAt => text()();
@@ -713,7 +721,7 @@ class AppDatabase extends _$AppDatabase {
   late final OfflineQueueDao offlineQueueDao = OfflineQueueDao(this);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration {
@@ -788,6 +796,20 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(libraryItems, libraryItems.syncStatus);
           await m.createIndex(idxLibMetronCollectionId);
           await m.createIndex(idxLibSyncStatus);
+        }
+        if (from < 14) {
+          await m.addColumn(pullListEntries, pullListEntries.metronPullListId);
+          await m.addColumn(pullListEntries, pullListEntries.syncStatus);
+          await m.createIndex(idxPullSyncStatus);
+          await m.addColumn(
+            seriesSubscriptions,
+            seriesSubscriptions.metronPullListId,
+          );
+          await m.addColumn(
+            seriesSubscriptions,
+            seriesSubscriptions.syncStatus,
+          );
+          await m.createIndex(idxSubSyncStatus);
         }
       },
     );

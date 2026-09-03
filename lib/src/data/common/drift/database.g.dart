@@ -1544,6 +1544,29 @@ class $PullListEntriesTable extends PullListEntries
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _metronPullListIdMeta = const VerificationMeta(
+    'metronPullListId',
+  );
+  @override
+  late final GeneratedColumn<int> metronPullListId = GeneratedColumn<int>(
+    'metron_pull_list_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant("synced"),
+  );
   static const VerificationMeta _entryStatusMeta = const VerificationMeta(
     'entryStatus',
   );
@@ -1614,6 +1637,8 @@ class $PullListEntriesTable extends PullListEntries
     userId,
     metronIssueId,
     metronSeriesId,
+    metronPullListId,
+    syncStatus,
     entryStatus,
     releaseDate,
     source,
@@ -1667,6 +1692,21 @@ class $PullListEntriesTable extends PullListEntries
       );
     } else if (isInserting) {
       context.missing(_metronSeriesIdMeta);
+    }
+    if (data.containsKey('metron_pull_list_id')) {
+      context.handle(
+        _metronPullListIdMeta,
+        metronPullListId.isAcceptableOrUnknown(
+          data['metron_pull_list_id']!,
+          _metronPullListIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
     }
     if (data.containsKey('entry_status')) {
       context.handle(
@@ -1748,6 +1788,14 @@ class $PullListEntriesTable extends PullListEntries
         DriftSqlType.int,
         data['${effectivePrefix}metron_series_id'],
       )!,
+      metronPullListId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}metron_pull_list_id'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
       entryStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}entry_status'],
@@ -1786,6 +1834,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
   final String userId;
   final int metronIssueId;
   final int metronSeriesId;
+  final int? metronPullListId;
+  final String syncStatus;
   final String entryStatus;
   final DateTime? releaseDate;
   final String source;
@@ -1797,6 +1847,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
     required this.userId,
     required this.metronIssueId,
     required this.metronSeriesId,
+    this.metronPullListId,
+    required this.syncStatus,
     required this.entryStatus,
     this.releaseDate,
     required this.source,
@@ -1811,6 +1863,10 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
     map['user_id'] = Variable<String>(userId);
     map['metron_issue_id'] = Variable<int>(metronIssueId);
     map['metron_series_id'] = Variable<int>(metronSeriesId);
+    if (!nullToAbsent || metronPullListId != null) {
+      map['metron_pull_list_id'] = Variable<int>(metronPullListId);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
     map['entry_status'] = Variable<String>(entryStatus);
     if (!nullToAbsent || releaseDate != null) {
       map['release_date'] = Variable<DateTime>(releaseDate);
@@ -1828,6 +1884,10 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
       userId: Value(userId),
       metronIssueId: Value(metronIssueId),
       metronSeriesId: Value(metronSeriesId),
+      metronPullListId: metronPullListId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metronPullListId),
+      syncStatus: Value(syncStatus),
       entryStatus: Value(entryStatus),
       releaseDate: releaseDate == null && nullToAbsent
           ? const Value.absent()
@@ -1849,6 +1909,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
       userId: serializer.fromJson<String>(json['userId']),
       metronIssueId: serializer.fromJson<int>(json['metronIssueId']),
       metronSeriesId: serializer.fromJson<int>(json['metronSeriesId']),
+      metronPullListId: serializer.fromJson<int?>(json['metronPullListId']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
       entryStatus: serializer.fromJson<String>(json['entryStatus']),
       releaseDate: serializer.fromJson<DateTime?>(json['releaseDate']),
       source: serializer.fromJson<String>(json['source']),
@@ -1865,6 +1927,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
       'userId': serializer.toJson<String>(userId),
       'metronIssueId': serializer.toJson<int>(metronIssueId),
       'metronSeriesId': serializer.toJson<int>(metronSeriesId),
+      'metronPullListId': serializer.toJson<int?>(metronPullListId),
+      'syncStatus': serializer.toJson<String>(syncStatus),
       'entryStatus': serializer.toJson<String>(entryStatus),
       'releaseDate': serializer.toJson<DateTime?>(releaseDate),
       'source': serializer.toJson<String>(source),
@@ -1879,6 +1943,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
     String? userId,
     int? metronIssueId,
     int? metronSeriesId,
+    Value<int?> metronPullListId = const Value.absent(),
+    String? syncStatus,
     String? entryStatus,
     Value<DateTime?> releaseDate = const Value.absent(),
     String? source,
@@ -1890,6 +1956,10 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
     userId: userId ?? this.userId,
     metronIssueId: metronIssueId ?? this.metronIssueId,
     metronSeriesId: metronSeriesId ?? this.metronSeriesId,
+    metronPullListId: metronPullListId.present
+        ? metronPullListId.value
+        : this.metronPullListId,
+    syncStatus: syncStatus ?? this.syncStatus,
     entryStatus: entryStatus ?? this.entryStatus,
     releaseDate: releaseDate.present ? releaseDate.value : this.releaseDate,
     source: source ?? this.source,
@@ -1907,6 +1977,12 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
       metronSeriesId: data.metronSeriesId.present
           ? data.metronSeriesId.value
           : this.metronSeriesId,
+      metronPullListId: data.metronPullListId.present
+          ? data.metronPullListId.value
+          : this.metronPullListId,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
       entryStatus: data.entryStatus.present
           ? data.entryStatus.value
           : this.entryStatus,
@@ -1929,6 +2005,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
           ..write('userId: $userId, ')
           ..write('metronIssueId: $metronIssueId, ')
           ..write('metronSeriesId: $metronSeriesId, ')
+          ..write('metronPullListId: $metronPullListId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('entryStatus: $entryStatus, ')
           ..write('releaseDate: $releaseDate, ')
           ..write('source: $source, ')
@@ -1945,6 +2023,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
     userId,
     metronIssueId,
     metronSeriesId,
+    metronPullListId,
+    syncStatus,
     entryStatus,
     releaseDate,
     source,
@@ -1960,6 +2040,8 @@ class PullListEntry extends DataClass implements Insertable<PullListEntry> {
           other.userId == this.userId &&
           other.metronIssueId == this.metronIssueId &&
           other.metronSeriesId == this.metronSeriesId &&
+          other.metronPullListId == this.metronPullListId &&
+          other.syncStatus == this.syncStatus &&
           other.entryStatus == this.entryStatus &&
           other.releaseDate == this.releaseDate &&
           other.source == this.source &&
@@ -1973,6 +2055,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
   final Value<String> userId;
   final Value<int> metronIssueId;
   final Value<int> metronSeriesId;
+  final Value<int?> metronPullListId;
+  final Value<String> syncStatus;
   final Value<String> entryStatus;
   final Value<DateTime?> releaseDate;
   final Value<String> source;
@@ -1985,6 +2069,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
     this.userId = const Value.absent(),
     this.metronIssueId = const Value.absent(),
     this.metronSeriesId = const Value.absent(),
+    this.metronPullListId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     this.entryStatus = const Value.absent(),
     this.releaseDate = const Value.absent(),
     this.source = const Value.absent(),
@@ -1998,6 +2084,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
     required String userId,
     required int metronIssueId,
     required int metronSeriesId,
+    this.metronPullListId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     required String entryStatus,
     this.releaseDate = const Value.absent(),
     required String source,
@@ -2019,6 +2107,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
     Expression<String>? userId,
     Expression<int>? metronIssueId,
     Expression<int>? metronSeriesId,
+    Expression<int>? metronPullListId,
+    Expression<String>? syncStatus,
     Expression<String>? entryStatus,
     Expression<DateTime>? releaseDate,
     Expression<String>? source,
@@ -2032,6 +2122,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
       if (userId != null) 'user_id': userId,
       if (metronIssueId != null) 'metron_issue_id': metronIssueId,
       if (metronSeriesId != null) 'metron_series_id': metronSeriesId,
+      if (metronPullListId != null) 'metron_pull_list_id': metronPullListId,
+      if (syncStatus != null) 'sync_status': syncStatus,
       if (entryStatus != null) 'entry_status': entryStatus,
       if (releaseDate != null) 'release_date': releaseDate,
       if (source != null) 'source': source,
@@ -2047,6 +2139,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
     Value<String>? userId,
     Value<int>? metronIssueId,
     Value<int>? metronSeriesId,
+    Value<int?>? metronPullListId,
+    Value<String>? syncStatus,
     Value<String>? entryStatus,
     Value<DateTime?>? releaseDate,
     Value<String>? source,
@@ -2060,6 +2154,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
       userId: userId ?? this.userId,
       metronIssueId: metronIssueId ?? this.metronIssueId,
       metronSeriesId: metronSeriesId ?? this.metronSeriesId,
+      metronPullListId: metronPullListId ?? this.metronPullListId,
+      syncStatus: syncStatus ?? this.syncStatus,
       entryStatus: entryStatus ?? this.entryStatus,
       releaseDate: releaseDate ?? this.releaseDate,
       source: source ?? this.source,
@@ -2084,6 +2180,12 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
     }
     if (metronSeriesId.present) {
       map['metron_series_id'] = Variable<int>(metronSeriesId.value);
+    }
+    if (metronPullListId.present) {
+      map['metron_pull_list_id'] = Variable<int>(metronPullListId.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
     }
     if (entryStatus.present) {
       map['entry_status'] = Variable<String>(entryStatus.value);
@@ -2116,6 +2218,8 @@ class PullListEntriesCompanion extends UpdateCompanion<PullListEntry> {
           ..write('userId: $userId, ')
           ..write('metronIssueId: $metronIssueId, ')
           ..write('metronSeriesId: $metronSeriesId, ')
+          ..write('metronPullListId: $metronPullListId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('entryStatus: $entryStatus, ')
           ..write('releaseDate: $releaseDate, ')
           ..write('source: $source, ')
@@ -2162,6 +2266,29 @@ class $SeriesSubscriptionsTable extends SeriesSubscriptions
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _metronPullListIdMeta = const VerificationMeta(
+    'metronPullListId',
+  );
+  @override
+  late final GeneratedColumn<int> metronPullListId = GeneratedColumn<int>(
+    'metron_pull_list_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant("synced"),
   );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
@@ -2230,6 +2357,8 @@ class $SeriesSubscriptionsTable extends SeriesSubscriptions
     id,
     userId,
     metronSeriesId,
+    metronPullListId,
+    syncStatus,
     isActive,
     autoAddPull,
     subscribedAt,
@@ -2271,6 +2400,21 @@ class $SeriesSubscriptionsTable extends SeriesSubscriptions
       );
     } else if (isInserting) {
       context.missing(_metronSeriesIdMeta);
+    }
+    if (data.containsKey('metron_pull_list_id')) {
+      context.handle(
+        _metronPullListIdMeta,
+        metronPullListId.isAcceptableOrUnknown(
+          data['metron_pull_list_id']!,
+          _metronPullListIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
     }
     if (data.containsKey('is_active')) {
       context.handle(
@@ -2337,6 +2481,14 @@ class $SeriesSubscriptionsTable extends SeriesSubscriptions
         DriftSqlType.int,
         data['${effectivePrefix}metron_series_id'],
       )!,
+      metronPullListId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}metron_pull_list_id'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -2371,6 +2523,8 @@ class SeriesSubscription extends DataClass
   final String id;
   final String userId;
   final int metronSeriesId;
+  final int? metronPullListId;
+  final String syncStatus;
   final bool isActive;
   final bool autoAddPull;
   final String subscribedAt;
@@ -2380,6 +2534,8 @@ class SeriesSubscription extends DataClass
     required this.id,
     required this.userId,
     required this.metronSeriesId,
+    this.metronPullListId,
+    required this.syncStatus,
     required this.isActive,
     required this.autoAddPull,
     required this.subscribedAt,
@@ -2392,6 +2548,10 @@ class SeriesSubscription extends DataClass
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['metron_series_id'] = Variable<int>(metronSeriesId);
+    if (!nullToAbsent || metronPullListId != null) {
+      map['metron_pull_list_id'] = Variable<int>(metronPullListId);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
     map['is_active'] = Variable<bool>(isActive);
     map['auto_add_pull'] = Variable<bool>(autoAddPull);
     map['subscribed_at'] = Variable<String>(subscribedAt);
@@ -2405,6 +2565,10 @@ class SeriesSubscription extends DataClass
       id: Value(id),
       userId: Value(userId),
       metronSeriesId: Value(metronSeriesId),
+      metronPullListId: metronPullListId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metronPullListId),
+      syncStatus: Value(syncStatus),
       isActive: Value(isActive),
       autoAddPull: Value(autoAddPull),
       subscribedAt: Value(subscribedAt),
@@ -2422,6 +2586,8 @@ class SeriesSubscription extends DataClass
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       metronSeriesId: serializer.fromJson<int>(json['metronSeriesId']),
+      metronPullListId: serializer.fromJson<int?>(json['metronPullListId']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       autoAddPull: serializer.fromJson<bool>(json['autoAddPull']),
       subscribedAt: serializer.fromJson<String>(json['subscribedAt']),
@@ -2436,6 +2602,8 @@ class SeriesSubscription extends DataClass
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'metronSeriesId': serializer.toJson<int>(metronSeriesId),
+      'metronPullListId': serializer.toJson<int?>(metronPullListId),
+      'syncStatus': serializer.toJson<String>(syncStatus),
       'isActive': serializer.toJson<bool>(isActive),
       'autoAddPull': serializer.toJson<bool>(autoAddPull),
       'subscribedAt': serializer.toJson<String>(subscribedAt),
@@ -2448,6 +2616,8 @@ class SeriesSubscription extends DataClass
     String? id,
     String? userId,
     int? metronSeriesId,
+    Value<int?> metronPullListId = const Value.absent(),
+    String? syncStatus,
     bool? isActive,
     bool? autoAddPull,
     String? subscribedAt,
@@ -2457,6 +2627,10 @@ class SeriesSubscription extends DataClass
     id: id ?? this.id,
     userId: userId ?? this.userId,
     metronSeriesId: metronSeriesId ?? this.metronSeriesId,
+    metronPullListId: metronPullListId.present
+        ? metronPullListId.value
+        : this.metronPullListId,
+    syncStatus: syncStatus ?? this.syncStatus,
     isActive: isActive ?? this.isActive,
     autoAddPull: autoAddPull ?? this.autoAddPull,
     subscribedAt: subscribedAt ?? this.subscribedAt,
@@ -2470,6 +2644,12 @@ class SeriesSubscription extends DataClass
       metronSeriesId: data.metronSeriesId.present
           ? data.metronSeriesId.value
           : this.metronSeriesId,
+      metronPullListId: data.metronPullListId.present
+          ? data.metronPullListId.value
+          : this.metronPullListId,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       autoAddPull: data.autoAddPull.present
           ? data.autoAddPull.value
@@ -2488,6 +2668,8 @@ class SeriesSubscription extends DataClass
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('metronSeriesId: $metronSeriesId, ')
+          ..write('metronPullListId: $metronPullListId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('isActive: $isActive, ')
           ..write('autoAddPull: $autoAddPull, ')
           ..write('subscribedAt: $subscribedAt, ')
@@ -2502,6 +2684,8 @@ class SeriesSubscription extends DataClass
     id,
     userId,
     metronSeriesId,
+    metronPullListId,
+    syncStatus,
     isActive,
     autoAddPull,
     subscribedAt,
@@ -2515,6 +2699,8 @@ class SeriesSubscription extends DataClass
           other.id == this.id &&
           other.userId == this.userId &&
           other.metronSeriesId == this.metronSeriesId &&
+          other.metronPullListId == this.metronPullListId &&
+          other.syncStatus == this.syncStatus &&
           other.isActive == this.isActive &&
           other.autoAddPull == this.autoAddPull &&
           other.subscribedAt == this.subscribedAt &&
@@ -2526,6 +2712,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
   final Value<String> id;
   final Value<String> userId;
   final Value<int> metronSeriesId;
+  final Value<int?> metronPullListId;
+  final Value<String> syncStatus;
   final Value<bool> isActive;
   final Value<bool> autoAddPull;
   final Value<String> subscribedAt;
@@ -2536,6 +2724,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.metronSeriesId = const Value.absent(),
+    this.metronPullListId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     this.isActive = const Value.absent(),
     this.autoAddPull = const Value.absent(),
     this.subscribedAt = const Value.absent(),
@@ -2547,6 +2737,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
     required String id,
     required String userId,
     required int metronSeriesId,
+    this.metronPullListId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     required bool isActive,
     this.autoAddPull = const Value.absent(),
     required String subscribedAt,
@@ -2564,6 +2756,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
     Expression<String>? id,
     Expression<String>? userId,
     Expression<int>? metronSeriesId,
+    Expression<int>? metronPullListId,
+    Expression<String>? syncStatus,
     Expression<bool>? isActive,
     Expression<bool>? autoAddPull,
     Expression<String>? subscribedAt,
@@ -2575,6 +2769,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (metronSeriesId != null) 'metron_series_id': metronSeriesId,
+      if (metronPullListId != null) 'metron_pull_list_id': metronPullListId,
+      if (syncStatus != null) 'sync_status': syncStatus,
       if (isActive != null) 'is_active': isActive,
       if (autoAddPull != null) 'auto_add_pull': autoAddPull,
       if (subscribedAt != null) 'subscribed_at': subscribedAt,
@@ -2588,6 +2784,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
     Value<String>? id,
     Value<String>? userId,
     Value<int>? metronSeriesId,
+    Value<int?>? metronPullListId,
+    Value<String>? syncStatus,
     Value<bool>? isActive,
     Value<bool>? autoAddPull,
     Value<String>? subscribedAt,
@@ -2599,6 +2797,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       metronSeriesId: metronSeriesId ?? this.metronSeriesId,
+      metronPullListId: metronPullListId ?? this.metronPullListId,
+      syncStatus: syncStatus ?? this.syncStatus,
       isActive: isActive ?? this.isActive,
       autoAddPull: autoAddPull ?? this.autoAddPull,
       subscribedAt: subscribedAt ?? this.subscribedAt,
@@ -2619,6 +2819,12 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
     }
     if (metronSeriesId.present) {
       map['metron_series_id'] = Variable<int>(metronSeriesId.value);
+    }
+    if (metronPullListId.present) {
+      map['metron_pull_list_id'] = Variable<int>(metronPullListId.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
     }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
@@ -2647,6 +2853,8 @@ class SeriesSubscriptionsCompanion extends UpdateCompanion<SeriesSubscription> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('metronSeriesId: $metronSeriesId, ')
+          ..write('metronPullListId: $metronPullListId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('isActive: $isActive, ')
           ..write('autoAddPull: $autoAddPull, ')
           ..write('subscribedAt: $subscribedAt, ')
@@ -20171,9 +20379,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_pull_release_status',
     'CREATE INDEX idx_pull_release_status ON pull_list_entries (release_date, entry_status)',
   );
+  late final Index idxPullSyncStatus = Index(
+    'idx_pull_sync_status',
+    'CREATE INDEX idx_pull_sync_status ON pull_list_entries (sync_status)',
+  );
   late final Index idxSubSeries = Index(
     'idx_sub_series',
     'CREATE INDEX idx_sub_series ON series_subscriptions (metron_series_id)',
+  );
+  late final Index idxSubSyncStatus = Index(
+    'idx_sub_sync_status',
+    'CREATE INDEX idx_sub_sync_status ON series_subscriptions (sync_status)',
   );
   late final Index idxActivitySeries = Index(
     'idx_activity_series',
@@ -20301,7 +20517,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxPullSeries,
     idxPullRelease,
     idxPullReleaseStatus,
+    idxPullSyncStatus,
     idxSubSeries,
+    idxSubSyncStatus,
     idxActivitySeries,
     idxActivityIssue,
     idxActivityEventTime,
@@ -21040,6 +21258,8 @@ typedef $$PullListEntriesTableCreateCompanionBuilder =
       required String userId,
       required int metronIssueId,
       required int metronSeriesId,
+      Value<int?> metronPullListId,
+      Value<String> syncStatus,
       required String entryStatus,
       Value<DateTime?> releaseDate,
       required String source,
@@ -21054,6 +21274,8 @@ typedef $$PullListEntriesTableUpdateCompanionBuilder =
       Value<String> userId,
       Value<int> metronIssueId,
       Value<int> metronSeriesId,
+      Value<int?> metronPullListId,
+      Value<String> syncStatus,
       Value<String> entryStatus,
       Value<DateTime?> releaseDate,
       Value<String> source,
@@ -21089,6 +21311,16 @@ class $$PullListEntriesTableFilterComposer
 
   ColumnFilters<int> get metronSeriesId => $composableBuilder(
     column: $table.metronSeriesId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get metronPullListId => $composableBuilder(
+    column: $table.metronPullListId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -21152,6 +21384,16 @@ class $$PullListEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get metronPullListId => $composableBuilder(
+    column: $table.metronPullListId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get entryStatus => $composableBuilder(
     column: $table.entryStatus,
     builder: (column) => ColumnOrderings(column),
@@ -21205,6 +21447,16 @@ class $$PullListEntriesTableAnnotationComposer
 
   GeneratedColumn<int> get metronSeriesId => $composableBuilder(
     column: $table.metronSeriesId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get metronPullListId => $composableBuilder(
+    column: $table.metronPullListId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
     builder: (column) => column,
   );
 
@@ -21270,6 +21522,8 @@ class $$PullListEntriesTableTableManager
                 Value<String> userId = const Value.absent(),
                 Value<int> metronIssueId = const Value.absent(),
                 Value<int> metronSeriesId = const Value.absent(),
+                Value<int?> metronPullListId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
                 Value<String> entryStatus = const Value.absent(),
                 Value<DateTime?> releaseDate = const Value.absent(),
                 Value<String> source = const Value.absent(),
@@ -21282,6 +21536,8 @@ class $$PullListEntriesTableTableManager
                 userId: userId,
                 metronIssueId: metronIssueId,
                 metronSeriesId: metronSeriesId,
+                metronPullListId: metronPullListId,
+                syncStatus: syncStatus,
                 entryStatus: entryStatus,
                 releaseDate: releaseDate,
                 source: source,
@@ -21296,6 +21552,8 @@ class $$PullListEntriesTableTableManager
                 required String userId,
                 required int metronIssueId,
                 required int metronSeriesId,
+                Value<int?> metronPullListId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
                 required String entryStatus,
                 Value<DateTime?> releaseDate = const Value.absent(),
                 required String source,
@@ -21308,6 +21566,8 @@ class $$PullListEntriesTableTableManager
                 userId: userId,
                 metronIssueId: metronIssueId,
                 metronSeriesId: metronSeriesId,
+                metronPullListId: metronPullListId,
+                syncStatus: syncStatus,
                 entryStatus: entryStatus,
                 releaseDate: releaseDate,
                 source: source,
@@ -21346,6 +21606,8 @@ typedef $$SeriesSubscriptionsTableCreateCompanionBuilder =
       required String id,
       required String userId,
       required int metronSeriesId,
+      Value<int?> metronPullListId,
+      Value<String> syncStatus,
       required bool isActive,
       Value<bool> autoAddPull,
       required String subscribedAt,
@@ -21358,6 +21620,8 @@ typedef $$SeriesSubscriptionsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> userId,
       Value<int> metronSeriesId,
+      Value<int?> metronPullListId,
+      Value<String> syncStatus,
       Value<bool> isActive,
       Value<bool> autoAddPull,
       Value<String> subscribedAt,
@@ -21387,6 +21651,16 @@ class $$SeriesSubscriptionsTableFilterComposer
 
   ColumnFilters<int> get metronSeriesId => $composableBuilder(
     column: $table.metronSeriesId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get metronPullListId => $composableBuilder(
+    column: $table.metronPullListId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -21440,6 +21714,16 @@ class $$SeriesSubscriptionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get metronPullListId => $composableBuilder(
+    column: $table.metronPullListId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
     builder: (column) => ColumnOrderings(column),
@@ -21483,6 +21767,16 @@ class $$SeriesSubscriptionsTableAnnotationComposer
 
   GeneratedColumn<int> get metronSeriesId => $composableBuilder(
     column: $table.metronSeriesId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get metronPullListId => $composableBuilder(
+    column: $table.metronPullListId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
     builder: (column) => column,
   );
 
@@ -21552,6 +21846,8 @@ class $$SeriesSubscriptionsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<int> metronSeriesId = const Value.absent(),
+                Value<int?> metronPullListId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> autoAddPull = const Value.absent(),
                 Value<String> subscribedAt = const Value.absent(),
@@ -21562,6 +21858,8 @@ class $$SeriesSubscriptionsTableTableManager
                 id: id,
                 userId: userId,
                 metronSeriesId: metronSeriesId,
+                metronPullListId: metronPullListId,
+                syncStatus: syncStatus,
                 isActive: isActive,
                 autoAddPull: autoAddPull,
                 subscribedAt: subscribedAt,
@@ -21574,6 +21872,8 @@ class $$SeriesSubscriptionsTableTableManager
                 required String id,
                 required String userId,
                 required int metronSeriesId,
+                Value<int?> metronPullListId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
                 required bool isActive,
                 Value<bool> autoAddPull = const Value.absent(),
                 required String subscribedAt,
@@ -21584,6 +21884,8 @@ class $$SeriesSubscriptionsTableTableManager
                 id: id,
                 userId: userId,
                 metronSeriesId: metronSeriesId,
+                metronPullListId: metronPullListId,
+                syncStatus: syncStatus,
                 isActive: isActive,
                 autoAddPull: autoAddPull,
                 subscribedAt: subscribedAt,

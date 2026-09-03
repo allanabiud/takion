@@ -1,16 +1,22 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/cache/user_state_cache.dart";
+import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/domain/repositories.dart";
 
 class LocalSubscriptionRepository implements SubscriptionRepository {
-  LocalSubscriptionRepository(this._database, this._cache);
+  LocalSubscriptionRepository(
+    this._database,
+    this._cache, {
+    OfflineWriteQueue? offlineQueue,
+  }) : _offlineQueue = offlineQueue;
 
   static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final UserStateCache _cache;
+  final OfflineWriteQueue? _offlineQueue;
 
   String _idForSeries(int seriesId) => "sub-$seriesId";
 
@@ -19,6 +25,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       id: d.id,
       userId: d.userId,
       metronSeriesId: d.metronSeriesId,
+      metronPullListId: d.metronPullListId,
+      syncStatus: d.syncStatus,
       isActive: d.isActive,
       autoAddToPullList: d.autoAddPull,
       subscribedAt: DateTime.parse(d.subscribedAt),
@@ -72,10 +80,13 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       metronSeriesId,
     );
     final now = DateTime.now().toUtc();
+    final syncStatus = _offlineQueue != null ? "pending" : (existing?.syncStatus ?? "synced");
     final value = SeriesSubscription(
       id: existing?.id ?? _idForSeries(metronSeriesId),
       userId: _localUserId,
       metronSeriesId: metronSeriesId,
+      metronPullListId: existing?.metronPullListId,
+      syncStatus: syncStatus,
       isActive: true,
       autoAddToPullList: autoAddToPullList,
       subscribedAt: existing != null
@@ -90,6 +101,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
         id: Value(value.id),
         userId: Value(value.userId),
         metronSeriesId: Value(value.metronSeriesId),
+        metronPullListId: Value(value.metronPullListId),
+        syncStatus: Value(value.syncStatus),
         isActive: Value(value.isActive),
         autoAddPull: Value(value.autoAddToPullList),
         subscribedAt: Value(value.subscribedAt.toIso8601String()),
@@ -99,6 +112,11 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     );
 
     _cache.setSubscription(metronSeriesId, value);
+
+    if (_offlineQueue != null) {
+      await _offlineQueue.enqueuePullListAdd(seriesId: metronSeriesId);
+    }
+
     return value;
   }
 
@@ -107,10 +125,13 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     final current = await getSubscriptionBySeriesId(metronSeriesId);
     if (current == null) return;
     final now = DateTime.now().toUtc();
+    final syncStatus = _offlineQueue != null ? "pending" : "synced";
     final updated = SeriesSubscription(
       id: current.id,
       userId: current.userId,
       metronSeriesId: current.metronSeriesId,
+      metronPullListId: current.metronPullListId,
+      syncStatus: syncStatus,
       isActive: false,
       autoAddToPullList: current.autoAddToPullList,
       subscribedAt: current.subscribedAt,
@@ -122,6 +143,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
         id: Value(updated.id),
         userId: Value(updated.userId),
         metronSeriesId: Value(updated.metronSeriesId),
+        metronPullListId: Value(updated.metronPullListId),
+        syncStatus: Value(updated.syncStatus),
         isActive: Value(updated.isActive),
         autoAddPull: Value(updated.autoAddToPullList),
         subscribedAt: Value(updated.subscribedAt.toIso8601String()),
@@ -130,6 +153,10 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       ),
     );
     _cache.setSubscription(metronSeriesId, updated);
+
+    if (_offlineQueue != null) {
+      await _offlineQueue.enqueuePullListRemove(seriesId: metronSeriesId);
+    }
   }
 
   @override

@@ -1,21 +1,18 @@
-import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
-import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
 import "package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart";
 import "package:takion/src/presentation/features/issues/issue_share_util.dart";
 import "package:takion/src/presentation/features/issues/series_subscription_toggle.dart";
-import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_collection_status_model.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
 import "package:takion/src/presentation/features/issues/providers/scrobble_issue_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/presentation/features/reading_lists/add_to_local_reading_list_bottom_sheet.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/core/logging/app_logger.dart";
-import "package:takion/src/domain/entities.dart";
 
 class _ScrobbleActionIcon extends StatelessWidget {
   const _ScrobbleActionIcon({
@@ -68,10 +65,6 @@ Future<void> showScrobbleSheet({
 }) async {
   final title = sheetTitle ?? "Issue #$issueId";
 
-  // Series id comes from issue-list data (which always includes it), so the Subscribe tile needs no full details fetch.
-  final resolvedSeriesId = seriesId;
-
-  var isPulling = false;
   var isSharing = false;
   final notifier = ref.read(scrobbleIssueProvider(issueId).notifier);
   notifier.reset();
@@ -112,11 +105,6 @@ Future<void> showScrobbleSheet({
             ? ref.watch(seriesSubscriptionProvider(effectiveSeriesId))
             : null;
         final liveSubscribed = subState?.asData?.value?.isActive ?? false;
-        final pullEntryWatch = ref.watch(issuePullListEntryProvider(issueId));
-        final pullEntry = pullEntryWatch.asData?.value;
-        final pullIssue =
-            pullEntry != null &&
-            pullEntry.entryStatus != PullListEntryStatus.skipped;
         final collectionStatus = ref.watch(
           issueCollectionStatusProvider(issueId),
         );
@@ -153,45 +141,13 @@ Future<void> showScrobbleSheet({
                       onPressed: isSubmitting
                           ? null
                           : () {
-                              final newValue = !addToCollection;
-                              final previousWishlist = addToWishlist;
                               setModalState(() {
-                                addToCollection = newValue;
-                                if (newValue) addToWishlist = false;
+                                addToCollection = !addToCollection;
+                                if (addToCollection) addToWishlist = false;
                               });
-                              ref
-                                  .read(scrobbleIssueProvider(issueId).notifier)
-                                  .scrobble(
-                                    addToCollection: newValue,
-                                    addToWishlist: newValue ? false : null,
-                                  )
-                                  .then((_) {
-                                    if (!context.mounted) return;
-                                    if (ref
-                                        .read(scrobbleIssueProvider(issueId))
-                                        .hasError) {
-                                      setModalState(() {
-                                        addToCollection = !newValue;
-                                        if (newValue) {
-                                          addToWishlist = previousWishlist;
-                                        }
-                                      });
-                                    } else if (newValue) {
-                                      AppLogger.info(
-                                        "Scrobble: added issue #$issueId to collection",
-                                      );
-                                      TakionAlerts.libraryAddedToCollection(
-                                        context,
-                                      );
-                                    } else {
-                                      AppLogger.info(
-                                        "Scrobble: removed issue #$issueId from collection",
-                                      );
-                                    }
-                                  });
                             },
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 32),
                     _ScrobbleActionIcon(
                       icon: markAsRead
                           ? Icons.bookmark_added
@@ -201,153 +157,13 @@ Future<void> showScrobbleSheet({
                       onPressed: isSubmitting
                           ? null
                           : () {
-                              final newValue = !markAsRead;
-                              final previousRating = selectedRating;
                               setModalState(() {
-                                markAsRead = newValue;
-                                if (!newValue) selectedRating = 0;
+                                markAsRead = !markAsRead;
+                                if (!markAsRead) selectedRating = 0;
                               });
-                              ref
-                                  .read(scrobbleIssueProvider(issueId).notifier)
-                                  .scrobble(
-                                    markAsRead: newValue,
-                                    dateRead: newValue
-                                        ? DateTime.now().toUtc()
-                                        : null,
-                                    rating: newValue && selectedRating > 0
-                                        ? selectedRating
-                                        : null,
-                                  )
-                                  .then((_) {
-                                    if (!context.mounted) return;
-                                    if (ref
-                                        .read(scrobbleIssueProvider(issueId))
-                                        .hasError) {
-                                      setModalState(() {
-                                        markAsRead = !newValue;
-                                        selectedRating = previousRating;
-                                      });
-                                    } else if (newValue) {
-                                      AppLogger.info(
-                                        "Scrobble: marked issue #$issueId as read",
-                                      );
-                                      TakionAlerts.libraryMarkedAsRead(context);
-                                    } else {
-                                      AppLogger.info(
-                                        "Scrobble: unmarked issue #$issueId as read",
-                                      );
-                                    }
-                                  });
                             },
                     ),
-                    const SizedBox(width: 24),
-                    _ScrobbleActionIcon(
-                      icon: pullIssue
-                          ? Icons.shopping_bag
-                          : Icons.shopping_bag_outlined,
-                      label: "Pull",
-                      color: toggleColor(pullIssue),
-                      onPressed:
-                          isSubmitting || isPulling || pullEntryWatch.isLoading
-                          ? null
-                          : () async {
-                              final currentlyPulled = pullIssue;
-                              final newValue = !currentlyPulled;
-                              final seriesIdLocal = resolvedSeriesId;
-
-                              if (newValue && seriesIdLocal == null) {
-                                TakionAlerts.noLinkedSeriesForIssue(context);
-                                return;
-                              }
-
-                              isPulling = true;
-                              setModalState(() {});
-                              bool didUpdate = false;
-
-                              try {
-                                if (!newValue) {
-                                  await ref
-                                      .read(pullListRepositoryProvider)
-                                      .updateEntryStatus(
-                                        metronIssueId: issueId,
-                                        status: PullListEntryStatus.skipped,
-                                      );
-                                  AppLogger.info(
-                                    "Scrobble: dismissed issue #$issueId from pull list",
-                                  );
-                                } else {
-                                  await ref
-                                      .read(pullListRepositoryProvider)
-                                      .upsertManualEntry(
-                                        metronSeriesId: seriesIdLocal!,
-                                        metronIssueId: issueId,
-                                        releaseDate: releaseDate,
-                                      );
-                                  AppLogger.info(
-                                    "Scrobble: added issue #$issueId to pull list",
-                                  );
-                                  final sub = await ref
-                                      .read(subscriptionRepositoryProvider)
-                                      .getSubscriptionBySeriesId(seriesIdLocal);
-                                  if (sub != null && sub.isActive) {
-                                    unawaited(
-                                      ref
-                                          .read(
-                                            subscriptionPullReconcilerProvider,
-                                          )
-                                          .reconcile(
-                                            force: true,
-                                            onlySeriesId: seriesIdLocal,
-                                          ),
-                                    );
-                                  }
-                                }
-                                didUpdate = true;
-
-                                if (context.mounted) {
-                                  if (newValue) {
-                                    TakionAlerts.success(
-                                      context,
-                                      "Added to Pull List",
-                                    );
-                                  } else {
-                                    TakionAlerts.info(
-                                      context,
-                                      "Dismissed from Pull List",
-                                    );
-                                  }
-                                }
-                              } catch (e) {
-                                AppLogger.warning(
-                                  "Failed to update pull list",
-                                  error: e,
-                                );
-                                if (context.mounted) {
-                                  TakionAlerts.error(
-                                    context,
-                                    "Failed to update pull list",
-                                  );
-                                }
-                              } finally {
-                                isPulling = false;
-                                if (context.mounted) {
-                                  setModalState(() {});
-                                }
-                                if (didUpdate) {
-                                  ref.invalidate(currentWeekPullsProvider);
-                                  ref.invalidate(
-                                    pullListEntriesForWeekProvider,
-                                  );
-                                  ref.invalidate(pullsIssuesForWeekProvider);
-                                  ref.invalidate(currentWeekPullsCountProvider);
-                                  ref.invalidate(
-                                    issuePullListEntryProvider(issueId),
-                                  );
-                                }
-                              }
-                            },
-                    ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 32),
                     _ScrobbleActionIcon(
                       icon: addToWishlist
                           ? Icons.turned_in
@@ -357,33 +173,10 @@ Future<void> showScrobbleSheet({
                       onPressed: isSubmitting
                           ? null
                           : () {
-                              final newValue = !addToWishlist;
-                              final previousCollection = addToCollection;
                               setModalState(() {
-                                addToWishlist = newValue;
-                                if (newValue) addToCollection = false;
+                                addToWishlist = !addToWishlist;
+                                if (addToWishlist) addToCollection = false;
                               });
-                              ref
-                                  .read(scrobbleIssueProvider(issueId).notifier)
-                                  .scrobble(
-                                    addToWishlist: newValue,
-                                    addToCollection: newValue ? false : null,
-                                  )
-                                  .then((_) {
-                                    if (!context.mounted) return;
-                                    if (ref
-                                        .read(scrobbleIssueProvider(issueId))
-                                        .hasError) {
-                                      setModalState(() {
-                                        addToWishlist = !newValue;
-                                        if (newValue) {
-                                          addToCollection = previousCollection;
-                                        }
-                                      });
-                                    } else if (newValue) {
-                                      TakionAlerts.libraryUpdated(context);
-                                    }
-                                  });
                             },
                     ),
                   ],
@@ -396,52 +189,54 @@ Future<void> showScrobbleSheet({
                     selectedRating: selectedRating,
                     enabled: !isSubmitting,
                     onChanged: (value) {
-                      final previousRead = markAsRead;
-                      final previousRating = selectedRating;
                       setModalState(() {
                         selectedRating = value;
                         markAsRead = true;
                       });
-                      ref
-                          .read(scrobbleIssueProvider(issueId).notifier)
-                          .scrobble(
-                            markAsRead: true,
-                            rating: value,
-                            dateRead: DateTime.now().toUtc(),
-                          )
-                          .then((_) {
-                            if (!context.mounted) return;
-                            if (ref
-                                .read(scrobbleIssueProvider(issueId))
-                                .hasError) {
-                              setModalState(() {
-                                selectedRating = previousRating;
-                                markAsRead = previousRead;
-                              });
-                            } else {
-                              TakionAlerts.libraryMarkedAsRead(context);
-                            }
-                          });
                     },
                     onReset: () {
-                      final previousRating = selectedRating;
                       setModalState(() {
                         selectedRating = 0;
                       });
-                      ref
-                          .read(scrobbleIssueProvider(issueId).notifier)
-                          .scrobble(rating: 0)
-                          .then((_) {
-                            if (!context.mounted) return;
-                            if (ref
-                                .read(scrobbleIssueProvider(issueId))
-                                .hasError) {
-                              setModalState(() {
-                                selectedRating = previousRating;
-                              });
-                            }
-                          });
                     },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Divider(),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            await ref
+                                .read(scrobbleIssueProvider(issueId).notifier)
+                                .scrobble(
+                                  addToCollection: addToCollection,
+                                  markAsRead: markAsRead,
+                                  addToWishlist: addToWishlist,
+                                  rating: selectedRating,
+                                  dateRead: markAsRead
+                                      ? DateTime.now().toUtc()
+                                      : null,
+                                );
+                            if (context.mounted &&
+                                !ref
+                                    .read(scrobbleIssueProvider(issueId))
+                                    .hasError) {
+                              Navigator.pop(context);
+                            }
+                          },
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text("Save Changes"),
                   ),
                 ),
                 const SizedBox(height: 12),
