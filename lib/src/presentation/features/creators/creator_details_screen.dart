@@ -87,6 +87,7 @@ class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen>
       toSubtitle: (d) =>
           d.alias.isNotEmpty ? d.alias.map((a) => "@$a").join(", ") : null,
       onRefresh: (_) => refreshDetails(context),
+      onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,

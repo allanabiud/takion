@@ -4,12 +4,13 @@ import "package:auto_route/auto_route.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/router/app_router.gr.dart";
-import "package:takion/src/presentation/shared/widgets/components.dart";
-import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
-import "package:takion/src/presentation/shared/widgets/image_error_placeholder.dart";
+import "package:takion/src/core/errors/error_mapper.dart";
 import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
+import "package:takion/src/presentation/shared/widgets/image_error_placeholder.dart";
 
 class DetailScreenShell<T> extends ConsumerWidget {
   const DetailScreenShell({
@@ -26,6 +27,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.toHeaderExtra,
     this.toTrailingHeaderAction,
     this.onRefresh,
+    this.onRetry,
     this.onShare,
     this.onOpenInBrowser,
     this.appBarTrailingAction,
@@ -53,6 +55,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   final Widget? Function(T data)? toHeaderExtra;
   final Widget? Function(T data)? toTrailingHeaderAction;
   final void Function(T data)? onRefresh;
+  final VoidCallback? onRetry;
   final void Function(T data)? onShare;
   final void Function(T data)? onOpenInBrowser;
   final Widget Function(T data)? appBarTrailingAction;
@@ -71,6 +74,9 @@ class DetailScreenShell<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (asyncValue.hasValue) {
+      return _buildData(context, ref, asyncValue.requireValue);
+    }
     return asyncValue.when(
       loading: () => _buildLoading(context),
       error: (error, _) => _buildError(context, error),
@@ -207,14 +213,13 @@ class DetailScreenShell<T> extends ConsumerWidget {
   }
 
   Widget _buildError(BuildContext context, Object error) {
+    final failure = ErrorMapper.fromException(error);
     return Scaffold(
       appBar: AppBar(),
       body: Center(
-        child: Text(
-          TakionAlerts.cleanError(
-            error,
-            fallback: "Failed to load $entityType details",
-          ),
+        child: AsyncStatePanel.fromFailure(
+          failure: failure,
+          onRetry: onRetry,
         ),
       ),
     );
@@ -360,6 +365,46 @@ class DetailScreenShell<T> extends ConsumerWidget {
                                     "Updating...",
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      else if (asyncValue.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.errorContainer
+                                    .withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: theme.colorScheme.error.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_off_outlined,
+                                    size: 12,
+                                    color: theme.colorScheme.onErrorContainer,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Cached",
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onErrorContainer,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

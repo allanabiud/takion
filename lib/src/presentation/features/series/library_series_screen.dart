@@ -59,6 +59,7 @@ class LibrarySeriesScreen extends ConsumerWidget {
       toImageUrl: (d) => null,
       toHeroTag: (d) => "library-series-${d.id}",
       toTitle: (d) => '${d.name.toUpperCase()} (${d.yearBegan ?? ''})',
+      onRetry: () => ref.invalidate(seriesDetailsProvider(seriesId)),
       appBarTrailingAction: (d) => IconButton(
         icon: const Icon(Icons.open_in_new),
         tooltip: "View full series details",

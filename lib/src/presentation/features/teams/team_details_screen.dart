@@ -68,6 +68,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
       toHeroTag: (d) => "team-image-${d.id}",
       toTitle: (d) => d.name,
       onRefresh: (_) => refreshDetails(context),
+      onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,

@@ -1,5 +1,4 @@
 openapi: 3.0.3
-
 info:
   title: Metron Comicbook Database
   version: 1.0.0
@@ -10,22 +9,16 @@ info:
   license:
     name: Creative Commons License
     url: https://creativecommons.org/licenses/by-sa/4.0/
-
 paths:
-
   /api/arc/:
-
     get:
-
       operationId: api_arc_list
-
       description: |-
         list:
         Returns a list of all the story arcs.
 
         retrieve:
         Returns the information of an individual story arc.
-
       parameters:
       - in: query
         name: cv_id
@@ -53,14 +46,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -68,20 +59,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedArcListList'
           description: ''
-
   /api/arc/{id}/:
-
     get:
-
       operationId: api_arc_retrieve
-
       description: |-
         list:
         Returns a list of all the story arcs.
 
         retrieve:
         Returns the information of an individual story arc.
-
       parameters:
       - in: path
         name: id
@@ -89,14 +75,12 @@ paths:
           type: integer
         description: A unique integer value identifying this arc.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -104,20 +88,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Arc'
           description: ''
-
   /api/arc/{id}/issue_list/:
-
     get:
-
       operationId: api_arc_issue_list_list
-
       description: |-
         list:
         Returns a list of all the story arcs.
 
         retrieve:
         Returns the information of an individual story arc.
-
       parameters:
       - in: path
         name: id
@@ -131,14 +110,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -146,20 +123,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
-
   /api/character/:
-
     get:
-
       operationId: api_character_list
-
       description: |-
         list:
         Return a list of all the characters.
 
         retrieve:
         Returns the information of an individual character.
-
       parameters:
       - in: query
         name: cv_id
@@ -187,14 +159,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -202,20 +172,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCharacterListList'
           description: ''
-
   /api/character/{id}/:
-
     get:
-
       operationId: api_character_retrieve
-
       description: |-
         list:
         Return a list of all the characters.
 
         retrieve:
         Returns the information of an individual character.
-
       parameters:
       - in: path
         name: id
@@ -223,14 +188,12 @@ paths:
           type: integer
         description: A unique integer value identifying this character.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -238,20 +201,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/CharacterRead'
           description: ''
-
   /api/character/{id}/issue_list/:
-
     get:
-
       operationId: api_character_issue_list_list
-
       description: |-
         list:
         Return a list of all the characters.
 
         retrieve:
         Returns the information of an individual character.
-
       parameters:
       - in: path
         name: id
@@ -265,14 +223,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -280,20 +236,592 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
-
-  /api/creator/:
-
+  /api/collection/:
     get:
+      operationId: api_collection_list
+      description: |-
+        list:
+        Returns authenticated user's collection items.
+        Requires authentication.
 
+        retrieve:
+        Returns details of a specific collection item (must belong to authenticated user).
+        Requires authentication.
+
+        partial_update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        destroy:
+        Remove a specific collection item (must belong to authenticated user).
+        Requires authentication.
+      parameters:
+      - in: query
+        name: book_format
+        schema:
+          type: string
+          enum:
+          - BOTH
+          - DIGITAL
+          - PRINT
+        description: |-
+          Format of the comic (print, digital, or both)
+
+          * `PRINT` - Print
+          * `DIGITAL` - Digital
+          * `BOTH` - Both
+      - in: query
+        name: date_read
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_read_gt
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_read_gte
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_read_lt
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_read_lte
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: grade
+        schema:
+          type: number
+          nullable: true
+          enum:
+          - 0.5
+          - 1.0
+          - 1.5
+          - 1.8
+          - 10.0
+          - 2.0
+          - 2.5
+          - 3.0
+          - 3.5
+          - 4.0
+          - 4.5
+          - 5.0
+          - 5.5
+          - 6.0
+          - 6.5
+          - 7.0
+          - 7.5
+          - 8.0
+          - 8.5
+          - 9.0
+          - 9.2
+          - 9.4
+          - 9.6
+          - 9.8
+          - 9.9
+        description: |-
+          Comic book grade (CGC scale)
+
+          * `10.0` - 10.0 (Gem Mint)
+          * `9.9` - 9.9 (Mint)
+          * `9.8` - 9.8 (NM/M - Near Mint/Mint)
+          * `9.6` - 9.6 (NM+ - Near Mint+)
+          * `9.4` - 9.4 (NM - Near Mint)
+          * `9.2` - 9.2 (NM- - Near Mint-)
+          * `9.0` - 9.0 (VF/NM - Very Fine/Near Mint)
+          * `8.5` - 8.5 (VF+ - Very Fine+)
+          * `8.0` - 8.0 (VF - Very Fine)
+          * `7.5` - 7.5 (VF- - Very Fine-)
+          * `7.0` - 7.0 (FN/VF - Fine/Very Fine)
+          * `6.5` - 6.5 (FN+ - Fine+)
+          * `6.0` - 6.0 (FN - Fine)
+          * `5.5` - 5.5 (FN- - Fine-)
+          * `5.0` - 5.0 (VG/FN - Very Good/Fine)
+          * `4.5` - 4.5 (VG+ - Very Good+)
+          * `4.0` - 4.0 (VG - Very Good)
+          * `3.5` - 3.5 (VG- - Very Good-)
+          * `3.0` - 3.0 (GD/VG - Good/Very Good)
+          * `2.5` - 2.5 (GD+ - Good+)
+          * `2.0` - 2.0 (GD - Good)
+          * `1.8` - 1.8 (GD- - Good-)
+          * `1.5` - 1.5 (FR/GD - Fair/Good)
+          * `1.0` - 1.0 (FR - Fair)
+          * `0.5` - 0.5 (PR - Poor)
+      - in: query
+        name: grading_company
+        schema:
+          type: string
+          enum:
+          - CBCS
+          - CGC
+          - PGX
+        description: |-
+          Professional grading company (leave blank for user-assessed grade)
+
+          * `CGC` - CGC (Certified Guaranty Company)
+          * `CBCS` - CBCS (Comic Book Certification Service)
+          * `PGX` - PGX (Professional Grading Experts)
+      - in: query
+        name: is_read
+        schema:
+          type: boolean
+      - in: query
+        name: issue__series
+        schema:
+          type: integer
+      - in: query
+        name: modified_gt
+        schema:
+          type: string
+          format: date-time
+        description: Greater than Modified DateTime
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: purchase_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: purchase_date_gt
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: purchase_date_gte
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: purchase_date_lt
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: purchase_date_lte
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: purchase_store
+        schema:
+          type: string
+      - in: query
+        name: rating
+        schema:
+          type: integer
+      - in: query
+        name: storage_location
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCollectionListList'
+          description: ''
+  /api/collection/{id}/:
+    get:
+      operationId: api_collection_retrieve
+      description: |-
+        list:
+        Returns authenticated user's collection items.
+        Requires authentication.
+
+        retrieve:
+        Returns details of a specific collection item (must belong to authenticated user).
+        Requires authentication.
+
+        partial_update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        destroy:
+        Remove a specific collection item (must belong to authenticated user).
+        Requires authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Collection Item.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionRead'
+          description: ''
+    put:
+      operationId: api_collection_update
+      description: |-
+        list:
+        Returns authenticated user's collection items.
+        Requires authentication.
+
+        retrieve:
+        Returns details of a specific collection item (must belong to authenticated user).
+        Requires authentication.
+
+        partial_update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        destroy:
+        Remove a specific collection item (must belong to authenticated user).
+        Requires authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Collection Item.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionRatingUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CollectionRatingUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CollectionRatingUpdate'
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionRatingUpdate'
+          description: ''
+    patch:
+      operationId: api_collection_partial_update
+      description: |-
+        list:
+        Returns authenticated user's collection items.
+        Requires authentication.
+
+        retrieve:
+        Returns details of a specific collection item (must belong to authenticated user).
+        Requires authentication.
+
+        partial_update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        destroy:
+        Remove a specific collection item (must belong to authenticated user).
+        Requires authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Collection Item.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCollectionRatingUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCollectionRatingUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCollectionRatingUpdate'
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionRatingUpdate'
+          description: ''
+    delete:
+      operationId: api_collection_destroy
+      description: |-
+        list:
+        Returns authenticated user's collection items.
+        Requires authentication.
+
+        retrieve:
+        Returns details of a specific collection item (must belong to authenticated user).
+        Requires authentication.
+
+        partial_update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        update:
+        Update the rating of a specific collection item (must belong to authenticated user).
+        Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+        Requires authentication.
+
+        destroy:
+        Remove a specific collection item (must belong to authenticated user).
+        Requires authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Collection Item.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+  /api/collection/add/:
+    post:
+      operationId: api_collection_add_create
+      description: Add an issue to the authenticated user's collection.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionAddItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CollectionAddItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CollectionAddItem'
+        required: true
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionRead'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionRead'
+          description: ''
+  /api/collection/missing_issues/{series_id}/:
+    get:
+      operationId: api_collection_missing_issues_list
+      description: Return specific missing issues for a series.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: path
+        name: series_id
+        schema:
+          type: integer
+        description: ID of the series to get missing issues for
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMissingIssueList'
+          description: ''
+  /api/collection/missing_series/:
+    get:
+      operationId: api_collection_missing_series_list
+      description: Return series where the user has some issues but is missing others.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMissingSeriesList'
+          description: ''
+  /api/collection/scrobble/:
+    post:
+      operationId: api_collection_scrobble_create
+      description: Mark an issue as read (scrobble). Auto-creates collection item
+        if needed.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScrobbleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScrobbleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScrobbleRequest'
+        required: true
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrobbleResponse'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrobbleResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: ''
+  /api/collection/stats/:
+    get:
+      operationId: api_collection_stats_retrieve
+      description: Return statistics about the user's collection.
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_items:
+                    type: integer
+                  total_quantity:
+                    type: integer
+                  total_value:
+                    type: string
+                  read_count:
+                    type: integer
+                  unread_count:
+                    type: integer
+                  by_format:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        book_format:
+                          type: string
+                        count:
+                          type: integer
+          description: ''
+  /api/creator/:
+    get:
       operationId: api_creator_list
-
       description: |-
         list:
         Return a list of all the creators.
 
         retrieve:
         Returns the information of an individual creator.
-
       parameters:
       - in: query
         name: cv_id
@@ -321,14 +849,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -336,20 +862,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCreatorListList'
           description: ''
-
   /api/creator/{id}/:
-
     get:
-
       operationId: api_creator_retrieve
-
       description: |-
         list:
         Return a list of all the creators.
 
         retrieve:
         Returns the information of an individual creator.
-
       parameters:
       - in: path
         name: id
@@ -357,14 +878,12 @@ paths:
           type: integer
         description: A unique integer value identifying this creator.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -372,13 +891,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Creator'
           description: ''
-
   /api/imprint/:
-
     get:
-
       operationId: api_imprint_list
-
       description: |-
         list:
         Returns a list of all imprints.
@@ -391,7 +906,6 @@ paths:
 
         update:
         Update an imprint's information.
-
       parameters:
       - in: query
         name: cv_id
@@ -419,14 +933,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -434,13 +946,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedImprintListList'
           description: ''
-
   /api/imprint/{id}/:
-
     get:
-
       operationId: api_imprint_retrieve
-
       description: |-
         list:
         Returns a list of all imprints.
@@ -453,7 +961,6 @@ paths:
 
         update:
         Update an imprint's information.
-
       parameters:
       - in: path
         name: id
@@ -461,14 +968,12 @@ paths:
           type: integer
         description: A unique integer value identifying this imprint.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -476,13 +981,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImprintRead'
           description: ''
-
   /api/issue/:
-
     get:
-
       operationId: api_issue_list
-
       description: |-
         list:
         Return a list of all the issues.
@@ -492,7 +993,6 @@ paths:
 
         Note: cover_hash is a Perceptual hashing created with
         ImageHash. https://github.com/JohannesBuchner/imagehash
-
       parameters:
       - in: query
         name: alt_number
@@ -609,6 +1109,11 @@ paths:
         explode: false
         style: form
       - in: query
+        name: series_alt_names
+        schema:
+          type: string
+        description: Series Alternative Name
+      - in: query
         name: series_id
         schema:
           type: integer
@@ -618,6 +1123,11 @@ paths:
         schema:
           type: string
         description: Series Name
+      - in: query
+        name: series_q
+        schema:
+          type: string
+        description: Quick search across series name and alternative names
       - in: query
         name: series_volume
         schema:
@@ -669,14 +1179,12 @@ paths:
           type: string
         description: UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile
           scanner that strips the 5-digit EAN supplemental)
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -684,13 +1192,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
-
   /api/issue/{id}/:
-
     get:
-
       operationId: api_issue_retrieve
-
       description: |-
         list:
         Return a list of all the issues.
@@ -700,7 +1204,6 @@ paths:
 
         Note: cover_hash is a Perceptual hashing created with
         ImageHash. https://github.com/JohannesBuchner/imagehash
-
       parameters:
       - in: path
         name: id
@@ -708,14 +1211,12 @@ paths:
           type: integer
         description: A unique integer value identifying this issue.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -723,13 +1224,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueRead'
           description: ''
-
   /api/publisher/:
-
     get:
-
       operationId: api_publisher_list
-
       description: |-
         list:
         Returns a list of all publishers.
@@ -742,8 +1239,11 @@ paths:
 
         update:
         Update a publisher's information.
-
       parameters:
+      - in: query
+        name: alt_names
+        schema:
+          type: string
       - in: query
         name: cv_id
         schema:
@@ -770,14 +1270,17 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Quick search across name and alternative names
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -785,13 +1288,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPublisherListList'
           description: ''
-
   /api/publisher/{id}/:
-
     get:
-
       operationId: api_publisher_retrieve
-
       description: |-
         list:
         Returns a list of all publishers.
@@ -804,7 +1303,6 @@ paths:
 
         update:
         Update a publisher's information.
-
       parameters:
       - in: path
         name: id
@@ -812,14 +1310,12 @@ paths:
           type: integer
         description: A unique integer value identifying this publisher.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -827,15 +1323,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Publisher'
           description: ''
-
   /api/publisher/{id}/series_list/:
-
     get:
-
       operationId: api_publisher_series_list_list
-
       description: Returns a list of series for a publisher.
-
       parameters:
       - in: path
         name: id
@@ -849,14 +1340,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -864,13 +1353,166 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSeriesListList'
           description: ''
-
-  /api/reading_list/:
-
+  /api/pull_list/:
     get:
+      operationId: api_pull_list_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPullListReadList'
+          description: ''
+  /api/pull_list/{id}/:
+    get:
+      operationId: api_pull_list_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Pull List.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullListRead'
+          description: ''
+  /api/pull_list/issues/:
+    get:
+      operationId: api_pull_list_issues_list
+      description: |-
+        Return issues for series on the authenticated user's pull list.
 
+        Optionally filter by store date using store_date_after and store_date_before.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: store_date_after
+        schema:
+          type: string
+        description: Return issues with a store date on or after this date (YYYY-MM-DD).
+      - in: query
+        name: store_date_before
+        schema:
+          type: string
+        description: Return issues with a store date on or before this date (YYYY-MM-DD).
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPullListIssueList'
+          description: ''
+  /api/pull_list/series/:
+    get:
+      operationId: api_pull_list_series_list
+      description: Returns the authenticated user's pull list series.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPullListSeriesList'
+          description: ''
+  /api/pull_list/series/{series_pk}/remove/:
+    delete:
+      operationId: api_pull_list_series_remove_destroy
+      description: Remove a series from the authenticated user's pull list.
+      parameters:
+      - in: path
+        name: series_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: No response body
+  /api/pull_list/series/add/:
+    post:
+      operationId: api_pull_list_series_add_create
+      description: Add a series to the authenticated user's pull list.
+      parameters:
+      - in: query
+        name: series_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullListSeries'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullListSeries'
+          description: ''
+  /api/reading_list/:
+    get:
       operationId: api_reading_list_list
-
       description: |-
         list:
         Returns a list of reading lists based on user permissions.
@@ -881,7 +1523,6 @@ paths:
         retrieve:
         Returns the information of an individual reading list.
         Requires authentication.
-
       parameters:
       - in: query
         name: attribution_source
@@ -965,14 +1606,12 @@ paths:
         name: username
         schema:
           type: string
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -980,13 +1619,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedReadingListListList'
           description: ''
-
   /api/reading_list/{id}/:
-
     get:
-
       operationId: api_reading_list_retrieve
-
       description: |-
         list:
         Returns a list of reading lists based on user permissions.
@@ -997,7 +1632,6 @@ paths:
         retrieve:
         Returns the information of an individual reading list.
         Requires authentication.
-
       parameters:
       - in: path
         name: id
@@ -1005,14 +1639,12 @@ paths:
           type: integer
         description: A unique integer value identifying this reading list.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1020,15 +1652,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReadingListRead'
           description: ''
-
   /api/reading_list/{id}/items/:
-
     get:
-
       operationId: api_reading_list_items_list
-
       description: Returns a paginated list of items for this reading list.
-
       parameters:
       - in: path
         name: id
@@ -1042,14 +1669,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1057,17 +1682,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedReadingListItemList'
           description: ''
-
   /api/role/:
-
     get:
-
       operationId: api_role_list
-
       description: |-
         list:
         Returns a list of all the creator roles.
-
       parameters:
       - in: query
         name: modified_gt
@@ -1085,14 +1705,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1100,19 +1718,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedRoleList'
           description: ''
-
   /api/schema/:
-
     get:
-
       operationId: api_schema_retrieve
-
       description: |-
         OpenApi3 schema for this API. Format can be selected via content negotiation.
 
         - YAML: application/vnd.oai.openapi
         - JSON: application/vnd.oai.openapi+json
-
       parameters:
       - in: query
         name: format
@@ -1123,6 +1736,89 @@ paths:
           - yaml
       - in: query
         name: lang
+        schema:
+          type: string
+          enum:
+          - en
+          - it
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/series/:
+    get:
+      operationId: api_series_list
+      description: |-
+        list:
+        Returns a list of all the comic series.
+
+        retrieve:
+        Returns the information of an individual comic series.
+
+        create:
+        Add a new Series.
+
+        update:
+        Update a Series information.
+      parameters:
+      - in: query
+        name: alt_names
+        schema:
+          type: string
+      - in: query
+        name: character_id
+        schema:
+          type: integer
+        description: Character Metron ID
+      - in: query
+        name: creator_id
+        schema:
+          type: integer
+        description: Creator Metron ID
+      - in: query
+        name: cv_id
+        schema:
+          type: integer
+        description: Comic Vine ID
+      - in: query
+        name: gcd_id
+        schema:
+          type: integer
+        description: Grand Comics Database ID
+      - in: query
+        name: imprint_id
+        schema:
+          type: integer
+        description: Imprint Metron ID
+      - in: query
+        name: imprint_name
+        schema:
+          type: string
+      - in: query
+        name: language
         schema:
           type: string
           enum:
@@ -1226,85 +1922,107 @@ paths:
           - vi
           - zh-hans
           - zh-hant
-
-      tags:
-      - api
-
-      security:
-      - basicAuth: []
-      - cookieAuth: []
-      - {}
-
-      responses:
-        '200':
-          content:
-            application/vnd.oai.openapi:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/yaml:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/vnd.oai.openapi+json:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
-
-  /api/series/:
-
-    get:
-
-      operationId: api_series_list
-
-      description: |-
-        list:
-        Returns a list of all the comic series.
-
-        retrieve:
-        Returns the information of an individual comic series.
-
-        create:
-        Add a new Series.
-
-        update:
-        Update a Series information.
-
-      parameters:
-      - in: query
-        name: character_id
-        schema:
-          type: integer
-        description: Character Metron ID
-      - in: query
-        name: creator_id
-        schema:
-          type: integer
-        description: Creator Metron ID
-      - in: query
-        name: cv_id
-        schema:
-          type: integer
-        description: Comic Vine ID
-      - in: query
-        name: gcd_id
-        schema:
-          type: integer
-        description: Grand Comics Database ID
-      - in: query
-        name: imprint_id
-        schema:
-          type: integer
-        description: Imprint Metron ID
-      - in: query
-        name: imprint_name
-        schema:
-          type: string
+        description: |-
+          * `af` - Afrikaans
+          * `ar` - Arabic
+          * `ar-dz` - Algerian Arabic
+          * `ast` - Asturian
+          * `az` - Azerbaijani
+          * `bg` - Bulgarian
+          * `be` - Belarusian
+          * `bn` - Bengali
+          * `br` - Breton
+          * `bs` - Bosnian
+          * `ca` - Catalan
+          * `ckb` - Central Kurdish (Sorani)
+          * `cs` - Czech
+          * `cy` - Welsh
+          * `da` - Danish
+          * `de` - German
+          * `dsb` - Lower Sorbian
+          * `el` - Greek
+          * `en` - English
+          * `en-au` - Australian English
+          * `en-gb` - British English
+          * `eo` - Esperanto
+          * `es` - Spanish
+          * `es-ar` - Argentinian Spanish
+          * `es-co` - Colombian Spanish
+          * `es-mx` - Mexican Spanish
+          * `es-ni` - Nicaraguan Spanish
+          * `es-ve` - Venezuelan Spanish
+          * `et` - Estonian
+          * `eu` - Basque
+          * `fa` - Persian
+          * `fi` - Finnish
+          * `fr` - French
+          * `fy` - Frisian
+          * `ga` - Irish
+          * `gd` - Scottish Gaelic
+          * `gl` - Galician
+          * `he` - Hebrew
+          * `hi` - Hindi
+          * `hr` - Croatian
+          * `hsb` - Upper Sorbian
+          * `ht` - Haitian Creole
+          * `hu` - Hungarian
+          * `hy` - Armenian
+          * `ia` - Interlingua
+          * `id` - Indonesian
+          * `ig` - Igbo
+          * `io` - Ido
+          * `is` - Icelandic
+          * `it` - Italian
+          * `ja` - Japanese
+          * `ka` - Georgian
+          * `kab` - Kabyle
+          * `kk` - Kazakh
+          * `km` - Khmer
+          * `kn` - Kannada
+          * `ko` - Korean
+          * `ky` - Kyrgyz
+          * `lb` - Luxembourgish
+          * `lt` - Lithuanian
+          * `lv` - Latvian
+          * `mk` - Macedonian
+          * `ml` - Malayalam
+          * `mn` - Mongolian
+          * `mr` - Marathi
+          * `ms` - Malay
+          * `my` - Burmese
+          * `nb` - Norwegian Bokmål
+          * `ne` - Nepali
+          * `nl` - Dutch
+          * `nn` - Norwegian Nynorsk
+          * `os` - Ossetic
+          * `pa` - Punjabi
+          * `pl` - Polish
+          * `pt` - Portuguese
+          * `pt-br` - Brazilian Portuguese
+          * `ro` - Romanian
+          * `ru` - Russian
+          * `sk` - Slovak
+          * `sl` - Slovenian
+          * `sq` - Albanian
+          * `sr` - Serbian
+          * `sr-latn` - Serbian Latin
+          * `sv` - Swedish
+          * `sw` - Swahili
+          * `ta` - Tamil
+          * `te` - Telugu
+          * `tg` - Tajik
+          * `th` - Thai
+          * `tk` - Turkmen
+          * `tr` - Turkish
+          * `tt` - Tatar
+          * `udm` - Udmurt
+          * `ug` - Uyghur
+          * `uk` - Ukrainian
+          * `ur` - Urdu
+          * `uz` - Uzbek
+          * `vi` - Vietnamese
+          * `zh-hans` - Simplified Chinese
+          * `zh-hant` - Traditional Chinese
       - in: query
         name: missing_cv_id
         schema:
@@ -1337,6 +2055,11 @@ paths:
         name: publisher_name
         schema:
           type: string
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Quick search across name and alternative names
       - in: query
         name: role_id
         schema:
@@ -1380,14 +2103,12 @@ paths:
         name: year_end
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1395,13 +2116,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSeriesListList'
           description: ''
-
   /api/series/{id}/:
-
     get:
-
       operationId: api_series_retrieve
-
       description: |-
         list:
         Returns a list of all the comic series.
@@ -1414,7 +2131,6 @@ paths:
 
         update:
         Update a Series information.
-
       parameters:
       - in: path
         name: id
@@ -1422,14 +2138,12 @@ paths:
           type: integer
         description: A unique integer value identifying this series.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1437,13 +2151,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/SeriesRead'
           description: ''
-
   /api/series/{id}/issue_list/:
-
     get:
-
       operationId: api_series_issue_list_list
-
       description: |-
         list:
         Returns a list of all the comic series.
@@ -1456,7 +2166,6 @@ paths:
 
         update:
         Update a Series information.
-
       parameters:
       - in: path
         name: id
@@ -1470,14 +2179,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1485,17 +2192,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
-
   /api/series_type/:
-
     get:
-
       operationId: api_series_type_list
-
       description: |-
         list:
         Returns a list of the Series Types available.
-
       parameters:
       - in: query
         name: modified_gt
@@ -1513,14 +2215,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1528,20 +2228,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSeriesTypeList'
           description: ''
-
   /api/team/:
-
     get:
-
       operationId: api_team_list
-
       description: |-
         list:
         Return a list of all the teams.
 
         retrieve:
         Returns the information of an individual team.
-
       parameters:
       - in: query
         name: cv_id
@@ -1569,14 +2264,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1584,20 +2277,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTeamListList'
           description: ''
-
   /api/team/{id}/:
-
     get:
-
       operationId: api_team_retrieve
-
       description: |-
         list:
         Return a list of all the teams.
 
         retrieve:
         Returns the information of an individual team.
-
       parameters:
       - in: path
         name: id
@@ -1605,14 +2293,12 @@ paths:
           type: integer
         description: A unique integer value identifying this team.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1620,20 +2306,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/TeamRead'
           description: ''
-
   /api/team/{id}/issue_list/:
-
     get:
-
       operationId: api_team_issue_list_list
-
       description: |-
         list:
         Return a list of all the teams.
 
         retrieve:
         Returns the information of an individual team.
-
       parameters:
       - in: path
         name: id
@@ -1647,14 +2328,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1662,20 +2341,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIssueListList'
           description: ''
-
   /api/universe/:
-
     get:
-
       operationId: api_universe_list
-
       description: |-
         list:
         Return a list of all the universes.
 
         retrieve:
         Returns the information of an individual universe.
-
       parameters:
       - in: query
         name: designation
@@ -1697,14 +2371,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1712,20 +2384,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedUniverseListList'
           description: ''
-
   /api/universe/{id}/:
-
     get:
-
       operationId: api_universe_retrieve
-
       description: |-
         list:
         Return a list of all the universes.
 
         retrieve:
         Returns the information of an individual universe.
-
       parameters:
       - in: path
         name: id
@@ -1733,14 +2400,12 @@ paths:
           type: integer
         description: A unique integer value identifying this universe.
         required: true
-
       tags:
       - api
-
       security:
       - basicAuth: []
       - cookieAuth: []
-
+      - knoxApiToken: []
       responses:
         '200':
           content:
@@ -1748,10 +2413,186 @@ paths:
               schema:
                 $ref: '#/components/schemas/UniverseRead'
           description: ''
-
+  /api/wish_list/:
+    get:
+      operationId: api_wish_list_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWishListList'
+          description: ''
+  /api/wish_list/{id}/:
+    get:
+      operationId: api_wish_list_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Wish List.
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishList'
+          description: ''
+  /api/wish_list/items/:
+    get:
+      operationId: api_wish_list_items_list
+      description: Returns paginated wish list items for the authenticated user.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWishListItemListList'
+          description: ''
+  /api/wish_list/items/{item_pk}/acquire/:
+    post:
+      operationId: api_wish_list_items_acquire_create
+      description: Mark a wish list item as acquired and create a collection item.
+      parameters:
+      - in: path
+        name: item_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcquireWishListItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AcquireWishListItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AcquireWishListItem'
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '200':
+          description: No response body
+  /api/wish_list/items/{item_pk}/remove/:
+    delete:
+      operationId: api_wish_list_items_remove_destroy
+      description: Remove an item from the authenticated user's wish list.
+      parameters:
+      - in: path
+        name: item_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: No response body
+  /api/wish_list/items/add/:
+    post:
+      operationId: api_wish_list_items_add_create
+      description: Add an issue to the authenticated user's wish list.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WishListAddItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WishListAddItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WishListAddItem'
+        required: true
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishListItemRead'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishListItemRead'
+          description: ''
 components:
   schemas:
-
+    AcquireWishListItem:
+      type: object
+      properties:
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+        purchase_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,2})?$
+          nullable: true
+        purchase_price_currency:
+          allOf:
+          - $ref: '#/components/schemas/CurrencyEnum'
+          default: USD
+        purchase_store:
+          type: string
+          default: ''
+        notes:
+          type: string
+          default: ''
     Arc:
       type: object
       properties:
@@ -1791,7 +2632,6 @@ components:
       - modified
       - name
       - resource_url
-
     ArcList:
       type: object
       properties:
@@ -1809,7 +2649,6 @@ components:
       - id
       - modified
       - name
-
     AssociatedSeries:
       type: object
       properties:
@@ -1821,7 +2660,6 @@ components:
       required:
       - id
       - series
-
     AttributionSourceEnum:
       enum:
       - CBRO
@@ -1842,7 +2680,6 @@ components:
         * `HTLC` - How To Love Comics
         * `LOCG` - League of ComicGeeks
         * `OTHER` - Other
-
     BasicImprint:
       type: object
       properties:
@@ -1855,7 +2692,6 @@ components:
       required:
       - id
       - name
-
     BasicPublisher:
       type: object
       properties:
@@ -1868,11 +2704,19 @@ components:
       required:
       - id
       - name
-
     BlankEnum:
       enum:
       - ''
-
+    BookFormatEnum:
+      enum:
+      - PRINT
+      - DIGITAL
+      - BOTH
+      type: string
+      description: |-
+        * `PRINT` - Print
+        * `DIGITAL` - Digital
+        * `BOTH` - Both
     CharacterList:
       type: object
       properties:
@@ -1890,7 +2734,6 @@ components:
       - id
       - modified
       - name
-
     CharacterRead:
       type: object
       properties:
@@ -1953,7 +2796,919 @@ components:
       - resource_url
       - teams
       - universes
+    CollectionAddItem:
+      type: object
+      description: Serializer for adding an issue to the authenticated user's collection.
+      properties:
+        issue_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+          default: 1
+        book_format:
+          allOf:
+          - $ref: '#/components/schemas/BookFormatEnum'
+          default: PRINT
+        grade:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,1})?$
+          nullable: true
+        grading_company:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/GradingCompanyEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+        purchase_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,2})?$
+          nullable: true
+        purchase_price_currency:
+          allOf:
+          - $ref: '#/components/schemas/CurrencyEnum'
+          default: USD
+        purchase_store:
+          type: string
+          default: ''
+        storage_location:
+          type: string
+          default: ''
+        notes:
+          type: string
+          default: ''
+      required:
+      - issue_id
+    CollectionIssue:
+      type: object
+      description: Serializer for issues in collection (without image and cover_hash).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/IssueListSeries'
+          readOnly: true
+        number:
+          type: string
+          maxLength: 25
+        cover_date:
+          type: string
+          format: date
+        store_date:
+          type: string
+          format: date
+          nullable: true
+          title: In Store Date
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cover_date
+      - id
+      - modified
+      - number
+      - series
+    CollectionList:
+      type: object
+      description: List serializer for collection items - minimal data for list view.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        issue:
+          allOf:
+          - $ref: '#/components/schemas/CollectionIssue'
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          description: Number of copies owned
+        book_format:
+          type: string
+          readOnly: true
+        grade:
+          nullable: true
+          description: |-
+            Comic book grade (CGC scale)
 
+            * `10.0` - 10.0 (Gem Mint)
+            * `9.9` - 9.9 (Mint)
+            * `9.8` - 9.8 (NM/M - Near Mint/Mint)
+            * `9.6` - 9.6 (NM+ - Near Mint+)
+            * `9.4` - 9.4 (NM - Near Mint)
+            * `9.2` - 9.2 (NM- - Near Mint-)
+            * `9.0` - 9.0 (VF/NM - Very Fine/Near Mint)
+            * `8.5` - 8.5 (VF+ - Very Fine+)
+            * `8.0` - 8.0 (VF - Very Fine)
+            * `7.5` - 7.5 (VF- - Very Fine-)
+            * `7.0` - 7.0 (FN/VF - Fine/Very Fine)
+            * `6.5` - 6.5 (FN+ - Fine+)
+            * `6.0` - 6.0 (FN - Fine)
+            * `5.5` - 5.5 (FN- - Fine-)
+            * `5.0` - 5.0 (VG/FN - Very Good/Fine)
+            * `4.5` - 4.5 (VG+ - Very Good+)
+            * `4.0` - 4.0 (VG - Very Good)
+            * `3.5` - 3.5 (VG- - Very Good-)
+            * `3.0` - 3.0 (GD/VG - Good/Very Good)
+            * `2.5` - 2.5 (GD+ - Good+)
+            * `2.0` - 2.0 (GD - Good)
+            * `1.8` - 1.8 (GD- - Good-)
+            * `1.5` - 1.5 (FR/GD - Fair/Good)
+            * `1.0` - 1.0 (FR - Fair)
+            * `0.5` - 0.5 (PR - Poor)
+          maximum: 100
+          exclusiveMaximum: true
+          minimum: -100
+          exclusiveMinimum: true
+          oneOf:
+          - $ref: '#/components/schemas/DesiredGradeEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        grading_company:
+          type: string
+          readOnly: true
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when the issue was purchased
+        is_read:
+          type: boolean
+          description: Whether the issue has been read
+        read_dates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadDate'
+          readOnly: true
+        read_count:
+          type: integer
+          readOnly: true
+        rating:
+          nullable: true
+          description: |-
+            Star rating (1-5) for this issue
+
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
+            * `4` - 4
+            * `5` - 5
+          minimum: 0
+          maximum: 32767
+          oneOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - book_format
+      - grading_company
+      - id
+      - issue
+      - modified
+      - read_count
+      - read_dates
+      - user
+    CollectionRatingUpdate:
+      type: object
+      description: |-
+        Update serializer for collection items - rating only.
+
+        Read-tracking (is_read/date_read) is handled exclusively through the
+        scrobble action, so this serializer intentionally excludes those fields.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        rating:
+          nullable: true
+          description: |-
+            Star rating (1-5) for this issue
+
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
+            * `4` - 4
+            * `5` - 5
+          minimum: 0
+          maximum: 32767
+          oneOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+    CollectionRead:
+      type: object
+      description: Read serializer for collection items - full detail view.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        issue:
+          allOf:
+          - $ref: '#/components/schemas/CollectionIssue'
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          description: Number of copies owned
+        book_format:
+          type: string
+          readOnly: true
+        grade:
+          nullable: true
+          description: |-
+            Comic book grade (CGC scale)
+
+            * `10.0` - 10.0 (Gem Mint)
+            * `9.9` - 9.9 (Mint)
+            * `9.8` - 9.8 (NM/M - Near Mint/Mint)
+            * `9.6` - 9.6 (NM+ - Near Mint+)
+            * `9.4` - 9.4 (NM - Near Mint)
+            * `9.2` - 9.2 (NM- - Near Mint-)
+            * `9.0` - 9.0 (VF/NM - Very Fine/Near Mint)
+            * `8.5` - 8.5 (VF+ - Very Fine+)
+            * `8.0` - 8.0 (VF - Very Fine)
+            * `7.5` - 7.5 (VF- - Very Fine-)
+            * `7.0` - 7.0 (FN/VF - Fine/Very Fine)
+            * `6.5` - 6.5 (FN+ - Fine+)
+            * `6.0` - 6.0 (FN - Fine)
+            * `5.5` - 5.5 (FN- - Fine-)
+            * `5.0` - 5.0 (VG/FN - Very Good/Fine)
+            * `4.5` - 4.5 (VG+ - Very Good+)
+            * `4.0` - 4.0 (VG - Very Good)
+            * `3.5` - 3.5 (VG- - Very Good-)
+            * `3.0` - 3.0 (GD/VG - Good/Very Good)
+            * `2.5` - 2.5 (GD+ - Good+)
+            * `2.0` - 2.0 (GD - Good)
+            * `1.8` - 1.8 (GD- - Good-)
+            * `1.5` - 1.5 (FR/GD - Fair/Good)
+            * `1.0` - 1.0 (FR - Fair)
+            * `0.5` - 0.5 (PR - Poor)
+          maximum: 100
+          exclusiveMaximum: true
+          minimum: -100
+          exclusiveMinimum: true
+          oneOf:
+          - $ref: '#/components/schemas/DesiredGradeEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        grading_company:
+          type: string
+          readOnly: true
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when the issue was purchased
+        purchase_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,2})?$
+          nullable: true
+          description: Price paid for this issue
+        purchase_store:
+          type: string
+          description: Store or vendor where purchased
+          maxLength: 255
+        storage_location:
+          type: string
+          description: Physical location where the issue is stored
+          maxLength: 255
+        notes:
+          type: string
+          description: Additional notes about this collection item
+        is_read:
+          type: boolean
+          description: Whether the issue has been read
+        date_read:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date and time when the issue was last read (synced from read_dates)
+        read_dates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadDate'
+          readOnly: true
+        read_count:
+          type: integer
+          readOnly: true
+        rating:
+          nullable: true
+          description: |-
+            Star rating (1-5) for this issue
+
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
+            * `4` - 4
+            * `5` - 5
+          minimum: 0
+          maximum: 32767
+          oneOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        resource_url:
+          type: string
+          readOnly: true
+        created_on:
+          type: string
+          format: date-time
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - book_format
+      - created_on
+      - grading_company
+      - id
+      - issue
+      - modified
+      - read_count
+      - read_dates
+      - resource_url
+      - user
+    CountryEnum:
+      enum:
+      - AF
+      - AX
+      - AL
+      - DZ
+      - AS
+      - AD
+      - AO
+      - AI
+      - AQ
+      - AG
+      - AR
+      - AM
+      - AW
+      - AU
+      - AT
+      - AZ
+      - BS
+      - BH
+      - BD
+      - BB
+      - BY
+      - BE
+      - BZ
+      - BJ
+      - BM
+      - BT
+      - BO
+      - BQ
+      - BA
+      - BW
+      - BV
+      - BR
+      - IO
+      - BN
+      - BG
+      - BF
+      - BI
+      - CV
+      - KH
+      - CM
+      - CA
+      - KY
+      - CF
+      - TD
+      - CL
+      - CN
+      - CX
+      - CC
+      - CO
+      - KM
+      - CG
+      - CK
+      - CR
+      - CI
+      - HR
+      - CU
+      - CW
+      - CY
+      - CZ
+      - CD
+      - DK
+      - DJ
+      - DM
+      - DO
+      - EC
+      - EG
+      - SV
+      - GQ
+      - ER
+      - EE
+      - SZ
+      - ET
+      - FK
+      - FO
+      - FJ
+      - FI
+      - FR
+      - GF
+      - PF
+      - TF
+      - GA
+      - GM
+      - GE
+      - DE
+      - GH
+      - GI
+      - GR
+      - GL
+      - GD
+      - GP
+      - GU
+      - GT
+      - GG
+      - GN
+      - GW
+      - GY
+      - HT
+      - HM
+      - HN
+      - HK
+      - HU
+      - IS
+      - IN
+      - ID
+      - IR
+      - IQ
+      - IE
+      - IM
+      - IL
+      - IT
+      - JM
+      - JP
+      - JE
+      - JO
+      - KZ
+      - KE
+      - KI
+      - KW
+      - KG
+      - LA
+      - LV
+      - LB
+      - LS
+      - LR
+      - LY
+      - LI
+      - LT
+      - LU
+      - MO
+      - MG
+      - MW
+      - MY
+      - MV
+      - ML
+      - MT
+      - MH
+      - MQ
+      - MR
+      - MU
+      - YT
+      - MX
+      - FM
+      - MD
+      - MC
+      - MN
+      - ME
+      - MS
+      - MA
+      - MZ
+      - MM
+      - NA
+      - NR
+      - NP
+      - NL
+      - NC
+      - NZ
+      - NI
+      - NE
+      - NG
+      - NU
+      - NF
+      - KP
+      - MK
+      - MP
+      - 'NO'
+      - OM
+      - PK
+      - PW
+      - PS
+      - PA
+      - PG
+      - PY
+      - PE
+      - PH
+      - PN
+      - PL
+      - PT
+      - PR
+      - QA
+      - RE
+      - RO
+      - RU
+      - RW
+      - BL
+      - SH
+      - KN
+      - LC
+      - MF
+      - PM
+      - VC
+      - WS
+      - SM
+      - ST
+      - SA
+      - SN
+      - RS
+      - SC
+      - SL
+      - SG
+      - SX
+      - SK
+      - SI
+      - SB
+      - SO
+      - ZA
+      - GS
+      - KR
+      - SS
+      - ES
+      - LK
+      - SD
+      - SR
+      - SJ
+      - SE
+      - CH
+      - SY
+      - TW
+      - TJ
+      - TZ
+      - TH
+      - TL
+      - TG
+      - TK
+      - TO
+      - TT
+      - TN
+      - TR
+      - TM
+      - TC
+      - TV
+      - UG
+      - UA
+      - AE
+      - GB
+      - UM
+      - US
+      - UY
+      - UZ
+      - VU
+      - VA
+      - VE
+      - VN
+      - VG
+      - VI
+      - WF
+      - EH
+      - YE
+      - ZM
+      - ZW
+      type: string
+      description: |-
+        * `AF` - Afghanistan
+        * `AX` - Åland Islands
+        * `AL` - Albania
+        * `DZ` - Algeria
+        * `AS` - American Samoa
+        * `AD` - Andorra
+        * `AO` - Angola
+        * `AI` - Anguilla
+        * `AQ` - Antarctica
+        * `AG` - Antigua and Barbuda
+        * `AR` - Argentina
+        * `AM` - Armenia
+        * `AW` - Aruba
+        * `AU` - Australia
+        * `AT` - Austria
+        * `AZ` - Azerbaijan
+        * `BS` - Bahamas (The)
+        * `BH` - Bahrain
+        * `BD` - Bangladesh
+        * `BB` - Barbados
+        * `BY` - Belarus
+        * `BE` - Belgium
+        * `BZ` - Belize
+        * `BJ` - Benin
+        * `BM` - Bermuda
+        * `BT` - Bhutan
+        * `BO` - Bolivia
+        * `BQ` - Bonaire, Sint Eustatius and Saba
+        * `BA` - Bosnia and Herzegovina
+        * `BW` - Botswana
+        * `BV` - Bouvet Island
+        * `BR` - Brazil
+        * `IO` - British Indian Ocean Territory
+        * `BN` - Brunei
+        * `BG` - Bulgaria
+        * `BF` - Burkina Faso
+        * `BI` - Burundi
+        * `CV` - Cabo Verde
+        * `KH` - Cambodia
+        * `CM` - Cameroon
+        * `CA` - Canada
+        * `KY` - Cayman Islands
+        * `CF` - Central African Republic
+        * `TD` - Chad
+        * `CL` - Chile
+        * `CN` - China
+        * `CX` - Christmas Island
+        * `CC` - Cocos (Keeling) Islands
+        * `CO` - Colombia
+        * `KM` - Comoros
+        * `CG` - Congo
+        * `CK` - Cook Islands
+        * `CR` - Costa Rica
+        * `CI` - Côte d'Ivoire
+        * `HR` - Croatia
+        * `CU` - Cuba
+        * `CW` - Curaçao
+        * `CY` - Cyprus
+        * `CZ` - Czechia
+        * `CD` - Democratic Republic of the Congo
+        * `DK` - Denmark
+        * `DJ` - Djibouti
+        * `DM` - Dominica
+        * `DO` - Dominican Republic
+        * `EC` - Ecuador
+        * `EG` - Egypt
+        * `SV` - El Salvador
+        * `GQ` - Equatorial Guinea
+        * `ER` - Eritrea
+        * `EE` - Estonia
+        * `SZ` - Eswatini
+        * `ET` - Ethiopia
+        * `FK` - Falkland Islands (Malvinas)
+        * `FO` - Faroe Islands
+        * `FJ` - Fiji
+        * `FI` - Finland
+        * `FR` - France
+        * `GF` - French Guiana
+        * `PF` - French Polynesia
+        * `TF` - French Southern Territories
+        * `GA` - Gabon
+        * `GM` - Gambia
+        * `GE` - Georgia
+        * `DE` - Germany
+        * `GH` - Ghana
+        * `GI` - Gibraltar
+        * `GR` - Greece
+        * `GL` - Greenland
+        * `GD` - Grenada
+        * `GP` - Guadeloupe
+        * `GU` - Guam
+        * `GT` - Guatemala
+        * `GG` - Guernsey
+        * `GN` - Guinea
+        * `GW` - Guinea-Bissau
+        * `GY` - Guyana
+        * `HT` - Haiti
+        * `HM` - Heard Island and McDonald Islands
+        * `HN` - Honduras
+        * `HK` - Hong Kong
+        * `HU` - Hungary
+        * `IS` - Iceland
+        * `IN` - India
+        * `ID` - Indonesia
+        * `IR` - Iran
+        * `IQ` - Iraq
+        * `IE` - Ireland
+        * `IM` - Isle of Man
+        * `IL` - Israel
+        * `IT` - Italy
+        * `JM` - Jamaica
+        * `JP` - Japan
+        * `JE` - Jersey
+        * `JO` - Jordan
+        * `KZ` - Kazakhstan
+        * `KE` - Kenya
+        * `KI` - Kiribati
+        * `KW` - Kuwait
+        * `KG` - Kyrgyzstan
+        * `LA` - Laos
+        * `LV` - Latvia
+        * `LB` - Lebanon
+        * `LS` - Lesotho
+        * `LR` - Liberia
+        * `LY` - Libya
+        * `LI` - Liechtenstein
+        * `LT` - Lithuania
+        * `LU` - Luxembourg
+        * `MO` - Macao
+        * `MG` - Madagascar
+        * `MW` - Malawi
+        * `MY` - Malaysia
+        * `MV` - Maldives
+        * `ML` - Mali
+        * `MT` - Malta
+        * `MH` - Marshall Islands
+        * `MQ` - Martinique
+        * `MR` - Mauritania
+        * `MU` - Mauritius
+        * `YT` - Mayotte
+        * `MX` - Mexico
+        * `FM` - Micronesia
+        * `MD` - Moldova
+        * `MC` - Monaco
+        * `MN` - Mongolia
+        * `ME` - Montenegro
+        * `MS` - Montserrat
+        * `MA` - Morocco
+        * `MZ` - Mozambique
+        * `MM` - Myanmar
+        * `NA` - Namibia
+        * `NR` - Nauru
+        * `NP` - Nepal
+        * `NL` - Netherlands
+        * `NC` - New Caledonia
+        * `NZ` - New Zealand
+        * `NI` - Nicaragua
+        * `NE` - Niger
+        * `NG` - Nigeria
+        * `NU` - Niue
+        * `NF` - Norfolk Island
+        * `KP` - North Korea
+        * `MK` - North Macedonia
+        * `MP` - Northern Mariana Islands
+        * `NO` - Norway
+        * `OM` - Oman
+        * `PK` - Pakistan
+        * `PW` - Palau
+        * `PS` - Palestine
+        * `PA` - Panama
+        * `PG` - Papua New Guinea
+        * `PY` - Paraguay
+        * `PE` - Peru
+        * `PH` - Philippines
+        * `PN` - Pitcairn
+        * `PL` - Poland
+        * `PT` - Portugal
+        * `PR` - Puerto Rico
+        * `QA` - Qatar
+        * `RE` - Réunion
+        * `RO` - Romania
+        * `RU` - Russia
+        * `RW` - Rwanda
+        * `BL` - Saint Barthélemy
+        * `SH` - Saint Helena
+        * `KN` - Saint Kitts and Nevis
+        * `LC` - Saint Lucia
+        * `MF` - Saint Martin (French part)
+        * `PM` - Saint Pierre and Miquelon
+        * `VC` - Saint Vincent and the Grenadines
+        * `WS` - Samoa
+        * `SM` - San Marino
+        * `ST` - Sao Tome and Principe
+        * `SA` - Saudi Arabia
+        * `SN` - Senegal
+        * `RS` - Serbia
+        * `SC` - Seychelles
+        * `SL` - Sierra Leone
+        * `SG` - Singapore
+        * `SX` - Sint Maarten (Dutch part)
+        * `SK` - Slovakia
+        * `SI` - Slovenia
+        * `SB` - Solomon Islands
+        * `SO` - Somalia
+        * `ZA` - South Africa
+        * `GS` - South Georgia
+        * `KR` - South Korea
+        * `SS` - South Sudan
+        * `ES` - Spain
+        * `LK` - Sri Lanka
+        * `SD` - Sudan
+        * `SR` - Suriname
+        * `SJ` - Svalbard and Jan Mayen
+        * `SE` - Sweden
+        * `CH` - Switzerland
+        * `SY` - Syria
+        * `TW` - Taiwan
+        * `TJ` - Tajikistan
+        * `TZ` - Tanzania
+        * `TH` - Thailand
+        * `TL` - Timor-Leste
+        * `TG` - Togo
+        * `TK` - Tokelau
+        * `TO` - Tonga
+        * `TT` - Trinidad and Tobago
+        * `TN` - Tunisia
+        * `TR` - Türkiye
+        * `TM` - Turkmenistan
+        * `TC` - Turks and Caicos Islands
+        * `TV` - Tuvalu
+        * `UG` - Uganda
+        * `UA` - Ukraine
+        * `AE` - United Arab Emirates
+        * `GB` - United Kingdom
+        * `UM` - United States Minor Outlying Islands
+        * `US` - United States of America
+        * `UY` - Uruguay
+        * `UZ` - Uzbekistan
+        * `VU` - Vanuatu
+        * `VA` - Vatican City
+        * `VE` - Venezuela
+        * `VN` - Vietnam
+        * `VG` - Virgin Islands (British)
+        * `VI` - Virgin Islands (U.S.)
+        * `WF` - Wallis and Futuna
+        * `EH` - Western Sahara
+        * `YE` - Yemen
+        * `ZM` - Zambia
+        * `ZW` - Zimbabwe
+    Creator:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        birth:
+          type: string
+          format: date
+          nullable: true
+          title: Date of Birth
+        death:
+          type: string
+          format: date
+          nullable: true
+          title: Date of Death
+        desc:
+          type: string
+          title: Description
+        image:
+          type: string
+          format: uri
+          nullable: true
+        alias:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        resource_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+      - resource_url
     CreatorList:
       type: object
       properties:
@@ -1971,7 +3726,6 @@ components:
       - id
       - modified
       - name
-
     CreditRead:
       type: object
       properties:
@@ -1989,16 +3743,18 @@ components:
       - creator
       - id
       - role
-
     CurrencyEnum:
       enum:
       - USD
       - GBP
+      - EUR
+      - ITL
       type: string
       description: |-
         * `USD` - USD
         * `GBP` - GBP
-
+        * `EUR` - EUR
+        * `ITL` - ITL
     DesiredGradeEnum:
       enum:
       - 10.0
@@ -2053,7 +3809,6 @@ components:
         * `1.5` - 1.5 (FR/GD - Fair/Good)
         * `1.0` - 1.0 (FR - Fair)
         * `0.5` - 0.5 (PR - Poor)
-
     Genre:
       type: object
       properties:
@@ -2066,7 +3821,16 @@ components:
       required:
       - id
       - name
-
+    GradingCompanyEnum:
+      enum:
+      - CGC
+      - CBCS
+      - PGX
+      type: string
+      description: |-
+        * `CGC` - CGC (Certified Guaranty Company)
+        * `CBCS` - CBCS (Comic Book Certification Service)
+        * `PGX` - PGX (Professional Grading Experts)
     ImprintList:
       type: object
       properties:
@@ -2084,7 +3848,6 @@ components:
       - id
       - modified
       - name
-
     ImprintRead:
       type: object
       properties:
@@ -2136,7 +3899,6 @@ components:
       - name
       - publisher
       - resource_url
-
     IssueList:
       type: object
       properties:
@@ -2179,7 +3941,6 @@ components:
       - modified
       - number
       - series
-
     IssueListSeries:
       type: object
       properties:
@@ -2203,7 +3964,6 @@ components:
       - name
       - volume
       - year_began
-
     IssueRead:
       type: object
       properties:
@@ -2401,7 +4161,6 @@ components:
       - teams
       - universes
       - variants
-
     IssueSeries:
       type: object
       properties:
@@ -2411,6 +4170,12 @@ components:
         name:
           type: string
           maxLength: 255
+        alt_names:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+          title: Alternative Names
         sort_name:
           type: string
           maxLength: 255
@@ -2432,6 +4197,10 @@ components:
           items:
             $ref: '#/components/schemas/Genre'
           readOnly: true
+        language:
+          oneOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          - $ref: '#/components/schemas/BlankEnum'
       required:
       - genres
       - id
@@ -2440,7 +4209,210 @@ components:
       - sort_name
       - volume
       - year_began
-
+    LanguageEnum:
+      enum:
+      - af
+      - ar
+      - ar-dz
+      - ast
+      - az
+      - bg
+      - be
+      - bn
+      - br
+      - bs
+      - ca
+      - ckb
+      - cs
+      - cy
+      - da
+      - de
+      - dsb
+      - el
+      - en
+      - en-au
+      - en-gb
+      - eo
+      - es
+      - es-ar
+      - es-co
+      - es-mx
+      - es-ni
+      - es-ve
+      - et
+      - eu
+      - fa
+      - fi
+      - fr
+      - fy
+      - ga
+      - gd
+      - gl
+      - he
+      - hi
+      - hr
+      - hsb
+      - ht
+      - hu
+      - hy
+      - ia
+      - id
+      - ig
+      - io
+      - is
+      - it
+      - ja
+      - ka
+      - kab
+      - kk
+      - km
+      - kn
+      - ko
+      - ky
+      - lb
+      - lt
+      - lv
+      - mk
+      - ml
+      - mn
+      - mr
+      - ms
+      - my
+      - nb
+      - ne
+      - nl
+      - nn
+      - os
+      - pa
+      - pl
+      - pt
+      - pt-br
+      - ro
+      - ru
+      - sk
+      - sl
+      - sq
+      - sr
+      - sr-latn
+      - sv
+      - sw
+      - ta
+      - te
+      - tg
+      - th
+      - tk
+      - tr
+      - tt
+      - udm
+      - ug
+      - uk
+      - ur
+      - uz
+      - vi
+      - zh-hans
+      - zh-hant
+      type: string
+      description: |-
+        * `af` - Afrikaans
+        * `ar` - Arabic
+        * `ar-dz` - Algerian Arabic
+        * `ast` - Asturian
+        * `az` - Azerbaijani
+        * `bg` - Bulgarian
+        * `be` - Belarusian
+        * `bn` - Bengali
+        * `br` - Breton
+        * `bs` - Bosnian
+        * `ca` - Catalan
+        * `ckb` - Central Kurdish (Sorani)
+        * `cs` - Czech
+        * `cy` - Welsh
+        * `da` - Danish
+        * `de` - German
+        * `dsb` - Lower Sorbian
+        * `el` - Greek
+        * `en` - English
+        * `en-au` - Australian English
+        * `en-gb` - British English
+        * `eo` - Esperanto
+        * `es` - Spanish
+        * `es-ar` - Argentinian Spanish
+        * `es-co` - Colombian Spanish
+        * `es-mx` - Mexican Spanish
+        * `es-ni` - Nicaraguan Spanish
+        * `es-ve` - Venezuelan Spanish
+        * `et` - Estonian
+        * `eu` - Basque
+        * `fa` - Persian
+        * `fi` - Finnish
+        * `fr` - French
+        * `fy` - Frisian
+        * `ga` - Irish
+        * `gd` - Scottish Gaelic
+        * `gl` - Galician
+        * `he` - Hebrew
+        * `hi` - Hindi
+        * `hr` - Croatian
+        * `hsb` - Upper Sorbian
+        * `ht` - Haitian Creole
+        * `hu` - Hungarian
+        * `hy` - Armenian
+        * `ia` - Interlingua
+        * `id` - Indonesian
+        * `ig` - Igbo
+        * `io` - Ido
+        * `is` - Icelandic
+        * `it` - Italian
+        * `ja` - Japanese
+        * `ka` - Georgian
+        * `kab` - Kabyle
+        * `kk` - Kazakh
+        * `km` - Khmer
+        * `kn` - Kannada
+        * `ko` - Korean
+        * `ky` - Kyrgyz
+        * `lb` - Luxembourgish
+        * `lt` - Lithuanian
+        * `lv` - Latvian
+        * `mk` - Macedonian
+        * `ml` - Malayalam
+        * `mn` - Mongolian
+        * `mr` - Marathi
+        * `ms` - Malay
+        * `my` - Burmese
+        * `nb` - Norwegian Bokmål
+        * `ne` - Nepali
+        * `nl` - Dutch
+        * `nn` - Norwegian Nynorsk
+        * `os` - Ossetic
+        * `pa` - Punjabi
+        * `pl` - Polish
+        * `pt` - Portuguese
+        * `pt-br` - Brazilian Portuguese
+        * `ro` - Romanian
+        * `ru` - Russian
+        * `sk` - Slovak
+        * `sl` - Slovenian
+        * `sq` - Albanian
+        * `sr` - Serbian
+        * `sr-latn` - Serbian Latin
+        * `sv` - Swedish
+        * `sw` - Swahili
+        * `ta` - Tamil
+        * `te` - Telugu
+        * `tg` - Tajik
+        * `th` - Thai
+        * `tk` - Turkmen
+        * `tr` - Turkish
+        * `tt` - Tatar
+        * `udm` - Udmurt
+        * `ug` - Uyghur
+        * `uk` - Ukrainian
+        * `ur` - Urdu
+        * `uz` - Uzbek
+        * `vi` - Vietnamese
+        * `zh-hans` - Simplified Chinese
+        * `zh-hant` - Traditional Chinese
     MissingIssue:
       type: object
       description: Serializer for missing issues in a series.
@@ -2468,7 +4440,6 @@ components:
       - id
       - number
       - series
-
     MissingSeries:
       type: object
       description: Serializer for series with missing issues.
@@ -2525,11 +4496,9 @@ components:
       - sort_name
       - total_issues
       - year_began
-
     NullEnum:
       enum:
       - null
-
     PaginatedArcListList:
       type: object
       required:
@@ -2553,7 +4522,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ArcList'
-
     PaginatedCharacterListList:
       type: object
       required:
@@ -2577,7 +4545,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CharacterList'
-
+    PaginatedCollectionListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CollectionList'
     PaginatedCreatorListList:
       type: object
       required:
@@ -2601,7 +4591,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CreatorList'
-
     PaginatedImprintListList:
       type: object
       required:
@@ -2625,7 +4614,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ImprintList'
-
     PaginatedIssueListList:
       type: object
       required:
@@ -2649,7 +4637,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IssueList'
-
     PaginatedMissingIssueList:
       type: object
       required:
@@ -2673,7 +4660,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MissingIssue'
-
     PaginatedMissingSeriesList:
       type: object
       required:
@@ -2697,7 +4683,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MissingSeries'
-
     PaginatedPublisherListList:
       type: object
       required:
@@ -2721,7 +4706,75 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublisherList'
-
+    PaginatedPullListIssueList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PullListIssue'
+    PaginatedPullListReadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PullListRead'
+    PaginatedPullListSeriesList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PullListSeries'
     PaginatedReadingListItemList:
       type: object
       required:
@@ -2745,7 +4798,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReadingListItem'
-
     PaginatedReadingListListList:
       type: object
       required:
@@ -2769,7 +4821,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReadingListList'
-
     PaginatedRoleList:
       type: object
       required:
@@ -2793,7 +4844,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Role'
-
     PaginatedSeriesListList:
       type: object
       required:
@@ -2817,7 +4867,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SeriesList'
-
     PaginatedSeriesTypeList:
       type: object
       required:
@@ -2841,7 +4890,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SeriesType'
-
     PaginatedTeamListList:
       type: object
       required:
@@ -2865,7 +4913,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TeamList'
-
     PaginatedUniverseListList:
       type: object
       required:
@@ -2889,7 +4936,82 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UniverseList'
+    PaginatedWishListItemListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WishListItemList'
+    PaginatedWishListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WishList'
+    PatchedCollectionRatingUpdate:
+      type: object
+      description: |-
+        Update serializer for collection items - rating only.
 
+        Read-tracking (is_read/date_read) is handled exclusively through the
+        scrobble action, so this serializer intentionally excludes those fields.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        rating:
+          nullable: true
+          description: |-
+            Star rating (1-5) for this issue
+
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
+            * `4` - 4
+            * `5` - 5
+          minimum: 0
+          maximum: 32767
+          oneOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
     PriorityEnum:
       enum:
       - 1
@@ -2904,7 +5026,6 @@ components:
         * `3` - 3
         * `4` - 4
         * `5` - 5
-
     Publisher:
       type: object
       properties:
@@ -2914,6 +5035,12 @@ components:
         name:
           type: string
           maxLength: 255
+        alt_names:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+          title: Alternative Names
         founded:
           type: integer
           maximum: 32767
@@ -2953,7 +5080,6 @@ components:
       - modified
       - name
       - resource_url
-
     PublisherList:
       type: object
       properties:
@@ -2971,7 +5097,83 @@ components:
       - id
       - modified
       - name
-
+    PullListIssue:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/IssueListSeries'
+          readOnly: true
+        number:
+          type: string
+          maxLength: 25
+        issue:
+          type: string
+        cover_date:
+          type: string
+          format: date
+        store_date:
+          type: string
+          format: date
+          nullable: true
+          title: In Store Date
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Cover
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cover_date
+      - id
+      - issue
+      - modified
+      - number
+      - series
+    PullListRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series_count:
+          type: integer
+          readOnly: true
+        series_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - series_count
+      - series_url
+    PullListSeries:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          allOf:
+          - $ref: '#/components/schemas/SeriesList'
+          readOnly: true
+        added_on:
+          type: string
+          format: date-time
+      required:
+      - added_on
+      - id
+      - series
     Rating:
       type: object
       properties:
@@ -2984,7 +5186,6 @@ components:
       required:
       - id
       - name
-
     RatingEnum:
       enum:
       - 1
@@ -2999,7 +5200,6 @@ components:
         * `3` - 3
         * `4` - 4
         * `5` - 5
-
     ReadDate:
       type: object
       description: Serializer for read dates.
@@ -3018,7 +5218,6 @@ components:
       - created_on
       - id
       - read_date
-
     ReadingListIssue:
       type: object
       description: Serializer for issues in reading lists (without image and cover_hash).
@@ -3062,7 +5261,6 @@ components:
       - modified
       - number
       - series
-
     ReadingListItem:
       type: object
       properties:
@@ -3085,7 +5283,6 @@ components:
       - id
       - issue
       - issue_type
-
     ReadingListList:
       type: object
       properties:
@@ -3145,7 +5342,6 @@ components:
       - rating_count
       - slug
       - user
-
     ReadingListNav:
       type: object
       description: Minimal representation of a reading list used for previous/next
@@ -3160,7 +5356,6 @@ components:
       required:
       - id
       - name
-
     ReadingListRead:
       type: object
       properties:
@@ -3244,7 +5439,6 @@ components:
       - resource_url
       - slug
       - user
-
     Reprint:
       type: object
       properties:
@@ -3256,7 +5450,6 @@ components:
       required:
       - id
       - issue
-
     Role:
       type: object
       properties:
@@ -3269,7 +5462,69 @@ components:
       required:
       - id
       - name
+    ScrobbleRequest:
+      type: object
+      description: Serializer for scrobble request validation.
+      properties:
+        issue_id:
+          type: integer
+        date_read:
+          type: string
+          format: date-time
+          nullable: true
+        rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          nullable: true
+      required:
+      - issue_id
+    ScrobbleResponse:
+      type: object
+      description: Serializer for scrobble response.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        issue:
+          allOf:
+          - $ref: '#/components/schemas/CollectionIssue'
+          readOnly: true
+        is_read:
+          type: boolean
+          description: Whether the issue has been read
+        date_read:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date and time when the issue was last read (synced from read_dates)
+        rating:
+          nullable: true
+          description: |-
+            Star rating (1-5) for this issue
 
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
+            * `4` - 4
+            * `5` - 5
+          minimum: 0
+          maximum: 32767
+          oneOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        created:
+          type: boolean
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created
+      - id
+      - issue
+      - modified
     SeriesList:
       type: object
       properties:
@@ -3307,7 +5562,6 @@ components:
       - series
       - volume
       - year_began
-
     SeriesRead:
       type: object
       properties:
@@ -3320,6 +5574,16 @@ components:
         sort_name:
           type: string
           maxLength: 255
+        alt_names:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+          title: Alternative Names
+        language:
+          oneOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         volume:
           type: integer
           maximum: 32767
@@ -3399,7 +5663,6 @@ components:
       - status
       - volume
       - year_began
-
     SeriesType:
       type: object
       properties:
@@ -3412,7 +5675,6 @@ components:
       required:
       - id
       - name
-
     TeamList:
       type: object
       properties:
@@ -3430,7 +5692,6 @@ components:
       - id
       - modified
       - name
-
     TeamRead:
       type: object
       properties:
@@ -3482,7 +5743,6 @@ components:
       - name
       - resource_url
       - universes
-
     UniverseList:
       type: object
       properties:
@@ -3500,7 +5760,6 @@ components:
       - id
       - modified
       - name
-
     UniverseRead:
       type: object
       properties:
@@ -3543,7 +5802,6 @@ components:
       - name
       - publisher
       - resource_url
-
     User:
       type: object
       properties:
@@ -3559,7 +5817,6 @@ components:
       required:
       - id
       - username
-
     VariantsIssue:
       type: object
       properties:
@@ -3609,13 +5866,153 @@ components:
       required:
       - image
       - price
+    WishList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        item_count:
+          type: integer
+          readOnly: true
+        items_url:
+          type: string
+          readOnly: true
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - item_count
+      - items_url
+      - modified
+    WishListAddItem:
+      type: object
+      properties:
+        issue_id:
+          type: integer
+        priority:
+          type: integer
+          maximum: 5
+          minimum: 1
+          default: 3
+        desired_grade:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,1})?$
+          nullable: true
+        max_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,2})?$
+          nullable: true
+        max_price_currency:
+          allOf:
+          - $ref: '#/components/schemas/CurrencyEnum'
+          default: USD
+        notes:
+          type: string
+          default: ''
+      required:
+      - issue_id
+    WishListItemList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        issue:
+          allOf:
+          - $ref: '#/components/schemas/CollectionIssue'
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          minimum: 0
+          maximum: 32767
+        desired_grade:
+          nullable: true
+          maximum: 100
+          exclusiveMaximum: true
+          minimum: -100
+          exclusiveMinimum: true
+          oneOf:
+          - $ref: '#/components/schemas/DesiredGradeEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - issue
+      - modified
+      - status
+    WishListItemRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        issue:
+          allOf:
+          - $ref: '#/components/schemas/CollectionIssue'
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          minimum: 0
+          maximum: 32767
+        desired_grade:
+          nullable: true
+          maximum: 100
+          exclusiveMaximum: true
+          minimum: -100
+          exclusiveMinimum: true
+          oneOf:
+          - $ref: '#/components/schemas/DesiredGradeEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        max_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,2})?$
+          nullable: true
+          title: Maximum Price
+        max_price_currency:
+          type: string
+          nullable: true
+          readOnly: true
+        notes:
+          type: string
+        added_on:
+          type: string
+          format: date-time
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - added_on
+      - id
+      - issue
+      - max_price_currency
+      - modified
+      - status
   securitySchemes:
-
     basicAuth:
       type: http
       scheme: basic
-
     cookieAuth:
       type: apiKey
       in: cookie
       name: sessionid
+    knoxApiToken:
+      type: http
+      scheme: bearer

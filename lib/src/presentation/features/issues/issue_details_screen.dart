@@ -5,6 +5,7 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
+import "package:takion/src/core/errors/error_mapper.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
@@ -305,12 +306,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
           loading: () => IssueDetailsSkeleton(imageUrl: widget.initialImageUrl),
           error: (error, stack) => Scaffold(
             appBar: AppBar(),
-            body: AsyncStatePanel.error(
-              title: "Failed to load issue details",
-              errorMessage: TakionAlerts.cleanError(
-                error,
-                fallback: "Something went wrong",
-              ),
+            body: AsyncStatePanel.fromFailure(
+              failure: ErrorMapper.fromException(error, stack),
               onRetry: () {
                 ref.invalidate(issueDetailsProvider(_currentIssueId));
               },
@@ -449,6 +446,87 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                         backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
+                          if (issueAsync.isRefreshing || (issueAsync.isLoading && issueAsync.hasValue))
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surfaceContainerHigh
+                                        .withValues(alpha: 0.85),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "Updating...",
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          else if (issueAsync.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.errorContainer
+                                        .withValues(alpha: 0.85),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: theme.colorScheme.error
+                                          .withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.cloud_off_outlined,
+                                        size: 12,
+                                        color: theme.colorScheme.onErrorContainer,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "Cached",
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.colorScheme.onErrorContainer,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           EntityDetailActions(
                             onRefresh: isCurrentData
                                 ? () => refreshDetails(context)

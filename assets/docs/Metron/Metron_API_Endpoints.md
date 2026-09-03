@@ -2,44 +2,81 @@
 
 Reference for the Metron API endpoints. All endpoints live under `https://metron.cloud`.
 
-- All requests require HTTP Basic authentication (username + password).
+## Authentication
+
+All requests require authentication. Metron supports three authentication methods:
+
+| Method | Type | Header | Description |
+|--------|------|--------|-------------|
+| **Basic Auth** | HTTP Basic | `Authorization: Basic <base64>` | Username + password |
+| **API Token** | Bearer Token | `Authorization: Token <token>` | Knox API token (recommended) |
+| **Session Cookie** | Cookie | `Cookie: sessionid=<value>` | Browser session |
+
+> **Tip:** API tokens (`knoxApiToken`) are the recommended method for programmatic access. They don't require sending your password with every request.
+
+## General Notes
+
 - Responses are paginated using the standard DRF format (`count`, `next`, `previous`, `results`).
-- Read endpoints (`GET`) are open to any authenticated user. Write operations (create/update on imprints, publishers, series) require the Editor or Admin role.
+- Read endpoints (`GET`) are open to any authenticated user.
+- Write operations (create/update on imprints, publishers, series, collections) require the Editor or Admin role.
 - `next` and `previous` pagination URLs are ready to use — pass them straight to your HTTP client.
+
 
 ## Endpoint Overview
 
-| Endpoint | Description |
-|---|---|
-| `GET /api/arc/` | List story arcs |
-| `GET /api/arc/{id}/` | Retrieve a story arc |
-| `GET /api/arc/{id}/issue_list/` | List issues in a story arc |
-| `GET /api/character/` | List characters |
-| `GET /api/character/{id}/` | Retrieve a character |
-| `GET /api/character/{id}/issue_list/` | List a character's appearances |
-| `GET /api/creator/` | List creators |
-| `GET /api/creator/{id}/` | Retrieve a creator |
-| `GET /api/imprint/` | List imprints |
-| `GET /api/imprint/{id}/` | Retrieve an imprint |
-| `GET /api/issue/` | List issues |
-| `GET /api/issue/{id}/` | Retrieve an issue |
-| `GET /api/publisher/` | List publishers |
-| `GET /api/publisher/{id}/` | Retrieve a publisher |
-| `GET /api/publisher/{id}/series_list/` | List a publisher's series |
-| `GET /api/reading_list/` | List reading lists |
-| `GET /api/reading_list/{id}/` | Retrieve a reading list |
-| `GET /api/reading_list/{id}/items/` | List a reading list's items |
-| `GET /api/role/` | List creator roles |
-| `GET /api/schema/` | OpenAPI schema for the API |
-| `GET /api/series/` | List series |
-| `GET /api/series/{id}/` | Retrieve a series |
-| `GET /api/series/{id}/issue_list/` | List a series' issues |
-| `GET /api/series_type/` | List series types |
-| `GET /api/team/` | List teams |
-| `GET /api/team/{id}/` | Retrieve a team |
-| `GET /api/team/{id}/issue_list/` | List issues featuring a team |
-| `GET /api/universe/` | List universes |
-| `GET /api/universe/{id}/` | Retrieve a universe |
+| Endpoint | Methods | Description |
+|---|---|---|
+| `/api/arc/` | GET | List story arcs |
+| `/api/arc/{id}/` | GET | Retrieve a story arc |
+| `/api/arc/{id}/issue_list/` | GET | List issues in a story arc |
+| `/api/character/` | GET | List characters |
+| `/api/character/{id}/` | GET | Retrieve a character |
+| `/api/character/{id}/issue_list/` | GET | List a character's appearances |
+| `/api/collection/` | GET | List user's collection items |
+| `/api/collection/add/` | POST | Add issue to collection |
+| `/api/collection/{id}/` | GET, PUT, PATCH, DELETE | Manage collection item |
+| `/api/collection/missing_issues/{series_id}/` | GET | Get missing issues for series |
+| `/api/collection/missing_series/` | GET | Get series with missing issues |
+| `/api/collection/scrobble/` | POST | Mark issue as read |
+| `/api/collection/stats/` | GET | Collection statistics |
+| `/api/creator/` | GET | List creators |
+| `/api/creator/{id}/` | GET | Retrieve a creator |
+| `/api/imprint/` | GET, POST | List/create imprints |
+| `/api/imprint/{id}/` | GET, PUT, PATCH | Retrieve/update imprint |
+| `/api/issue/` | GET | List issues |
+| `/api/issue/{id}/` | GET | Retrieve an issue |
+| `/api/publisher/` | GET, POST | List/create publishers |
+| `/api/publisher/{id}/` | GET, PUT, PATCH | Retrieve/update publisher |
+| `/api/publisher/{id}/series_list/` | GET | List a publisher's series |
+| `/api/pull_list/` | GET | List pull lists |
+| `/api/pull_list/{id}/` | GET | Retrieve a pull list |
+| `/api/pull_list/issues/` | GET | List issues for pull list series |
+| `/api/pull_list/series/` | GET | List series on pull list |
+| `/api/pull_list/series/add/` | POST | Add series to pull list |
+| `/api/pull_list/series/{series_pk}/remove/` | DELETE | Remove series from pull list |
+| `/api/reading_list/` | GET | List reading lists |
+| `/api/reading_list/{id}/` | GET | Retrieve a reading list |
+| `/api/reading_list/{id}/items/` | GET | List a reading list's items |
+| `/api/role/` | GET | List creator roles |
+| `/api/schema/` | GET | OpenAPI schema |
+| `/api/series/` | GET, POST | List/create series |
+| `/api/series/{id}/` | GET, PUT, PATCH | Retrieve/update series |
+| `/api/series/{id}/issue_list/` | GET | List a series' issues |
+| `/api/series_type/` | GET | List series types |
+| `/api/team/` | GET | List teams |
+| `/api/team/{id}/` | GET | Retrieve a team |
+| `/api/team/{id}/issue_list/` | GET | List issues featuring a team |
+| `/api/universe/` | GET | List universes |
+| `/api/universe/{id}/` | GET | Retrieve a universe |
+| `/api/wish_list/` | GET | List wish lists |
+| `/api/wish_list/{id}/` | GET | Retrieve a wish list |
+| `/api/wish_list/items/` | GET | List wish list items |
+| `/api/wish_list/items/add/` | POST | Add issue to wish list |
+| `/api/wish_list/items/{item_pk}/acquire/` | POST | Mark item as acquired |
+| `/api/wish_list/items/{item_pk}/remove/` | DELETE | Remove wish list item |
+
+---
+
 
 ## Story Arcs
 
@@ -61,18 +98,14 @@ Returns a list of all the story arcs.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:42:18.725Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/arc/{id}/`
 
@@ -82,7 +115,7 @@ Returns the information of an individual story arc.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this arc. |
+| `id` | integer (path) | A unique integer value identifying this arc. |
 
 **Response — `200 OK`**
 
@@ -91,13 +124,15 @@ Returns the information of an individual story arc.
   "id": 0,
   "name": "string",
   "desc": "string",
-  "image": "string",
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "image": "https://example.com/image.jpg",
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:42:33.476Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
 
 ### `GET /api/arc/{id}/issue_list/`
 
@@ -107,36 +142,22 @@ Returns the list of issues in a story arc.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this arc. |
+| `id` | integer (path) | A unique integer value identifying this arc. |
 | `page` | integer | A page number within the paginated result set. |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "series": {
-        "id": 0,
-        "name": "string",
-        "volume": 32767,
-        "year_began": 32767
-      },
-      "number": "string",
-      "issue": "string",
-      "cover_date": "2026-07-24",
-      "store_date": "2026-07-24",
-      "image": "string",
-      "cover_hash": "string",
-      "modified": "2026-07-24T06:42:48.471Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
+
 
 ## Characters
 
@@ -158,18 +179,14 @@ Returns a list of all the characters.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:42:58.132Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/character/{id}/`
 
@@ -179,7 +196,7 @@ Returns the information of an individual character.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this character. |
+| `id` | integer (path) | A unique integer value identifying this character. |
 
 **Response — `200 OK`**
 
@@ -191,34 +208,15 @@ Returns the information of an individual character.
     "string"
   ],
   "desc": "string",
-  "image": "string",
-  "creators": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:43:08.035Z"
-    }
-  ],
-  "teams": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:43:08.035Z"
-    }
-  ],
-  "universes": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:43:08.035Z"
-    }
-  ],
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "image": "https://example.com/image.jpg",
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:43:08.035Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
 
 ### `GET /api/character/{id}/issue_list/`
 
@@ -228,36 +226,307 @@ Returns a list of a character's appearances.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this character. |
+| `id` | integer (path) | A unique integer value identifying this character. |
 | `page` | integer | A page number within the paginated result set. |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+
+## Collection
+
+### `GET /api/collection/`
+
+Returns authenticated user's collection items.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `book_format` | string | Format: PRINT, DIGITAL, or BOTH |
+| `date_read` | string (date) | Date read |
+| `grade` | number | CGC grade (0.5 - 10.0) |
+| `grading_company` | string | CGC, CBCS, or PGX |
+| `is_read` | boolean | Read status |
+| `modified_gt` | string (date-time) | Greater than Modified DateTime |
+| `page` | integer | Page number |
+| `rating` | integer | User rating |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `POST /api/collection/add/`
+
+Add an issue to the authenticated user's collection.
+
+**Request Body**
+
+```json
+{
+  "issue_id": 123,
+  "quantity": 1,
+  "book_format": "PRINT",
+  "grade": null,
+  "grading_company": "",
+  "purchase_date": null,
+  "purchase_price": null,
+  "purchase_price_currency": "USD",
+  "purchase_store": "",
+  "storage_location": "",
+  "notes": ""
+}
+```
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": 0,
+  "quantity": 0,
+  "purchase_date": "2026-07-24",
+  "purchase_price": "3.99",
+  "purchase_store": "string",
+  "storage_location": "string",
+  "notes": "string",
+  "is_read": true,
+  "date_read": "2026-07-24T06:42:18.725Z",
+  "resource_url": "string",
+  "created_on": "2026-07-24T06:42:18.725Z",
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `GET /api/collection/{id}/`
+
+Returns details of a specific collection item.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | integer (path) | Collection item ID |
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 0,
+  "quantity": 0,
+  "purchase_date": "2026-07-24",
+  "purchase_price": "3.99",
+  "purchase_store": "string",
+  "storage_location": "string",
+  "notes": "string",
+  "is_read": true,
+  "date_read": "2026-07-24T06:42:18.725Z",
+  "resource_url": "string",
+  "created_on": "2026-07-24T06:42:18.725Z",
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `PUT /api/collection/{id}/`
+
+Update a collection item (full update).
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | integer (path) | Collection item ID |
+
+**Request Body**
+
+```json
+{
+  "rating": 5
+}
+```
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 0,
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `PATCH /api/collection/{id}/`
+
+Update a collection item (partial update).
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | integer (path) | Collection item ID |
+
+**Request Body**
+
+```json
+{
+  "rating": 5
+}
+```
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 0,
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `DELETE /api/collection/{id}/`
+
+Remove an item from the collection.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | integer (path) | Collection item ID |
+
+**Response — `204 No Content`**
+
+---
+
+### `GET /api/collection/missing_issues/{series_id}/`
+
+Returns missing issues for a specific series.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `series_id` | integer (path) | Series ID |
+| `page` | integer | Page number |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `GET /api/collection/missing_series/`
+
+Returns series where the user has some issues but is missing others.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `page` | integer | Page number |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `POST /api/collection/scrobble/`
+
+Mark an issue as read (scrobble). Auto-creates collection item if needed.
+
+**Request Body**
+
+```json
+{
+  "issue_id": 123,
+  "date_read": "2026-09-03T00:00:00Z",
+  "rating": 5
+}
+```
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": 0,
+  "is_read": true,
+  "date_read": "2026-07-24T06:42:18.725Z",
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `GET /api/collection/stats/`
+
+Returns statistics about the user's collection.
+
+**Response — `200 OK`**
+
+```json
+{
+  "total_items": 500,
+  "total_quantity": 520,
+  "total_value": "4500.00",
+  "read_count": 450,
+  "unread_count": 50,
+  "by_format": [
     {
-      "id": 0,
-      "series": {
-        "id": 0,
-        "name": "string",
-        "volume": 32767,
-        "year_began": 32767
-      },
-      "number": "string",
-      "issue": "string",
-      "cover_date": "2026-07-24",
-      "store_date": "2026-07-24",
-      "image": "string",
-      "cover_hash": "string",
-      "modified": "2026-07-24T06:43:22.769Z"
+      "book_format": "PRINT",
+      "count": 400
+    },
+    {
+      "book_format": "DIGITAL",
+      "count": 100
+    },
+    {
+      "book_format": "BOTH",
+      "count": 20
     }
   ]
 }
 ```
+
+---
+
 
 ## Creators
 
@@ -279,18 +548,14 @@ Returns a list of all the creators.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:43:46.396Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/creator/{id}/`
 
@@ -300,7 +565,7 @@ Returns the information of an individual creator.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this creator. |
+| `id` | integer (path) | A unique integer value identifying this creator. |
 
 **Response — `200 OK`**
 
@@ -311,22 +576,25 @@ Returns the information of an individual creator.
   "birth": "2026-07-24",
   "death": "2026-07-24",
   "desc": "string",
-  "image": "string",
+  "image": "https://example.com/image.jpg",
   "alias": [
     "string"
   ],
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:43:57.315Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
+
 
 ## Imprints
 
 ### `GET /api/imprint/`
 
-Returns a list of all imprints. Supports list, retrieve, create, and update operations — write operations require the Editor or Admin role.
+Returns a list of all imprints.
 
 **Parameters**
 
@@ -342,18 +610,14 @@ Returns a list of all imprints. Supports list, retrieve, create, and update oper
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:44:09.126Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/imprint/{id}/`
 
@@ -363,7 +627,7 @@ Returns the information of an individual imprint.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this imprint. |
+| `id` | integer (path) | A unique integer value identifying this imprint. |
 
 **Response — `200 OK`**
 
@@ -371,27 +635,24 @@ Returns the information of an individual imprint.
 {
   "id": 0,
   "name": "string",
-  "founded": 32767,
+  "founded": 0,
   "desc": "string",
-  "image": "string",
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
-  "publisher": {
-    "id": 0,
-    "name": "string"
-  },
+  "image": "https://example.com/image.jpg",
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:44:23.437Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
+
 
 ## Issues
 
 ### `GET /api/issue/`
 
 Returns a list of all the issues.
-
-> **Note:** `cover_hash` is a perceptual hash created with [ImageHash](https://github.com/JohannesBuchner/imagehash).
 
 **Parameters**
 
@@ -405,8 +666,6 @@ Returns a list of all the issues.
 | `creator_id` | integer | Creator Metron ID |
 | `cv_id` | integer | Comic Vine ID |
 | `foc_date` | string (date) | Final order cutoff date |
-| `foc_date_range_after` | string (date) | Final order cutoff date — on or after |
-| `foc_date_range_before` | string (date) | Final order cutoff date — on or before |
 | `gcd_id` | integer | Grand Comics Database ID |
 | `imprint_id` | integer | Imprint Metron ID |
 | `imprint_name` | string | Imprint Name |
@@ -418,90 +677,44 @@ Returns a list of all the issues.
 | `publisher_id` | integer | Publisher Metron ID |
 | `publisher_name` | string | Publisher Name |
 | `rating` | string | Rating |
-| `role_id` | array\<integer\> | Multiple values may be separated by commas. |
 | `series_id` | integer | Series Metron ID |
 | `series_name` | string | Series Name |
 | `series_volume` | integer | Series Volume Number |
 | `series_year_began` | integer | Series Beginning Year |
 | `sku` | string | Distributor SKU |
 | `store_date` | string (date) | In-store date |
-| `store_date_range_after` | string (date) | In-store date — on or after |
-| `store_date_range_before` | string (date) | In-store date — on or before |
 | `team_id` | integer | Team Metron ID |
 | `universe_id` | integer | Universe Metron ID |
 | `upc` | string | UPC Code |
-| `upc_starts_with` | string | UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile scanner that strips the 5-digit EAN supplemental) |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "series": {
-        "id": 0,
-        "name": "string",
-        "volume": 32767,
-        "year_began": 32767
-      },
-      "number": "string",
-      "issue": "string",
-      "cover_date": "2026-07-24",
-      "store_date": "2026-07-24",
-      "image": "string",
-      "cover_hash": "string",
-      "modified": "2026-07-24T06:44:33.662Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/issue/{id}/`
 
 Returns the information of an individual issue.
 
-> **Note:** `cover_hash` is a perceptual hash created with [ImageHash](https://github.com/JohannesBuchner/imagehash).
-
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this issue. |
+| `id` | integer (path) | A unique integer value identifying this issue. |
 
 **Response — `200 OK`**
 
 ```json
 {
   "id": 0,
-  "publisher": {
-    "id": 0,
-    "name": "string"
-  },
-  "imprint": {
-    "id": 0,
-    "name": "string"
-  },
-  "series": {
-    "id": 0,
-    "name": "string",
-    "sort_name": "string",
-    "volume": 32767,
-    "year_began": 32767,
-    "series_type": {
-      "id": 0,
-      "name": "string"
-    },
-    "genres": [
-      {
-        "id": 0,
-        "name": "string"
-      }
-    ]
-  },
   "number": "string",
   "alt_number": "string",
   "title": "string",
@@ -511,88 +724,28 @@ Returns the information of an individual issue.
   "cover_date": "2026-07-24",
   "store_date": "2026-07-24",
   "foc_date": "2026-07-24",
-  "price": "3.99",
-  "price_currency": "string",
-  "rating": {
-    "id": 0,
-    "name": "string"
-  },
   "sku": "string",
   "isbn": "string",
   "upc": "string",
-  "page": 32767,
+  "page": 0,
   "desc": "string",
-  "image": "string",
+  "image": "https://example.com/image.jpg",
   "cover_hash": "string",
-  "average_rating": 9,
-  "rating_count": 0,
-  "arcs": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:44:47.523Z"
-    }
-  ],
-  "credits": [
-    {
-      "id": 0,
-      "creator": "string",
-      "role": [
-        {
-          "id": 0,
-          "name": "string"
-        }
-      ]
-    }
-  ],
-  "characters": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:44:47.523Z"
-    }
-  ],
-  "teams": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:44:47.523Z"
-    }
-  ],
-  "universes": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:44:47.523Z"
-    }
-  ],
-  "reprints": [
-    {
-      "id": 0,
-      "issue": "string"
-    }
-  ],
-  "variants": [
-    {
-      "name": "string",
-      "price": "3.99",
-      "sku": "string",
-      "upc": "string",
-      "image": "string"
-    }
-  ],
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:44:47.523Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
+
 
 ## Publishers
 
 ### `GET /api/publisher/`
 
-Returns a list of all publishers. Supports list, retrieve, create, and update operations — write operations require the Editor or Admin role.
+Returns a list of all publishers.
 
 **Parameters**
 
@@ -608,18 +761,14 @@ Returns a list of all publishers. Supports list, retrieve, create, and update op
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:44:59.252Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/publisher/{id}/`
 
@@ -629,7 +778,7 @@ Returns the information of an individual publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this publisher. |
+| `id` | integer (path) | A unique integer value identifying this publisher. |
 
 **Response — `200 OK`**
 
@@ -637,16 +786,20 @@ Returns the information of an individual publisher.
 {
   "id": 0,
   "name": "string",
-  "founded": 32767,
-  "country": "AF",
+  "alt_names": [
+    "string"
+  ],
+  "founded": 0,
   "desc": "string",
-  "image": "string",
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "image": "https://example.com/image.jpg",
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:45:08.566Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
 
 ### `GET /api/publisher/{id}/series_list/`
 
@@ -656,47 +809,167 @@ Returns a list of series for a publisher.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this publisher. |
+| `id` | integer (path) | A unique integer value identifying this publisher. |
 | `page` | integer | A page number within the paginated result set. |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "series": "string",
-      "year_began": 32767,
-      "year_end": 32767,
-      "volume": 32767,
-      "issue_count": 0,
-      "modified": "2026-07-24T06:45:18.901Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
 
-## Reading Lists
+---
 
-### `GET /api/reading_list/`
 
-Returns a list of reading lists based on user permissions. Requires authentication.
+## Pull List
 
-- **Authenticated users:** Public lists + own lists
-- **Admin users:** Public lists + own lists + Metron's lists
+### `GET /api/pull_list/`
+
+Returns the authenticated user's pull lists.
 
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
-| `attribution_source` | string | Source where this reading list information was obtained. One of `CBRO`, `CMRO`, `CBH`, `CBT`, `MG`, `HTLC`, `LOCG`, `OTHER` |
+| `page` | integer | A page number within the paginated result set. |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `GET /api/pull_list/{id}/`
+
+Returns details of a specific pull list.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | integer (path) | A unique integer value identifying this Pull List. |
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 0,
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `GET /api/pull_list/issues/`
+
+Returns issues for series on the authenticated user's pull list.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `page` | integer | A page number within the paginated result set. |
+| `store_date_after` | string (date) | Return issues with a store date on or after this date (YYYY-MM-DD). |
+| `store_date_before` | string (date) | Return issues with a store date on or before this date (YYYY-MM-DD). |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `GET /api/pull_list/series/`
+
+Returns the authenticated user's pull list series.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `page` | integer | A page number within the paginated result set. |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `POST /api/pull_list/series/add/`
+
+Add a series to the authenticated user's pull list.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `series_id` | integer | Series ID to add |
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 0,
+  "added_on": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `DELETE /api/pull_list/series/{series_pk}/remove/`
+
+Remove a series from the authenticated user's pull list.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `series_pk` | integer (path) | Series ID to remove |
+
+**Response — `204 No Content`**
+
+---
+
+
+## Reading Lists
+
+### `GET /api/reading_list/`
+
+Returns a list of reading lists based on user permissions.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `attribution_source` | string | Source: CBRO, CMRO, CBH, CBT, MG, HTLC, LOCG, OTHER |
 | `average_rating__gte` | number | Minimum Rating |
 | `is_private` | boolean | Whether the list is private |
-| `list_type` | string | The type of reading list. One of `CREATOR`, `EVENT`, `STORY`, `CHARACTERS`, `TEAMS`, `MASTER` |
+| `list_type` | string | Type: CREATOR, EVENT, STORY, CHARACTERS, TEAMS, MASTER |
 | `modified_gt` | string (date-time) | Greater than Modified DateTime |
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
@@ -708,71 +981,41 @@ Returns a list of reading lists based on user permissions. Requires authenticati
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "slug": "rEQ6c1BS_2oQfnSq6MejkuTRwqvvmS2x_Olxw1sxWOE0z639uxwAUBp7V4q7q-WhXEiV0RCN4pn0gwqakf_mn",
-      "user": {
-        "id": 0,
-        "username": "8yXPsbfwwF+U8z2pgGq-fZL+eEuE-.90o1piX9DoObcbs_-cbp8Hly"
-      },
-      "list_type": "string",
-      "is_private": true,
-      "attribution_source": "CBRO",
-      "average_rating": 0,
-      "rating_count": 0,
-      "modified": "2026-07-24T06:45:29.818Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
 
+---
+
 ### `GET /api/reading_list/{id}/`
 
-Returns the information of an individual reading list. Requires authentication.
+Returns the information of an individual reading list.
 
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this reading list. |
+| `id` | integer (path) | A unique integer value identifying this reading list. |
 
 **Response — `200 OK`**
 
 ```json
 {
   "id": 0,
-  "user": {
-    "id": 0,
-    "username": "RLMejgaC-347p-sDIBJDvXW5elIG1s32tejZhSTC6jFcbxezQ2mo_FT+mY63pe"
-  },
   "name": "string",
-  "slug": "WSk6hGMUUHHYtdxjVAcP7qDVDGmx",
+  "slug": "string",
   "desc": "string",
-  "image": "string",
-  "list_type": "string",
   "is_private": true,
-  "attribution_source": "string",
-  "attribution_url": "string",
-  "previous": {
-    "id": 0,
-    "name": "string"
-  },
-  "next": {
-    "id": 0,
-    "name": "string"
-  },
-  "average_rating": 0,
-  "rating_count": 0,
-  "items_url": "string",
+  "attribution_url": "https://example.com/image.jpg",
   "resource_url": "string",
-  "modified": "2026-07-24T06:45:43.194Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
 
 ### `GET /api/reading_list/{id}/items/`
 
@@ -782,40 +1025,22 @@ Returns a paginated list of items for this reading list.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this reading list. |
+| `id` | integer (path) | A unique integer value identifying this reading list. |
 | `page` | integer | A page number within the paginated result set. |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "issue": {
-        "id": 0,
-        "series": {
-          "id": 0,
-          "name": "string",
-          "volume": 32767,
-          "year_began": 32767
-        },
-        "number": "string",
-        "cover_date": "2026-07-24",
-        "store_date": "2026-07-24",
-        "cv_id": 2147483647,
-        "gcd_id": 2147483647,
-        "modified": "2026-07-24T06:45:54.359Z"
-      },
-      "order": 2147483647,
-      "issue_type": "string"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
+
 
 ## Creator Roles
 
@@ -835,49 +1060,41 @@ Returns a list of all the creator roles.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
+
 
 ## OpenAPI Schema
 
 ### `GET /api/schema/`
 
-OpenAPI 3 schema for this API. The format can be selected via content negotiation:
-
-- **YAML:** `application/vnd.oai.openapi`
-- **JSON:** `application/vnd.oai.openapi+json`
+OpenAPI 3 schema for this API.
 
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
-| `format` | string | Output format. One of `json`, `yaml` |
-| `lang` | string | Language code (e.g. `en`, `fr`, `ja`) |
+| `format` | string | Output format. One of json, yaml |
+| `lang` | string | Language code (e.g. en, fr, ja) |
 
 **Response — `200 OK`**
 
-```json
-{
-  "additionalProp1": "string",
-  "additionalProp2": "string",
-  "additionalProp3": "string"
-}
-```
+Returns the OpenAPI 3 schema in the requested format (JSON or YAML).
+
+---
+
 
 ## Series
 
 ### `GET /api/series/`
 
-Returns a list of all the comic series. Supports list, retrieve, create, and update operations — write operations require the Editor or Admin role.
+Returns a list of all the comic series.
 
 **Parameters**
 
@@ -896,7 +1113,6 @@ Returns a list of all the comic series. Supports list, retrieve, create, and upd
 | `page` | integer | A page number within the paginated result set. |
 | `publisher_id` | integer | Publisher Metron ID |
 | `publisher_name` | string | Publisher Name |
-| `role_id` | array\<integer\> | Multiple values may be separated by commas. |
 | `series_type` | string | Series Type |
 | `series_type_id` | integer | Series Type ID |
 | `status` | integer | Status |
@@ -910,22 +1126,14 @@ Returns a list of all the comic series. Supports list, retrieve, create, and upd
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "series": "string",
-      "year_began": 32767,
-      "year_end": 32767,
-      "volume": 32767,
-      "issue_count": 0,
-      "modified": "2026-07-24T06:46:38.642Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/series/{id}/`
 
@@ -935,7 +1143,7 @@ Returns the information of an individual comic series.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this series. |
+| `id` | integer (path) | A unique integer value identifying this series. |
 
 **Response — `200 OK`**
 
@@ -944,42 +1152,21 @@ Returns the information of an individual comic series.
   "id": 0,
   "name": "string",
   "sort_name": "string",
-  "volume": 32767,
-  "series_type": {
-    "id": 0,
-    "name": "string"
-  },
-  "status": "string",
-  "publisher": {
-    "id": 0,
-    "name": "string"
-  },
-  "imprint": {
-    "id": 0,
-    "name": "string"
-  },
-  "year_began": 32767,
-  "year_end": 32767,
+  "alt_names": [
+    "string"
+  ],
+  "volume": 0,
+  "year_began": 0,
+  "year_end": 0,
   "desc": "string",
-  "issue_count": 0,
-  "genres": [
-    {
-      "id": 0,
-      "name": "string"
-    }
-  ],
-  "associated": [
-    {
-      "id": 0,
-      "series": "string"
-    }
-  ],
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:46:49.165Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
 
 ### `GET /api/series/{id}/issue_list/`
 
@@ -989,36 +1176,22 @@ Returns a list of a series' issues.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this series. |
+| `id` | integer (path) | A unique integer value identifying this series. |
 | `page` | integer | A page number within the paginated result set. |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "series": {
-        "id": 0,
-        "name": "string",
-        "volume": 32767,
-        "year_began": 32767
-      },
-      "number": "string",
-      "issue": "string",
-      "cover_date": "2026-07-24",
-      "store_date": "2026-07-24",
-      "image": "string",
-      "cover_hash": "string",
-      "modified": "2026-07-24T06:46:49.442Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
+
 
 ## Series Types
 
@@ -1038,17 +1211,15 @@ Returns a list of the series types available.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
+
 
 ## Teams
 
@@ -1070,18 +1241,14 @@ Returns a list of all the teams.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:47:28.991Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/team/{id}/`
 
@@ -1091,7 +1258,7 @@ Returns the information of an individual team.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this team. |
+| `id` | integer (path) | A unique integer value identifying this team. |
 
 **Response — `200 OK`**
 
@@ -1100,27 +1267,15 @@ Returns the information of an individual team.
   "id": 0,
   "name": "string",
   "desc": "string",
-  "image": "string",
-  "creators": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:47:38.335Z"
-    }
-  ],
-  "universes": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:47:38.335Z"
-    }
-  ],
-  "cv_id": 2147483647,
-  "gcd_id": 2147483647,
+  "image": "https://example.com/image.jpg",
+  "cv_id": 0,
+  "gcd_id": 0,
   "resource_url": "string",
-  "modified": "2026-07-24T06:47:38.335Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
 
 ### `GET /api/team/{id}/issue_list/`
 
@@ -1130,36 +1285,22 @@ Returns a list of issues featuring the team.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this team. |
+| `id` | integer (path) | A unique integer value identifying this team. |
 | `page` | integer | A page number within the paginated result set. |
 
 **Response — `200 OK`**
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "series": {
-        "id": 0,
-        "name": "string",
-        "volume": 32767,
-        "year_began": 32767
-      },
-      "number": "string",
-      "issue": "string",
-      "cover_date": "2026-07-24",
-      "store_date": "2026-07-24",
-      "image": "string",
-      "cover_hash": "string",
-      "modified": "2026-07-24T06:47:50.686Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
+
 
 ## Universes
 
@@ -1180,18 +1321,14 @@ Returns a list of all the universes.
 
 ```json
 {
-  "count": 123,
-  "next": "http://api.example.org/accounts/?page=4",
-  "previous": "http://api.example.org/accounts/?page=2",
-  "results": [
-    {
-      "id": 0,
-      "name": "string",
-      "modified": "2026-07-24T06:48:01.996Z"
-    }
-  ]
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
 }
 ```
+
+---
 
 ### `GET /api/universe/{id}/`
 
@@ -1201,23 +1338,166 @@ Returns the information of an individual universe.
 
 | Name | Type | Description |
 |---|---|---|
-| `id` * | integer (path) | A unique integer value identifying this universe. |
+| `id` | integer (path) | A unique integer value identifying this universe. |
 
 **Response — `200 OK`**
 
 ```json
 {
   "id": 0,
-  "publisher": {
-    "id": 0,
-    "name": "string"
-  },
   "name": "string",
   "designation": "string",
   "desc": "string",
-  "gcd_id": 2147483647,
-  "image": "string",
+  "gcd_id": 0,
+  "image": "https://example.com/image.jpg",
   "resource_url": "string",
-  "modified": "2026-07-24T06:48:12.521Z"
+  "modified": "2026-07-24T06:42:18.725Z"
 }
 ```
+
+---
+
+
+## Wish List
+
+### `GET /api/wish_list/`
+
+Returns paginated wish lists for the authenticated user.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `page` | integer | A page number within the paginated result set. |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `GET /api/wish_list/{id}/`
+
+Returns details of a specific wish list.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | integer (path) | A unique integer value identifying this Wish List. |
+
+**Response — `200 OK`**
+
+```json
+{
+  "id": 0,
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `GET /api/wish_list/items/`
+
+Returns paginated wish list items for the authenticated user.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `page` | integer | A page number within the paginated result set. |
+
+**Response — `200 OK`**
+
+```json
+{
+  "count": 0,
+  "next": "https://example.com/image.jpg",
+  "previous": "https://example.com/image.jpg",
+  "results": []
+}
+```
+
+---
+
+### `POST /api/wish_list/items/add/`
+
+Add an issue to the authenticated user's wish list.
+
+**Request Body**
+
+```json
+{
+  "issue_id": 123,
+  "priority": 3,
+  "desired_grade": null,
+  "max_price": null,
+  "max_price_currency": "USD",
+  "notes": ""
+}
+```
+
+**Response — `201 Created`**
+
+```json
+{
+  "id": 0,
+  "max_price": "3.99",
+  "notes": "string",
+  "added_on": "2026-07-24T06:42:18.725Z",
+  "modified": "2026-07-24T06:42:18.725Z"
+}
+```
+
+---
+
+### `POST /api/wish_list/items/{item_pk}/acquire/`
+
+Mark a wish list item as acquired and create a collection item.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `item_pk` | integer (path) | Wish list item ID |
+
+**Request Body**
+
+```json
+{
+  "purchase_date": "2026-09-03",
+  "purchase_price": "29.99",
+  "purchase_price_currency": "USD",
+  "purchase_store": "Local Comic Shop",
+  "notes": ""
+}
+```
+
+**Response — `200 OK`**
+
+```json
+{}
+```
+
+---
+
+### `DELETE /api/wish_list/items/{item_pk}/remove/`
+
+Remove an item from the authenticated user's wish list.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `item_pk` | integer (path) | Wish list item ID |
+
+**Response — `204 No Content`**
+
+---

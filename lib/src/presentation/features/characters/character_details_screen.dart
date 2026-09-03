@@ -119,6 +119,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.alias,
       onRefresh: (_) => refreshDetails(context),
+      onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,

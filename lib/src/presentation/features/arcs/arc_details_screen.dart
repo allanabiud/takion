@@ -200,6 +200,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
       toHeroTag: (d) => "arc-image-${d.id}",
       toTitle: (d) => d.name,
       onRefresh: (_) => refreshDetails(context),
+      onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       initialChildSize: 0.55,

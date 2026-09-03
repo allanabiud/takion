@@ -66,6 +66,7 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen>
       toTitle: (d) => d.name,
       toSubtitle: (d) => d.designation,
       onRefresh: (_) => refreshDetails(context),
+      onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       heroWidth: 300,

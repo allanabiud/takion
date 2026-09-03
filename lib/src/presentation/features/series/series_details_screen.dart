@@ -326,6 +326,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
         );
       },
       onRefresh: (_) => refreshDetails(context),
+      onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       headerBackground: (context, d) => [
