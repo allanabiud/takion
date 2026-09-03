@@ -27,10 +27,37 @@ import "package:takion/src/data/pull_list/repositories/local_pull_list_repositor
 import "package:takion/src/data/subscription/repositories/local_subscription_repository.dart";
 import "package:takion/src/data/catalog/repositories/metron_local_catalog_repository.dart";
 import "package:takion/src/data/catalog/repositories/metron_repository_impl.dart";
+import "package:takion/src/core/sync/offline_queue/offline_queue_processor.dart";
+import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
+import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
 import "package:takion/src/domain/repositories.dart";
 
 final userStateCacheProvider = Provider<UserStateCache>((ref) {
   return UserStateCache();
+});
+
+final offlineQueueDaoProvider = Provider<OfflineQueueDao>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.offlineQueueDao;
+});
+
+final offlineQueueProcessorProvider = Provider<OfflineQueueProcessor>((ref) {
+  final dao = ref.watch(offlineQueueDaoProvider);
+  final collectionRemote = ref.watch(metronCollectionRemoteDataSourceProvider);
+  final pullListRemote = ref.watch(metronPullListRemoteDataSourceProvider);
+  final wishlistRemote = ref.watch(metronWishlistRemoteDataSourceProvider);
+  return OfflineQueueProcessor(
+    dao: dao,
+    collectionRemote: collectionRemote,
+    pullListRemote: pullListRemote,
+    wishlistRemote: wishlistRemote,
+  );
+});
+
+final offlineWriteQueueProvider = Provider<OfflineWriteQueue>((ref) {
+  final dao = ref.watch(offlineQueueDaoProvider);
+  final processor = ref.watch(offlineQueueProcessorProvider);
+  return OfflineWriteQueue(dao: dao, processor: processor);
 });
 
 final metronRemoteDataSourceProvider = Provider<MetronRemoteDataSource>((ref) {

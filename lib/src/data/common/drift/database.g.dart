@@ -19388,6 +19388,558 @@ class SyncMetaCompanion extends UpdateCompanion<SyncMetaData> {
   }
 }
 
+class $OfflineWriteQueueTable extends OfflineWriteQueue
+    with TableInfo<$OfflineWriteQueueTable, OfflineWriteQueueData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OfflineWriteQueueTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
+    'retryCount',
+  );
+  @override
+  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant("pending"),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    operation,
+    entityType,
+    entityId,
+    payload,
+    createdAt,
+    retryCount,
+    status,
+    lastError,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'offline_write_queue';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OfflineWriteQueueData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('retry_count')) {
+      context.handle(
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OfflineWriteQueueData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OfflineWriteQueueData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      operation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation'],
+      )!,
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      ),
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+    );
+  }
+
+  @override
+  $OfflineWriteQueueTable createAlias(String alias) {
+    return $OfflineWriteQueueTable(attachedDatabase, alias);
+  }
+}
+
+class OfflineWriteQueueData extends DataClass
+    implements Insertable<OfflineWriteQueueData> {
+  final int id;
+  final String operation;
+  final String entityType;
+  final String? entityId;
+  final String payload;
+  final int createdAt;
+  final int retryCount;
+  final String status;
+  final String? lastError;
+  const OfflineWriteQueueData({
+    required this.id,
+    required this.operation,
+    required this.entityType,
+    this.entityId,
+    required this.payload,
+    required this.createdAt,
+    required this.retryCount,
+    required this.status,
+    this.lastError,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['operation'] = Variable<String>(operation);
+    map['entity_type'] = Variable<String>(entityType);
+    if (!nullToAbsent || entityId != null) {
+      map['entity_id'] = Variable<String>(entityId);
+    }
+    map['payload'] = Variable<String>(payload);
+    map['created_at'] = Variable<int>(createdAt);
+    map['retry_count'] = Variable<int>(retryCount);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    return map;
+  }
+
+  OfflineWriteQueueCompanion toCompanion(bool nullToAbsent) {
+    return OfflineWriteQueueCompanion(
+      id: Value(id),
+      operation: Value(operation),
+      entityType: Value(entityType),
+      entityId: entityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entityId),
+      payload: Value(payload),
+      createdAt: Value(createdAt),
+      retryCount: Value(retryCount),
+      status: Value(status),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+    );
+  }
+
+  factory OfflineWriteQueueData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OfflineWriteQueueData(
+      id: serializer.fromJson<int>(json['id']),
+      operation: serializer.fromJson<String>(json['operation']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      entityId: serializer.fromJson<String?>(json['entityId']),
+      payload: serializer.fromJson<String>(json['payload']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      retryCount: serializer.fromJson<int>(json['retryCount']),
+      status: serializer.fromJson<String>(json['status']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'operation': serializer.toJson<String>(operation),
+      'entityType': serializer.toJson<String>(entityType),
+      'entityId': serializer.toJson<String?>(entityId),
+      'payload': serializer.toJson<String>(payload),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'retryCount': serializer.toJson<int>(retryCount),
+      'status': serializer.toJson<String>(status),
+      'lastError': serializer.toJson<String?>(lastError),
+    };
+  }
+
+  OfflineWriteQueueData copyWith({
+    int? id,
+    String? operation,
+    String? entityType,
+    Value<String?> entityId = const Value.absent(),
+    String? payload,
+    int? createdAt,
+    int? retryCount,
+    String? status,
+    Value<String?> lastError = const Value.absent(),
+  }) => OfflineWriteQueueData(
+    id: id ?? this.id,
+    operation: operation ?? this.operation,
+    entityType: entityType ?? this.entityType,
+    entityId: entityId.present ? entityId.value : this.entityId,
+    payload: payload ?? this.payload,
+    createdAt: createdAt ?? this.createdAt,
+    retryCount: retryCount ?? this.retryCount,
+    status: status ?? this.status,
+    lastError: lastError.present ? lastError.value : this.lastError,
+  );
+  OfflineWriteQueueData copyWithCompanion(OfflineWriteQueueCompanion data) {
+    return OfflineWriteQueueData(
+      id: data.id.present ? data.id.value : this.id,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
+      status: data.status.present ? data.status.value : this.status,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfflineWriteQueueData(')
+          ..write('id: $id, ')
+          ..write('operation: $operation, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('status: $status, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    operation,
+    entityType,
+    entityId,
+    payload,
+    createdAt,
+    retryCount,
+    status,
+    lastError,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OfflineWriteQueueData &&
+          other.id == this.id &&
+          other.operation == this.operation &&
+          other.entityType == this.entityType &&
+          other.entityId == this.entityId &&
+          other.payload == this.payload &&
+          other.createdAt == this.createdAt &&
+          other.retryCount == this.retryCount &&
+          other.status == this.status &&
+          other.lastError == this.lastError);
+}
+
+class OfflineWriteQueueCompanion
+    extends UpdateCompanion<OfflineWriteQueueData> {
+  final Value<int> id;
+  final Value<String> operation;
+  final Value<String> entityType;
+  final Value<String?> entityId;
+  final Value<String> payload;
+  final Value<int> createdAt;
+  final Value<int> retryCount;
+  final Value<String> status;
+  final Value<String?> lastError;
+  const OfflineWriteQueueCompanion({
+    this.id = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.retryCount = const Value.absent(),
+    this.status = const Value.absent(),
+    this.lastError = const Value.absent(),
+  });
+  OfflineWriteQueueCompanion.insert({
+    this.id = const Value.absent(),
+    required String operation,
+    required String entityType,
+    this.entityId = const Value.absent(),
+    required String payload,
+    required int createdAt,
+    this.retryCount = const Value.absent(),
+    this.status = const Value.absent(),
+    this.lastError = const Value.absent(),
+  }) : operation = Value(operation),
+       entityType = Value(entityType),
+       payload = Value(payload),
+       createdAt = Value(createdAt);
+  static Insertable<OfflineWriteQueueData> custom({
+    Expression<int>? id,
+    Expression<String>? operation,
+    Expression<String>? entityType,
+    Expression<String>? entityId,
+    Expression<String>? payload,
+    Expression<int>? createdAt,
+    Expression<int>? retryCount,
+    Expression<String>? status,
+    Expression<String>? lastError,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (operation != null) 'operation': operation,
+      if (entityType != null) 'entity_type': entityType,
+      if (entityId != null) 'entity_id': entityId,
+      if (payload != null) 'payload': payload,
+      if (createdAt != null) 'created_at': createdAt,
+      if (retryCount != null) 'retry_count': retryCount,
+      if (status != null) 'status': status,
+      if (lastError != null) 'last_error': lastError,
+    });
+  }
+
+  OfflineWriteQueueCompanion copyWith({
+    Value<int>? id,
+    Value<String>? operation,
+    Value<String>? entityType,
+    Value<String?>? entityId,
+    Value<String>? payload,
+    Value<int>? createdAt,
+    Value<int>? retryCount,
+    Value<String>? status,
+    Value<String?>? lastError,
+  }) {
+    return OfflineWriteQueueCompanion(
+      id: id ?? this.id,
+      operation: operation ?? this.operation,
+      entityType: entityType ?? this.entityType,
+      entityId: entityId ?? this.entityId,
+      payload: payload ?? this.payload,
+      createdAt: createdAt ?? this.createdAt,
+      retryCount: retryCount ?? this.retryCount,
+      status: status ?? this.status,
+      lastError: lastError ?? this.lastError,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (retryCount.present) {
+      map['retry_count'] = Variable<int>(retryCount.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfflineWriteQueueCompanion(')
+          ..write('id: $id, ')
+          ..write('operation: $operation, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('status: $status, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19465,6 +20017,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
+  late final $OfflineWriteQueueTable offlineWriteQueue =
+      $OfflineWriteQueueTable(this);
   late final Index idxLibIssue = Index(
     'idx_lib_issue',
     'CREATE INDEX idx_lib_issue ON library_items (metron_issue_id)',
@@ -19565,6 +20119,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_mrli_list',
     'CREATE INDEX idx_mrli_list ON metron_reading_list_items (list_id)',
   );
+  late final Index idxOfflineQueueStatus = Index(
+    'idx_offline_queue_status',
+    'CREATE INDEX idx_offline_queue_status ON offline_write_queue (status)',
+  );
+  late final Index idxOfflineQueueCreated = Index(
+    'idx_offline_queue_created',
+    'CREATE INDEX idx_offline_queue_created ON offline_write_queue (created_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -19614,6 +20176,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     appSettings,
     seriesNameIndex,
     syncMeta,
+    offlineWriteQueue,
     idxLibIssue,
     idxLibSeries,
     idxLibRead,
@@ -19639,6 +20202,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxIssueTeamsTeam,
     idxIssueUniversesUniverse,
     idxMrliList,
+    idxOfflineQueueStatus,
+    idxOfflineQueueCreated,
   ];
 }
 
@@ -29918,6 +30483,293 @@ typedef $$SyncMetaTableProcessedTableManager =
       SyncMetaData,
       PrefetchHooks Function()
     >;
+typedef $$OfflineWriteQueueTableCreateCompanionBuilder =
+    OfflineWriteQueueCompanion Function({
+      Value<int> id,
+      required String operation,
+      required String entityType,
+      Value<String?> entityId,
+      required String payload,
+      required int createdAt,
+      Value<int> retryCount,
+      Value<String> status,
+      Value<String?> lastError,
+    });
+typedef $$OfflineWriteQueueTableUpdateCompanionBuilder =
+    OfflineWriteQueueCompanion Function({
+      Value<int> id,
+      Value<String> operation,
+      Value<String> entityType,
+      Value<String?> entityId,
+      Value<String> payload,
+      Value<int> createdAt,
+      Value<int> retryCount,
+      Value<String> status,
+      Value<String?> lastError,
+    });
+
+class $$OfflineWriteQueueTableFilterComposer
+    extends Composer<_$AppDatabase, $OfflineWriteQueueTable> {
+  $$OfflineWriteQueueTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OfflineWriteQueueTableOrderingComposer
+    extends Composer<_$AppDatabase, $OfflineWriteQueueTable> {
+  $$OfflineWriteQueueTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OfflineWriteQueueTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OfflineWriteQueueTable> {
+  $$OfflineWriteQueueTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+}
+
+class $$OfflineWriteQueueTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OfflineWriteQueueTable,
+          OfflineWriteQueueData,
+          $$OfflineWriteQueueTableFilterComposer,
+          $$OfflineWriteQueueTableOrderingComposer,
+          $$OfflineWriteQueueTableAnnotationComposer,
+          $$OfflineWriteQueueTableCreateCompanionBuilder,
+          $$OfflineWriteQueueTableUpdateCompanionBuilder,
+          (
+            OfflineWriteQueueData,
+            BaseReferences<
+              _$AppDatabase,
+              $OfflineWriteQueueTable,
+              OfflineWriteQueueData
+            >,
+          ),
+          OfflineWriteQueueData,
+          PrefetchHooks Function()
+        > {
+  $$OfflineWriteQueueTableTableManager(
+    _$AppDatabase db,
+    $OfflineWriteQueueTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OfflineWriteQueueTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OfflineWriteQueueTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OfflineWriteQueueTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String?> entityId = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+              }) => OfflineWriteQueueCompanion(
+                id: id,
+                operation: operation,
+                entityType: entityType,
+                entityId: entityId,
+                payload: payload,
+                createdAt: createdAt,
+                retryCount: retryCount,
+                status: status,
+                lastError: lastError,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String operation,
+                required String entityType,
+                Value<String?> entityId = const Value.absent(),
+                required String payload,
+                required int createdAt,
+                Value<int> retryCount = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+              }) => OfflineWriteQueueCompanion.insert(
+                id: id,
+                operation: operation,
+                entityType: entityType,
+                entityId: entityId,
+                payload: payload,
+                createdAt: createdAt,
+                retryCount: retryCount,
+                status: status,
+                lastError: lastError,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OfflineWriteQueueTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OfflineWriteQueueTable,
+      OfflineWriteQueueData,
+      $$OfflineWriteQueueTableFilterComposer,
+      $$OfflineWriteQueueTableOrderingComposer,
+      $$OfflineWriteQueueTableAnnotationComposer,
+      $$OfflineWriteQueueTableCreateCompanionBuilder,
+      $$OfflineWriteQueueTableUpdateCompanionBuilder,
+      (
+        OfflineWriteQueueData,
+        BaseReferences<
+          _$AppDatabase,
+          $OfflineWriteQueueTable,
+          OfflineWriteQueueData
+        >,
+      ),
+      OfflineWriteQueueData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -30016,4 +30868,6 @@ class $AppDatabaseManager {
       $$SeriesNameIndexTableTableManager(_db, _db.seriesNameIndex);
   $$SyncMetaTableTableManager get syncMeta =>
       $$SyncMetaTableTableManager(_db, _db.syncMeta);
+  $$OfflineWriteQueueTableTableManager get offlineWriteQueue =>
+      $$OfflineWriteQueueTableTableManager(_db, _db.offlineWriteQueue);
 }

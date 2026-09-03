@@ -18,7 +18,7 @@ void main() {
     });
 
     test("Initializes full schema at current version idempotently", () async {
-      expect(db.schemaVersion, equals(11));
+      expect(db.schemaVersion, equals(12));
 
       // Verify essential DAOs and tables are accessible
       final seriesNames = await db.seriesNameDao.getAll();
@@ -29,6 +29,9 @@ void main() {
 
       final syncWatermark = await db.syncMetaDao.get("sync_watermark");
       expect(syncWatermark, isNull);
+
+      final queueEntries = await db.offlineQueueDao.getPendingEntries();
+      expect(queueEntries, isEmpty);
     });
 
     test("Schema tables support CRUD operations without constraint errors", () async {
@@ -47,6 +50,17 @@ void main() {
       await db.syncMetaDao.set("last_sync_status", "success");
       final status = await db.syncMetaDao.get("last_sync_status");
       expect(status, equals("success"));
+
+      // Verify offline write queue entry
+      final queueId = await db.offlineQueueDao.enqueue(
+        operation: "create",
+        entityType: "collection",
+        payload: "{}",
+      );
+      expect(queueId, isPositive);
+      final pending = await db.offlineQueueDao.getPendingEntries();
+      expect(pending.length, equals(1));
+      expect(pending.first.operation, equals("create"));
     });
   });
 }

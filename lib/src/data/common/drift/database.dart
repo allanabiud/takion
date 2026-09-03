@@ -26,6 +26,7 @@ import "daos/series_name_dao.dart";
 import "daos/sync_meta_dao.dart";
 import "daos/metron_entity_dao.dart";
 import "daos/junction_dao.dart";
+import "daos/offline_queue_dao.dart";
 
 part "database.g.dart";
 
@@ -609,6 +610,20 @@ class SeriesNameIndex extends Table {
   Set<Column> get primaryKey => {normalizedName};
 }
 
+@TableIndex(name: "idx_offline_queue_status", columns: {#status})
+@TableIndex(name: "idx_offline_queue_created", columns: {#createdAt})
+class OfflineWriteQueue extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get operation => text()(); // 'create', 'update', 'delete', 'scrobble', 'acquire'
+  TextColumn get entityType => text()(); // 'collection', 'pull_list', 'wish_list'
+  TextColumn get entityId => text().nullable()(); // local or Metron ID
+  TextColumn get payload => text()(); // JSON body
+  IntColumn get createdAt => integer()();
+  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  TextColumn get status => text().withDefault(const Constant("pending"))();
+  TextColumn get lastError => text().nullable()();
+}
+
 class SyncMeta extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();
@@ -663,6 +678,7 @@ class SyncMeta extends Table {
     AppSettings,
     SeriesNameIndex,
     SyncMeta,
+    OfflineWriteQueue,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -686,9 +702,10 @@ class AppDatabase extends _$AppDatabase {
   late final SyncMetaDao syncMetaDao = SyncMetaDao(this);
   late final MetronEntityDao metronEntityDao = MetronEntityDao(this);
   late final JunctionDao junctionDao = JunctionDao(this);
+  late final OfflineQueueDao offlineQueueDao = OfflineQueueDao(this);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -752,6 +769,11 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 11) {
           await m.addColumn(activityEvents, activityEvents.batchId);
+        }
+        if (from < 12) {
+          await m.createTable(offlineWriteQueue);
+          await m.createIndex(idxOfflineQueueStatus);
+          await m.createIndex(idxOfflineQueueCreated);
         }
       },
     );
