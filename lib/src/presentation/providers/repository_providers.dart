@@ -32,6 +32,9 @@ import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
 import "package:takion/src/data/collection/repositories/metron_collection_repository_impl.dart";
 import "package:takion/src/data/collection/sync/collection_sync_manager.dart";
+import "package:takion/src/core/sync/connectivity_monitor.dart";
+import "package:takion/src/core/sync/metron_sync_manager.dart";
+import "package:takion/src/core/sync/metron_sync_state.dart";
 import "package:takion/src/data/pull_list/repositories/metron_pull_list_repository_impl.dart";
 import "package:takion/src/data/pull_list/sync/pull_list_sync_manager.dart";
 import "package:takion/src/data/wishlist/repositories/local_wishlist_repository.dart";
@@ -240,4 +243,34 @@ final localWishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
 final wishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
   return ref.watch(localWishlistRepositoryProvider);
 });
+
+final connectivityMonitorProvider = Provider<ConnectivityMonitor>((ref) {
+  final monitor = ConnectivityMonitor();
+  ref.onDispose(monitor.dispose);
+  return monitor;
+});
+
+final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
+  final colSync = ref.watch(collectionSyncManagerProvider);
+  final pullSync = ref.watch(pullListSyncManagerProvider);
+  final wishSync = ref.watch(wishlistSyncManagerProvider);
+  final offlineQueue = ref.watch(offlineWriteQueueProvider);
+  final monitor = ref.watch(connectivityMonitorProvider);
+
+  final manager = MetronSyncManager(
+    collectionSyncManager: colSync,
+    pullListSyncManager: pullSync,
+    wishlistSyncManager: wishSync,
+    offlineWriteQueue: offlineQueue,
+    connectivityMonitor: monitor,
+  );
+  ref.onDispose(manager.dispose);
+  return manager;
+});
+
+final metronSyncStateProvider = StreamProvider<MetronSyncState>((ref) {
+  final manager = ref.watch(metronSyncManagerProvider);
+  return manager.stateStream;
+});
+
 
