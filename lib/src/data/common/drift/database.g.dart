@@ -20252,6 +20252,1113 @@ class OfflineWriteQueueCompanion
   }
 }
 
+class $WishlistItemsTable extends WishlistItems
+    with TableInfo<$WishlistItemsTable, WishlistItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WishlistItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _issueIdMeta = const VerificationMeta(
+    'issueId',
+  );
+  @override
+  late final GeneratedColumn<int> issueId = GeneratedColumn<int>(
+    'issue_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _seriesIdMeta = const VerificationMeta(
+    'seriesId',
+  );
+  @override
+  late final GeneratedColumn<int> seriesId = GeneratedColumn<int>(
+    'series_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _seriesNameMeta = const VerificationMeta(
+    'seriesName',
+  );
+  @override
+  late final GeneratedColumn<String> seriesName = GeneratedColumn<String>(
+    'series_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _issueNumberMeta = const VerificationMeta(
+    'issueNumber',
+  );
+  @override
+  late final GeneratedColumn<String> issueNumber = GeneratedColumn<String>(
+    'issue_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _seriesVolumeMeta = const VerificationMeta(
+    'seriesVolume',
+  );
+  @override
+  late final GeneratedColumn<int> seriesVolume = GeneratedColumn<int>(
+    'series_volume',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _seriesYearBeganMeta = const VerificationMeta(
+    'seriesYearBegan',
+  );
+  @override
+  late final GeneratedColumn<int> seriesYearBegan = GeneratedColumn<int>(
+    'series_year_began',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coverDateMeta = const VerificationMeta(
+    'coverDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> coverDate = GeneratedColumn<DateTime>(
+    'cover_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _storeDateMeta = const VerificationMeta(
+    'storeDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> storeDate = GeneratedColumn<DateTime>(
+    'store_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(3),
+  );
+  static const VerificationMeta _desiredGradeMeta = const VerificationMeta(
+    'desiredGrade',
+  );
+  @override
+  late final GeneratedColumn<double> desiredGrade = GeneratedColumn<double>(
+    'desired_grade',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _maxPriceMeta = const VerificationMeta(
+    'maxPrice',
+  );
+  @override
+  late final GeneratedColumn<double> maxPrice = GeneratedColumn<double>(
+    'max_price',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _maxPriceCurrencyMeta = const VerificationMeta(
+    'maxPriceCurrency',
+  );
+  @override
+  late final GeneratedColumn<String> maxPriceCurrency = GeneratedColumn<String>(
+    'max_price_currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant("USD"),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _addedOnMeta = const VerificationMeta(
+    'addedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> addedOn = GeneratedColumn<DateTime>(
+    'added_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _modifiedMeta = const VerificationMeta(
+    'modified',
+  );
+  @override
+  late final GeneratedColumn<DateTime> modified = GeneratedColumn<DateTime>(
+    'modified',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant("synced"),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    issueId,
+    seriesId,
+    seriesName,
+    issueNumber,
+    seriesVolume,
+    seriesYearBegan,
+    coverDate,
+    storeDate,
+    imageUrl,
+    priority,
+    desiredGrade,
+    maxPrice,
+    maxPriceCurrency,
+    notes,
+    addedOn,
+    modified,
+    syncStatus,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wishlist_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WishlistItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('issue_id')) {
+      context.handle(
+        _issueIdMeta,
+        issueId.isAcceptableOrUnknown(data['issue_id']!, _issueIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_issueIdMeta);
+    }
+    if (data.containsKey('series_id')) {
+      context.handle(
+        _seriesIdMeta,
+        seriesId.isAcceptableOrUnknown(data['series_id']!, _seriesIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seriesIdMeta);
+    }
+    if (data.containsKey('series_name')) {
+      context.handle(
+        _seriesNameMeta,
+        seriesName.isAcceptableOrUnknown(data['series_name']!, _seriesNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seriesNameMeta);
+    }
+    if (data.containsKey('issue_number')) {
+      context.handle(
+        _issueNumberMeta,
+        issueNumber.isAcceptableOrUnknown(
+          data['issue_number']!,
+          _issueNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_issueNumberMeta);
+    }
+    if (data.containsKey('series_volume')) {
+      context.handle(
+        _seriesVolumeMeta,
+        seriesVolume.isAcceptableOrUnknown(
+          data['series_volume']!,
+          _seriesVolumeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('series_year_began')) {
+      context.handle(
+        _seriesYearBeganMeta,
+        seriesYearBegan.isAcceptableOrUnknown(
+          data['series_year_began']!,
+          _seriesYearBeganMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cover_date')) {
+      context.handle(
+        _coverDateMeta,
+        coverDate.isAcceptableOrUnknown(data['cover_date']!, _coverDateMeta),
+      );
+    }
+    if (data.containsKey('store_date')) {
+      context.handle(
+        _storeDateMeta,
+        storeDate.isAcceptableOrUnknown(data['store_date']!, _storeDateMeta),
+      );
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('desired_grade')) {
+      context.handle(
+        _desiredGradeMeta,
+        desiredGrade.isAcceptableOrUnknown(
+          data['desired_grade']!,
+          _desiredGradeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('max_price')) {
+      context.handle(
+        _maxPriceMeta,
+        maxPrice.isAcceptableOrUnknown(data['max_price']!, _maxPriceMeta),
+      );
+    }
+    if (data.containsKey('max_price_currency')) {
+      context.handle(
+        _maxPriceCurrencyMeta,
+        maxPriceCurrency.isAcceptableOrUnknown(
+          data['max_price_currency']!,
+          _maxPriceCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('added_on')) {
+      context.handle(
+        _addedOnMeta,
+        addedOn.isAcceptableOrUnknown(data['added_on']!, _addedOnMeta),
+      );
+    }
+    if (data.containsKey('modified')) {
+      context.handle(
+        _modifiedMeta,
+        modified.isAcceptableOrUnknown(data['modified']!, _modifiedMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WishlistItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WishlistItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      issueId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}issue_id'],
+      )!,
+      seriesId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}series_id'],
+      )!,
+      seriesName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}series_name'],
+      )!,
+      issueNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}issue_number'],
+      )!,
+      seriesVolume: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}series_volume'],
+      ),
+      seriesYearBegan: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}series_year_began'],
+      ),
+      coverDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cover_date'],
+      ),
+      storeDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}store_date'],
+      ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}priority'],
+      )!,
+      desiredGrade: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}desired_grade'],
+      ),
+      maxPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}max_price'],
+      ),
+      maxPriceCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}max_price_currency'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      addedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_on'],
+      ),
+      modified: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}modified'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WishlistItemsTable createAlias(String alias) {
+    return $WishlistItemsTable(attachedDatabase, alias);
+  }
+}
+
+class WishlistItem extends DataClass implements Insertable<WishlistItem> {
+  final int id;
+  final int issueId;
+  final int seriesId;
+  final String seriesName;
+  final String issueNumber;
+  final int? seriesVolume;
+  final int? seriesYearBegan;
+  final DateTime? coverDate;
+  final DateTime? storeDate;
+  final String? imageUrl;
+  final int priority;
+  final double? desiredGrade;
+  final double? maxPrice;
+  final String maxPriceCurrency;
+  final String? notes;
+  final DateTime? addedOn;
+  final DateTime? modified;
+  final String syncStatus;
+  final String createdAt;
+  final String updatedAt;
+  const WishlistItem({
+    required this.id,
+    required this.issueId,
+    required this.seriesId,
+    required this.seriesName,
+    required this.issueNumber,
+    this.seriesVolume,
+    this.seriesYearBegan,
+    this.coverDate,
+    this.storeDate,
+    this.imageUrl,
+    required this.priority,
+    this.desiredGrade,
+    this.maxPrice,
+    required this.maxPriceCurrency,
+    this.notes,
+    this.addedOn,
+    this.modified,
+    required this.syncStatus,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['issue_id'] = Variable<int>(issueId);
+    map['series_id'] = Variable<int>(seriesId);
+    map['series_name'] = Variable<String>(seriesName);
+    map['issue_number'] = Variable<String>(issueNumber);
+    if (!nullToAbsent || seriesVolume != null) {
+      map['series_volume'] = Variable<int>(seriesVolume);
+    }
+    if (!nullToAbsent || seriesYearBegan != null) {
+      map['series_year_began'] = Variable<int>(seriesYearBegan);
+    }
+    if (!nullToAbsent || coverDate != null) {
+      map['cover_date'] = Variable<DateTime>(coverDate);
+    }
+    if (!nullToAbsent || storeDate != null) {
+      map['store_date'] = Variable<DateTime>(storeDate);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    map['priority'] = Variable<int>(priority);
+    if (!nullToAbsent || desiredGrade != null) {
+      map['desired_grade'] = Variable<double>(desiredGrade);
+    }
+    if (!nullToAbsent || maxPrice != null) {
+      map['max_price'] = Variable<double>(maxPrice);
+    }
+    map['max_price_currency'] = Variable<String>(maxPriceCurrency);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || addedOn != null) {
+      map['added_on'] = Variable<DateTime>(addedOn);
+    }
+    if (!nullToAbsent || modified != null) {
+      map['modified'] = Variable<DateTime>(modified);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    return map;
+  }
+
+  WishlistItemsCompanion toCompanion(bool nullToAbsent) {
+    return WishlistItemsCompanion(
+      id: Value(id),
+      issueId: Value(issueId),
+      seriesId: Value(seriesId),
+      seriesName: Value(seriesName),
+      issueNumber: Value(issueNumber),
+      seriesVolume: seriesVolume == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seriesVolume),
+      seriesYearBegan: seriesYearBegan == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seriesYearBegan),
+      coverDate: coverDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverDate),
+      storeDate: storeDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storeDate),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      priority: Value(priority),
+      desiredGrade: desiredGrade == null && nullToAbsent
+          ? const Value.absent()
+          : Value(desiredGrade),
+      maxPrice: maxPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxPrice),
+      maxPriceCurrency: Value(maxPriceCurrency),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      addedOn: addedOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(addedOn),
+      modified: modified == null && nullToAbsent
+          ? const Value.absent()
+          : Value(modified),
+      syncStatus: Value(syncStatus),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory WishlistItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WishlistItem(
+      id: serializer.fromJson<int>(json['id']),
+      issueId: serializer.fromJson<int>(json['issueId']),
+      seriesId: serializer.fromJson<int>(json['seriesId']),
+      seriesName: serializer.fromJson<String>(json['seriesName']),
+      issueNumber: serializer.fromJson<String>(json['issueNumber']),
+      seriesVolume: serializer.fromJson<int?>(json['seriesVolume']),
+      seriesYearBegan: serializer.fromJson<int?>(json['seriesYearBegan']),
+      coverDate: serializer.fromJson<DateTime?>(json['coverDate']),
+      storeDate: serializer.fromJson<DateTime?>(json['storeDate']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      priority: serializer.fromJson<int>(json['priority']),
+      desiredGrade: serializer.fromJson<double?>(json['desiredGrade']),
+      maxPrice: serializer.fromJson<double?>(json['maxPrice']),
+      maxPriceCurrency: serializer.fromJson<String>(json['maxPriceCurrency']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      addedOn: serializer.fromJson<DateTime?>(json['addedOn']),
+      modified: serializer.fromJson<DateTime?>(json['modified']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'issueId': serializer.toJson<int>(issueId),
+      'seriesId': serializer.toJson<int>(seriesId),
+      'seriesName': serializer.toJson<String>(seriesName),
+      'issueNumber': serializer.toJson<String>(issueNumber),
+      'seriesVolume': serializer.toJson<int?>(seriesVolume),
+      'seriesYearBegan': serializer.toJson<int?>(seriesYearBegan),
+      'coverDate': serializer.toJson<DateTime?>(coverDate),
+      'storeDate': serializer.toJson<DateTime?>(storeDate),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'priority': serializer.toJson<int>(priority),
+      'desiredGrade': serializer.toJson<double?>(desiredGrade),
+      'maxPrice': serializer.toJson<double?>(maxPrice),
+      'maxPriceCurrency': serializer.toJson<String>(maxPriceCurrency),
+      'notes': serializer.toJson<String?>(notes),
+      'addedOn': serializer.toJson<DateTime?>(addedOn),
+      'modified': serializer.toJson<DateTime?>(modified),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+    };
+  }
+
+  WishlistItem copyWith({
+    int? id,
+    int? issueId,
+    int? seriesId,
+    String? seriesName,
+    String? issueNumber,
+    Value<int?> seriesVolume = const Value.absent(),
+    Value<int?> seriesYearBegan = const Value.absent(),
+    Value<DateTime?> coverDate = const Value.absent(),
+    Value<DateTime?> storeDate = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
+    int? priority,
+    Value<double?> desiredGrade = const Value.absent(),
+    Value<double?> maxPrice = const Value.absent(),
+    String? maxPriceCurrency,
+    Value<String?> notes = const Value.absent(),
+    Value<DateTime?> addedOn = const Value.absent(),
+    Value<DateTime?> modified = const Value.absent(),
+    String? syncStatus,
+    String? createdAt,
+    String? updatedAt,
+  }) => WishlistItem(
+    id: id ?? this.id,
+    issueId: issueId ?? this.issueId,
+    seriesId: seriesId ?? this.seriesId,
+    seriesName: seriesName ?? this.seriesName,
+    issueNumber: issueNumber ?? this.issueNumber,
+    seriesVolume: seriesVolume.present ? seriesVolume.value : this.seriesVolume,
+    seriesYearBegan: seriesYearBegan.present
+        ? seriesYearBegan.value
+        : this.seriesYearBegan,
+    coverDate: coverDate.present ? coverDate.value : this.coverDate,
+    storeDate: storeDate.present ? storeDate.value : this.storeDate,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    priority: priority ?? this.priority,
+    desiredGrade: desiredGrade.present ? desiredGrade.value : this.desiredGrade,
+    maxPrice: maxPrice.present ? maxPrice.value : this.maxPrice,
+    maxPriceCurrency: maxPriceCurrency ?? this.maxPriceCurrency,
+    notes: notes.present ? notes.value : this.notes,
+    addedOn: addedOn.present ? addedOn.value : this.addedOn,
+    modified: modified.present ? modified.value : this.modified,
+    syncStatus: syncStatus ?? this.syncStatus,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  WishlistItem copyWithCompanion(WishlistItemsCompanion data) {
+    return WishlistItem(
+      id: data.id.present ? data.id.value : this.id,
+      issueId: data.issueId.present ? data.issueId.value : this.issueId,
+      seriesId: data.seriesId.present ? data.seriesId.value : this.seriesId,
+      seriesName: data.seriesName.present
+          ? data.seriesName.value
+          : this.seriesName,
+      issueNumber: data.issueNumber.present
+          ? data.issueNumber.value
+          : this.issueNumber,
+      seriesVolume: data.seriesVolume.present
+          ? data.seriesVolume.value
+          : this.seriesVolume,
+      seriesYearBegan: data.seriesYearBegan.present
+          ? data.seriesYearBegan.value
+          : this.seriesYearBegan,
+      coverDate: data.coverDate.present ? data.coverDate.value : this.coverDate,
+      storeDate: data.storeDate.present ? data.storeDate.value : this.storeDate,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      desiredGrade: data.desiredGrade.present
+          ? data.desiredGrade.value
+          : this.desiredGrade,
+      maxPrice: data.maxPrice.present ? data.maxPrice.value : this.maxPrice,
+      maxPriceCurrency: data.maxPriceCurrency.present
+          ? data.maxPriceCurrency.value
+          : this.maxPriceCurrency,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      addedOn: data.addedOn.present ? data.addedOn.value : this.addedOn,
+      modified: data.modified.present ? data.modified.value : this.modified,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WishlistItem(')
+          ..write('id: $id, ')
+          ..write('issueId: $issueId, ')
+          ..write('seriesId: $seriesId, ')
+          ..write('seriesName: $seriesName, ')
+          ..write('issueNumber: $issueNumber, ')
+          ..write('seriesVolume: $seriesVolume, ')
+          ..write('seriesYearBegan: $seriesYearBegan, ')
+          ..write('coverDate: $coverDate, ')
+          ..write('storeDate: $storeDate, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('priority: $priority, ')
+          ..write('desiredGrade: $desiredGrade, ')
+          ..write('maxPrice: $maxPrice, ')
+          ..write('maxPriceCurrency: $maxPriceCurrency, ')
+          ..write('notes: $notes, ')
+          ..write('addedOn: $addedOn, ')
+          ..write('modified: $modified, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    issueId,
+    seriesId,
+    seriesName,
+    issueNumber,
+    seriesVolume,
+    seriesYearBegan,
+    coverDate,
+    storeDate,
+    imageUrl,
+    priority,
+    desiredGrade,
+    maxPrice,
+    maxPriceCurrency,
+    notes,
+    addedOn,
+    modified,
+    syncStatus,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WishlistItem &&
+          other.id == this.id &&
+          other.issueId == this.issueId &&
+          other.seriesId == this.seriesId &&
+          other.seriesName == this.seriesName &&
+          other.issueNumber == this.issueNumber &&
+          other.seriesVolume == this.seriesVolume &&
+          other.seriesYearBegan == this.seriesYearBegan &&
+          other.coverDate == this.coverDate &&
+          other.storeDate == this.storeDate &&
+          other.imageUrl == this.imageUrl &&
+          other.priority == this.priority &&
+          other.desiredGrade == this.desiredGrade &&
+          other.maxPrice == this.maxPrice &&
+          other.maxPriceCurrency == this.maxPriceCurrency &&
+          other.notes == this.notes &&
+          other.addedOn == this.addedOn &&
+          other.modified == this.modified &&
+          other.syncStatus == this.syncStatus &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class WishlistItemsCompanion extends UpdateCompanion<WishlistItem> {
+  final Value<int> id;
+  final Value<int> issueId;
+  final Value<int> seriesId;
+  final Value<String> seriesName;
+  final Value<String> issueNumber;
+  final Value<int?> seriesVolume;
+  final Value<int?> seriesYearBegan;
+  final Value<DateTime?> coverDate;
+  final Value<DateTime?> storeDate;
+  final Value<String?> imageUrl;
+  final Value<int> priority;
+  final Value<double?> desiredGrade;
+  final Value<double?> maxPrice;
+  final Value<String> maxPriceCurrency;
+  final Value<String?> notes;
+  final Value<DateTime?> addedOn;
+  final Value<DateTime?> modified;
+  final Value<String> syncStatus;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  const WishlistItemsCompanion({
+    this.id = const Value.absent(),
+    this.issueId = const Value.absent(),
+    this.seriesId = const Value.absent(),
+    this.seriesName = const Value.absent(),
+    this.issueNumber = const Value.absent(),
+    this.seriesVolume = const Value.absent(),
+    this.seriesYearBegan = const Value.absent(),
+    this.coverDate = const Value.absent(),
+    this.storeDate = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.desiredGrade = const Value.absent(),
+    this.maxPrice = const Value.absent(),
+    this.maxPriceCurrency = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.addedOn = const Value.absent(),
+    this.modified = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  WishlistItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int issueId,
+    required int seriesId,
+    required String seriesName,
+    required String issueNumber,
+    this.seriesVolume = const Value.absent(),
+    this.seriesYearBegan = const Value.absent(),
+    this.coverDate = const Value.absent(),
+    this.storeDate = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.desiredGrade = const Value.absent(),
+    this.maxPrice = const Value.absent(),
+    this.maxPriceCurrency = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.addedOn = const Value.absent(),
+    this.modified = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    required String createdAt,
+    required String updatedAt,
+  }) : issueId = Value(issueId),
+       seriesId = Value(seriesId),
+       seriesName = Value(seriesName),
+       issueNumber = Value(issueNumber),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<WishlistItem> custom({
+    Expression<int>? id,
+    Expression<int>? issueId,
+    Expression<int>? seriesId,
+    Expression<String>? seriesName,
+    Expression<String>? issueNumber,
+    Expression<int>? seriesVolume,
+    Expression<int>? seriesYearBegan,
+    Expression<DateTime>? coverDate,
+    Expression<DateTime>? storeDate,
+    Expression<String>? imageUrl,
+    Expression<int>? priority,
+    Expression<double>? desiredGrade,
+    Expression<double>? maxPrice,
+    Expression<String>? maxPriceCurrency,
+    Expression<String>? notes,
+    Expression<DateTime>? addedOn,
+    Expression<DateTime>? modified,
+    Expression<String>? syncStatus,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (issueId != null) 'issue_id': issueId,
+      if (seriesId != null) 'series_id': seriesId,
+      if (seriesName != null) 'series_name': seriesName,
+      if (issueNumber != null) 'issue_number': issueNumber,
+      if (seriesVolume != null) 'series_volume': seriesVolume,
+      if (seriesYearBegan != null) 'series_year_began': seriesYearBegan,
+      if (coverDate != null) 'cover_date': coverDate,
+      if (storeDate != null) 'store_date': storeDate,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (priority != null) 'priority': priority,
+      if (desiredGrade != null) 'desired_grade': desiredGrade,
+      if (maxPrice != null) 'max_price': maxPrice,
+      if (maxPriceCurrency != null) 'max_price_currency': maxPriceCurrency,
+      if (notes != null) 'notes': notes,
+      if (addedOn != null) 'added_on': addedOn,
+      if (modified != null) 'modified': modified,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  WishlistItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? issueId,
+    Value<int>? seriesId,
+    Value<String>? seriesName,
+    Value<String>? issueNumber,
+    Value<int?>? seriesVolume,
+    Value<int?>? seriesYearBegan,
+    Value<DateTime?>? coverDate,
+    Value<DateTime?>? storeDate,
+    Value<String?>? imageUrl,
+    Value<int>? priority,
+    Value<double?>? desiredGrade,
+    Value<double?>? maxPrice,
+    Value<String>? maxPriceCurrency,
+    Value<String?>? notes,
+    Value<DateTime?>? addedOn,
+    Value<DateTime?>? modified,
+    Value<String>? syncStatus,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+  }) {
+    return WishlistItemsCompanion(
+      id: id ?? this.id,
+      issueId: issueId ?? this.issueId,
+      seriesId: seriesId ?? this.seriesId,
+      seriesName: seriesName ?? this.seriesName,
+      issueNumber: issueNumber ?? this.issueNumber,
+      seriesVolume: seriesVolume ?? this.seriesVolume,
+      seriesYearBegan: seriesYearBegan ?? this.seriesYearBegan,
+      coverDate: coverDate ?? this.coverDate,
+      storeDate: storeDate ?? this.storeDate,
+      imageUrl: imageUrl ?? this.imageUrl,
+      priority: priority ?? this.priority,
+      desiredGrade: desiredGrade ?? this.desiredGrade,
+      maxPrice: maxPrice ?? this.maxPrice,
+      maxPriceCurrency: maxPriceCurrency ?? this.maxPriceCurrency,
+      notes: notes ?? this.notes,
+      addedOn: addedOn ?? this.addedOn,
+      modified: modified ?? this.modified,
+      syncStatus: syncStatus ?? this.syncStatus,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (issueId.present) {
+      map['issue_id'] = Variable<int>(issueId.value);
+    }
+    if (seriesId.present) {
+      map['series_id'] = Variable<int>(seriesId.value);
+    }
+    if (seriesName.present) {
+      map['series_name'] = Variable<String>(seriesName.value);
+    }
+    if (issueNumber.present) {
+      map['issue_number'] = Variable<String>(issueNumber.value);
+    }
+    if (seriesVolume.present) {
+      map['series_volume'] = Variable<int>(seriesVolume.value);
+    }
+    if (seriesYearBegan.present) {
+      map['series_year_began'] = Variable<int>(seriesYearBegan.value);
+    }
+    if (coverDate.present) {
+      map['cover_date'] = Variable<DateTime>(coverDate.value);
+    }
+    if (storeDate.present) {
+      map['store_date'] = Variable<DateTime>(storeDate.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (desiredGrade.present) {
+      map['desired_grade'] = Variable<double>(desiredGrade.value);
+    }
+    if (maxPrice.present) {
+      map['max_price'] = Variable<double>(maxPrice.value);
+    }
+    if (maxPriceCurrency.present) {
+      map['max_price_currency'] = Variable<String>(maxPriceCurrency.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (addedOn.present) {
+      map['added_on'] = Variable<DateTime>(addedOn.value);
+    }
+    if (modified.present) {
+      map['modified'] = Variable<DateTime>(modified.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WishlistItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('issueId: $issueId, ')
+          ..write('seriesId: $seriesId, ')
+          ..write('seriesName: $seriesName, ')
+          ..write('issueNumber: $issueNumber, ')
+          ..write('seriesVolume: $seriesVolume, ')
+          ..write('seriesYearBegan: $seriesYearBegan, ')
+          ..write('coverDate: $coverDate, ')
+          ..write('storeDate: $storeDate, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('priority: $priority, ')
+          ..write('desiredGrade: $desiredGrade, ')
+          ..write('maxPrice: $maxPrice, ')
+          ..write('maxPriceCurrency: $maxPriceCurrency, ')
+          ..write('notes: $notes, ')
+          ..write('addedOn: $addedOn, ')
+          ..write('modified: $modified, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -20331,6 +21438,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
   late final $OfflineWriteQueueTable offlineWriteQueue =
       $OfflineWriteQueueTable(this);
+  late final $WishlistItemsTable wishlistItems = $WishlistItemsTable(this);
   late final Index idxLibIssue = Index(
     'idx_lib_issue',
     'CREATE INDEX idx_lib_issue ON library_items (metron_issue_id)',
@@ -20455,6 +21563,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_offline_queue_created',
     'CREATE INDEX idx_offline_queue_created ON offline_write_queue (created_at)',
   );
+  late final Index idxWishlistIssue = Index(
+    'idx_wishlist_issue',
+    'CREATE INDEX idx_wishlist_issue ON wishlist_items (issue_id)',
+  );
+  late final Index idxWishlistSeries = Index(
+    'idx_wishlist_series',
+    'CREATE INDEX idx_wishlist_series ON wishlist_items (series_id)',
+  );
+  late final Index idxWishlistSyncStatus = Index(
+    'idx_wishlist_sync_status',
+    'CREATE INDEX idx_wishlist_sync_status ON wishlist_items (sync_status)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -20505,6 +21625,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     seriesNameIndex,
     syncMeta,
     offlineWriteQueue,
+    wishlistItems,
     idxLibIssue,
     idxLibSeries,
     idxLibRead,
@@ -20536,6 +21657,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxMrliList,
     idxOfflineQueueStatus,
     idxOfflineQueueCreated,
+    idxWishlistIssue,
+    idxWishlistSeries,
+    idxWishlistSyncStatus,
   ];
 }
 
@@ -31228,6 +32352,499 @@ typedef $$OfflineWriteQueueTableProcessedTableManager =
       OfflineWriteQueueData,
       PrefetchHooks Function()
     >;
+typedef $$WishlistItemsTableCreateCompanionBuilder =
+    WishlistItemsCompanion Function({
+      Value<int> id,
+      required int issueId,
+      required int seriesId,
+      required String seriesName,
+      required String issueNumber,
+      Value<int?> seriesVolume,
+      Value<int?> seriesYearBegan,
+      Value<DateTime?> coverDate,
+      Value<DateTime?> storeDate,
+      Value<String?> imageUrl,
+      Value<int> priority,
+      Value<double?> desiredGrade,
+      Value<double?> maxPrice,
+      Value<String> maxPriceCurrency,
+      Value<String?> notes,
+      Value<DateTime?> addedOn,
+      Value<DateTime?> modified,
+      Value<String> syncStatus,
+      required String createdAt,
+      required String updatedAt,
+    });
+typedef $$WishlistItemsTableUpdateCompanionBuilder =
+    WishlistItemsCompanion Function({
+      Value<int> id,
+      Value<int> issueId,
+      Value<int> seriesId,
+      Value<String> seriesName,
+      Value<String> issueNumber,
+      Value<int?> seriesVolume,
+      Value<int?> seriesYearBegan,
+      Value<DateTime?> coverDate,
+      Value<DateTime?> storeDate,
+      Value<String?> imageUrl,
+      Value<int> priority,
+      Value<double?> desiredGrade,
+      Value<double?> maxPrice,
+      Value<String> maxPriceCurrency,
+      Value<String?> notes,
+      Value<DateTime?> addedOn,
+      Value<DateTime?> modified,
+      Value<String> syncStatus,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+    });
+
+class $$WishlistItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get issueId => $composableBuilder(
+    column: $table.issueId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seriesId => $composableBuilder(
+    column: $table.seriesId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get seriesName => $composableBuilder(
+    column: $table.seriesName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get issueNumber => $composableBuilder(
+    column: $table.issueNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seriesVolume => $composableBuilder(
+    column: $table.seriesVolume,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seriesYearBegan => $composableBuilder(
+    column: $table.seriesYearBegan,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get coverDate => $composableBuilder(
+    column: $table.coverDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get storeDate => $composableBuilder(
+    column: $table.storeDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get desiredGrade => $composableBuilder(
+    column: $table.desiredGrade,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get maxPrice => $composableBuilder(
+    column: $table.maxPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get maxPriceCurrency => $composableBuilder(
+    column: $table.maxPriceCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get addedOn => $composableBuilder(
+    column: $table.addedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get modified => $composableBuilder(
+    column: $table.modified,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WishlistItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get issueId => $composableBuilder(
+    column: $table.issueId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seriesId => $composableBuilder(
+    column: $table.seriesId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get seriesName => $composableBuilder(
+    column: $table.seriesName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get issueNumber => $composableBuilder(
+    column: $table.issueNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seriesVolume => $composableBuilder(
+    column: $table.seriesVolume,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seriesYearBegan => $composableBuilder(
+    column: $table.seriesYearBegan,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get coverDate => $composableBuilder(
+    column: $table.coverDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get storeDate => $composableBuilder(
+    column: $table.storeDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get desiredGrade => $composableBuilder(
+    column: $table.desiredGrade,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get maxPrice => $composableBuilder(
+    column: $table.maxPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get maxPriceCurrency => $composableBuilder(
+    column: $table.maxPriceCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get addedOn => $composableBuilder(
+    column: $table.addedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get modified => $composableBuilder(
+    column: $table.modified,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WishlistItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get issueId =>
+      $composableBuilder(column: $table.issueId, builder: (column) => column);
+
+  GeneratedColumn<int> get seriesId =>
+      $composableBuilder(column: $table.seriesId, builder: (column) => column);
+
+  GeneratedColumn<String> get seriesName => $composableBuilder(
+    column: $table.seriesName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get issueNumber => $composableBuilder(
+    column: $table.issueNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get seriesVolume => $composableBuilder(
+    column: $table.seriesVolume,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get seriesYearBegan => $composableBuilder(
+    column: $table.seriesYearBegan,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get coverDate =>
+      $composableBuilder(column: $table.coverDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get storeDate =>
+      $composableBuilder(column: $table.storeDate, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<double> get desiredGrade => $composableBuilder(
+    column: $table.desiredGrade,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get maxPrice =>
+      $composableBuilder(column: $table.maxPrice, builder: (column) => column);
+
+  GeneratedColumn<String> get maxPriceCurrency => $composableBuilder(
+    column: $table.maxPriceCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get addedOn =>
+      $composableBuilder(column: $table.addedOn, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get modified =>
+      $composableBuilder(column: $table.modified, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$WishlistItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WishlistItemsTable,
+          WishlistItem,
+          $$WishlistItemsTableFilterComposer,
+          $$WishlistItemsTableOrderingComposer,
+          $$WishlistItemsTableAnnotationComposer,
+          $$WishlistItemsTableCreateCompanionBuilder,
+          $$WishlistItemsTableUpdateCompanionBuilder,
+          (
+            WishlistItem,
+            BaseReferences<_$AppDatabase, $WishlistItemsTable, WishlistItem>,
+          ),
+          WishlistItem,
+          PrefetchHooks Function()
+        > {
+  $$WishlistItemsTableTableManager(_$AppDatabase db, $WishlistItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WishlistItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WishlistItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WishlistItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> issueId = const Value.absent(),
+                Value<int> seriesId = const Value.absent(),
+                Value<String> seriesName = const Value.absent(),
+                Value<String> issueNumber = const Value.absent(),
+                Value<int?> seriesVolume = const Value.absent(),
+                Value<int?> seriesYearBegan = const Value.absent(),
+                Value<DateTime?> coverDate = const Value.absent(),
+                Value<DateTime?> storeDate = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                Value<double?> desiredGrade = const Value.absent(),
+                Value<double?> maxPrice = const Value.absent(),
+                Value<String> maxPriceCurrency = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime?> addedOn = const Value.absent(),
+                Value<DateTime?> modified = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+              }) => WishlistItemsCompanion(
+                id: id,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                seriesVolume: seriesVolume,
+                seriesYearBegan: seriesYearBegan,
+                coverDate: coverDate,
+                storeDate: storeDate,
+                imageUrl: imageUrl,
+                priority: priority,
+                desiredGrade: desiredGrade,
+                maxPrice: maxPrice,
+                maxPriceCurrency: maxPriceCurrency,
+                notes: notes,
+                addedOn: addedOn,
+                modified: modified,
+                syncStatus: syncStatus,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int issueId,
+                required int seriesId,
+                required String seriesName,
+                required String issueNumber,
+                Value<int?> seriesVolume = const Value.absent(),
+                Value<int?> seriesYearBegan = const Value.absent(),
+                Value<DateTime?> coverDate = const Value.absent(),
+                Value<DateTime?> storeDate = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                Value<double?> desiredGrade = const Value.absent(),
+                Value<double?> maxPrice = const Value.absent(),
+                Value<String> maxPriceCurrency = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime?> addedOn = const Value.absent(),
+                Value<DateTime?> modified = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                required String createdAt,
+                required String updatedAt,
+              }) => WishlistItemsCompanion.insert(
+                id: id,
+                issueId: issueId,
+                seriesId: seriesId,
+                seriesName: seriesName,
+                issueNumber: issueNumber,
+                seriesVolume: seriesVolume,
+                seriesYearBegan: seriesYearBegan,
+                coverDate: coverDate,
+                storeDate: storeDate,
+                imageUrl: imageUrl,
+                priority: priority,
+                desiredGrade: desiredGrade,
+                maxPrice: maxPrice,
+                maxPriceCurrency: maxPriceCurrency,
+                notes: notes,
+                addedOn: addedOn,
+                modified: modified,
+                syncStatus: syncStatus,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WishlistItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WishlistItemsTable,
+      WishlistItem,
+      $$WishlistItemsTableFilterComposer,
+      $$WishlistItemsTableOrderingComposer,
+      $$WishlistItemsTableAnnotationComposer,
+      $$WishlistItemsTableCreateCompanionBuilder,
+      $$WishlistItemsTableUpdateCompanionBuilder,
+      (
+        WishlistItem,
+        BaseReferences<_$AppDatabase, $WishlistItemsTable, WishlistItem>,
+      ),
+      WishlistItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -31328,4 +32945,6 @@ class $AppDatabaseManager {
       $$SyncMetaTableTableManager(_db, _db.syncMeta);
   $$OfflineWriteQueueTableTableManager get offlineWriteQueue =>
       $$OfflineWriteQueueTableTableManager(_db, _db.offlineWriteQueue);
+  $$WishlistItemsTableTableManager get wishlistItems =>
+      $$WishlistItemsTableTableManager(_db, _db.wishlistItems);
 }

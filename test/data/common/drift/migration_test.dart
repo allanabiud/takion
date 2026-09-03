@@ -18,7 +18,7 @@ void main() {
     });
 
     test("Initializes full schema at current version idempotently", () async {
-      expect(db.schemaVersion, equals(14));
+      expect(db.schemaVersion, equals(15));
 
       // Verify essential DAOs and tables are accessible
       final seriesNames = await db.seriesNameDao.getAll();
@@ -32,6 +32,9 @@ void main() {
 
       final queueEntries = await db.offlineQueueDao.getPendingEntries();
       expect(queueEntries, isEmpty);
+
+      final wishlist = await db.wishlistDao.getAll();
+      expect(wishlist, isEmpty);
     });
 
     test("Schema tables support CRUD operations without constraint errors", () async {

@@ -34,6 +34,9 @@ import "package:takion/src/data/collection/repositories/metron_collection_reposi
 import "package:takion/src/data/collection/sync/collection_sync_manager.dart";
 import "package:takion/src/data/pull_list/repositories/metron_pull_list_repository_impl.dart";
 import "package:takion/src/data/pull_list/sync/pull_list_sync_manager.dart";
+import "package:takion/src/data/wishlist/repositories/local_wishlist_repository.dart";
+import "package:takion/src/data/wishlist/repositories/metron_wishlist_repository_impl.dart";
+import "package:takion/src/data/wishlist/sync/wishlist_sync_manager.dart";
 import "package:takion/src/domain/repositories.dart";
 
 final userStateCacheProvider = Provider<UserStateCache>((ref) {
@@ -210,3 +213,31 @@ final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   return LocalActivityRepository(db);
 });
+
+final metronWishlistRepositoryProvider =
+    Provider<MetronWishlistRepository>((ref) {
+  final remote = ref.watch(metronWishlistRemoteDataSourceProvider);
+  return MetronWishlistRepositoryImpl(remoteDataSource: remote);
+});
+
+final wishlistSyncManagerProvider = Provider<WishlistSyncManager>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final repo = ref.watch(metronWishlistRepositoryProvider);
+  final offlineQueue = ref.watch(offlineWriteQueueProvider);
+  return WishlistSyncManager(
+    database: db,
+    wishlistRepository: repo,
+    offlineWriteQueue: offlineQueue,
+  );
+});
+
+final localWishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final offlineQueue = ref.watch(offlineWriteQueueProvider);
+  return LocalWishlistRepository(db, offlineQueue: offlineQueue);
+});
+
+final wishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
+  return ref.watch(localWishlistRepositoryProvider);
+});
+

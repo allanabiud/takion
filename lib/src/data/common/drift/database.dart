@@ -27,6 +27,7 @@ import "daos/sync_meta_dao.dart";
 import "daos/metron_entity_dao.dart";
 import "daos/junction_dao.dart";
 import "daos/offline_queue_dao.dart";
+import "daos/wishlist_dao.dart";
 
 part "database.g.dart";
 
@@ -118,6 +119,37 @@ class SeriesSubscriptions extends Table {
   BoolColumn get isActive => boolean()();
   BoolColumn get autoAddPull => boolean().withDefault(const Constant(false))();
   TextColumn get subscribedAt => text()();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@TableIndex(name: "idx_wishlist_issue", columns: {#issueId})
+@TableIndex(name: "idx_wishlist_series", columns: {#seriesId})
+@TableIndex(name: "idx_wishlist_sync_status", columns: {#syncStatus})
+class WishlistItems extends Table {
+  IntColumn get id => integer()();
+  IntColumn get issueId => integer()();
+  IntColumn get seriesId => integer()();
+  TextColumn get seriesName => text()();
+  TextColumn get issueNumber => text()();
+  IntColumn get seriesVolume => integer().nullable()();
+  IntColumn get seriesYearBegan => integer().nullable()();
+  DateTimeColumn get coverDate => dateTime().nullable()();
+  DateTimeColumn get storeDate => dateTime().nullable()();
+  TextColumn get imageUrl => text().nullable()();
+  IntColumn get priority => integer().withDefault(const Constant(3))();
+  RealColumn get desiredGrade => real().nullable()();
+  RealColumn get maxPrice => real().nullable()();
+  TextColumn get maxPriceCurrency =>
+      text().withDefault(const Constant("USD"))();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get addedOn => dateTime().nullable()();
+  DateTimeColumn get modified => dateTime().nullable()();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant("synced"))();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
 
@@ -695,6 +727,7 @@ class SyncMeta extends Table {
     SeriesNameIndex,
     SyncMeta,
     OfflineWriteQueue,
+    WishlistItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -719,9 +752,10 @@ class AppDatabase extends _$AppDatabase {
   late final MetronEntityDao metronEntityDao = MetronEntityDao(this);
   late final JunctionDao junctionDao = JunctionDao(this);
   late final OfflineQueueDao offlineQueueDao = OfflineQueueDao(this);
+  late final WishlistDao wishlistDao = WishlistDao(this);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration {
@@ -810,6 +844,12 @@ class AppDatabase extends _$AppDatabase {
             seriesSubscriptions.syncStatus,
           );
           await m.createIndex(idxSubSyncStatus);
+        }
+        if (from < 15) {
+          await m.createTable(wishlistItems);
+          await m.createIndex(idxWishlistIssue);
+          await m.createIndex(idxWishlistSeries);
+          await m.createIndex(idxWishlistSyncStatus);
         }
       },
     );
