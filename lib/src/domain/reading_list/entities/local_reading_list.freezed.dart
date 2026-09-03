@@ -301,7 +301,7 @@ as DateTime?,
 /// @nodoc
 mixin _$LocalReadingList {
 
- String get id; String get title; String get description; bool get isOrdered; ListContentType get contentType; DateTime get createdAt; DateTime get updatedAt; List<LocalReadingListItem> get items; int? get metronSourceId; int? get metronArcId; String? get metronAttributionSource; String? get metronAttributionUrl; String? get metronImageUrl; String? get metronListType; DateTime? get lastSyncedAt;
+ String get id; String get title; String get description; bool get isOrdered; ListContentType get contentType; DateTime get createdAt; DateTime get updatedAt; List<LocalReadingListItem> get items; int? get metronSourceId; int? get metronArcId; String? get metronAttributionSource; String? get metronAttributionUrl; String? get metronImageUrl; String? get metronListType; DateTime? get lastSyncedAt; String get syncStatus;
 /// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -312,16 +312,16 @@ $LocalReadingListCopyWith<LocalReadingList> get copyWith => _$LocalReadingListCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronArcId, metronArcId) || other.metronArcId == metronArcId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronArcId, metronArcId) || other.metronArcId == metronArcId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(items),metronSourceId,metronArcId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt);
+int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(items),metronSourceId,metronArcId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt,syncStatus);
 
 @override
 String toString() {
-  return 'LocalReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronArcId: $metronArcId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
+  return 'LocalReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronArcId: $metronArcId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt, syncStatus: $syncStatus)';
 }
 
 
@@ -332,7 +332,7 @@ abstract mixin class $LocalReadingListCopyWith<$Res>  {
   factory $LocalReadingListCopyWith(LocalReadingList value, $Res Function(LocalReadingList) _then) = _$LocalReadingListCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<LocalReadingListItem> items, int? metronSourceId, int? metronArcId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt
+ String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<LocalReadingListItem> items, int? metronSourceId, int? metronArcId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt, String syncStatus
 });
 
 
@@ -349,7 +349,7 @@ class _$LocalReadingListCopyWithImpl<$Res>
 
 /// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronArcId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronArcId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,Object? syncStatus = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -366,7 +366,8 @@ as String?,metronAttributionUrl: freezed == metronAttributionUrl ? _self.metronA
 as String?,metronImageUrl: freezed == metronImageUrl ? _self.metronImageUrl : metronImageUrl // ignore: cast_nullable_to_non_nullable
 as String?,metronListType: freezed == metronListType ? _self.metronListType : metronListType // ignore: cast_nullable_to_non_nullable
 as String?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -451,10 +452,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  int? metronArcId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  int? metronArcId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt,  String syncStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocalReadingList() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronArcId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
+return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronArcId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt,_that.syncStatus);case _:
   return orElse();
 
 }
@@ -472,10 +473,10 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  int? metronArcId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  int? metronArcId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt,  String syncStatus)  $default,) {final _that = this;
 switch (_that) {
 case _LocalReadingList():
-return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronArcId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
+return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronArcId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt,_that.syncStatus);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -492,10 +493,10 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  int? metronArcId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  bool isOrdered,  ListContentType contentType,  DateTime createdAt,  DateTime updatedAt,  List<LocalReadingListItem> items,  int? metronSourceId,  int? metronArcId,  String? metronAttributionSource,  String? metronAttributionUrl,  String? metronImageUrl,  String? metronListType,  DateTime? lastSyncedAt,  String syncStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _LocalReadingList() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronArcId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt);case _:
+return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.contentType,_that.createdAt,_that.updatedAt,_that.items,_that.metronSourceId,_that.metronArcId,_that.metronAttributionSource,_that.metronAttributionUrl,_that.metronImageUrl,_that.metronListType,_that.lastSyncedAt,_that.syncStatus);case _:
   return null;
 
 }
@@ -507,7 +508,7 @@ return $default(_that.id,_that.title,_that.description,_that.isOrdered,_that.con
 
 
 class _LocalReadingList implements LocalReadingList {
-  const _LocalReadingList({required this.id, required this.title, required this.description, required this.isOrdered, required this.contentType, required this.createdAt, required this.updatedAt, required final  List<LocalReadingListItem> items, this.metronSourceId, this.metronArcId, this.metronAttributionSource, this.metronAttributionUrl, this.metronImageUrl, this.metronListType, this.lastSyncedAt}): _items = items;
+  const _LocalReadingList({required this.id, required this.title, required this.description, required this.isOrdered, required this.contentType, required this.createdAt, required this.updatedAt, required final  List<LocalReadingListItem> items, this.metronSourceId, this.metronArcId, this.metronAttributionSource, this.metronAttributionUrl, this.metronImageUrl, this.metronListType, this.lastSyncedAt, this.syncStatus = "synced"}): _items = items;
   
 
 @override final  String id;
@@ -531,6 +532,7 @@ class _LocalReadingList implements LocalReadingList {
 @override final  String? metronImageUrl;
 @override final  String? metronListType;
 @override final  DateTime? lastSyncedAt;
+@override@JsonKey() final  String syncStatus;
 
 /// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
@@ -542,16 +544,16 @@ _$LocalReadingListCopyWith<_LocalReadingList> get copyWith => __$LocalReadingLis
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronArcId, metronArcId) || other.metronArcId == metronArcId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalReadingList&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.isOrdered, isOrdered) || other.isOrdered == isOrdered)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.metronSourceId, metronSourceId) || other.metronSourceId == metronSourceId)&&(identical(other.metronArcId, metronArcId) || other.metronArcId == metronArcId)&&(identical(other.metronAttributionSource, metronAttributionSource) || other.metronAttributionSource == metronAttributionSource)&&(identical(other.metronAttributionUrl, metronAttributionUrl) || other.metronAttributionUrl == metronAttributionUrl)&&(identical(other.metronImageUrl, metronImageUrl) || other.metronImageUrl == metronImageUrl)&&(identical(other.metronListType, metronListType) || other.metronListType == metronListType)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(_items),metronSourceId,metronArcId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt);
+int get hashCode => Object.hash(runtimeType,id,title,description,isOrdered,contentType,createdAt,updatedAt,const DeepCollectionEquality().hash(_items),metronSourceId,metronArcId,metronAttributionSource,metronAttributionUrl,metronImageUrl,metronListType,lastSyncedAt,syncStatus);
 
 @override
 String toString() {
-  return 'LocalReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronArcId: $metronArcId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt)';
+  return 'LocalReadingList(id: $id, title: $title, description: $description, isOrdered: $isOrdered, contentType: $contentType, createdAt: $createdAt, updatedAt: $updatedAt, items: $items, metronSourceId: $metronSourceId, metronArcId: $metronArcId, metronAttributionSource: $metronAttributionSource, metronAttributionUrl: $metronAttributionUrl, metronImageUrl: $metronImageUrl, metronListType: $metronListType, lastSyncedAt: $lastSyncedAt, syncStatus: $syncStatus)';
 }
 
 
@@ -562,7 +564,7 @@ abstract mixin class _$LocalReadingListCopyWith<$Res> implements $LocalReadingLi
   factory _$LocalReadingListCopyWith(_LocalReadingList value, $Res Function(_LocalReadingList) _then) = __$LocalReadingListCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<LocalReadingListItem> items, int? metronSourceId, int? metronArcId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt
+ String id, String title, String description, bool isOrdered, ListContentType contentType, DateTime createdAt, DateTime updatedAt, List<LocalReadingListItem> items, int? metronSourceId, int? metronArcId, String? metronAttributionSource, String? metronAttributionUrl, String? metronImageUrl, String? metronListType, DateTime? lastSyncedAt, String syncStatus
 });
 
 
@@ -579,7 +581,7 @@ class __$LocalReadingListCopyWithImpl<$Res>
 
 /// Create a copy of LocalReadingList
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronArcId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? isOrdered = null,Object? contentType = null,Object? createdAt = null,Object? updatedAt = null,Object? items = null,Object? metronSourceId = freezed,Object? metronArcId = freezed,Object? metronAttributionSource = freezed,Object? metronAttributionUrl = freezed,Object? metronImageUrl = freezed,Object? metronListType = freezed,Object? lastSyncedAt = freezed,Object? syncStatus = null,}) {
   return _then(_LocalReadingList(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -596,7 +598,8 @@ as String?,metronAttributionUrl: freezed == metronAttributionUrl ? _self.metronA
 as String?,metronImageUrl: freezed == metronImageUrl ? _self.metronImageUrl : metronImageUrl // ignore: cast_nullable_to_non_nullable
 as String?,metronListType: freezed == metronListType ? _self.metronListType : metronListType // ignore: cast_nullable_to_non_nullable
 as String?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

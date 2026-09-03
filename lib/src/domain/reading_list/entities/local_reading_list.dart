@@ -86,6 +86,7 @@ abstract class LocalReadingList with _$LocalReadingList {
     String? metronImageUrl,
     String? metronListType,
     DateTime? lastSyncedAt,
+    @Default("synced") String syncStatus,
   }) = _LocalReadingList;
 
   factory LocalReadingList.fromJson(Map<String, dynamic> json) {
@@ -127,6 +128,7 @@ abstract class LocalReadingList with _$LocalReadingList {
       lastSyncedAt: json["lastSyncedAt"] != null
           ? DateTime.tryParse(json["lastSyncedAt"].toString())
           : null,
+      syncStatus: json["syncStatus"]?.toString() ?? "synced",
     );
   }
 }
@@ -149,6 +151,7 @@ extension LocalReadingListJson on LocalReadingList {
       "metronImageUrl": metronImageUrl,
       "metronListType": metronListType,
       "lastSyncedAt": lastSyncedAt?.toIso8601String(),
+      "syncStatus": syncStatus,
     };
   }
 }
