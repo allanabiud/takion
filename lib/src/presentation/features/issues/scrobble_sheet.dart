@@ -203,44 +203,6 @@ Future<void> showScrobbleSheet({
                 ),
                 const SizedBox(height: 12),
                 const Divider(),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: isSubmitting
-                        ? null
-                        : () async {
-                            await ref
-                                .read(scrobbleIssueProvider(issueId).notifier)
-                                .scrobble(
-                                  addToCollection: addToCollection,
-                                  markAsRead: markAsRead,
-                                  addToWishlist: addToWishlist,
-                                  rating: selectedRating,
-                                  dateRead: markAsRead
-                                      ? DateTime.now().toUtc()
-                                      : null,
-                                );
-                            if (context.mounted &&
-                                !ref
-                                    .read(scrobbleIssueProvider(issueId))
-                                    .hasError) {
-                              Navigator.pop(context);
-                            }
-                          },
-                    child: isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text("Save Changes"),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Divider(),
                 const SizedBox(height: 8),
                 if (effectiveSeriesId != null)
                   _SubscribeTile(
@@ -370,6 +332,43 @@ Future<void> showScrobbleSheet({
                     ),
                   ),
                 ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            await ref
+                                .read(scrobbleIssueProvider(issueId).notifier)
+                                .scrobble(
+                                  addToCollection: addToCollection,
+                                  markAsRead: markAsRead,
+                                  addToWishlist: addToWishlist,
+                                  rating: selectedRating,
+                                  dateRead: markAsRead
+                                      ? DateTime.now().toUtc()
+                                      : null,
+                                );
+                            if (context.mounted &&
+                                !ref
+                                    .read(scrobbleIssueProvider(issueId))
+                                    .hasError) {
+                              Navigator.pop(context);
+                            }
+                          },
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text("Save Changes"),
+                  ),
+                ),
               ],
             );
           },

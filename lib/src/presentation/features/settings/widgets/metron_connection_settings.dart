@@ -263,7 +263,7 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
         ? theme.colorScheme.tertiary
         : theme.colorScheme.primary;
 
-    return buildSettingsGroup(context, "Cloud Synchronization", [
+    return buildSettingsGroup(context, "Metron Synchronization", [
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: isSyncing
@@ -282,7 +282,7 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
               ? (syncState.currentPhase ?? "Syncing with Metron...")
               : syncState.hasError
               ? "Sync Error"
-              : "Metron Cloud Sync",
+              : "Metron Sync",
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
@@ -297,7 +297,10 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
                 )
               : null,
         ),
-        trailing: FilledButton.tonal(
+      ),
+      SizedBox(
+        width: double.infinity,
+        child: FilledButton.tonal(
           onPressed: isSyncing || _isMigrating ? null : _triggerMetronSync,
           child: isSyncing
               ? const SizedBox(

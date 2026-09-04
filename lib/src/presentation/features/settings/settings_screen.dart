@@ -70,7 +70,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SettingsNavTile(
             icon: Icons.backup_outlined,
-            title: "Backup & Sync",
+            title: "Backup & Cloud Sync",
             subtitle: "Local backup & cloud sync",
             onTap: () => showBackupAndSyncSettings(context, ref),
           ),

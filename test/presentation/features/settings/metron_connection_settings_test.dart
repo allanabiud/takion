@@ -72,8 +72,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text("CLOUD SYNCHRONIZATION"), findsOneWidget);
-      expect(find.text("Metron Cloud Sync"), findsOneWidget);
+      expect(find.text("METRON SYNCHRONIZATION"), findsOneWidget);
+      expect(find.text("Metron Sync"), findsOneWidget);
       expect(find.text("Sync Now"), findsOneWidget);
       expect(find.text("Migrate Local Data to Metron"), findsOneWidget);
       expect(find.text("API USAGE"), findsOneWidget);
