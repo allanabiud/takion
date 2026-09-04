@@ -5,6 +5,7 @@ class StatusIndicatorIcons extends StatelessWidget {
   final bool isRead;
   final bool isPulled;
   final bool isWishlisted;
+  final String? syncStatus;
   final double iconSize;
   final double spacing;
   final MainAxisSize mainAxisSize;
@@ -15,6 +16,7 @@ class StatusIndicatorIcons extends StatelessWidget {
     required this.isRead,
     required this.isPulled,
     required this.isWishlisted,
+    this.syncStatus,
     this.iconSize = 16,
     this.spacing = 8,
     this.mainAxisSize = MainAxisSize.min,
@@ -23,6 +25,9 @@ class StatusIndicatorIcons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasPendingSync = syncStatus == "pending";
+    final hasFailedSync = syncStatus == "failed";
+
     return Row(
       mainAxisSize: mainAxisSize,
       children: [
@@ -53,6 +58,27 @@ class StatusIndicatorIcons extends StatelessWidget {
           isWishlisted,
           theme.colorScheme.tertiary,
         ),
+        if (hasPendingSync) ...[
+          SizedBox(width: spacing),
+          Tooltip(
+            message: "Changes queued to sync",
+            child: Icon(
+              Icons.cloud_upload_outlined,
+              size: iconSize,
+              color: theme.colorScheme.tertiary,
+            ),
+          ),
+        ] else if (hasFailedSync) ...[
+          SizedBox(width: spacing),
+          Tooltip(
+            message: "Sync failed - will retry",
+            child: Icon(
+              Icons.sync_problem_outlined,
+              size: iconSize,
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
       ],
     );
   }

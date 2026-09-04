@@ -25,6 +25,7 @@ class SeriesListTile extends ConsumerWidget {
   final String? categoryLabel;
   final bool showProgressBar;
   final int? ownedCount;
+  final String? syncStatus;
 
   const SeriesListTile({
     super.key,
@@ -41,6 +42,7 @@ class SeriesListTile extends ConsumerWidget {
     this.categoryLabel,
     this.showProgressBar = false,
     this.ownedCount,
+    this.syncStatus,
   });
 
   String _formatSeriesType(String? type) {
@@ -287,6 +289,29 @@ class SeriesListTile extends ConsumerWidget {
                                     role != ItemRole.standard) ...[
                                   const SizedBox(width: 8),
                                   RoleBadge(role: role!),
+                                ],
+                                if (syncStatus == "pending") ...[
+                                  const SizedBox(width: 8),
+                                  Tooltip(
+                                    message: "Changes queued to sync",
+                                    child: Icon(
+                                      Icons.cloud_upload_outlined,
+                                      size: 16,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ] else if (syncStatus == "failed") ...[
+                                  const SizedBox(width: 8),
+                                  Tooltip(
+                                    message: "Sync failed - will retry",
+                                    child: Icon(
+                                      Icons.sync_problem_outlined,
+                                      size: 16,
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                    ),
+                                  ),
                                 ],
                               ],
                             ),

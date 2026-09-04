@@ -16,6 +16,7 @@ Map<int, Map<String, dynamic>> _computeCollectionStatusMap(
       "isWishlisted": ownershipStatus == "wishlist",
       "isRead": item["isRead"] as bool,
       "rating": item["rating"],
+      "syncStatus": item["syncStatus"] as String? ?? "synced",
     };
   }
   return map;
@@ -34,6 +35,7 @@ final collectionStatusCacheProvider =
                 "ownershipStatus": row.ownershipStatus,
                 "isRead": row.isRead,
                 "rating": row.rating,
+                "syncStatus": row.syncStatus,
               },
             )
             .toList(growable: false);
@@ -48,6 +50,7 @@ final collectionStatusCacheProvider =
               isWishlisted: (value["isWishlisted"] as bool?) ?? false,
               isRead: (value["isRead"] as bool?) ?? false,
               rating: value["rating"] as int?,
+              syncStatus: (value["syncStatus"] as String?) ?? "synced",
             ),
           ),
         );

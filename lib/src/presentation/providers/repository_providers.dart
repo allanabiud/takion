@@ -317,5 +317,10 @@ final migrationProgressProvider = StreamProvider<MigrationProgress>((ref) {
   return manager.progressStream;
 });
 
+final pendingOfflineWritesCountProvider = StreamProvider<int>((ref) {
+  final queue = ref.watch(offlineWriteQueueProvider);
+  return queue.watchPendingCount();
+});
+
 
 

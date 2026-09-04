@@ -19,6 +19,7 @@ class IssueCard extends ConsumerWidget {
   final bool? isWishlisted;
   final bool? isRead;
   final bool? isPulled;
+  final String? syncStatus;
   final ItemRole? role;
   final bool compact;
   final int? seriesId;
@@ -38,6 +39,7 @@ class IssueCard extends ConsumerWidget {
     this.isWishlisted,
     this.isRead,
     this.isPulled,
+    this.syncStatus,
     this.role,
     this.compact = false,
     this.seriesId,
@@ -69,6 +71,7 @@ class IssueCard extends ConsumerWidget {
         isWishlisted ?? providerStatus?.isWishlisted ?? false;
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = isPulled ?? pullEntryAsync?.asData?.value != null;
+    final effectiveSyncStatus = syncStatus ?? providerStatus?.syncStatus;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth = width.isInfinite
@@ -117,6 +120,7 @@ class IssueCard extends ConsumerWidget {
                       isRead: effectiveIsRead,
                       isPulled: effectiveIsPulled,
                       isWishlisted: effectiveIsWishlisted,
+                      syncStatus: effectiveSyncStatus,
                       iconSize: 14,
                       spacing: 4,
                     ),
@@ -126,6 +130,7 @@ class IssueCard extends ConsumerWidget {
                     isRead: effectiveIsRead,
                     isPulled: effectiveIsPulled,
                     isWishlisted: effectiveIsWishlisted,
+                    syncStatus: effectiveSyncStatus,
                     iconSize: 16,
                     spacing: 8,
                   ),

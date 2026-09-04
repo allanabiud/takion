@@ -22,6 +22,7 @@ class IssueListTile extends ConsumerWidget {
   final bool? isCollected;
   final bool? isRead;
   final int? rating;
+  final String? syncStatus;
   final bool useCardBackground;
   final double horizontalPadding;
   final ItemRole? role;
@@ -37,6 +38,7 @@ class IssueListTile extends ConsumerWidget {
     this.isCollected,
     this.isRead,
     this.rating,
+    this.syncStatus,
     this.useCardBackground = false,
     this.horizontalPadding = 12,
     this.role,
@@ -138,6 +140,7 @@ class IssueListTile extends ConsumerWidget {
     final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
     final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
     final effectiveRating = rating ?? providerStatus?.rating;
+    final effectiveSyncStatus = syncStatus ?? providerStatus?.syncStatus;
     final effectiveStoreDate =
         effectiveIssue.storeDate ?? effectiveIssue.coverDate;
     final hasStoreDate = effectiveStoreDate != null;
@@ -270,6 +273,7 @@ class IssueListTile extends ConsumerWidget {
                               isRead: effectiveIsRead,
                               isPulled: effectiveIsPulled,
                               isWishlisted: effectiveIsWishlisted,
+                              syncStatus: effectiveSyncStatus,
                               iconSize: 16,
                               spacing: 8,
                             ),

@@ -5,6 +5,7 @@ import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
@@ -28,6 +29,11 @@ class SeriesSubscriptionCard extends ConsumerWidget {
     final effectiveOnTap =
         onTap ??
         () => context.pushRoute(SeriesDetailsRoute(seriesId: series.id));
+
+    final subAsync = ref.watch(seriesSubscriptionProvider(series.id));
+    final sub = subAsync.asData?.value;
+    final isPendingSync = sub?.syncStatus == "pending";
+    final isFailedSync = sub?.syncStatus == "failed";
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -62,6 +68,30 @@ class SeriesSubscriptionCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (isPendingSync || isFailedSync)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: (isFailedSync
+                                ? theme.colorScheme.errorContainer
+                                : theme.colorScheme.surface)
+                            .withValues(alpha: 0.9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isFailedSync
+                            ? Icons.sync_problem_outlined
+                            : Icons.cloud_upload_outlined,
+                        size: 14,
+                        color: isFailedSync
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 if (nextIssueDate != null)
                   Positioned(
                     top: 8,

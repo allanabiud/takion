@@ -15,6 +15,8 @@ final activeSubscriptionsProvider =
             id: row.id,
             userId: row.userId,
             metronSeriesId: row.metronSeriesId,
+            metronPullListId: row.metronPullListId,
+            syncStatus: row.syncStatus,
             isActive: row.isActive,
             autoAddToPullList: row.autoAddPull,
             subscribedAt: DateTime.parse(row.subscribedAt),

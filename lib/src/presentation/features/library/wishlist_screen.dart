@@ -5,6 +5,7 @@ import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/presentation/features/library/providers/category_series_providers.dart";
+import "package:takion/src/presentation/features/library/providers/wishlist_sync_status_provider.dart";
 import "package:takion/src/presentation/features/library/activity_log_view.dart";
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
@@ -181,6 +182,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(SortPreferenceContext.libraryWishlist),
     );
+    final syncStatuses = ref.watch(allWishlistSeriesSyncStatusesProvider);
 
     return viewAsync.when(
       loading: () => const AsyncStatePanel.loading(),
@@ -233,6 +235,8 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                   SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final summary = filtered[index];
+                      final seriesSyncStatus =
+                          syncStatuses.value?[summary.id];
                       return RepaintBoundary(
                         child: SeriesListTile(
                           series: summary,
@@ -241,6 +245,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                           showProgressBar: true,
                           isFirst: index == 0,
                           isLast: index == filtered.length - 1,
+                          syncStatus: seriesSyncStatus,
                           onTap: () => context.pushRoute(
                             LibrarySeriesRoute(
                               seriesId: summary.id,

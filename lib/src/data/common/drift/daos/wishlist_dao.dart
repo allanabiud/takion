@@ -68,6 +68,25 @@ class WishlistDao extends DatabaseAccessor<AppDatabase> with _$WishlistDaoMixin 
         .get();
   }
 
+  Stream<Map<int, String>> watchSyncStatusSummaryBySeries() {
+    return watchAll().map((items) {
+      final result = <int, String>{};
+      for (final item in items) {
+        final seriesId = item.seriesId;
+        final status = item.syncStatus;
+        final existing = result[seriesId];
+        if (existing == null) {
+          result[seriesId] = status;
+        } else if (existing == "synced" && status != "synced") {
+          result[seriesId] = status;
+        } else if (existing == "pending" && status == "failed") {
+          result[seriesId] = status;
+        }
+      }
+      return result;
+    });
+  }
+
   Future<void> upsert(WishlistItemsCompanion item) {
     return into(wishlistItems).insertOnConflictUpdate(item);
   }

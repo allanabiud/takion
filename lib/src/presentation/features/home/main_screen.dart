@@ -139,6 +139,13 @@ class MainScreenState extends ConsumerState<MainScreen>
       builder: (context, child) {
         final tabsRouter = context.tabsRouter;
         final syncState = ref.watch(driveSyncProvider);
+        final metronSyncStateAsync = ref.watch(metronSyncStateProvider);
+        final metronSyncManager = ref.watch(metronSyncManagerProvider);
+        final metronSyncState =
+            metronSyncStateAsync.value ?? metronSyncManager.currentState;
+        final pendingCount =
+            ref.watch(pendingOfflineWritesCountProvider).value ?? 0;
+        final isMetronSyncing = metronSyncState.isSyncing;
         final connectivityState = ref.watch(connectivityStatusProvider);
         final isOffline =
             connectivityState.asData?.value == AppConnectivityStatus.offline;
@@ -209,14 +216,18 @@ class MainScreenState extends ConsumerState<MainScreen>
                                 ).colorScheme.onErrorContainer,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                "You are offline",
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onErrorContainer,
-                                    ),
+                              Expanded(
+                                child: Text(
+                                  pendingCount > 0
+                                      ? "You are offline · $pendingCount change${pendingCount == 1 ? '' : 's'} queued to sync"
+                                      : "You are offline",
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onErrorContainer,
+                                      ),
+                                ),
                               ),
                             ],
                           ),
@@ -226,7 +237,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
-                  child: syncState.isSyncing
+                  child: isMetronSyncing || syncState.isSyncing
                       ? Container(
                           width: double.infinity,
                           color: Theme.of(context).colorScheme.surfaceContainer,
@@ -240,7 +251,10 @@ class MainScreenState extends ConsumerState<MainScreen>
                                   vertical: 6,
                                 ),
                                 child: Text(
-                                  "Syncing with Google Drive",
+                                  isMetronSyncing
+                                      ? (metronSyncState.currentPhase ??
+                                          "Syncing with Metron...")
+                                      : "Syncing with Google Drive",
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),
                               ),

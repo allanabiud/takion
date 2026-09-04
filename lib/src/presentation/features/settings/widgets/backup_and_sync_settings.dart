@@ -38,6 +38,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
   bool _isBackingUp = false;
   bool _isRestoring = false;
   bool _isDeletingBackup = false;
+  bool _isMetronSyncing = false;
 
   @override
   void initState() {
@@ -102,14 +103,105 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
   }
 
   Widget _buildSyncSection() {
+    final theme = Theme.of(context);
+    final metronSyncStateAsync = ref.watch(metronSyncStateProvider);
+    final metronSyncManager = ref.watch(metronSyncManagerProvider);
+    final metronSyncState =
+        metronSyncStateAsync.value ?? metronSyncManager.currentState;
+    final pendingWrites =
+        ref.watch(pendingOfflineWritesCountProvider).value ?? 0;
+    final isMetronSyncing = metronSyncState.isSyncing || _isMetronSyncing;
+
     final syncState = ref.watch(driveSyncProvider);
     final driveService = ref.read(driveSyncServiceProvider);
+
+    final metronLastSyncText = metronSyncState.lastSyncedAt != null
+        ? "Last synced ${DateFormatter.relativeShort(metronSyncState.lastSyncedAt!)}"
+        : "Not synced yet";
+
+    final metronStatusColor = metronSyncState.hasError
+        ? theme.colorScheme.error
+        : isMetronSyncing
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        buildSettingsGroup(context, "Google Drive Sync", [
+        buildSettingsGroup(context, "Metron Cloud Sync (Primary)", [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: isMetronSyncing
+                ? RotationTransition(
+                    turns: _syncRotation,
+                    child: Icon(Icons.sync, color: theme.colorScheme.primary),
+                  )
+                : Icon(
+                    metronSyncState.hasError
+                        ? Icons.sync_problem
+                        : Icons.cloud_done_outlined,
+                    color: metronStatusColor,
+                  ),
+            title: Text(
+              isMetronSyncing
+                  ? (metronSyncState.currentPhase ?? "Syncing with Metron...")
+                  : metronSyncState.hasError
+                  ? "Sync Error"
+                  : "Metron Cloud Sync",
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              isMetronSyncing
+                  ? "Please wait while data is synchronizing"
+                  : metronSyncState.hasError
+                  ? (metronSyncState.errorMessage ?? "An error occurred")
+                  : metronLastSyncText,
+              style: metronSyncState.hasError
+                  ? theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    )
+                  : null,
+            ),
+            trailing: FilledButton.tonal(
+              onPressed: isMetronSyncing ? null : _syncMetronNow,
+              child: isMetronSyncing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text("Sync Now"),
+            ),
+          ),
+          if (pendingWrites > 0) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.cloud_upload_outlined,
+                    size: 16,
+                    color: theme.colorScheme.tertiary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "$pendingWrites offline change${pendingWrites == 1 ? '' : 's'} pending sync",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.tertiary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ]),
+        const SizedBox(height: 16),
+        buildSettingsGroup(context, "Google Drive Sync (Optional)", [
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(
@@ -485,6 +577,33 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
       }
     } finally {
       syncNotifier.setSyncing(false);
+    }
+  }
+
+  Future<void> _syncMetronNow() async {
+    setState(() => _isMetronSyncing = true);
+    _syncAnimController.repeat();
+    try {
+      final syncManager = ref.read(metronSyncManagerProvider);
+      final result = await syncManager.syncAll(forceFullSync: true);
+      if (!mounted) return;
+      if (result.hasError) {
+        TakionAlerts.error(
+          context,
+          result.errorMessage ?? "Metron sync failed",
+        );
+      } else {
+        TakionAlerts.success(context, "Metron sync complete");
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.safeError(context, e, userMessage: "Metron sync failed");
+      }
+    } finally {
+      if (mounted) {
+        _syncAnimController.reset();
+        setState(() => _isMetronSyncing = false);
+      }
     }
   }
 }
