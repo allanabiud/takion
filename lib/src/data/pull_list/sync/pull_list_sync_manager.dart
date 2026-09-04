@@ -1,6 +1,5 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
-import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/pull_list/entities/pull_list_item.dart";
 import "package:takion/src/domain/pull_list/repositories/pull_list_repository.dart";
@@ -23,17 +22,14 @@ class PullListSyncManager {
   PullListSyncManager({
     required db.AppDatabase database,
     required MetronPullListRepository pullListRepository,
-    OfflineWriteQueue? offlineWriteQueue,
   })  : _database = database,
-        _pullListRepository = pullListRepository,
-        _offlineWriteQueue = offlineWriteQueue;
+        _pullListRepository = pullListRepository;
 
   static const String _syncMetaKey = "metron_last_pull_list_sync";
   static const String _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final MetronPullListRepository _pullListRepository;
-  final OfflineWriteQueue? _offlineWriteQueue;
 
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
@@ -50,10 +46,6 @@ class PullListSyncManager {
 
     _isSyncing = true;
     try {
-      if (_offlineWriteQueue != null) {
-        await _offlineWriteQueue.processQueue();
-      }
-
       // 1. Sync Pull List Series (Subscriptions)
       var seriesPage = 1;
       final remoteSeries = <PullListSeriesItem>[];

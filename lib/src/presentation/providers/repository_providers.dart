@@ -58,11 +58,13 @@ final offlineQueueDaoProvider = Provider<OfflineQueueDao>((ref) {
 
 final offlineQueueProcessorProvider = Provider<OfflineQueueProcessor>((ref) {
   final dao = ref.watch(offlineQueueDaoProvider);
+  final db = ref.watch(driftDatabaseProvider);
   final collectionRemote = ref.watch(metronCollectionRemoteDataSourceProvider);
   final pullListRemote = ref.watch(metronPullListRemoteDataSourceProvider);
   final wishlistRemote = ref.watch(metronWishlistRemoteDataSourceProvider);
   return OfflineQueueProcessor(
     dao: dao,
+    database: db,
     collectionRemote: collectionRemote,
     pullListRemote: pullListRemote,
     wishlistRemote: wishlistRemote,
@@ -162,11 +164,9 @@ final metronCollectionRepositoryProvider = Provider<CollectionRepository>((ref) 
 final collectionSyncManagerProvider = Provider<CollectionSyncManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final repo = ref.watch(metronCollectionRepositoryProvider);
-  final offlineQueue = ref.watch(offlineWriteQueueProvider);
   return CollectionSyncManager(
     database: db,
     collectionRepository: repo,
-    offlineWriteQueue: offlineQueue,
   );
 });
 
@@ -185,11 +185,9 @@ final metronPullListRepositoryProvider = Provider<MetronPullListRepository>((ref
 final pullListSyncManagerProvider = Provider<PullListSyncManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final repo = ref.watch(metronPullListRepositoryProvider);
-  final offlineQueue = ref.watch(offlineWriteQueueProvider);
   return PullListSyncManager(
     database: db,
     pullListRepository: repo,
-    offlineWriteQueue: offlineQueue,
   );
 });
 
@@ -231,11 +229,9 @@ final metronWishlistRepositoryProvider =
 final wishlistSyncManagerProvider = Provider<WishlistSyncManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final repo = ref.watch(metronWishlistRepositoryProvider);
-  final offlineQueue = ref.watch(offlineWriteQueueProvider);
   return WishlistSyncManager(
     database: db,
     wishlistRepository: repo,
-    offlineWriteQueue: offlineQueue,
   );
 });
 
@@ -259,6 +255,7 @@ final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
   final colSync = ref.watch(collectionSyncManagerProvider);
   final pullSync = ref.watch(pullListSyncManagerProvider);
   final wishSync = ref.watch(wishlistSyncManagerProvider);
+  final migrationManager = ref.watch(migrationManagerProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
   final monitor = ref.watch(connectivityMonitorProvider);
 
@@ -266,6 +263,7 @@ final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
     collectionSyncManager: colSync,
     pullListSyncManager: pullSync,
     wishlistSyncManager: wishSync,
+    migrationManager: migrationManager,
     offlineWriteQueue: offlineQueue,
     connectivityMonitor: monitor,
   );
@@ -320,6 +318,11 @@ final migrationProgressProvider = StreamProvider<MigrationProgress>((ref) {
 final pendingOfflineWritesCountProvider = StreamProvider<int>((ref) {
   final queue = ref.watch(offlineWriteQueueProvider);
   return queue.watchPendingCount();
+});
+
+final failedOfflineWritesCountProvider = StreamProvider<int>((ref) {
+  final queue = ref.watch(offlineWriteQueueProvider);
+  return queue.watchFailedCount();
 });
 
 

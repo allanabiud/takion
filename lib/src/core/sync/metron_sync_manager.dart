@@ -1,5 +1,6 @@
 import "dart:async";
 import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/migration/migration_manager.dart";
 import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
@@ -12,11 +13,13 @@ class MetronSyncManager {
     required CollectionSyncManager collectionSyncManager,
     required PullListSyncManager pullListSyncManager,
     required WishlistSyncManager wishlistSyncManager,
+    MigrationManager? migrationManager,
     OfflineWriteQueue? offlineWriteQueue,
     ConnectivityMonitor? connectivityMonitor,
   })  : _collectionSyncManager = collectionSyncManager,
         _pullListSyncManager = pullListSyncManager,
         _wishlistSyncManager = wishlistSyncManager,
+        _migrationManager = migrationManager,
         _offlineWriteQueue = offlineWriteQueue,
         _connectivityMonitor = connectivityMonitor {
     _initConnectivityListener();
@@ -25,6 +28,7 @@ class MetronSyncManager {
   final CollectionSyncManager _collectionSyncManager;
   final PullListSyncManager _pullListSyncManager;
   final WishlistSyncManager _wishlistSyncManager;
+  final MigrationManager? _migrationManager;
   final OfflineWriteQueue? _offlineWriteQueue;
   final ConnectivityMonitor? _connectivityMonitor;
 
@@ -54,6 +58,12 @@ class MetronSyncManager {
 
   Future<MetronSyncState> syncAll({bool forceFullSync = false}) async {
     if (_currentState.isSyncing) {
+      return _currentState;
+    }
+
+    final migration = _migrationManager;
+    if (migration != null && migration.currentProgress.isMigrating) {
+      AppLogger.info("Metron sync deferred: migration in progress");
       return _currentState;
     }
 

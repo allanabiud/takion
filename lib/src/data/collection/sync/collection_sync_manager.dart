@@ -1,6 +1,5 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
-import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/collection/entities/collection_item.dart";
 import "package:takion/src/domain/collection/repositories/collection_repository.dart";
@@ -25,17 +24,14 @@ class CollectionSyncManager {
   CollectionSyncManager({
     required db.AppDatabase database,
     required CollectionRepository collectionRepository,
-    OfflineWriteQueue? offlineWriteQueue,
   })  : _database = database,
-        _collectionRepository = collectionRepository,
-        _offlineWriteQueue = offlineWriteQueue;
+        _collectionRepository = collectionRepository;
 
   static const String _syncMetaKey = "metron_last_collection_sync";
   static const String _localUserId = "local-user";
 
   final db.AppDatabase _database;
   final CollectionRepository _collectionRepository;
-  final OfflineWriteQueue? _offlineWriteQueue;
 
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
@@ -57,10 +53,6 @@ class CollectionSyncManager {
 
     _isSyncing = true;
     try {
-      if (_offlineWriteQueue != null) {
-        await _offlineWriteQueue.processQueue();
-      }
-
       final lastSync = forceFullSync ? null : await getLastSyncTime();
       final isFullSync = lastSync == null;
 

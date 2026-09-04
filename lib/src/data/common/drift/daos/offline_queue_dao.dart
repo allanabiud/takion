@@ -37,6 +37,14 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
     return query.map((row) => row.read(countExp) ?? 0).watchSingle();
   }
 
+  Stream<int> watchFailedCount() {
+    final countExp = attachedDatabase.offlineWriteQueue.id.count();
+    final query = selectOnly(attachedDatabase.offlineWriteQueue)
+      ..addColumns([countExp])
+      ..where(attachedDatabase.offlineWriteQueue.status.equals("failed"));
+    return query.map((row) => row.read(countExp) ?? 0).watchSingle();
+  }
+
   Future<void> markCompleted(int id) async {
     await (delete(attachedDatabase.offlineWriteQueue)..where((t) => t.id.equals(id))).go();
   }
@@ -57,5 +65,17 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
 
   Future<void> clearAll() async {
     await delete(attachedDatabase.offlineWriteQueue).go();
+  }
+
+  Future<void> resetFailedEntries() async {
+    await (update(attachedDatabase.offlineWriteQueue)
+          ..where((t) => t.status.equals("failed")))
+        .write(
+      const OfflineWriteQueueCompanion(
+        status: Value("pending"),
+        retryCount: Value(0),
+        lastError: Value(null),
+      ),
+    );
   }
 }

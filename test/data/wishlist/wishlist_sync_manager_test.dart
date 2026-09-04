@@ -99,7 +99,7 @@ void main() {
       expect(inDb.syncStatus, "pending");
     });
 
-    test("syncWishlist deletes local synced items absent on remote", () async {
+    test("syncWishlist preserves local synced items when remote returns empty (safety guard)", () async {
       await database.wishlistDao.upsert(
         const WishlistItemsCompanion(
           id: Value(10),
@@ -121,7 +121,44 @@ void main() {
       expect(result.isSuccess, isTrue);
 
       final inDb = await database.wishlistDao.getByIssueId(501);
-      expect(inDb, isNull);
+      expect(inDb, isNotNull);
+    });
+
+    test("syncWishlist deletes local synced items absent on remote when remote has data", () async {
+      await database.wishlistDao.upsert(
+        const WishlistItemsCompanion(
+          id: Value(10),
+          issueId: Value(501),
+          seriesId: Value(100),
+          seriesName: Value("Batman"),
+          issueNumber: Value("1"),
+          syncStatus: Value("synced"),
+          createdAt: Value("2026-09-01T00:00:00Z"),
+          updatedAt: Value("2026-09-04T00:00:00Z"),
+        ),
+      );
+
+      when(
+        () => mockRepository.getWishListItems(page: 1),
+      ).thenAnswer((_) async => [
+        const WishlistItem(
+          id: 20,
+          issueId: 600,
+          seriesId: 200,
+          seriesName: "X-Men",
+          issueNumber: "1",
+          priority: 3,
+        ),
+      ]);
+
+      final result = await syncManager.syncWishlist();
+      expect(result.isSuccess, isTrue);
+
+      final deleted = await database.wishlistDao.getByIssueId(501);
+      expect(deleted, isNull);
+
+      final kept = await database.wishlistDao.getByIssueId(600);
+      expect(kept, isNotNull);
     });
   });
 }

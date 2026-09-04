@@ -44,6 +44,7 @@ void main() {
 
     processor = OfflineQueueProcessor(
       dao: db.offlineQueueDao,
+      database: db,
       collectionRemote: mockCollectionRemote,
       pullListRemote: mockPullListRemote,
       wishlistRemote: mockWishlistRemote,

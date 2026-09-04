@@ -14,6 +14,10 @@ class OfflineWriteQueue {
 
   Stream<int> watchPendingCount() => _dao.watchPendingCount();
 
+  Stream<int> watchFailedCount() => _dao.watchFailedCount();
+
+  Future<void> retryFailedEntries() => _dao.resetFailedEntries();
+
   Future<int> enqueueCollectionAdd({
     required int issueId,
     int quantity = 1,

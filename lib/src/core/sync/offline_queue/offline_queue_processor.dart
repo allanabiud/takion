@@ -1,7 +1,9 @@
 import "dart:convert";
+import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
 import "package:takion/src/data/collection/dto/scrobble_dto.dart";
+import "package:takion/src/data/common/drift/database.dart";
 import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
 import "package:takion/src/data/pull_list/datasources/remote/metron_pull_list_remote_data_source.dart";
 import "package:takion/src/data/wishlist/datasources/remote/metron_wishlist_remote_data_source.dart";
@@ -9,16 +11,19 @@ import "package:takion/src/data/wishlist/dto/wishlist_dto.dart";
 
 class OfflineQueueProcessor {
   final OfflineQueueDao _dao;
+  final AppDatabase _database;
   final MetronCollectionRemoteDataSource _collectionRemote;
   final MetronPullListRemoteDataSource _pullListRemote;
   final MetronWishlistRemoteDataSource _wishlistRemote;
 
   OfflineQueueProcessor({
     required OfflineQueueDao dao,
+    required AppDatabase database,
     required MetronCollectionRemoteDataSource collectionRemote,
     required MetronPullListRemoteDataSource pullListRemote,
     required MetronWishlistRemoteDataSource wishlistRemote,
   })  : _dao = dao,
+        _database = database,
         _collectionRemote = collectionRemote,
         _pullListRemote = pullListRemote,
         _wishlistRemote = wishlistRemote;
@@ -34,6 +39,11 @@ class OfflineQueueProcessor {
           entityType: entry.entityType,
           entityId: entry.entityId,
           payloadJson: entry.payload,
+        );
+        await _markEntitySynced(
+          entityType: entry.entityType,
+          operation: entry.operation,
+          entityId: entry.entityId,
         );
         await _dao.markCompleted(entry.id);
         processedCount++;
@@ -52,6 +62,139 @@ class OfflineQueueProcessor {
     }
 
     return processedCount;
+  }
+
+  Future<void> _markEntitySynced({
+    required String entityType,
+    required String operation,
+    String? entityId,
+  }) async {
+    if (entityId == null) return;
+
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+
+    switch (entityType) {
+      case "collection":
+        await _markCollectionSynced(operation, entityId, nowIso);
+      case "pull_list":
+        await _markPullListSynced(operation, entityId, nowIso);
+      case "wish_list":
+        await _markWishlistSynced(operation, entityId, nowIso);
+    }
+  }
+
+  Future<void> _markCollectionSynced(
+    String operation,
+    String entityId,
+    String nowIso,
+  ) async {
+    switch (operation) {
+      case "create":
+        final issueId = int.tryParse(entityId);
+        if (issueId != null) {
+          await (_database.update(_database.libraryItems)
+                ..where((t) => t.metronIssueId.equals(issueId)))
+              .write(
+            LibraryItemsCompanion(
+              syncStatus: const Value("synced"),
+              updatedAt: Value(nowIso),
+            ),
+          );
+        }
+      case "update":
+        final collectionId = int.tryParse(entityId);
+        if (collectionId != null) {
+          await (_database.update(_database.libraryItems)
+                ..where((t) => t.metronCollectionId.equals(collectionId)))
+              .write(
+            LibraryItemsCompanion(
+              syncStatus: const Value("synced"),
+              updatedAt: Value(nowIso),
+            ),
+          );
+        }
+      case "delete":
+        final collectionId = int.tryParse(entityId);
+        if (collectionId != null) {
+          await (_database.delete(_database.libraryItems)
+                ..where((t) => t.metronCollectionId.equals(collectionId)))
+              .go();
+        }
+      case "scrobble":
+        break;
+    }
+  }
+
+  Future<void> _markPullListSynced(
+    String operation,
+    String entityId,
+    String nowIso,
+  ) async {
+    final seriesId = int.tryParse(entityId);
+    if (seriesId == null) return;
+
+    switch (operation) {
+      case "create":
+        await (_database.update(_database.seriesSubscriptions)
+              ..where((t) => t.metronSeriesId.equals(seriesId)))
+            .write(
+          SeriesSubscriptionsCompanion(
+            syncStatus: const Value("synced"),
+            updatedAt: Value(nowIso),
+          ),
+        );
+      case "delete":
+        await (_database.update(_database.seriesSubscriptions)
+              ..where((t) => t.metronSeriesId.equals(seriesId)))
+            .write(
+          SeriesSubscriptionsCompanion(
+            syncStatus: const Value("synced"),
+            isActive: const Value(false),
+            metronPullListId: const Value(null),
+            updatedAt: Value(nowIso),
+          ),
+        );
+    }
+  }
+
+  Future<void> _markWishlistSynced(
+    String operation,
+    String entityId,
+    String nowIso,
+  ) async {
+    switch (operation) {
+      case "create":
+        final issueId = int.tryParse(entityId);
+        if (issueId != null) {
+          await (_database.update(_database.wishlistItems)
+                ..where((t) => t.issueId.equals(issueId)))
+              .write(
+            WishlistItemsCompanion(
+              syncStatus: const Value("synced"),
+              updatedAt: Value(nowIso),
+            ),
+          );
+        }
+      case "acquire":
+        final itemId = int.tryParse(entityId);
+        if (itemId != null) {
+          await (_database.update(_database.wishlistItems)
+                ..where((t) => t.id.equals(itemId)))
+              .write(
+            WishlistItemsCompanion(
+              syncStatus: const Value("synced"),
+              updatedAt: Value(nowIso),
+            ),
+          );
+        }
+      case "delete":
+        final itemId = int.tryParse(entityId);
+        if (itemId != null) {
+          await (_database.delete(_database.wishlistItems)
+                ..where((t) => t.id.equals(itemId)))
+              .go();
+        }
+    }
   }
 
   Future<void> _processEntry({

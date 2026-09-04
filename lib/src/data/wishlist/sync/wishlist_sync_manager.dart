@@ -1,6 +1,5 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
-import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/wishlist/entities/wishlist_item.dart";
 import "package:takion/src/domain/wishlist/repositories/wishlist_repository.dart";
@@ -23,16 +22,13 @@ class WishlistSyncManager {
   WishlistSyncManager({
     required db.AppDatabase database,
     required MetronWishlistRepository wishlistRepository,
-    OfflineWriteQueue? offlineWriteQueue,
   })  : _database = database,
-        _wishlistRepository = wishlistRepository,
-        _offlineWriteQueue = offlineWriteQueue;
+        _wishlistRepository = wishlistRepository;
 
   static const String _syncMetaKey = "metron_last_wishlist_sync";
 
   final db.AppDatabase _database;
   final MetronWishlistRepository _wishlistRepository;
-  final OfflineWriteQueue? _offlineWriteQueue;
 
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
@@ -49,10 +45,6 @@ class WishlistSyncManager {
 
     _isSyncing = true;
     try {
-      if (_offlineWriteQueue != null) {
-        await _offlineWriteQueue.processQueue();
-      }
-
       var page = 1;
       final remoteItems = <WishlistItem>[];
 
@@ -144,7 +136,13 @@ class WishlistSyncManager {
     }
 
     if (toDeleteIds.isNotEmpty) {
-      await _database.wishlistDao.batchDeleteByIds(toDeleteIds);
+      if (remoteItems.isEmpty && localItems.isNotEmpty) {
+        AppLogger.warning(
+          "Skipping wishlist deletion: remote returned 0 items but ${localItems.length} exist locally (possible transient API error)",
+        );
+      } else {
+        await _database.wishlistDao.batchDeleteByIds(toDeleteIds);
+      }
     }
 
     return companions.length;

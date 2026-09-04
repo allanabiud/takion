@@ -197,6 +197,8 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
     final syncState = syncStateAsync.value ?? syncManager.currentState;
     final pendingCount =
         ref.watch(pendingOfflineWritesCountProvider).value ?? 0;
+    final failedCount =
+        ref.watch(failedOfflineWritesCountProvider).value ?? 0;
     final isSyncing = syncState.isSyncing || _isManualSyncing;
 
     if (isSyncing && !_syncAnimController.isAnimating) {
@@ -283,6 +285,43 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      if (failedCount > 0) ...[
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 16,
+                color: theme.colorScheme.error,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "$failedCount write${failedCount == 1 ? '' : 's'} failed permanently",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: isSyncing
+                    ? null
+                    : () async {
+                        final queue = ref.read(offlineWriteQueueProvider);
+                        await queue.retryFailedEntries();
+                        if (context.mounted) {
+                          await _triggerMetronSync();
+                        }
+                      },
+                child: const Text("Retry"),
               ),
             ],
           ),
