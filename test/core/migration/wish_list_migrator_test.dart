@@ -67,7 +67,8 @@ void main() {
       expect(count, 1);
 
       final migrated = await migrator.migrate();
-      expect(migrated, 1);
+      expect(migrated.migrated, 1);
+      expect(migrated.failed, 0);
 
       // Verify removed from legacy libraryItems
       final legacy = await database.libraryItemDao.getByIssueId(202);

@@ -60,18 +60,21 @@ void main() {
       when(
         () => colMigrator.migrate(
           onProgress: any(named: "onProgress"),
+          isCancelled: any(named: "isCancelled"),
         ),
-      ).thenAnswer((_) async => 2);
+      ).thenAnswer((_) async => const MigrationResult(migrated: 2, failed: 0));
       when(
         () => pullMigrator.migrate(
           onProgress: any(named: "onProgress"),
+          isCancelled: any(named: "isCancelled"),
         ),
-      ).thenAnswer((_) async => 1);
+      ).thenAnswer((_) async => const MigrationResult(migrated: 1, failed: 0));
       when(
         () => wishMigrator.migrate(
           onProgress: any(named: "onProgress"),
+          isCancelled: any(named: "isCancelled"),
         ),
-      ).thenAnswer((_) async => 3);
+      ).thenAnswer((_) async => const MigrationResult(migrated: 3, failed: 0));
 
       final progress = await manager.runMigration();
 

@@ -1,5 +1,6 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 
@@ -12,6 +13,9 @@ class CollectionMigrator {
 
   final db.AppDatabase _database;
   final MetronCollectionRemoteDataSource _remoteDataSource;
+
+  static const int _batchSize = 18;
+  static const Duration _batchDelay = Duration(seconds: 60);
 
   Future<List<db.LibraryItem>> getUnmigratedItems() async {
     return (_database.select(_database.libraryItems)
@@ -28,16 +32,25 @@ class CollectionMigrator {
     return items.length;
   }
 
-  Future<int> migrate({
+  Future<MigrationResult> migrate({
     void Function(int migrated, int total)? onProgress,
+    bool Function()? isCancelled,
   }) async {
     final unmigrated = await getUnmigratedItems();
-    if (unmigrated.isEmpty) return 0;
+    if (unmigrated.isEmpty) return const MigrationResult(migrated: 0, failed: 0);
 
     var migratedCount = 0;
+    var failedCount = 0;
     final total = unmigrated.length;
 
-    for (final item in unmigrated) {
+    for (var i = 0; i < unmigrated.length; i++) {
+      if (isCancelled?.call() == true) break;
+
+      if (i > 0 && i % _batchSize == 0) {
+        await Future<void>.delayed(_batchDelay);
+      }
+
+      final item = unmigrated[i];
       try {
         final dto = await _remoteDataSource.addToCollection(
           issueId: item.metronIssueId,
@@ -64,16 +77,18 @@ class CollectionMigrator {
         );
 
         migratedCount++;
-        onProgress?.call(migratedCount, total);
+        onProgress?.call(migratedCount + failedCount, total);
       } catch (e, st) {
+        failedCount++;
         AppLogger.warning(
           "Failed to migrate library item #${item.metronIssueId}",
           error: e,
           stackTrace: st,
         );
+        onProgress?.call(migratedCount + failedCount, total);
       }
     }
 
-    return migratedCount;
+    return MigrationResult(migrated: migratedCount, failed: failedCount);
   }
 }

@@ -28,6 +28,7 @@ class MigrationManager {
       StreamController<MigrationProgress>.broadcast();
 
   MigrationProgress _currentProgress = const MigrationProgress();
+  bool _cancelled = false;
 
   MigrationProgress get currentProgress => _currentProgress;
   Stream<MigrationProgress> get progressStream => _progressController.stream;
@@ -37,6 +38,10 @@ class MigrationManager {
     if (!_progressController.isClosed) {
       _progressController.add(progress);
     }
+  }
+
+  void cancel() {
+    _cancelled = true;
   }
 
   Future<bool> isMigrationCompleted() async {
@@ -62,6 +67,9 @@ class MigrationManager {
       return _currentProgress;
     }
 
+    _cancelled = false;
+    final stopwatch = Stopwatch()..start();
+
     try {
       final totalCol = await _collectionMigrator.countUnmigrated();
       final totalSubs = await _pullListMigrator.countUnmigrated();
@@ -78,65 +86,139 @@ class MigrationManager {
       );
 
       // 1. Migrate collection
-      _emit(_currentProgress.copyWith(currentStep: "Migrating collection"));
-      final migratedCol = await _collectionMigrator.migrate(
-        onProgress: (migrated, total) {
+      _emit(
+        _currentProgress.copyWith(
+          currentStep: "Migrating collection (0/$totalCol)",
+        ),
+      );
+      final colResult = await _collectionMigrator.migrate(
+        onProgress: (processed, total) {
           _emit(
             _currentProgress.copyWith(
-              migratedCollection: migrated,
-              currentStep: "Migrated $migrated of $total collection items",
+              migratedCollection: processed,
+              currentStep: "Migrating collection ($processed/$total)",
+              elapsedMs: stopwatch.elapsedMilliseconds,
             ),
           );
         },
+        isCancelled: () => _cancelled,
       );
 
       // 2. Migrate subscriptions / pull list
-      _emit(_currentProgress.copyWith(currentStep: "Migrating subscriptions"));
-      final migratedSubs = await _pullListMigrator.migrate(
-        onProgress: (migrated, total) {
-          _emit(
-            _currentProgress.copyWith(
-              migratedSubscriptions: migrated,
-              currentStep: "Migrated $migrated of $total subscriptions",
-            ),
-          );
-        },
-      );
+      if (!_cancelled) {
+        _emit(
+          _currentProgress.copyWith(
+            currentStep: "Migrating subscriptions (0/$totalSubs)",
+            failedCollection: colResult.failed,
+          ),
+        );
+        final subResult = await _pullListMigrator.migrate(
+          onProgress: (processed, total) {
+            _emit(
+              _currentProgress.copyWith(
+                migratedSubscriptions: processed,
+                currentStep: "Migrating subscriptions ($processed/$total)",
+                elapsedMs: stopwatch.elapsedMilliseconds,
+              ),
+            );
+          },
+          isCancelled: () => _cancelled,
+        );
 
-      // 3. Migrate wishlist
-      _emit(_currentProgress.copyWith(currentStep: "Migrating wishlist"));
-      final migratedWish = await _wishListMigrator.migrate(
-        onProgress: (migrated, total) {
+        // 3. Migrate wishlist
+        if (!_cancelled) {
           _emit(
             _currentProgress.copyWith(
-              migratedWishlist: migrated,
-              currentStep: "Migrated $migrated of $total wishlist items",
+              currentStep: "Migrating wishlist (0/$totalWish)",
+              failedSubscriptions: subResult.failed,
             ),
           );
-        },
-      );
+          final wishResult = await _wishListMigrator.migrate(
+            onProgress: (processed, total) {
+              _emit(
+                _currentProgress.copyWith(
+                  migratedWishlist: processed,
+                  currentStep: "Migrating wishlist ($processed/$total)",
+                  elapsedMs: stopwatch.elapsedMilliseconds,
+                ),
+              );
+            },
+            isCancelled: () => _cancelled,
+          );
+
+          stopwatch.stop();
+
+          if (_cancelled) {
+            final cancelledProgress = _currentProgress.copyWith(
+              status: MigrationStatus.failed,
+              currentStep: "Migration cancelled",
+              failedCollection: colResult.failed,
+              failedSubscriptions: subResult.failed,
+              failedWishlist: wishResult.failed,
+              errorMessage: "Migration was cancelled by user",
+              elapsedMs: stopwatch.elapsedMilliseconds,
+            );
+            _emit(cancelledProgress);
+            return cancelledProgress;
+          }
+
+          await _database.settingsDao.setBool(_migrationCompletedKey, true);
+
+          final completedProgress = _currentProgress.copyWith(
+            status: MigrationStatus.completed,
+            currentStep: "Migration completed",
+            migratedCollection: colResult.migrated,
+            migratedSubscriptions: subResult.migrated,
+            migratedWishlist: wishResult.migrated,
+            failedCollection: colResult.failed,
+            failedSubscriptions: subResult.failed,
+            failedWishlist: wishResult.failed,
+            elapsedMs: stopwatch.elapsedMilliseconds,
+          );
+
+          _emit(completedProgress);
+          AppLogger.info(
+            "One-time migration finished: ${colResult.migrated} collection, ${subResult.migrated} subscriptions, ${wishResult.migrated} wishlist "
+            "(${colResult.failed + subResult.failed + wishResult.failed} failed)",
+          );
+          return completedProgress;
+        }
+      }
+
+      stopwatch.stop();
+
+      if (_cancelled) {
+        final cancelledProgress = _currentProgress.copyWith(
+          status: MigrationStatus.failed,
+          currentStep: "Migration cancelled",
+          failedCollection: colResult.failed,
+          errorMessage: "Migration was cancelled by user",
+          elapsedMs: stopwatch.elapsedMilliseconds,
+        );
+        _emit(cancelledProgress);
+        return cancelledProgress;
+      }
 
       await _database.settingsDao.setBool(_migrationCompletedKey, true);
 
       final completedProgress = _currentProgress.copyWith(
         status: MigrationStatus.completed,
-        currentStep: "Migration completed successfully",
-        migratedCollection: migratedCol,
-        migratedSubscriptions: migratedSubs,
-        migratedWishlist: migratedWish,
+        currentStep: "Migration completed",
+        migratedCollection: colResult.migrated,
+        failedCollection: colResult.failed,
+        elapsedMs: stopwatch.elapsedMilliseconds,
       );
 
       _emit(completedProgress);
-      AppLogger.info(
-        "One-time migration finished: $migratedCol collection, $migratedSubs subscriptions, $migratedWish wishlist",
-      );
       return completedProgress;
     } catch (e, st) {
+      stopwatch.stop();
       AppLogger.error("One-time migration failed", error: e, stackTrace: st);
       final errorProgress = _currentProgress.copyWith(
         status: MigrationStatus.failed,
         currentStep: "Migration failed",
         errorMessage: e.toString(),
+        elapsedMs: stopwatch.elapsedMilliseconds,
       );
       _emit(errorProgress);
       return errorProgress;

@@ -1,5 +1,6 @@
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/data/wishlist/datasources/remote/metron_wishlist_remote_data_source.dart";
 import "package:takion/src/data/wishlist/dto/wishlist_dto.dart";
@@ -13,6 +14,9 @@ class WishListMigrator {
 
   final db.AppDatabase _database;
   final MetronWishlistRemoteDataSource _remoteDataSource;
+
+  static const int _batchSize = 18;
+  static const Duration _batchDelay = Duration(seconds: 60);
 
   Future<List<db.LibraryItem>> getLegacyWishlistItems() async {
     return (_database.select(_database.libraryItems)
@@ -32,19 +36,27 @@ class WishListMigrator {
     return legacy.length + unsynced.length;
   }
 
-  Future<int> migrate({
+  Future<MigrationResult> migrate({
     void Function(int migrated, int total)? onProgress,
+    bool Function()? isCancelled,
   }) async {
     final legacy = await getLegacyWishlistItems();
     final unsynced = await getUnsyncedWishlistItems();
     final total = legacy.length + unsynced.length;
-    if (total == 0) return 0;
+    if (total == 0) return const MigrationResult(migrated: 0, failed: 0);
 
     var migratedCount = 0;
+    var failedCount = 0;
     final nowIso = DateTime.now().toUtc().toIso8601String();
 
-    // 1. Migrate legacy library wishlist rows to Metron and into WishlistItems table
-    for (final leg in legacy) {
+    for (var i = 0; i < legacy.length; i++) {
+      if (isCancelled?.call() == true) break;
+
+      if (i > 0 && i % _batchSize == 0) {
+        await Future<void>.delayed(_batchDelay);
+      }
+
+      final leg = legacy[i];
       try {
         final dto = await _remoteDataSource.addToWishList(
           WishListAddItemDto(
@@ -85,24 +97,31 @@ class WishListMigrator {
           ),
         );
 
-        // Remove legacy item from LibraryItems
         await (_database.delete(_database.libraryItems)
               ..where((t) => t.id.equals(leg.id)))
             .go();
 
         migratedCount++;
-        onProgress?.call(migratedCount, total);
+        onProgress?.call(migratedCount + failedCount, total);
       } catch (e, st) {
+        failedCount++;
         AppLogger.warning(
           "Failed to migrate legacy wishlist item #${leg.metronIssueId}",
           error: e,
           stackTrace: st,
         );
+        onProgress?.call(migratedCount + failedCount, total);
       }
     }
 
-    // 2. Migrate any unsynced local WishlistItems rows
-    for (final item in unsynced) {
+    for (var i = 0; i < unsynced.length; i++) {
+      if (isCancelled?.call() == true) break;
+
+      if (i > 0 && i % _batchSize == 0) {
+        await Future<void>.delayed(_batchDelay);
+      }
+
+      final item = unsynced[i];
       try {
         final dto = await _remoteDataSource.addToWishList(
           WishListAddItemDto(
@@ -147,16 +166,18 @@ class WishListMigrator {
         );
 
         migratedCount++;
-        onProgress?.call(migratedCount, total);
+        onProgress?.call(migratedCount + failedCount, total);
       } catch (e, st) {
+        failedCount++;
         AppLogger.warning(
           "Failed to migrate local wishlist item #${item.issueId}",
           error: e,
           stackTrace: st,
         );
+        onProgress?.call(migratedCount + failedCount, total);
       }
     }
 
-    return migratedCount;
+    return MigrationResult(migrated: migratedCount, failed: failedCount);
   }
 }

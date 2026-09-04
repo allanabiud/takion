@@ -12,6 +12,7 @@ import "package:takion/src/core/auth/auth_provider.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/presentation/providers/rate_limit_status_provider.dart";
 import "package:takion/src/presentation/providers/repository_providers.dart";
+import "package:takion/src/presentation/features/settings/widgets/migration_progress_sheet.dart";
 
 Future<void> disconnectMetronAccount(
   BuildContext context,
@@ -142,7 +143,6 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
   late final AnimationController _syncAnimController;
   late final Animation<double> _syncRotation;
   bool _isManualSyncing = false;
-  bool _isMigrating = false;
 
   @override
   void initState() {
@@ -186,54 +186,6 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
         _syncAnimController.reset();
         setState(() => _isManualSyncing = false);
       }
-    }
-  }
-
-  Future<void> _triggerMigration() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Migrate Local Data to Metron"),
-        content: const Text(
-          "This will upload any local collection items, pull lists, and wish lists "
-          "to your Metron cloud account.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text("Migrate"),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-
-    setState(() => _isMigrating = true);
-    try {
-      final migrationManager = ref.read(migrationManagerProvider);
-      final result = await migrationManager.runMigration();
-      if (!mounted) return;
-      if (result.hasFailed) {
-        TakionAlerts.error(
-          context,
-          "Migration failed: ${result.errorMessage ?? 'Unknown error'}",
-        );
-      } else {
-        TakionAlerts.success(
-          context,
-          "Migration complete (${result.migratedCollection} collection, ${result.migratedSubscriptions} pull list, ${result.migratedWishlist} wishlist)",
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        TakionAlerts.safeError(context, e, userMessage: "Migration failed");
-      }
-    } finally {
-      if (mounted) setState(() => _isMigrating = false);
     }
   }
 
@@ -301,7 +253,7 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
       SizedBox(
         width: double.infinity,
         child: FilledButton.tonal(
-          onPressed: isSyncing || _isMigrating ? null : _triggerMetronSync,
+          onPressed: isSyncing ? null : _triggerMetronSync,
           child: isSyncing
               ? const SizedBox(
                   width: 16,
@@ -339,22 +291,17 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
       const Divider(height: 1),
       ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: _isMigrating
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(Icons.upload_file_outlined, color: theme.colorScheme.primary),
-        title: Text(
-          _isMigrating ? "Migrating Data..." : "Migrate Local Data to Metron",
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        leading: Icon(Icons.upload_file_outlined, color: theme.colorScheme.primary),
+        title: const Text(
+          "Migrate Local Data to Metron",
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: const Text(
           "Upload existing local comics, subscriptions, and wishlist to Metron",
         ),
-        enabled: !isSyncing && !_isMigrating,
-        onTap: isSyncing || _isMigrating ? null : _triggerMigration,
+        trailing: const Icon(Icons.chevron_right),
+        enabled: !isSyncing,
+        onTap: isSyncing ? null : () => showMigrationSheet(context),
       ),
     ]);
   }
