@@ -310,59 +310,84 @@ class LocalLibraryRepository implements LibraryRepository {
       updatedAt: now,
     );
 
-    await _database.libraryItemDao.upsert(
-      db.LibraryItemsCompanion(
-        id: Value(item.id),
-        userId: Value(item.userId),
-        metronIssueId: Value(item.metronIssueId),
-        metronSeriesId: Value(item.metronSeriesId),
-        ownershipStatus: Value(_ownershipToRaw(item.ownershipStatus)),
-        isRead: Value(item.isRead),
-        metronCollectionId: Value(item.metronCollectionId),
-        syncStatus: Value(item.syncStatus),
-        rating: Value(item.rating),
-        purchaseDate: Value(item.purchaseDate?.toIso8601String()),
-        pricePaid: Value(item.pricePaid),
-        quantityOwned: Value(item.quantityOwned),
-        format: Value(_formatToRaw(item.format)),
-        firstReadAt: Value(item.firstReadAt?.toIso8601String()),
-        conditionGrade: Value(item.conditionGrade),
-        acquiredOn: Value(item.acquiredOn?.toIso8601String()),
-        notes: Value(item.notes),
-        createdAt: Value(item.createdAt.toIso8601String()),
-        updatedAt: Value(item.updatedAt.toIso8601String()),
-      ),
-    );
+    await _database.transaction(() async {
+      // If owned, clear any wishlist entry to guarantee mutual exclusivity
+      if (ownershipStatus == LibraryOwnershipStatus.owned) {
+        final wishlistItem = await _database.wishlistDao.getByIssueId(metronIssueId);
+        if (wishlistItem != null) {
+          await _database.wishlistDao.deleteByIssueId(metronIssueId);
+          if (_offlineQueue != null) {
+            await _offlineQueue.enqueueWishlistRemove(itemId: wishlistItem.id);
+          }
+        }
+      }
+
+      await _database.libraryItemDao.upsert(
+        db.LibraryItemsCompanion(
+          id: Value(item.id),
+          userId: Value(item.userId),
+          metronIssueId: Value(item.metronIssueId),
+          metronSeriesId: Value(item.metronSeriesId),
+          ownershipStatus: Value(_ownershipToRaw(item.ownershipStatus)),
+          isRead: Value(item.isRead),
+          metronCollectionId: Value(item.metronCollectionId),
+          syncStatus: Value(item.syncStatus),
+          rating: Value(item.rating),
+          purchaseDate: Value(item.purchaseDate?.toIso8601String()),
+          pricePaid: Value(item.pricePaid),
+          quantityOwned: Value(item.quantityOwned),
+          format: Value(_formatToRaw(item.format)),
+          firstReadAt: Value(item.firstReadAt?.toIso8601String()),
+          conditionGrade: Value(item.conditionGrade),
+          acquiredOn: Value(item.acquiredOn?.toIso8601String()),
+          notes: Value(item.notes),
+          createdAt: Value(item.createdAt.toIso8601String()),
+          updatedAt: Value(item.updatedAt.toIso8601String()),
+        ),
+      );
+
+      if (_offlineQueue != null && ownershipStatus == LibraryOwnershipStatus.owned) {
+        if (existing?.metronCollectionId != null) {
+          await _offlineQueue.enqueueCollectionUpdate(
+            metronCollectionId: existing!.metronCollectionId!,
+            updates: {
+              "quantity": quantityOwned,
+              "book_format": _formatToRaw(format).toUpperCase(),
+              "grade": ?(conditionGrade != null ? double.tryParse(conditionGrade) : null),
+              "purchase_date": ?purchaseDate?.toIso8601String().split("T").first,
+              "purchase_price": ?resolvedPricePaid,
+              "notes": ?notes,
+              "is_read": isRead,
+              "rating": ?rating,
+            },
+          );
+        } else {
+          await _offlineQueue.enqueueCollectionAdd(
+            issueId: metronIssueId,
+            quantity: quantityOwned,
+            bookFormat: _formatToRaw(format).toUpperCase(),
+            grade: conditionGrade != null ? double.tryParse(conditionGrade) : null,
+            purchaseDate: purchaseDate,
+            purchasePrice: resolvedPricePaid,
+            notes: notes,
+          );
+        }
+      } else if (_offlineQueue != null &&
+          ownershipStatus == LibraryOwnershipStatus.wishlist) {
+        if (existing?.metronCollectionId != null) {
+          await _offlineQueue.enqueueCollectionDelete(
+            metronCollectionId: existing!.metronCollectionId!,
+          );
+        }
+        if (existing == null || existing.metronCollectionId != null) {
+          await _offlineQueue.enqueueWishlistAdd(
+            issueId: metronIssueId,
+          );
+        }
+      }
+    });
 
     _cache.setLibraryItem(metronIssueId, item);
-
-    if (_offlineQueue != null && ownershipStatus == LibraryOwnershipStatus.owned) {
-      if (existing?.metronCollectionId != null) {
-        await _offlineQueue.enqueueCollectionUpdate(
-          metronCollectionId: existing!.metronCollectionId!,
-          updates: {
-            "quantity": quantityOwned,
-            "book_format": _formatToRaw(format).toUpperCase(),
-            "grade": ?(conditionGrade != null ? double.tryParse(conditionGrade) : null),
-            "purchase_date": ?purchaseDate?.toIso8601String().split("T").first,
-            "purchase_price": ?resolvedPricePaid,
-            "notes": ?notes,
-            "is_read": isRead,
-            "rating": ?rating,
-          },
-        );
-      } else {
-        await _offlineQueue.enqueueCollectionAdd(
-          issueId: metronIssueId,
-          quantity: quantityOwned,
-          bookFormat: _formatToRaw(format).toUpperCase(),
-          grade: conditionGrade != null ? double.tryParse(conditionGrade) : null,
-          purchaseDate: purchaseDate,
-          purchasePrice: resolvedPricePaid,
-          notes: notes,
-        );
-      }
-    }
 
     return item;
   }
@@ -379,6 +404,7 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<LibraryReadLog> addReadLog({
     required int metronIssueId,
     required DateTime readAt,
+    int? rating,
     String? notes,
   }) async {
     final item = await _database.libraryItemDao.getByIssueId(metronIssueId);
@@ -411,6 +437,7 @@ class LocalLibraryRepository implements LibraryRepository {
       await _offlineQueue.enqueueScrobble(
         issueId: metronIssueId,
         dateRead: readAt,
+        rating: rating,
       );
     }
 

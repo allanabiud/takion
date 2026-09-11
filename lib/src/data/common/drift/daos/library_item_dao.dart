@@ -452,6 +452,13 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     });
   }
 
+  Future<void> deleteByIssueId(int metronIssueId) async {
+    final item = await getByIssueId(metronIssueId);
+    if (item != null) {
+      await deleteById(item.id);
+    }
+  }
+
   Stream<List<LibraryItem>> watchCollected() {
     return (select(
       attachedDatabase.libraryItems,

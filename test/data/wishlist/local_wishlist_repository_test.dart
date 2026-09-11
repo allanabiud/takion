@@ -105,6 +105,12 @@ void main() {
       final inDb = await repository.getItemByIssueId(101);
       expect(inDb, isNull);
 
+      final libItem = await database.libraryItemDao.getByIssueId(101);
+      expect(libItem, isNotNull);
+      expect(libItem!.ownershipStatus, "owned");
+      expect(libItem.metronIssueId, 101);
+      expect(libItem.metronSeriesId, 20);
+
       verify(
         () => offlineQueue.enqueueWishlistAcquire(
           itemId: 101,

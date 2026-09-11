@@ -106,41 +106,54 @@ class LocalWishlistRepository implements WishlistRepository {
       syncStatus: syncStatus,
     );
 
-    await _database.wishlistDao.upsert(
-      db.WishlistItemsCompanion(
-        id: Value(item.id),
-        issueId: Value(item.issueId),
-        seriesId: Value(item.seriesId),
-        seriesName: Value(item.seriesName),
-        issueNumber: Value(item.issueNumber),
-        seriesVolume: Value(item.seriesVolume),
-        seriesYearBegan: Value(item.seriesYearBegan),
-        coverDate: Value(item.coverDate),
-        storeDate: Value(item.storeDate),
-        imageUrl: Value(item.imageUrl),
-        priority: Value(item.priority),
-        desiredGrade: Value(item.desiredGrade),
-        maxPrice: Value(item.maxPrice),
-        maxPriceCurrency: Value(item.maxPriceCurrency),
-        notes: Value(item.notes),
-        addedOn: Value(item.addedOn),
-        modified: Value(item.modified),
-        syncStatus: Value(item.syncStatus),
-        createdAt: Value(existing?.createdAt ?? now.toIso8601String()),
-        updatedAt: Value(now.toIso8601String()),
-      ),
-    );
+    await _database.transaction(() async {
+      // If issue was owned in collection, delete it to enforce mutual exclusivity
+      final libItem = await _database.libraryItemDao.getByIssueId(issueId);
+      if (libItem != null && libItem.ownershipStatus == "owned") {
+        await _database.libraryItemDao.deleteByIssueId(issueId);
+        if (_offlineQueue != null && libItem.metronCollectionId != null) {
+          await _offlineQueue.enqueueCollectionDelete(
+            metronCollectionId: libItem.metronCollectionId!,
+          );
+        }
+      }
 
-    if (_offlineQueue != null) {
-      await _offlineQueue.enqueueWishlistAdd(
-        issueId: issueId,
-        priority: priority,
-        desiredGrade: desiredGrade,
-        maxPrice: maxPrice,
-        maxPriceCurrency: maxPriceCurrency,
-        notes: notes,
+      await _database.wishlistDao.upsert(
+        db.WishlistItemsCompanion(
+          id: Value(item.id),
+          issueId: Value(item.issueId),
+          seriesId: Value(item.seriesId),
+          seriesName: Value(item.seriesName),
+          issueNumber: Value(item.issueNumber),
+          seriesVolume: Value(item.seriesVolume),
+          seriesYearBegan: Value(item.seriesYearBegan),
+          coverDate: Value(item.coverDate),
+          storeDate: Value(item.storeDate),
+          imageUrl: Value(item.imageUrl),
+          priority: Value(item.priority),
+          desiredGrade: Value(item.desiredGrade),
+          maxPrice: Value(item.maxPrice),
+          maxPriceCurrency: Value(item.maxPriceCurrency),
+          notes: Value(item.notes),
+          addedOn: Value(item.addedOn),
+          modified: Value(item.modified),
+          syncStatus: Value(item.syncStatus),
+          createdAt: Value(existing?.createdAt ?? now.toIso8601String()),
+          updatedAt: Value(now.toIso8601String()),
+        ),
       );
-    }
+
+      if (_offlineQueue != null) {
+        await _offlineQueue.enqueueWishlistAdd(
+          issueId: issueId,
+          priority: priority,
+          desiredGrade: desiredGrade,
+          maxPrice: maxPrice,
+          maxPriceCurrency: maxPriceCurrency,
+          notes: notes,
+        );
+      }
+    });
 
     return item;
   }
@@ -154,11 +167,55 @@ class LocalWishlistRepository implements WishlistRepository {
     String? purchaseStore,
     String? notes,
   }) async {
-    await _database.wishlistDao.deleteById(itemId);
+    var wishlistItem = await _database.wishlistDao.getById(itemId);
+    wishlistItem ??= await _database.wishlistDao.getByIssueId(itemId);
+    final effectiveItemId = wishlistItem?.id ?? itemId;
+    final issueId = wishlistItem?.issueId ?? itemId;
+
+    await _database.wishlistDao.deleteById(effectiveItemId);
+    await _database.wishlistDao.deleteByIssueId(issueId);
+
+    final libItem = await _database.libraryItemDao.getByIssueId(issueId);
+    final now = DateTime.now().toUtc();
+    final nowIso = now.toIso8601String();
+    final purchaseDateIso = (purchaseDate ?? now).toIso8601String();
+    final itemIdString = libItem?.id ?? "lib-$issueId";
+    final seriesId = (wishlistItem?.seriesId != null && wishlistItem!.seriesId > 0)
+        ? wishlistItem.seriesId
+        : (libItem?.metronSeriesId ?? 0);
+
+    await _database.libraryItemDao.upsert(
+      db.LibraryItemsCompanion(
+        id: Value(itemIdString),
+        userId: const Value("local-user"),
+        metronIssueId: Value(issueId),
+        metronSeriesId: Value(seriesId),
+        ownershipStatus: const Value("owned"),
+        isRead: Value(libItem?.isRead ?? false),
+        rating: Value(libItem?.rating),
+        quantityOwned: Value(libItem?.quantityOwned ?? 1),
+        format: Value(libItem?.format ?? "print"),
+        purchaseDate: Value(purchaseDateIso),
+        pricePaid: purchasePrice != null
+            ? Value(purchasePrice)
+            : (libItem?.pricePaid != null
+                ? Value(libItem!.pricePaid)
+                : const Value.absent()),
+        acquiredOn: Value(purchaseDateIso),
+        notes: notes != null
+            ? Value(notes)
+            : (libItem?.notes != null
+                ? Value(libItem!.notes)
+                : const Value.absent()),
+        syncStatus: const Value("synced"),
+        createdAt: Value(libItem?.createdAt ?? nowIso),
+        updatedAt: Value(nowIso),
+      ),
+    );
 
     if (_offlineQueue != null) {
       await _offlineQueue.enqueueWishlistAcquire(
-        itemId: itemId,
+        itemId: effectiveItemId,
         purchaseDate: purchaseDate,
         purchasePrice: purchasePrice,
         purchasePriceCurrency: purchasePriceCurrency,
