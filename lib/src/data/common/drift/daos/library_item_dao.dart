@@ -766,7 +766,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   }
 
   // ---------------------------------------------------------------------------
-  // Aggregate Stats Methods (Phase 6: Sub-5ms SQL aggregates)
+  // Aggregate Stats Methods
   // ---------------------------------------------------------------------------
 
   Stream<int> watchOwnedCount() {
