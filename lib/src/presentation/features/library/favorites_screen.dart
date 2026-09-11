@@ -178,7 +178,7 @@ class _FavoriteReadingListsTab extends ConsumerWidget {
               list: list,
               onTap: () {
                 context.pushRoute(
-                  LocalReadingListDetailsRoute(listId: list.id),
+                  ReadingListDetailsRoute(listId: list.id),
                 );
               },
             );

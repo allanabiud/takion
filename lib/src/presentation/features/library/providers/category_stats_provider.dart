@@ -49,15 +49,13 @@ final categoryInsightsProvider = StreamProvider.autoDispose
               ? 0.0
               : ((readCount / filteredLibrary.length) * 100).toDouble();
 
-          final wishlistCount = category == CategoryType.wishlist
-              ? filteredLibrary.length
-              : filteredLibrary
-                    .where(
-                      (item) =>
-                          item.ownershipStatus ==
-                          LibraryOwnershipStatus.wishlist,
-                    )
-                    .length;
+          int wishlistCount;
+          if (category == CategoryType.wishlist) {
+            final db = ref.read(driftDatabaseProvider);
+            wishlistCount = await db.wishlistDao.getItemCount();
+          } else {
+            wishlistCount = 0;
+          }
 
           final ratings = filteredLibrary
               .map((entry) => entry.rating)

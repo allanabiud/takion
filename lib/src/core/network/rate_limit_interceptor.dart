@@ -35,10 +35,14 @@ class RateLimitInterceptor extends Interceptor {
   ) async {
     final priority = resolveRequestPriority(options);
     try {
+      final originalConnectTimeout = options.connectTimeout;
+      // Do not count queue waiting time towards socket connection timeout
+      options.connectTimeout = null;
       final result = await _scheduler.enqueue(
         request: options,
         priority: priority,
       );
+      options.connectTimeout = originalConnectTimeout;
       if (result == RequestDispatch.sent) {
         handler.next(options);
       } else {

@@ -10,6 +10,29 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
     String? entityId,
     required String payload,
   }) async {
+    final existing = await (select(attachedDatabase.offlineWriteQueue)
+          ..where((t) =>
+              t.operation.equals(operation) &
+              t.entityType.equals(entityType) &
+              t.entityId.equals(entityId ?? "") &
+              t.status.equals("pending")))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      await (update(attachedDatabase.offlineWriteQueue)
+            ..where((t) => t.id.equals(existing.id)))
+          .write(
+        OfflineWriteQueueCompanion(
+          payload: Value(payload),
+          createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+          retryCount: const Value(0),
+          lastError: const Value(null),
+          lastAttemptAt: const Value(null),
+        ),
+      );
+      return existing.id;
+    }
+
     return into(attachedDatabase.offlineWriteQueue).insert(
       OfflineWriteQueueCompanion.insert(
         operation: operation,
@@ -55,6 +78,7 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
         retryCount: Value(retryCount),
         lastError: Value(error),
         status: Value(retryCount >= 5 ? "failed" : "pending"),
+        lastAttemptAt: Value(DateTime.now().millisecondsSinceEpoch),
       ),
     );
   }
@@ -65,6 +89,25 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
 
   Future<void> clearAll() async {
     await delete(attachedDatabase.offlineWriteQueue).go();
+  }
+
+  Future<List<OfflineWriteQueueData>> getFailedEntries() async {
+    return (select(attachedDatabase.offlineWriteQueue)
+          ..where((t) => t.status.equals("failed"))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+  }
+
+  Future<void> deleteEntry(int id) async {
+    await (delete(attachedDatabase.offlineWriteQueue)
+          ..where((t) => t.id.equals(id)))
+        .go();
+  }
+
+  Future<void> clearFailedEntries() async {
+    await (delete(attachedDatabase.offlineWriteQueue)
+          ..where((t) => t.status.equals("failed")))
+        .go();
   }
 
   Future<void> resetFailedEntries() async {

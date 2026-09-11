@@ -158,28 +158,18 @@ class AppRouter extends RootStackRouter {
       guards: [authGuard],
     ),
     AutoRoute(
-      page: LocalReadingListsRoute.page,
+      page: ReadingListsRoute.page,
       path: "/my-comics/reading-lists",
       guards: [authGuard],
     ),
     AutoRoute(
-      page: LocalReadingListDetailsRoute.page,
+      page: ReadingListDetailsRoute.page,
       path: "/my-comics/reading-lists/:listId",
       guards: [authGuard],
     ),
     AutoRoute(
       page: LocalReadingListEditRoute.page,
       path: "/my-comics/reading-lists/:listId/edit",
-      guards: [authGuard],
-    ),
-    AutoRoute(
-      page: MetronReadingListBrowserRoute.page,
-      path: "/my-comics/reading-lists/browse-metron",
-      guards: [authGuard],
-    ),
-    AutoRoute(
-      page: MetronReadingListDetailRoute.page,
-      path: "/my-comics/reading-lists/browse-metron/:id",
       guards: [authGuard],
     ),
     AutoRoute(

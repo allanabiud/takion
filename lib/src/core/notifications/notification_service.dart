@@ -18,6 +18,10 @@ class NotificationService {
   static const _syncChannelName = "Drive Sync";
   static const _syncNotificationId = 2001;
 
+  static const _metronSyncChannelId = "metron_sync_channel";
+  static const _metronSyncChannelName = "Metron Sync";
+  static const _metronSyncNotificationId = 3001;
+
   bool Function()? onNavigateToMyPulls;
 
   bool _pendingNavigateToMyPulls = false;
@@ -64,6 +68,14 @@ class NotificationService {
           importance: Importance.low,
         );
         await android.createNotificationChannel(syncChannel);
+
+        const metronSyncChannel = AndroidNotificationChannel(
+          _metronSyncChannelId,
+          _metronSyncChannelName,
+          description: "Notifications for Metron sync status",
+          importance: Importance.low,
+        );
+        await android.createNotificationChannel(metronSyncChannel);
       }
 
       AppLogger.info("Notification service initialized");
@@ -103,6 +115,76 @@ class NotificationService {
       await _plugin.cancel(_syncNotificationId);
     } catch (e) {
       AppLogger.warning("Failed to cancel sync notification", error: e);
+    }
+  }
+
+  Future<void> showMetronSyncNotification({
+    required String title,
+    required String body,
+    bool isOngoing = true,
+  }) async {
+    final androidDetails = AndroidNotificationDetails(
+      _metronSyncChannelId,
+      _metronSyncChannelName,
+      channelDescription: "Notifications for Metron sync status",
+      importance: Importance.low,
+      priority: Priority.low,
+      icon: "ic_notification",
+      ongoing: isOngoing,
+      autoCancel: !isOngoing,
+      showProgress: isOngoing,
+      indeterminate: isOngoing,
+      showWhen: true,
+    );
+    final details = NotificationDetails(android: androidDetails);
+    try {
+      await _plugin.show(_metronSyncNotificationId, title, body, details);
+    } catch (e) {
+      AppLogger.warning("Failed to show Metron sync notification", error: e);
+    }
+  }
+
+  Future<void> updateMetronSyncProgress({
+    required int progress,
+    required int maxProgress,
+    required String body,
+  }) async {
+    final androidDetails = AndroidNotificationDetails(
+      _metronSyncChannelId,
+      _metronSyncChannelName,
+      channelDescription: "Notifications for Metron sync status",
+      importance: Importance.low,
+      priority: Priority.low,
+      icon: "ic_notification",
+      ongoing: true,
+      autoCancel: false,
+      showProgress: true,
+      progress: progress,
+      maxProgress: maxProgress,
+      indeterminate: false,
+      showWhen: true,
+    );
+    final details = NotificationDetails(android: androidDetails);
+    try {
+      await _plugin.show(
+        _metronSyncNotificationId,
+        "Metron Syncing",
+        body,
+        details,
+      );
+    } catch (e) {
+      AppLogger.warning("Failed to update Metron sync notification", error: e);
+    }
+  }
+
+  Future<void> cancelMetronSyncNotification() async {
+    try {
+      await _plugin.cancel(_metronSyncNotificationId);
+    } catch (e) {
+      AppLogger.warning(
+        "Failed to cancel Metron sync notification",
+        error: e,
+      );
     }
   }
 

@@ -212,5 +212,107 @@ void main() {
         expect(req.sent, isTrue);
       });
     });
+
+    test("burst limit updates from x-ratelimit-burst-limit header", () {
+      fakeAsync((async) {
+        scheduler = MetronRequestScheduler(
+          maxRequestsPerMinute: 20,
+          maxConcurrent: 8,
+        );
+
+        expect(scheduler.burstLimit, 20);
+
+        scheduler.onResponse({
+          "x-ratelimit-burst-limit": ["45"],
+          "x-ratelimit-burst-remaining": ["44"],
+        });
+
+        expect(scheduler.burstLimit, 45);
+        expect(scheduler.state.burstLimit, 45);
+        expect(scheduler.state.burstRemaining, 44);
+      });
+    });
+
+    test("burst limit infers from burst-remaining plus dispatched count", () {
+      fakeAsync((async) {
+        scheduler = MetronRequestScheduler(
+          maxRequestsPerMinute: 20,
+          maxConcurrent: 8,
+        );
+
+        // Dispatch 3 requests to fill the window
+        final r1 = enqueue(RequestPriority.normal, path: "/1");
+        final r2 = enqueue(RequestPriority.normal, path: "/2");
+        final r3 = enqueue(RequestPriority.normal, path: "/3");
+        async.flushMicrotasks();
+        expect(r1.sent, isTrue);
+        expect(r2.sent, isTrue);
+        expect(r3.sent, isTrue);
+        completeRequest();
+        completeRequest();
+        completeRequest();
+
+        // Server says 42 remaining, we dispatched 3 -> limit is 45
+        scheduler.onResponse({
+          "x-ratelimit-burst-remaining": ["42"],
+        });
+
+        expect(scheduler.burstLimit, 45);
+      });
+    });
+
+    test("burst limit never decreases from inference", () {
+      fakeAsync((async) {
+        scheduler = MetronRequestScheduler(
+          maxRequestsPerMinute: 20,
+          maxConcurrent: 8,
+        );
+
+        // Set a high limit from header
+        scheduler.onResponse({
+          "x-ratelimit-burst-limit": ["50"],
+        });
+        expect(scheduler.burstLimit, 50);
+
+        // Infer from remaining (42 + 0 dispatched = 42) should NOT decrease from 50
+        scheduler.onResponse({
+          "x-ratelimit-burst-remaining": ["42"],
+        });
+        expect(scheduler.burstLimit, 50);
+      });
+    });
+
+    test("dispatches up to dynamic burst limit instead of hardcoded default",
+        () {
+      fakeAsync((async) {
+        scheduler = MetronRequestScheduler(
+          maxRequestsPerMinute: 20,
+          maxConcurrent: 8,
+        );
+
+        // Server tells us the limit is 45
+        scheduler.onResponse({
+          "x-ratelimit-burst-limit": ["45"],
+          "x-ratelimit-burst-remaining": ["44"],
+        });
+
+        // Enqueue 25 requests — all should dispatch without hitting the old 20 cap
+        final requests = <_Tracked>[];
+        for (var i = 0; i < 25; i++) {
+          requests.add(enqueue(RequestPriority.normal, path: "/$i"));
+        }
+
+        // Drain: complete active requests so queued ones can dispatch
+        for (var i = 0; i < 25; i++) {
+          async.flushMicrotasks();
+          completeRequest();
+        }
+        async.flushMicrotasks();
+
+        for (final r in requests) {
+          expect(r.sent, isTrue);
+        }
+      });
+    });
   });
 }

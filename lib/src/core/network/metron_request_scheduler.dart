@@ -14,6 +14,7 @@ class RateLimitState {
   final int sustainedLimit;
   final int sustainedRemaining;
   final int sustainedReset;
+  final int burstLimit;
   final int burstRemaining;
   final int burstReset;
   final bool hasObservedHeaders;
@@ -22,6 +23,7 @@ class RateLimitState {
     this.sustainedLimit = 5000,
     this.sustainedRemaining = 5000,
     this.sustainedReset = 0,
+    this.burstLimit = 20,
     this.burstRemaining = 20,
     this.burstReset = 0,
     this.hasObservedHeaders = false,
@@ -63,6 +65,7 @@ class MetronRequestScheduler {
   }) {
     _sustainedLimit = fallbackDailyLimit;
     _sustainedRemaining = fallbackDailyLimit;
+    _burstLimit = maxRequestsPerMinute;
     _burstRemaining = maxRequestsPerMinute;
     stateNotifier.value = state;
   }
@@ -86,12 +89,15 @@ class MetronRequestScheduler {
   int _sustainedLimit = 5000;
   int _sustainedRemaining = 5000;
   int _sustainedReset = 0;
+  int _burstLimit = 20;
   int _burstRemaining = 20;
   int _burstReset = 0;
   bool _hasObservedHeaders = false;
 
   int _activeRequests = 0;
   Timer? _wakeTimer;
+
+  int get burstLimit => _burstLimit;
 
   final ValueNotifier<RateLimitState> stateNotifier = ValueNotifier(
     const RateLimitState(),
@@ -101,6 +107,7 @@ class MetronRequestScheduler {
     sustainedLimit: _sustainedLimit,
     sustainedRemaining: _sustainedRemaining,
     sustainedReset: _sustainedReset,
+    burstLimit: _burstLimit,
     burstRemaining: _burstRemaining,
     burstReset: _burstReset,
     hasObservedHeaders: _hasObservedHeaders,
@@ -143,7 +150,7 @@ class MetronRequestScheduler {
   void onError({required int? statusCode, Map<String, List<String>>? headers}) {
     if (statusCode != 429) {
       _sustainedRemaining = min(_sustainedLimit, _sustainedRemaining + 1);
-      _burstRemaining = min(maxRequestsPerMinute, _burstRemaining + 1);
+      _burstRemaining = min(_burstLimit, _burstRemaining + 1);
     }
     if (headers != null && headers.isNotEmpty) _updateFromHeaders(headers);
     _notify();
@@ -214,9 +221,9 @@ class MetronRequestScheduler {
 
   bool _canDispatch(_ScheduledRequest req) {
     if (_sustainedExhausted) return false;
-    if (_recentRequests.length >= maxRequestsPerMinute) return false;
+    if (_recentRequests.length >= _burstLimit) return false;
     if (req.priority.isBackground) {
-      final bgCap = max(1, maxRequestsPerMinute - reservedForeground);
+      final bgCap = max(1, _burstLimit - reservedForeground);
       if (_recentBackgroundRequests.length >= bgCap) return false;
     }
     return true;
@@ -244,10 +251,10 @@ class MetronRequestScheduler {
 
     DateTime? nextWake;
 
-    if (_recentRequests.length >= maxRequestsPerMinute) {
+    if (_recentRequests.length >= _burstLimit) {
       nextWake = _timestampToDateTime(_recentRequests.first + oneMinuteMs);
     }
-    final bgCap = max(1, maxRequestsPerMinute - reservedForeground);
+    final bgCap = max(1, _burstLimit - reservedForeground);
     if (_recentBackgroundRequests.length >= bgCap) {
       final bgExpiry = _timestampToDateTime(
         _recentBackgroundRequests.first + oneMinuteMs,
@@ -300,6 +307,7 @@ class MetronRequestScheduler {
       headers,
       "x-ratelimit-sustained-reset",
     );
+    final burstLimit = _parseIntHeader(headers, "x-ratelimit-burst-limit");
     final burstRemaining = _parseIntHeader(
       headers,
       "x-ratelimit-burst-remaining",
@@ -315,7 +323,16 @@ class MetronRequestScheduler {
       _hasObservedHeaders = true;
     }
     if (sustainedReset != null) _sustainedReset = sustainedReset;
-    if (burstRemaining != null) _burstRemaining = burstRemaining;
+    if (burstLimit != null) {
+      _burstLimit = burstLimit;
+      _hasObservedHeaders = true;
+    }
+    if (burstRemaining != null) {
+      _burstRemaining = burstRemaining;
+      // Infer total burst limit: remaining + already dispatched in this window
+      final inferred = burstRemaining + _recentRequests.length;
+      if (inferred > _burstLimit) _burstLimit = inferred;
+    }
     if (burstReset != null) _burstReset = burstReset;
   }
 
@@ -330,4 +347,11 @@ class MetronRequestScheduler {
     }
     return null;
   }
+}
+
+/// Computes the minimum delay between sequential Metron API requests
+/// based on the current burst limit, with a 200ms safety margin.
+Duration rateLimitDelayFromBurstLimit(int burstLimit) {
+  final ms = 60000 ~/ burstLimit + 200;
+  return Duration(milliseconds: ms);
 }

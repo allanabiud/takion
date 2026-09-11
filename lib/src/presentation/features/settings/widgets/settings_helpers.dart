@@ -17,7 +17,7 @@ Widget buildSettingsGroup(
           color: Theme.of(context).colorScheme.primary,
         ),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       Material(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -64,7 +64,7 @@ Widget buildSettingsRow(String label, String value, {Color? color}) {
 
 Widget buildSettingsSectionHeader(BuildContext context, String title) {
   return Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 2),
     child: Text(
       title,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(

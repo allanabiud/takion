@@ -58,7 +58,9 @@ void main() {
             metronSyncStateProvider.overrideWith((ref) => Stream.value(syncState)),
             metronSyncManagerProvider.overrideWithValue(mockSyncManager),
             pendingOfflineWritesCountProvider.overrideWith((ref) => Stream.value(0)),
+            failedOfflineWritesCountProvider.overrideWith((ref) => Stream.value(0)),
             rateLimitStatusProvider.overrideWith(FakeRateLimitNotifier.new),
+            migrationNeededProvider.overrideWithValue(const AsyncValue.data(true)),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -74,10 +76,45 @@ void main() {
 
       expect(find.text("METRON SYNCHRONIZATION"), findsOneWidget);
       expect(find.text("Metron Sync"), findsOneWidget);
+      expect(find.text("No changes to sync"), findsOneWidget);
       expect(find.text("Sync Now"), findsOneWidget);
-      expect(find.text("Migrate Local Data to Metron"), findsOneWidget);
       expect(find.text("API USAGE"), findsOneWidget);
       expect(find.text("480"), findsOneWidget);
+    });
+
+    testWidgets("renders pending changes count in subtitle when pending changes exist", (tester) async {
+      const syncState = MetronSyncState(
+        status: SyncStatus.idle,
+      );
+
+      final mockSyncManager = MockMetronSyncManager();
+      when(() => mockSyncManager.currentState).thenReturn(syncState);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            driftDatabaseProvider.overrideWithValue(db),
+            metronConnectionProvider.overrideWith((ref) async => true),
+            metronSyncStateProvider.overrideWith((ref) => Stream.value(syncState)),
+            metronSyncManagerProvider.overrideWithValue(mockSyncManager),
+            pendingOfflineWritesCountProvider.overrideWith((ref) => Stream.value(3)),
+            failedOfflineWritesCountProvider.overrideWith((ref) => Stream.value(0)),
+            rateLimitStatusProvider.overrideWith(FakeRateLimitNotifier.new),
+            migrationNeededProvider.overrideWithValue(const AsyncValue.data(true)),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: MetronConnectionContent(),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text("3 changes not synced"), findsOneWidget);
     });
   });
 }

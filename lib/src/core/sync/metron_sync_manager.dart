@@ -1,7 +1,6 @@
 import "dart:async";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/migration/migration_manager.dart";
-import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/collection/sync/collection_sync_manager.dart";
@@ -15,14 +14,14 @@ class MetronSyncManager {
     required WishlistSyncManager wishlistSyncManager,
     MigrationManager? migrationManager,
     OfflineWriteQueue? offlineWriteQueue,
-    ConnectivityMonitor? connectivityMonitor,
+    Duration periodicInterval = const Duration(minutes: 15),
   })  : _collectionSyncManager = collectionSyncManager,
         _pullListSyncManager = pullListSyncManager,
         _wishlistSyncManager = wishlistSyncManager,
         _migrationManager = migrationManager,
         _offlineWriteQueue = offlineWriteQueue,
-        _connectivityMonitor = connectivityMonitor {
-    _initConnectivityListener();
+        _periodicInterval = periodicInterval {
+    _initAutoSyncListeners();
   }
 
   final CollectionSyncManager _collectionSyncManager;
@@ -30,12 +29,16 @@ class MetronSyncManager {
   final WishlistSyncManager _wishlistSyncManager;
   final MigrationManager? _migrationManager;
   final OfflineWriteQueue? _offlineWriteQueue;
-  final ConnectivityMonitor? _connectivityMonitor;
+  final Duration _periodicInterval;
 
   final StreamController<MetronSyncState> _stateController =
       StreamController<MetronSyncState>.broadcast();
 
   MetronSyncState _currentState = const MetronSyncState();
+  Timer? _debounceTimer;
+  Timer? _periodicTimer;
+  StreamSubscription<int>? _pendingWritesSub;
+  DateTime _lastSyncTriggeredAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   MetronSyncState get currentState => _currentState;
   Stream<MetronSyncState> get stateStream => _stateController.stream;
@@ -47,13 +50,33 @@ class MetronSyncManager {
     }
   }
 
-  void _initConnectivityListener() {
-    _connectivityMonitor?.startMonitoring(
-      onReconnected: () {
-        AppLogger.info("Network reconnected: triggering Metron sync");
+  void _initAutoSyncListeners() {
+    if (_offlineWriteQueue != null) {
+      _pendingWritesSub = _offlineWriteQueue.watchPendingCount().listen((count) {
+        if (count > 0 &&
+            !_currentState.isSyncing &&
+            DateTime.now().difference(_lastSyncTriggeredAt) >
+                const Duration(minutes: 1)) {
+          scheduleSync();
+        }
+      });
+    }
+
+    if (_periodicInterval > Duration.zero) {
+      _periodicTimer = Timer.periodic(_periodicInterval, (_) {
+        AppLogger.debug("Periodic in-app Metron sync triggered");
         syncAll();
-      },
-    );
+      });
+    }
+  }
+
+  /// Schedules a debounced background sync (e.g. after local changes are enqueued).
+  void scheduleSync({Duration debounce = const Duration(seconds: 3)}) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(debounce, () {
+      AppLogger.info("Executing scheduled debounced Metron sync");
+      syncAll();
+    });
   }
 
   Future<MetronSyncState> syncAll({bool forceFullSync = false}) async {
@@ -61,36 +84,44 @@ class MetronSyncManager {
       return _currentState;
     }
 
-    final migration = _migrationManager;
-    if (migration != null && migration.currentProgress.isMigrating) {
-      AppLogger.info("Metron sync deferred: migration in progress");
-      return _currentState;
-    }
+    _debounceTimer?.cancel();
+    _lastSyncTriggeredAt = DateTime.now();
 
     _emit(
       _currentState.copyWith(
         status: SyncStatus.syncing,
-        currentPhase: "Processing offline writes",
+        currentPhase: "Syncing pending changes",
         errorMessage: null,
       ),
     );
 
     try {
+      // 1. Process pending offline write entries
       if (_offlineWriteQueue != null) {
-        await _offlineWriteQueue.processQueue();
+        await _offlineWriteQueue.processAllEntries();
       }
 
-      // 1. Sync Collection
+      // 2. Automatically migrate any legacy/unmigrated local data to Metron
+      final migration = _migrationManager;
+      if (migration != null) {
+        final needsMigration = await migration.isMigrationNeeded();
+        if (needsMigration) {
+          _emit(_currentState.copyWith(currentPhase: "Migrating local data to Metron"));
+          await migration.runMigration();
+        }
+      }
+
+      // 3. Sync Collection (pull remote changes)
       _emit(_currentState.copyWith(currentPhase: "Syncing collection"));
       final colResult = await _collectionSyncManager.syncCollection(
         forceFullSync: forceFullSync,
       );
 
-      // 2. Sync Pull List & Subscriptions
+      // 4. Sync Pull List & Subscriptions
       _emit(_currentState.copyWith(currentPhase: "Syncing pull list"));
       final pullResult = await _pullListSyncManager.syncPullList();
 
-      // 3. Sync Wishlist
+      // 5. Sync Wishlist
       _emit(_currentState.copyWith(currentPhase: "Syncing wishlist"));
       final wishResult = await _wishlistSyncManager.syncWishlist();
 
@@ -127,6 +158,9 @@ class MetronSyncManager {
   }
 
   void dispose() {
+    _debounceTimer?.cancel();
+    _periodicTimer?.cancel();
+    _pendingWritesSub?.cancel();
     _stateController.close();
   }
 }

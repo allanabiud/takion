@@ -59,14 +59,6 @@ class _MigrationContentState extends ConsumerState<_MigrationContent> {
                 total: progress.totalSubscriptions,
                 icon: Icons.notifications_outlined,
               ),
-              const SizedBox(height: 8),
-              _ProgressRow(
-                label: "Wishlist",
-                migrated: progress.migratedWishlist,
-                failed: progress.failedWishlist,
-                total: progress.totalWishlist,
-                icon: Icons.turned_in_not,
-              ),
               if (progress.currentStep != null) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -143,13 +135,6 @@ class _MigrationContentState extends ConsumerState<_MigrationContent> {
                 failed: progress.failedSubscriptions,
                 total: progress.totalSubscriptions,
               ),
-              const SizedBox(height: 4),
-              _SummaryRow(
-                label: "Wishlist",
-                migrated: progress.migratedWishlist,
-                failed: progress.failedWishlist,
-                total: progress.totalWishlist,
-              ),
               if (progress.elapsedMs > 0) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -178,6 +163,21 @@ class _MigrationContentState extends ConsumerState<_MigrationContent> {
                 ),
               ],
               const SizedBox(height: 16),
+              if (progress.failedItems > 0) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      await manager.runMigration();
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
+                    child: const Text("Retry Failed Items"),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -187,12 +187,12 @@ class _MigrationContentState extends ConsumerState<_MigrationContent> {
               ),
             ] else ...[
               Text(
-                "This will upload your local collection, subscriptions, and wishlist to your Metron account.",
+                "This will upload your local collection and subscriptions to your Metron account.",
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 12),
               Text(
-                "Items are processed in batches of 18 with a 60-second pause between batches to respect API rate limits.",
+                "Items are uploaded one at a time with a short delay between each to respect API rate limits.",
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

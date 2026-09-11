@@ -8,14 +8,17 @@ class PullListMigrator {
   PullListMigrator({
     required db.AppDatabase database,
     required MetronPullListRemoteDataSource remoteDataSource,
+    Duration Function()? rateLimitDelay,
   })  : _database = database,
-        _remoteDataSource = remoteDataSource;
+        _remoteDataSource = remoteDataSource,
+        _rateLimitDelay = rateLimitDelay;
 
   final db.AppDatabase _database;
   final MetronPullListRemoteDataSource _remoteDataSource;
+  final Duration Function()? _rateLimitDelay;
 
-  static const int _batchSize = 18;
-  static const Duration _batchDelay = Duration(seconds: 60);
+  Duration get _currentDelay =>
+      _rateLimitDelay?.call() ?? const Duration(milliseconds: 3200);
 
   Future<List<db.SeriesSubscription>> getUnmigratedSubscriptions() async {
     return (_database.select(_database.seriesSubscriptions)
@@ -24,8 +27,15 @@ class PullListMigrator {
   }
 
   Future<int> countUnmigrated() async {
-    final items = await getUnmigratedSubscriptions();
-    return items.length;
+    final countExp = _database.seriesSubscriptions.id.count();
+    final query = _database.selectOnly(_database.seriesSubscriptions)
+      ..addColumns([countExp])
+      ..where(
+        _database.seriesSubscriptions.isActive.equals(true) &
+            _database.seriesSubscriptions.metronPullListId.isNull(),
+      );
+    final result = await query.getSingleOrNull();
+    return result?.read(countExp) ?? 0;
   }
 
   Future<MigrationResult> migrate({
@@ -42,8 +52,8 @@ class PullListMigrator {
     for (var i = 0; i < unmigrated.length; i++) {
       if (isCancelled?.call() == true) break;
 
-      if (i > 0 && i % _batchSize == 0) {
-        await Future<void>.delayed(_batchDelay);
+      if (i > 0) {
+        await Future<void>.delayed(_currentDelay);
       }
 
       final sub = unmigrated[i];

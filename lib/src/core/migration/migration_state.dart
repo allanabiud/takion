@@ -40,7 +40,8 @@ class MigrationProgress {
   int get totalItems => totalCollection + totalSubscriptions + totalWishlist;
   int get migratedItems =>
       migratedCollection + migratedSubscriptions + migratedWishlist;
-  int get failedItems => failedCollection + failedSubscriptions + failedWishlist;
+  int get failedItems =>
+      failedCollection + failedSubscriptions + failedWishlist;
   int get processedItems => migratedItems + failedItems;
 
   double get progressFraction {

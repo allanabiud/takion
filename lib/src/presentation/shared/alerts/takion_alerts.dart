@@ -16,6 +16,15 @@ class TakionAlerts {
     TakionFlash.error(context, message);
   }
 
+  static void celebration(BuildContext context, String message) {
+    TakionFlash.show(
+      context: context,
+      message: message,
+      icon: Icons.emoji_events_rounded,
+      color: Colors.amber.shade700,
+    );
+  }
+
   static void successWithUndo(
     BuildContext context,
     String message, {

@@ -5,34 +5,28 @@ import "package:takion/src/core/migration/collection_migrator.dart";
 import "package:takion/src/core/migration/migration_manager.dart";
 import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/core/migration/pull_list_migrator.dart";
-import "package:takion/src/core/migration/wish_list_migrator.dart";
 import "package:takion/src/data/common/drift/database.dart";
 
 class MockCollectionMigrator extends Mock implements CollectionMigrator {}
 
 class MockPullListMigrator extends Mock implements PullListMigrator {}
 
-class MockWishListMigrator extends Mock implements WishListMigrator {}
-
 void main() {
   group("MigrationManager", () {
     late AppDatabase database;
     late MockCollectionMigrator colMigrator;
     late MockPullListMigrator pullMigrator;
-    late MockWishListMigrator wishMigrator;
     late MigrationManager manager;
 
     setUp(() {
       database = AppDatabase.forTesting(NativeDatabase.memory());
       colMigrator = MockCollectionMigrator();
       pullMigrator = MockPullListMigrator();
-      wishMigrator = MockWishListMigrator();
 
       manager = MigrationManager(
         database: database,
         collectionMigrator: colMigrator,
         pullListMigrator: pullMigrator,
-        wishListMigrator: wishMigrator,
       );
     });
 
@@ -45,7 +39,6 @@ void main() {
         () async {
       when(() => colMigrator.countUnmigrated()).thenAnswer((_) async => 5);
       when(() => pullMigrator.countUnmigrated()).thenAnswer((_) async => 0);
-      when(() => wishMigrator.countUnmigrated()).thenAnswer((_) async => 0);
 
       final needed = await manager.isMigrationNeeded();
       expect(needed, isTrue);
@@ -55,7 +48,6 @@ void main() {
         () async {
       when(() => colMigrator.countUnmigrated()).thenAnswer((_) async => 2);
       when(() => pullMigrator.countUnmigrated()).thenAnswer((_) async => 1);
-      when(() => wishMigrator.countUnmigrated()).thenAnswer((_) async => 3);
 
       when(
         () => colMigrator.migrate(
@@ -69,19 +61,12 @@ void main() {
           isCancelled: any(named: "isCancelled"),
         ),
       ).thenAnswer((_) async => const MigrationResult(migrated: 1, failed: 0));
-      when(
-        () => wishMigrator.migrate(
-          onProgress: any(named: "onProgress"),
-          isCancelled: any(named: "isCancelled"),
-        ),
-      ).thenAnswer((_) async => const MigrationResult(migrated: 3, failed: 0));
 
       final progress = await manager.runMigration();
 
       expect(progress.status, MigrationStatus.completed);
       expect(progress.migratedCollection, 2);
       expect(progress.migratedSubscriptions, 1);
-      expect(progress.migratedWishlist, 3);
       expect(progress.progressFraction, 1.0);
 
       final completed = await manager.isMigrationCompleted();

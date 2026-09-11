@@ -67,17 +67,19 @@ final readSeriesProvider =
       return result;
     });
 
+final allWishlistItemsStreamProvider = StreamProvider<List>((ref) {
+  return ref.watch(driftDatabaseProvider).wishlistDao.watchAll();
+});
+
 final wishlistSeriesProvider =
     FutureProvider.autoDispose<List<CategorySeriesSummary>>((ref) async {
       final link = ref.keepAlive();
       Timer? timer;
       ref.onDispose(() => timer?.cancel());
 
-      await ref.watch(allLibraryItemsProvider.future);
-      final dao = ref.read(driftDatabaseProvider).libraryItemDao;
-      final rows = await dao.getSeriesSummariesByCategory(
-        ownershipStatus: "wishlist",
-      );
+      await ref.watch(allWishlistItemsStreamProvider.future);
+      final db = ref.read(driftDatabaseProvider);
+      final rows = await db.wishlistDao.getSeriesSummaries();
       final cache = ref.read(entityImageCacheProvider);
       final result = rows.map((r) {
         if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {

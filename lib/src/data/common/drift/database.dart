@@ -670,6 +670,7 @@ class OfflineWriteQueue extends Table {
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   TextColumn get status => text().withDefault(const Constant("pending"))();
   TextColumn get lastError => text().nullable()();
+  IntColumn get lastAttemptAt => integer().nullable()();
 }
 
 class SyncMeta extends Table {
@@ -755,7 +756,7 @@ class AppDatabase extends _$AppDatabase {
   late final WishlistDao wishlistDao = WishlistDao(this);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration {
@@ -851,6 +852,12 @@ class AppDatabase extends _$AppDatabase {
           await m.createIndex(idxWishlistSeries);
           await m.createIndex(idxWishlistSyncStatus);
         }
+        if (from < 16) {
+          await m.addColumn(offlineWriteQueue, offlineWriteQueue.lastAttemptAt);
+        }
+        if (from < 17) {
+          await _migrateWishlistFromLibraryItems();
+        }
       },
     );
   }
@@ -913,6 +920,59 @@ class AppDatabase extends _$AppDatabase {
         ReadingListItemsCompanion(createdAt: Value(ts), updatedAt: Value(ts)),
       );
     }
+  }
+
+  Future<void> _migrateWishlistFromLibraryItems() async {
+    final wishlistRows = await customSelect(
+      "SELECT li.*, ms.name AS series_name, ms.volume, ms.year_began, "
+      "mi.issue_number "
+      "FROM library_items li "
+      "LEFT JOIN metron_series ms ON ms.id = li.metron_series_id "
+      "LEFT JOIN metron_issues mi ON mi.id = li.metron_issue_id "
+      "WHERE li.ownership_status = 'wishlist'",
+      readsFrom: {libraryItems},
+    ).get();
+
+    for (final row in wishlistRows) {
+      final issueId = row.read<int>("metron_issue_id");
+      final seriesId = row.read<int>("metron_series_id");
+      final seriesName = row.read<String?>("series_name") ?? "Series $seriesId";
+      final issueNumber = row.read<String?>("issue_number") ?? "";
+      final volume = row.read<int?>("volume");
+      final yearBegan = row.read<int?>("year_began");
+      final pricePaid = row.read<double?>("price_paid");
+      final conditionGrade = row.read<String?>("condition_grade");
+      final notes = row.read<String?>("notes");
+      final createdAt = row.read<String>("created_at");
+      final updatedAt = row.read<String>("updated_at");
+      final syncStatus = row.read<String>("sync_status");
+
+      await into(wishlistItems).insertOnConflictUpdate(
+        WishlistItemsCompanion(
+          id: Value(issueId),
+          issueId: Value(issueId),
+          seriesId: Value(seriesId),
+          seriesName: Value(seriesName),
+          issueNumber: Value(issueNumber),
+          seriesVolume: Value(volume),
+          seriesYearBegan: Value(yearBegan),
+          imageUrl: const Value.absent(),
+          priority: const Value(3),
+          desiredGrade: Value(
+            conditionGrade != null ? double.tryParse(conditionGrade) : null,
+          ),
+          maxPrice: Value(pricePaid),
+          notes: Value(notes),
+          syncStatus: Value(syncStatus),
+          createdAt: Value(createdAt),
+          updatedAt: Value(updatedAt),
+        ),
+      );
+    }
+
+    await (delete(libraryItems)
+          ..where((t) => t.ownershipStatus.equals("wishlist")))
+        .go();
   }
 }
 

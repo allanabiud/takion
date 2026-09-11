@@ -25,6 +25,8 @@ class MetronSyncState {
 
   bool get isSyncing => status == SyncStatus.syncing;
   bool get hasError => status == SyncStatus.error;
+  bool get isSuccess => status == SyncStatus.success;
+  bool get isIdle => status == SyncStatus.idle;
 
   MetronSyncState copyWith({
     SyncStatus? status,

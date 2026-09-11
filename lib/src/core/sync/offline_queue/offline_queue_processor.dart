@@ -1,4 +1,5 @@
 import "dart:convert";
+import "package:dio/dio.dart";
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
@@ -15,6 +16,7 @@ class OfflineQueueProcessor {
   final MetronCollectionRemoteDataSource _collectionRemote;
   final MetronPullListRemoteDataSource _pullListRemote;
   final MetronWishlistRemoteDataSource _wishlistRemote;
+  final Duration Function()? _rateLimitDelay;
 
   OfflineQueueProcessor({
     required OfflineQueueDao dao,
@@ -22,17 +24,45 @@ class OfflineQueueProcessor {
     required MetronCollectionRemoteDataSource collectionRemote,
     required MetronPullListRemoteDataSource pullListRemote,
     required MetronWishlistRemoteDataSource wishlistRemote,
+    Duration Function()? rateLimitDelay,
   })  : _dao = dao,
         _database = database,
         _collectionRemote = collectionRemote,
         _pullListRemote = pullListRemote,
-        _wishlistRemote = wishlistRemote;
+        _wishlistRemote = wishlistRemote,
+        _rateLimitDelay = rateLimitDelay;
+
+  Duration get _currentDelay =>
+      _rateLimitDelay?.call() ?? const Duration(milliseconds: 3200);
+
+  static int _computeBackoffMs(int retryCount, int baseMs) {
+    final ms = baseMs * (1 << retryCount);
+    return ms > 51200 ? 51200 : ms;
+  }
 
   Future<int> processPendingEntries({int batchSize = 20}) async {
     final entries = await _dao.getPendingEntries(limit: batchSize);
+    final now = DateTime.now().millisecondsSinceEpoch;
     var processedCount = 0;
 
-    for (final entry in entries) {
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+
+      if (i > 0) {
+        await Future<void>.delayed(_currentDelay);
+      }
+
+      if (entry.lastAttemptAt != null) {
+        final backoffMs = _computeBackoffMs(
+          entry.retryCount,
+          _currentDelay.inMilliseconds,
+        );
+        final elapsed = now - entry.lastAttemptAt!;
+        if (elapsed < backoffMs) {
+          continue;
+        }
+      }
+
       try {
         await _processEntry(
           operation: entry.operation,
@@ -40,13 +70,41 @@ class OfflineQueueProcessor {
           entityId: entry.entityId,
           payloadJson: entry.payload,
         );
-        await _markEntitySynced(
-          entityType: entry.entityType,
-          operation: entry.operation,
-          entityId: entry.entityId,
-        );
         await _dao.markCompleted(entry.id);
         processedCount++;
+      } on DioException catch (e, st) {
+        final statusCode = e.response?.statusCode;
+        final responseData = e.response?.data?.toString().toLowerCase() ?? "";
+        final isAlreadyPresent = (statusCode == 400 || statusCode == 409) &&
+            (responseData.contains("already") ||
+                responseData.contains("duplicate") ||
+                responseData.contains("exists"));
+        final isAlreadyDeleted = statusCode == 404 && entry.operation == "delete";
+
+        if (isAlreadyPresent || isAlreadyDeleted) {
+          AppLogger.info(
+            "Offline queue entry #${entry.id} (${entry.entityType}/${entry.operation}) already synced on remote: $responseData",
+          );
+          await _markEntitySynced(
+            entityType: entry.entityType,
+            operation: entry.operation,
+            entityId: entry.entityId,
+          );
+          await _dao.markCompleted(entry.id);
+          processedCount++;
+        } else {
+          final cleanError = _extractCleanErrorMessage(e);
+          AppLogger.warning(
+            "Failed to process offline queue entry #${entry.id} (${entry.entityType}/${entry.operation}): $cleanError",
+            error: e,
+            stackTrace: st,
+          );
+          await _dao.markFailed(
+            entry.id,
+            error: cleanError,
+            retryCount: entry.retryCount + 1,
+          );
+        }
       } catch (e, st) {
         AppLogger.warning(
           "Failed to process offline queue entry #${entry.id} (${entry.entityType}/${entry.operation})",
@@ -64,10 +122,39 @@ class OfflineQueueProcessor {
     return processedCount;
   }
 
+  String _extractCleanErrorMessage(DioException e) {
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      if (data["detail"] != null) return data["detail"].toString();
+      if (data["error"] != null) return data["error"].toString();
+      final firstKey = data.keys.firstOrNull;
+      if (firstKey != null) {
+        final val = data[firstKey];
+        if (val is List && val.isNotEmpty) {
+          return "$firstKey: ${val.first}";
+        }
+        return "$firstKey: $val";
+      }
+    } else if (data is String && data.isNotEmpty) {
+      return data;
+    }
+    final statusCode = e.response?.statusCode;
+    if (statusCode == 429) return "Rate limit exceeded (HTTP 429)";
+    if (statusCode == 401) return "Unauthorized: Invalid or expired token";
+    if (statusCode == 403) return "Forbidden: Missing permissions on Metron";
+    if (statusCode == 404) return "Resource not found on Metron (HTTP 404)";
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return "Connection timed out";
+    }
+    return e.message ?? e.toString();
+  }
+
   Future<void> _markEntitySynced({
     required String entityType,
     required String operation,
     String? entityId,
+    int? remoteId,
   }) async {
     if (entityId == null) return;
 
@@ -75,7 +162,7 @@ class OfflineQueueProcessor {
 
     switch (entityType) {
       case "collection":
-        await _markCollectionSynced(operation, entityId, nowIso);
+        await _markCollectionSynced(operation, entityId, nowIso, remoteId);
       case "pull_list":
         await _markPullListSynced(operation, entityId, nowIso);
       case "wish_list":
@@ -86,20 +173,36 @@ class OfflineQueueProcessor {
   Future<void> _markCollectionSynced(
     String operation,
     String entityId,
-    String nowIso,
-  ) async {
+    String nowIso, [
+    int? remoteId,
+  ]) async {
     switch (operation) {
       case "create":
         final issueId = int.tryParse(entityId);
         if (issueId != null) {
+          final updates = LibraryItemsCompanion(
+            syncStatus: const Value("synced"),
+            updatedAt: Value(nowIso),
+          );
           await (_database.update(_database.libraryItems)
                 ..where((t) => t.metronIssueId.equals(issueId)))
-              .write(
-            LibraryItemsCompanion(
-              syncStatus: const Value("synced"),
-              updatedAt: Value(nowIso),
-            ),
-          );
+              .write(updates);
+          if (remoteId != null) {
+            await (_database.update(_database.libraryItems)
+                  ..where((t) => t.metronIssueId.equals(issueId)))
+                .write(
+              LibraryItemsCompanion(metronCollectionId: Value(remoteId)),
+            );
+            final item = await _database.libraryItemDao.getByIssueId(issueId);
+            if (item != null && item.rating != null && item.rating! > 0) {
+              await _database.offlineQueueDao.enqueue(
+                operation: "update",
+                entityType: "collection",
+                entityId: remoteId.toString(),
+                payload: jsonEncode({"rating": item.rating}),
+              );
+            }
+          }
         }
       case "update":
         final collectionId = int.tryParse(entityId);
@@ -166,33 +269,29 @@ class OfflineQueueProcessor {
       case "create":
         final issueId = int.tryParse(entityId);
         if (issueId != null) {
-          await (_database.update(_database.wishlistItems)
-                ..where((t) => t.issueId.equals(issueId)))
-              .write(
-            WishlistItemsCompanion(
-              syncStatus: const Value("synced"),
-              updatedAt: Value(nowIso),
-            ),
+          await _database.wishlistDao.updateSyncStatusByIssueId(
+            issueId,
+            "synced",
           );
         }
       case "acquire":
         final itemId = int.tryParse(entityId);
         if (itemId != null) {
-          await (_database.update(_database.wishlistItems)
-                ..where((t) => t.id.equals(itemId)))
-              .write(
-            WishlistItemsCompanion(
-              syncStatus: const Value("synced"),
-              updatedAt: Value(nowIso),
-            ),
-          );
+          final item = await _database.wishlistDao.getById(itemId);
+          if (item != null) {
+            await _database.wishlistDao.upsert(
+              WishlistItemsCompanion(
+                id: Value(itemId),
+                syncStatus: const Value("synced"),
+                updatedAt: Value(nowIso),
+              ),
+            );
+          }
         }
       case "delete":
         final itemId = int.tryParse(entityId);
         if (itemId != null) {
-          await (_database.delete(_database.wishlistItems)
-                ..where((t) => t.id.equals(itemId)))
-              .go();
+          await _database.wishlistDao.deleteById(itemId);
         }
     }
   }
@@ -207,9 +306,11 @@ class OfflineQueueProcessor {
         ? jsonDecode(payloadJson) as Map<String, dynamic>
         : <String, dynamic>{};
 
+    int? remoteId;
+
     switch (entityType) {
       case "collection":
-        await _processCollection(operation, entityId, payload);
+        remoteId = await _processCollection(operation, entityId, payload);
       case "pull_list":
         await _processPullList(operation, entityId, payload);
       case "wish_list":
@@ -217,9 +318,16 @@ class OfflineQueueProcessor {
       default:
         throw ArgumentError("Unknown entityType: $entityType");
     }
+
+    await _markEntitySynced(
+      entityType: entityType,
+      operation: operation,
+      entityId: entityId,
+      remoteId: remoteId,
+    );
   }
 
-  Future<void> _processCollection(
+  Future<int?> _processCollection(
     String operation,
     String? entityId,
     Map<String, dynamic> payload,
@@ -229,7 +337,7 @@ class OfflineQueueProcessor {
         final issueId = payload["issue_id"] as int? ??
             int.tryParse(entityId ?? "") ??
             0;
-        await _collectionRemote.addToCollection(
+        final result = await _collectionRemote.addToCollection(
           issueId: issueId,
           quantity: payload["quantity"] as int? ?? 1,
           bookFormat: payload["book_format"] as String? ?? "PRINT",
@@ -245,12 +353,15 @@ class OfflineQueueProcessor {
           storageLocation: payload["storage_location"] as String?,
           notes: payload["notes"] as String?,
         );
+        return result.id;
       case "update":
         final id = int.parse(entityId!);
         await _collectionRemote.updateCollectionItem(id, payload);
+        return null;
       case "delete":
         final id = int.parse(entityId!);
         await _collectionRemote.removeFromCollection(id);
+        return null;
       case "scrobble":
         final issueId = payload["issue_id"] as int? ??
             int.tryParse(entityId ?? "") ??
@@ -262,6 +373,7 @@ class OfflineQueueProcessor {
             rating: payload["rating"] as int?,
           ),
         );
+        return null;
       default:
         throw ArgumentError("Unknown collection operation: $operation");
     }

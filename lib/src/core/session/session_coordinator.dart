@@ -6,11 +6,10 @@ import "package:takion/src/core/auth/auth_provider.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/network/metron_account_service.dart";
 import "package:takion/src/core/notifications/notification_settings_provider.dart";
-import "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/common/services/drive_backup_service.dart";
-import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
 import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 import "package:takion/src/presentation/providers/drive_sync_provider.dart";
+import "package:takion/src/presentation/providers/repository_providers.dart";
 
 /// Explicit lifecycle and session states for the Takion application.
 enum SessionState {
@@ -74,8 +73,8 @@ class SessionCoordinator {
     return status;
   }
 
-  /// Safely executes subscription pull reconciliation when authenticated.
-  Future<bool> reconcileSubscriptionPulls() async {
+  /// Safely executes Metron synchronization (offline writes + migration + remote sync) when authenticated.
+  Future<bool> syncMetronIfNeeded({bool forceFullSync = false}) async {
     final authState = _ref.read(authStateProvider).value;
     if (authState != AuthStatus.authenticated) return false;
 
@@ -83,10 +82,11 @@ class SessionCoordinator {
     if (!await service.getConnection()) return false;
 
     try {
-      await _ref.read(subscriptionPullReconcilerProvider).reconcile();
-      return true;
+      final syncManager = _ref.read(metronSyncManagerProvider);
+      final result = await syncManager.syncAll(forceFullSync: forceFullSync);
+      return result.isSuccess;
     } catch (error) {
-      AppLogger.warning("Background pull reconciliation failed", error: error);
+      AppLogger.warning("Metron synchronization failed", error: error);
       return false;
     }
   }
@@ -147,6 +147,7 @@ class SessionCoordinator {
     AppLogger.debug("SessionCoordinator onAppResumed triggered");
     await scheduleWeeklyPullNotification(_ref);
     await _ref.read(driftDatabaseProvider).apiCacheDao.deleteStaleEntries();
+    await syncMetronIfNeeded();
     await runDriveAutoSync(onInvalidateCache: onInvalidateCache);
   }
 

@@ -1,6 +1,7 @@
 import "dart:convert";
 import "package:takion/src/core/sync/offline_queue/offline_queue_processor.dart";
 import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
+import "package:takion/src/data/common/drift/database.dart";
 
 class OfflineWriteQueue {
   final OfflineQueueDao _dao;
@@ -15,6 +16,12 @@ class OfflineWriteQueue {
   Stream<int> watchPendingCount() => _dao.watchPendingCount();
 
   Stream<int> watchFailedCount() => _dao.watchFailedCount();
+
+  Future<List<OfflineWriteQueueData>> getFailedEntries() => _dao.getFailedEntries();
+
+  Future<void> deleteEntry(int id) => _dao.deleteEntry(id);
+
+  Future<void> clearFailedEntries() => _dao.clearFailedEntries();
 
   Future<void> retryFailedEntries() => _dao.resetFailedEntries();
 
@@ -173,5 +180,12 @@ class OfflineWriteQueue {
 
   Future<int> processQueue({int batchSize = 20}) {
     return _processor.processPendingEntries(batchSize: batchSize);
+  }
+
+  Future<void> processAllEntries({int maxBatches = 5}) async {
+    for (var i = 0; i < maxBatches; i++) {
+      final processed = await _processor.processPendingEntries(batchSize: 50);
+      if (processed == 0) break;
+    }
   }
 }

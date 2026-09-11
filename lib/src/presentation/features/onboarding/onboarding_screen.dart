@@ -17,6 +17,7 @@ import "package:takion/src/presentation/features/onboarding/widgets/metron_info_
 import "package:takion/src/presentation/features/onboarding/widgets/onboarding_page_scaffold.dart";
 import "package:takion/src/presentation/features/onboarding/widgets/restore_backup_page.dart";
 import "package:takion/src/presentation/features/onboarding/widgets/welcome_page.dart";
+import "package:takion/src/presentation/features/settings/providers/metron_account_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
@@ -130,6 +131,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
       if (hadBackup) {
         invalidateCacheBackedProvidersBatched(container.invalidate);
+        final isMetronConnected = ref.read(metronConnectionProvider).value == true;
+        if (isMetronConnected) {
+          ref.read(migrationManagerProvider).runMigration();
+        }
         AppLogger.info("Drive restore completed");
         AppLogger.info("Onboarding completed");
         if (mounted) {
@@ -196,6 +201,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
       invalidateCacheBackedProvidersBatched(container.invalidate);
       await Future<void>.delayed(Duration.zero);
+
+      final isMetronConnected = ref.read(metronConnectionProvider).value == true;
+      if (isMetronConnected) {
+        ref.read(migrationManagerProvider).runMigration();
+      }
 
       AppLogger.info("Local restore completed");
       if (mounted) {

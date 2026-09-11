@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_status_provider.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/issues/issue_details/issue_my_details_sheets.dart";
@@ -355,6 +357,27 @@ Future<void> showScrobbleSheet({
                                     .read(scrobbleIssueProvider(issueId))
                                     .hasError) {
                               Navigator.pop(context);
+                              if (markAsRead &&
+                                  effectiveSeriesId != null &&
+                                  effectiveSeriesId > 0 &&
+                                  callerContext.mounted) {
+                                ref
+                                    .read(
+                                      seriesAllIssuesReadProvider(
+                                        effectiveSeriesId,
+                                      ).future,
+                                    )
+                                    .then((isAllRead) {
+                                      if (isAllRead && callerContext.mounted) {
+                                        HapticFeedback.heavyImpact();
+                                        TakionAlerts.celebration(
+                                          callerContext,
+                                          "Series Complete! 🎉 You finished this run!",
+                                        );
+                                      }
+                                    })
+                                    .catchError((_) {});
+                              }
                             }
                           },
                     child: isSubmitting

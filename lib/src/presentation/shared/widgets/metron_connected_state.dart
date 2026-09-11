@@ -86,10 +86,6 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
             ],
           ),
         ),
-        Divider(
-          height: 1,
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
           child: Row(
@@ -130,40 +126,26 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
             ],
           ),
         ),
-        Divider(
-          height: 1,
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: isConnected ? widget.onDisconnect : widget.onConnect,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isConnected ? LucideIcons.unlink : LucideIcons.link,
-                    size: 16,
-                    color: isConnected ? theme.colorScheme.error : primaryColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    isConnected ? "Disconnect Account" : "Connect Account",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isConnected
-                          ? theme.colorScheme.error
-                          : primaryColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+        const SizedBox(height: 12),
+        if (isConnected)
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.errorContainer,
+                foregroundColor: theme.colorScheme.onErrorContainer,
               ),
+              onPressed: widget.onDisconnect,
+              icon: const Icon(LucideIcons.unlink, size: 16),
+              label: const Text("Disconnect Account"),
             ),
+          )
+        else
+          FilledButton.icon(
+            onPressed: widget.onConnect,
+            icon: const Icon(LucideIcons.link, size: 16),
+            label: const Text("Connect Account"),
           ),
-        ),
       ],
     );
   }

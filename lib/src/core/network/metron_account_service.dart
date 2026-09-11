@@ -5,6 +5,7 @@ import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/core/sync/periodic_sync_manager.dart";
 import "package:takion/src/data/common/drift/daos/settings_dao.dart";
 
 final metronAccountServiceProvider = Provider<MetronAccountService>((ref) {
@@ -83,6 +84,7 @@ class MetronAccountService {
   Future<void> disconnect() async {
     await _settingsDao.deleteByKey(_apiTokenKey);
     invalidateCachedStatus();
+    await PeriodicSyncManager.instance.cancelMetronSync();
     AppLogger.info("Metron disconnected");
   }
 

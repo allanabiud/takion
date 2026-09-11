@@ -44,6 +44,11 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   await PeriodicSyncManager.instance.init();
 
   final db = AppDatabase();
+  final metronToken = await db.settingsDao.getString("metron_api_token");
+  if (metronToken != null && metronToken.trim().isNotEmpty) {
+    await PeriodicSyncManager.instance.scheduleMetronSync();
+  }
+
   final cacheHeaderStore = CacheHeaderStore();
   await cacheHeaderStore.init(db);
 

@@ -92,7 +92,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
         return;
       }
 
-      await coordinator.reconcileSubscriptionPulls();
+      await coordinator.syncMetronIfNeeded();
       if (!mounted) return;
 
       final container = ProviderScope.containerOf(context, listen: false);
@@ -158,7 +158,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
             return;
           }
 
-          await coordinator.reconcileSubscriptionPulls();
+          await coordinator.syncMetronIfNeeded();
           await scheduleWeeklyPullNotification(ref);
         } else if (current == AuthStatus.unauthenticated) {
           if (previous?.value == AuthStatus.authenticated &&

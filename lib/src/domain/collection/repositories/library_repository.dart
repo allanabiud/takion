@@ -56,6 +56,7 @@ abstract class LibraryRepository {
   Future<LibraryReadLog> addReadLog({
     required int metronIssueId,
     required DateTime readAt,
+    int? rating,
     String? notes,
   });
 

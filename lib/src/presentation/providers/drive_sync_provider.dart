@@ -48,6 +48,7 @@ class DriveSyncState {
   final DateTime? lastErrorTime;
   final SyncInterval syncInterval;
   final bool syncIntervalEnabled;
+  final bool autoBackupOnRestart;
 
   const DriveSyncState({
     this.isInitialized = false,
@@ -59,6 +60,7 @@ class DriveSyncState {
     this.lastErrorTime,
     this.syncInterval = SyncInterval.hours1,
     this.syncIntervalEnabled = false,
+    this.autoBackupOnRestart = false,
   });
 
   DriveSyncState copyWith({
@@ -71,6 +73,7 @@ class DriveSyncState {
     DateTime? lastErrorTime,
     SyncInterval? syncInterval,
     bool? syncIntervalEnabled,
+    bool? autoBackupOnRestart,
   }) {
     return DriveSyncState(
       isInitialized: isInitialized ?? this.isInitialized,
@@ -82,6 +85,7 @@ class DriveSyncState {
       lastErrorTime: lastErrorTime ?? this.lastErrorTime,
       syncInterval: syncInterval ?? this.syncInterval,
       syncIntervalEnabled: syncIntervalEnabled ?? this.syncIntervalEnabled,
+      autoBackupOnRestart: autoBackupOnRestart ?? this.autoBackupOnRestart,
     );
   }
 }
@@ -100,6 +104,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
   static const _emailKey = SettingsKeys.driveSyncEmail;
   static const _intervalKey = SettingsKeys.driveSyncInterval;
   static const _intervalEnabledKey = SettingsKeys.driveSyncIntervalEnabled;
+  static const _autoBackupKey = SettingsKeys.driveAutoBackupOnRestart;
 
   late final Future<void> _initFuture = _loadSettings();
 
@@ -124,6 +129,10 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
       _intervalEnabledKey,
       defaultValue: false,
     );
+    final autoBackupOnRestart = await db.settingsDao.getBool(
+      _autoBackupKey,
+      defaultValue: false,
+    );
 
     final lastSyncRaw = await db.syncMetaDao.get("last_sync_timestamp");
     DateTime? lastSync;
@@ -137,6 +146,7 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
       lastSync: lastSync,
       syncInterval: interval,
       syncIntervalEnabled: intervalEnabled,
+      autoBackupOnRestart: autoBackupOnRestart,
     );
 
     if (enabled && intervalEnabled) {
@@ -194,6 +204,14 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
         await PeriodicSyncManager.instance.cancelPeriodicSync();
       }
     }
+  }
+
+  Future<void> updateAutoBackupOnRestart(bool value) async {
+    await ensureInitialized();
+    AppLogger.info("Drive auto backup on restart: $value");
+    final db = ref.read(driftDatabaseProvider);
+    await db.settingsDao.setBool(_autoBackupKey, value);
+    state = state.copyWith(autoBackupOnRestart: value);
   }
 
   Future<void> updateLastSync() async {

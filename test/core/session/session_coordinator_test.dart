@@ -6,11 +6,11 @@ import "package:mocktail/mocktail.dart";
 import "package:takion/src/core/auth/auth_provider.dart";
 import "package:takion/src/core/network/metron_account_service.dart";
 import "package:takion/src/core/session/session_coordinator.dart";
-import "package:takion/src/core/storage/drift_database_provider.dart";
-import "package:takion/src/presentation/features/library/providers/subscription_pull_reconciler.dart";
+import "package:takion/src/core/sync/metron_sync_manager.dart";
+import "package:takion/src/presentation/providers/repository_providers.dart";
 
 class MockMetronAccountService extends Mock implements MetronAccountService {}
-class MockSubscriptionPullReconciler extends Mock implements SubscriptionPullReconciler {}
+class MockMetronSyncManager extends Mock implements MetronSyncManager {}
 
 void main() {
   setUpAll(() {
@@ -19,19 +19,19 @@ void main() {
 
   late AppDatabase db;
   late MockMetronAccountService mockMetronService;
-  late MockSubscriptionPullReconciler mockReconciler;
+  late MockMetronSyncManager mockSyncManager;
   late ProviderContainer container;
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     mockMetronService = MockMetronAccountService();
-    mockReconciler = MockSubscriptionPullReconciler();
+    mockSyncManager = MockMetronSyncManager();
 
     container = ProviderContainer(
       overrides: [
         driftDatabaseProvider.overrideWithValue(db),
         metronAccountServiceProvider.overrideWithValue(mockMetronService),
-        subscriptionPullReconcilerProvider.overrideWithValue(mockReconciler),
+        metronSyncManagerProvider.overrideWithValue(mockSyncManager),
       ],
     );
   });
@@ -59,9 +59,9 @@ void main() {
       expect(result, isNull);
     });
 
-    test("reconcileSubscriptionPulls returns false when not authenticated", () async {
+    test("syncMetronIfNeeded returns false when not authenticated", () async {
       final coordinator = container.read(sessionCoordinatorProvider);
-      final result = await coordinator.reconcileSubscriptionPulls();
+      final result = await coordinator.syncMetronIfNeeded();
       expect(result, isFalse);
     });
 

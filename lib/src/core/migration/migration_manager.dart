@@ -3,7 +3,7 @@ import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/migration/collection_migrator.dart";
 import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/core/migration/pull_list_migrator.dart";
-import "package:takion/src/core/migration/wish_list_migrator.dart";
+import "package:takion/src/core/migration/wishlist_migrator.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 
 class MigrationManager {
@@ -11,24 +11,27 @@ class MigrationManager {
     required db.AppDatabase database,
     required CollectionMigrator collectionMigrator,
     required PullListMigrator pullListMigrator,
-    required WishListMigrator wishListMigrator,
+    WishlistMigrator? wishlistMigrator,
   })  : _database = database,
         _collectionMigrator = collectionMigrator,
         _pullListMigrator = pullListMigrator,
-        _wishListMigrator = wishListMigrator;
+        _wishlistMigrator = wishlistMigrator;
 
   static const String _migrationCompletedKey = "metron_migration_completed";
 
   final db.AppDatabase _database;
   final CollectionMigrator _collectionMigrator;
   final PullListMigrator _pullListMigrator;
-  final WishListMigrator _wishListMigrator;
+  final WishlistMigrator? _wishlistMigrator;
 
   final StreamController<MigrationProgress> _progressController =
       StreamController<MigrationProgress>.broadcast();
 
   MigrationProgress _currentProgress = const MigrationProgress();
   bool _cancelled = false;
+  int _retryCount = 0;
+  Timer? _retryTimer;
+  static const _maxAutoRetries = 3;
 
   MigrationProgress get currentProgress => _currentProgress;
   Stream<MigrationProgress> get progressStream => _progressController.stream;
@@ -42,6 +45,27 @@ class MigrationManager {
 
   void cancel() {
     _cancelled = true;
+    _retryTimer?.cancel();
+  }
+
+  void _scheduleAutoRetry() {
+    _retryCount++;
+    final delaySeconds = 30 * _retryCount;
+    AppLogger.info(
+      "Scheduling auto-retry #$_retryCount in ${delaySeconds}s for ${_currentProgress.failedItems} failed items",
+    );
+    _emit(
+      _currentProgress.copyWith(
+        currentStep:
+            "Retrying ${_currentProgress.failedItems} failed items in ${delaySeconds}s (attempt $_retryCount/$_maxAutoRetries)...",
+      ),
+    );
+    _retryTimer?.cancel();
+    _retryTimer = Timer(Duration(seconds: delaySeconds), () async {
+      if (_cancelled) return;
+      AppLogger.info("Auto-retry #$_retryCount starting");
+      await runMigration();
+    });
   }
 
   Future<bool> isMigrationCompleted() async {
@@ -57,9 +81,9 @@ class MigrationManager {
 
     final unmigratedCollection = await _collectionMigrator.countUnmigrated();
     final unmigratedSubs = await _pullListMigrator.countUnmigrated();
-    final unmigratedWishlist = await _wishListMigrator.countUnmigrated();
+    final unmigratedWish = await _wishlistMigrator?.countUnmigrated() ?? 0;
 
-    return (unmigratedCollection + unmigratedSubs + unmigratedWishlist) > 0;
+    return (unmigratedCollection + unmigratedSubs + unmigratedWish) > 0;
   }
 
   Future<MigrationProgress> runMigration() async {
@@ -68,12 +92,15 @@ class MigrationManager {
     }
 
     _cancelled = false;
+    if (_retryTimer == null || !_retryTimer!.isActive) {
+      _retryCount = 0;
+    }
     final stopwatch = Stopwatch()..start();
 
     try {
       final totalCol = await _collectionMigrator.countUnmigrated();
       final totalSubs = await _pullListMigrator.countUnmigrated();
-      final totalWish = await _wishListMigrator.countUnmigrated();
+      final totalWish = await _wishlistMigrator?.countUnmigrated() ?? 0;
 
       _emit(
         MigrationProgress(
@@ -105,6 +132,7 @@ class MigrationManager {
       );
 
       // 2. Migrate subscriptions / pull list
+      MigrationResult subResult = const MigrationResult(migrated: 0, failed: 0);
       if (!_cancelled) {
         _emit(
           _currentProgress.copyWith(
@@ -112,7 +140,7 @@ class MigrationManager {
             failedCollection: colResult.failed,
           ),
         );
-        final subResult = await _pullListMigrator.migrate(
+        subResult = await _pullListMigrator.migrate(
           onProgress: (processed, total) {
             _emit(
               _currentProgress.copyWith(
@@ -124,65 +152,29 @@ class MigrationManager {
           },
           isCancelled: () => _cancelled,
         );
+      }
 
-        // 3. Migrate wishlist
-        if (!_cancelled) {
-          _emit(
-            _currentProgress.copyWith(
-              currentStep: "Migrating wishlist (0/$totalWish)",
-              failedSubscriptions: subResult.failed,
-            ),
-          );
-          final wishResult = await _wishListMigrator.migrate(
-            onProgress: (processed, total) {
-              _emit(
-                _currentProgress.copyWith(
-                  migratedWishlist: processed,
-                  currentStep: "Migrating wishlist ($processed/$total)",
-                  elapsedMs: stopwatch.elapsedMilliseconds,
-                ),
-              );
-            },
-            isCancelled: () => _cancelled,
-          );
-
-          stopwatch.stop();
-
-          if (_cancelled) {
-            final cancelledProgress = _currentProgress.copyWith(
-              status: MigrationStatus.failed,
-              currentStep: "Migration cancelled",
-              failedCollection: colResult.failed,
-              failedSubscriptions: subResult.failed,
-              failedWishlist: wishResult.failed,
-              errorMessage: "Migration was cancelled by user",
-              elapsedMs: stopwatch.elapsedMilliseconds,
-            );
-            _emit(cancelledProgress);
-            return cancelledProgress;
-          }
-
-          await _database.settingsDao.setBool(_migrationCompletedKey, true);
-
-          final completedProgress = _currentProgress.copyWith(
-            status: MigrationStatus.completed,
-            currentStep: "Migration completed",
-            migratedCollection: colResult.migrated,
-            migratedSubscriptions: subResult.migrated,
-            migratedWishlist: wishResult.migrated,
-            failedCollection: colResult.failed,
+      // 3. Migrate wishlist
+      MigrationResult wishResult = const MigrationResult(migrated: 0, failed: 0);
+      if (!_cancelled && _wishlistMigrator != null && totalWish > 0) {
+        _emit(
+          _currentProgress.copyWith(
+            currentStep: "Migrating wishlist (0/$totalWish)",
             failedSubscriptions: subResult.failed,
-            failedWishlist: wishResult.failed,
-            elapsedMs: stopwatch.elapsedMilliseconds,
-          );
-
-          _emit(completedProgress);
-          AppLogger.info(
-            "One-time migration finished: ${colResult.migrated} collection, ${subResult.migrated} subscriptions, ${wishResult.migrated} wishlist "
-            "(${colResult.failed + subResult.failed + wishResult.failed} failed)",
-          );
-          return completedProgress;
-        }
+          ),
+        );
+        wishResult = await _wishlistMigrator.migrate(
+          onProgress: (processed, total) {
+            _emit(
+              _currentProgress.copyWith(
+                migratedWishlist: processed,
+                currentStep: "Migrating wishlist ($processed/$total)",
+                elapsedMs: stopwatch.elapsedMilliseconds,
+              ),
+            );
+          },
+          isCancelled: () => _cancelled,
+        );
       }
 
       stopwatch.stop();
@@ -192,6 +184,8 @@ class MigrationManager {
           status: MigrationStatus.failed,
           currentStep: "Migration cancelled",
           failedCollection: colResult.failed,
+          failedSubscriptions: subResult.failed,
+          failedWishlist: wishResult.failed,
           errorMessage: "Migration was cancelled by user",
           elapsedMs: stopwatch.elapsedMilliseconds,
         );
@@ -201,15 +195,30 @@ class MigrationManager {
 
       await _database.settingsDao.setBool(_migrationCompletedKey, true);
 
+      final totalFailed =
+          colResult.failed + subResult.failed + wishResult.failed;
       final completedProgress = _currentProgress.copyWith(
         status: MigrationStatus.completed,
         currentStep: "Migration completed",
         migratedCollection: colResult.migrated,
+        migratedSubscriptions: subResult.migrated,
+        migratedWishlist: wishResult.migrated,
         failedCollection: colResult.failed,
+        failedSubscriptions: subResult.failed,
+        failedWishlist: wishResult.failed,
         elapsedMs: stopwatch.elapsedMilliseconds,
       );
 
       _emit(completedProgress);
+      AppLogger.info(
+        "One-time migration finished: ${colResult.migrated} collection, ${subResult.migrated} subs, ${wishResult.migrated} wishlist "
+        "($totalFailed failed)",
+      );
+
+      if (totalFailed > 0 && _retryCount < _maxAutoRetries) {
+        _scheduleAutoRetry();
+      }
+
       return completedProgress;
     } catch (e, st) {
       stopwatch.stop();
@@ -236,6 +245,7 @@ class MigrationManager {
   }
 
   void dispose() {
+    _retryTimer?.cancel();
     _progressController.close();
   }
 }

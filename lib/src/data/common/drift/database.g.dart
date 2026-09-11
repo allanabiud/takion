@@ -19807,6 +19807,17 @@ class $OfflineWriteQueueTable extends OfflineWriteQueue
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _lastAttemptAtMeta = const VerificationMeta(
+    'lastAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastAttemptAt = GeneratedColumn<int>(
+    'last_attempt_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -19818,6 +19829,7 @@ class $OfflineWriteQueueTable extends OfflineWriteQueue
     retryCount,
     status,
     lastError,
+    lastAttemptAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -19890,6 +19902,15 @@ class $OfflineWriteQueueTable extends OfflineWriteQueue
         lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
       );
     }
+    if (data.containsKey('last_attempt_at')) {
+      context.handle(
+        _lastAttemptAtMeta,
+        lastAttemptAt.isAcceptableOrUnknown(
+          data['last_attempt_at']!,
+          _lastAttemptAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -19935,6 +19956,10 @@ class $OfflineWriteQueueTable extends OfflineWriteQueue
         DriftSqlType.string,
         data['${effectivePrefix}last_error'],
       ),
+      lastAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_attempt_at'],
+      ),
     );
   }
 
@@ -19955,6 +19980,7 @@ class OfflineWriteQueueData extends DataClass
   final int retryCount;
   final String status;
   final String? lastError;
+  final int? lastAttemptAt;
   const OfflineWriteQueueData({
     required this.id,
     required this.operation,
@@ -19965,6 +19991,7 @@ class OfflineWriteQueueData extends DataClass
     required this.retryCount,
     required this.status,
     this.lastError,
+    this.lastAttemptAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -19981,6 +20008,9 @@ class OfflineWriteQueueData extends DataClass
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || lastError != null) {
       map['last_error'] = Variable<String>(lastError);
+    }
+    if (!nullToAbsent || lastAttemptAt != null) {
+      map['last_attempt_at'] = Variable<int>(lastAttemptAt);
     }
     return map;
   }
@@ -20000,6 +20030,9 @@ class OfflineWriteQueueData extends DataClass
       lastError: lastError == null && nullToAbsent
           ? const Value.absent()
           : Value(lastError),
+      lastAttemptAt: lastAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAttemptAt),
     );
   }
 
@@ -20018,6 +20051,7 @@ class OfflineWriteQueueData extends DataClass
       retryCount: serializer.fromJson<int>(json['retryCount']),
       status: serializer.fromJson<String>(json['status']),
       lastError: serializer.fromJson<String?>(json['lastError']),
+      lastAttemptAt: serializer.fromJson<int?>(json['lastAttemptAt']),
     );
   }
   @override
@@ -20033,6 +20067,7 @@ class OfflineWriteQueueData extends DataClass
       'retryCount': serializer.toJson<int>(retryCount),
       'status': serializer.toJson<String>(status),
       'lastError': serializer.toJson<String?>(lastError),
+      'lastAttemptAt': serializer.toJson<int?>(lastAttemptAt),
     };
   }
 
@@ -20046,6 +20081,7 @@ class OfflineWriteQueueData extends DataClass
     int? retryCount,
     String? status,
     Value<String?> lastError = const Value.absent(),
+    Value<int?> lastAttemptAt = const Value.absent(),
   }) => OfflineWriteQueueData(
     id: id ?? this.id,
     operation: operation ?? this.operation,
@@ -20056,6 +20092,9 @@ class OfflineWriteQueueData extends DataClass
     retryCount: retryCount ?? this.retryCount,
     status: status ?? this.status,
     lastError: lastError.present ? lastError.value : this.lastError,
+    lastAttemptAt: lastAttemptAt.present
+        ? lastAttemptAt.value
+        : this.lastAttemptAt,
   );
   OfflineWriteQueueData copyWithCompanion(OfflineWriteQueueCompanion data) {
     return OfflineWriteQueueData(
@@ -20072,6 +20111,9 @@ class OfflineWriteQueueData extends DataClass
           : this.retryCount,
       status: data.status.present ? data.status.value : this.status,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      lastAttemptAt: data.lastAttemptAt.present
+          ? data.lastAttemptAt.value
+          : this.lastAttemptAt,
     );
   }
 
@@ -20086,7 +20128,8 @@ class OfflineWriteQueueData extends DataClass
           ..write('createdAt: $createdAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('status: $status, ')
-          ..write('lastError: $lastError')
+          ..write('lastError: $lastError, ')
+          ..write('lastAttemptAt: $lastAttemptAt')
           ..write(')'))
         .toString();
   }
@@ -20102,6 +20145,7 @@ class OfflineWriteQueueData extends DataClass
     retryCount,
     status,
     lastError,
+    lastAttemptAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -20115,7 +20159,8 @@ class OfflineWriteQueueData extends DataClass
           other.createdAt == this.createdAt &&
           other.retryCount == this.retryCount &&
           other.status == this.status &&
-          other.lastError == this.lastError);
+          other.lastError == this.lastError &&
+          other.lastAttemptAt == this.lastAttemptAt);
 }
 
 class OfflineWriteQueueCompanion
@@ -20129,6 +20174,7 @@ class OfflineWriteQueueCompanion
   final Value<int> retryCount;
   final Value<String> status;
   final Value<String?> lastError;
+  final Value<int?> lastAttemptAt;
   const OfflineWriteQueueCompanion({
     this.id = const Value.absent(),
     this.operation = const Value.absent(),
@@ -20139,6 +20185,7 @@ class OfflineWriteQueueCompanion
     this.retryCount = const Value.absent(),
     this.status = const Value.absent(),
     this.lastError = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
   });
   OfflineWriteQueueCompanion.insert({
     this.id = const Value.absent(),
@@ -20150,6 +20197,7 @@ class OfflineWriteQueueCompanion
     this.retryCount = const Value.absent(),
     this.status = const Value.absent(),
     this.lastError = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
   }) : operation = Value(operation),
        entityType = Value(entityType),
        payload = Value(payload),
@@ -20164,6 +20212,7 @@ class OfflineWriteQueueCompanion
     Expression<int>? retryCount,
     Expression<String>? status,
     Expression<String>? lastError,
+    Expression<int>? lastAttemptAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -20175,6 +20224,7 @@ class OfflineWriteQueueCompanion
       if (retryCount != null) 'retry_count': retryCount,
       if (status != null) 'status': status,
       if (lastError != null) 'last_error': lastError,
+      if (lastAttemptAt != null) 'last_attempt_at': lastAttemptAt,
     });
   }
 
@@ -20188,6 +20238,7 @@ class OfflineWriteQueueCompanion
     Value<int>? retryCount,
     Value<String>? status,
     Value<String?>? lastError,
+    Value<int?>? lastAttemptAt,
   }) {
     return OfflineWriteQueueCompanion(
       id: id ?? this.id,
@@ -20199,6 +20250,7 @@ class OfflineWriteQueueCompanion
       retryCount: retryCount ?? this.retryCount,
       status: status ?? this.status,
       lastError: lastError ?? this.lastError,
+      lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
     );
   }
 
@@ -20232,6 +20284,9 @@ class OfflineWriteQueueCompanion
     if (lastError.present) {
       map['last_error'] = Variable<String>(lastError.value);
     }
+    if (lastAttemptAt.present) {
+      map['last_attempt_at'] = Variable<int>(lastAttemptAt.value);
+    }
     return map;
   }
 
@@ -20246,7 +20301,8 @@ class OfflineWriteQueueCompanion
           ..write('createdAt: $createdAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('status: $status, ')
-          ..write('lastError: $lastError')
+          ..write('lastError: $lastError, ')
+          ..write('lastAttemptAt: $lastAttemptAt')
           ..write(')'))
         .toString();
   }
@@ -32076,6 +32132,7 @@ typedef $$OfflineWriteQueueTableCreateCompanionBuilder =
       Value<int> retryCount,
       Value<String> status,
       Value<String?> lastError,
+      Value<int?> lastAttemptAt,
     });
 typedef $$OfflineWriteQueueTableUpdateCompanionBuilder =
     OfflineWriteQueueCompanion Function({
@@ -32088,6 +32145,7 @@ typedef $$OfflineWriteQueueTableUpdateCompanionBuilder =
       Value<int> retryCount,
       Value<String> status,
       Value<String?> lastError,
+      Value<int?> lastAttemptAt,
     });
 
 class $$OfflineWriteQueueTableFilterComposer
@@ -32141,6 +32199,11 @@ class $$OfflineWriteQueueTableFilterComposer
 
   ColumnFilters<String> get lastError => $composableBuilder(
     column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -32198,6 +32261,11 @@ class $$OfflineWriteQueueTableOrderingComposer
     column: $table.lastError,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$OfflineWriteQueueTableAnnotationComposer
@@ -32239,6 +32307,11 @@ class $$OfflineWriteQueueTableAnnotationComposer
 
   GeneratedColumn<String> get lastError =>
       $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<int> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => column,
+  );
 }
 
 class $$OfflineWriteQueueTableTableManager
@@ -32290,6 +32363,7 @@ class $$OfflineWriteQueueTableTableManager
                 Value<int> retryCount = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
+                Value<int?> lastAttemptAt = const Value.absent(),
               }) => OfflineWriteQueueCompanion(
                 id: id,
                 operation: operation,
@@ -32300,6 +32374,7 @@ class $$OfflineWriteQueueTableTableManager
                 retryCount: retryCount,
                 status: status,
                 lastError: lastError,
+                lastAttemptAt: lastAttemptAt,
               ),
           createCompanionCallback:
               ({
@@ -32312,6 +32387,7 @@ class $$OfflineWriteQueueTableTableManager
                 Value<int> retryCount = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
+                Value<int?> lastAttemptAt = const Value.absent(),
               }) => OfflineWriteQueueCompanion.insert(
                 id: id,
                 operation: operation,
@@ -32322,6 +32398,7 @@ class $$OfflineWriteQueueTableTableManager
                 retryCount: retryCount,
                 status: status,
                 lastError: lastError,
+                lastAttemptAt: lastAttemptAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

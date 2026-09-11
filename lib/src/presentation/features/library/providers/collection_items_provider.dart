@@ -120,7 +120,10 @@ final allCollectionItemsProvider =
         final backfill = <int, double>{};
         final items = rows
             .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
-            .where((item) => item.quantity > 0 || item.isRead)
+            .where((item) =>
+                item.quantity > 0 ||
+                item.isRead ||
+                item.ownershipStatus == LibraryOwnershipStatus.wishlist)
             .toList();
         if (backfill.isNotEmpty) {
           schedulePriceBackfill(ref, backfill);
@@ -203,19 +206,29 @@ final unratedCollectionItemsProvider =
 
 final wishlistCollectionItemsProvider =
     StreamProvider.autoDispose<List<CollectionItem>>((ref) {
-      final stream = ref
-          .watch(driftDatabaseProvider)
-          .libraryItemDao
-          .watchHydratedItems(ownershipStatus: "wishlist");
-      return stream.map((rows) {
-        final backfill = <int, double>{};
-        final items = rows
-            .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
-            .toList();
-        if (backfill.isNotEmpty) {
-          schedulePriceBackfill(ref, backfill);
-        }
-        return items;
+      final db = ref.watch(driftDatabaseProvider);
+      return db.wishlistDao.watchAll().map((rows) {
+        return rows.map((w) {
+          return CollectionItem(
+            id: w.issueId,
+            quantity: 0,
+            ownershipStatus: LibraryOwnershipStatus.wishlist,
+            syncStatus: w.syncStatus,
+            issue: CollectionIssueRef(
+              id: w.issueId,
+              number: w.issueNumber,
+              image: w.imageUrl,
+              coverDate: w.coverDate,
+              storeDate: w.storeDate,
+              series: CollectionIssueSeriesRef(
+                id: w.seriesId,
+                name: w.seriesName,
+                volume: w.seriesVolume,
+                yearBegan: w.seriesYearBegan,
+              ),
+            ),
+          );
+        }).toList();
       });
     });
 

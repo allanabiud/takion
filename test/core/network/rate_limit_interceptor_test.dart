@@ -129,6 +129,7 @@ void main() {
                 "X-RateLimit-Sustained-Limit": ["15000"],
                 "X-RateLimit-Sustained-Remaining": ["14950"],
                 "X-RateLimit-Sustained-Reset": ["1750003600"],
+                "X-RateLimit-Burst-Limit": ["45"],
                 "X-RateLimit-Burst-Remaining": ["18"],
                 "X-RateLimit-Burst-Reset": ["45"],
               }),
@@ -140,10 +141,38 @@ void main() {
           expect(interceptor.state.sustainedLimit, 15000);
           expect(interceptor.state.sustainedRemaining, 14950);
           expect(interceptor.state.sustainedReset, 1750003600);
+          expect(interceptor.state.burstLimit, 45);
           expect(interceptor.state.burstRemaining, 18);
           expect(interceptor.state.burstReset, 45);
         });
       },
     );
+
+    test("burst limit defaults to maxRequestsPerMinute and updates from header",
+        () {
+      fakeAsync((async) {
+        final interceptor = RateLimitInterceptor(maxRequestsPerMinute: 20);
+        expect(interceptor.state.burstLimit, 20);
+
+        final options = RequestOptions(path: "/series/");
+        final handler = RequestInterceptorHandler();
+        interceptor.onRequest(options, handler);
+        async.flushMicrotasks();
+
+        interceptor.onResponse(
+          Response(
+            requestOptions: options,
+            headers: Headers.fromMap({
+              "x-ratelimit-burst-limit": ["45"],
+              "x-ratelimit-burst-remaining": ["44"],
+            }),
+          ),
+          ResponseInterceptorHandler(),
+        );
+
+        expect(interceptor.state.burstLimit, 45);
+        expect(interceptor.state.burstRemaining, 44);
+      });
+    });
   });
 }

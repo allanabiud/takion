@@ -5,8 +5,11 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/core/sync/periodic_sync_manager.dart";
+import "package:takion/src/data/common/services/drive_backup_service.dart";
 import "package:takion/src/presentation/features/search/providers/search_state_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/providers/rate_limit_status_provider.dart";
 import "package:takion/src/presentation/shared/widgets/animated_app_bar_title.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/shared/widgets/empty_content_state.dart";
@@ -114,6 +117,15 @@ class MainScreenState extends ConsumerState<MainScreen>
         if (!mounted) return;
         showChangelogSheet(context);
       }
+
+      try {
+        final driveService = ref.read(driveSyncServiceProvider);
+        final db = ref.read(driftDatabaseProvider);
+        await PeriodicSyncManager.instance.backupOnRestart(
+          db: db,
+          driveService: driveService,
+        );
+      } catch (_) {}
     });
   }
 
@@ -146,6 +158,7 @@ class MainScreenState extends ConsumerState<MainScreen>
         final pendingCount =
             ref.watch(pendingOfflineWritesCountProvider).value ?? 0;
         final isMetronSyncing = metronSyncState.isSyncing;
+        final rateLimitState = ref.watch(rateLimitStatusProvider);
         final connectivityState = ref.watch(connectivityStatusProvider);
         final isOffline =
             connectivityState.asData?.value == AppConnectivityStatus.offline;
@@ -219,7 +232,7 @@ class MainScreenState extends ConsumerState<MainScreen>
                               Expanded(
                                 child: Text(
                                   pendingCount > 0
-                                      ? "You are offline · $pendingCount change${pendingCount == 1 ? '' : 's'} queued to sync"
+                                      ? "You are offline · $pendingCount change${pendingCount == 1 ? '' : 's'} not synced"
                                       : "You are offline",
                                   style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
@@ -233,6 +246,11 @@ class MainScreenState extends ConsumerState<MainScreen>
                           ),
                         )
                       : const SizedBox(width: double.infinity, height: 0),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: _buildMigrationBanner(context, ref),
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
@@ -252,9 +270,11 @@ class MainScreenState extends ConsumerState<MainScreen>
                                 ),
                                 child: Text(
                                   isMetronSyncing
-                                      ? (metronSyncState.currentPhase ??
-                                          "Syncing with Metron...")
-                                      : "Syncing with Google Drive",
+                                      ? (rateLimitState.burstRemaining <= 0
+                                          ? "Metron sync paused (rate limit) · Resuming shortly"
+                                          : (metronSyncState.currentPhase ??
+                                              "Syncing with Metron..."))
+                                      : "Backing up to Google Drive",
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),
                               ),
@@ -370,6 +390,41 @@ class MainScreenState extends ConsumerState<MainScreen>
       SearchTarget.publishers => "Search publishers...",
       SearchTarget.arcs => "Search arcs...",
     };
+  }
+
+  Widget _buildMigrationBanner(BuildContext context, WidgetRef ref) {
+    final migrationAsync = ref.watch(migrationProgressProvider);
+    final progress = migrationAsync.value;
+    if (progress == null || !progress.isMigrating) {
+      return const SizedBox(width: double.infinity, height: 0);
+    }
+
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      color: theme.colorScheme.tertiaryContainer,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Text(
+              progress.currentStep ?? "Migrating data to Metron...",
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onTertiaryContainer,
+              ),
+            ),
+          ),
+          LinearProgressIndicator(
+            value: progress.progressFraction,
+            minHeight: 2,
+            color: theme.colorScheme.tertiary,
+            backgroundColor: theme.colorScheme.tertiaryContainer,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSearchFieldRow() {

@@ -753,7 +753,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (
         Icons.list_alt_rounded,
         "Reading Lists",
-        () => context.pushRoute(const MetronReadingListBrowserRoute()),
+        () => context.pushRoute(ReadingListsRoute(initialTab: 1)),
       ),
       (Icons.groups, "Teams", () => context.pushRoute(const TeamBrowseRoute())),
       (

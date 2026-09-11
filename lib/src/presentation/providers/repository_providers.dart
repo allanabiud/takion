@@ -37,6 +37,7 @@ import "package:takion/src/core/migration/collection_migrator.dart";
 import "package:takion/src/core/migration/migration_manager.dart";
 import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/core/migration/pull_list_migrator.dart";
+import "package:takion/src/core/migration/wishlist_migrator.dart";
 import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_manager.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
@@ -305,15 +306,29 @@ final pullListMigratorProvider = Provider<PullListMigrator>((ref) {
   );
 });
 
+final wishlistMigratorProvider = Provider<WishlistMigrator>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  final remote = ref.watch(metronWishlistRemoteDataSourceProvider);
+  final interceptor = ref.watch(rateLimitInterceptorProvider);
+  return WishlistMigrator(
+    database: db,
+    remoteDataSource: remote,
+    rateLimitDelay: () =>
+        rateLimitDelayFromBurstLimit(interceptor.state.burstLimit),
+  );
+});
+
 final migrationManagerProvider = Provider<MigrationManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final colMigrator = ref.watch(collectionMigratorProvider);
   final pullMigrator = ref.watch(pullListMigratorProvider);
+  final wishMigrator = ref.watch(wishlistMigratorProvider);
 
   final manager = MigrationManager(
     database: db,
     collectionMigrator: colMigrator,
     pullListMigrator: pullMigrator,
+    wishlistMigrator: wishMigrator,
   );
   ref.onDispose(manager.dispose);
   return manager;

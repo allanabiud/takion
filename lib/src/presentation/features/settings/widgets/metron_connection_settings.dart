@@ -10,9 +10,9 @@ import "package:takion/src/presentation/features/settings/widgets/settings_helpe
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/core/auth/auth_provider.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/data/common/drift/database.dart";
 import "package:takion/src/presentation/providers/rate_limit_status_provider.dart";
 import "package:takion/src/presentation/providers/repository_providers.dart";
-import "package:takion/src/presentation/features/settings/widgets/migration_progress_sheet.dart";
 
 Future<void> disconnectMetronAccount(
   BuildContext context,
@@ -84,7 +84,7 @@ class _MetronConnectionContentState
                   color: theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               AnimatedSize(
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.easeInOutCubic,
@@ -207,9 +207,37 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
       _syncAnimController.reset();
     }
 
-    final lastSyncText = syncState.lastSyncedAt != null
-        ? "Last synced ${DateFormatter.relativeShort(syncState.lastSyncedAt!)}"
-        : "Not synced yet";
+    final rateLimitState = ref.watch(rateLimitStatusProvider);
+    final isRateLimited = isSyncing && rateLimitState.burstRemaining <= 0;
+
+    final String syncSubtitleText;
+    final TextStyle? syncSubtitleStyle;
+    if (isRateLimited) {
+      syncSubtitleText =
+          "Rate limit reached (${rateLimitState.burstLimit} req/min) · Waiting for next slot...";
+      syncSubtitleStyle = theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.tertiary,
+        fontWeight: FontWeight.w500,
+      );
+    } else if (isSyncing) {
+      syncSubtitleText = "Please wait while data is synchronizing";
+      syncSubtitleStyle = null;
+    } else if (syncState.hasError) {
+      syncSubtitleText = syncState.errorMessage ?? "An error occurred during sync";
+      syncSubtitleStyle = theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.error,
+      );
+    } else if (pendingCount > 0) {
+      syncSubtitleText =
+          "$pendingCount change${pendingCount == 1 ? '' : 's'} not synced";
+      syncSubtitleStyle = theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.tertiary,
+        fontWeight: FontWeight.w500,
+      );
+    } else {
+      syncSubtitleText = "No changes to sync";
+      syncSubtitleStyle = null;
+    }
 
     final statusColor = syncState.hasError
         ? theme.colorScheme.error
@@ -240,18 +268,33 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          isSyncing
-              ? "Please wait while data is synchronizing"
-              : syncState.hasError
-              ? (syncState.errorMessage ?? "An error occurred during sync")
-              : lastSyncText,
-          style: syncState.hasError
-              ? theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                )
-              : null,
+          syncSubtitleText,
+          style: syncSubtitleStyle,
         ),
       ),
+      if (isRateLimited)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.hourglass_top_rounded,
+                size: 14,
+                color: theme.colorScheme.tertiary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  "Metron limit: ${rateLimitState.burstLimit} requests/min. Pacing automatically to prevent errors.",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.tertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      const SizedBox(height: 12),
       SizedBox(
         width: double.infinity,
         child: FilledButton.tonal(
@@ -265,35 +308,9 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
               : const Text("Sync Now"),
         ),
       ),
-      if (pendingCount > 0) ...[
-        const Divider(height: 1),
+      if (failedCount > 0)
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              Icon(
-                Icons.cloud_upload_outlined,
-                size: 16,
-                color: theme.colorScheme.tertiary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  "$pendingCount offline write${pendingCount == 1 ? '' : 's'} queued to push",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.tertiary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-      if (failedCount > 0) ...[
-        const Divider(height: 1),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.only(top: 8),
           child: Row(
             children: [
               Icon(
@@ -304,12 +321,16 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  "$failedCount write${failedCount == 1 ? '' : 's'} failed permanently",
+                  "$failedCount change${failedCount == 1 ? '' : 's'} failed",
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+              ),
+              TextButton(
+                onPressed: () => _showFailedChangesSheet(context, ref),
+                child: const Text("Details"),
               ),
               TextButton(
                 onPressed: isSyncing
@@ -326,22 +347,6 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
             ],
           ),
         ),
-      ],
-      const Divider(height: 1),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(Icons.upload_file_outlined, color: theme.colorScheme.primary),
-        title: const Text(
-          "Migrate Local Data to Metron",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: const Text(
-          "Upload existing local comics, subscriptions, and wishlist to Metron",
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        enabled: !isSyncing,
-        onTap: isSyncing ? null : () => showMigrationSheet(context),
-      ),
     ]);
   }
 }
@@ -392,7 +397,7 @@ class _ApiUsageCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              "${state.burstRemaining}/min",
+              "${state.burstRemaining}/${state.burstLimit}",
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: progressColor,
@@ -432,5 +437,190 @@ class _ApiUsageCard extends ConsumerWidget {
           ),
         ),
     ]);
+  }
+}
+
+void _showFailedChangesSheet(BuildContext context, WidgetRef ref) {
+  TakionBottomSheet.show(
+    context: context,
+    title: "Failed Sync Changes",
+    child: _FailedChangesSheetContent(ref: ref),
+  );
+}
+
+class _FailedChangesSheetContent extends StatefulWidget {
+  final WidgetRef ref;
+  const _FailedChangesSheetContent({required this.ref});
+
+  @override
+  State<_FailedChangesSheetContent> createState() =>
+      _FailedChangesSheetContentState();
+}
+
+class _FailedChangesSheetContentState
+    extends State<_FailedChangesSheetContent> {
+  List<OfflineWriteQueueData>? _failedEntries;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEntries();
+  }
+
+  Future<void> _loadEntries() async {
+    final queue = widget.ref.read(offlineWriteQueueProvider);
+    final entries = await queue.getFailedEntries();
+    if (mounted) {
+      setState(() {
+        _failedEntries = entries;
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatOperation(OfflineWriteQueueData entry) {
+    final entity = switch (entry.entityType) {
+      "collection" => "Collection",
+      "pull_list" => "Pull List",
+      "wish_list" => "Wishlist",
+      _ => entry.entityType,
+    };
+    final op = switch (entry.operation) {
+      "create" => "Add to",
+      "delete" => "Remove from",
+      "update" => "Update in",
+      "scrobble" => "Mark read in",
+      "acquire" => "Acquire in",
+      _ => entry.operation,
+    };
+    final idStr = entry.entityId != null ? " (#${entry.entityId})" : "";
+    return "$op $entity$idStr";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final entries = _failedEntries ?? [];
+    if (entries.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: Text("No failed changes in queue"),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          "The following changes could not be synced after multiple attempts. "
+          "Review the error reason below to resolve the issue, retry, or remove invalid items.",
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.45,
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: entries.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (ctx, index) {
+              final entry = entries[index];
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.error_outline,
+                  color: theme.colorScheme.error,
+                  size: 20,
+                ),
+                title: Text(
+                  _formatOperation(entry),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.lastError ?? "Unknown error",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "Attempted ${entry.retryCount} times",
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  tooltip: "Remove from queue",
+                  onPressed: () async {
+                    final queue = widget.ref.read(offlineWriteQueueProvider);
+                    await queue.deleteEntry(entry.id);
+                    await _loadEntries();
+                    if (entries.length <= 1 && ctx.mounted) {
+                      Navigator.of(ctx).pop();
+                    }
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () async {
+                  final queue = widget.ref.read(offlineWriteQueueProvider);
+                  await queue.clearFailedEntries();
+                  if (context.mounted) Navigator.of(context).pop();
+                },
+                child: const Text("Clear All"),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: () async {
+                  final queue = widget.ref.read(offlineWriteQueueProvider);
+                  await queue.retryFailedEntries();
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    final syncManager = widget.ref.read(metronSyncManagerProvider);
+                    syncManager.syncAll();
+                  }
+                },
+                child: const Text("Retry All"),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

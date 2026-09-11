@@ -126,7 +126,7 @@ class LibraryScreen extends ConsumerWidget {
                         error: (_, _) => "!",
                       ),
                   onTap: () {
-                    context.pushRoute(const LocalReadingListsRoute());
+                    context.pushRoute(ReadingListsRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -165,7 +165,7 @@ class LibraryScreen extends ConsumerWidget {
                       flat: true,
                       onTap: () {
                         context.pushRoute(
-                          LocalReadingListDetailsRoute(listId: suggestion.id),
+                          ReadingListDetailsRoute(listId: suggestion.id),
                         );
                       },
                     ),

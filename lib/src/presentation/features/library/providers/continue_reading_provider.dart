@@ -1,9 +1,10 @@
+import "package:drift/drift.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
-import "package:takion/src/core/logging/app_logger.dart";
 
 class ContinueReadingSuggestion {
   const ContinueReadingSuggestion({
@@ -81,14 +82,76 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
 }) async {
   if (readIssueIds.isEmpty) return null;
 
-  final repository = ref.read(metronRepositoryProvider);
-  var page = 1;
-  var scannedPages = 0;
-  var hasSeenLastReadIssue = false;
+  final db = ref.read(driftDatabaseProvider);
 
-  while (scannedPages < 8) {
-    final issuePage = await repository.getSeriesIssueList(seriesId, page: page);
+  // 1. Try local SQLite query first (sub-5ms)
+  try {
+    final localIssues = await (db.select(db.metronIssues)
+          ..where((tbl) => tbl.seriesId.equals(seriesId))
+          ..orderBy([
+            (t) => OrderingTerm(
+                  expression: const CustomExpression<double>(
+                    "CAST(number AS REAL)",
+                  ),
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.storeDate,
+                  mode: OrderingMode.asc,
+                ),
+          ]))
+        .get();
 
+    if (localIssues.isNotEmpty) {
+      bool hasSeenLastRead = false;
+      for (final issue in localIssues) {
+        if (issue.id == lastReadIssueId) {
+          hasSeenLastRead = true;
+          continue;
+        }
+        if (hasSeenLastRead && !readIssueIds.contains(issue.id)) {
+          final seriesRow = await (db.select(db.metronSeries)
+                ..where((tbl) => tbl.id.equals(seriesId)))
+              .getSingleOrNull();
+
+          return IssueList(
+            id: issue.id,
+            name: seriesRow?.name.trim().isNotEmpty == true
+                ? seriesRow!.name
+                : "Issue",
+            number: issue.number,
+            series: seriesRow != null
+                ? Series(
+                    id: seriesRow.id,
+                    name: seriesRow.name,
+                    volume: seriesRow.volume,
+                    yearBegan: seriesRow.yearBegan,
+                  )
+                : null,
+            image: issue.imageUrl,
+            coverDate: issue.coverDate != null
+                ? DateTime.tryParse(issue.coverDate!)
+                : null,
+            storeDate: issue.storeDate != null
+                ? DateTime.tryParse(issue.storeDate!)
+                : null,
+            modified: issue.modified != null
+                ? DateTime.tryParse(issue.modified!)
+                : null,
+          );
+        }
+      }
+    }
+  } catch (e) {
+    AppLogger.debug("Local continue reading query fallback for series $seriesId: $e");
+  }
+
+  // 2. Remote lookahead (1 page) fallback
+  try {
+    final repository = ref.read(metronRepositoryProvider);
+    final issuePage = await repository.getSeriesIssueList(seriesId, page: 1);
+
+    var hasSeenLastReadIssue = false;
     for (final issue in issuePage.results) {
       final issueId = issue.id;
       if (issueId == null) continue;
@@ -100,16 +163,10 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
         return issue;
       }
     }
-
-    final nextPage = issuePage.nextPage;
-    if (nextPage == null) {
-      break;
-    }
-    page = nextPage;
-    scannedPages++;
+  } catch (e) {
+    AppLogger.debug("Remote continue reading fallback failed for series $seriesId: $e");
   }
 
-  if (!hasSeenLastReadIssue) return null;
   return null;
 }
 

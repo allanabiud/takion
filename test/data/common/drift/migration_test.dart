@@ -18,7 +18,7 @@ void main() {
     });
 
     test("Initializes full schema at current version idempotently", () async {
-      expect(db.schemaVersion, equals(15));
+      expect(db.schemaVersion, equals(17));
 
       // Verify essential DAOs and tables are accessible
       final seriesNames = await db.seriesNameDao.getAll();

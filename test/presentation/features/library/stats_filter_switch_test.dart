@@ -120,6 +120,18 @@ void main() {
                   ),
                 );
               }),
+              collectionStatsProvider.overrideWith(
+                (ref) => Stream.value(
+                  const CollectionStats(
+                    totalItems: 50,
+                    totalQuantity: 50,
+                    readCount: 40,
+                    wishlistCount: 5,
+                    unreadCount: 10,
+                    totalValue: r"$150.00",
+                  ),
+                ),
+              ),
             ],
             child: MaterialApp(
               home: Scaffold(

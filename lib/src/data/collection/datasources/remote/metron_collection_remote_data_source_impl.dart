@@ -39,18 +39,25 @@ class MetronCollectionRemoteDataSourceImpl
       "rating": ?rating,
     };
 
-    final response = await _dio.get(
-      "collection/",
-      queryParameters: queryParameters,
-      cancelToken: cancelToken,
-    );
+    try {
+      final response = await _dio.get(
+        "collection/",
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+      );
 
-    final data = response.data as Map<String, dynamic>;
-    final results = data["results"] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(CollectionItemDto.fromJson)
-        .toList();
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? [];
+      return results
+          .whereType<Map<String, dynamic>>()
+          .map(CollectionItemDto.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -122,10 +129,17 @@ class MetronCollectionRemoteDataSourceImpl
     int id, {
     CancelToken? cancelToken,
   }) async {
-    await _dio.delete(
-      "collection/$id/",
-      cancelToken: cancelToken,
-    );
+    try {
+      await _dio.delete(
+        "collection/$id/",
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return;
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -158,17 +172,24 @@ class MetronCollectionRemoteDataSourceImpl
     int page = 1,
     CancelToken? cancelToken,
   }) async {
-    final response = await _dio.get(
-      "collection/missing_issues/$seriesId/",
-      queryParameters: {"page": page},
-      cancelToken: cancelToken,
-    );
-    final data = response.data as Map<String, dynamic>;
-    final results = data["results"] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(MissingIssueDto.fromJson)
-        .toList();
+    try {
+      final response = await _dio.get(
+        "collection/missing_issues/$seriesId/",
+        queryParameters: {"page": page},
+        cancelToken: cancelToken,
+      );
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? [];
+      return results
+          .whereType<Map<String, dynamic>>()
+          .map(MissingIssueDto.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -176,16 +197,23 @@ class MetronCollectionRemoteDataSourceImpl
     int page = 1,
     CancelToken? cancelToken,
   }) async {
-    final response = await _dio.get(
-      "collection/missing_series/",
-      queryParameters: {"page": page},
-      cancelToken: cancelToken,
-    );
-    final data = response.data as Map<String, dynamic>;
-    final results = data["results"] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(MissingSeriesDto.fromJson)
-        .toList();
+    try {
+      final response = await _dio.get(
+        "collection/missing_series/",
+        queryParameters: {"page": page},
+        cancelToken: cancelToken,
+      );
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? [];
+      return results
+          .whereType<Map<String, dynamic>>()
+          .map(MissingSeriesDto.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 }
