@@ -29,6 +29,30 @@ class HydratedLibraryItemRow {
   final MetronSery? series;
 }
 
+class SeriesSummaryItem {
+  const SeriesSummaryItem({
+    required this.seriesId,
+    required this.seriesName,
+    this.volume,
+    this.yearBegan,
+    this.issueCount,
+    this.computedCoverUrl,
+    required this.ownedCount,
+    required this.readCount,
+    this.isSubscribed = false,
+  });
+
+  final int seriesId;
+  final String seriesName;
+  final int? volume;
+  final int? yearBegan;
+  final int? issueCount;
+  final String? computedCoverUrl;
+  final int ownedCount;
+  final int readCount;
+  final bool isSubscribed;
+}
+
 class SeriesSummaryDataRow {
   const SeriesSummaryDataRow({
     required this.seriesId,
@@ -51,6 +75,92 @@ class SeriesSummaryDataRow {
 
 class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   LibraryItemDao(super.db);
+
+  Stream<List<SeriesSummaryItem>> watchSeriesSummaries({
+    String? ownershipStatus,
+    bool? isRead,
+  }) {
+    final ownedCountCol = attachedDatabase.libraryItems.id.count(
+      filter: attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
+    );
+    final readCountCol = attachedDatabase.libraryItems.id.count(
+      filter: attachedDatabase.libraryItems.isRead.equals(true),
+    );
+    final subCountCol = attachedDatabase.seriesSubscriptions.id.count(
+      filter: attachedDatabase.seriesSubscriptions.isActive.equals(true),
+    );
+
+    final query = selectOnly(attachedDatabase.libraryItems)
+      ..addColumns([
+        attachedDatabase.libraryItems.metronSeriesId,
+        ownedCountCol,
+        readCountCol,
+        subCountCol,
+        attachedDatabase.metronSeries.name,
+        attachedDatabase.metronSeries.volume,
+        attachedDatabase.metronSeries.yearBegan,
+        attachedDatabase.metronSeries.issueCount,
+        attachedDatabase.metronSeries.computedCoverUrl,
+      ])
+      ..join([
+        leftOuterJoin(
+          attachedDatabase.metronSeries,
+          attachedDatabase.metronSeries.id.equalsExp(
+            attachedDatabase.libraryItems.metronSeriesId,
+          ),
+        ),
+        leftOuterJoin(
+          attachedDatabase.seriesSubscriptions,
+          attachedDatabase.seriesSubscriptions.metronSeriesId.equalsExp(
+            attachedDatabase.libraryItems.metronSeriesId,
+          ),
+        ),
+      ]);
+
+    if (ownershipStatus != null) {
+      query.where(
+        attachedDatabase.libraryItems.ownershipStatus.equals(ownershipStatus),
+      );
+    }
+    if (isRead != null) {
+      query.where(attachedDatabase.libraryItems.isRead.equals(isRead));
+    }
+
+    query.where(
+      attachedDatabase.libraryItems.metronSeriesId.isBiggerThanValue(0),
+    );
+    query.groupBy([attachedDatabase.libraryItems.metronSeriesId]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        final seriesId =
+            row.read(attachedDatabase.libraryItems.metronSeriesId) ?? 0;
+        final name = row.read(attachedDatabase.metronSeries.name);
+        final vol = row.read(attachedDatabase.metronSeries.volume);
+        final year = row.read(attachedDatabase.metronSeries.yearBegan);
+        final totalIssues = row.read(attachedDatabase.metronSeries.issueCount);
+        final coverUrl =
+            row.read(attachedDatabase.metronSeries.computedCoverUrl);
+        final ownedCount = row.read(ownedCountCol) ?? 0;
+        final readCount = row.read(readCountCol) ?? 0;
+        final subCount = row.read(subCountCol) ?? 0;
+
+        return SeriesSummaryItem(
+          seriesId: seriesId,
+          seriesName: (name != null && name.isNotEmpty)
+              ? name
+              : "Series $seriesId",
+          volume: vol,
+          yearBegan: year,
+          issueCount: totalIssues,
+          computedCoverUrl: coverUrl,
+          ownedCount: ownedCount,
+          readCount: readCount,
+          isSubscribed: subCount > 0,
+        );
+      }).toList();
+    });
+  }
 
   Future<List<SeriesSummaryDataRow>> getSeriesSummariesByCategory({
     String? ownershipStatus,
