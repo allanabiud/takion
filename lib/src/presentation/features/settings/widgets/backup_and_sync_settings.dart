@@ -15,323 +15,41 @@ import "package:takion/src/presentation/providers/providers.dart";
 void showBackupAndSyncSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
     context: context,
-    title: "Backup & Cloud Sync",
-    child: const _BackupAndSyncContent(),
+    title: "Backup & Restore",
+    child: const _BackupContent(),
   );
 }
 
-enum _BackupSyncMode { backup, sync }
-
-class _BackupAndSyncContent extends ConsumerStatefulWidget {
-  const _BackupAndSyncContent();
+class _BackupContent extends ConsumerStatefulWidget {
+  const _BackupContent();
 
   @override
-  ConsumerState<_BackupAndSyncContent> createState() =>
-      _BackupAndSyncContentState();
+  ConsumerState<_BackupContent> createState() => _BackupContentState();
 }
 
-class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _syncAnimController;
-  late final Animation<double> _syncRotation;
-  _BackupSyncMode _mode = _BackupSyncMode.backup;
+class _BackupContentState extends ConsumerState<_BackupContent> {
   bool _isBackingUp = false;
   bool _isRestoring = false;
+  bool _isCloudBackingUp = false;
+  bool _isCloudRestoring = false;
   bool _isDeletingBackup = false;
 
   @override
-  void initState() {
-    super.initState();
-    _syncAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    _syncRotation = Tween<double>(begin: 0, end: -1).animate(
-      CurvedAnimation(parent: _syncAnimController, curve: Curves.linear),
-    );
-  }
-
-  @override
-  void dispose() {
-    _syncAnimController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    ref.listen(driveSyncProvider, (_, next) {
-      if (!mounted) return;
-      if (next.isSyncing) {
-        _syncAnimController.repeat();
-      } else {
-        _syncAnimController.reset();
-      }
-    });
-
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<_BackupSyncMode>(
-              segments: const [
-                ButtonSegment(
-                  value: _BackupSyncMode.backup,
-                  icon: Icon(Icons.backup),
-                  label: Text("BACKUP"),
-                ),
-                ButtonSegment(
-                  value: _BackupSyncMode.sync,
-                  icon: Icon(Icons.sync),
-                  label: Text("SYNC"),
-                ),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (selected) =>
-                  setState(() => _mode = selected.first),
-            ),
-          ),
+          _buildLocalBackupSection(),
           const SizedBox(height: 16),
-          if (_mode == _BackupSyncMode.backup) _buildBackupSection(),
-          if (_mode == _BackupSyncMode.sync) _buildSyncSection(),
+          _buildCloudBackupSection(),
         ],
       ),
     );
   }
 
-  Widget _buildSyncSection() {
-    final syncState = ref.watch(driveSyncProvider);
-    final driveService = ref.read(driveSyncServiceProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildSettingsGroup(context, "Google Drive Sync", [
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(
-              "Google Drive Sync",
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              syncState.enabled
-                  ? (syncState.email ?? "Syncing to Google Drive")
-                  : "Off",
-            ),
-            value: syncState.enabled,
-            onChanged: (value) async {
-              final syncNotifier = ref.read(driveSyncProvider.notifier);
-              if (value) {
-                syncNotifier.setSyncing(true);
-                try {
-                  final account = await driveService.signIn();
-                  if (account == null) return;
-                  await syncNotifier.enable(email: account.email);
-                  if (!mounted) return;
-                  await _syncNow();
-                } finally {
-                  syncNotifier.setSyncing(false);
-                }
-              } else {
-                syncNotifier.setSyncing(false);
-                await driveService.signOut();
-                await syncNotifier.disable();
-              }
-            },
-          ),
-        ]),
-        if (syncState.enabled) ...[
-          const SizedBox(height: 16),
-          buildSettingsGroup(context, "Synchronization Settings", [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: syncState.isSyncing
-                  ? RotationTransition(
-                      turns: _syncRotation,
-                      child: Icon(
-                        Icons.sync,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    )
-                  : Icon(
-                      Icons.sync,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              title: Text(
-                syncState.isSyncing ? "Syncing..." : "Sync Now",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: syncState.isSyncing
-                  ? const Text("Please wait")
-                  : _buildSyncNowSubtitle(),
-              onTap: syncState.isSyncing ? null : _syncNow,
-            ),
-            const Divider(height: 1),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text(
-                    "Automatic sync",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text("Schedule sync intervals"),
-                  value: syncState.syncIntervalEnabled,
-                  onChanged: syncState.isSyncing
-                      ? null
-                      : (value) {
-                          ref
-                              .read(driveSyncProvider.notifier)
-                              .updateSyncIntervalEnabled(value);
-                        },
-                ),
-                if (syncState.syncIntervalEnabled)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 8),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<SyncInterval>(
-                        segments: const [
-                          ButtonSegment<SyncInterval>(
-                            value: SyncInterval.hours1,
-                            label: Text("1 hr"),
-                          ),
-                          ButtonSegment<SyncInterval>(
-                            value: SyncInterval.hours3,
-                            label: Text("3 hrs"),
-                          ),
-                          ButtonSegment<SyncInterval>(
-                            value: SyncInterval.hours24,
-                            label: Text("24 hrs"),
-                          ),
-                        ],
-                        selected: {syncState.syncInterval},
-                        onSelectionChanged: (selected) {
-                          ref
-                              .read(driveSyncProvider.notifier)
-                              .updateSyncInterval(selected.first);
-                        },
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const Divider(height: 1),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              enabled: !_isDeletingBackup,
-              leading: _isDeletingBackup
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      Icons.delete_outline,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-              title: Text(
-                _isDeletingBackup
-                    ? "Deleting Backup..."
-                    : "Delete Backup from Drive",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                _isDeletingBackup
-                    ? "Please wait"
-                    : "Remove backup file from Google Drive",
-              ),
-              onTap: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text("Delete Backup"),
-                    content: const Text(
-                      "Are you sure you want to delete the backup file "
-                      "from Google Drive? This cannot be undone.",
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        child: const Text("Cancel"),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        child: const Text("Delete"),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm != true) return;
-                setState(() => _isDeletingBackup = true);
-                try {
-                  await driveService.deleteRemoteData();
-                  if (!mounted) return;
-                  TakionAlerts.success(context, "Backup deleted from Drive");
-                } catch (e) {
-                  if (!mounted) return;
-                  TakionAlerts.safeError(
-                    context,
-                    e,
-                    userMessage: "Failed to delete backup",
-                  );
-                } finally {
-                  if (mounted) setState(() => _isDeletingBackup = false);
-                }
-              },
-            ),
-          ]),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSyncNowSubtitle() {
-    final theme = Theme.of(context);
-    final diagnostics = ref.watch(syncDiagnosticsProvider).value;
-    final lastSuccess = diagnostics?.lastSuccessTime;
-    final lastErrorTime = diagnostics?.lastErrorTime;
-    final hasError =
-        lastErrorTime != null &&
-        (lastSuccess == null || lastErrorTime.isAfter(lastSuccess));
-
-    final IconData icon;
-    final Color color;
-    final String text;
-    if (hasError) {
-      icon = Icons.error_outline;
-      color = theme.colorScheme.error;
-      text = "Last sync failed · ${DateFormatter.relativeShort(lastErrorTime)}";
-    } else if (lastSuccess != null) {
-      icon = Icons.check_circle_outline;
-      color = theme.colorScheme.primary;
-      text =
-          "Last sync successful · ${DateFormatter.relativeShort(lastSuccess)}";
-    } else {
-      icon = Icons.info_outline;
-      color = theme.colorScheme.onSurfaceVariant;
-      text = "Never synced";
-    }
-
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodySmall?.copyWith(color: color),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBackupSection() {
+  Widget _buildLocalBackupSection() {
     final theme = Theme.of(context);
     return buildSettingsGroup(context, "Local Backup", [
       ListTile(
@@ -342,7 +60,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 height: 24,
                 child: CircularProgressIndicator(strokeWidth: 2.5),
               )
-            : Icon(Icons.backup, color: theme.colorScheme.primary),
+            : Icon(Icons.save_outlined, color: theme.colorScheme.primary),
         title: Text(
           _isBackingUp ? "Creating Backup..." : "Create Local Backup",
           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -362,18 +80,227 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
                 height: 24,
                 child: CircularProgressIndicator(strokeWidth: 2.5),
               )
-            : Icon(Icons.restore_page, color: theme.colorScheme.primary),
+            : Icon(Icons.folder_open_outlined, color: theme.colorScheme.primary),
         title: Text(
-          _isRestoring ? "Restoring..." : "Restore from Backup",
+          _isRestoring ? "Restoring..." : "Restore from Local Backup",
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           _isRestoring ? "Please wait" : "Import data from a .tkbak file",
         ),
-        onTap: _isRestoring ? null : _restoreFromBackup,
+        onTap: _isRestoring ? null : _restoreFromLocalBackup,
         enabled: !_isRestoring,
       ),
     ]);
+  }
+
+  Widget _buildCloudBackupSection() {
+    final theme = Theme.of(context);
+    final syncState = ref.watch(driveSyncProvider);
+    final driveService = ref.read(driveSyncServiceProvider);
+
+    return buildSettingsGroup(context, "Cloud Backup", [
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: const Text(
+          "Cloud Backup",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          syncState.enabled
+              ? (syncState.email ?? "Connected to Google Drive")
+              : "Sign in to enable cloud backups",
+        ),
+        value: syncState.enabled,
+        onChanged: (value) async {
+          final syncNotifier = ref.read(driveSyncProvider.notifier);
+          if (value) {
+            syncNotifier.setSyncing(true);
+            try {
+              final account = await driveService.signIn();
+              if (account == null) return;
+              await syncNotifier.enable(email: account.email);
+              if (!mounted) return;
+              await _cloudBackupNow();
+            } finally {
+              syncNotifier.setSyncing(false);
+            }
+          } else {
+            syncNotifier.setSyncing(false);
+            await driveService.signOut();
+            await syncNotifier.disable();
+          }
+        },
+      ),
+      if (syncState.enabled) ...[
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: _isCloudBackingUp
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : Icon(Icons.cloud_upload_outlined, color: theme.colorScheme.primary),
+          title: Text(
+            _isCloudBackingUp ? "Backing up..." : "Create Cloud Backup",
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: _buildCloudBackupSubtitle(),
+          onTap: _isCloudBackingUp ? null : _cloudBackupNow,
+          enabled: !_isCloudBackingUp,
+        ),
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: _isCloudRestoring
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : Icon(Icons.cloud_download_outlined, color: theme.colorScheme.primary),
+          title: Text(
+            _isCloudRestoring ? "Restoring..." : "Restore from Cloud Backup",
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            _isCloudRestoring
+                ? "Please wait"
+                : "Download and restore data from Google Drive",
+          ),
+          onTap: _isCloudRestoring ? null : _restoreFromCloudBackup,
+          enabled: !_isCloudRestoring,
+        ),
+        const Divider(height: 1),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(
+            "Automatic Backups",
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: const Text(
+            "Backup to Google Drive periodically",
+          ),
+          value: syncState.autoBackupOnRestart,
+          onChanged: (value) {
+            ref
+                .read(driveSyncProvider.notifier)
+                .updateAutoBackupOnRestart(value);
+          },
+        ),
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          enabled: !_isDeletingBackup,
+          leading: _isDeletingBackup
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                ),
+          title: Text(
+            _isDeletingBackup
+                ? "Deleting Backup..."
+                : "Delete Backup from Drive",
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            _isDeletingBackup
+                ? "Please wait"
+                : "Remove backup file from Google Drive",
+          ),
+          onTap: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text("Delete Backup"),
+                content: const Text(
+                  "Are you sure you want to delete the backup file "
+                  "from Google Drive? This cannot be undone.",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text("Cancel"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: const Text("Delete"),
+                  ),
+                ],
+              ),
+            );
+            if (confirm != true) return;
+            setState(() => _isDeletingBackup = true);
+            try {
+              await driveService.deleteRemoteData();
+              if (!mounted) return;
+              TakionAlerts.success(context, "Backup deleted from Drive");
+            } catch (e) {
+              if (!mounted) return;
+              TakionAlerts.safeError(
+                context,
+                e,
+                userMessage: "Failed to delete backup",
+              );
+            } finally {
+              if (mounted) setState(() => _isDeletingBackup = false);
+            }
+          },
+        ),
+      ],
+    ]);
+  }
+
+  Widget _buildCloudBackupSubtitle() {
+    final theme = Theme.of(context);
+    final diagnostics = ref.watch(syncDiagnosticsProvider).value;
+    final lastSuccess = diagnostics?.lastSuccessTime;
+    final lastErrorTime = diagnostics?.lastErrorTime;
+    final hasError =
+        lastErrorTime != null &&
+        (lastSuccess == null || lastErrorTime.isAfter(lastSuccess));
+
+    if (_isCloudBackingUp) {
+      return const Text("Please wait");
+    }
+
+    final IconData icon;
+    final Color color;
+    final String text;
+    if (hasError) {
+      icon = Icons.error_outline;
+      color = theme.colorScheme.error;
+      text = "Last backup failed · ${DateFormatter.relativeShort(lastErrorTime)}";
+    } else if (lastSuccess != null) {
+      icon = Icons.check_circle_outline;
+      color = theme.colorScheme.primary;
+      text =
+          "Last backup successful · ${DateFormatter.relativeShort(lastSuccess)}";
+    } else {
+      icon = Icons.info_outline;
+      color = theme.colorScheme.onSurfaceVariant;
+      text = "No backup yet";
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _createLocalBackup() async {
@@ -390,7 +317,6 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
         bytes: bytes,
       );
       if (result != null && mounted) {
-        // FilePicker already wrote the file; the Android path is a SAF handle dart:io can't re-open, so treat non-null as success.
         TakionAlerts.success(context, "Backup saved successfully");
       }
     } catch (e) {
@@ -406,30 +332,7 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     }
   }
 
-  Future<void> _restoreFromBackup() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Restore Backup"),
-        content: const Text(
-          "This will merge the backup data into your current data. "
-          "Existing records will be kept if they are newer.\n\n"
-          "This action cannot be undone.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text("Restore"),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-
+  Future<void> _restoreFromLocalBackup() async {
     setState(() => _isRestoring = true);
     try {
       final result = await FilePicker.pickFiles(type: FileType.any);
@@ -445,6 +348,43 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
       }
 
       final service = ref.read(localBackupServiceProvider);
+      final preview = service.previewBackup(bytes);
+
+      if (!mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Restore Backup"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(preview.summary),
+              const SizedBox(height: 8),
+              Text(
+                "This will merge the backup data into your current data. "
+                "Existing records will be kept if they are newer.",
+                style: Theme.of(ctx).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text("Restore"),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) {
+        if (mounted) setState(() => _isRestoring = false);
+        return;
+      }
+
       await service.importBackupData(bytes);
 
       invalidateCacheBackedProviders((p) => ref.invalidate(p));
@@ -465,26 +405,109 @@ class _BackupAndSyncContentState extends ConsumerState<_BackupAndSyncContent>
     }
   }
 
-  Future<void> _syncNow() async {
+  Future<void> _cloudBackupNow() async {
     final driveService = ref.read(driveSyncServiceProvider);
     final syncNotifier = ref.read(driveSyncProvider.notifier);
     final container = ProviderScope.containerOf(context, listen: false);
 
     syncNotifier.clearError();
     syncNotifier.setSyncing(true);
+    setState(() => _isCloudBackingUp = true);
     try {
       await driveService.triggerSync(ignoreThrottle: true);
       await syncNotifier.updateLastSync();
       invalidateCacheBackedProviders(container.invalidate);
       await Future<void>.delayed(Duration.zero);
-      if (mounted) TakionAlerts.success(context, "Synced to Drive");
+      if (mounted) TakionAlerts.success(context, "Backup saved to Drive");
     } catch (e) {
       if (mounted) {
         syncNotifier.setError(e.toString());
-        TakionAlerts.safeError(context, e, userMessage: "Sync failed");
+        TakionAlerts.safeError(context, e, userMessage: "Cloud backup failed");
       }
     } finally {
       syncNotifier.setSyncing(false);
+      if (mounted) setState(() => _isCloudBackingUp = false);
+    }
+  }
+
+  Future<void> _restoreFromCloudBackup() async {
+    final driveService = ref.read(driveSyncServiceProvider);
+    final container = ProviderScope.containerOf(context, listen: false);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Restore from Cloud Backup"),
+        content: const Text(
+          "This will download your data from Google Drive and merge it "
+          "into your current data. Existing records will be kept if they "
+          "are newer.\n\nA rollback snapshot will be created before "
+          "restoring, allowing you to undo if needed.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text("Restore"),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _isCloudRestoring = true);
+    try {
+      await driveService.restoreFromDrive();
+      invalidateCacheBackedProviders(container.invalidate);
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      final hasRollback = await driveService.getRollbackSnapshot() != null;
+      if (!mounted) return;
+      if (hasRollback) {
+        TakionAlerts.successWithUndo(
+          context,
+          "Cloud backup restored successfully",
+          actionLabel: "Undo",
+          onUndo: _performRollback,
+        );
+      } else {
+        TakionAlerts.success(context, "Cloud backup restored successfully");
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.safeError(
+          context,
+          e,
+          userMessage: "Failed to restore from cloud backup",
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isCloudRestoring = false);
+    }
+  }
+
+  Future<void> _performRollback() async {
+    final driveService = ref.read(driveSyncServiceProvider);
+    final container = ProviderScope.containerOf(context, listen: false);
+
+    try {
+      await driveService.rollback();
+      invalidateCacheBackedProviders(container.invalidate);
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) {
+        TakionAlerts.success(context, "Rollback completed");
+      }
+    } catch (e) {
+      if (mounted) {
+        TakionAlerts.safeError(
+          context,
+          e,
+          userMessage: "Rollback failed",
+        );
+      }
     }
   }
 }

@@ -414,8 +414,57 @@ class DriveSyncService {
     progressNotifier.setPhase(SyncPhase.completed);
   }
 
+  Map<String, dynamic>? _rollbackSnapshot;
+  DateTime? _rollbackCreatedAt;
+  static const _rollbackExpiry = Duration(hours: 24);
+
+  Future<Map<String, dynamic>?> getRollbackSnapshot() async {
+    if (_rollbackSnapshot == null || _rollbackCreatedAt == null) return null;
+    if (DateTime.now().difference(_rollbackCreatedAt!) > _rollbackExpiry) {
+      _rollbackSnapshot = null;
+      _rollbackCreatedAt = null;
+      return null;
+    }
+    return _rollbackSnapshot;
+  }
+
+  Future<void> clearRollback() async {
+    _rollbackSnapshot = null;
+    _rollbackCreatedAt = null;
+  }
+
+  Future<bool> rollback() async {
+    final snapshot = await getRollbackSnapshot();
+    if (snapshot == null) {
+      throw StateError("No rollback snapshot available (expired or not created)");
+    }
+    await _guarded(
+      "apply",
+      SyncPhase.applying,
+      () => _applier.applyDelta(snapshot),
+    );
+    final toTimestamp = snapshot["toTimestamp"] as String?;
+    if (toTimestamp != null) {
+      await _journal.setSyncTimestamps(toTimestamp);
+    }
+    await _journal.record(phase: "rollback", success: true);
+    progressNotifier.setPhase(SyncPhase.completed);
+    AppLogger.info("Rollback completed successfully");
+    _rollbackSnapshot = null;
+    _rollbackCreatedAt = null;
+    return true;
+  }
+
   Future<void> restoreFromDrive() async {
     AppLogger.info("Restore from Drive started");
+
+    _rollbackSnapshot = await _guarded(
+      "extract",
+      SyncPhase.extracting,
+      () => _extractor.extractDelta(null),
+    );
+    _rollbackCreatedAt = DateTime.now();
+    AppLogger.info("Rollback snapshot created before restore");
 
     final String? fileId = await _guarded(
       "folder",
@@ -437,6 +486,13 @@ class DriveSyncService {
       throw StateError("Failed to download sync data");
     }
 
+    if (bytes.length > 50 * 1024 * 1024) {
+      throw StateError(
+        "Backup file is too large (${(bytes.length / 1024 / 1024).toStringAsFixed(1)}MB). "
+        "Maximum supported size is 50MB.",
+      );
+    }
+
     final payload = await _guarded(
       "parse",
       SyncPhase.parsing,
@@ -445,6 +501,13 @@ class DriveSyncService {
     if (!_resolver.isSupportedVersion(payload["version"])) {
       throw StateError(
         'Unsupported sync format version: ${payload['version']}',
+      );
+    }
+
+    if (!SyncDeltaApplier.validateChecksum(payload)) {
+      AppLogger.warning("Cloud backup checksum mismatch — file may be corrupted");
+      throw StateError(
+        "Backup file integrity check failed. The file may be corrupted.",
       );
     }
 

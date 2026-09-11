@@ -1,3 +1,6 @@
+import "dart:convert";
+
+import "package:crypto/crypto.dart";
 import "package:drift/drift.dart";
 import "package:takion/src/data/common/drift/database.dart";
 import "package:uuid/uuid.dart";
@@ -192,13 +195,20 @@ class SyncDeltaExtractor {
       "deletes": getDeletesForTable("favorite_reading_lists"),
     };
 
-    return {
+    final payload = {
       "version": 2,
       "deviceId": await getDeviceId(),
       "fromTimestamp": sinceStr,
       "toTimestamp": clock().toUtc().toIso8601String(),
       "tables": tablesData,
     };
+
+    final checksumPayload = Map<String, dynamic>.from(payload)
+      ..remove("checksum");
+    final checksum = sha256.convert(utf8.encode(jsonEncode(checksumPayload)));
+    payload["checksum"] = checksum.toString();
+
+    return payload;
   }
 
   /// Drops delete-tombstone rows in sync_meta older than [cutoff].

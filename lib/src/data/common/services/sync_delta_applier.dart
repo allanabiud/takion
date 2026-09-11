@@ -1,3 +1,6 @@
+import "dart:convert";
+
+import "package:crypto/crypto.dart";
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/data/common/drift/database.dart";
@@ -9,6 +12,35 @@ class SyncDeltaApplier {
 
   static bool isSupportedVersion(Object? version) =>
       version == 1 || version == 2;
+
+  static bool validateChecksum(Map<String, dynamic> payload) {
+    final storedChecksum = payload["checksum"] as String?;
+    if (storedChecksum == null) return true;
+    final checkPayload = Map<String, dynamic>.from(payload)
+      ..remove("checksum");
+    final computed = sha256.convert(utf8.encode(jsonEncode(checkPayload)));
+    return computed.toString() == storedChecksum;
+  }
+
+  static BackupPreview summarizePayload(Map<String, dynamic> payload) {
+    final tables = payload["tables"] as Map<String, dynamic>? ?? {};
+    final counts = <String, int>{};
+    var totalRows = 0;
+    for (final entry in tables.entries) {
+      final tableData = entry.value as Map<String, dynamic>;
+      final inserts = (tableData["inserts"] as List?)?.length ?? 0;
+      final deletes = (tableData["deletes"] as List?)?.length ?? 0;
+      counts[entry.key] = inserts + deletes;
+      totalRows += inserts + deletes;
+    }
+    return BackupPreview(
+      version: payload["version"] as int? ?? 0,
+      deviceId: payload["deviceId"] as String? ?? "unknown",
+      toTimestamp: payload["toTimestamp"] as String? ?? "",
+      tableCounts: counts,
+      totalRows: totalRows,
+    );
+  }
 
   static const knownTableNames = [
     "library_items",
@@ -345,5 +377,43 @@ class SyncDeltaApplier {
     await _db.customStatement("DELETE FROM $tableName WHERE $pkSqlName = ?", [
       parsedPk,
     ]);
+  }
+}
+
+class BackupPreview {
+  const BackupPreview({
+    required this.version,
+    required this.deviceId,
+    required this.toTimestamp,
+    required this.tableCounts,
+    required this.totalRows,
+  });
+
+  final int version;
+  final String deviceId;
+  final String toTimestamp;
+  final Map<String, int> tableCounts;
+  final int totalRows;
+
+  String get summary {
+    final parts = <String>[];
+    if (tableCounts["library_items"] != null && tableCounts["library_items"]! > 0) {
+      parts.add("${tableCounts["library_items"]} library items");
+    }
+    if (tableCounts["series_subscriptions"] != null && tableCounts["series_subscriptions"]! > 0) {
+      parts.add("${tableCounts["series_subscriptions"]} subscriptions");
+    }
+    if (tableCounts["pull_list_entries"] != null && tableCounts["pull_list_entries"]! > 0) {
+      parts.add("${tableCounts["pull_list_entries"]} pull list entries");
+    }
+    if (tableCounts["reading_lists"] != null && tableCounts["reading_lists"]! > 0) {
+      parts.add("${tableCounts["reading_lists"]} reading lists");
+    }
+    final favCount = (tableCounts["favorite_series"] ?? 0) +
+        (tableCounts["favorite_issues"] ?? 0) +
+        (tableCounts["favorite_characters"] ?? 0) +
+        (tableCounts["favorite_creators"] ?? 0);
+    if (favCount > 0) parts.add("$favCount favorites");
+    return parts.isEmpty ? "Empty backup" : parts.join(", ");
   }
 }
