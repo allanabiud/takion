@@ -129,6 +129,155 @@ class MetronEntityDao extends DatabaseAccessor<AppDatabase> {
         .get();
   }
 
+  Future<List<MetronCreator>> searchCreatorsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronCreators)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronCharacter>> searchCharactersLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronCharacters)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronPublisher>> searchPublishersLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronPublishers)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronTeam>> searchTeamsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronTeams)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronUniverse>> searchUniversesLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronUniverses)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronImprint>> searchImprintsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronImprints)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronArc>> searchArcsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronArcs)
+          ..where((t) => t.name.like("%$cleanQuery%"))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<MetronIssue>> searchIssuesLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    final cleanQuery = query
+        .trim()
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
+    return (select(attachedDatabase.metronIssues)
+          ..where(
+            (t) =>
+                t.number.like("%$cleanQuery%") |
+                t.sku.like("%$cleanQuery%") |
+                t.upc.like("%$cleanQuery%"),
+          )
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.number, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
   Future<void> upsertSeries(MetronSeriesCompanion companion) async {
     await into(attachedDatabase.metronSeries).insertOnConflictUpdate(companion);
   }

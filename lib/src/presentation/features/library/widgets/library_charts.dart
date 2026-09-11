@@ -239,6 +239,164 @@ class StatBarTable extends StatelessWidget {
   }
 }
 
+class SpendingTrendChart extends StatelessWidget {
+  const SpendingTrendChart({super.key, required this.data});
+
+  final List<SpendingTrendPoint> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (data.isEmpty) return const SizedBox.shrink();
+
+    final maxAmount = data
+        .map((e) => e.amount)
+        .fold(0.0, (prev, curr) => curr > prev ? curr : prev);
+    final interval =
+        maxAmount > 50 ? (maxAmount / 5).ceilToDouble() : 10.0;
+
+    return AspectRatio(
+      aspectRatio: 1.7,
+      child: LineChart(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+        LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: interval,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+              strokeWidth: 1,
+            ),
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  if (index < 0 || index >= data.length) {
+                    return const SizedBox.shrink();
+                  }
+                  final label = data[index].label;
+                  if (label.isEmpty) return const SizedBox.shrink();
+
+                  return SideTitleWidget(
+                    meta: meta,
+                    space: 8,
+                    child: Text(
+                      label,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: interval,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) {
+                  return SideTitleWidget(
+                    meta: meta,
+                    child: Text(
+                      "\$${value.toInt()}",
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          minX: 0,
+          maxX: (data.length - 1).toDouble(),
+          minY: 0,
+          maxY: (maxAmount + interval).toDouble(),
+          lineBarsData: [
+            LineChartBarData(
+              spots: data
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) =>
+                        FlSpot(e.key.toDouble(), e.value.amount),
+                  )
+                  .toList(),
+              isCurved: true,
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.tertiary,
+                  colorScheme.tertiary.withValues(alpha: 0.5),
+                ],
+              ),
+              barWidth: 4,
+              isStrokeCapRound: true,
+              dotData: FlDotData(
+                show: data.length < 15,
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                      radius: 4,
+                      color: colorScheme.tertiary,
+                      strokeWidth: 2,
+                      strokeColor: colorScheme.surface,
+                    ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.tertiary.withValues(alpha: 0.3),
+                    colorScheme.tertiary.withValues(alpha: 0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (spot) => colorScheme.surfaceContainerHigh,
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final point = data[spot.spotIndex];
+                  return LineTooltipItem(
+                    "\$${point.amount.toStringAsFixed(2)}\n${point.label}",
+                    TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class PublisherDistributionChart extends StatelessWidget {
   const PublisherDistributionChart({super.key, required this.publishers});
 

@@ -764,4 +764,286 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       attachedDatabase.libraryReadLogs,
     )..where((t) => t.collectionItemId.equals(itemId))).watch();
   }
+
+  // ---------------------------------------------------------------------------
+  // Aggregate Stats Methods (Phase 6: Sub-5ms SQL aggregates)
+  // ---------------------------------------------------------------------------
+
+  Stream<int> watchOwnedCount() {
+    final col = countAll(
+      filter: attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
+    );
+    return (selectOnly(attachedDatabase.libraryItems)..addColumns([col]))
+        .watch()
+        .map((rows) => rows.isNotEmpty ? (rows.first.read(col) ?? 0) : 0);
+  }
+
+  Stream<int> watchOwnedQuantitySum() {
+    final col = attachedDatabase.libraryItems.quantityOwned.sum(
+      filter: attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
+    );
+    return (selectOnly(attachedDatabase.libraryItems)..addColumns([col]))
+        .watch()
+        .map((rows) => rows.isNotEmpty ? (rows.first.read(col) ?? 0) : 0);
+  }
+
+  Stream<int> watchReadsCount({String? startDate}) {
+    if (startDate != null) {
+      return customSelect(
+        "SELECT COUNT(*) AS cnt FROM library_items "
+        "WHERE is_read = 1 AND first_read_at >= ?",
+        variables: [Variable.withString(startDate)],
+        readsFrom: {attachedDatabase.libraryItems},
+      ).watch().map(
+        (rows) => rows.isNotEmpty ? rows.first.read<int>("cnt") : 0,
+      );
+    }
+    return customSelect(
+      "SELECT COUNT(*) AS cnt FROM library_items WHERE is_read = 1",
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map(
+      (rows) => rows.isNotEmpty ? rows.first.read<int>("cnt") : 0,
+    );
+  }
+
+  Stream<double> watchAverageRating() {
+    return customSelect(
+      "SELECT AVG(rating) AS avg_rating FROM library_items "
+      "WHERE rating IS NOT NULL AND rating > 0 AND is_read = 1",
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      if (rows.isEmpty) return 0.0;
+      return rows.first.read<double>("avg_rating");
+    });
+  }
+
+  Stream<({String name, int yearBegan, int count})?> watchMostReadSeries() {
+    return customSelect(
+      "SELECT ms.name, ms.year_began, COUNT(*) AS cnt "
+      "FROM library_items li "
+      "INNER JOIN metron_series ms ON ms.id = li.metron_series_id "
+      "WHERE li.is_read = 1 AND li.metron_series_id > 0 "
+      "GROUP BY li.metron_series_id "
+      "ORDER BY cnt DESC LIMIT 1",
+      readsFrom: {attachedDatabase.libraryItems, attachedDatabase.metronSeries},
+    ).watch().map((rows) {
+      if (rows.isEmpty) return null;
+      return (
+        name: rows.first.read<String>("name"),
+        yearBegan: rows.first.read<int>("year_began"),
+        count: rows.first.read<int>("cnt"),
+      );
+    });
+  }
+
+  Stream<List<({String label, int count, DateTime date})>>
+  watchReadingTrendsByDay(String startDate, String endDate) {
+    return customSelect(
+      "SELECT substr(first_read_at, 1, 10) AS day, COUNT(*) AS cnt "
+      "FROM library_items "
+      "WHERE is_read = 1 AND first_read_at IS NOT NULL "
+      "AND first_read_at >= ? AND first_read_at < ? "
+      "GROUP BY day ORDER BY day",
+      variables: [
+        Variable.withString(startDate),
+        Variable.withString(endDate),
+      ],
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      return rows.map((r) {
+        final day = r.read<String>("day");
+        return (
+          label: day.length >= 5 ? day.substring(5) : day,
+          count: r.read<int>("cnt"),
+          date: DateTime.parse(day),
+        );
+      }).toList();
+    });
+  }
+
+  Stream<List<({String label, int count, DateTime date})>>
+  watchReadingTrendsByMonth(int year) {
+    final start = "$year-01-01";
+    final end = "${year + 1}-01-01";
+    return customSelect(
+      "SELECT substr(first_read_at, 1, 7) AS month, COUNT(*) AS cnt "
+      "FROM library_items "
+      "WHERE is_read = 1 AND first_read_at IS NOT NULL "
+      "AND first_read_at >= ? AND first_read_at < ? "
+      "GROUP BY month ORDER BY month",
+      variables: [Variable.withString(start), Variable.withString(end)],
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      return rows.map((r) {
+        final month = r.read<String>("month");
+        return (
+          label: month.length >= 5 ? month.substring(5) : month,
+          count: r.read<int>("cnt"),
+          date: DateTime.parse("$month-01"),
+        );
+      }).toList();
+    });
+  }
+
+  Stream<List<({String label, int count, DateTime date})>>
+  watchReadingTrendsAllTime() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month - 5, 1);
+    final startStr =
+        "${start.year}-${start.month.toString().padLeft(2, '0')}-01";
+    final endStr =
+        "${now.year}-${(now.month + 1).toString().padLeft(2, '0')}-01";
+    return customSelect(
+      "SELECT substr(first_read_at, 1, 7) AS month, COUNT(*) AS cnt "
+      "FROM library_items "
+      "WHERE is_read = 1 AND first_read_at IS NOT NULL "
+      "AND first_read_at >= ? AND first_read_at < ? "
+      "GROUP BY month ORDER BY month",
+      variables: [Variable.withString(startStr), Variable.withString(endStr)],
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      return rows.map((r) {
+        final month = r.read<String>("month");
+        return (
+          label: month.length >= 5 ? month.substring(5) : month,
+          count: r.read<int>("cnt"),
+          date: DateTime.parse("$month-01"),
+        );
+      }).toList();
+    });
+  }
+
+  Stream<List<LibraryItem>> watchRecentlyRead({int limit = 5}) {
+    return (select(attachedDatabase.libraryItems)
+          ..where(
+            (t) => t.isRead.equals(true) & t.firstReadAt.isNotNull(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.firstReadAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(limit))
+        .watch();
+  }
+
+  Stream<List<DateTime>> watchAllReadDates() {
+    return customSelect(
+      "SELECT first_read_at FROM library_items "
+      "WHERE is_read = 1 AND first_read_at IS NOT NULL",
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      return rows
+          .map(
+            (r) =>
+                DateTime.parse(r.read<String>("first_read_at")).toLocal(),
+          )
+          .toList();
+    });
+  }
+
+  Stream<List<({String format, int count})>> watchFormatBreakdown() {
+    final col = attachedDatabase.libraryItems.id.count();
+    return (selectOnly(attachedDatabase.libraryItems)
+          ..addColumns([attachedDatabase.libraryItems.format, col])
+          ..where(
+            attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
+          )
+          ..groupBy([attachedDatabase.libraryItems.format]))
+        .watch()
+        .map((rows) {
+          return rows
+              .map(
+                (r) => (
+                  format:
+                      r.read(attachedDatabase.libraryItems.format) ??
+                      "UNKNOWN",
+                  count: r.read(col) ?? 0,
+                ),
+              )
+              .toList();
+        });
+  }
+
+  Stream<double> watchTotalSpending({String? startDate, String? endDate}) {
+    final conditions = <String>["price_paid IS NOT NULL"];
+    final vars = <Variable>[];
+    if (startDate != null) {
+      conditions.add("first_read_at >= ?");
+      vars.add(Variable.withString(startDate));
+    }
+    if (endDate != null) {
+      conditions.add("first_read_at < ?");
+      vars.add(Variable.withString(endDate));
+    }
+    final where = conditions.join(" AND ");
+    return customSelect(
+      "SELECT COALESCE(SUM(price_paid * quantity_owned), 0.0) AS total "
+      "FROM library_items WHERE $where",
+      variables: vars,
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      if (rows.isEmpty) return 0.0;
+      return rows.first.read<double>("total");
+    });
+  }
+
+  Stream<List<({String label, double amount, DateTime date})>>
+  watchSpendingTrendsByDay(String startDate, String endDate) {
+    return customSelect(
+      "SELECT substr(first_read_at, 1, 10) AS day, "
+      "COALESCE(SUM(price_paid * quantity_owned), 0.0) AS amount "
+      "FROM library_items "
+      "WHERE price_paid IS NOT NULL "
+      "AND first_read_at >= ? AND first_read_at < ? "
+      "GROUP BY day ORDER BY day",
+      variables: [
+        Variable.withString(startDate),
+        Variable.withString(endDate),
+      ],
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      return rows.map((r) {
+        final day = r.read<String>("day");
+        return (
+          label: day.length >= 5 ? day.substring(5) : day,
+          amount: r.read<double>("amount"),
+          date: DateTime.parse(day),
+        );
+      }).toList();
+    });
+  }
+
+  Stream<List<({String label, double amount, DateTime date})>>
+  watchSpendingTrendsByMonth(
+    int year, {
+    int startMonth = 1,
+    int endMonth = 12,
+  }) {
+    final start = "$year-${startMonth.toString().padLeft(2, '0')}-01";
+    final endMonthStr = endMonth >= 12 ? 1 : endMonth + 1;
+    final endYear = endMonth >= 12 ? year + 1 : year;
+    final end =
+        "$endYear-${endMonthStr.toString().padLeft(2, '0')}-01";
+    return customSelect(
+      "SELECT substr(first_read_at, 1, 7) AS month, "
+      "COALESCE(SUM(price_paid * quantity_owned), 0.0) AS amount "
+      "FROM library_items "
+      "WHERE price_paid IS NOT NULL "
+      "AND first_read_at >= ? AND first_read_at < ? "
+      "GROUP BY month ORDER BY month",
+      variables: [Variable.withString(start), Variable.withString(end)],
+      readsFrom: {attachedDatabase.libraryItems},
+    ).watch().map((rows) {
+      return rows.map((r) {
+        final month = r.read<String>("month");
+        return (
+          label: month.length >= 5 ? month.substring(5) : month,
+          amount: r.read<double>("amount"),
+          date: DateTime.parse("$month-01"),
+        );
+      }).toList();
+    });
+  }
 }

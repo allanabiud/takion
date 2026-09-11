@@ -4,8 +4,8 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
 import "package:takion/src/domain/entities.dart";
-import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
+import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
 import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
 import "package:takion/src/presentation/features/library/providers/library_items_serialization.dart";
 import "package:takion/src/presentation/features/library/providers/stats_debounce.dart";
@@ -127,182 +127,145 @@ List<ReadingTrendPoint> _computeReadingTrends(
 final libraryBasicStatsProvider = StreamProvider.autoDispose
     .family<LibraryBasicStats, LibraryFilter>((ref, filter) {
       final pullRepository = ref.watch(pullListRepositoryProvider);
-      final localCatalog = ref.watch(localCatalogRepositoryProvider);
+      final db = ref.watch(driftDatabaseProvider);
       final controller = StreamController<LibraryBasicStats>();
       final debounced = DebouncedWorker();
 
-      Future<void> emitStats(List<LibraryItem> libraryItems) async {
-        try {
-          // Fall back to empty subscriptions if provider is unavailable.
-          List<SeriesSubscription> subscriptions;
-          try {
-            subscriptions = await ref.read(activeSubscriptionsProvider.future);
-          } catch (_) {
-            subscriptions = const [];
-          }
+      final now = DateTime.now().toLocal();
+      DateTime? startDate;
+      DateTime? endDate;
 
-          final now = DateTime.now().toLocal();
-          DateTime? startDate;
-          DateTime? endDate;
-
-          switch (filter) {
-            case LibraryFilter.week:
-              startDate = _atStartOfWeek(now);
-              endDate = startDate.add(const Duration(days: 6));
-              break;
-            case LibraryFilter.month:
-              startDate = _atStartOfMonth(now);
-              endDate = DateTime(startDate.year, startDate.month + 1, 0);
-              break;
-            case LibraryFilter.year:
-              startDate = _atStartOfYear(now);
-              endDate = DateTime(startDate.year, 12, 31);
-              break;
-            case LibraryFilter.allTime:
-              startDate = null;
-              endDate = null;
-              break;
-          }
-
-          final owned = libraryItems
-              .where(
-                (item) => item.ownershipStatus == LibraryOwnershipStatus.owned,
-              )
-              .toList();
-          final allRead = libraryItems.where((item) => item.isRead).toList();
-
-          final totalOwned = owned.fold<int>(
-            0,
-            (sum, item) => sum + item.quantityOwned,
-          );
-
-          final readPercent = owned.isEmpty
-              ? 0.0
-              : ((allRead.length / owned.length) * 100).toDouble();
-
-          final wishlistCount = libraryItems
-              .where(
-                (item) =>
-                    item.ownershipStatus == LibraryOwnershipStatus.wishlist,
-              )
-              .length;
-
-          final readsInPeriod = allRead.where((item) {
-            final readAt = item.firstReadAt?.toLocal();
-            if (readAt == null) return false;
-            if (startDate == null) return true;
-            return !readAt.isBefore(startDate);
-          }).length;
-
-          int pullsInPeriod;
-          try {
-            pullsInPeriod = (await pullRepository.listEntries(
-              fromDate: startDate,
-              toDate: endDate,
-              limit: 10000,
-            )).length;
-          } catch (_) {
-            pullsInPeriod = 0;
-          }
-
-          final ratings = allRead
-              .map((entry) => entry.rating)
-              .whereType<int>()
-              .toList();
-          final averageRating = ratings.isEmpty
-              ? 0.0
-              : (ratings.reduce((a, b) => a + b) / ratings.length).toDouble();
-
-          final readSeriesIds = allRead
-              .map((item) => item.metronSeriesId)
-              .where((id) => id > 0)
-              .toSet()
-              .toList();
-
-          Map<int, SeriesList> seriesMap;
-          try {
-            seriesMap = await localCatalog.getSeriesByIds(readSeriesIds);
-          } catch (_) {
-            seriesMap = const {};
-          }
-
-          final readSeries = <String, int>{};
-          final readSeriesYear = <String, int?>{};
-          for (final item in allRead) {
-            final series = seriesMap[item.metronSeriesId];
-            final seriesName = series?.name.trim();
-            if (seriesName == null || seriesName.isEmpty) continue;
-            readSeries.update(
-              seriesName,
-              (value) => value + 1,
-              ifAbsent: () => 1,
-            );
-            if (!readSeriesYear.containsKey(seriesName)) {
-              readSeriesYear[seriesName] = series?.yearBegan;
-            }
-          }
-          final mostReadSeriesEntry = readSeries.entries.isEmpty
-              ? null
-              : (readSeries.entries.toList()
-                      ..sort((a, b) => b.value.compareTo(a.value)))
-                    .first;
-          final mostReadSeries = mostReadSeriesEntry?.key;
-          final mostReadSeriesYear = mostReadSeriesEntry == null
-              ? null
-              : readSeriesYear[mostReadSeriesEntry.key];
-
-          final readDates = allRead
-              .map((item) => item.firstReadAt)
-              .whereType<DateTime>()
-              .map((date) => date.toLocal())
-              .toList();
-
-          if (!controller.isClosed) {
-            controller.add(
-              LibraryBasicStats(
-                totalOwned: totalOwned,
-                readPercent: readPercent,
-                wishlistCount: wishlistCount,
-                subscriptionsCount: subscriptions.length,
-                pullsInPeriod: pullsInPeriod,
-                readsInPeriod: readsInPeriod,
-                streakDays: _streakDays(readDates),
-                averageRating: averageRating,
-                mostReadSeries: mostReadSeries,
-                mostReadSeriesYear: mostReadSeriesYear,
-                filter: filter,
-              ),
-            );
-          }
-        } catch (e) {
-          // Emit zero stats on error so cards remain visible.
-          if (!controller.isClosed) {
-            controller.add(LibraryBasicStats.zero(filter));
-          }
-        }
+      switch (filter) {
+        case LibraryFilter.week:
+          startDate = _atStartOfWeek(now);
+          endDate = startDate.add(const Duration(days: 6));
+          break;
+        case LibraryFilter.month:
+          startDate = _atStartOfMonth(now);
+          endDate = DateTime(startDate.year, startDate.month + 1, 0);
+          break;
+        case LibraryFilter.year:
+          startDate = _atStartOfYear(now);
+          endDate = DateTime(startDate.year, 12, 31);
+          break;
+        case LibraryFilter.allTime:
+          startDate = null;
+          endDate = null;
+          break;
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
-        _,
-        next,
-      ) {
-        next.whenOrNull(
-          data: (libraryItems) {
-            // Debounce rapid-fire emissions from bulk operations.
-            debounced.schedule(() => emitStats(libraryItems));
-          },
-        );
-      });
+      int totalOwned = 0;
+      int totalRead = 0;
+      int readsInPeriod = 0;
+      double averageRating = 0;
+      ({String name, int yearBegan, int count})? mostReadSeries;
+      List<DateTime> readDates = [];
+      int wishlistCount = 0;
+      int subscriptionsCount = 0;
+      int pullsInPeriod = 0;
 
-      ref
-          .read(allLibraryItemsProvider)
-          .whenOrNull(
-            data: (libraryItems) {
-              emitStats(libraryItems);
-            },
-          );
+      void emitStats() {
+        if (controller.isClosed) return;
+        final readPercent = totalOwned == 0
+            ? 0.0
+            : ((totalRead / totalOwned) * 100).toDouble();
+        controller.add(
+          LibraryBasicStats(
+            totalOwned: totalOwned,
+            readPercent: readPercent,
+            wishlistCount: wishlistCount,
+            subscriptionsCount: subscriptionsCount,
+            pullsInPeriod: pullsInPeriod,
+            readsInPeriod: readsInPeriod,
+            streakDays: _streakDays(readDates),
+            averageRating: averageRating,
+            mostReadSeries: mostReadSeries?.name,
+            mostReadSeriesYear: mostReadSeries?.yearBegan,
+            filter: filter,
+          ),
+        );
+      }
+
+      final streamSubscriptions = <StreamSubscription>[];
+
+      streamSubscriptions.add(
+        db.libraryItemDao.watchOwnedCount().listen((count) {
+          totalOwned = count;
+          debounced.schedule(emitStats);
+        }),
+      );
+
+      streamSubscriptions.add(
+        db.libraryItemDao.watchReadsCount().listen((count) {
+          totalRead = count;
+          debounced.schedule(emitStats);
+        }),
+      );
+
+      streamSubscriptions.add(
+        db.libraryItemDao
+            .watchReadsCount(
+              startDate: startDate?.toUtc().toIso8601String(),
+            )
+            .listen((count) {
+              readsInPeriod = count;
+              debounced.schedule(emitStats);
+            }),
+      );
+
+      streamSubscriptions.add(
+        db.libraryItemDao.watchAverageRating().listen((rating) {
+          averageRating = rating;
+          debounced.schedule(emitStats);
+        }),
+      );
+
+      streamSubscriptions.add(
+        db.libraryItemDao.watchMostReadSeries().listen((series) {
+          mostReadSeries = series;
+          debounced.schedule(emitStats);
+        }),
+      );
+
+      streamSubscriptions.add(
+        db.libraryItemDao.watchAllReadDates().listen((dates) {
+          readDates = dates;
+          debounced.schedule(emitStats);
+        }),
+      );
+
+      streamSubscriptions.add(
+        db.wishlistDao.watchAll().map((items) => items.length).listen((count) {
+          wishlistCount = count;
+          debounced.schedule(emitStats);
+        }),
+      );
+
+      Future<void> fetchAsyncData() async {
+        try {
+          final subs = await ref.read(activeSubscriptionsProvider.future);
+          subscriptionsCount = subs.length;
+        } catch (_) {
+          subscriptionsCount = 0;
+        }
+        try {
+          pullsInPeriod = (await pullRepository.listEntries(
+            fromDate: startDate,
+            toDate: endDate,
+            limit: 10000,
+          )).length;
+        } catch (_) {
+          pullsInPeriod = 0;
+        }
+        debounced.schedule(emitStats);
+      }
+
+      fetchAsyncData();
 
       ref.onDispose(() {
+        for (final sub in streamSubscriptions) {
+          sub.cancel();
+        }
         debounced.cancel();
         controller.close();
       });
@@ -312,10 +275,13 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
 
 final libraryReadingTrendsProvider = StreamProvider.autoDispose
     .family<List<ReadingTrendPoint>, LibraryFilter>((ref, filter) {
+      final db = ref.watch(driftDatabaseProvider);
       final controller = StreamController<List<ReadingTrendPoint>>();
       final debounced = DebouncedWorker();
 
-      void computeTrends(List<LibraryItem> libraryItems) {
+      StreamSubscription<List<DateTime>>? sub;
+
+      void computeTrends(List<DateTime> readDates) {
         final now = DateTime.now().toLocal();
         DateTime? startDate;
 
@@ -334,13 +300,6 @@ final libraryReadingTrendsProvider = StreamProvider.autoDispose
             break;
         }
 
-        final allRead = libraryItems.where((item) => item.isRead).toList();
-        final readDates = allRead
-            .map((item) => item.firstReadAt)
-            .whereType<DateTime>()
-            .map((date) => date.toLocal())
-            .toList();
-
         if (!controller.isClosed) {
           controller.add(
             _computeReadingTrends(readDates, filter, now, startDate),
@@ -348,26 +307,108 @@ final libraryReadingTrendsProvider = StreamProvider.autoDispose
         }
       }
 
-      ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (
-        _,
-        next,
-      ) {
-        next.whenOrNull(
-          data: (libraryItems) {
-            debounced.schedule(() => computeTrends(libraryItems));
-          },
-        );
+      sub = db.libraryItemDao.watchAllReadDates().listen((dates) {
+        debounced.schedule(() => computeTrends(dates));
       });
 
-      ref
-          .read(allLibraryItemsProvider)
-          .whenOrNull(
-            data: (libraryItems) {
-              computeTrends(libraryItems);
-            },
-          );
+      ref.onDispose(() {
+        sub?.cancel();
+        debounced.cancel();
+        controller.close();
+      });
+
+      return controller.stream;
+    });
+
+final librarySpendingTrendsProvider = StreamProvider.autoDispose
+    .family<List<SpendingTrendPoint>, LibraryFilter>((ref, filter) {
+      final db = ref.watch(driftDatabaseProvider);
+      final controller = StreamController<List<SpendingTrendPoint>>();
+      final debounced = DebouncedWorker();
+
+      final now = DateTime.now().toLocal();
+      DateTime? startDate;
+      DateTime? endDate;
+      String groupBy;
+
+      switch (filter) {
+        case LibraryFilter.week:
+          startDate = _atStartOfWeek(now);
+          endDate = startDate.add(const Duration(days: 7));
+          groupBy = "day";
+          break;
+        case LibraryFilter.month:
+          startDate = _atStartOfMonth(now);
+          endDate = DateTime(startDate.year, startDate.month + 1);
+          groupBy = "day";
+          break;
+        case LibraryFilter.year:
+          startDate = _atStartOfYear(now);
+          endDate = DateTime(startDate.year + 1);
+          groupBy = "month";
+          break;
+        case LibraryFilter.allTime:
+          final start = DateTime(now.year, now.month - 5, 1);
+          startDate = start;
+          endDate = DateTime(now.year, now.month + 1);
+          groupBy = "month";
+          break;
+      }
+
+      final startDateIso = startDate.toUtc().toIso8601String();
+      final endDateIso = endDate.toUtc().toIso8601String();
+
+      StreamSubscription<List<({String label, double amount, DateTime date})>>?
+      sub;
+
+      if (groupBy == "day") {
+        sub = db.libraryItemDao
+            .watchSpendingTrendsByDay(startDateIso, endDateIso)
+            .listen((data) {
+              debounced.schedule(() {
+                if (!controller.isClosed) {
+                  controller.add(
+                    data
+                        .map(
+                          (d) => SpendingTrendPoint(
+                            label: d.label,
+                            amount: d.amount,
+                            date: d.date,
+                          ),
+                        )
+                        .toList(),
+                  );
+                }
+              });
+            });
+      } else {
+        sub = db.libraryItemDao
+            .watchSpendingTrendsByMonth(
+              startDate.year,
+              startMonth: startDate.month,
+              endMonth: endDate.month,
+            )
+            .listen((data) {
+              debounced.schedule(() {
+                if (!controller.isClosed) {
+                  controller.add(
+                    data
+                        .map(
+                          (d) => SpendingTrendPoint(
+                            label: d.label,
+                            amount: d.amount,
+                            date: d.date,
+                          ),
+                        )
+                        .toList(),
+                  );
+                }
+              });
+            });
+      }
 
       ref.onDispose(() {
+        sub?.cancel();
         debounced.cancel();
         controller.close();
       });

@@ -50,6 +50,55 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
     );
   }
 
+  CharacterList _characterToDomain(MetronCharacter row) {
+    return CharacterList(
+      id: row.id,
+      name: row.name,
+      slug: row.name.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), "-"),
+      modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
+    );
+  }
+
+  PublisherList _publisherToDomain(MetronPublisher row) {
+    return PublisherList(
+      id: row.id,
+      name: row.name,
+      modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
+    );
+  }
+
+  TeamList _teamToDomain(MetronTeam row) {
+    return TeamList(
+      id: row.id,
+      name: row.name,
+      modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
+    );
+  }
+
+  UniverseList _universeToDomain(MetronUniverse row) {
+    return UniverseList(
+      id: row.id,
+      name: row.name,
+      modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
+    );
+  }
+
+  ImprintList _imprintToDomain(MetronImprint row) {
+    return ImprintList(
+      id: row.id,
+      name: row.name,
+      modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
+    );
+  }
+
+  ArcList _arcToDomain(MetronArc row) {
+    return ArcList(
+      id: row.id,
+      name: row.name,
+      modified: row.modified != null ? DateTime.tryParse(row.modified!) : null,
+    );
+  }
+
   @override
   Future<SeriesList?> getSeries(int seriesId) async {
     final row = await _entityDao.getSeries(seriesId);
@@ -121,6 +170,78 @@ class MetronLocalCatalogRepository implements LocalCatalogRepository {
   }) async {
     final rows = await _entityDao.searchSeriesLocally(query, limit: limit);
     return rows.map(_seriesToDomain).toList();
+  }
+
+  @override
+  Future<List<CreatorList>> searchCreatorsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchCreatorsLocally(query, limit: limit);
+    return rows.map(_creatorToDomain).toList();
+  }
+
+  @override
+  Future<List<CharacterList>> searchCharactersLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchCharactersLocally(query, limit: limit);
+    return rows.map(_characterToDomain).toList();
+  }
+
+  @override
+  Future<List<PublisherList>> searchPublishersLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchPublishersLocally(query, limit: limit);
+    return rows.map(_publisherToDomain).toList();
+  }
+
+  @override
+  Future<List<TeamList>> searchTeamsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchTeamsLocally(query, limit: limit);
+    return rows.map(_teamToDomain).toList();
+  }
+
+  @override
+  Future<List<UniverseList>> searchUniversesLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchUniversesLocally(query, limit: limit);
+    return rows.map(_universeToDomain).toList();
+  }
+
+  @override
+  Future<List<ImprintList>> searchImprintsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchImprintsLocally(query, limit: limit);
+    return rows.map(_imprintToDomain).toList();
+  }
+
+  @override
+  Future<List<ArcList>> searchArcsLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchArcsLocally(query, limit: limit);
+    return rows.map(_arcToDomain).toList();
+  }
+
+  @override
+  Future<List<LocalIssue>> searchIssuesLocally(
+    String query, {
+    int limit = 50,
+  }) async {
+    final rows = await _entityDao.searchIssuesLocally(query, limit: limit);
+    return rows.map(_issueToDomain).toList();
   }
 
   @override

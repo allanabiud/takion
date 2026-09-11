@@ -22,6 +22,18 @@ class ReadingTrendPoint {
   final DateTime date;
 }
 
+class SpendingTrendPoint {
+  const SpendingTrendPoint({
+    required this.label,
+    required this.amount,
+    required this.date,
+  });
+
+  final String label;
+  final double amount;
+  final DateTime date;
+}
+
 class LibraryBasicStats {
   const LibraryBasicStats({
     required this.totalOwned,
