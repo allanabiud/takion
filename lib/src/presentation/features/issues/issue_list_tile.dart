@@ -1,5 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
@@ -12,6 +13,7 @@ import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_details_provider.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 class IssueListTile extends ConsumerWidget {
   final IssueList issue;
@@ -27,6 +29,9 @@ class IssueListTile extends ConsumerWidget {
   final double horizontalPadding;
   final ItemRole? role;
   final bool allowRemoteHydration;
+  final Widget? trailing;
+  final String? heroTag;
+  final String? scope;
 
   const IssueListTile({
     super.key,
@@ -43,6 +48,9 @@ class IssueListTile extends ConsumerWidget {
     this.horizontalPadding = 12,
     this.role,
     this.allowRemoteHydration = true,
+    this.trailing,
+    this.heroTag,
+    this.scope,
   });
 
   @override
@@ -157,7 +165,7 @@ class IssueListTile extends ConsumerWidget {
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth = (imageWidth * devicePixelRatio).round();
 
-    final Widget leading = isHydrating
+    final Widget coverWidget = isHydrating
         ? Container(
             width: imageWidth,
             height: imageHeight,
@@ -188,6 +196,13 @@ class IssueListTile extends ConsumerWidget {
               ),
             ),
           );
+
+    final effectiveHeroTag =
+        heroTag ?? (effectiveIssue.id != null ? "issue-cover-${effectiveIssue.id}${scope ?? ""}" : null);
+
+    final Widget leading = effectiveHeroTag != null
+        ? Hero(tag: effectiveHeroTag, child: coverWidget)
+        : coverWidget;
 
     final tileContent = Padding(
       padding: const EdgeInsets.all(8),
@@ -318,13 +333,18 @@ class IssueListTile extends ConsumerWidget {
                     ],
                   ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
         ],
       ),
     );
 
+    Widget wrappedTile;
     if (useCardBackground) {
       const radius = 24.0;
-      return Card(
+      wrappedTile = Card(
         margin: EdgeInsets.only(
           left: horizontalPadding,
           right: horizontalPadding,
@@ -343,30 +363,85 @@ class IssueListTile extends ConsumerWidget {
           child: tileContent,
         ),
       );
+    } else {
+      wrappedTile = RepaintBoundary(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: horizontalPadding,
+            right: horizontalPadding,
+            top: isFirst ? 12 : 2,
+            bottom: isLast ? 12 : 0,
+          ),
+          child: Column(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: effectiveOnTap,
+                  onLongPress: effectiveOnLongPress,
+                  child: tileContent,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
-    return RepaintBoundary(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-          top: isFirst ? 12 : 2,
-          bottom: isLast ? 12 : 0,
-        ),
-        child: Column(
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: effectiveOnTap,
-                onLongPress: effectiveOnLongPress,
-                child: tileContent,
-              ),
+    if (effectiveIsCollected || effectiveIssue.id == null) {
+      return wrappedTile;
+    }
+
+    return Dismissible(
+      key: ValueKey("issue-collect-${effectiveIssue.id}"),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        HapticFeedback.mediumImpact();
+        return true;
+      },
+      onDismissed: (_) {
+        showScrobbleSheet(
+          context: context,
+          ref: ref,
+          issueId: effectiveIssue.id!,
+          sheetTitle: issueTitle,
+          seriesId: effectiveIssue.series?.id,
+          seriesName: effectiveIssue.series?.name,
+          issueNumber: effectiveIssue.number,
+          imageUrl: effectiveIssue.image,
+        );
+        if (context.mounted) {
+          TakionAlerts.infoWithUndo(
+            context,
+            "Added to collection",
+            actionLabel: "Undo",
+            onUndo: () => showScrobbleSheet(
+              context: context,
+              ref: ref,
+              issueId: effectiveIssue.id!,
+              sheetTitle: issueTitle,
+              seriesId: effectiveIssue.series?.id,
+              seriesName: effectiveIssue.series?.name,
+              issueNumber: effectiveIssue.number,
+              imageUrl: effectiveIssue.image,
             ),
-          ],
+          );
+        }
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.inventory_2,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
         ),
       ),
+      child: wrappedTile,
     );
   }
 }

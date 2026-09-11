@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
@@ -7,6 +8,7 @@ import "package:takion/src/presentation/features/issues/scrobble_sheet.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
 import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 class IssueCard extends ConsumerWidget {
   final int? issueId;
@@ -26,6 +28,7 @@ class IssueCard extends ConsumerWidget {
   final String? seriesName;
   final String? issueNumber;
   final String? heroTag;
+  final String? scope;
 
   const IssueCard({
     super.key,
@@ -46,6 +49,7 @@ class IssueCard extends ConsumerWidget {
     this.seriesName,
     this.issueNumber,
     this.heroTag,
+    this.scope,
   });
 
   @override
@@ -96,6 +100,9 @@ class IssueCard extends ConsumerWidget {
               }
             : null);
 
+    final effectiveHeroTag =
+        heroTag ?? (issueId != null ? "issue-cover-$issueId${scope ?? ""}" : null);
+
     Widget cardContent = Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -139,11 +146,11 @@ class IssueCard extends ConsumerWidget {
       ),
     );
 
-    if (heroTag != null) {
-      cardContent = Hero(tag: heroTag!, child: cardContent);
+    if (effectiveHeroTag != null) {
+      cardContent = Hero(tag: effectiveHeroTag, child: cardContent);
     }
 
-    return RepaintBoundary(
+    final tileContent = RepaintBoundary(
       child: SizedBox(
         width: width,
         child: InkWell(
@@ -174,6 +181,61 @@ class IssueCard extends ConsumerWidget {
           ),
         ),
       ),
+    );
+
+    if (effectiveIsCollected || issueId == null) {
+      return tileContent;
+    }
+
+    return Dismissible(
+      key: ValueKey("issue-collect-$issueId"),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        HapticFeedback.mediumImpact();
+        return true;
+      },
+      onDismissed: (_) {
+        showScrobbleSheet(
+          context: context,
+          ref: ref,
+          issueId: issueId!,
+          sheetTitle: title,
+          seriesId: seriesId,
+          seriesName: seriesName,
+          issueNumber: issueNumber,
+          imageUrl: imageUrl,
+        );
+        if (context.mounted) {
+          TakionAlerts.infoWithUndo(
+            context,
+            "Added to collection",
+            actionLabel: "Undo",
+            onUndo: () => showScrobbleSheet(
+              context: context,
+              ref: ref,
+              issueId: issueId!,
+              sheetTitle: title,
+              seriesId: seriesId,
+              seriesName: seriesName,
+              issueNumber: issueNumber,
+              imageUrl: imageUrl,
+            ),
+          );
+        }
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          Icons.inventory_2,
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
+      ),
+      child: tileContent,
     );
   }
 }

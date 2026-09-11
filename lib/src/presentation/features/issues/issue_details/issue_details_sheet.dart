@@ -1,5 +1,8 @@
+import "dart:ui";
+
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/entities.dart";
@@ -22,6 +25,7 @@ class IssueDetailsSheet extends StatelessWidget {
     this.seriesId,
     this.isSubscribed,
     this.onToggleSeriesSubscription,
+    this.onAcquire,
   });
 
   final ScrollController scrollController;
@@ -37,6 +41,7 @@ class IssueDetailsSheet extends StatelessWidget {
   final int? seriesId;
   final bool? isSubscribed;
   final VoidCallback? onToggleSeriesSubscription;
+  final VoidCallback? onAcquire;
 
   Widget _buildTitleSubtitle(BuildContext context) {
     final theme = Theme.of(context);
@@ -192,113 +197,139 @@ class IssueDetailsSheet extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: (collectionStatus?.isCollected == true)
-                              ? _StateActionButton(
-                                  label: "Remove",
-                                  icon: Icons.delete_outline,
-                                  backgroundColor:
-                                      theme.colorScheme.errorContainer,
-                                  foregroundColor:
-                                      theme.colorScheme.onErrorContainer,
-                                  onPressed: onShowScrobbleSheet,
-                                )
-                              : (collectionStatus?.isWishlisted == true)
-                              ? _StateActionButton(
-                                  label: "Wishlisted",
-                                  icon: Icons.turned_in,
-                                  backgroundColor:
-                                      theme.colorScheme.tertiaryContainer,
-                                  foregroundColor:
-                                      theme.colorScheme.onTertiaryContainer,
-                                  onPressed: onShowScrobbleSheet,
-                                )
-                              : isInPullList
-                              ? _StateActionButton(
-                                  label: "Pulled",
-                                  icon: Icons.shopping_bag,
-                                  backgroundColor:
-                                      theme.colorScheme.secondaryContainer,
-                                  foregroundColor:
-                                      theme.colorScheme.onSecondaryContainer,
-                                  onPressed: onShowScrobbleSheet,
-                                )
-                              : _StateActionButton(
-                                  label: "Add",
-                                  icon: Icons.add,
-                                  onPressed: onShowScrobbleSheet,
-                                ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: isFavorite
-                              ? FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.primaryContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onPrimaryContainer,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite),
-                                )
-                              : FilledButton.tonal(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: onToggleFavorite,
-                                  child: const Icon(Icons.favorite_border),
-                                ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 1,
-                          child: Tooltip(
-                            message: "Go to series",
-                            child: FilledButton.tonal(
-                              style: FilledButton.styleFrom(
-                                backgroundColor:
-                                    theme.colorScheme.surfaceContainerHigh,
-                                foregroundColor:
-                                    theme.colorScheme.onSurfaceVariant,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                iconSize: 28,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: seriesId != null
-                                  ? onNavigateToSeries
-                                  : null,
-                              child: const Icon(Icons.view_agenda_outlined),
-                            ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant
+                                .withValues(alpha: 0.3),
                           ),
                         ),
-                      ],
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: _SpringMorphingStateButton(
+                                isCollected:
+                                    collectionStatus?.isCollected ?? false,
+                                isWishlisted:
+                                    collectionStatus?.isWishlisted ?? false,
+                                isInPullList: isInPullList,
+                                onPressed: onShowScrobbleSheet,
+                              ),
+                            ),
+                            if (onAcquire != null &&
+                                (collectionStatus?.isWishlisted ?? false) &&
+                                !(collectionStatus?.isCollected ?? false)) ...[
+                              const SizedBox(width: 6),
+                              Expanded(
+                                flex: 1,
+                                child: Tooltip(
+                                  message: "Acquire to collection",
+                                  child: FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor:
+                                          theme.colorScheme.primaryContainer,
+                                      foregroundColor:
+                                          theme.colorScheme.onPrimaryContainer,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 14,
+                                      ),
+                                      iconSize: 28,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: onAcquire,
+                                    child: const Icon(
+                                      Icons.shopping_cart_outlined,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 6),
+                            Expanded(
+                              flex: 1,
+                              child: isFavorite
+                                  ? FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor:
+                                            theme.colorScheme.primaryContainer,
+                                        foregroundColor: theme
+                                            .colorScheme.onPrimaryContainer,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                        iconSize: 28,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      onPressed: onToggleFavorite,
+                                      child: const Icon(Icons.favorite),
+                                    )
+                                  : FilledButton.tonal(
+                                      style: FilledButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                        iconSize: 28,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      onPressed: onToggleFavorite,
+                                      child: const Icon(Icons.favorite_border),
+                                    ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              flex: 1,
+                              child: Tooltip(
+                                message: "Go to series",
+                                child: FilledButton.tonal(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: theme
+                                        .colorScheme.surfaceContainerHigh,
+                                    foregroundColor:
+                                        theme.colorScheme.onSurfaceVariant,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    iconSize: 28,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: seriesId != null
+                                      ? onNavigateToSeries
+                                      : null,
+                                  child: const Icon(
+                                    Icons.view_agenda_outlined,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -321,45 +352,117 @@ class IssueDetailsSheet extends StatelessWidget {
   }
 }
 
-class _StateActionButton extends StatelessWidget {
-  const _StateActionButton({
-    required this.label,
-    required this.icon,
+class _SpringMorphingStateButton extends StatelessWidget {
+  const _SpringMorphingStateButton({
+    required this.isCollected,
+    required this.isWishlisted,
+    required this.isInPullList,
     required this.onPressed,
-    this.backgroundColor,
-    this.foregroundColor,
   });
 
-  final String label;
-  final IconData icon;
+  final bool isCollected;
+  final bool isWishlisted;
+  final bool isInPullList;
   final VoidCallback? onPressed;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return FilledButton(
-      style: FilledButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: foregroundColor,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-        minimumSize: const Size(0, 56),
-        textStyle: theme.textTheme.titleMedium,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+    final (label, icon, bgColor, fgColor) = isCollected
+        ? (
+            "Remove",
+            Icons.delete_outline,
+            theme.colorScheme.errorContainer,
+            theme.colorScheme.onErrorContainer,
+          )
+        : isWishlisted
+        ? (
+            "Wishlisted",
+            Icons.turned_in,
+            theme.colorScheme.tertiaryContainer,
+            theme.colorScheme.onTertiaryContainer,
+          )
+        : isInPullList
+        ? (
+            "Pulled",
+            Icons.shopping_bag,
+            theme.colorScheme.secondaryContainer,
+            theme.colorScheme.onSecondaryContainer,
+          )
+        : (
+            "Add",
+            Icons.add,
+            null,
+            null,
+          );
+
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(
+        begin: theme.colorScheme.surfaceContainerHighest,
+        end: bgColor ?? theme.colorScheme.primaryContainer,
       ),
-      onPressed: onPressed,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      builder: (context, animatedBg, child) {
+        return TweenAnimationBuilder<Color?>(
+          tween: ColorTween(
+            begin: theme.colorScheme.onSurface,
+            end: fgColor ?? theme.colorScheme.onPrimaryContainer,
           ),
-        ],
-      ),
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          builder: (context, animatedFg, child) {
+            return FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: animatedBg,
+                foregroundColor: animatedFg,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                minimumSize: const Size(0, 56),
+                textStyle: theme.textTheme.titleMedium,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                onPressed?.call();
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: Row(
+                  key: ValueKey("$label-$icon"),
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
