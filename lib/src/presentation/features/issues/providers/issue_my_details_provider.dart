@@ -167,6 +167,10 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           final resolvedRating = isRead ? rating : null;
           final firstReadAt = isRead ? (existing?.firstReadAt ?? now) : null;
 
+          if (isCollected) {
+            await ref.read(wishlistRepositoryProvider).removeFromWishListByIssueId(_issueId);
+          }
+
           await libraryRepository.upsertItem(
             metronIssueId: _issueId,
             metronSeriesId: seriesId,

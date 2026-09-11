@@ -115,10 +115,27 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         final readAt = dateRead ?? DateTime.now().toUtc();
         final readLogs = await libraryRepository.getReadLogsByIssueId(_issueId);
 
+        // Enforce strict mutual exclusivity across collection and wishlist
+        if (targetIsCollected) {
+          await ref.read(wishlistRepositoryProvider).removeFromWishListByIssueId(_issueId);
+        } else if (targetIsWishlisted) {
+          if (wasCollected) {
+            await libraryRepository.deleteItemByIssueId(_issueId);
+          }
+          await ref.read(wishlistRepositoryProvider).addToWishList(
+            issueId: _issueId,
+            seriesId: seriesId,
+            seriesName: _context?.seriesName,
+            issueNumber: _context?.issueNumber,
+            imageUrl: _context?.imageUrl,
+          );
+        }
+
         if (!targetIsCollected && !targetIsRead && !targetIsWishlisted) {
           if (existing != null) {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
+          await ref.read(wishlistRepositoryProvider).removeFromWishListByIssueId(_issueId);
           await _recordActivityEvents(
             seriesId: seriesId,
             wasCollected: wasCollected,
@@ -175,6 +192,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           await libraryRepository.addReadLog(
             metronIssueId: _issueId,
             readAt: readAt,
+            rating: rating,
           );
           AppLogger.info(
             "Scrobble: created read log for issue #$_issueId at $readAt",
