@@ -72,3 +72,9 @@ final seriesFullDetailsProvider = FutureProvider.autoDispose
       timer = Timer(const Duration(minutes: 5), link.close);
       return series;
     });
+
+final seriesMissingIssuesProvider = FutureProvider.autoDispose
+    .family<List<MissingIssue>, int>((ref, seriesId) async {
+      final repository = ref.watch(collectionRepositoryProvider);
+      return repository.getMissingIssues(seriesId);
+    });

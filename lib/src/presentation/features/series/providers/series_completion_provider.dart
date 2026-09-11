@@ -21,6 +21,16 @@ final seriesReadCountProvider = StreamProvider.autoDispose.family<int, int>((
       .map((items) => items.where((i) => i.isRead).length);
 });
 
+final seriesWishlistCountProvider = StreamProvider.autoDispose.family<int, int>((
+  ref,
+  seriesId,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.wishlistDao
+      .watchBySeries(seriesId)
+      .map((items) => items.length);
+});
+
 /// Parent-level lookup so a list watches one Map instead of one provider/DB query per tile.
 final seriesOwnedCountsProvider = StreamProvider.autoDispose
     .family<Map<int, int>, List<int>>((ref, seriesIds) {

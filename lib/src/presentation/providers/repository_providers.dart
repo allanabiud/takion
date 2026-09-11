@@ -4,6 +4,7 @@ import "package:takion/src/core/cache/metron_metadata_cache.dart";
 export "package:takion/src/core/cache/metron_metadata_cache.dart";
 import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/core/network/dio_client.dart";
+import "package:takion/src/core/network/metron_request_scheduler.dart";
 import "package:takion/src/core/storage/drift_database_provider.dart";
 export "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
@@ -36,7 +37,6 @@ import "package:takion/src/core/migration/collection_migrator.dart";
 import "package:takion/src/core/migration/migration_manager.dart";
 import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/core/migration/pull_list_migrator.dart";
-import "package:takion/src/core/migration/wish_list_migrator.dart";
 import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_manager.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
@@ -62,12 +62,15 @@ final offlineQueueProcessorProvider = Provider<OfflineQueueProcessor>((ref) {
   final collectionRemote = ref.watch(metronCollectionRemoteDataSourceProvider);
   final pullListRemote = ref.watch(metronPullListRemoteDataSourceProvider);
   final wishlistRemote = ref.watch(metronWishlistRemoteDataSourceProvider);
+  final interceptor = ref.watch(rateLimitInterceptorProvider);
   return OfflineQueueProcessor(
     dao: dao,
     database: db,
     collectionRemote: collectionRemote,
     pullListRemote: pullListRemote,
     wishlistRemote: wishlistRemote,
+    rateLimitDelay: () =>
+        rateLimitDelayFromBurstLimit(interceptor.state.burstLimit),
   );
 });
 
@@ -159,6 +162,10 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
 final metronCollectionRepositoryProvider = Provider<CollectionRepository>((ref) {
   final remote = ref.watch(metronCollectionRemoteDataSourceProvider);
   return MetronCollectionRepositoryImpl(remote);
+});
+
+final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
+  return ref.watch(metronCollectionRepositoryProvider);
 });
 
 final collectionSyncManagerProvider = Provider<CollectionSyncManager>((ref) {
@@ -257,7 +264,6 @@ final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
   final wishSync = ref.watch(wishlistSyncManagerProvider);
   final migrationManager = ref.watch(migrationManagerProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
-  final monitor = ref.watch(connectivityMonitorProvider);
 
   final manager = MetronSyncManager(
     collectionSyncManager: colSync,
@@ -265,7 +271,6 @@ final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
     wishlistSyncManager: wishSync,
     migrationManager: migrationManager,
     offlineWriteQueue: offlineQueue,
-    connectivityMonitor: monitor,
   );
   ref.onDispose(manager.dispose);
   return manager;
@@ -279,32 +284,36 @@ final metronSyncStateProvider = StreamProvider<MetronSyncState>((ref) {
 final collectionMigratorProvider = Provider<CollectionMigrator>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final remote = ref.watch(metronCollectionRemoteDataSourceProvider);
-  return CollectionMigrator(database: db, remoteDataSource: remote);
+  final interceptor = ref.watch(rateLimitInterceptorProvider);
+  return CollectionMigrator(
+    database: db,
+    remoteDataSource: remote,
+    rateLimitDelay: () =>
+        rateLimitDelayFromBurstLimit(interceptor.state.burstLimit),
+  );
 });
 
 final pullListMigratorProvider = Provider<PullListMigrator>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final remote = ref.watch(metronPullListRemoteDataSourceProvider);
-  return PullListMigrator(database: db, remoteDataSource: remote);
-});
-
-final wishListMigratorProvider = Provider<WishListMigrator>((ref) {
-  final db = ref.watch(driftDatabaseProvider);
-  final remote = ref.watch(metronWishlistRemoteDataSourceProvider);
-  return WishListMigrator(database: db, remoteDataSource: remote);
+  final interceptor = ref.watch(rateLimitInterceptorProvider);
+  return PullListMigrator(
+    database: db,
+    remoteDataSource: remote,
+    rateLimitDelay: () =>
+        rateLimitDelayFromBurstLimit(interceptor.state.burstLimit),
+  );
 });
 
 final migrationManagerProvider = Provider<MigrationManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final colMigrator = ref.watch(collectionMigratorProvider);
   final pullMigrator = ref.watch(pullListMigratorProvider);
-  final wishMigrator = ref.watch(wishListMigratorProvider);
 
   final manager = MigrationManager(
     database: db,
     collectionMigrator: colMigrator,
     pullListMigrator: pullMigrator,
-    wishListMigrator: wishMigrator,
   );
   ref.onDispose(manager.dispose);
   return manager;
@@ -313,6 +322,11 @@ final migrationManagerProvider = Provider<MigrationManager>((ref) {
 final migrationProgressProvider = StreamProvider<MigrationProgress>((ref) {
   final manager = ref.watch(migrationManagerProvider);
   return manager.progressStream;
+});
+
+final migrationNeededProvider = FutureProvider<bool>((ref) async {
+  final manager = ref.watch(migrationManagerProvider);
+  return manager.isMigrationNeeded();
 });
 
 final pendingOfflineWritesCountProvider = StreamProvider<int>((ref) {

@@ -298,9 +298,9 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
                             isFirst: index == 0,
                             isLast: !hasMore && index == visible.length - 1,
                             onTap: () => context.pushRoute(
-                              LibrarySeriesRoute(
+                              SeriesDetailsRoute(
                                 seriesId: summary.id,
-                                category: "read",
+                                initialFilter: "read",
                                 seriesName: summary.name,
                               ),
                             ),
@@ -410,6 +410,7 @@ class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
   @override
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(libraryBasicStatsProvider(widget.filter));
+    final collectionStatsAsync = ref.watch(collectionStatsProvider);
     final theme = Theme.of(context);
 
     if (statsAsync.hasValue) {
@@ -422,6 +423,21 @@ class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
         (statsAsync.hasValue ? statsAsync.value : null) ??
         LibraryBasicStats.zero(widget.filter);
 
+    final collectionStats = collectionStatsAsync.value;
+
+    // Use Metron's all-time read count when available (more accurate than local).
+    final readCount = (collectionStats != null && collectionStats.readCount > 0)
+        ? collectionStats.readCount
+        : displayStats.readsInPeriod;
+
+    // Use Metron's all-time average rating when available.
+    final avgRating =
+        (collectionStats != null &&
+                collectionStats.averageRating != null &&
+                collectionStats.averageRating! > 0)
+            ? collectionStats.averageRating!
+            : displayStats.averageRating;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -431,7 +447,7 @@ class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
               Expanded(
                 child: StatCard(
                   icon: Icons.menu_book,
-                  value: "${displayStats.readsInPeriod}",
+                  value: "$readCount",
                   label: "Read",
                   color: theme.colorScheme.primary,
                 ),
@@ -453,9 +469,7 @@ class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
               Expanded(
                 child: StatCard(
                   icon: Icons.star_half,
-                  value: displayStats.averageRating > 0
-                      ? displayStats.averageRating.toStringAsFixed(1)
-                      : "--",
+                  value: avgRating > 0 ? avgRating.toStringAsFixed(1) : "--",
                   label: "Rating",
                   color: theme.colorScheme.tertiary,
                 ),

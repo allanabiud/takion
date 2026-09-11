@@ -307,9 +307,9 @@ class _MyComicsBrowseTabState extends ConsumerState<_MyComicsBrowseTab>
                             isFirst: index == 0,
                             isLast: !hasMore && index == visible.length - 1,
                             onTap: () => context.pushRoute(
-                              LibrarySeriesRoute(
+                              SeriesDetailsRoute(
                                 seriesId: summary.id,
-                                category: "collected",
+                                initialFilter: "owned",
                                 seriesName: summary.name,
                               ),
                             ),

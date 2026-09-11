@@ -245,11 +245,6 @@ class AppRouter extends RootStackRouter {
     ),
     AutoRoute(page: SettingsRoute.page, path: "/settings", guards: [authGuard]),
     AutoRoute(
-      page: LibrarySeriesRoute.page,
-      path: "/library/series/:seriesId",
-      guards: [authGuard],
-    ),
-    AutoRoute(
       page: TopCharactersRoute.page,
       path: "/library/top-characters",
       guards: [authGuard],

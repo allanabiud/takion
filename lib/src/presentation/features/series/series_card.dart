@@ -3,9 +3,9 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
-import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
 
 class SeriesCard extends ConsumerWidget {
   final SeriesList series;
@@ -30,10 +30,12 @@ class SeriesCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final subscriptionAsync = ref.watch(seriesSubscriptionProvider(series.id));
-    final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
-    final isFavorite =
-        ref.watch(isSeriesFavoriteProvider(series.id)).asData?.value == true;
+    final isSubscribed = ref.watch(
+      subscribedSeriesIdsSetProvider.select((set) => set.contains(series.id)),
+    );
+    final isFavorite = ref.watch(
+      favoriteSeriesIdsSetProvider.select((set) => set.contains(series.id)),
+    );
 
     ref.watch(entityImageVersionProvider);
     final cache = ref.read(entityImageCacheProvider);

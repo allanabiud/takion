@@ -162,9 +162,9 @@ class _UnreadScreenState extends ConsumerState<UnreadScreen> {
                       isFirst: index == 0,
                       isLast: index == filtered.length - 1,
                       onTap: () => context.pushRoute(
-                        LibrarySeriesRoute(
+                        SeriesDetailsRoute(
                           seriesId: summary.id,
-                          category: "unread",
+                          initialFilter: "unread",
                           seriesName: summary.name,
                         ),
                       ),
