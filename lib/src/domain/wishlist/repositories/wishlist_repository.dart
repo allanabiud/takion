@@ -3,7 +3,10 @@ import "package:takion/src/domain/wishlist/entities/wishlist_item.dart";
 abstract class WishlistRepository {
   Stream<List<WishlistItem>> watchWishListItems({int? seriesId});
 
-  Future<List<WishlistItem>> getWishListItems({int page = 1});
+  Future<List<WishlistItem>> getWishListItems({
+    int page = 1,
+    DateTime? modifiedGt,
+  });
 
   Future<WishlistItem?> getItemByIssueId(int issueId);
 

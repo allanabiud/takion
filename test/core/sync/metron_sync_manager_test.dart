@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:mocktail/mocktail.dart";
-import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_manager.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
@@ -16,15 +15,12 @@ class MockWishlistSyncManager extends Mock implements WishlistSyncManager {}
 
 class MockOfflineWriteQueue extends Mock implements OfflineWriteQueue {}
 
-class MockConnectivityMonitor extends Mock implements ConnectivityMonitor {}
-
 void main() {
   group("MetronSyncManager", () {
     late MockCollectionSyncManager collectionSync;
     late MockPullListSyncManager pullListSync;
     late MockWishlistSyncManager wishlistSync;
     late MockOfflineWriteQueue offlineQueue;
-    late MockConnectivityMonitor connectivityMonitor;
     late MetronSyncManager syncManager;
 
     setUp(() {
@@ -32,9 +28,10 @@ void main() {
       pullListSync = MockPullListSyncManager();
       wishlistSync = MockWishlistSyncManager();
       offlineQueue = MockOfflineWriteQueue();
-      connectivityMonitor = MockConnectivityMonitor();
 
+      when(() => offlineQueue.watchPendingCount()).thenAnswer((_) => Stream.value(0));
       when(() => offlineQueue.processQueue()).thenAnswer((_) async => 0);
+      when(() => offlineQueue.processAllEntries()).thenAnswer((_) async => 0);
       when(
         () => collectionSync.syncCollection(
           forceFullSync: any(named: "forceFullSync"),
@@ -51,6 +48,7 @@ void main() {
           seriesFetched: 2,
           issuesFetched: 3,
           isSuccess: true,
+          isFullSync: true,
         ),
       );
       when(() => wishlistSync.syncWishlist()).thenAnswer(
@@ -58,6 +56,7 @@ void main() {
           itemsFetched: 4,
           itemsUpdated: 4,
           isSuccess: true,
+          isFullSync: true,
         ),
       );
 
@@ -66,7 +65,7 @@ void main() {
         pullListSyncManager: pullListSync,
         wishlistSyncManager: wishlistSync,
         offlineWriteQueue: offlineQueue,
-        connectivityMonitor: connectivityMonitor,
+        periodicInterval: Duration.zero,
       );
     });
 
@@ -87,7 +86,7 @@ void main() {
       expect(result.pullListIssuesSynced, 3);
       expect(result.wishlistItemsSynced, 4);
 
-      verify(() => offlineQueue.processQueue()).called(1);
+      verify(() => offlineQueue.processAllEntries()).called(1);
       verify(() => collectionSync.syncCollection(forceFullSync: false))
           .called(1);
       verify(() => pullListSync.syncPullList()).called(1);

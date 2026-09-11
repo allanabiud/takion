@@ -14,6 +14,7 @@ abstract class MetronWishlistRemoteDataSource {
 
   Future<List<WishListItemDto>> getWishListItems({
     int page = 1,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 

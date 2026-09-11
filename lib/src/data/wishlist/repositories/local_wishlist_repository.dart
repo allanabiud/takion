@@ -45,7 +45,10 @@ class LocalWishlistRepository implements WishlistRepository {
   }
 
   @override
-  Future<List<WishlistItem>> getWishListItems({int page = 1}) async {
+  Future<List<WishlistItem>> getWishListItems({
+    int page = 1,
+    DateTime? modifiedGt,
+  }) async {
     final rows = await _database.wishlistDao.getAll();
     return rows.map(_toDomain).toList();
   }

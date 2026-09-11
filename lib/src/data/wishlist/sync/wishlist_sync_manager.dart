@@ -1,7 +1,8 @@
+import "package:dio/dio.dart";
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
-import "package:takion/src/domain/wishlist/entities/wishlist_item.dart";
+import "package:takion/src/domain/entities.dart";
 import "package:takion/src/domain/wishlist/repositories/wishlist_repository.dart";
 
 class WishlistSyncResult {
@@ -9,12 +10,14 @@ class WishlistSyncResult {
     required this.itemsFetched,
     required this.itemsUpdated,
     required this.isSuccess,
+    required this.isFullSync,
     this.errorMessage,
   });
 
   final int itemsFetched;
   final int itemsUpdated;
   final bool isSuccess;
+  final bool isFullSync;
   final String? errorMessage;
 }
 
@@ -33,41 +36,85 @@ class WishlistSyncManager {
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
 
-  Future<WishlistSyncResult> syncWishlist() async {
+  Future<DateTime?> getLastSyncTime() async {
+    final str = await _database.syncMetaDao.get(_syncMetaKey);
+    return str != null ? DateTime.tryParse(str) : null;
+  }
+
+  Future<WishlistSyncResult> syncWishlist({bool forceFullSync = false}) async {
     if (_isSyncing) {
       return const WishlistSyncResult(
         itemsFetched: 0,
         itemsUpdated: 0,
         isSuccess: false,
+        isFullSync: false,
         errorMessage: "Wishlist sync already in progress",
       );
     }
 
     _isSyncing = true;
     try {
+      final lastSync = forceFullSync ? null : await getLastSyncTime();
+      final isFullSync = lastSync == null;
+
       var page = 1;
-      final remoteItems = <WishlistItem>[];
+      var totalFetched = 0;
+      var totalUpdated = 0;
+      final now = DateTime.now().toUtc();
 
       while (true) {
-        final pageItems = await _wishlistRepository.getWishListItems(page: page);
+        final pageItems = await _wishlistRepository.getWishListItems(
+          page: page,
+          modifiedGt: lastSync,
+        );
         if (pageItems.isEmpty) break;
-        remoteItems.addAll(pageItems);
+        totalFetched += pageItems.length;
+        final updatedCount = await _reconcileWishlistItems(
+          pageItems,
+          isIncremental: !isFullSync,
+        );
+        totalUpdated += updatedCount;
         if (pageItems.length < 20) break;
         page++;
       }
 
-      final updatedCount = await _reconcileWishlistItems(remoteItems);
-      final now = DateTime.now().toUtc();
       await _database.syncMetaDao.set(_syncMetaKey, now.toIso8601String());
 
       AppLogger.info(
-        "Wishlist sync completed: ${remoteItems.length} fetched, $updatedCount updated",
+        "Wishlist sync completed: $totalFetched fetched, $totalUpdated updated (fullSync: $isFullSync)",
       );
 
       return WishlistSyncResult(
-        itemsFetched: remoteItems.length,
-        itemsUpdated: updatedCount,
+        itemsFetched: totalFetched,
+        itemsUpdated: totalUpdated,
         isSuccess: true,
+        isFullSync: isFullSync,
+      );
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 404) {
+        AppLogger.info(
+          "Wishlist sync: no wishlist found on remote (404), treating as empty",
+        );
+        final now = DateTime.now().toUtc();
+        await _database.syncMetaDao.set(
+          _syncMetaKey,
+          now.toIso8601String(),
+        );
+        return const WishlistSyncResult(
+          itemsFetched: 0,
+          itemsUpdated: 0,
+          isSuccess: true,
+          isFullSync: true,
+        );
+      }
+      AppLogger.error("Wishlist sync failed", error: e);
+      return WishlistSyncResult(
+        itemsFetched: 0,
+        itemsUpdated: 0,
+        isSuccess: false,
+        isFullSync: forceFullSync,
+        errorMessage: e.toString(),
       );
     } catch (e, st) {
       AppLogger.error("Wishlist sync failed", error: e, stackTrace: st);
@@ -75,6 +122,7 @@ class WishlistSyncManager {
         itemsFetched: 0,
         itemsUpdated: 0,
         isSuccess: false,
+        isFullSync: forceFullSync,
         errorMessage: e.toString(),
       );
     } finally {
@@ -82,16 +130,18 @@ class WishlistSyncManager {
     }
   }
 
-  Future<int> _reconcileWishlistItems(List<WishlistItem> remoteItems) async {
+  Future<int> _reconcileWishlistItems(
+    List<WishlistItem> remoteItems, {
+    bool isIncremental = false,
+  }) async {
     final nowIso = DateTime.now().toUtc().toIso8601String();
-    final remoteIds = remoteItems.map((item) => item.id).toSet();
+    final remoteIssueIds = remoteItems.map((item) => item.issueId).toSet();
     final companions = <db.WishlistItemsCompanion>[];
 
     for (final item in remoteItems) {
       final existing = await _database.wishlistDao.getByIssueId(item.issueId);
 
       if (existing != null && existing.syncStatus != "synced") {
-        // Pending local modifications take priority until synced
         continue;
       }
 
@@ -112,8 +162,6 @@ class WishlistSyncManager {
           maxPrice: Value(item.maxPrice),
           maxPriceCurrency: Value(item.maxPriceCurrency),
           notes: Value(item.notes),
-          addedOn: Value(item.addedOn),
-          modified: Value(item.modified),
           syncStatus: const Value("synced"),
           createdAt: Value(existing?.createdAt ?? nowIso),
           updatedAt: Value(nowIso),
@@ -122,26 +170,29 @@ class WishlistSyncManager {
     }
 
     if (companions.isNotEmpty) {
-      await _database.wishlistDao.batchUpsert(companions);
-    }
-
-    // Reconcile local items that were deleted remotely
-    final localItems = await _database.wishlistDao.getAll();
-    final toDeleteIds = <int>[];
-
-    for (final local in localItems) {
-      if (local.syncStatus == "synced" && !remoteIds.contains(local.id)) {
-        toDeleteIds.add(local.id);
+      for (final companion in companions) {
+        await _database.wishlistDao.upsert(companion);
       }
     }
 
-    if (toDeleteIds.isNotEmpty) {
-      if (remoteItems.isEmpty && localItems.isNotEmpty) {
-        AppLogger.warning(
-          "Skipping wishlist deletion: remote returned 0 items but ${localItems.length} exist locally (possible transient API error)",
-        );
-      } else {
-        await _database.wishlistDao.batchDeleteByIds(toDeleteIds);
+    if (!isIncremental) {
+      final localItems = await _database.wishlistDao.getAll();
+      final localIssueIds = localItems.map((i) => i.issueId).toSet();
+      final toDeleteIssueIds = localIssueIds.difference(remoteIssueIds);
+
+      if (toDeleteIssueIds.isNotEmpty) {
+        if (remoteItems.isEmpty && localItems.isNotEmpty) {
+          AppLogger.warning(
+            "Skipping wishlist deletion: remote returned 0 items but ${localItems.length} exist locally (possible transient API error)",
+          );
+        } else {
+          for (final issueId in toDeleteIssueIds) {
+            final item = await _database.wishlistDao.getByIssueId(issueId);
+            if (item != null && item.syncStatus == "synced") {
+              await _database.wishlistDao.deleteByIssueId(issueId);
+            }
+          }
+        }
       }
     }
 

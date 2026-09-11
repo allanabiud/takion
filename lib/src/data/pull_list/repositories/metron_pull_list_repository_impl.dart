@@ -8,8 +8,14 @@ class MetronPullListRepositoryImpl implements MetronPullListRepository {
   final MetronPullListRemoteDataSource _remoteDataSource;
 
   @override
-  Future<List<PullListSeriesItem>> getPullListSeries({int page = 1}) async {
-    final dtos = await _remoteDataSource.getPullListSeries(page: page);
+  Future<List<PullListSeriesItem>> getPullListSeries({
+    int page = 1,
+    DateTime? modifiedGt,
+  }) async {
+    final dtos = await _remoteDataSource.getPullListSeries(
+      page: page,
+      modifiedGt: modifiedGt,
+    );
     return dtos.map((dto) => dto.toEntity()).toList();
   }
 

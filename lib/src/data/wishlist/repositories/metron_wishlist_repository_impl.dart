@@ -18,8 +18,14 @@ class MetronWishlistRepositoryImpl implements MetronWishlistRepository {
   }
 
   @override
-  Future<List<WishlistItem>> getWishListItems({int page = 1}) async {
-    final dtos = await _remoteDataSource.getWishListItems(page: page);
+  Future<List<WishlistItem>> getWishListItems({
+    int page = 1,
+    DateTime? modifiedGt,
+  }) async {
+    final dtos = await _remoteDataSource.getWishListItems(
+      page: page,
+      modifiedGt: modifiedGt,
+    );
     return dtos.map((dto) => dto.toEntity()).toList();
   }
 

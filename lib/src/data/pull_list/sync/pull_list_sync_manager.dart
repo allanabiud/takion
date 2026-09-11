@@ -1,3 +1,4 @@
+import "package:dio/dio.dart";
 import "package:drift/drift.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
@@ -9,12 +10,14 @@ class PullListSyncResult {
     required this.seriesFetched,
     required this.issuesFetched,
     required this.isSuccess,
+    required this.isFullSync,
     this.errorMessage,
   });
 
   final int seriesFetched;
   final int issuesFetched;
   final bool isSuccess;
+  final bool isFullSync;
   final String? errorMessage;
 }
 
@@ -34,36 +37,63 @@ class PullListSyncManager {
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
 
-  Future<PullListSyncResult> syncPullList() async {
+  Future<DateTime?> getLastSyncTime() async {
+    final str = await _database.syncMetaDao.get(_syncMetaKey);
+    return str != null ? DateTime.tryParse(str) : null;
+  }
+
+  Future<PullListSyncResult> syncPullList({bool forceFullSync = false}) async {
     if (_isSyncing) {
       return const PullListSyncResult(
         seriesFetched: 0,
         issuesFetched: 0,
         isSuccess: false,
+        isFullSync: false,
         errorMessage: "Pull list sync already in progress",
       );
     }
 
     _isSyncing = true;
     try {
+      final lastSync = forceFullSync ? null : await getLastSyncTime();
+      final isFullSync = lastSync == null;
+
       // 1. Sync Pull List Series (Subscriptions)
       var seriesPage = 1;
-      final remoteSeries = <PullListSeriesItem>[];
+      var totalSeriesFetched = 0;
       while (true) {
         final pageItems = await _pullListRepository.getPullListSeries(
           page: seriesPage,
+          modifiedGt: lastSync,
         );
         if (pageItems.isEmpty) break;
-        remoteSeries.addAll(pageItems);
+        totalSeriesFetched += pageItems.length;
+        if (!isFullSync) {
+          await _ingestIncrementalSubscriptions(pageItems);
+        } else {
+          await _reconcileSubscriptions(pageItems);
+        }
         if (pageItems.length < 20) break;
         seriesPage++;
       }
 
-      await _reconcileSubscriptions(remoteSeries);
+      // For full sync, reconcile subscriptions after fetching all
+      if (isFullSync) {
+        final allSeries = <PullListSeriesItem>[];
+        var p = 1;
+        while (true) {
+          final items = await _pullListRepository.getPullListSeries(page: p);
+          if (items.isEmpty) break;
+          allSeries.addAll(items);
+          if (items.length < 20) break;
+          p++;
+        }
+        await _reconcileSubscriptions(allSeries);
+      }
 
       // 2. Sync Pull List Issues
       var issuePage = 1;
-      final remoteIssues = <PullListIssueItem>[];
+      var totalIssuesFetched = 0;
       final now = DateTime.now().toUtc();
       final storeDateAfter = now.subtract(const Duration(days: 30));
       final storeDateBefore = now.add(const Duration(days: 60));
@@ -75,23 +105,49 @@ class PullListSyncManager {
           storeDateBefore: storeDateBefore,
         );
         if (pageIssues.isEmpty) break;
-        remoteIssues.addAll(pageIssues);
+        totalIssuesFetched += pageIssues.length;
+        await _ingestPullListIssues(pageIssues);
         if (pageIssues.length < 20) break;
         issuePage++;
       }
 
-      await _ingestPullListIssues(remoteIssues);
-
       await _database.syncMetaDao.set(_syncMetaKey, now.toIso8601String());
 
       AppLogger.info(
-        "Pull list sync completed: ${remoteSeries.length} series, ${remoteIssues.length} issues",
+        "Pull list sync completed: $totalSeriesFetched series, $totalIssuesFetched issues (fullSync: $isFullSync)",
       );
 
       return PullListSyncResult(
-        seriesFetched: remoteSeries.length,
-        issuesFetched: remoteIssues.length,
+        seriesFetched: totalSeriesFetched,
+        issuesFetched: totalIssuesFetched,
         isSuccess: true,
+        isFullSync: isFullSync,
+      );
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 404) {
+        AppLogger.info(
+          "Pull list sync: no pull list found on remote (404), treating as empty",
+        );
+        final now = DateTime.now().toUtc();
+        await _database.syncMetaDao.set(
+          _syncMetaKey,
+          now.toIso8601String(),
+        );
+        return const PullListSyncResult(
+          seriesFetched: 0,
+          issuesFetched: 0,
+          isSuccess: true,
+          isFullSync: true,
+        );
+      }
+      AppLogger.error("Pull list sync failed", error: e);
+      return PullListSyncResult(
+        seriesFetched: 0,
+        issuesFetched: 0,
+        isSuccess: false,
+        isFullSync: forceFullSync,
+        errorMessage: e.toString(),
       );
     } catch (e, st) {
       AppLogger.error("Pull list sync failed", error: e, stackTrace: st);
@@ -99,10 +155,46 @@ class PullListSyncManager {
         seriesFetched: 0,
         issuesFetched: 0,
         isSuccess: false,
+        isFullSync: forceFullSync,
         errorMessage: e.toString(),
       );
     } finally {
       _isSyncing = false;
+    }
+  }
+
+  Future<void> _ingestIncrementalSubscriptions(
+    List<PullListSeriesItem> remoteSeries,
+  ) async {
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+
+    for (final series in remoteSeries) {
+      final existing = await _database.subscriptionDao.getBySeriesId(
+        series.seriesId,
+      );
+
+      if (existing != null && existing.syncStatus != "synced") {
+        continue;
+      }
+
+      await _database.subscriptionDao.upsert(
+        db.SeriesSubscriptionsCompanion(
+          id: Value(existing?.id ?? "sub-${series.seriesId}"),
+          userId: const Value(_localUserId),
+          metronSeriesId: Value(series.seriesId),
+          metronPullListId: Value(series.id),
+          syncStatus: const Value("synced"),
+          isActive: const Value(true),
+          autoAddPull: Value(existing?.autoAddPull ?? true),
+          subscribedAt: Value(
+            series.addedOn?.toIso8601String() ??
+                existing?.subscribedAt ??
+                nowIso,
+          ),
+          createdAt: Value(existing?.createdAt ?? nowIso),
+          updatedAt: Value(nowIso),
+        ),
+      );
     }
   }
 
@@ -118,7 +210,6 @@ class PullListSyncManager {
       );
 
       if (existing != null && existing.syncStatus != "synced") {
-        // Pending local modification, do not overwrite
         continue;
       }
 
@@ -132,7 +223,9 @@ class PullListSyncManager {
           isActive: const Value(true),
           autoAddPull: Value(existing?.autoAddPull ?? true),
           subscribedAt: Value(
-            series.addedOn?.toIso8601String() ?? existing?.subscribedAt ?? nowIso,
+            series.addedOn?.toIso8601String() ??
+                existing?.subscribedAt ??
+                nowIso,
           ),
           createdAt: Value(existing?.createdAt ?? nowIso),
           updatedAt: Value(nowIso),
@@ -140,7 +233,6 @@ class PullListSyncManager {
       );
     }
 
-    // Check for local active subscriptions no longer on remote
     final localActive = await _database.subscriptionDao.watchActiveList();
     for (final local in localActive) {
       if (local.syncStatus == "synced" &&

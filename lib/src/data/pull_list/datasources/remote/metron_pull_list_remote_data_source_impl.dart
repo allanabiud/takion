@@ -14,17 +14,24 @@ class MetronPullListRemoteDataSourceImpl
     int page = 1,
     CancelToken? cancelToken,
   }) async {
-    final response = await _dio.get(
-      "pull_list/",
-      queryParameters: {"page": page},
-      cancelToken: cancelToken,
-    );
-    final data = response.data as Map<String, dynamic>;
-    final results = data["results"] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(PullListReadDto.fromJson)
-        .toList();
+    try {
+      final response = await _dio.get(
+        "pull_list/",
+        queryParameters: {"page": page},
+        cancelToken: cancelToken,
+      );
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? [];
+      return results
+          .whereType<Map<String, dynamic>>()
+          .map(PullListReadDto.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -42,19 +49,32 @@ class MetronPullListRemoteDataSourceImpl
   @override
   Future<List<PullListSeriesDto>> getPullListSeries({
     int page = 1,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   }) async {
-    final response = await _dio.get(
-      "pull_list/series/",
-      queryParameters: {"page": page},
-      cancelToken: cancelToken,
-    );
-    final data = response.data as Map<String, dynamic>;
-    final results = data["results"] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(PullListSeriesDto.fromJson)
-        .toList();
+    try {
+      final queryParameters = <String, dynamic>{"page": page};
+      if (modifiedGt != null) {
+        queryParameters["modified_gt"] =
+            modifiedGt.toUtc().toIso8601String();
+      }
+      final response = await _dio.get(
+        "pull_list/series/",
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+      );
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? [];
+      return results
+          .whereType<Map<String, dynamic>>()
+          .map(PullListSeriesDto.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -64,7 +84,7 @@ class MetronPullListRemoteDataSourceImpl
   }) async {
     final response = await _dio.post(
       "pull_list/series/add/",
-      queryParameters: {"series_id": seriesId},
+      data: {"series_id": seriesId},
       cancelToken: cancelToken,
     );
     return PullListSeriesDto.fromJson(response.data as Map<String, dynamic>);
@@ -75,10 +95,17 @@ class MetronPullListRemoteDataSourceImpl
     int seriesId, {
     CancelToken? cancelToken,
   }) async {
-    await _dio.delete(
-      "pull_list/series/$seriesId/remove/",
-      cancelToken: cancelToken,
-    );
+    try {
+      await _dio.delete(
+        "pull_list/series/$seriesId/remove/",
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return;
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -96,16 +123,23 @@ class MetronPullListRemoteDataSourceImpl
         "store_date_before": DateFormatter.isoDate(storeDateBefore),
     };
 
-    final response = await _dio.get(
-      "pull_list/issues/",
-      queryParameters: queryParameters,
-      cancelToken: cancelToken,
-    );
-    final data = response.data as Map<String, dynamic>;
-    final results = data["results"] as List<dynamic>? ?? [];
-    return results
-        .whereType<Map<String, dynamic>>()
-        .map(PullListIssueDto.fromJson)
-        .toList();
+    try {
+      final response = await _dio.get(
+        "pull_list/issues/",
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+      );
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? [];
+      return results
+          .whereType<Map<String, dynamic>>()
+          .map(PullListIssueDto.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
   }
 }

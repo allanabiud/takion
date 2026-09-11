@@ -14,6 +14,7 @@ abstract class MetronPullListRemoteDataSource {
 
   Future<List<PullListSeriesDto>> getPullListSeries({
     int page = 1,
+    DateTime? modifiedGt,
     CancelToken? cancelToken,
   });
 

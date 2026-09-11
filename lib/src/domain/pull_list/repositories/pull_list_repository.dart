@@ -38,7 +38,10 @@ abstract class PullListRepository {
 }
 
 abstract class MetronPullListRepository {
-  Future<List<PullListSeriesItem>> getPullListSeries({int page = 1});
+  Future<List<PullListSeriesItem>> getPullListSeries({
+    int page = 1,
+    DateTime? modifiedGt,
+  });
 
   Future<PullListSeriesItem> addSeriesToPullList(int seriesId);
 
