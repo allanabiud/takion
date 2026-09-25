@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Compact Week Picker**: Redesigned week navigation bar with left-aligned title, grouped compact controls (`<`, `📅`, `>`), and removed the NCBD countdown badge to maximize vertical screen space.
+- **Compact Week Picker**: Redesigned week navigation bar with left-aligned title and grouped compact controls.
 - **Opt-in Hero Transitions**: Made Hero animations opt-in on issue covers to prevent jarring cross-route flight artifacts and disappearing covers during navigation.
 - **Stream Debouncing**: Added 16ms status stream debouncing to prevent UI jitter during bulk background syncs and backup restores.
 - **Atomic Ownership Transitions**: Wrapped collection/wishlist status mutations in atomic Drift database transactions to guarantee mutual exclusivity.
