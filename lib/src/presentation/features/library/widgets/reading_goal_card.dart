@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/domain/collection/entities/collection_analytics.dart";
 import "package:takion/src/presentation/features/settings/providers/reading_goal_provider.dart";
-import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
 import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
@@ -16,12 +16,12 @@ class ReadingGoalCard extends ConsumerStatefulWidget {
 }
 
 class _ReadingGoalCardState extends ConsumerState<ReadingGoalCard> {
-  LibraryBasicStats? _lastKnownStats;
+  ReadingGoalProgress? _lastKnownProgress;
 
   @override
   Widget build(BuildContext context) {
     final goalAsync = ref.watch(readingGoalProvider);
-    final basicStatsAsync = ref.watch(libraryBasicStatsProvider(widget.filter));
+    final progressAsync = ref.watch(readingGoalProgressProvider);
 
     return goalAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -29,18 +29,17 @@ class _ReadingGoalCardState extends ConsumerState<ReadingGoalCard> {
       data: (goal) {
         if (goal == null) return const SizedBox.shrink();
 
-        if (basicStatsAsync.hasValue) {
-          _lastKnownStats = basicStatsAsync.value;
+        if (progressAsync.hasValue) {
+          _lastKnownProgress = progressAsync.value;
         }
 
-        final stats =
-            _lastKnownStats ??
-            (basicStatsAsync.hasValue ? basicStatsAsync.value : null) ??
-            LibraryBasicStats.zero(widget.filter);
-
-        final progress = stats.readsInPeriod;
+        final progressValue =
+            _lastKnownProgress ??
+            (progressAsync.hasValue ? progressAsync.value : null);
+        final progress = progressValue?.readCount ?? 0;
         final target = goal.target;
-        final percent = target > 0 ? (progress / target).clamp(0.0, 1.0) : 0.0;
+        final percent = (progressValue?.percentComplete ?? 0.0)
+            .clamp(0.0, 1.0);
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

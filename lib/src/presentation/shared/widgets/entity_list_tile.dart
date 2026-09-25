@@ -1,10 +1,8 @@
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class EntityListTile extends ConsumerWidget {
+class EntityListTile extends StatelessWidget {
   final String entityType;
   final int entityId;
   final String name;
@@ -17,6 +15,8 @@ class EntityListTile extends ConsumerWidget {
   final double imageWidth;
   final double imageHeight;
   final double imageBorderRadius;
+  final int? cacheWidth;
+  final int? cacheHeight;
 
   const EntityListTile({
     super.key,
@@ -32,15 +32,15 @@ class EntityListTile extends ConsumerWidget {
     this.imageWidth = 80,
     this.imageHeight = 56,
     this.imageBorderRadius = 8,
+    this.cacheWidth,
+    this.cacheHeight,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached(entityType, entityId);
-    final effectiveImageUrl = imageUrl ?? cachedImage;
+    final effectiveCacheWidth = cacheWidth ?? (imageWidth.isFinite ? (imageWidth * 2).round() : 120);
+    final effectiveCacheHeight = cacheHeight ?? (imageHeight.isFinite ? (imageHeight * 2).round() : 180);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -69,13 +69,15 @@ class EntityListTile extends ConsumerWidget {
                       ),
                     ),
                     child: EntityCover(
-                      imageUrl: effectiveImageUrl,
+                      imageUrl: imageUrl,
                       placeholderLabel: initials(name),
                       width: imageWidth,
                       height: imageHeight,
                       borderRadius: 0,
                       aspectRatio: imageWidth / imageHeight,
                       iconSize: 20,
+                      cacheWidth: effectiveCacheWidth,
+                      cacheHeight: effectiveCacheHeight,
                     ),
                   ),
                 ),

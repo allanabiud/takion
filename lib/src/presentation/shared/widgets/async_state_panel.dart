@@ -2,6 +2,18 @@ import "package:flutter/material.dart";
 import "package:takion/src/core/errors/app_failure.dart";
 
 class AsyncStatePanel extends StatelessWidget {
+  final bool _isLoading;
+  final bool _isInline;
+  final bool _isError;
+  final bool _isEmpty;
+  final String? message;
+  final String? title;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
+  final String retryLabel;
+  final IconData? icon;
+  final EdgeInsetsGeometry padding;
+
   const AsyncStatePanel.loading({
     super.key,
     this.message,
@@ -12,7 +24,9 @@ class AsyncStatePanel extends StatelessWidget {
        retryLabel = "Retry",
        icon = null,
        _isLoading = true,
-       _isInline = false;
+       _isInline = false,
+       _isError = false,
+       _isEmpty = false;
 
   const AsyncStatePanel.inlineLoading({
     super.key,
@@ -24,7 +38,9 @@ class AsyncStatePanel extends StatelessWidget {
        retryLabel = "Retry",
        icon = null,
        _isLoading = true,
-       _isInline = true;
+       _isInline = true,
+       _isError = false,
+       _isEmpty = false;
 
   const AsyncStatePanel.error({
     super.key,
@@ -36,7 +52,9 @@ class AsyncStatePanel extends StatelessWidget {
     this.padding = const EdgeInsets.all(24),
   }) : message = null,
        _isLoading = false,
-       _isInline = false;
+       _isInline = false,
+       _isError = true,
+       _isEmpty = false;
 
   const AsyncStatePanel.staleOffline({
     super.key,
@@ -48,7 +66,9 @@ class AsyncStatePanel extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
   }) : errorMessage = message,
        _isLoading = false,
-       _isInline = true;
+       _isInline = true,
+       _isError = false,
+       _isEmpty = false;
 
   const AsyncStatePanel.rateLimitWait({
     super.key,
@@ -61,7 +81,9 @@ class AsyncStatePanel extends StatelessWidget {
        retryLabel = "Retry Now",
        icon = Icons.speed_outlined,
        _isLoading = false,
-       _isInline = false;
+       _isInline = false,
+       _isError = false,
+       _isEmpty = false;
 
   const AsyncStatePanel.empty({
     super.key,
@@ -76,7 +98,9 @@ class AsyncStatePanel extends StatelessWidget {
        onRetry = onAction,
        retryLabel = actionLabel,
        _isLoading = false,
-       _isInline = false;
+       _isInline = false,
+       _isError = false,
+       _isEmpty = true;
 
   factory AsyncStatePanel.fromFailure({
     Key? key,
@@ -145,18 +169,10 @@ class AsyncStatePanel extends StatelessWidget {
     );
   }
 
-  final bool _isLoading;
-  final bool _isInline;
-  final String? message;
-  final String? title;
-  final String? errorMessage;
-  final VoidCallback? onRetry;
-  final String retryLabel;
-  final IconData? icon;
-  final EdgeInsetsGeometry padding;
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (_isInline && _isLoading) {
       return Padding(
         padding: padding,
@@ -172,12 +188,25 @@ class AsyncStatePanel extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 message!,
-                style: Theme.of(context).textTheme.bodySmall,
+                style: theme.textTheme.bodySmall,
               ),
             ],
           ],
         ),
       );
+    }
+
+    final Color effectiveIconColor;
+    final Color effectiveIconBg;
+    if (_isError) {
+      effectiveIconColor = theme.colorScheme.error;
+      effectiveIconBg = theme.colorScheme.errorContainer.withValues(alpha: 0.4);
+    } else if (_isEmpty) {
+      effectiveIconColor = theme.colorScheme.primary;
+      effectiveIconBg = theme.colorScheme.primaryContainer.withValues(alpha: 0.4);
+    } else {
+      effectiveIconColor = theme.colorScheme.tertiary;
+      effectiveIconBg = theme.colorScheme.tertiaryContainer.withValues(alpha: 0.4);
     }
 
     return Center(
@@ -193,7 +222,7 @@ class AsyncStatePanel extends StatelessWidget {
                     Text(
                       message!,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ],
                 ],
@@ -202,17 +231,26 @@ class AsyncStatePanel extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(
-                      icon,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.error,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: effectiveIconBg,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 36,
+                        color: effectiveIconColor,
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                   ],
                   if (title != null) ...[
                     Text(
                       title!,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
@@ -220,11 +258,16 @@ class AsyncStatePanel extends StatelessWidget {
                   Text(
                     errorMessage ?? "Something went wrong.",
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   if (onRetry != null) ...[
                     const SizedBox(height: 16),
-                    FilledButton(onPressed: onRetry, child: Text(retryLabel)),
+                    FilledButton.tonal(
+                      onPressed: onRetry,
+                      child: Text(retryLabel),
+                    ),
                   ],
                 ],
               ),

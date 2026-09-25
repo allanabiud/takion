@@ -1,16 +1,14 @@
 import "package:drift/drift.dart";
-import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/domain/repositories.dart";
 
 class LocalPullListRepository implements PullListRepository {
-  LocalPullListRepository(this._database, this._cache);
+  LocalPullListRepository(this._database);
 
   static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
-  final UserStateCache _cache;
 
   String _idForIssue(int issueId) => "pull-$issueId";
 
@@ -104,15 +102,8 @@ class LocalPullListRepository implements PullListRepository {
 
   @override
   Future<PullListEntry?> getEntryByIssueId(int metronIssueId) async {
-    final cached = _cache.getPullListEntry(metronIssueId);
-    if (cached != null) return cached;
     final d = await _database.pullListDao.getByIssueId(metronIssueId);
-    if (d != null) {
-      final entry = _toDomain(d);
-      _cache.setPullListEntry(metronIssueId, entry);
-      return entry;
-    }
-    return null;
+    return d != null ? _toDomain(d) : null;
   }
 
   @override
@@ -152,7 +143,6 @@ class LocalPullListRepository implements PullListRepository {
       ),
     );
 
-    _cache.setPullListEntry(metronIssueId, entry);
     return entry;
   }
 
@@ -193,14 +183,12 @@ class LocalPullListRepository implements PullListRepository {
         updatedAt: Value(updated.updatedAt.toIso8601String()),
       ),
     );
-    _cache.setPullListEntry(metronIssueId, updated);
     return updated;
   }
 
   @override
   Future<void> deleteEntryByIssueId(int metronIssueId) async {
     await _database.pullListDao.deleteByIssueId(metronIssueId);
-    _cache.removePullListEntry(metronIssueId);
   }
 
   @override

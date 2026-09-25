@@ -77,6 +77,8 @@ class DriveSyncService {
 
   Future<DateTime?> getLastSyncTime() => _journal.getLastSyncTime();
 
+  Future<DateTime?> getLastBackupTime() => _journal.getLastBackupTime();
+
   Future<bool> isThrottled({
     Duration minInterval = const Duration(minutes: 5),
   }) => _journal.isThrottled(minInterval: minInterval);
@@ -341,6 +343,7 @@ class DriveSyncService {
     }
 
     progressNotifier.setPhase(SyncPhase.completed);
+    await _journal.setLastBackupTime(DateTime.now());
     return true;
   }
 
@@ -411,6 +414,7 @@ class DriveSyncService {
       SyncPhase.pruning,
       () => _extractor.pruneDeletedRows(now.subtract(const Duration(days: 30))),
     );
+    await _journal.setLastBackupTime(DateTime.now());
     progressNotifier.setPhase(SyncPhase.completed);
   }
 

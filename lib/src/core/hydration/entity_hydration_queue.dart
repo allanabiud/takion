@@ -3,7 +3,6 @@ import "dart:collection";
 
 import "package:dio/dio.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/core/network/rate_limit_interceptor.dart";
@@ -80,7 +79,7 @@ class HydrationQueueStats {
 class EntityHydrationQueue {
   EntityHydrationQueue(
     this._ref, {
-    this.maxConcurrency = 2,
+    this.maxConcurrency = 1,
     this.minBurstRemaining = 3,
     this.maxRetryAttempts = 3,
     this.baseRetryDelay = const Duration(seconds: 15),
@@ -255,88 +254,34 @@ class EntityHydrationQueue {
 
   Future<void> _executeHydration(HydrationKey key) async {
     final repo = _ref.read(metronRepositoryProvider);
-    final metadataCache = _ref.read(metronMetadataCacheProvider);
-    final imageCache = _ref.read(entityImageCacheProvider);
 
     switch (key.type) {
       case HydrationEntityType.series:
-        final details = await repo.getSeriesDetails(key.id);
-        metadataCache.indexSeries(key.id, details.name);
-        if (details.image != null) {
-          await imageCache.set("series", key.id, details.image!);
-        }
-        if (details.publisher?.id != null && details.publisher?.name != null) {
-          metadataCache.indexPublisher(
-            details.publisher!.id,
-            details.publisher!.name,
-          );
-        }
+        await repo.getSeriesDetails(key.id);
         break;
-
       case HydrationEntityType.issue:
-        final details = await repo.getIssueDetails(key.id);
-        if (details.image != null) {
-          await imageCache.set("issue", key.id, details.image!);
-        }
-        if (details.series?.id != null && details.series?.name != null) {
-          metadataCache.indexSeries(
-            details.series!.id,
-            details.series!.name,
-          );
-        }
+        await repo.getIssueDetails(key.id);
         break;
-
       case HydrationEntityType.publisher:
-        final details = await repo.getPublisherDetails(key.id);
-        metadataCache.indexPublisher(key.id, details.name);
-        if (details.image != null) {
-          await imageCache.set("publisher", key.id, details.image!);
-        }
+        await repo.getPublisherDetails(key.id);
         break;
-
       case HydrationEntityType.character:
-        final details = await repo.getCharacterDetails(key.id);
-        metadataCache.indexCharacter(key.id, details.name);
-        if (details.image != null) {
-          await imageCache.set("character", key.id, details.image!);
-        }
+        await repo.getCharacterDetails(key.id);
         break;
-
       case HydrationEntityType.creator:
-        final details = await repo.getCreatorDetails(key.id);
-        metadataCache.indexCreator(key.id, details.name);
-        if (details.image != null) {
-          await imageCache.set("creator", key.id, details.image!);
-        }
+        await repo.getCreatorDetails(key.id);
         break;
-
       case HydrationEntityType.team:
-        final details = await repo.getTeamDetails(key.id);
-        if (details.image != null) {
-          await imageCache.set("team", key.id, details.image!);
-        }
+        await repo.getTeamDetails(key.id);
         break;
-
       case HydrationEntityType.arc:
-        final details = await repo.getArcDetails(key.id);
-        if (details.image != null) {
-          await imageCache.set("arc", key.id, details.image!);
-        }
+        await repo.getArcDetails(key.id);
         break;
-
       case HydrationEntityType.imprint:
-        final details = await repo.getImprintDetails(key.id);
-        metadataCache.indexImprint(key.id, details.name);
-        if (details.image != null) {
-          await imageCache.set("imprint", key.id, details.image!);
-        }
+        await repo.getImprintDetails(key.id);
         break;
-
       case HydrationEntityType.universe:
-        final details = await repo.getUniverseDetails(key.id);
-        if (details.image != null) {
-          await imageCache.set("universe", key.id, details.image!);
-        }
+        await repo.getUniverseDetails(key.id);
         break;
     }
   }

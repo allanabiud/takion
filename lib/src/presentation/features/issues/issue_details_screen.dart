@@ -16,9 +16,6 @@ import "package:takion/src/presentation/features/library/providers/pulls_provide
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart";
-import "package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart";
-import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
-import "package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart";
 import "package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart";
@@ -233,67 +230,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
     );
   }
 
-  Future<void> _acquireWishlistedIssue() async {
-    final wishlistRepo = ref.read(wishlistRepositoryProvider);
-    final item = await wishlistRepo.getItemByIssueId(_currentIssueId);
-
-    if (item != null) {
-      await wishlistRepo.acquireWishListItem(itemId: item.id);
-    } else {
-      final libraryRepo = ref.read(libraryRepositoryProvider);
-      final libItem = await libraryRepo.getItemByIssueId(_currentIssueId);
-      if (libItem != null &&
-          libItem.ownershipStatus == LibraryOwnershipStatus.wishlist) {
-        await libraryRepo.upsertItem(
-          metronIssueId: libItem.metronIssueId,
-          metronSeriesId: libItem.metronSeriesId,
-          ownershipStatus: LibraryOwnershipStatus.owned,
-          isRead: libItem.isRead,
-          rating: libItem.rating,
-          format: libItem.format,
-          acquiredOn: DateTime.now().toUtc(),
-        );
-        await wishlistRepo.removeFromWishListByIssueId(_currentIssueId);
-      } else {
-        if (mounted) {
-          TakionAlerts.error(context, "Wishlist item not found");
-        }
-        return;
-      }
-    }
-
-    try {
-      final issue = ref.read(issueDetailsProvider(_currentIssueId)).asData?.value;
-      final activityRepo = ref.read(activityRepositoryProvider);
-      final now = DateTime.now().toUtc();
-      final seriesId = issue?.series?.id ?? 0;
-      await activityRepo.addEvent(
-        LibraryActivityEvent(
-          id: "act-col-$_currentIssueId-${now.microsecondsSinceEpoch}",
-          userId: "local-user",
-          type: ActivityEventType.collected,
-          issueId: _currentIssueId,
-          seriesId: seriesId,
-          seriesName: issue?.series?.name ?? "",
-          issueNumber: issue?.number ?? "",
-          imageUrl: issue?.image,
-          timestamp: now,
-        ),
-      );
-      await activityRepo.deleteEventsByIssueIds(
-        [_currentIssueId],
-        type: ActivityEventType.wishlisted,
-      );
-    } catch (_) {}
-
-    ref.invalidate(issueMyDetailsProvider(_currentIssueId));
-    ref.invalidate(collectionStatusCacheProvider);
-    ref.invalidate(collectionStatsProvider);
-    if (mounted) {
-      TakionAlerts.success(context, "Added to collection");
-    }
-  }
-
   Future<void> toggleFavorite() {
     return toggleFavoriteWithUndo(
       context,
@@ -406,6 +342,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                         child: CachedNetworkImage(
                           imageUrl: issue.image!,
                           fit: BoxFit.cover,
+                          memCacheWidth: 720,
                         ),
                       )
                     else
@@ -465,6 +402,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                                       ? CachedNetworkImage(
                                           imageUrl: issue.image!,
                                           fit: BoxFit.cover,
+                                          memCacheWidth: 720,
                                         )
                                       : Container(
                                           color: theme
@@ -637,9 +575,6 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                     onToggleSeriesSubscription:
                         (isCurrentData && seriesId != null)
                         ? () => _setSeriesSubscription(!isSubscribed, seriesId)
-                        : null,
-                    onAcquire: isCurrentData
-                        ? _acquireWishlistedIssue
                         : null,
                   );
                 },

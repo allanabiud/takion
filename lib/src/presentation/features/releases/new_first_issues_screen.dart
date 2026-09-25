@@ -45,6 +45,10 @@ class NewFirstIssuesScreen extends ConsumerWidget {
         },
         orElse: () => null,
       ),
+      onRefresh: () async {
+        ref.invalidate(weeklyReleasesProvider(selectedDate));
+        await ref.read(weeklyReleasesProvider(selectedDate).future);
+      },
     );
   }
 }

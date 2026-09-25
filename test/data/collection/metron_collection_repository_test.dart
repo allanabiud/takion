@@ -123,20 +123,24 @@ void main() {
       when(
         () => remoteDataSource.getMissingIssues(100, page: 1),
       ).thenAnswer(
-        (_) async => [
-          const MissingIssueDto(
-            id: 201,
-            seriesId: 100,
-            seriesName: "Spider-Man",
-            issueNumber: "2",
-          ),
-        ],
+        (_) async => const MissingIssuesPageDto(
+          count: 1,
+          results: [
+            MissingIssueDto(
+              id: 201,
+              seriesId: 100,
+              seriesName: "Spider-Man",
+              issueNumber: "2",
+            ),
+          ],
+        ),
       );
 
-      final issues = await repository.getMissingIssues(100);
-      expect(issues.length, 1);
-      expect(issues.first.id, 201);
-      expect(issues.first.issueNumber, "2");
+      final issuesPage = await repository.getMissingIssues(100);
+      expect(issuesPage.count, 1);
+      expect(issuesPage.results.length, 1);
+      expect(issuesPage.results.first.id, 201);
+      expect(issuesPage.results.first.issueNumber, "2");
     });
 
     test("getMissingSeries maps missing series DTOs to entities", () async {

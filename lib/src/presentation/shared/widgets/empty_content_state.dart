@@ -20,24 +20,35 @@ class EmptyContentState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(
-      context,
-    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.65);
+    final theme = Theme.of(context);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.6,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: theme.colorScheme.primary.withValues(alpha: 0.8),
+              ),
+            ),
+            const SizedBox(height: 14),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: color),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
@@ -48,7 +59,7 @@ class EmptyContentState extends StatelessWidget {
             ],
             if (secondaryActionLabel != null && onSecondaryAction != null) ...[
               const SizedBox(height: 8),
-              FilledButton.tonal(
+              TextButton(
                 onPressed: onSecondaryAction,
                 child: Text(secondaryActionLabel!),
               ),

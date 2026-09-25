@@ -79,7 +79,6 @@ void invalidateCacheBackedProvidersForAutoSync(
   invalidate(becauseYouPulledIssuesProvider);
 
   Future.microtask(() {
-    invalidate(collectionIssueStatusMapProvider);
     invalidate(allLibraryItemsProvider);
     invalidate(libraryBasicStatsProvider);
     invalidate(libraryEntityStatsProvider);
@@ -221,8 +220,6 @@ class SettingsNotifier extends _$SettingsNotifier {
 
     try {
       final db = ref.read(driftDatabaseProvider);
-      await db.apiCacheDao.clearAll();
-      await db.imageCacheDao.clearAll();
       final cacheHeaderStore = ref.read(cacheHeaderStoreProvider);
       await cacheHeaderStore.clear(db);
       _invalidateCacheBackedProviders();

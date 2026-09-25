@@ -1,6 +1,7 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/settings_keys.dart";
-import "package:takion/src/core/storage/drift_database_provider.dart";
+import "package:takion/src/domain/collection/entities/collection_analytics.dart";
+import "package:takion/src/presentation/providers/repository_providers.dart";
 
 class ReadingGoal {
   final int target;
@@ -55,3 +56,19 @@ class ReadingGoalNotifier extends AsyncNotifier<ReadingGoal?> {
     state = const AsyncValue.data(null);
   }
 }
+
+/// Progress of the configured goal for its own period window (a calendar
+/// year for "yearly", the current month otherwise), counted in SQL over
+/// `first_read_at`. Independent of whatever period filter the stats UI is
+/// showing; re-emits whenever the library changes.
+final readingGoalProgressProvider =
+    StreamProvider.autoDispose<ReadingGoalProgress?>((ref) {
+      final goalAsync = ref.watch(readingGoalProvider);
+      final engine = ref.watch(collectionAnalyticsEngineProvider);
+      final goal = goalAsync.value;
+      if (goal == null) return Stream<ReadingGoalProgress?>.value(null);
+      return engine.watchReadingGoalProgress(
+        target: goal.target,
+        period: goal.period,
+      );
+    });

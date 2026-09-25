@@ -2,7 +2,6 @@ import "package:dio/dio.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:mocktail/mocktail.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/hydration/entity_hydration_queue.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/core/network/rate_limit_interceptor.dart";
@@ -13,22 +12,16 @@ import "package:takion/src/presentation/providers/repository_providers.dart";
 
 class MockCatalogRepository extends Mock implements CatalogRepository {}
 
-class MockEntityImageCache extends Mock implements EntityImageCache {}
-
 class MockRateLimitInterceptor extends Mock implements RateLimitInterceptor {}
 
 void main() {
   late MockCatalogRepository mockRepo;
-  late MockEntityImageCache mockImageCache;
   late MockRateLimitInterceptor mockRateLimit;
-  late MetronMetadataCache metadataCache;
   late ProviderContainer container;
 
   setUp(() {
     mockRepo = MockCatalogRepository();
-    mockImageCache = MockEntityImageCache();
     mockRateLimit = MockRateLimitInterceptor();
-    metadataCache = MetronMetadataCache();
 
     when(() => mockRateLimit.state).thenReturn(
       const RateLimitState(
@@ -41,16 +34,10 @@ void main() {
       ),
     );
 
-    when(
-      () => mockImageCache.set(any(), any(), any()),
-    ).thenAnswer((_) async {});
-
     container = ProviderContainer(
       overrides: [
         metronRepositoryProvider.overrideWithValue(mockRepo),
-        entityImageCacheProvider.overrideWithValue(mockImageCache),
         rateLimitInterceptorProvider.overrideWithValue(mockRateLimit),
-        metronMetadataCacheProvider.overrideWithValue(metadataCache),
         connectivityStatusProvider.overrideWith(
           (ref) => Stream.value(AppConnectivityStatus.online),
         ),
@@ -79,7 +66,7 @@ void main() {
     expect(added, 3);
   });
 
-  test("processes series hydration and populates metadata and image cache", () async {
+  test("processes series hydration through the repository", () async {
     const seriesDetails = SeriesDetails(
       id: 201,
       name: "Saga",
@@ -98,9 +85,8 @@ void main() {
 
     await pumpEventQueue();
 
-    expect(metadataCache.getSeriesName(201), "Saga");
-    expect(metadataCache.getPublisherName(50), "Image Comics");
-    verify(() => mockImageCache.set("series", 201, "https://example.com/saga.jpg")).called(1);
+    verify(() => mockRepo.getSeriesDetails(201)).called(1);
+    expect(queue.getStatus(HydrationEntityType.series, 201), HydrationStatus.succeeded);
     expect(queue.stats.succeededCount, 1);
   });
 

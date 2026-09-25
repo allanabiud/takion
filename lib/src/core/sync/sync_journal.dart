@@ -4,6 +4,15 @@ import "package:takion/src/data/common/drift/daos/sync_meta_dao.dart";
 
 /// Manages local sync state, watermarks, timestamps, locking, and diagnostic outcome logging.
 class SyncJournal {
+  /// Wall-clock timestamp of the last successful Google Drive backup run.
+  ///
+  /// Distinct from `last_sync_timestamp` (the Drive *data watermark*, which
+  /// only advances when something actually uploads) and from the Metron sync
+  /// keys (`metron_last_collection_sync`, `metron_last_pull_list_sync`,
+  /// `metron_last_wishlist_sync`).
+  static const String driveLastBackupTimestampKey =
+      "drive_last_backup_timestamp";
+
   final SyncMetaDao _dao;
 
   SyncJournal(this._dao);
@@ -12,6 +21,16 @@ class SyncJournal {
     final timestamp = await _dao.get("last_sync_timestamp");
     if (timestamp == null) return null;
     return DateTime.tryParse(timestamp);
+  }
+
+  Future<DateTime?> getLastBackupTime() async {
+    final raw = await _dao.get(driveLastBackupTimestampKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> setLastBackupTime(DateTime time) async {
+    await _dao.set(driveLastBackupTimestampKey, time.toUtc().toIso8601String());
   }
 
   Future<DateTime?> getLastUploadedTime() async {

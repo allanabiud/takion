@@ -37,3 +37,20 @@ class MissingSeries {
   final int? missingCount;
   final String? imageUrl;
 }
+
+class MissingIssuesPage {
+  const MissingIssuesPage({
+    required this.count,
+    required this.results,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final List<MissingIssue> results;
+  final String? next;
+  final String? previous;
+
+  bool get hasNext => next != null;
+  bool get hasPrevious => previous != null;
+}

@@ -1,10 +1,8 @@
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class EntityCard extends ConsumerWidget {
+class EntityCard extends StatelessWidget {
   const EntityCard({
     super.key,
     required this.entityType,
@@ -17,6 +15,8 @@ class EntityCard extends ConsumerWidget {
     this.imageWidth,
     this.imageHeight,
     this.borderRadius = 10,
+    this.cacheWidth,
+    this.cacheHeight,
   });
 
   final String entityType;
@@ -29,17 +29,17 @@ class EntityCard extends ConsumerWidget {
   final double? imageWidth;
   final double? imageHeight;
   final double borderRadius;
+  final int? cacheWidth;
+  final int? cacheHeight;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached(entityType, entityId);
-    final effectiveImageUrl = imageUrl ?? cachedImage;
-
     final effectiveImageWidth = imageWidth ?? (width ?? 100);
     final effectiveImageHeight = imageHeight ?? effectiveImageWidth;
+
+    final effectiveCacheWidth = cacheWidth ?? (effectiveImageWidth.isFinite ? (effectiveImageWidth * 2).round() : 300);
+    final effectiveCacheHeight = cacheHeight ?? (effectiveImageHeight.isFinite ? (effectiveImageHeight * 2).round() : 450);
 
     Widget card = InkWell(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -61,12 +61,14 @@ class EntityCard extends ConsumerWidget {
                   ),
                 ),
                 child: EntityCover(
-                  imageUrl: effectiveImageUrl,
+                  imageUrl: imageUrl,
                   placeholderLabel: initials(name),
                   width: effectiveImageWidth,
                   height: effectiveImageHeight,
                   borderRadius: 0,
                   aspectRatio: effectiveImageWidth / effectiveImageHeight,
+                  cacheWidth: effectiveCacheWidth,
+                  cacheHeight: effectiveCacheHeight,
                   iconSize: 24,
                 ),
               ),

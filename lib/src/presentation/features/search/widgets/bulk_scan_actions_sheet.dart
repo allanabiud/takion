@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
@@ -294,30 +293,19 @@ Future<void> _applyBulkActions(
           }
 
           final activityRepo = ref.read(activityRepositoryProvider);
-          final imageCache = ref.read(entityImageCacheProvider);
           String seriesName = "Unknown Series";
           String issueNumber = "#$issueId";
           String? imageUrl;
           try {
-            imageUrl = await imageCache.get("issue", issueId);
+            final details = await catalogRepo.getIssueDetails(issueId);
+            seriesName = details.series?.name ?? "Unknown Series";
+            issueNumber = details.number;
+            imageUrl = details.image;
           } catch (e) {
             AppLogger.debug(
-              "Failed to read cached image during bulk scan",
+              "Failed to load issue details during bulk scan",
               error: e,
             );
-          }
-          if (imageUrl == null || imageUrl.isEmpty) {
-            try {
-              final details = await catalogRepo.getIssueDetails(issueId);
-              seriesName = details.series?.name ?? "Unknown Series";
-              issueNumber = details.number;
-              imageUrl = details.image;
-            } catch (e) {
-              AppLogger.debug(
-                "Failed to load issue details during bulk scan",
-                error: e,
-              );
-            }
           }
 
           if (wantCollection &&

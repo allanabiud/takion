@@ -1,10 +1,8 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_collection_status_provider.dart";
@@ -13,7 +11,6 @@ import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_details_provider.dart";
-import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 class IssueListTile extends ConsumerWidget {
   final IssueList issue;
@@ -67,12 +64,6 @@ class IssueListTile extends ConsumerWidget {
         ? ref.watch(issueDetailsProvider(issue.id!))
         : null;
 
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = issue.id != null
-        ? cache.getCached("issue", issue.id!)
-        : null;
-
     final bool isHydrating = hydratedIssueAsync?.isLoading == true;
     final IssueDetails? hydratedIssue = hydratedIssueAsync?.value;
     final String effectiveName = hydratedIssue != null
@@ -96,10 +87,10 @@ class IssueListTile extends ConsumerWidget {
                   ),
             coverDate: hydratedIssue.coverDate,
             storeDate: hydratedIssue.storeDate,
-            image: hydratedIssue.image ?? issue.image ?? cachedImage,
+            image: hydratedIssue.image ?? issue.image,
             modified: hydratedIssue.modified,
           )
-        : issue.copyWith(image: issue.image ?? cachedImage);
+        : issue;
 
     final effectiveOnTap =
         onTap ??
@@ -162,9 +153,6 @@ class IssueListTile extends ConsumerWidget {
                 .contains(effectiveIssue.id!) ==
             true;
 
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth = (imageWidth * devicePixelRatio).round();
-
     final Widget coverWidget = isHydrating
         ? Container(
             width: imageWidth,
@@ -191,14 +179,16 @@ class IssueListTile extends ConsumerWidget {
                 height: imageHeight,
                 borderRadius: 0,
                 aspectRatio: imageWidth / imageHeight,
-                cacheWidth: cacheWidth,
+                cacheWidth: 120,
+                cacheHeight: 180,
                 iconSize: 22,
+                isFavorite: isFavorite,
+                syncStatus: effectiveSyncStatus,
               ),
             ),
           );
 
-    final effectiveHeroTag =
-        heroTag ?? (effectiveIssue.id != null ? "issue-cover-${effectiveIssue.id}${scope ?? ""}" : null);
+    final effectiveHeroTag = heroTag;
 
     final Widget leading = effectiveHeroTag != null
         ? Hero(tag: effectiveHeroTag, child: coverWidget)
@@ -288,30 +278,9 @@ class IssueListTile extends ConsumerWidget {
                               isRead: effectiveIsRead,
                               isPulled: effectiveIsPulled,
                               isWishlisted: effectiveIsWishlisted,
-                              syncStatus: effectiveSyncStatus,
                               iconSize: 16,
                               spacing: 8,
                             ),
-                            if (isFavorite) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Icon(
-                                  Icons.favorite,
-                                  size: 13,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            ],
                             const Spacer(),
                             if ((effectiveRating ?? 0) > 0)
                               ...List.generate(5, (index) {
@@ -389,59 +358,6 @@ class IssueListTile extends ConsumerWidget {
       );
     }
 
-    if (effectiveIsCollected || effectiveIssue.id == null) {
-      return wrappedTile;
-    }
-
-    return Dismissible(
-      key: ValueKey("issue-collect-${effectiveIssue.id}"),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        HapticFeedback.mediumImpact();
-        return true;
-      },
-      onDismissed: (_) {
-        showScrobbleSheet(
-          context: context,
-          ref: ref,
-          issueId: effectiveIssue.id!,
-          sheetTitle: issueTitle,
-          seriesId: effectiveIssue.series?.id,
-          seriesName: effectiveIssue.series?.name,
-          issueNumber: effectiveIssue.number,
-          imageUrl: effectiveIssue.image,
-        );
-        if (context.mounted) {
-          TakionAlerts.infoWithUndo(
-            context,
-            "Added to collection",
-            actionLabel: "Undo",
-            onUndo: () => showScrobbleSheet(
-              context: context,
-              ref: ref,
-              issueId: effectiveIssue.id!,
-              sheetTitle: issueTitle,
-              seriesId: effectiveIssue.series?.id,
-              seriesName: effectiveIssue.series?.name,
-              issueNumber: effectiveIssue.number,
-              imageUrl: effectiveIssue.image,
-            ),
-          );
-        }
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          Icons.inventory_2,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
-      ),
-      child: wrappedTile,
-    );
+    return wrappedTile;
   }
 }

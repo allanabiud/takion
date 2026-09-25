@@ -46,9 +46,11 @@ class WishlistDao extends DatabaseAccessor<AppDatabase> with _$WishlistDaoMixin 
         .getSingleOrNull();
   }
 
-  Future<WishlistItem?> getByIssueId(int issueId) {
-    return (select(wishlistItems)..where((t) => t.issueId.equals(issueId)))
-        .getSingleOrNull();
+  Future<WishlistItem?> getByIssueId(int issueId) async {
+    final results = await (select(wishlistItems)
+          ..where((t) => t.issueId.equals(issueId)))
+        .get();
+    return results.isEmpty ? null : results.first;
   }
 
   Future<List<WishlistItem>> getByIssueIds(List<int> issueIds) {

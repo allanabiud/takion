@@ -298,7 +298,7 @@ class _ReadBrowseTabState extends ConsumerState<_ReadBrowseTab>
                             isFirst: index == 0,
                             isLast: !hasMore && index == visible.length - 1,
                             onTap: () => context.pushRoute(
-                              SeriesDetailsRoute(
+                              SeriesIssuesRoute(
                                 seriesId: summary.id,
                                 initialFilter: "read",
                                 seriesName: summary.name,

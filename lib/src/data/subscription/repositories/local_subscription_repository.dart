@@ -1,5 +1,4 @@
 import "package:drift/drift.dart";
-import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/entities.dart";
@@ -7,15 +6,13 @@ import "package:takion/src/domain/repositories.dart";
 
 class LocalSubscriptionRepository implements SubscriptionRepository {
   LocalSubscriptionRepository(
-    this._database,
-    this._cache, {
+    this._database, {
     OfflineWriteQueue? offlineQueue,
   }) : _offlineQueue = offlineQueue;
 
   static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
-  final UserStateCache _cache;
   final OfflineWriteQueue? _offlineQueue;
 
   String _idForSeries(int seriesId) => "sub-$seriesId";
@@ -60,15 +57,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   Future<SeriesSubscription?> getSubscriptionBySeriesId(
     int metronSeriesId,
   ) async {
-    final cached = _cache.getSubscription(metronSeriesId);
-    if (cached != null) return cached;
     final d = await _database.subscriptionDao.getBySeriesId(metronSeriesId);
-    if (d != null) {
-      final sub = _toDomain(d);
-      _cache.setSubscription(metronSeriesId, sub);
-      return sub;
-    }
-    return null;
+    return d != null ? _toDomain(d) : null;
   }
 
   @override
@@ -111,8 +101,6 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       ),
     );
 
-    _cache.setSubscription(metronSeriesId, value);
-
     if (_offlineQueue != null) {
       await _offlineQueue.enqueuePullListAdd(seriesId: metronSeriesId);
     }
@@ -152,7 +140,6 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
         updatedAt: Value(updated.updatedAt.toIso8601String()),
       ),
     );
-    _cache.setSubscription(metronSeriesId, updated);
 
     if (_offlineQueue != null) {
       await _offlineQueue.enqueuePullListRemove(seriesId: metronSeriesId);
@@ -194,7 +181,6 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
         updatedAt: Value(updated.updatedAt.toIso8601String()),
       ),
     );
-    _cache.setSubscription(metronSeriesId, updated);
     return updated;
   }
 }

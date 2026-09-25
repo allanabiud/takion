@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 
@@ -41,12 +40,6 @@ final seriesDetailsProvider = FutureProvider.autoDispose
       final series = await ref
           .watch(metronRepositoryProvider)
           .getSeriesDetails(id);
-      if (series.image != null && series.image!.trim().isNotEmpty) {
-        ref.read(entityImageCacheProvider).set("series", id, series.image!);
-        ref
-            .read(entityImageVersionProvider.notifier)
-            .update((value) => value + 1);
-      }
 
       timer = Timer(const Duration(minutes: 5), link.close);
       return series;
@@ -62,19 +55,31 @@ final seriesFullDetailsProvider = FutureProvider.autoDispose
       final series = await ref
           .watch(metronRepositoryProvider)
           .getSeriesDetails(id);
-      if (series.image != null && series.image!.trim().isNotEmpty) {
-        ref.read(entityImageCacheProvider).set("series", id, series.image!);
-        ref
-            .read(entityImageVersionProvider.notifier)
-            .update((value) => value + 1);
-      }
 
       timer = Timer(const Duration(minutes: 5), link.close);
       return series;
     });
 
+class SeriesMissingIssuesArgs {
+  const SeriesMissingIssuesArgs({required this.seriesId, this.page = 1});
+
+  final int seriesId;
+  final int page;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SeriesMissingIssuesArgs &&
+        other.seriesId == seriesId &&
+        other.page == page;
+  }
+
+  @override
+  int get hashCode => Object.hash(seriesId, page);
+}
+
 final seriesMissingIssuesProvider = FutureProvider.autoDispose
-    .family<List<MissingIssue>, int>((ref, seriesId) async {
+    .family<MissingIssuesPage, SeriesMissingIssuesArgs>((ref, args) async {
       final repository = ref.watch(collectionRepositoryProvider);
-      return repository.getMissingIssues(seriesId);
+      return repository.getMissingIssues(args.seriesId, page: args.page);
     });

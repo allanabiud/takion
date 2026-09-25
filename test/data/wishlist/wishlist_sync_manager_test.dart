@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:drift/drift.dart" hide isNotNull, isNull;
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -159,5 +161,94 @@ void main() {
       expect(kept, isNotNull);
       expect(kept!.syncStatus, "synced");
     });
+
+    test("syncWishlist paginates past full pages and stamps the cursor",
+        () async {
+      when(
+        () => mockRepository.getWishListItems(page: any(named: "page")),
+      ).thenAnswer((invocation) async {
+        final page = invocation.namedArguments[#page] as int;
+        if (page == 1) {
+          // Metron page size → the worker must request page 2 as well.
+          return List.generate(20, (i) => _wishlistItem(i + 1));
+        }
+        if (page == 2) {
+          return [_wishlistItem(21), _wishlistItem(22), _wishlistItem(23)];
+        }
+        return const [];
+      });
+
+      final result = await syncManager.syncWishlist(forceFullSync: true);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.itemsFetched, 23);
+      expect(result.itemsUpdated, 23);
+
+      verify(() => mockRepository.getWishListItems(page: 1)).called(1);
+      verify(() => mockRepository.getWishListItems(page: 2)).called(1);
+      verifyNever(() => mockRepository.getWishListItems(page: 3));
+
+      expect(
+        await database.syncMetaDao.get("metron_last_wishlist_sync"),
+        isNotNull,
+      );
+      expect(await database.wishlistDao.getByIssueId(7021), isNotNull);
+    });
+
+    test("a failed page must not advance the wishlist cursor", () async {
+      const seededCursor = "2026-09-01T00:00:00.000Z";
+      await database.syncMetaDao.set("metron_last_wishlist_sync", seededCursor);
+
+      when(
+        () => mockRepository.getWishListItems(page: any(named: "page")),
+      ).thenAnswer((invocation) async {
+        final page = invocation.namedArguments[#page] as int;
+        if (page == 1) return List.generate(20, (i) => _wishlistItem(i + 1));
+        throw Exception("wishlist page 2 down");
+      });
+
+      final result = await syncManager.syncWishlist();
+
+      expect(result.isSuccess, isFalse);
+      expect(result.errorMessage, contains("wishlist page 2 down"));
+      expect(
+        await database.syncMetaDao.get("metron_last_wishlist_sync"),
+        seededCursor,
+      );
+    });
+
+    test("rejects a concurrent run instead of starting a second sync",
+        () async {
+      final gate = Completer<List<WishlistItem>>();
+      var calls = 0;
+      when(
+        () => mockRepository.getWishListItems(page: any(named: "page")),
+      ).thenAnswer((_) {
+        calls++;
+        return gate.future;
+      });
+
+      final first = syncManager.syncWishlist(forceFullSync: true);
+      await Future<void>.delayed(Duration.zero);
+
+      final second = await syncManager.syncWishlist();
+      expect(second.isSuccess, isFalse);
+      expect(second.errorMessage, "Wishlist sync already in progress");
+
+      gate.complete(const []);
+      final firstResult = await first;
+      expect(firstResult.isSuccess, isTrue);
+      expect(calls, 1);
+    });
   });
+}
+
+WishlistItem _wishlistItem(int n) {
+  return WishlistItem(
+    id: n,
+    issueId: 7000 + n,
+    seriesId: 100,
+    seriesName: "Series",
+    issueNumber: "$n",
+  );
 }

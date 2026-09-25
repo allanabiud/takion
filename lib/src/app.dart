@@ -34,6 +34,7 @@ class _TakionAppState extends ConsumerState<TakionApp>
   late final AppRouter _appRouter;
   final ShortcutHandler _shortcutHandler = ShortcutHandler();
   bool _hasSeenOnboarding = false;
+  Timer? _launchSyncDelayTimer;
 
   @override
   void initState() {
@@ -92,6 +93,18 @@ class _TakionAppState extends ConsumerState<TakionApp>
         return;
       }
 
+      // Let the initial frame settle before starting network and database
+      // work. This callback is already detached from rendering, so the delay
+      // keeps launch sync out of the first-frame critical path. A cancellable
+      // timer (rather than Future.delayed) ensures disposing the app first —
+      // e.g. in widget tests — does not leave it pending.
+      final launchGate = Completer<void>();
+      _launchSyncDelayTimer = Timer(
+        const Duration(milliseconds: 500),
+        launchGate.complete,
+      );
+      await launchGate.future;
+      if (!mounted) return;
       await coordinator.syncMetronIfNeeded();
       if (!mounted) return;
 
@@ -222,14 +235,15 @@ class _TakionAppState extends ConsumerState<TakionApp>
     AppLogger.debug("App lifecycle state: $state");
     if (state == AppLifecycleState.resumed && mounted) {
       final container = ProviderScope.containerOf(context, listen: false);
-      ref.read(sessionCoordinatorProvider).onAppResumed(
-        onInvalidateCache: container.invalidate,
-      );
+      ref
+          .read(sessionCoordinatorProvider)
+          .onAppResumed(onInvalidateCache: container.invalidate);
     }
   }
 
   @override
   void dispose() {
+    _launchSyncDelayTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

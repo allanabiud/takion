@@ -4,7 +4,7 @@ import "package:takion/src/data/common/drift/database.dart";
 import "package:takion/src/presentation/features/library/providers/collection_status_cache_provider.dart";
 
 void main() {
-  test("buildStatusMap enforces strict mutual exclusivity where owned status overrides wishlist", () {
+  test("buildStatusMap preserves both collected and wishlisted status when an issue has both", () {
     final now = DateTime.now().toUtc();
     final libraryRows = [
       const LibraryItemStatusRow(
@@ -26,7 +26,7 @@ void main() {
     final wishlistRows = <WishlistItem>[
       WishlistItem(
         id: 1,
-        issueId: 101, // Duplicate on wishlist: should be ignored because it is owned in library
+        issueId: 101, // Present on wishlist and owned in library
         seriesId: 1,
         seriesName: "Spider-Man",
         issueNumber: "101",
@@ -57,9 +57,9 @@ void main() {
       wishlistRows: wishlistRows,
     );
 
-    // Issue 101: Collected = true, Wishlisted = false
+    // Issue 101: Collected = true, Wishlisted = true
     expect(statusMap[101]?.isCollected, true);
-    expect(statusMap[101]?.isWishlisted, false);
+    expect(statusMap[101]?.isWishlisted, true);
     expect(statusMap[101]?.isRead, true);
     expect(statusMap[101]?.rating, 5);
 

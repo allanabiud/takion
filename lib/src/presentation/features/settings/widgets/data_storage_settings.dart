@@ -5,7 +5,6 @@ import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
 import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
-import "package:takion/src/core/storage/drift_database_provider.dart";
 
 void showDataStorageSettings(BuildContext context, WidgetRef ref) {
   TakionBottomSheet.show(
@@ -114,8 +113,8 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                       ),
                     );
                     if (confirm == true) {
-                      final db = ref.read(driftDatabaseProvider);
-                      await db.imageCacheDao.clearAll();
+                      PaintingBinding.instance.imageCache.clear();
+                      PaintingBinding.instance.imageCache.clearLiveImages();
                       if (context.mounted) {
                         TakionAlerts.success(context, "Image Cache Cleared");
                       }

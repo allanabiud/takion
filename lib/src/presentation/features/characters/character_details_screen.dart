@@ -10,7 +10,6 @@ import "package:takion/src/presentation/shared/favorite_toggle_actions.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/features/characters/providers/character_details_provider.dart";
-import "package:takion/src/presentation/features/characters/widgets/powerstats_radar_card.dart";
 import "package:takion/src/presentation/features/characters/providers/character_issue_list_provider.dart";
 import "package:takion/src/presentation/features/issues/issue_card.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
@@ -85,13 +84,6 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
     final detailsAsync = ref.watch(
       characterDetailsProvider(widget.characterId),
     );
-    final superheroAsync = ref.watch(
-      superheroCharacterProvider(widget.characterId),
-    );
-    final usePowerstats =
-        ref.watch(superheroUsePowerstatsProvider).value ?? false;
-    final superhero = superheroAsync.asData?.value;
-    final isSuperHeroLoading = superheroAsync.isLoading;
     final isFavoriteAsync = ref.watch(
       isCharacterFavoriteProvider(widget.characterId),
     );
@@ -228,20 +220,6 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: _CharacterCreatorsCard(creators: data.creators),
-            ),
-          ],
-          if (usePowerstats &&
-              (isSuperHeroLoading || superhero?.powerstats != null)) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: isSuperHeroLoading
-                    ? const ShimmerWidget(
-                        child: SkeletonBox(borderRadius: 16, height: 340),
-                      )
-                    : PowerStatsRadarCard(powerstats: superhero!.powerstats!),
-              ),
             ),
           ],
           if (hasIssues ||
@@ -599,6 +577,8 @@ class _CharacterFirstAppearanceCard extends StatelessWidget {
                   imageUrl: issue.image,
                   width: 60,
                   height: 90,
+                  cacheWidth: 120,
+                  cacheHeight: 180,
                   borderRadius: 0,
                   aspectRatio: 60 / 90,
                   iconSize: 24,

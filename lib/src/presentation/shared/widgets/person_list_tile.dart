@@ -1,7 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
@@ -36,16 +35,6 @@ class PersonListTile extends ConsumerWidget {
     final hasCharacterId = characterId != null;
     final hasCreatorId = creatorId != null;
     final theme = Theme.of(context);
-
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedCharImage = characterId != null
-        ? cache.getCached("character", characterId!)
-        : null;
-    final cachedCreatorImage = creatorId != null
-        ? cache.getCached("creator", creatorId!)
-        : null;
-    final effectiveImageUrl = imageUrl ?? cachedCharImage ?? cachedCreatorImage;
 
     final isFav = hasCharacterId
         ? ref.watch(isCharacterFavoriteProvider(characterId!)).asData?.value ??
@@ -91,7 +80,7 @@ class PersonListTile extends ConsumerWidget {
                             width: 60,
                             height: 60,
                             child: EntityCover(
-                              imageUrl: effectiveImageUrl,
+                              imageUrl: imageUrl,
                               placeholderLabel: initials(name),
                               width: 60,
                               height: 60,

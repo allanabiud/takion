@@ -174,7 +174,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   ref.listen<AsyncValue<List<LibraryItem>>>(allLibraryItemsProvider, (_, next) {
     if (!next.hasValue) return;
     debounced.schedule(() => computeStats(next.value!));
-  });
+  }, fireImmediately: true);
 
   ref.listen<AsyncValue<List<LocalIssue>>>(metronIssuesStreamProvider, (
     _,
@@ -197,7 +197,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     ref.read(allLibraryItemsProvider).whenOrNull(
           data: computeStats,
         );
-  });
+  }, fireImmediately: true);
 
   fetchRemoteStats();
 

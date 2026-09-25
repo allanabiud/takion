@@ -3,7 +3,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
 
@@ -37,15 +36,10 @@ class SeriesCard extends ConsumerWidget {
       favoriteSeriesIdsSetProvider.select((set) => set.contains(series.id)),
     );
 
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached("series", series.id);
-    final coverImage = imageUrl ?? cachedImage;
+    final coverImage = imageUrl;
 
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth = width.isInfinite
-        ? null
-        : (width * devicePixelRatio).round();
+    const cacheWidth = 300;
+    const cacheHeight = 450;
 
     return SizedBox(
       width: width,
@@ -68,6 +62,7 @@ class SeriesCard extends ConsumerWidget {
                     role: role,
                     placeholderIcon: Icons.collections_bookmark_outlined,
                     cacheWidth: cacheWidth,
+                    cacheHeight: cacheHeight,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),

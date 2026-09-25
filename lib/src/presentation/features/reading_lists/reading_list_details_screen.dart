@@ -4,7 +4,6 @@ import "package:auto_route/auto_route.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/core/sharing/reading_list_sharing_service.dart";
 import "package:takion/src/domain/entities.dart";
@@ -505,6 +504,8 @@ class _ReadingListDetailsScreenState
                       width: 48,
                       height: 72,
                       fit: BoxFit.cover,
+                      memCacheWidth: 120,
+                      memCacheHeight: 180,
                     ),
                   )
                 else
@@ -598,18 +599,7 @@ class _ReadingListDetailsScreenState
 
   Widget _buildHeader(LocalReadingList list, MetronReadingListDetail? detail) {
     final theme = Theme.of(context);
-    String? firstCoverUrl = list.metronImageUrl ?? detail?.image;
-
-    if ((firstCoverUrl == null || firstCoverUrl.isEmpty) && list.items.isNotEmpty) {
-      ref.watch(entityImageVersionProvider);
-      final cache = ref.read(entityImageCacheProvider);
-      final firstItem = list.items.first;
-      final id = int.tryParse(firstItem.targetId.replaceAll(RegExp(r"\D"), "")) ?? 0;
-      firstCoverUrl = cache.getCached(
-        firstItem.isSeries ? "series" : "issue",
-        id,
-      );
-    }
+    final String? firstCoverUrl = list.metronImageUrl ?? detail?.image;
 
     return SizedBox(
       height: 350,
@@ -622,6 +612,7 @@ class _ReadingListDetailsScreenState
               child: CachedNetworkImage(
                 imageUrl: firstCoverUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: 720,
               ),
             )
           else

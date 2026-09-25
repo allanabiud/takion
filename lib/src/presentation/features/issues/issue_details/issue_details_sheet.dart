@@ -1,5 +1,3 @@
-import "dart:ui";
-
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -25,7 +23,6 @@ class IssueDetailsSheet extends StatelessWidget {
     this.seriesId,
     this.isSubscribed,
     this.onToggleSeriesSubscription,
-    this.onAcquire,
   });
 
   final ScrollController scrollController;
@@ -41,7 +38,6 @@ class IssueDetailsSheet extends StatelessWidget {
   final int? seriesId;
   final bool? isSubscribed;
   final VoidCallback? onToggleSeriesSubscription;
-  final VoidCallback? onAcquire;
 
   Widget _buildTitleSubtitle(BuildContext context) {
     final theme = Theme.of(context);
@@ -135,6 +131,16 @@ class IssueDetailsSheet extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
+                          isInPullList
+                              ? Icons.shopping_bag
+                              : Icons.shopping_bag_outlined,
+                          size: 22,
+                          color: isInPullList
+                              ? theme.colorScheme.secondary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 10),
+                        Icon(
                           (collectionStatus?.isCollected ?? false)
                               ? Icons.inventory_2
                               : Icons.inventory_2_outlined,
@@ -151,16 +157,6 @@ class IssueDetailsSheet extends StatelessWidget {
                           size: 22,
                           color: (collectionStatus?.isRead ?? false)
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 10),
-                        Icon(
-                          isInPullList
-                              ? Icons.shopping_bag
-                              : Icons.shopping_bag_outlined,
-                          size: 22,
-                          color: isInPullList
-                              ? theme.colorScheme.secondary
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 10),
@@ -197,138 +193,89 @@ class IssueDetailsSheet extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: AnimatedSize(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: theme.colorScheme.outlineVariant
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: _SpringMorphingStateButton(
-                                isCollected:
-                                    collectionStatus?.isCollected ?? false,
-                                isWishlisted:
-                                    collectionStatus?.isWishlisted ?? false,
-                                isInPullList: isInPullList,
-                                onPressed: onShowScrobbleSheet,
-                              ),
-                            ),
-                            if (onAcquire != null &&
-                                (collectionStatus?.isWishlisted ?? false) &&
-                                !(collectionStatus?.isCollected ?? false)) ...[
-                              const SizedBox(width: 6),
-                              Expanded(
-                                flex: 1,
-                                child: Tooltip(
-                                  message: "Acquire to collection",
-                                  child: FilledButton(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor:
-                                          theme.colorScheme.primaryContainer,
-                                      foregroundColor:
-                                          theme.colorScheme.onPrimaryContainer,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      iconSize: 28,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    onPressed: onAcquire,
-                                    child: const Icon(
-                                      Icons.shopping_cart_outlined,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(width: 6),
-                            Expanded(
-                              flex: 1,
-                              child: isFavorite
-                                  ? FilledButton(
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor:
-                                            theme.colorScheme.primaryContainer,
-                                        foregroundColor: theme
-                                            .colorScheme.onPrimaryContainer,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 14,
-                                        ),
-                                        iconSize: 28,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      onPressed: onToggleFavorite,
-                                      child: const Icon(Icons.favorite),
-                                    )
-                                  : FilledButton.tonal(
-                                      style: FilledButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 14,
-                                        ),
-                                        iconSize: 28,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      onPressed: onToggleFavorite,
-                                      child: const Icon(Icons.favorite_border),
-                                    ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              flex: 1,
-                              child: Tooltip(
-                                message: "Go to series",
-                                child: FilledButton.tonal(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: theme
-                                        .colorScheme.surfaceContainerHigh,
-                                    foregroundColor:
-                                        theme.colorScheme.onSurfaceVariant,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    iconSize: 28,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: seriesId != null
-                                      ? onNavigateToSeries
-                                      : null,
-                                  child: const Icon(
-                                    Icons.view_agenda_outlined,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _SpringMorphingStateButton(
+                          isCollected:
+                              collectionStatus?.isCollected ?? false,
+                          isWishlisted:
+                              collectionStatus?.isWishlisted ?? false,
+                          isInPullList: isInPullList,
+                          onPressed: onShowScrobbleSheet,
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        flex: 1,
+                        child: isFavorite
+                            ? FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      theme.colorScheme.primaryContainer,
+                                  foregroundColor: theme
+                                      .colorScheme.onPrimaryContainer,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  iconSize: 28,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: onToggleFavorite,
+                                child: const Icon(Icons.favorite),
+                              )
+                            : FilledButton.tonal(
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  iconSize: 28,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: onToggleFavorite,
+                                child: const Icon(Icons.favorite_border),
+                              ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        flex: 1,
+                        child: Tooltip(
+                          message: "Go to series",
+                          child: FilledButton.tonal(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: theme
+                                  .colorScheme.surfaceContainerHigh,
+                              foregroundColor:
+                                  theme.colorScheme.onSurfaceVariant,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                              iconSize: 28,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: seriesId != null
+                                ? onNavigateToSeries
+                                : null,
+                            child: const Icon(
+                              Icons.view_agenda_outlined,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

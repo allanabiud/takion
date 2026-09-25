@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/shared/widgets/section_header.dart";
 
 /// A single property item inside a [DetailsPropertyCard].
@@ -146,13 +147,7 @@ class _PropertyRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               onTap: () {
                 Clipboard.setData(ClipboardData(text: item.copyableValue!));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Copied ${item.label} to clipboard"),
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                TakionAlerts.copiedToClipboard(context, item.label);
               },
               child: Padding(
                 padding: const EdgeInsets.all(2),

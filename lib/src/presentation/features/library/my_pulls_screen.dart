@@ -216,6 +216,10 @@ class MyPullsScreen extends ConsumerWidget {
           icon: const Icon(Icons.add),
         ),
       ],
+      onRefresh: () async {
+        ref.invalidate(pullsIssuesForWeekProvider(selectedDate));
+        await ref.read(pullsIssuesForWeekProvider(selectedDate).future);
+      },
     );
   }
 }

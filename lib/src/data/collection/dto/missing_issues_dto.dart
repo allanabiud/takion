@@ -89,3 +89,39 @@ class MissingSeriesDto {
     );
   }
 }
+
+class MissingIssuesPageDto {
+  const MissingIssuesPageDto({
+    required this.count,
+    required this.results,
+    this.next,
+    this.previous,
+  });
+
+  final int count;
+  final List<MissingIssueDto> results;
+  final String? next;
+  final String? previous;
+
+  factory MissingIssuesPageDto.fromJson(Map<String, dynamic> json) {
+    final results = json["results"] as List<dynamic>? ?? [];
+    return MissingIssuesPageDto(
+      count: (json["count"] as num?)?.toInt() ?? results.length,
+      next: json["next"] as String?,
+      previous: json["previous"] as String?,
+      results: results
+          .whereType<Map<String, dynamic>>()
+          .map(MissingIssueDto.fromJson)
+          .toList(),
+    );
+  }
+
+  MissingIssuesPage toEntity() {
+    return MissingIssuesPage(
+      count: count,
+      next: next,
+      previous: previous,
+      results: results.map((d) => d.toEntity()).toList(),
+    );
+  }
+}

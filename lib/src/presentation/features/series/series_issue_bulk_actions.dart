@@ -4,7 +4,6 @@ import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/providers/providers.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 
 enum SeriesIssueBulkOperation {
   addToCollection,
@@ -142,7 +141,6 @@ Future<void> applySeriesIssueBulkAction({
   try {
     final libraryRepository = ref.read(libraryRepositoryProvider);
     final activityRepository = ref.read(activityRepositoryProvider);
-    final imageCache = ref.read(entityImageCacheProvider);
     final existingItems = await libraryRepository.getItemsBySeriesId(seriesId);
     final existingByIssueId = {
       for (final e in existingItems) e.metronIssueId: e,
@@ -156,7 +154,6 @@ Future<void> applySeriesIssueBulkAction({
     final readLogsToAdd = <LibraryReadLog>[];
     final issueIdsToDelete = <int>[];
     final readLogItemIdsToDelete = <String>[];
-    final imageCacheEntries = <int, String>{};
 
     for (final issue in issues) {
       final issueId = issue.issueId;
@@ -214,9 +211,6 @@ Future<void> applySeriesIssueBulkAction({
             timestamp: now,
           ),
         );
-        if (issue.imageUrl != null && issue.imageUrl!.isNotEmpty) {
-          imageCacheEntries[issueId] = issue.imageUrl!;
-        }
         affectedIssueIds.add(issueId);
         affected++;
         continue;
@@ -277,9 +271,6 @@ Future<void> applySeriesIssueBulkAction({
             timestamp: now,
           ),
         );
-        if (issue.imageUrl != null && issue.imageUrl!.isNotEmpty) {
-          imageCacheEntries[issueId] = issue.imageUrl!;
-        }
         affectedIssueIds.add(issueId);
         affected++;
         continue;
@@ -316,9 +307,6 @@ Future<void> applySeriesIssueBulkAction({
       }
     }
 
-    if (imageCacheEntries.isNotEmpty) {
-      await imageCache.setMany("issue", imageCacheEntries);
-    }
     if (itemsToUpsert.isNotEmpty) {
       await libraryRepository.batchUpsertItems(seriesId, itemsToUpsert);
     }
@@ -422,7 +410,9 @@ Future<void> showSeriesIssueBulkActionsSheet({
 
   TakionBottomSheet.show<void>(
     context: context,
-    title: seriesYear != null ? "$seriesName ($seriesYear)" : seriesName,
+    title: seriesYear != null
+        ? "${seriesName.replaceAll(RegExp(r"\s*\(\d{4}\)\s*$"), "")} ($seriesYear)"
+        : seriesName,
     child: StatefulBuilder(
       builder: (context, setModalState) {
         if (isLoading) {

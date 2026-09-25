@@ -167,7 +167,7 @@ class MetronCollectionRemoteDataSourceImpl
   }
 
   @override
-  Future<List<MissingIssueDto>> getMissingIssues(
+  Future<MissingIssuesPageDto> getMissingIssues(
     int seriesId, {
     int page = 1,
     CancelToken? cancelToken,
@@ -179,14 +179,10 @@ class MetronCollectionRemoteDataSourceImpl
         cancelToken: cancelToken,
       );
       final data = response.data as Map<String, dynamic>;
-      final results = data["results"] as List<dynamic>? ?? [];
-      return results
-          .whereType<Map<String, dynamic>>()
-          .map(MissingIssueDto.fromJson)
-          .toList();
+      return MissingIssuesPageDto.fromJson(data);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        return const [];
+        return const MissingIssuesPageDto(count: 0, results: []);
       }
       rethrow;
     }

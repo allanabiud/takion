@@ -419,6 +419,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         attachedDatabase.libraryItems.ownershipStatus,
         attachedDatabase.libraryItems.isRead,
         attachedDatabase.libraryItems.rating,
+        attachedDatabase.libraryItems.syncStatus,
       ]);
     final rows = await query.get();
     return [
@@ -431,6 +432,8 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
               "notOwned",
           isRead: row.read(attachedDatabase.libraryItems.isRead) ?? false,
           rating: row.read(attachedDatabase.libraryItems.rating),
+          syncStatus:
+              row.read(attachedDatabase.libraryItems.syncStatus) ?? "synced",
         ),
     ];
   }

@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
@@ -8,7 +7,6 @@ import "package:takion/src/presentation/features/issues/scrobble_sheet.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
 import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
-import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 
 class IssueCard extends ConsumerWidget {
   final int? issueId;
@@ -60,9 +58,7 @@ class IssueCard extends ConsumerWidget {
         ref.watch(favoriteIssueIdsProvider).asData?.value.contains(issueId!) ==
             true;
     final id = issueId;
-    final hasExplicitStatus =
-        isCollected != null && isWishlisted != null && isRead != null;
-    final providerStatus = id == null || hasExplicitStatus
+    final providerStatus = id == null
         ? null
         : ref.watch(issueCollectionStatusProvider(id));
     final pullEntryAsync = id == null || isPulled != null
@@ -100,8 +96,7 @@ class IssueCard extends ConsumerWidget {
               }
             : null);
 
-    final effectiveHeroTag =
-        heroTag ?? (issueId != null ? "issue-cover-$issueId${scope ?? ""}" : null);
+    final effectiveHeroTag = heroTag;
 
     Widget cardContent = Card(
       margin: EdgeInsets.zero,
@@ -114,6 +109,7 @@ class IssueCard extends ConsumerWidget {
             isFavorite: isFavorite,
             isRead: effectiveIsRead,
             role: role,
+            syncStatus: effectiveSyncStatus,
             cacheWidth: cacheWidth,
           ),
           Padding(
@@ -127,7 +123,6 @@ class IssueCard extends ConsumerWidget {
                       isRead: effectiveIsRead,
                       isPulled: effectiveIsPulled,
                       isWishlisted: effectiveIsWishlisted,
-                      syncStatus: effectiveSyncStatus,
                       iconSize: 14,
                       spacing: 4,
                     ),
@@ -137,7 +132,6 @@ class IssueCard extends ConsumerWidget {
                     isRead: effectiveIsRead,
                     isPulled: effectiveIsPulled,
                     isWishlisted: effectiveIsWishlisted,
-                    syncStatus: effectiveSyncStatus,
                     iconSize: 16,
                     spacing: 8,
                   ),
@@ -183,59 +177,6 @@ class IssueCard extends ConsumerWidget {
       ),
     );
 
-    if (effectiveIsCollected || issueId == null) {
-      return tileContent;
-    }
-
-    return Dismissible(
-      key: ValueKey("issue-collect-$issueId"),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        HapticFeedback.mediumImpact();
-        return true;
-      },
-      onDismissed: (_) {
-        showScrobbleSheet(
-          context: context,
-          ref: ref,
-          issueId: issueId!,
-          sheetTitle: title,
-          seriesId: seriesId,
-          seriesName: seriesName,
-          issueNumber: issueNumber,
-          imageUrl: imageUrl,
-        );
-        if (context.mounted) {
-          TakionAlerts.infoWithUndo(
-            context,
-            "Added to collection",
-            actionLabel: "Undo",
-            onUndo: () => showScrobbleSheet(
-              context: context,
-              ref: ref,
-              issueId: issueId!,
-              sheetTitle: title,
-              seriesId: seriesId,
-              seriesName: seriesName,
-              issueNumber: issueNumber,
-              imageUrl: imageUrl,
-            ),
-          );
-        }
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(
-          Icons.inventory_2,
-          color: theme.colorScheme.onPrimaryContainer,
-        ),
-      ),
-      child: tileContent,
-    );
+    return tileContent;
   }
 }

@@ -131,12 +131,12 @@ class MetronCollectionRepositoryImpl implements CollectionRepository {
   }
 
   @override
-  Future<List<MissingIssue>> getMissingIssues(
+  Future<MissingIssuesPage> getMissingIssues(
     int seriesId, {
     int page = 1,
   }) async {
-    final dtos = await _remoteDataSource.getMissingIssues(seriesId, page: page);
-    return dtos.map((dto) => dto.toEntity()).toList();
+    final dto = await _remoteDataSource.getMissingIssues(seriesId, page: page);
+    return dto.toEntity();
   }
 
   @override

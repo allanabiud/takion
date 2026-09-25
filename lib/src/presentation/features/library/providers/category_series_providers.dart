@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/content_sorting.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
@@ -18,11 +17,7 @@ final collectedSeriesProvider =
       final rows = await dao.getSeriesSummariesByCategory(
         ownershipStatus: "owned",
       );
-      final cache = ref.read(entityImageCacheProvider);
       final result = rows.map((r) {
-        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
-          cache.set("series", r.seriesId, r.computedCoverUrl!);
-        }
         return CategorySeriesSummary(
           seriesId: r.seriesId,
           seriesName: r.seriesName,
@@ -47,11 +42,7 @@ final readSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(isRead: true);
-      final cache = ref.read(entityImageCacheProvider);
       final result = rows.map((r) {
-        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
-          cache.set("series", r.seriesId, r.computedCoverUrl!);
-        }
         return CategorySeriesSummary(
           seriesId: r.seriesId,
           seriesName: r.seriesName,
@@ -80,11 +71,7 @@ final wishlistSeriesProvider =
       await ref.watch(allWishlistItemsStreamProvider.future);
       final db = ref.read(driftDatabaseProvider);
       final rows = await db.wishlistDao.getSeriesSummaries();
-      final cache = ref.read(entityImageCacheProvider);
       final result = rows.map((r) {
-        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
-          cache.set("series", r.seriesId, r.computedCoverUrl!);
-        }
         return CategorySeriesSummary(
           seriesId: r.seriesId,
           seriesName: r.seriesName,
@@ -109,11 +96,7 @@ final unreadSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(isRead: false);
-      final cache = ref.read(entityImageCacheProvider);
       final result = rows.map((r) {
-        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
-          cache.set("series", r.seriesId, r.computedCoverUrl!);
-        }
         return CategorySeriesSummary(
           seriesId: r.seriesId,
           seriesName: r.seriesName,
@@ -138,11 +121,7 @@ final unratedSeriesProvider =
       await ref.watch(allLibraryItemsProvider.future);
       final dao = ref.read(driftDatabaseProvider).libraryItemDao;
       final rows = await dao.getSeriesSummariesByCategory(isUnrated: true);
-      final cache = ref.read(entityImageCacheProvider);
       final result = rows.map((r) {
-        if (r.computedCoverUrl != null && r.computedCoverUrl!.isNotEmpty) {
-          cache.set("series", r.seriesId, r.computedCoverUrl!);
-        }
         return CategorySeriesSummary(
           seriesId: r.seriesId,
           seriesName: r.seriesName,

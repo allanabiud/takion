@@ -209,6 +209,7 @@ class _IssueCoverGalleryScreenState extends State<IssueCoverGalleryScreen> {
                 final image = CachedNetworkImage(
                   imageUrl: widget.imageUrls[index],
                   fit: BoxFit.contain,
+                  memCacheWidth: 720,
                 );
 
                 final padded = Padding(

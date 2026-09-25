@@ -1,5 +1,4 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
@@ -76,21 +75,16 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
 
         Future<void> recordEvents() async {
           final now = DateTime.now().toUtc();
-          final imageCache = ref.read(entityImageCacheProvider);
           String? imageUrl;
           String seriesName = "Unknown Series";
           String issueNumber = "#$_issueId";
           try {
-            final cachedUrl = await imageCache.get("issue", _issueId);
-            if (cachedUrl != null && cachedUrl.isNotEmpty) {
-              imageUrl = cachedUrl;
-            }
-          } catch (e) {
-            AppLogger.debug(
-              "Failed to read cached issue image for event recording",
-              error: e,
-            );
-          }
+            final localIssue = await ref
+                .read(driftDatabaseProvider)
+                .metronEntityDao
+                .getIssue(_issueId);
+            imageUrl = localIssue?.imageUrl;
+          } catch (_) {}
           try {
             final catalogRepository = ref.read(catalogRepositoryProvider);
             final details = await catalogRepository.getIssueDetails(_issueId);
@@ -99,16 +93,6 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
                 ? details.number
                 : issueNumber;
             imageUrl ??= details.image;
-            if (details.image != null && details.image!.isNotEmpty) {
-              try {
-                await imageCache.set("issue", _issueId, details.image!);
-              } catch (e) {
-                AppLogger.debug(
-                  "Failed to cache issue image for event recording",
-                  error: e,
-                );
-              }
-            }
           } catch (e) {
             AppLogger.debug(
               "Failed to load issue details for event recording",
@@ -249,21 +233,16 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
         );
 
         final activityRepository = ref.read(activityRepositoryProvider);
-        final imageCache = ref.read(entityImageCacheProvider);
         String? imageUrl;
         String seriesName = "Unknown Series";
         String issueNumber = "#$_issueId";
         try {
-          final cachedUrl = await imageCache.get("issue", _issueId);
-          if (cachedUrl != null && cachedUrl.isNotEmpty) {
-            imageUrl = cachedUrl;
-          }
-        } catch (e) {
-          AppLogger.debug(
-            "Failed to read cached issue image for read event",
-            error: e,
-          );
-        }
+          final localIssue = await ref
+              .read(driftDatabaseProvider)
+              .metronEntityDao
+              .getIssue(_issueId);
+          imageUrl = localIssue?.imageUrl;
+        } catch (_) {}
         try {
           final catalogRepository = ref.read(catalogRepositoryProvider);
           final details = await catalogRepository.getIssueDetails(_issueId);
@@ -272,16 +251,6 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
               ? details.number
               : issueNumber;
           imageUrl ??= details.image;
-          if (details.image != null && details.image!.isNotEmpty) {
-            try {
-              await imageCache.set("issue", _issueId, details.image!);
-            } catch (e) {
-              AppLogger.debug(
-                "Failed to cache issue image for read event",
-                error: e,
-              );
-            }
-          }
         } catch (e) {
           AppLogger.debug(
             "Failed to load issue details for read event",

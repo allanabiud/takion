@@ -1,7 +1,6 @@
 import "package:dio/dio.dart";
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
 import "package:takion/src/data/catalog/datasources/local/series_name_index.dart"
     as series_index;
@@ -96,10 +95,7 @@ void main() {
     () async {
       final remote = FakeMetronRemoteDataSource();
       final repo = buildRepo(remote);
-      final subscriptionRepo = LocalSubscriptionRepository(
-        db,
-        UserStateCache(),
-      );
+      final subscriptionRepo = LocalSubscriptionRepository(db);
 
       await subscriptionRepo.subscribe(
         metronSeriesId: 900,
@@ -125,10 +121,7 @@ void main() {
     () async {
       final remote = FakeMetronRemoteDataSource();
       final repo = buildRepo(remote);
-      final subscriptionRepo = LocalSubscriptionRepository(
-        db,
-        UserStateCache(),
-      );
+      final subscriptionRepo = LocalSubscriptionRepository(db);
 
       await subscriptionRepo.subscribe(
         metronSeriesId: 900,

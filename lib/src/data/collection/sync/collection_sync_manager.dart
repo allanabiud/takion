@@ -41,7 +41,10 @@ class CollectionSyncManager {
     return str != null ? DateTime.tryParse(str) : null;
   }
 
-  Future<CollectionSyncResult> syncCollection({bool forceFullSync = false}) async {
+  Future<CollectionSyncResult> syncCollection({
+    bool forceFullSync = false,
+    void Function(int count)? onProgress,
+  }) async {
     if (_isSyncing) {
       return const CollectionSyncResult(
         itemsFetched: 0,
@@ -70,6 +73,7 @@ class CollectionSyncManager {
         if (items.isEmpty) break;
 
         totalFetched += items.length;
+        onProgress?.call(totalFetched);
         final updatedCount = await _ingestCollectionItems(items);
         totalUpdated += updatedCount;
 

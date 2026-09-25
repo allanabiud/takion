@@ -144,7 +144,7 @@ class _UnratedScreenState extends ConsumerState<UnratedScreen> {
                       isFirst: index == 0,
                       isLast: index == filtered.length - 1,
                       onTap: () => context.pushRoute(
-                        SeriesDetailsRoute(
+                        SeriesIssuesRoute(
                           seriesId: summary.id,
                           initialFilter: "unrated",
                           seriesName: summary.name,

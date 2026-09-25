@@ -10,6 +10,7 @@ class EntityCover extends StatelessWidget {
   final bool isFavorite;
   final bool isRead;
   final ItemRole? role;
+  final String? syncStatus;
   final double borderRadius;
   final double aspectRatio;
   final double? width;
@@ -34,6 +35,7 @@ class EntityCover extends StatelessWidget {
     this.isFavorite = false,
     this.isRead = false,
     this.role,
+    this.syncStatus,
     this.borderRadius = 8,
     this.aspectRatio = 2 / 3,
     this.width,
@@ -54,6 +56,9 @@ class EntityCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasPendingSync = syncStatus == "pending";
+    final hasFailedSync = syncStatus == "failed";
+    final hasRoleBadge = role != null && role != ItemRole.standard;
 
     Widget cover = RepaintBoundary(
       child: ClipRRect(
@@ -118,27 +123,125 @@ class EntityCover extends StatelessWidget {
                             )
                           : Icon(placeholderIcon, size: iconSize),
                     ),
-              if (role != null && role != ItemRole.standard)
-                Positioned(top: 4, left: 4, child: RoleBadge(role: role!)),
+              if (hasRoleBadge || hasPendingSync || hasFailedSync)
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasRoleBadge) RoleBadge(role: role!),
+                      if (hasRoleBadge && (hasPendingSync || hasFailedSync))
+                        const SizedBox(height: 3),
+                      if (hasPendingSync)
+                        Tooltip(
+                          message: "Changes queued to sync",
+                          child: Container(
+                            padding: const EdgeInsets.all(3.5),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface.withValues(
+                                alpha: 0.92,
+                              ),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.5),
+                                width: 0.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.cloud_upload_outlined,
+                              size: 13,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      else if (hasFailedSync)
+                        Tooltip(
+                          message: "Sync failed - will retry",
+                          child: Container(
+                            padding: const EdgeInsets.all(3.5),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.errorContainer
+                                  .withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                color: theme.colorScheme.error.withValues(
+                                  alpha: 0.6,
+                                ),
+                                width: 0.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.sync_problem_outlined,
+                              size: 13,
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               if (isFavorite)
                 Positioned(
-                  top: 3,
-                  right: 3,
+                  top: 4,
+                  right: 4,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(3.5),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(
                         alpha: 0.95,
                       ),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
                     child: Icon(
                       Icons.favorite,
-                      size: 14,
+                      size: 13,
                       color: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
+              IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      circular ? 0 : borderRadius,
+                    ),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.25,
+                      ),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+              ),
               ?overlay,
             ],
           ),

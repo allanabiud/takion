@@ -5,6 +5,8 @@ import "package:takion/src/presentation/features/onboarding/widgets/onboarding_p
 import "package:takion/src/presentation/features/settings/providers/metron_account_provider.dart";
 import "package:takion/src/presentation/providers/repository_providers.dart";
 
+import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
+
 class AllDonePage extends ConsumerStatefulWidget {
   const AllDonePage({super.key, required this.onFinish});
 
@@ -15,21 +17,14 @@ class AllDonePage extends ConsumerStatefulWidget {
 }
 
 class _AllDonePageState extends ConsumerState<AllDonePage> {
-  bool _syncTriggered = false;
+  bool _syncStarted = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _triggerInitialSyncIfNeeded();
-    });
-  }
-
-  void _triggerInitialSyncIfNeeded() {
-    if (_syncTriggered) return;
     final isConnected = ref.read(metronConnectionProvider).value == true;
     if (isConnected) {
-      _syncTriggered = true;
+      _syncStarted = true;
       ref.read(metronSyncManagerProvider).syncAll();
     }
   }
@@ -41,7 +36,22 @@ class _AllDonePageState extends ConsumerState<AllDonePage> {
     final syncState =
         ref.watch(metronSyncStateProvider).value ?? const MetronSyncState();
 
-    final isSyncing = isConnected && syncState.isSyncing;
+    final isSyncing = _syncStarted || (isConnected && syncState.isSyncing);
+    if (_syncStarted && !syncState.isSyncing) {
+      _syncStarted = false;
+    }
+
+    final phase = (syncState.currentPhase ?? "").toLowerCase();
+    final isCollectionActive = isSyncing && phase.contains("collection");
+    final isPullListActive = isSyncing && phase.contains("pull list");
+    final isWishlistActive = isSyncing && phase.contains("wishlist");
+
+    final isCollectionDone = !isCollectionActive &&
+        (syncState.collectionItemsSynced > 0 || isPullListActive || isWishlistActive || !isSyncing);
+    final isPullListDone = !isPullListActive &&
+        (syncState.pullListSeriesSynced > 0 || isWishlistActive || !isSyncing);
+    final isWishlistDone = !isWishlistActive &&
+        (syncState.wishlistItemsSynced > 0 || (!isSyncing && !isWishlistActive));
 
     return PopScope(
       canPop: false,
@@ -75,9 +85,7 @@ class _AllDonePageState extends ConsumerState<AllDonePage> {
         title: Text(
           isSyncing
               ? "Syncing Your Comics..."
-              : isConnected
-                  ? "All Synced & Ready!"
-                  : "All Done!",
+              : "All Done!",
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -101,26 +109,29 @@ class _AllDonePageState extends ConsumerState<AllDonePage> {
                     children: [
                       _buildSyncCounterRow(
                         context,
-                        icon: Icons.auto_stories_outlined,
+                        icon: Icons.inventory_2_outlined,
                         label: "Collected Issues",
                         count: syncState.collectionItemsSynced,
-                        isSyncing: isSyncing,
+                        isActive: isCollectionActive,
+                        isDone: isCollectionDone,
                       ),
                       const Divider(height: 16),
                       _buildSyncCounterRow(
                         context,
-                        icon: Icons.bookmark_added_outlined,
+                        icon: Icons.notifications_active_outlined,
                         label: "Subscriptions / Pulls",
                         count: syncState.pullListSeriesSynced,
-                        isSyncing: isSyncing,
+                        isActive: isPullListActive,
+                        isDone: isPullListDone,
                       ),
                       const Divider(height: 16),
                       _buildSyncCounterRow(
                         context,
-                        icon: Icons.favorite_border,
+                        icon: Icons.turned_in_not,
                         label: "Wishlist Items",
                         count: syncState.wishlistItemsSynced,
-                        isSyncing: isSyncing,
+                        isActive: isWishlistActive,
+                        isDone: isWishlistDone,
                       ),
                     ],
                   ),
@@ -128,18 +139,15 @@ class _AllDonePageState extends ConsumerState<AllDonePage> {
               )
             : const SizedBox.shrink(),
         buttons: [
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: FilledButton(
-              onPressed: widget.onFinish,
-              child: Text(
-                isSyncing
-                    ? "Enter Takion (Sync in Background)"
-                    : "Finish Setup",
+          if (!isSyncing)
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton(
+                onPressed: widget.onFinish,
+                child: const Text("Finish Setup"),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -150,35 +158,62 @@ class _AllDonePageState extends ConsumerState<AllDonePage> {
     required IconData icon,
     required String label,
     required int count,
-    required bool isSyncing,
+    required bool isActive,
+    required bool isDone,
   }) {
     final theme = Theme.of(context);
+    final isHighlighted = isActive || isDone || count > 0;
+
     return Row(
       children: [
-        Icon(icon, size: 20, color: theme.colorScheme.primary),
+        Icon(
+          icon,
+          size: 20,
+          color: isHighlighted
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outline,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             label,
             style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
+              fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
+              color: isHighlighted
+                  ? theme.colorScheme.onSurface
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
-        if (isSyncing && count == 0)
-          const SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        else
-          Text(
-            "$count",
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isActive) ...[
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+            ] else if (isDone) ...[
+              Icon(
+                Icons.check_circle_rounded,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+            ],
+            AnimatedCounterText(
+              value: count,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isHighlighted
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
+              ),
             ),
-          ),
+          ],
+        ),
       ],
     );
   }

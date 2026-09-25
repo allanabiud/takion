@@ -166,4 +166,13 @@ class TakionAlerts {
   static void noLinkedSeriesForIssue(BuildContext context) {
     info(context, "No linked series");
   }
+
+  static void copiedToClipboard(BuildContext context, [String? label]) {
+    info(
+      context,
+      label != null && label.trim().isNotEmpty
+          ? "$label copied to clipboard"
+          : "Copied to clipboard",
+    );
+  }
 }

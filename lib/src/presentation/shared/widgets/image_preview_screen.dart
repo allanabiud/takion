@@ -115,6 +115,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
     final image = CachedNetworkImage(
       imageUrl: widget.imageUrl,
       fit: BoxFit.contain,
+      memCacheWidth: 720,
     );
 
     return Scaffold(

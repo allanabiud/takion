@@ -1,7 +1,8 @@
-import "package:dio/dio.dart";
 import "package:flutter/widgets.dart";
 import "package:workmanager/workmanager.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/logging/app_logger.dart";
+import "package:takion/src/core/network/metron_dio_factory.dart";
 import "package:takion/src/core/notifications/notification_service.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source_impl.dart";
 import "package:takion/src/data/collection/repositories/metron_collection_repository_impl.dart";
@@ -19,6 +20,34 @@ import "package:takion/src/presentation/providers/drive_sync_provider.dart";
 const String periodicSyncTaskName = "com.takion.app.periodic_sync";
 const String metronSyncTaskName = "com.takion.app.metron_sync";
 
+/// Weekly automatic Drive backup cadence (plan §3: "Workmanager: Every 7
+/// Days" and §6: "weekly automatic backup as the default").
+const Duration restartBackupInterval = Duration(days: 7);
+
+/// Whether the automatic Drive backup should run on app restart.
+///
+/// Due when no successful backup has been recorded, or when the last one is
+/// [restartBackupInterval] or older. A missing or corrupt timestamp fails
+/// open: a redundant backup is cheap, a missed one is not.
+bool isRestartBackupDue({DateTime? lastBackup, DateTime? now}) {
+  if (lastBackup == null) return true;
+  final reference = now ?? DateTime.now();
+  return reference.difference(lastBackup) >= restartBackupInterval;
+}
+
+/// Reads the Drive-specific backup timestamp, falling back to the Drive
+/// journal watermark for installs that predate the dedicated key so existing
+/// users keep their cadence. Never reads the Metron sync keys
+/// (`metron_last_*`) — Drive backup and Metron sync stay independent.
+Future<DateTime?> _readLastBackupTime(AppDatabase db) async {
+  final raw = await db.syncMetaDao.get(
+    SyncJournal.driveLastBackupTimestampKey,
+  );
+  if (raw != null) return DateTime.tryParse(raw);
+  final legacy = await db.syncMetaDao.get("last_sync_timestamp");
+  return legacy == null ? null : DateTime.tryParse(legacy);
+}
+
 @pragma("vm:entry-point")
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
@@ -35,8 +64,11 @@ void callbackDispatcher() {
 Future<bool> _handleMetronSync() async {
   AppDatabase? db;
   try {
-    db = AppDatabase();
-    final token = await db.settingsDao.getString("metron_api_token");
+    final database = AppDatabase();
+    db = database;
+    final token = await database.settingsDao.getString(
+      SettingsKeys.metronApiToken,
+    );
     if (token == null || token.trim().isEmpty) {
       AppLogger.info("Metron background sync skipped: no API token");
       return true;
@@ -47,15 +79,13 @@ Future<bool> _handleMetronSync() async {
       body: "Starting background sync...",
     );
 
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: "https://metron.cloud/api/",
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-        validateStatus: (status) =>
-            status != null && ((status >= 200 && status < 300) || status == 304),
-        headers: {"Authorization": "Bearer ${token.trim()}"},
-      ),
+    // Reuse the shared interceptor chain (rate limiting, 429/5xx retries,
+    // auth injection) so background sync cannot diverge from foreground
+    // behavior or blow through burst quota unnoticed.
+    final dio = buildMetronDio(
+      readToken: () =>
+          database.settingsDao.getString(SettingsKeys.metronApiToken),
+      db: database,
     );
 
     final colRemote = MetronCollectionRemoteDataSourceImpl(dio);
@@ -128,7 +158,7 @@ Future<bool> _handleDriveSync() async {
   try {
     db = AppDatabase();
     final enabled = await db.settingsDao.getBool(
-      "drive_sync_enabled",
+      SettingsKeys.driveSyncEnabled,
       defaultValue: false,
     );
 
@@ -267,29 +297,24 @@ class PeriodicSyncManager {
   }) async {
     try {
       final enabled = await db.settingsDao.getBool(
-        "drive_sync_enabled",
+        SettingsKeys.driveSyncEnabled,
         defaultValue: false,
       );
       if (!enabled) return;
 
       final autoBackup = await db.settingsDao.getBool(
-        "drive_auto_backup_on_restart",
-        defaultValue: false,
+        SettingsKeys.driveAutoBackupOnRestart,
+        defaultValue: true,
       );
       if (!autoBackup) return;
 
-      final lastSyncRaw = await db.syncMetaDao.get("last_sync_timestamp");
-      if (lastSyncRaw != null) {
-        final lastSync = DateTime.tryParse(lastSyncRaw);
-        if (lastSync != null) {
-          final elapsed = DateTime.now().difference(lastSync);
-          if (elapsed < const Duration(hours: 3)) {
-            AppLogger.info(
-              "Skipping auto backup: last backup was ${elapsed.inMinutes}m ago (< 3h)",
-            );
-            return;
-          }
-        }
+      final lastBackup = await _readLastBackupTime(db);
+      if (!isRestartBackupDue(lastBackup: lastBackup)) {
+        final elapsed = DateTime.now().difference(lastBackup!);
+        AppLogger.info(
+          "Skipping auto backup: last backup was ${elapsed.inDays}d ago (< 7d)",
+        );
+        return;
       }
 
       final account = await driveService.signInSilently();

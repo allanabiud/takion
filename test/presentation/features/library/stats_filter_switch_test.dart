@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:takion/src/domain/collection/entities/collection_analytics.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
 import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
@@ -194,6 +195,11 @@ void main() {
                 () => _FakeReadingGoalNotifier(
                   const ReadingGoal(target: 30, period: "monthly"),
                 ),
+              ),
+              // Keep the widget test database-free: the real progress
+              // provider subscribes to a drift query stream.
+              readingGoalProgressProvider.overrideWith(
+                (ref) => Stream<ReadingGoalProgress?>.value(null),
               ),
             ],
             child: MaterialApp(

@@ -2,7 +2,6 @@
 /// Metron catalog metadata, junction tables, and API/image cache.
 library;
 
-import "dart:convert";
 import "dart:io";
 
 import "package:drift/drift.dart";
@@ -18,9 +17,6 @@ import "daos/subscription_dao.dart";
 import "daos/activity_dao.dart";
 import "daos/reading_list_dao.dart";
 import "daos/favorite_dao.dart";
-import "daos/api_cache_dao.dart";
-import "daos/image_cache_dao.dart";
-import "daos/superhero_character_cache_dao.dart";
 import "daos/settings_dao.dart";
 import "daos/series_name_dao.dart";
 import "daos/sync_meta_dao.dart";
@@ -49,8 +45,7 @@ class LibraryItems extends Table {
   TextColumn get ownershipStatus => text()();
   BoolColumn get isRead => boolean()();
   IntColumn get metronCollectionId => integer().nullable()();
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant("synced"))();
+  TextColumn get syncStatus => text().withDefault(const Constant("synced"))();
   IntColumn get rating => integer().nullable()();
   TextColumn get purchaseDate => text().nullable()();
   RealColumn get pricePaid => real().nullable()();
@@ -94,8 +89,7 @@ class PullListEntries extends Table {
   IntColumn get metronIssueId => integer()();
   IntColumn get metronSeriesId => integer()();
   IntColumn get metronPullListId => integer().nullable()();
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant("synced"))();
+  TextColumn get syncStatus => text().withDefault(const Constant("synced"))();
   TextColumn get entryStatus => text()();
   DateTimeColumn get releaseDate => dateTime().nullable()();
   TextColumn get source => text()();
@@ -114,8 +108,7 @@ class SeriesSubscriptions extends Table {
   TextColumn get userId => text()();
   IntColumn get metronSeriesId => integer()();
   IntColumn get metronPullListId => integer().nullable()();
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant("synced"))();
+  TextColumn get syncStatus => text().withDefault(const Constant("synced"))();
   BoolColumn get isActive => boolean()();
   BoolColumn get autoAddPull => boolean().withDefault(const Constant(false))();
   TextColumn get subscribedAt => text()();
@@ -148,8 +141,7 @@ class WishlistItems extends Table {
   TextColumn get notes => text().nullable()();
   DateTimeColumn get addedOn => dateTime().nullable()();
   DateTimeColumn get modified => dateTime().nullable()();
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant("synced"))();
+  TextColumn get syncStatus => text().withDefault(const Constant("synced"))();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
 
@@ -268,6 +260,7 @@ class FavoriteReadingLists extends Table {
 class MetronIssues extends Table {
   IntColumn get id => integer()();
   TextColumn get number => text()();
+  TextColumn get issueName => text().nullable()();
   IntColumn get seriesId => integer().nullable()();
   TextColumn get coverDate => text().nullable()();
   TextColumn get storeDate => text().nullable()();
@@ -344,6 +337,7 @@ class MetronCreators extends Table {
 class MetronCharacters extends Table {
   IntColumn get id => integer()();
   TextColumn get name => text()();
+  TextColumn get slug => text().nullable()();
   TextColumn get imageUrl => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get aliasJson => text().nullable()();
@@ -464,6 +458,32 @@ class MetronReadingLists extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Pagination metadata and freshness for one cached query page. Entity
+/// payloads live in the normalized `metron_*` catalog tables; each row here
+/// pairs with the ordered entity ids in [PagedQueryItems] for the same key.
+class PagedQueryCaches extends Table {
+  TextColumn get cacheKeyPrefix => text()();
+  TextColumn get pageKey => text()();
+  IntColumn get count => integer().nullable()();
+  TextColumn get next => text().nullable()();
+  TextColumn get previous => text().nullable()();
+  TextColumn get cachedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {cacheKeyPrefix, pageKey};
+}
+
+/// Ordered entity ids for one cached query page (one row per position).
+class PagedQueryItems extends Table {
+  TextColumn get cacheKeyPrefix => text()();
+  TextColumn get pageKey => text()();
+  IntColumn get position => integer()();
+  IntColumn get entityId => integer()();
+
+  @override
+  Set<Column> get primaryKey => {cacheKeyPrefix, pageKey, position};
 }
 
 @TableIndex(name: "idx_issue_creators_creator", columns: {#creatorId})
@@ -608,40 +628,6 @@ class MetronReadingListItems extends Table {
   Set<Column> get primaryKey => {listId, targetId};
 }
 
-class ApiCache extends Table {
-  TextColumn get cacheKey => text()();
-  TextColumn get entityType => text()();
-  TextColumn get payload => text()();
-  TextColumn get etag => text().nullable()();
-  DateTimeColumn get cachedAt => dateTime()();
-
-  @override
-  Set<Column> get primaryKey => {cacheKey};
-}
-
-class ImageCache extends Table {
-  TextColumn get key => text()();
-  TextColumn get entityType => text()();
-  IntColumn get entityId => integer()();
-  TextColumn get imageUrl => text()();
-  DateTimeColumn get cachedAt => dateTime()();
-
-  @override
-  Set<Column> get primaryKey => {key};
-}
-
-class SuperheroCharacterCache extends Table {
-  IntColumn get metronCharacterId => integer()();
-  IntColumn get superheroId => integer()();
-  TextColumn get superheroName => text()();
-  TextColumn get imageUrl => text().nullable()();
-  TextColumn get powerstatsJson => text().nullable()();
-  DateTimeColumn get updatedAt => dateTime()();
-
-  @override
-  Set<Column> get primaryKey => {metronCharacterId};
-}
-
 class AppSettings extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();
@@ -662,8 +648,10 @@ class SeriesNameIndex extends Table {
 @TableIndex(name: "idx_offline_queue_created", columns: {#createdAt})
 class OfflineWriteQueue extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get operation => text()(); // 'create', 'update', 'delete', 'scrobble', 'acquire'
-  TextColumn get entityType => text()(); // 'collection', 'pull_list', 'wish_list'
+  TextColumn get operation =>
+      text()(); // 'create', 'update', 'delete', 'scrobble', 'acquire'
+  TextColumn get entityType =>
+      text()(); // 'collection', 'pull_list', 'wish_list'
   TextColumn get entityId => text().nullable()(); // local or Metron ID
   TextColumn get payload => text()(); // JSON body
   IntColumn get createdAt => integer()();
@@ -721,14 +709,13 @@ class SyncMeta extends Table {
     CreatorTeams,
     TeamUniverses,
     MetronReadingListItems,
-    ApiCache,
-    ImageCache,
-    SuperheroCharacterCache,
     AppSettings,
     SeriesNameIndex,
     SyncMeta,
     OfflineWriteQueue,
     WishlistItems,
+    PagedQueryCaches,
+    PagedQueryItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -743,10 +730,6 @@ class AppDatabase extends _$AppDatabase {
   late final ActivityDao activityDao = ActivityDao(this);
   late final ReadingListDao readingListDao = ReadingListDao(this);
   late final FavoriteDao favoriteDao = FavoriteDao(this);
-  late final ApiCacheDao apiCacheDao = ApiCacheDao(this);
-  late final ImageCacheDao imageCacheDao = ImageCacheDao(this);
-  late final SuperheroCharacterCacheDao superheroCharacterCacheDao =
-      SuperheroCharacterCacheDao(this);
   late final SettingsDao settingsDao = SettingsDao(this);
   late final SeriesNameDao seriesNameDao = SeriesNameDao(this);
   late final SyncMetaDao syncMetaDao = SyncMetaDao(this);
@@ -756,7 +739,7 @@ class AppDatabase extends _$AppDatabase {
   late final WishlistDao wishlistDao = WishlistDao(this);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration {
@@ -773,7 +756,6 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (m, from, to) async {
         if (from < 2) {
           await m.createAll();
-          await delete(apiCache).go();
         }
         if (from < 3) {
           await m.addColumn(metronIssues, metronIssues.variantsJson);
@@ -804,7 +786,6 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 7) {
           await m.addColumn(metronSeries, metronSeries.seriesTypeName);
-          await _backfillSeriesTypeNames();
         }
         if (from < 8) {
           await m.addColumn(readingListItems, readingListItems.createdAt);
@@ -814,9 +795,6 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 9) {
           await m.addColumn(readingLists, readingLists.metronArcId);
-        }
-        if (from < 10) {
-          await m.createTable(superheroCharacterCache);
         }
         if (from < 11) {
           await m.addColumn(activityEvents, activityEvents.batchId);
@@ -858,53 +836,26 @@ class AppDatabase extends _$AppDatabase {
         if (from < 17) {
           await _migrateWishlistFromLibraryItems();
         }
+        if (from < 18) {
+          await customStatement("DROP TABLE IF EXISTS api_cache");
+          await customStatement("DROP TABLE IF EXISTS image_cache");
+          await customStatement(
+            "DROP TABLE IF EXISTS superhero_character_cache",
+          );
+        }
+        if (from < 19) {
+          await m.addColumn(metronIssues, metronIssues.issueName);
+          await m.addColumn(metronCharacters, metronCharacters.slug);
+          await m.createTable(pagedQueryCaches);
+          await m.createTable(pagedQueryItems);
+          // Paged page payloads moved out of the settings key-value store
+          // into normalized tables; drop the abandoned JSON keys.
+          await customStatement(
+            "DELETE FROM app_settings WHERE key LIKE 'paged\\_cache%' ESCAPE '\\'",
+          );
+        }
       },
     );
-  }
-
-  Future<void> _backfillSeriesTypeNames() async {
-    final cachedRows =
-        await (select(apiCache)..where(
-              (t) =>
-                  t.cacheKey.like("series_details:%") |
-                  t.cacheKey.like("issue_details:%"),
-            ))
-            .get();
-
-    final namesById = <int, String>{};
-    for (final row in cachedRows) {
-      final payload = row.payload;
-      if (payload.isEmpty) continue;
-      try {
-        final json = jsonDecode(payload) as Map<String, dynamic>;
-        final Map<String, dynamic>? seriesType;
-        if (row.cacheKey.startsWith("series_details:")) {
-          final st = json["series_type"];
-          seriesType = st is Map<String, dynamic> ? st : null;
-        } else {
-          final series = json["series"];
-          final st = series is Map<String, dynamic>
-              ? series["series_type"]
-              : null;
-          seriesType = st is Map<String, dynamic> ? st : null;
-        }
-        if (seriesType != null) {
-          final id = seriesType["id"];
-          final name = seriesType["name"];
-          if (id is int && name is String && name.trim().isNotEmpty) {
-            namesById.putIfAbsent(id, () => name);
-          }
-        }
-      } catch (_) {
-        // Ignore malformed cached payloads.
-      }
-    }
-
-    for (final entry in namesById.entries) {
-      await (update(metronSeries)
-            ..where((t) => t.id.equals(entry.key) & t.seriesTypeName.isNull()))
-          .write(MetronSeriesCompanion(seriesTypeName: Value(entry.value)));
-    }
   }
 
   Future<void> _backfillReadingListItemTimestamps() async {
@@ -970,9 +921,9 @@ class AppDatabase extends _$AppDatabase {
       );
     }
 
-    await (delete(libraryItems)
-          ..where((t) => t.ownershipStatus.equals("wishlist")))
-        .go();
+    await (delete(
+      libraryItems,
+    )..where((t) => t.ownershipStatus.equals("wishlist"))).go();
   }
 }
 

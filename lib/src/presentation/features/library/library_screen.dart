@@ -21,8 +21,28 @@ class LibraryScreen extends ConsumerWidget {
     final suggestionAsync = ref.watch(readingSuggestionIssueProvider);
     final rateSuggestionAsync = ref.watch(rateSuggestionIssueProvider);
 
+    final totalComics = statsAsync.hasValue
+        ? statsAsync.value!.totalQuantity.toString()
+        : (statsAsync.isLoading ? "--" : "!");
+    final totalRead = statsAsync.hasValue
+        ? statsAsync.value!.readCount.toString()
+        : (statsAsync.isLoading ? "--" : "!");
+    final totalWishlist = statsAsync.hasValue
+        ? statsAsync.value!.wishlistCount.toString()
+        : (statsAsync.isLoading ? "--" : "!");
+    final totalUnread = statsAsync.hasValue
+        ? statsAsync.value!.unreadCount.toString()
+        : (statsAsync.isLoading ? "--" : "!");
+    final totalUnrated = statsAsync.hasValue
+        ? statsAsync.value!.unratedCount.toString()
+        : (statsAsync.isLoading ? "--" : "!");
+    final readingListsAsync = ref.watch(localReadingListsProvider);
+    final totalReadingLists = readingListsAsync.hasValue
+        ? readingListsAsync.value!.length.toString()
+        : (readingListsAsync.isLoading ? "--" : "!");
+
     return Scaffold(
-      appBar: statsAsync.isLoading
+      appBar: (statsAsync.isLoading && !statsAsync.hasValue)
           ? AppBar(
               toolbarHeight: 0,
               bottom: const PreferredSize(
@@ -43,11 +63,7 @@ class LibraryScreen extends ConsumerWidget {
                   Expanded(
                     child: ActionCard(
                       icon: Icons.inventory_2_outlined,
-                      value: statsAsync.when(
-                        data: (stats) => stats.totalQuantity.toString(),
-                        loading: () => "--",
-                        error: (_, _) => "!",
-                      ),
+                      value: totalComics,
                       label: "Comics",
                       onTap: () {
                         context.pushRoute(const MyComicsRoute());
@@ -58,11 +74,7 @@ class LibraryScreen extends ConsumerWidget {
                   Expanded(
                     child: ActionCard(
                       icon: Icons.bookmark_added,
-                      value: statsAsync.when(
-                        data: (stats) => stats.readCount.toString(),
-                        loading: () => "--",
-                        error: (_, _) => "!",
-                      ),
+                      value: totalRead,
                       label: "Read",
                       onTap: () {
                         context.pushRoute(const ReadRoute());
@@ -73,11 +85,7 @@ class LibraryScreen extends ConsumerWidget {
                   Expanded(
                     child: ActionCard(
                       icon: Icons.turned_in_not,
-                      value: statsAsync.when(
-                        data: (stats) => stats.wishlistCount.toString(),
-                        loading: () => "--",
-                        error: (_, _) => "!",
-                      ),
+                      value: totalWishlist,
                       label: "Wishlist",
                       onTap: () {
                         context.pushRoute(const WishlistRoute());
@@ -94,11 +102,7 @@ class LibraryScreen extends ConsumerWidget {
                 CompactListSectionItem(
                   icon: Icons.bookmark_added_outlined,
                   label: "Unread",
-                  value: statsAsync.when(
-                    data: (stats) => stats.unreadCount.toString(),
-                    loading: () => "--",
-                    error: (_, _) => "!",
-                  ),
+                  value: totalUnread,
                   onTap: () {
                     context.pushRoute(const UnreadRoute());
                   },
@@ -106,11 +110,7 @@ class LibraryScreen extends ConsumerWidget {
                 CompactListSectionItem(
                   icon: Icons.star_border_outlined,
                   label: "Unrated",
-                  value: statsAsync.when(
-                    data: (stats) => stats.unratedCount.toString(),
-                    loading: () => "--",
-                    error: (_, _) => "!",
-                  ),
+                  value: totalUnrated,
                   onTap: () {
                     context.pushRoute(const UnratedRoute());
                   },
@@ -118,15 +118,9 @@ class LibraryScreen extends ConsumerWidget {
                 CompactListSectionItem(
                   icon: Icons.list_alt_outlined,
                   label: "Reading Lists",
-                  value: ref
-                      .watch(localReadingListsProvider)
-                      .when(
-                        data: (lists) => lists.length.toString(),
-                        loading: () => "--",
-                        error: (_, _) => "!",
-                      ),
+                  value: totalReadingLists,
                   onTap: () {
-                    context.pushRoute(ReadingListsRoute());
+                    context.pushRoute(const ReadingListsRoute());
                   },
                 ),
                 CompactListSectionItem(
@@ -198,8 +192,34 @@ class _IssueSuggestionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return asyncSuggestion.when(
-      loading: () => Column(
+    if (asyncSuggestion.hasValue) {
+      final suggestion = asyncSuggestion.value;
+      if (suggestion == null) return const SizedBox.shrink();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SectionSubtitleHeader(title: title, subtitle: subtitle),
+          ),
+          const SizedBox(height: 8),
+          IssueListTile(
+            issue: suggestion.issue,
+            isFirst: true,
+            isLast: true,
+            useCardBackground: false,
+            isCollected: suggestion.isCollected,
+            isRead: suggestion.isRead,
+            rating: suggestion.rating,
+          ),
+        ],
+      );
+    }
+
+    if (asyncSuggestion.isLoading) {
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
@@ -213,7 +233,10 @@ class _IssueSuggestionSection extends StatelessWidget {
             child: Center(child: CircularProgressIndicator()),
           ),
         ],
-      ),
+      );
+    }
+
+    return asyncSuggestion.maybeWhen(
       error: (error, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,30 +255,7 @@ class _IssueSuggestionSection extends StatelessWidget {
           ),
         ],
       ),
-      data: (suggestion) {
-        if (suggestion == null) return const SizedBox.shrink();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SectionSubtitleHeader(title: title, subtitle: subtitle),
-            ),
-            const SizedBox(height: 8),
-            IssueListTile(
-              issue: suggestion.issue,
-              isFirst: true,
-              isLast: true,
-              useCardBackground: false,
-              isCollected: suggestion.isCollected,
-              isRead: suggestion.isRead,
-              rating: suggestion.rating,
-            ),
-          ],
-        );
-      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }

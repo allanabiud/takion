@@ -5,4 +5,4 @@ export "performance_metrics_provider.dart";
 export "repository_providers.dart";
 export "sort_preferences_provider.dart";
 export "theme_provider.dart";
-export "package:takion/src/presentation/features/integrations/providers/superhero_providers.dart";
+

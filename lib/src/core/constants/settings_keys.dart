@@ -6,10 +6,6 @@ abstract class SettingsKeys {
   static const String driveSyncInterval = "drive_sync_interval";
   static const String driveSyncIntervalEnabled = "drive_sync_interval_enabled";
   static const String driveAutoBackupOnRestart = "drive_auto_backup_on_restart";
-  static const String superheroApiToken = "superhero_api_token";
-  static const String superheroIntegrationEnabled =
-      "superhero_integration_enabled";
-  static const String superheroUseImage = "superhero_use_image";
   static const String backgroundSyncEnabled = "background_sync_enabled";
   static const String debugModeEnabled = "debug_mode_enabled";
   static const String themeMode = "theme_mode";

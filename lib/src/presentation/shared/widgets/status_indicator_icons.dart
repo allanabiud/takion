@@ -25,75 +25,62 @@ class StatusIndicatorIcons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasPendingSync = syncStatus == "pending";
-    final hasFailedSync = syncStatus == "failed";
 
     return Row(
       mainAxisSize: mainAxisSize,
       children: [
         _buildIcon(
           context,
-          isCollected ? Icons.inventory_2 : Icons.inventory_2_outlined,
-          isCollected,
-          theme.colorScheme.primary,
+          icon: isPulled ? Icons.shopping_bag : Icons.shopping_bag_outlined,
+          isActive: isPulled,
+          activeColor: theme.colorScheme.secondary,
+          tooltip: isPulled ? "Pulled" : "Not pulled",
         ),
         SizedBox(width: spacing),
         _buildIcon(
           context,
-          isRead ? Icons.bookmark_added : Icons.bookmark_added_outlined,
-          isRead,
-          theme.colorScheme.primary,
+          icon: isCollected ? Icons.inventory_2 : Icons.inventory_2_outlined,
+          isActive: isCollected,
+          activeColor: theme.colorScheme.primary,
+          tooltip: isCollected ? "In collection" : "Not in collection",
         ),
         SizedBox(width: spacing),
         _buildIcon(
           context,
-          isPulled ? Icons.shopping_bag : Icons.shopping_bag_outlined,
-          isPulled,
-          theme.colorScheme.secondary,
+          icon: isRead ? Icons.bookmark_added : Icons.bookmark_added_outlined,
+          isActive: isRead,
+          activeColor: theme.colorScheme.primary,
+          tooltip: isRead ? "Read" : "Unread",
         ),
         SizedBox(width: spacing),
         _buildIcon(
           context,
-          isWishlisted ? Icons.turned_in : Icons.turned_in_not,
-          isWishlisted,
-          theme.colorScheme.tertiary,
+          icon: isWishlisted ? Icons.turned_in : Icons.turned_in_not,
+          isActive: isWishlisted,
+          activeColor: theme.colorScheme.tertiary,
+          tooltip: isWishlisted ? "Wishlisted" : "Not wishlisted",
         ),
-        if (hasPendingSync) ...[
-          SizedBox(width: spacing),
-          Tooltip(
-            message: "Changes queued to sync",
-            child: Icon(
-              Icons.cloud_upload_outlined,
-              size: iconSize,
-              color: theme.colorScheme.tertiary,
-            ),
-          ),
-        ] else if (hasFailedSync) ...[
-          SizedBox(width: spacing),
-          Tooltip(
-            message: "Sync failed - will retry",
-            child: Icon(
-              Icons.sync_problem_outlined,
-              size: iconSize,
-              color: theme.colorScheme.error,
-            ),
-          ),
-        ],
       ],
     );
   }
 
   Widget _buildIcon(
-    BuildContext context,
-    IconData icon,
-    bool isActive,
-    Color activeColor,
-  ) {
+    BuildContext context, {
+    required IconData icon,
+    required bool isActive,
+    required Color activeColor,
+    required String tooltip,
+  }) {
     final theme = Theme.of(context);
-    return Icon(
-      icon,
-      size: iconSize,
-      color: isActive ? activeColor : theme.colorScheme.outline,
+    return Tooltip(
+      message: tooltip,
+      child: Icon(
+        icon,
+        size: iconSize,
+        color: isActive
+            ? activeColor
+            : theme.colorScheme.outline.withValues(alpha: 0.6),
+      ),
     );
   }
 }

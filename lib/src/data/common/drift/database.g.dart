@@ -6367,6 +6367,17 @@ class $MetronIssuesTable extends MetronIssues
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _issueNameMeta = const VerificationMeta(
+    'issueName',
+  );
+  @override
+  late final GeneratedColumn<String> issueName = GeneratedColumn<String>(
+    'issue_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _seriesIdMeta = const VerificationMeta(
     'seriesId',
   );
@@ -6594,6 +6605,7 @@ class $MetronIssuesTable extends MetronIssues
   List<GeneratedColumn> get $columns => [
     id,
     number,
+    issueName,
     seriesId,
     coverDate,
     storeDate,
@@ -6638,6 +6650,12 @@ class $MetronIssuesTable extends MetronIssues
       );
     } else if (isInserting) {
       context.missing(_numberMeta);
+    }
+    if (data.containsKey('issue_name')) {
+      context.handle(
+        _issueNameMeta,
+        issueName.isAcceptableOrUnknown(data['issue_name']!, _issueNameMeta),
+      );
     }
     if (data.containsKey('series_id')) {
       context.handle(
@@ -6800,6 +6818,10 @@ class $MetronIssuesTable extends MetronIssues
         DriftSqlType.string,
         data['${effectivePrefix}number'],
       )!,
+      issueName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}issue_name'],
+      ),
       seriesId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}series_id'],
@@ -6896,6 +6918,7 @@ class $MetronIssuesTable extends MetronIssues
 class MetronIssue extends DataClass implements Insertable<MetronIssue> {
   final int id;
   final String number;
+  final String? issueName;
   final int? seriesId;
   final String? coverDate;
   final String? storeDate;
@@ -6920,6 +6943,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
   const MetronIssue({
     required this.id,
     required this.number,
+    this.issueName,
     this.seriesId,
     this.coverDate,
     this.storeDate,
@@ -6947,6 +6971,9 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['number'] = Variable<String>(number);
+    if (!nullToAbsent || issueName != null) {
+      map['issue_name'] = Variable<String>(issueName);
+    }
     if (!nullToAbsent || seriesId != null) {
       map['series_id'] = Variable<int>(seriesId);
     }
@@ -7015,6 +7042,9 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     return MetronIssuesCompanion(
       id: Value(id),
       number: Value(number),
+      issueName: issueName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(issueName),
       seriesId: seriesId == null && nullToAbsent
           ? const Value.absent()
           : Value(seriesId),
@@ -7079,6 +7109,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     return MetronIssue(
       id: serializer.fromJson<int>(json['id']),
       number: serializer.fromJson<String>(json['number']),
+      issueName: serializer.fromJson<String?>(json['issueName']),
       seriesId: serializer.fromJson<int?>(json['seriesId']),
       coverDate: serializer.fromJson<String?>(json['coverDate']),
       storeDate: serializer.fromJson<String?>(json['storeDate']),
@@ -7108,6 +7139,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'number': serializer.toJson<String>(number),
+      'issueName': serializer.toJson<String?>(issueName),
       'seriesId': serializer.toJson<int?>(seriesId),
       'coverDate': serializer.toJson<String?>(coverDate),
       'storeDate': serializer.toJson<String?>(storeDate),
@@ -7135,6 +7167,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
   MetronIssue copyWith({
     int? id,
     String? number,
+    Value<String?> issueName = const Value.absent(),
     Value<int?> seriesId = const Value.absent(),
     Value<String?> coverDate = const Value.absent(),
     Value<String?> storeDate = const Value.absent(),
@@ -7159,6 +7192,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
   }) => MetronIssue(
     id: id ?? this.id,
     number: number ?? this.number,
+    issueName: issueName.present ? issueName.value : this.issueName,
     seriesId: seriesId.present ? seriesId.value : this.seriesId,
     coverDate: coverDate.present ? coverDate.value : this.coverDate,
     storeDate: storeDate.present ? storeDate.value : this.storeDate,
@@ -7185,6 +7219,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     return MetronIssue(
       id: data.id.present ? data.id.value : this.id,
       number: data.number.present ? data.number.value : this.number,
+      issueName: data.issueName.present ? data.issueName.value : this.issueName,
       seriesId: data.seriesId.present ? data.seriesId.value : this.seriesId,
       coverDate: data.coverDate.present ? data.coverDate.value : this.coverDate,
       storeDate: data.storeDate.present ? data.storeDate.value : this.storeDate,
@@ -7226,6 +7261,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
     return (StringBuffer('MetronIssue(')
           ..write('id: $id, ')
           ..write('number: $number, ')
+          ..write('issueName: $issueName, ')
           ..write('seriesId: $seriesId, ')
           ..write('coverDate: $coverDate, ')
           ..write('storeDate: $storeDate, ')
@@ -7255,6 +7291,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
   int get hashCode => Object.hashAll([
     id,
     number,
+    issueName,
     seriesId,
     coverDate,
     storeDate,
@@ -7283,6 +7320,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
       (other is MetronIssue &&
           other.id == this.id &&
           other.number == this.number &&
+          other.issueName == this.issueName &&
           other.seriesId == this.seriesId &&
           other.coverDate == this.coverDate &&
           other.storeDate == this.storeDate &&
@@ -7309,6 +7347,7 @@ class MetronIssue extends DataClass implements Insertable<MetronIssue> {
 class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
   final Value<int> id;
   final Value<String> number;
+  final Value<String?> issueName;
   final Value<int?> seriesId;
   final Value<String?> coverDate;
   final Value<String?> storeDate;
@@ -7333,6 +7372,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
   const MetronIssuesCompanion({
     this.id = const Value.absent(),
     this.number = const Value.absent(),
+    this.issueName = const Value.absent(),
     this.seriesId = const Value.absent(),
     this.coverDate = const Value.absent(),
     this.storeDate = const Value.absent(),
@@ -7358,6 +7398,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
   MetronIssuesCompanion.insert({
     this.id = const Value.absent(),
     required String number,
+    this.issueName = const Value.absent(),
     this.seriesId = const Value.absent(),
     this.coverDate = const Value.absent(),
     this.storeDate = const Value.absent(),
@@ -7383,6 +7424,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
   static Insertable<MetronIssue> custom({
     Expression<int>? id,
     Expression<String>? number,
+    Expression<String>? issueName,
     Expression<int>? seriesId,
     Expression<String>? coverDate,
     Expression<String>? storeDate,
@@ -7408,6 +7450,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (number != null) 'number': number,
+      if (issueName != null) 'issue_name': issueName,
       if (seriesId != null) 'series_id': seriesId,
       if (coverDate != null) 'cover_date': coverDate,
       if (storeDate != null) 'store_date': storeDate,
@@ -7435,6 +7478,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
   MetronIssuesCompanion copyWith({
     Value<int>? id,
     Value<String>? number,
+    Value<String?>? issueName,
     Value<int?>? seriesId,
     Value<String?>? coverDate,
     Value<String?>? storeDate,
@@ -7460,6 +7504,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     return MetronIssuesCompanion(
       id: id ?? this.id,
       number: number ?? this.number,
+      issueName: issueName ?? this.issueName,
       seriesId: seriesId ?? this.seriesId,
       coverDate: coverDate ?? this.coverDate,
       storeDate: storeDate ?? this.storeDate,
@@ -7492,6 +7537,9 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     }
     if (number.present) {
       map['number'] = Variable<String>(number.value);
+    }
+    if (issueName.present) {
+      map['issue_name'] = Variable<String>(issueName.value);
     }
     if (seriesId.present) {
       map['series_id'] = Variable<int>(seriesId.value);
@@ -7564,6 +7612,7 @@ class MetronIssuesCompanion extends UpdateCompanion<MetronIssue> {
     return (StringBuffer('MetronIssuesCompanion(')
           ..write('id: $id, ')
           ..write('number: $number, ')
+          ..write('issueName: $issueName, ')
           ..write('seriesId: $seriesId, ')
           ..write('coverDate: $coverDate, ')
           ..write('storeDate: $storeDate, ')
@@ -9389,6 +9438,15 @@ class $MetronCharactersTable extends MetronCharacters
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _slugMeta = const VerificationMeta('slug');
+  @override
+  late final GeneratedColumn<String> slug = GeneratedColumn<String>(
+    'slug',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _imageUrlMeta = const VerificationMeta(
     'imageUrl',
   );
@@ -9481,6 +9539,7 @@ class $MetronCharactersTable extends MetronCharacters
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    slug,
     imageUrl,
     description,
     aliasJson,
@@ -9512,6 +9571,12 @@ class $MetronCharactersTable extends MetronCharacters
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('slug')) {
+      context.handle(
+        _slugMeta,
+        slug.isAcceptableOrUnknown(data['slug']!, _slugMeta),
+      );
     }
     if (data.containsKey('image_url')) {
       context.handle(
@@ -9587,6 +9652,10 @@ class $MetronCharactersTable extends MetronCharacters
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      slug: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slug'],
+      ),
       imageUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}image_url'],
@@ -9631,6 +9700,7 @@ class $MetronCharactersTable extends MetronCharacters
 class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
   final int id;
   final String name;
+  final String? slug;
   final String? imageUrl;
   final String? description;
   final String? aliasJson;
@@ -9642,6 +9712,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
   const MetronCharacter({
     required this.id,
     required this.name,
+    this.slug,
     this.imageUrl,
     this.description,
     this.aliasJson,
@@ -9656,6 +9727,9 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || slug != null) {
+      map['slug'] = Variable<String>(slug);
+    }
     if (!nullToAbsent || imageUrl != null) {
       map['image_url'] = Variable<String>(imageUrl);
     }
@@ -9685,6 +9759,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
     return MetronCharactersCompanion(
       id: Value(id),
       name: Value(name),
+      slug: slug == null && nullToAbsent ? const Value.absent() : Value(slug),
       imageUrl: imageUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(imageUrl),
@@ -9716,6 +9791,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
     return MetronCharacter(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      slug: serializer.fromJson<String?>(json['slug']),
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       description: serializer.fromJson<String?>(json['description']),
       aliasJson: serializer.fromJson<String?>(json['aliasJson']),
@@ -9732,6 +9808,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'slug': serializer.toJson<String?>(slug),
       'imageUrl': serializer.toJson<String?>(imageUrl),
       'description': serializer.toJson<String?>(description),
       'aliasJson': serializer.toJson<String?>(aliasJson),
@@ -9746,6 +9823,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
   MetronCharacter copyWith({
     int? id,
     String? name,
+    Value<String?> slug = const Value.absent(),
     Value<String?> imageUrl = const Value.absent(),
     Value<String?> description = const Value.absent(),
     Value<String?> aliasJson = const Value.absent(),
@@ -9757,6 +9835,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
   }) => MetronCharacter(
     id: id ?? this.id,
     name: name ?? this.name,
+    slug: slug.present ? slug.value : this.slug,
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     description: description.present ? description.value : this.description,
     aliasJson: aliasJson.present ? aliasJson.value : this.aliasJson,
@@ -9770,6 +9849,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
     return MetronCharacter(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      slug: data.slug.present ? data.slug.value : this.slug,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       description: data.description.present
           ? data.description.value
@@ -9792,6 +9872,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
     return (StringBuffer('MetronCharacter(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('slug: $slug, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('description: $description, ')
           ..write('aliasJson: $aliasJson, ')
@@ -9808,6 +9889,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
   int get hashCode => Object.hash(
     id,
     name,
+    slug,
     imageUrl,
     description,
     aliasJson,
@@ -9823,6 +9905,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
       (other is MetronCharacter &&
           other.id == this.id &&
           other.name == this.name &&
+          other.slug == this.slug &&
           other.imageUrl == this.imageUrl &&
           other.description == this.description &&
           other.aliasJson == this.aliasJson &&
@@ -9836,6 +9919,7 @@ class MetronCharacter extends DataClass implements Insertable<MetronCharacter> {
 class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String?> slug;
   final Value<String?> imageUrl;
   final Value<String?> description;
   final Value<String?> aliasJson;
@@ -9847,6 +9931,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
   const MetronCharactersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.slug = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.description = const Value.absent(),
     this.aliasJson = const Value.absent(),
@@ -9859,6 +9944,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
   MetronCharactersCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.slug = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.description = const Value.absent(),
     this.aliasJson = const Value.absent(),
@@ -9871,6 +9957,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
   static Insertable<MetronCharacter> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? slug,
     Expression<String>? imageUrl,
     Expression<String>? description,
     Expression<String>? aliasJson,
@@ -9883,6 +9970,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (slug != null) 'slug': slug,
       if (imageUrl != null) 'image_url': imageUrl,
       if (description != null) 'description': description,
       if (aliasJson != null) 'alias_json': aliasJson,
@@ -9897,6 +9985,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
   MetronCharactersCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String?>? slug,
     Value<String?>? imageUrl,
     Value<String?>? description,
     Value<String?>? aliasJson,
@@ -9909,6 +9998,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
     return MetronCharactersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      slug: slug ?? this.slug,
       imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
       aliasJson: aliasJson ?? this.aliasJson,
@@ -9928,6 +10018,9 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (slug.present) {
+      map['slug'] = Variable<String>(slug.value);
     }
     if (imageUrl.present) {
       map['image_url'] = Variable<String>(imageUrl.value);
@@ -9961,6 +10054,7 @@ class MetronCharactersCompanion extends UpdateCompanion<MetronCharacter> {
     return (StringBuffer('MetronCharactersCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('slug: $slug, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('description: $description, ')
           ..write('aliasJson: $aliasJson, ')
@@ -17877,1179 +17971,6 @@ class MetronReadingListItemsCompanion
   }
 }
 
-class $ApiCacheTable extends ApiCache
-    with TableInfo<$ApiCacheTable, ApiCacheData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ApiCacheTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _cacheKeyMeta = const VerificationMeta(
-    'cacheKey',
-  );
-  @override
-  late final GeneratedColumn<String> cacheKey = GeneratedColumn<String>(
-    'cache_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
-    'entityType',
-  );
-  @override
-  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
-    'entity_type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _payloadMeta = const VerificationMeta(
-    'payload',
-  );
-  @override
-  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
-    'payload',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _etagMeta = const VerificationMeta('etag');
-  @override
-  late final GeneratedColumn<String> etag = GeneratedColumn<String>(
-    'etag',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
-    'cachedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
-    'cached_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    cacheKey,
-    entityType,
-    payload,
-    etag,
-    cachedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'api_cache';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<ApiCacheData> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('cache_key')) {
-      context.handle(
-        _cacheKeyMeta,
-        cacheKey.isAcceptableOrUnknown(data['cache_key']!, _cacheKeyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_cacheKeyMeta);
-    }
-    if (data.containsKey('entity_type')) {
-      context.handle(
-        _entityTypeMeta,
-        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_entityTypeMeta);
-    }
-    if (data.containsKey('payload')) {
-      context.handle(
-        _payloadMeta,
-        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_payloadMeta);
-    }
-    if (data.containsKey('etag')) {
-      context.handle(
-        _etagMeta,
-        etag.isAcceptableOrUnknown(data['etag']!, _etagMeta),
-      );
-    }
-    if (data.containsKey('cached_at')) {
-      context.handle(
-        _cachedAtMeta,
-        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_cachedAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {cacheKey};
-  @override
-  ApiCacheData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ApiCacheData(
-      cacheKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}cache_key'],
-      )!,
-      entityType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity_type'],
-      )!,
-      payload: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload'],
-      )!,
-      etag: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}etag'],
-      ),
-      cachedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}cached_at'],
-      )!,
-    );
-  }
-
-  @override
-  $ApiCacheTable createAlias(String alias) {
-    return $ApiCacheTable(attachedDatabase, alias);
-  }
-}
-
-class ApiCacheData extends DataClass implements Insertable<ApiCacheData> {
-  final String cacheKey;
-  final String entityType;
-  final String payload;
-  final String? etag;
-  final DateTime cachedAt;
-  const ApiCacheData({
-    required this.cacheKey,
-    required this.entityType,
-    required this.payload,
-    this.etag,
-    required this.cachedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['cache_key'] = Variable<String>(cacheKey);
-    map['entity_type'] = Variable<String>(entityType);
-    map['payload'] = Variable<String>(payload);
-    if (!nullToAbsent || etag != null) {
-      map['etag'] = Variable<String>(etag);
-    }
-    map['cached_at'] = Variable<DateTime>(cachedAt);
-    return map;
-  }
-
-  ApiCacheCompanion toCompanion(bool nullToAbsent) {
-    return ApiCacheCompanion(
-      cacheKey: Value(cacheKey),
-      entityType: Value(entityType),
-      payload: Value(payload),
-      etag: etag == null && nullToAbsent ? const Value.absent() : Value(etag),
-      cachedAt: Value(cachedAt),
-    );
-  }
-
-  factory ApiCacheData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ApiCacheData(
-      cacheKey: serializer.fromJson<String>(json['cacheKey']),
-      entityType: serializer.fromJson<String>(json['entityType']),
-      payload: serializer.fromJson<String>(json['payload']),
-      etag: serializer.fromJson<String?>(json['etag']),
-      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'cacheKey': serializer.toJson<String>(cacheKey),
-      'entityType': serializer.toJson<String>(entityType),
-      'payload': serializer.toJson<String>(payload),
-      'etag': serializer.toJson<String?>(etag),
-      'cachedAt': serializer.toJson<DateTime>(cachedAt),
-    };
-  }
-
-  ApiCacheData copyWith({
-    String? cacheKey,
-    String? entityType,
-    String? payload,
-    Value<String?> etag = const Value.absent(),
-    DateTime? cachedAt,
-  }) => ApiCacheData(
-    cacheKey: cacheKey ?? this.cacheKey,
-    entityType: entityType ?? this.entityType,
-    payload: payload ?? this.payload,
-    etag: etag.present ? etag.value : this.etag,
-    cachedAt: cachedAt ?? this.cachedAt,
-  );
-  ApiCacheData copyWithCompanion(ApiCacheCompanion data) {
-    return ApiCacheData(
-      cacheKey: data.cacheKey.present ? data.cacheKey.value : this.cacheKey,
-      entityType: data.entityType.present
-          ? data.entityType.value
-          : this.entityType,
-      payload: data.payload.present ? data.payload.value : this.payload,
-      etag: data.etag.present ? data.etag.value : this.etag,
-      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ApiCacheData(')
-          ..write('cacheKey: $cacheKey, ')
-          ..write('entityType: $entityType, ')
-          ..write('payload: $payload, ')
-          ..write('etag: $etag, ')
-          ..write('cachedAt: $cachedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(cacheKey, entityType, payload, etag, cachedAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ApiCacheData &&
-          other.cacheKey == this.cacheKey &&
-          other.entityType == this.entityType &&
-          other.payload == this.payload &&
-          other.etag == this.etag &&
-          other.cachedAt == this.cachedAt);
-}
-
-class ApiCacheCompanion extends UpdateCompanion<ApiCacheData> {
-  final Value<String> cacheKey;
-  final Value<String> entityType;
-  final Value<String> payload;
-  final Value<String?> etag;
-  final Value<DateTime> cachedAt;
-  final Value<int> rowid;
-  const ApiCacheCompanion({
-    this.cacheKey = const Value.absent(),
-    this.entityType = const Value.absent(),
-    this.payload = const Value.absent(),
-    this.etag = const Value.absent(),
-    this.cachedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  ApiCacheCompanion.insert({
-    required String cacheKey,
-    required String entityType,
-    required String payload,
-    this.etag = const Value.absent(),
-    required DateTime cachedAt,
-    this.rowid = const Value.absent(),
-  }) : cacheKey = Value(cacheKey),
-       entityType = Value(entityType),
-       payload = Value(payload),
-       cachedAt = Value(cachedAt);
-  static Insertable<ApiCacheData> custom({
-    Expression<String>? cacheKey,
-    Expression<String>? entityType,
-    Expression<String>? payload,
-    Expression<String>? etag,
-    Expression<DateTime>? cachedAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (cacheKey != null) 'cache_key': cacheKey,
-      if (entityType != null) 'entity_type': entityType,
-      if (payload != null) 'payload': payload,
-      if (etag != null) 'etag': etag,
-      if (cachedAt != null) 'cached_at': cachedAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  ApiCacheCompanion copyWith({
-    Value<String>? cacheKey,
-    Value<String>? entityType,
-    Value<String>? payload,
-    Value<String?>? etag,
-    Value<DateTime>? cachedAt,
-    Value<int>? rowid,
-  }) {
-    return ApiCacheCompanion(
-      cacheKey: cacheKey ?? this.cacheKey,
-      entityType: entityType ?? this.entityType,
-      payload: payload ?? this.payload,
-      etag: etag ?? this.etag,
-      cachedAt: cachedAt ?? this.cachedAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (cacheKey.present) {
-      map['cache_key'] = Variable<String>(cacheKey.value);
-    }
-    if (entityType.present) {
-      map['entity_type'] = Variable<String>(entityType.value);
-    }
-    if (payload.present) {
-      map['payload'] = Variable<String>(payload.value);
-    }
-    if (etag.present) {
-      map['etag'] = Variable<String>(etag.value);
-    }
-    if (cachedAt.present) {
-      map['cached_at'] = Variable<DateTime>(cachedAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ApiCacheCompanion(')
-          ..write('cacheKey: $cacheKey, ')
-          ..write('entityType: $entityType, ')
-          ..write('payload: $payload, ')
-          ..write('etag: $etag, ')
-          ..write('cachedAt: $cachedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $ImageCacheTable extends ImageCache
-    with TableInfo<$ImageCacheTable, ImageCacheData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ImageCacheTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _keyMeta = const VerificationMeta('key');
-  @override
-  late final GeneratedColumn<String> key = GeneratedColumn<String>(
-    'key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
-    'entityType',
-  );
-  @override
-  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
-    'entity_type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _entityIdMeta = const VerificationMeta(
-    'entityId',
-  );
-  @override
-  late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
-    'entity_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
-    'imageUrl',
-  );
-  @override
-  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
-    'image_url',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
-    'cachedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
-    'cached_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    key,
-    entityType,
-    entityId,
-    imageUrl,
-    cachedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'image_cache';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<ImageCacheData> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('key')) {
-      context.handle(
-        _keyMeta,
-        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_keyMeta);
-    }
-    if (data.containsKey('entity_type')) {
-      context.handle(
-        _entityTypeMeta,
-        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_entityTypeMeta);
-    }
-    if (data.containsKey('entity_id')) {
-      context.handle(
-        _entityIdMeta,
-        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_entityIdMeta);
-    }
-    if (data.containsKey('image_url')) {
-      context.handle(
-        _imageUrlMeta,
-        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_imageUrlMeta);
-    }
-    if (data.containsKey('cached_at')) {
-      context.handle(
-        _cachedAtMeta,
-        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_cachedAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {key};
-  @override
-  ImageCacheData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ImageCacheData(
-      key: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}key'],
-      )!,
-      entityType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity_type'],
-      )!,
-      entityId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}entity_id'],
-      )!,
-      imageUrl: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}image_url'],
-      )!,
-      cachedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}cached_at'],
-      )!,
-    );
-  }
-
-  @override
-  $ImageCacheTable createAlias(String alias) {
-    return $ImageCacheTable(attachedDatabase, alias);
-  }
-}
-
-class ImageCacheData extends DataClass implements Insertable<ImageCacheData> {
-  final String key;
-  final String entityType;
-  final int entityId;
-  final String imageUrl;
-  final DateTime cachedAt;
-  const ImageCacheData({
-    required this.key,
-    required this.entityType,
-    required this.entityId,
-    required this.imageUrl,
-    required this.cachedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['key'] = Variable<String>(key);
-    map['entity_type'] = Variable<String>(entityType);
-    map['entity_id'] = Variable<int>(entityId);
-    map['image_url'] = Variable<String>(imageUrl);
-    map['cached_at'] = Variable<DateTime>(cachedAt);
-    return map;
-  }
-
-  ImageCacheCompanion toCompanion(bool nullToAbsent) {
-    return ImageCacheCompanion(
-      key: Value(key),
-      entityType: Value(entityType),
-      entityId: Value(entityId),
-      imageUrl: Value(imageUrl),
-      cachedAt: Value(cachedAt),
-    );
-  }
-
-  factory ImageCacheData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ImageCacheData(
-      key: serializer.fromJson<String>(json['key']),
-      entityType: serializer.fromJson<String>(json['entityType']),
-      entityId: serializer.fromJson<int>(json['entityId']),
-      imageUrl: serializer.fromJson<String>(json['imageUrl']),
-      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'key': serializer.toJson<String>(key),
-      'entityType': serializer.toJson<String>(entityType),
-      'entityId': serializer.toJson<int>(entityId),
-      'imageUrl': serializer.toJson<String>(imageUrl),
-      'cachedAt': serializer.toJson<DateTime>(cachedAt),
-    };
-  }
-
-  ImageCacheData copyWith({
-    String? key,
-    String? entityType,
-    int? entityId,
-    String? imageUrl,
-    DateTime? cachedAt,
-  }) => ImageCacheData(
-    key: key ?? this.key,
-    entityType: entityType ?? this.entityType,
-    entityId: entityId ?? this.entityId,
-    imageUrl: imageUrl ?? this.imageUrl,
-    cachedAt: cachedAt ?? this.cachedAt,
-  );
-  ImageCacheData copyWithCompanion(ImageCacheCompanion data) {
-    return ImageCacheData(
-      key: data.key.present ? data.key.value : this.key,
-      entityType: data.entityType.present
-          ? data.entityType.value
-          : this.entityType,
-      entityId: data.entityId.present ? data.entityId.value : this.entityId,
-      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
-      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ImageCacheData(')
-          ..write('key: $key, ')
-          ..write('entityType: $entityType, ')
-          ..write('entityId: $entityId, ')
-          ..write('imageUrl: $imageUrl, ')
-          ..write('cachedAt: $cachedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(key, entityType, entityId, imageUrl, cachedAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ImageCacheData &&
-          other.key == this.key &&
-          other.entityType == this.entityType &&
-          other.entityId == this.entityId &&
-          other.imageUrl == this.imageUrl &&
-          other.cachedAt == this.cachedAt);
-}
-
-class ImageCacheCompanion extends UpdateCompanion<ImageCacheData> {
-  final Value<String> key;
-  final Value<String> entityType;
-  final Value<int> entityId;
-  final Value<String> imageUrl;
-  final Value<DateTime> cachedAt;
-  final Value<int> rowid;
-  const ImageCacheCompanion({
-    this.key = const Value.absent(),
-    this.entityType = const Value.absent(),
-    this.entityId = const Value.absent(),
-    this.imageUrl = const Value.absent(),
-    this.cachedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  ImageCacheCompanion.insert({
-    required String key,
-    required String entityType,
-    required int entityId,
-    required String imageUrl,
-    required DateTime cachedAt,
-    this.rowid = const Value.absent(),
-  }) : key = Value(key),
-       entityType = Value(entityType),
-       entityId = Value(entityId),
-       imageUrl = Value(imageUrl),
-       cachedAt = Value(cachedAt);
-  static Insertable<ImageCacheData> custom({
-    Expression<String>? key,
-    Expression<String>? entityType,
-    Expression<int>? entityId,
-    Expression<String>? imageUrl,
-    Expression<DateTime>? cachedAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (key != null) 'key': key,
-      if (entityType != null) 'entity_type': entityType,
-      if (entityId != null) 'entity_id': entityId,
-      if (imageUrl != null) 'image_url': imageUrl,
-      if (cachedAt != null) 'cached_at': cachedAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  ImageCacheCompanion copyWith({
-    Value<String>? key,
-    Value<String>? entityType,
-    Value<int>? entityId,
-    Value<String>? imageUrl,
-    Value<DateTime>? cachedAt,
-    Value<int>? rowid,
-  }) {
-    return ImageCacheCompanion(
-      key: key ?? this.key,
-      entityType: entityType ?? this.entityType,
-      entityId: entityId ?? this.entityId,
-      imageUrl: imageUrl ?? this.imageUrl,
-      cachedAt: cachedAt ?? this.cachedAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (key.present) {
-      map['key'] = Variable<String>(key.value);
-    }
-    if (entityType.present) {
-      map['entity_type'] = Variable<String>(entityType.value);
-    }
-    if (entityId.present) {
-      map['entity_id'] = Variable<int>(entityId.value);
-    }
-    if (imageUrl.present) {
-      map['image_url'] = Variable<String>(imageUrl.value);
-    }
-    if (cachedAt.present) {
-      map['cached_at'] = Variable<DateTime>(cachedAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ImageCacheCompanion(')
-          ..write('key: $key, ')
-          ..write('entityType: $entityType, ')
-          ..write('entityId: $entityId, ')
-          ..write('imageUrl: $imageUrl, ')
-          ..write('cachedAt: $cachedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SuperheroCharacterCacheTable extends SuperheroCharacterCache
-    with TableInfo<$SuperheroCharacterCacheTable, SuperheroCharacterCacheData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SuperheroCharacterCacheTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _metronCharacterIdMeta = const VerificationMeta(
-    'metronCharacterId',
-  );
-  @override
-  late final GeneratedColumn<int> metronCharacterId = GeneratedColumn<int>(
-    'metron_character_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _superheroIdMeta = const VerificationMeta(
-    'superheroId',
-  );
-  @override
-  late final GeneratedColumn<int> superheroId = GeneratedColumn<int>(
-    'superhero_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _superheroNameMeta = const VerificationMeta(
-    'superheroName',
-  );
-  @override
-  late final GeneratedColumn<String> superheroName = GeneratedColumn<String>(
-    'superhero_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
-    'imageUrl',
-  );
-  @override
-  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
-    'image_url',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _powerstatsJsonMeta = const VerificationMeta(
-    'powerstatsJson',
-  );
-  @override
-  late final GeneratedColumn<String> powerstatsJson = GeneratedColumn<String>(
-    'powerstats_json',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    metronCharacterId,
-    superheroId,
-    superheroName,
-    imageUrl,
-    powerstatsJson,
-    updatedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'superhero_character_cache';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SuperheroCharacterCacheData> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('metron_character_id')) {
-      context.handle(
-        _metronCharacterIdMeta,
-        metronCharacterId.isAcceptableOrUnknown(
-          data['metron_character_id']!,
-          _metronCharacterIdMeta,
-        ),
-      );
-    }
-    if (data.containsKey('superhero_id')) {
-      context.handle(
-        _superheroIdMeta,
-        superheroId.isAcceptableOrUnknown(
-          data['superhero_id']!,
-          _superheroIdMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_superheroIdMeta);
-    }
-    if (data.containsKey('superhero_name')) {
-      context.handle(
-        _superheroNameMeta,
-        superheroName.isAcceptableOrUnknown(
-          data['superhero_name']!,
-          _superheroNameMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_superheroNameMeta);
-    }
-    if (data.containsKey('image_url')) {
-      context.handle(
-        _imageUrlMeta,
-        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
-      );
-    }
-    if (data.containsKey('powerstats_json')) {
-      context.handle(
-        _powerstatsJsonMeta,
-        powerstatsJson.isAcceptableOrUnknown(
-          data['powerstats_json']!,
-          _powerstatsJsonMeta,
-        ),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {metronCharacterId};
-  @override
-  SuperheroCharacterCacheData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SuperheroCharacterCacheData(
-      metronCharacterId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}metron_character_id'],
-      )!,
-      superheroId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}superhero_id'],
-      )!,
-      superheroName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}superhero_name'],
-      )!,
-      imageUrl: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}image_url'],
-      ),
-      powerstatsJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}powerstats_json'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-    );
-  }
-
-  @override
-  $SuperheroCharacterCacheTable createAlias(String alias) {
-    return $SuperheroCharacterCacheTable(attachedDatabase, alias);
-  }
-}
-
-class SuperheroCharacterCacheData extends DataClass
-    implements Insertable<SuperheroCharacterCacheData> {
-  final int metronCharacterId;
-  final int superheroId;
-  final String superheroName;
-  final String? imageUrl;
-  final String? powerstatsJson;
-  final DateTime updatedAt;
-  const SuperheroCharacterCacheData({
-    required this.metronCharacterId,
-    required this.superheroId,
-    required this.superheroName,
-    this.imageUrl,
-    this.powerstatsJson,
-    required this.updatedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['metron_character_id'] = Variable<int>(metronCharacterId);
-    map['superhero_id'] = Variable<int>(superheroId);
-    map['superhero_name'] = Variable<String>(superheroName);
-    if (!nullToAbsent || imageUrl != null) {
-      map['image_url'] = Variable<String>(imageUrl);
-    }
-    if (!nullToAbsent || powerstatsJson != null) {
-      map['powerstats_json'] = Variable<String>(powerstatsJson);
-    }
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    return map;
-  }
-
-  SuperheroCharacterCacheCompanion toCompanion(bool nullToAbsent) {
-    return SuperheroCharacterCacheCompanion(
-      metronCharacterId: Value(metronCharacterId),
-      superheroId: Value(superheroId),
-      superheroName: Value(superheroName),
-      imageUrl: imageUrl == null && nullToAbsent
-          ? const Value.absent()
-          : Value(imageUrl),
-      powerstatsJson: powerstatsJson == null && nullToAbsent
-          ? const Value.absent()
-          : Value(powerstatsJson),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory SuperheroCharacterCacheData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SuperheroCharacterCacheData(
-      metronCharacterId: serializer.fromJson<int>(json['metronCharacterId']),
-      superheroId: serializer.fromJson<int>(json['superheroId']),
-      superheroName: serializer.fromJson<String>(json['superheroName']),
-      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
-      powerstatsJson: serializer.fromJson<String?>(json['powerstatsJson']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'metronCharacterId': serializer.toJson<int>(metronCharacterId),
-      'superheroId': serializer.toJson<int>(superheroId),
-      'superheroName': serializer.toJson<String>(superheroName),
-      'imageUrl': serializer.toJson<String?>(imageUrl),
-      'powerstatsJson': serializer.toJson<String?>(powerstatsJson),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-    };
-  }
-
-  SuperheroCharacterCacheData copyWith({
-    int? metronCharacterId,
-    int? superheroId,
-    String? superheroName,
-    Value<String?> imageUrl = const Value.absent(),
-    Value<String?> powerstatsJson = const Value.absent(),
-    DateTime? updatedAt,
-  }) => SuperheroCharacterCacheData(
-    metronCharacterId: metronCharacterId ?? this.metronCharacterId,
-    superheroId: superheroId ?? this.superheroId,
-    superheroName: superheroName ?? this.superheroName,
-    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
-    powerstatsJson: powerstatsJson.present
-        ? powerstatsJson.value
-        : this.powerstatsJson,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
-  SuperheroCharacterCacheData copyWithCompanion(
-    SuperheroCharacterCacheCompanion data,
-  ) {
-    return SuperheroCharacterCacheData(
-      metronCharacterId: data.metronCharacterId.present
-          ? data.metronCharacterId.value
-          : this.metronCharacterId,
-      superheroId: data.superheroId.present
-          ? data.superheroId.value
-          : this.superheroId,
-      superheroName: data.superheroName.present
-          ? data.superheroName.value
-          : this.superheroName,
-      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
-      powerstatsJson: data.powerstatsJson.present
-          ? data.powerstatsJson.value
-          : this.powerstatsJson,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SuperheroCharacterCacheData(')
-          ..write('metronCharacterId: $metronCharacterId, ')
-          ..write('superheroId: $superheroId, ')
-          ..write('superheroName: $superheroName, ')
-          ..write('imageUrl: $imageUrl, ')
-          ..write('powerstatsJson: $powerstatsJson, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    metronCharacterId,
-    superheroId,
-    superheroName,
-    imageUrl,
-    powerstatsJson,
-    updatedAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SuperheroCharacterCacheData &&
-          other.metronCharacterId == this.metronCharacterId &&
-          other.superheroId == this.superheroId &&
-          other.superheroName == this.superheroName &&
-          other.imageUrl == this.imageUrl &&
-          other.powerstatsJson == this.powerstatsJson &&
-          other.updatedAt == this.updatedAt);
-}
-
-class SuperheroCharacterCacheCompanion
-    extends UpdateCompanion<SuperheroCharacterCacheData> {
-  final Value<int> metronCharacterId;
-  final Value<int> superheroId;
-  final Value<String> superheroName;
-  final Value<String?> imageUrl;
-  final Value<String?> powerstatsJson;
-  final Value<DateTime> updatedAt;
-  const SuperheroCharacterCacheCompanion({
-    this.metronCharacterId = const Value.absent(),
-    this.superheroId = const Value.absent(),
-    this.superheroName = const Value.absent(),
-    this.imageUrl = const Value.absent(),
-    this.powerstatsJson = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  });
-  SuperheroCharacterCacheCompanion.insert({
-    this.metronCharacterId = const Value.absent(),
-    required int superheroId,
-    required String superheroName,
-    this.imageUrl = const Value.absent(),
-    this.powerstatsJson = const Value.absent(),
-    required DateTime updatedAt,
-  }) : superheroId = Value(superheroId),
-       superheroName = Value(superheroName),
-       updatedAt = Value(updatedAt);
-  static Insertable<SuperheroCharacterCacheData> custom({
-    Expression<int>? metronCharacterId,
-    Expression<int>? superheroId,
-    Expression<String>? superheroName,
-    Expression<String>? imageUrl,
-    Expression<String>? powerstatsJson,
-    Expression<DateTime>? updatedAt,
-  }) {
-    return RawValuesInsertable({
-      if (metronCharacterId != null) 'metron_character_id': metronCharacterId,
-      if (superheroId != null) 'superhero_id': superheroId,
-      if (superheroName != null) 'superhero_name': superheroName,
-      if (imageUrl != null) 'image_url': imageUrl,
-      if (powerstatsJson != null) 'powerstats_json': powerstatsJson,
-      if (updatedAt != null) 'updated_at': updatedAt,
-    });
-  }
-
-  SuperheroCharacterCacheCompanion copyWith({
-    Value<int>? metronCharacterId,
-    Value<int>? superheroId,
-    Value<String>? superheroName,
-    Value<String?>? imageUrl,
-    Value<String?>? powerstatsJson,
-    Value<DateTime>? updatedAt,
-  }) {
-    return SuperheroCharacterCacheCompanion(
-      metronCharacterId: metronCharacterId ?? this.metronCharacterId,
-      superheroId: superheroId ?? this.superheroId,
-      superheroName: superheroName ?? this.superheroName,
-      imageUrl: imageUrl ?? this.imageUrl,
-      powerstatsJson: powerstatsJson ?? this.powerstatsJson,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (metronCharacterId.present) {
-      map['metron_character_id'] = Variable<int>(metronCharacterId.value);
-    }
-    if (superheroId.present) {
-      map['superhero_id'] = Variable<int>(superheroId.value);
-    }
-    if (superheroName.present) {
-      map['superhero_name'] = Variable<String>(superheroName.value);
-    }
-    if (imageUrl.present) {
-      map['image_url'] = Variable<String>(imageUrl.value);
-    }
-    if (powerstatsJson.present) {
-      map['powerstats_json'] = Variable<String>(powerstatsJson.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SuperheroCharacterCacheCompanion(')
-          ..write('metronCharacterId: $metronCharacterId, ')
-          ..write('superheroId: $superheroId, ')
-          ..write('superheroName: $superheroName, ')
-          ..write('imageUrl: $imageUrl, ')
-          ..write('powerstatsJson: $powerstatsJson, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSetting> {
   @override
@@ -21415,6 +20336,748 @@ class WishlistItemsCompanion extends UpdateCompanion<WishlistItem> {
   }
 }
 
+class $PagedQueryCachesTable extends PagedQueryCaches
+    with TableInfo<$PagedQueryCachesTable, PagedQueryCache> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PagedQueryCachesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _cacheKeyPrefixMeta = const VerificationMeta(
+    'cacheKeyPrefix',
+  );
+  @override
+  late final GeneratedColumn<String> cacheKeyPrefix = GeneratedColumn<String>(
+    'cache_key_prefix',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pageKeyMeta = const VerificationMeta(
+    'pageKey',
+  );
+  @override
+  late final GeneratedColumn<String> pageKey = GeneratedColumn<String>(
+    'page_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextMeta = const VerificationMeta('next');
+  @override
+  late final GeneratedColumn<String> next = GeneratedColumn<String>(
+    'next',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _previousMeta = const VerificationMeta(
+    'previous',
+  );
+  @override
+  late final GeneratedColumn<String> previous = GeneratedColumn<String>(
+    'previous',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
+    'cachedAt',
+  );
+  @override
+  late final GeneratedColumn<String> cachedAt = GeneratedColumn<String>(
+    'cached_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    cacheKeyPrefix,
+    pageKey,
+    count,
+    next,
+    previous,
+    cachedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'paged_query_caches';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PagedQueryCache> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('cache_key_prefix')) {
+      context.handle(
+        _cacheKeyPrefixMeta,
+        cacheKeyPrefix.isAcceptableOrUnknown(
+          data['cache_key_prefix']!,
+          _cacheKeyPrefixMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_cacheKeyPrefixMeta);
+    }
+    if (data.containsKey('page_key')) {
+      context.handle(
+        _pageKeyMeta,
+        pageKey.isAcceptableOrUnknown(data['page_key']!, _pageKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pageKeyMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    }
+    if (data.containsKey('next')) {
+      context.handle(
+        _nextMeta,
+        next.isAcceptableOrUnknown(data['next']!, _nextMeta),
+      );
+    }
+    if (data.containsKey('previous')) {
+      context.handle(
+        _previousMeta,
+        previous.isAcceptableOrUnknown(data['previous']!, _previousMeta),
+      );
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(
+        _cachedAtMeta,
+        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {cacheKeyPrefix, pageKey};
+  @override
+  PagedQueryCache map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PagedQueryCache(
+      cacheKeyPrefix: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cache_key_prefix'],
+      )!,
+      pageKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}page_key'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      ),
+      next: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next'],
+      ),
+      previous: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}previous'],
+      ),
+      cachedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cached_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PagedQueryCachesTable createAlias(String alias) {
+    return $PagedQueryCachesTable(attachedDatabase, alias);
+  }
+}
+
+class PagedQueryCache extends DataClass implements Insertable<PagedQueryCache> {
+  final String cacheKeyPrefix;
+  final String pageKey;
+  final int? count;
+  final String? next;
+  final String? previous;
+  final String cachedAt;
+  const PagedQueryCache({
+    required this.cacheKeyPrefix,
+    required this.pageKey,
+    this.count,
+    this.next,
+    this.previous,
+    required this.cachedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['cache_key_prefix'] = Variable<String>(cacheKeyPrefix);
+    map['page_key'] = Variable<String>(pageKey);
+    if (!nullToAbsent || count != null) {
+      map['count'] = Variable<int>(count);
+    }
+    if (!nullToAbsent || next != null) {
+      map['next'] = Variable<String>(next);
+    }
+    if (!nullToAbsent || previous != null) {
+      map['previous'] = Variable<String>(previous);
+    }
+    map['cached_at'] = Variable<String>(cachedAt);
+    return map;
+  }
+
+  PagedQueryCachesCompanion toCompanion(bool nullToAbsent) {
+    return PagedQueryCachesCompanion(
+      cacheKeyPrefix: Value(cacheKeyPrefix),
+      pageKey: Value(pageKey),
+      count: count == null && nullToAbsent
+          ? const Value.absent()
+          : Value(count),
+      next: next == null && nullToAbsent ? const Value.absent() : Value(next),
+      previous: previous == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previous),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory PagedQueryCache.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PagedQueryCache(
+      cacheKeyPrefix: serializer.fromJson<String>(json['cacheKeyPrefix']),
+      pageKey: serializer.fromJson<String>(json['pageKey']),
+      count: serializer.fromJson<int?>(json['count']),
+      next: serializer.fromJson<String?>(json['next']),
+      previous: serializer.fromJson<String?>(json['previous']),
+      cachedAt: serializer.fromJson<String>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'cacheKeyPrefix': serializer.toJson<String>(cacheKeyPrefix),
+      'pageKey': serializer.toJson<String>(pageKey),
+      'count': serializer.toJson<int?>(count),
+      'next': serializer.toJson<String?>(next),
+      'previous': serializer.toJson<String?>(previous),
+      'cachedAt': serializer.toJson<String>(cachedAt),
+    };
+  }
+
+  PagedQueryCache copyWith({
+    String? cacheKeyPrefix,
+    String? pageKey,
+    Value<int?> count = const Value.absent(),
+    Value<String?> next = const Value.absent(),
+    Value<String?> previous = const Value.absent(),
+    String? cachedAt,
+  }) => PagedQueryCache(
+    cacheKeyPrefix: cacheKeyPrefix ?? this.cacheKeyPrefix,
+    pageKey: pageKey ?? this.pageKey,
+    count: count.present ? count.value : this.count,
+    next: next.present ? next.value : this.next,
+    previous: previous.present ? previous.value : this.previous,
+    cachedAt: cachedAt ?? this.cachedAt,
+  );
+  PagedQueryCache copyWithCompanion(PagedQueryCachesCompanion data) {
+    return PagedQueryCache(
+      cacheKeyPrefix: data.cacheKeyPrefix.present
+          ? data.cacheKeyPrefix.value
+          : this.cacheKeyPrefix,
+      pageKey: data.pageKey.present ? data.pageKey.value : this.pageKey,
+      count: data.count.present ? data.count.value : this.count,
+      next: data.next.present ? data.next.value : this.next,
+      previous: data.previous.present ? data.previous.value : this.previous,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PagedQueryCache(')
+          ..write('cacheKeyPrefix: $cacheKeyPrefix, ')
+          ..write('pageKey: $pageKey, ')
+          ..write('count: $count, ')
+          ..write('next: $next, ')
+          ..write('previous: $previous, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(cacheKeyPrefix, pageKey, count, next, previous, cachedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PagedQueryCache &&
+          other.cacheKeyPrefix == this.cacheKeyPrefix &&
+          other.pageKey == this.pageKey &&
+          other.count == this.count &&
+          other.next == this.next &&
+          other.previous == this.previous &&
+          other.cachedAt == this.cachedAt);
+}
+
+class PagedQueryCachesCompanion extends UpdateCompanion<PagedQueryCache> {
+  final Value<String> cacheKeyPrefix;
+  final Value<String> pageKey;
+  final Value<int?> count;
+  final Value<String?> next;
+  final Value<String?> previous;
+  final Value<String> cachedAt;
+  final Value<int> rowid;
+  const PagedQueryCachesCompanion({
+    this.cacheKeyPrefix = const Value.absent(),
+    this.pageKey = const Value.absent(),
+    this.count = const Value.absent(),
+    this.next = const Value.absent(),
+    this.previous = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PagedQueryCachesCompanion.insert({
+    required String cacheKeyPrefix,
+    required String pageKey,
+    this.count = const Value.absent(),
+    this.next = const Value.absent(),
+    this.previous = const Value.absent(),
+    required String cachedAt,
+    this.rowid = const Value.absent(),
+  }) : cacheKeyPrefix = Value(cacheKeyPrefix),
+       pageKey = Value(pageKey),
+       cachedAt = Value(cachedAt);
+  static Insertable<PagedQueryCache> custom({
+    Expression<String>? cacheKeyPrefix,
+    Expression<String>? pageKey,
+    Expression<int>? count,
+    Expression<String>? next,
+    Expression<String>? previous,
+    Expression<String>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (cacheKeyPrefix != null) 'cache_key_prefix': cacheKeyPrefix,
+      if (pageKey != null) 'page_key': pageKey,
+      if (count != null) 'count': count,
+      if (next != null) 'next': next,
+      if (previous != null) 'previous': previous,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PagedQueryCachesCompanion copyWith({
+    Value<String>? cacheKeyPrefix,
+    Value<String>? pageKey,
+    Value<int?>? count,
+    Value<String?>? next,
+    Value<String?>? previous,
+    Value<String>? cachedAt,
+    Value<int>? rowid,
+  }) {
+    return PagedQueryCachesCompanion(
+      cacheKeyPrefix: cacheKeyPrefix ?? this.cacheKeyPrefix,
+      pageKey: pageKey ?? this.pageKey,
+      count: count ?? this.count,
+      next: next ?? this.next,
+      previous: previous ?? this.previous,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (cacheKeyPrefix.present) {
+      map['cache_key_prefix'] = Variable<String>(cacheKeyPrefix.value);
+    }
+    if (pageKey.present) {
+      map['page_key'] = Variable<String>(pageKey.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (next.present) {
+      map['next'] = Variable<String>(next.value);
+    }
+    if (previous.present) {
+      map['previous'] = Variable<String>(previous.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<String>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PagedQueryCachesCompanion(')
+          ..write('cacheKeyPrefix: $cacheKeyPrefix, ')
+          ..write('pageKey: $pageKey, ')
+          ..write('count: $count, ')
+          ..write('next: $next, ')
+          ..write('previous: $previous, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PagedQueryItemsTable extends PagedQueryItems
+    with TableInfo<$PagedQueryItemsTable, PagedQueryItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PagedQueryItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _cacheKeyPrefixMeta = const VerificationMeta(
+    'cacheKeyPrefix',
+  );
+  @override
+  late final GeneratedColumn<String> cacheKeyPrefix = GeneratedColumn<String>(
+    'cache_key_prefix',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pageKeyMeta = const VerificationMeta(
+    'pageKey',
+  );
+  @override
+  late final GeneratedColumn<String> pageKey = GeneratedColumn<String>(
+    'page_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    cacheKeyPrefix,
+    pageKey,
+    position,
+    entityId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'paged_query_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PagedQueryItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('cache_key_prefix')) {
+      context.handle(
+        _cacheKeyPrefixMeta,
+        cacheKeyPrefix.isAcceptableOrUnknown(
+          data['cache_key_prefix']!,
+          _cacheKeyPrefixMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_cacheKeyPrefixMeta);
+    }
+    if (data.containsKey('page_key')) {
+      context.handle(
+        _pageKeyMeta,
+        pageKey.isAcceptableOrUnknown(data['page_key']!, _pageKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pageKeyMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {cacheKeyPrefix, pageKey, position};
+  @override
+  PagedQueryItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PagedQueryItem(
+      cacheKeyPrefix: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cache_key_prefix'],
+      )!,
+      pageKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}page_key'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}entity_id'],
+      )!,
+    );
+  }
+
+  @override
+  $PagedQueryItemsTable createAlias(String alias) {
+    return $PagedQueryItemsTable(attachedDatabase, alias);
+  }
+}
+
+class PagedQueryItem extends DataClass implements Insertable<PagedQueryItem> {
+  final String cacheKeyPrefix;
+  final String pageKey;
+  final int position;
+  final int entityId;
+  const PagedQueryItem({
+    required this.cacheKeyPrefix,
+    required this.pageKey,
+    required this.position,
+    required this.entityId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['cache_key_prefix'] = Variable<String>(cacheKeyPrefix);
+    map['page_key'] = Variable<String>(pageKey);
+    map['position'] = Variable<int>(position);
+    map['entity_id'] = Variable<int>(entityId);
+    return map;
+  }
+
+  PagedQueryItemsCompanion toCompanion(bool nullToAbsent) {
+    return PagedQueryItemsCompanion(
+      cacheKeyPrefix: Value(cacheKeyPrefix),
+      pageKey: Value(pageKey),
+      position: Value(position),
+      entityId: Value(entityId),
+    );
+  }
+
+  factory PagedQueryItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PagedQueryItem(
+      cacheKeyPrefix: serializer.fromJson<String>(json['cacheKeyPrefix']),
+      pageKey: serializer.fromJson<String>(json['pageKey']),
+      position: serializer.fromJson<int>(json['position']),
+      entityId: serializer.fromJson<int>(json['entityId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'cacheKeyPrefix': serializer.toJson<String>(cacheKeyPrefix),
+      'pageKey': serializer.toJson<String>(pageKey),
+      'position': serializer.toJson<int>(position),
+      'entityId': serializer.toJson<int>(entityId),
+    };
+  }
+
+  PagedQueryItem copyWith({
+    String? cacheKeyPrefix,
+    String? pageKey,
+    int? position,
+    int? entityId,
+  }) => PagedQueryItem(
+    cacheKeyPrefix: cacheKeyPrefix ?? this.cacheKeyPrefix,
+    pageKey: pageKey ?? this.pageKey,
+    position: position ?? this.position,
+    entityId: entityId ?? this.entityId,
+  );
+  PagedQueryItem copyWithCompanion(PagedQueryItemsCompanion data) {
+    return PagedQueryItem(
+      cacheKeyPrefix: data.cacheKeyPrefix.present
+          ? data.cacheKeyPrefix.value
+          : this.cacheKeyPrefix,
+      pageKey: data.pageKey.present ? data.pageKey.value : this.pageKey,
+      position: data.position.present ? data.position.value : this.position,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PagedQueryItem(')
+          ..write('cacheKeyPrefix: $cacheKeyPrefix, ')
+          ..write('pageKey: $pageKey, ')
+          ..write('position: $position, ')
+          ..write('entityId: $entityId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(cacheKeyPrefix, pageKey, position, entityId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PagedQueryItem &&
+          other.cacheKeyPrefix == this.cacheKeyPrefix &&
+          other.pageKey == this.pageKey &&
+          other.position == this.position &&
+          other.entityId == this.entityId);
+}
+
+class PagedQueryItemsCompanion extends UpdateCompanion<PagedQueryItem> {
+  final Value<String> cacheKeyPrefix;
+  final Value<String> pageKey;
+  final Value<int> position;
+  final Value<int> entityId;
+  final Value<int> rowid;
+  const PagedQueryItemsCompanion({
+    this.cacheKeyPrefix = const Value.absent(),
+    this.pageKey = const Value.absent(),
+    this.position = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PagedQueryItemsCompanion.insert({
+    required String cacheKeyPrefix,
+    required String pageKey,
+    required int position,
+    required int entityId,
+    this.rowid = const Value.absent(),
+  }) : cacheKeyPrefix = Value(cacheKeyPrefix),
+       pageKey = Value(pageKey),
+       position = Value(position),
+       entityId = Value(entityId);
+  static Insertable<PagedQueryItem> custom({
+    Expression<String>? cacheKeyPrefix,
+    Expression<String>? pageKey,
+    Expression<int>? position,
+    Expression<int>? entityId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (cacheKeyPrefix != null) 'cache_key_prefix': cacheKeyPrefix,
+      if (pageKey != null) 'page_key': pageKey,
+      if (position != null) 'position': position,
+      if (entityId != null) 'entity_id': entityId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PagedQueryItemsCompanion copyWith({
+    Value<String>? cacheKeyPrefix,
+    Value<String>? pageKey,
+    Value<int>? position,
+    Value<int>? entityId,
+    Value<int>? rowid,
+  }) {
+    return PagedQueryItemsCompanion(
+      cacheKeyPrefix: cacheKeyPrefix ?? this.cacheKeyPrefix,
+      pageKey: pageKey ?? this.pageKey,
+      position: position ?? this.position,
+      entityId: entityId ?? this.entityId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (cacheKeyPrefix.present) {
+      map['cache_key_prefix'] = Variable<String>(cacheKeyPrefix.value);
+    }
+    if (pageKey.present) {
+      map['page_key'] = Variable<String>(pageKey.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<int>(entityId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PagedQueryItemsCompanion(')
+          ..write('cacheKeyPrefix: $cacheKeyPrefix, ')
+          ..write('pageKey: $pageKey, ')
+          ..write('position: $position, ')
+          ..write('entityId: $entityId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -21483,10 +21146,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TeamUniversesTable teamUniverses = $TeamUniversesTable(this);
   late final $MetronReadingListItemsTable metronReadingListItems =
       $MetronReadingListItemsTable(this);
-  late final $ApiCacheTable apiCache = $ApiCacheTable(this);
-  late final $ImageCacheTable imageCache = $ImageCacheTable(this);
-  late final $SuperheroCharacterCacheTable superheroCharacterCache =
-      $SuperheroCharacterCacheTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $SeriesNameIndexTable seriesNameIndex = $SeriesNameIndexTable(
     this,
@@ -21495,6 +21154,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OfflineWriteQueueTable offlineWriteQueue =
       $OfflineWriteQueueTable(this);
   late final $WishlistItemsTable wishlistItems = $WishlistItemsTable(this);
+  late final $PagedQueryCachesTable pagedQueryCaches = $PagedQueryCachesTable(
+    this,
+  );
+  late final $PagedQueryItemsTable pagedQueryItems = $PagedQueryItemsTable(
+    this,
+  );
   late final Index idxLibIssue = Index(
     'idx_lib_issue',
     'CREATE INDEX idx_lib_issue ON library_items (metron_issue_id)',
@@ -21674,14 +21339,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     creatorTeams,
     teamUniverses,
     metronReadingListItems,
-    apiCache,
-    imageCache,
-    superheroCharacterCache,
     appSettings,
     seriesNameIndex,
     syncMeta,
     offlineWriteQueue,
     wishlistItems,
+    pagedQueryCaches,
+    pagedQueryItems,
     idxLibIssue,
     idxLibSeries,
     idxLibRead,
@@ -24951,6 +24615,7 @@ typedef $$MetronIssuesTableCreateCompanionBuilder =
     MetronIssuesCompanion Function({
       Value<int> id,
       required String number,
+      Value<String?> issueName,
       Value<int?> seriesId,
       Value<String?> coverDate,
       Value<String?> storeDate,
@@ -24977,6 +24642,7 @@ typedef $$MetronIssuesTableUpdateCompanionBuilder =
     MetronIssuesCompanion Function({
       Value<int> id,
       Value<String> number,
+      Value<String?> issueName,
       Value<int?> seriesId,
       Value<String?> coverDate,
       Value<String?> storeDate,
@@ -25016,6 +24682,11 @@ class $$MetronIssuesTableFilterComposer
 
   ColumnFilters<String> get number => $composableBuilder(
     column: $table.number,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get issueName => $composableBuilder(
+    column: $table.issueName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25144,6 +24815,11 @@ class $$MetronIssuesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get issueName => $composableBuilder(
+    column: $table.issueName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get seriesId => $composableBuilder(
     column: $table.seriesId,
     builder: (column) => ColumnOrderings(column),
@@ -25265,6 +24941,9 @@ class $$MetronIssuesTableAnnotationComposer
   GeneratedColumn<String> get number =>
       $composableBuilder(column: $table.number, builder: (column) => column);
 
+  GeneratedColumn<String> get issueName =>
+      $composableBuilder(column: $table.issueName, builder: (column) => column);
+
   GeneratedColumn<int> get seriesId =>
       $composableBuilder(column: $table.seriesId, builder: (column) => column);
 
@@ -25374,6 +25053,7 @@ class $$MetronIssuesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> number = const Value.absent(),
+                Value<String?> issueName = const Value.absent(),
                 Value<int?> seriesId = const Value.absent(),
                 Value<String?> coverDate = const Value.absent(),
                 Value<String?> storeDate = const Value.absent(),
@@ -25398,6 +25078,7 @@ class $$MetronIssuesTableTableManager
               }) => MetronIssuesCompanion(
                 id: id,
                 number: number,
+                issueName: issueName,
                 seriesId: seriesId,
                 coverDate: coverDate,
                 storeDate: storeDate,
@@ -25424,6 +25105,7 @@ class $$MetronIssuesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String number,
+                Value<String?> issueName = const Value.absent(),
                 Value<int?> seriesId = const Value.absent(),
                 Value<String?> coverDate = const Value.absent(),
                 Value<String?> storeDate = const Value.absent(),
@@ -25448,6 +25130,7 @@ class $$MetronIssuesTableTableManager
               }) => MetronIssuesCompanion.insert(
                 id: id,
                 number: number,
+                issueName: issueName,
                 seriesId: seriesId,
                 coverDate: coverDate,
                 storeDate: storeDate,
@@ -26310,6 +25993,7 @@ typedef $$MetronCharactersTableCreateCompanionBuilder =
     MetronCharactersCompanion Function({
       Value<int> id,
       required String name,
+      Value<String?> slug,
       Value<String?> imageUrl,
       Value<String?> description,
       Value<String?> aliasJson,
@@ -26323,6 +26007,7 @@ typedef $$MetronCharactersTableUpdateCompanionBuilder =
     MetronCharactersCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<String?> slug,
       Value<String?> imageUrl,
       Value<String?> description,
       Value<String?> aliasJson,
@@ -26349,6 +26034,11 @@ class $$MetronCharactersTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slug => $composableBuilder(
+    column: $table.slug,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26412,6 +26102,11 @@ class $$MetronCharactersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get imageUrl => $composableBuilder(
     column: $table.imageUrl,
     builder: (column) => ColumnOrderings(column),
@@ -26467,6 +26162,9 @@ class $$MetronCharactersTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get slug =>
+      $composableBuilder(column: $table.slug, builder: (column) => column);
 
   GeneratedColumn<String> get imageUrl =>
       $composableBuilder(column: $table.imageUrl, builder: (column) => column);
@@ -26538,6 +26236,7 @@ class $$MetronCharactersTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String?> slug = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> aliasJson = const Value.absent(),
@@ -26549,6 +26248,7 @@ class $$MetronCharactersTableTableManager
               }) => MetronCharactersCompanion(
                 id: id,
                 name: name,
+                slug: slug,
                 imageUrl: imageUrl,
                 description: description,
                 aliasJson: aliasJson,
@@ -26562,6 +26262,7 @@ class $$MetronCharactersTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<String?> slug = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> aliasJson = const Value.absent(),
@@ -26573,6 +26274,7 @@ class $$MetronCharactersTableTableManager
               }) => MetronCharactersCompanion.insert(
                 id: id,
                 name: name,
+                slug: slug,
                 imageUrl: imageUrl,
                 description: description,
                 aliasJson: aliasJson,
@@ -31042,650 +30744,6 @@ typedef $$MetronReadingListItemsTableProcessedTableManager =
       MetronReadingListItem,
       PrefetchHooks Function()
     >;
-typedef $$ApiCacheTableCreateCompanionBuilder =
-    ApiCacheCompanion Function({
-      required String cacheKey,
-      required String entityType,
-      required String payload,
-      Value<String?> etag,
-      required DateTime cachedAt,
-      Value<int> rowid,
-    });
-typedef $$ApiCacheTableUpdateCompanionBuilder =
-    ApiCacheCompanion Function({
-      Value<String> cacheKey,
-      Value<String> entityType,
-      Value<String> payload,
-      Value<String?> etag,
-      Value<DateTime> cachedAt,
-      Value<int> rowid,
-    });
-
-class $$ApiCacheTableFilterComposer
-    extends Composer<_$AppDatabase, $ApiCacheTable> {
-  $$ApiCacheTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get cacheKey => $composableBuilder(
-    column: $table.cacheKey,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get entityType => $composableBuilder(
-    column: $table.entityType,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get etag => $composableBuilder(
-    column: $table.etag,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
-    column: $table.cachedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$ApiCacheTableOrderingComposer
-    extends Composer<_$AppDatabase, $ApiCacheTable> {
-  $$ApiCacheTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get cacheKey => $composableBuilder(
-    column: $table.cacheKey,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get entityType => $composableBuilder(
-    column: $table.entityType,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get etag => $composableBuilder(
-    column: $table.etag,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
-    column: $table.cachedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$ApiCacheTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ApiCacheTable> {
-  $$ApiCacheTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get cacheKey =>
-      $composableBuilder(column: $table.cacheKey, builder: (column) => column);
-
-  GeneratedColumn<String> get entityType => $composableBuilder(
-    column: $table.entityType,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get payload =>
-      $composableBuilder(column: $table.payload, builder: (column) => column);
-
-  GeneratedColumn<String> get etag =>
-      $composableBuilder(column: $table.etag, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get cachedAt =>
-      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
-}
-
-class $$ApiCacheTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $ApiCacheTable,
-          ApiCacheData,
-          $$ApiCacheTableFilterComposer,
-          $$ApiCacheTableOrderingComposer,
-          $$ApiCacheTableAnnotationComposer,
-          $$ApiCacheTableCreateCompanionBuilder,
-          $$ApiCacheTableUpdateCompanionBuilder,
-          (
-            ApiCacheData,
-            BaseReferences<_$AppDatabase, $ApiCacheTable, ApiCacheData>,
-          ),
-          ApiCacheData,
-          PrefetchHooks Function()
-        > {
-  $$ApiCacheTableTableManager(_$AppDatabase db, $ApiCacheTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$ApiCacheTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ApiCacheTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ApiCacheTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> cacheKey = const Value.absent(),
-                Value<String> entityType = const Value.absent(),
-                Value<String> payload = const Value.absent(),
-                Value<String?> etag = const Value.absent(),
-                Value<DateTime> cachedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ApiCacheCompanion(
-                cacheKey: cacheKey,
-                entityType: entityType,
-                payload: payload,
-                etag: etag,
-                cachedAt: cachedAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String cacheKey,
-                required String entityType,
-                required String payload,
-                Value<String?> etag = const Value.absent(),
-                required DateTime cachedAt,
-                Value<int> rowid = const Value.absent(),
-              }) => ApiCacheCompanion.insert(
-                cacheKey: cacheKey,
-                entityType: entityType,
-                payload: payload,
-                etag: etag,
-                cachedAt: cachedAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$ApiCacheTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $ApiCacheTable,
-      ApiCacheData,
-      $$ApiCacheTableFilterComposer,
-      $$ApiCacheTableOrderingComposer,
-      $$ApiCacheTableAnnotationComposer,
-      $$ApiCacheTableCreateCompanionBuilder,
-      $$ApiCacheTableUpdateCompanionBuilder,
-      (
-        ApiCacheData,
-        BaseReferences<_$AppDatabase, $ApiCacheTable, ApiCacheData>,
-      ),
-      ApiCacheData,
-      PrefetchHooks Function()
-    >;
-typedef $$ImageCacheTableCreateCompanionBuilder =
-    ImageCacheCompanion Function({
-      required String key,
-      required String entityType,
-      required int entityId,
-      required String imageUrl,
-      required DateTime cachedAt,
-      Value<int> rowid,
-    });
-typedef $$ImageCacheTableUpdateCompanionBuilder =
-    ImageCacheCompanion Function({
-      Value<String> key,
-      Value<String> entityType,
-      Value<int> entityId,
-      Value<String> imageUrl,
-      Value<DateTime> cachedAt,
-      Value<int> rowid,
-    });
-
-class $$ImageCacheTableFilterComposer
-    extends Composer<_$AppDatabase, $ImageCacheTable> {
-  $$ImageCacheTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get entityType => $composableBuilder(
-    column: $table.entityType,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get entityId => $composableBuilder(
-    column: $table.entityId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get imageUrl => $composableBuilder(
-    column: $table.imageUrl,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
-    column: $table.cachedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$ImageCacheTableOrderingComposer
-    extends Composer<_$AppDatabase, $ImageCacheTable> {
-  $$ImageCacheTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get entityType => $composableBuilder(
-    column: $table.entityType,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get entityId => $composableBuilder(
-    column: $table.entityId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get imageUrl => $composableBuilder(
-    column: $table.imageUrl,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
-    column: $table.cachedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$ImageCacheTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ImageCacheTable> {
-  $$ImageCacheTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => column);
-
-  GeneratedColumn<String> get entityType => $composableBuilder(
-    column: $table.entityType,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get entityId =>
-      $composableBuilder(column: $table.entityId, builder: (column) => column);
-
-  GeneratedColumn<String> get imageUrl =>
-      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get cachedAt =>
-      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
-}
-
-class $$ImageCacheTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $ImageCacheTable,
-          ImageCacheData,
-          $$ImageCacheTableFilterComposer,
-          $$ImageCacheTableOrderingComposer,
-          $$ImageCacheTableAnnotationComposer,
-          $$ImageCacheTableCreateCompanionBuilder,
-          $$ImageCacheTableUpdateCompanionBuilder,
-          (
-            ImageCacheData,
-            BaseReferences<_$AppDatabase, $ImageCacheTable, ImageCacheData>,
-          ),
-          ImageCacheData,
-          PrefetchHooks Function()
-        > {
-  $$ImageCacheTableTableManager(_$AppDatabase db, $ImageCacheTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$ImageCacheTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ImageCacheTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ImageCacheTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> key = const Value.absent(),
-                Value<String> entityType = const Value.absent(),
-                Value<int> entityId = const Value.absent(),
-                Value<String> imageUrl = const Value.absent(),
-                Value<DateTime> cachedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ImageCacheCompanion(
-                key: key,
-                entityType: entityType,
-                entityId: entityId,
-                imageUrl: imageUrl,
-                cachedAt: cachedAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String key,
-                required String entityType,
-                required int entityId,
-                required String imageUrl,
-                required DateTime cachedAt,
-                Value<int> rowid = const Value.absent(),
-              }) => ImageCacheCompanion.insert(
-                key: key,
-                entityType: entityType,
-                entityId: entityId,
-                imageUrl: imageUrl,
-                cachedAt: cachedAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$ImageCacheTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $ImageCacheTable,
-      ImageCacheData,
-      $$ImageCacheTableFilterComposer,
-      $$ImageCacheTableOrderingComposer,
-      $$ImageCacheTableAnnotationComposer,
-      $$ImageCacheTableCreateCompanionBuilder,
-      $$ImageCacheTableUpdateCompanionBuilder,
-      (
-        ImageCacheData,
-        BaseReferences<_$AppDatabase, $ImageCacheTable, ImageCacheData>,
-      ),
-      ImageCacheData,
-      PrefetchHooks Function()
-    >;
-typedef $$SuperheroCharacterCacheTableCreateCompanionBuilder =
-    SuperheroCharacterCacheCompanion Function({
-      Value<int> metronCharacterId,
-      required int superheroId,
-      required String superheroName,
-      Value<String?> imageUrl,
-      Value<String?> powerstatsJson,
-      required DateTime updatedAt,
-    });
-typedef $$SuperheroCharacterCacheTableUpdateCompanionBuilder =
-    SuperheroCharacterCacheCompanion Function({
-      Value<int> metronCharacterId,
-      Value<int> superheroId,
-      Value<String> superheroName,
-      Value<String?> imageUrl,
-      Value<String?> powerstatsJson,
-      Value<DateTime> updatedAt,
-    });
-
-class $$SuperheroCharacterCacheTableFilterComposer
-    extends Composer<_$AppDatabase, $SuperheroCharacterCacheTable> {
-  $$SuperheroCharacterCacheTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get metronCharacterId => $composableBuilder(
-    column: $table.metronCharacterId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get superheroId => $composableBuilder(
-    column: $table.superheroId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get superheroName => $composableBuilder(
-    column: $table.superheroName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get imageUrl => $composableBuilder(
-    column: $table.imageUrl,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get powerstatsJson => $composableBuilder(
-    column: $table.powerstatsJson,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SuperheroCharacterCacheTableOrderingComposer
-    extends Composer<_$AppDatabase, $SuperheroCharacterCacheTable> {
-  $$SuperheroCharacterCacheTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get metronCharacterId => $composableBuilder(
-    column: $table.metronCharacterId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get superheroId => $composableBuilder(
-    column: $table.superheroId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get superheroName => $composableBuilder(
-    column: $table.superheroName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get imageUrl => $composableBuilder(
-    column: $table.imageUrl,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get powerstatsJson => $composableBuilder(
-    column: $table.powerstatsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SuperheroCharacterCacheTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SuperheroCharacterCacheTable> {
-  $$SuperheroCharacterCacheTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get metronCharacterId => $composableBuilder(
-    column: $table.metronCharacterId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get superheroId => $composableBuilder(
-    column: $table.superheroId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get superheroName => $composableBuilder(
-    column: $table.superheroName,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get imageUrl =>
-      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
-
-  GeneratedColumn<String> get powerstatsJson => $composableBuilder(
-    column: $table.powerstatsJson,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-}
-
-class $$SuperheroCharacterCacheTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SuperheroCharacterCacheTable,
-          SuperheroCharacterCacheData,
-          $$SuperheroCharacterCacheTableFilterComposer,
-          $$SuperheroCharacterCacheTableOrderingComposer,
-          $$SuperheroCharacterCacheTableAnnotationComposer,
-          $$SuperheroCharacterCacheTableCreateCompanionBuilder,
-          $$SuperheroCharacterCacheTableUpdateCompanionBuilder,
-          (
-            SuperheroCharacterCacheData,
-            BaseReferences<
-              _$AppDatabase,
-              $SuperheroCharacterCacheTable,
-              SuperheroCharacterCacheData
-            >,
-          ),
-          SuperheroCharacterCacheData,
-          PrefetchHooks Function()
-        > {
-  $$SuperheroCharacterCacheTableTableManager(
-    _$AppDatabase db,
-    $SuperheroCharacterCacheTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SuperheroCharacterCacheTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SuperheroCharacterCacheTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SuperheroCharacterCacheTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> metronCharacterId = const Value.absent(),
-                Value<int> superheroId = const Value.absent(),
-                Value<String> superheroName = const Value.absent(),
-                Value<String?> imageUrl = const Value.absent(),
-                Value<String?> powerstatsJson = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-              }) => SuperheroCharacterCacheCompanion(
-                metronCharacterId: metronCharacterId,
-                superheroId: superheroId,
-                superheroName: superheroName,
-                imageUrl: imageUrl,
-                powerstatsJson: powerstatsJson,
-                updatedAt: updatedAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> metronCharacterId = const Value.absent(),
-                required int superheroId,
-                required String superheroName,
-                Value<String?> imageUrl = const Value.absent(),
-                Value<String?> powerstatsJson = const Value.absent(),
-                required DateTime updatedAt,
-              }) => SuperheroCharacterCacheCompanion.insert(
-                metronCharacterId: metronCharacterId,
-                superheroId: superheroId,
-                superheroName: superheroName,
-                imageUrl: imageUrl,
-                powerstatsJson: powerstatsJson,
-                updatedAt: updatedAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SuperheroCharacterCacheTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SuperheroCharacterCacheTable,
-      SuperheroCharacterCacheData,
-      $$SuperheroCharacterCacheTableFilterComposer,
-      $$SuperheroCharacterCacheTableOrderingComposer,
-      $$SuperheroCharacterCacheTableAnnotationComposer,
-      $$SuperheroCharacterCacheTableCreateCompanionBuilder,
-      $$SuperheroCharacterCacheTableUpdateCompanionBuilder,
-      (
-        SuperheroCharacterCacheData,
-        BaseReferences<
-          _$AppDatabase,
-          $SuperheroCharacterCacheTable,
-          SuperheroCharacterCacheData
-        >,
-      ),
-      SuperheroCharacterCacheData,
-      PrefetchHooks Function()
-    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String key,
@@ -32922,6 +31980,422 @@ typedef $$WishlistItemsTableProcessedTableManager =
       WishlistItem,
       PrefetchHooks Function()
     >;
+typedef $$PagedQueryCachesTableCreateCompanionBuilder =
+    PagedQueryCachesCompanion Function({
+      required String cacheKeyPrefix,
+      required String pageKey,
+      Value<int?> count,
+      Value<String?> next,
+      Value<String?> previous,
+      required String cachedAt,
+      Value<int> rowid,
+    });
+typedef $$PagedQueryCachesTableUpdateCompanionBuilder =
+    PagedQueryCachesCompanion Function({
+      Value<String> cacheKeyPrefix,
+      Value<String> pageKey,
+      Value<int?> count,
+      Value<String?> next,
+      Value<String?> previous,
+      Value<String> cachedAt,
+      Value<int> rowid,
+    });
+
+class $$PagedQueryCachesTableFilterComposer
+    extends Composer<_$AppDatabase, $PagedQueryCachesTable> {
+  $$PagedQueryCachesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get cacheKeyPrefix => $composableBuilder(
+    column: $table.cacheKeyPrefix,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pageKey => $composableBuilder(
+    column: $table.pageKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get next => $composableBuilder(
+    column: $table.next,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get previous => $composableBuilder(
+    column: $table.previous,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PagedQueryCachesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PagedQueryCachesTable> {
+  $$PagedQueryCachesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get cacheKeyPrefix => $composableBuilder(
+    column: $table.cacheKeyPrefix,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pageKey => $composableBuilder(
+    column: $table.pageKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get next => $composableBuilder(
+    column: $table.next,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get previous => $composableBuilder(
+    column: $table.previous,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PagedQueryCachesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PagedQueryCachesTable> {
+  $$PagedQueryCachesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get cacheKeyPrefix => $composableBuilder(
+    column: $table.cacheKeyPrefix,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pageKey =>
+      $composableBuilder(column: $table.pageKey, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<String> get next =>
+      $composableBuilder(column: $table.next, builder: (column) => column);
+
+  GeneratedColumn<String> get previous =>
+      $composableBuilder(column: $table.previous, builder: (column) => column);
+
+  GeneratedColumn<String> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$PagedQueryCachesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PagedQueryCachesTable,
+          PagedQueryCache,
+          $$PagedQueryCachesTableFilterComposer,
+          $$PagedQueryCachesTableOrderingComposer,
+          $$PagedQueryCachesTableAnnotationComposer,
+          $$PagedQueryCachesTableCreateCompanionBuilder,
+          $$PagedQueryCachesTableUpdateCompanionBuilder,
+          (
+            PagedQueryCache,
+            BaseReferences<
+              _$AppDatabase,
+              $PagedQueryCachesTable,
+              PagedQueryCache
+            >,
+          ),
+          PagedQueryCache,
+          PrefetchHooks Function()
+        > {
+  $$PagedQueryCachesTableTableManager(
+    _$AppDatabase db,
+    $PagedQueryCachesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PagedQueryCachesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PagedQueryCachesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PagedQueryCachesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> cacheKeyPrefix = const Value.absent(),
+                Value<String> pageKey = const Value.absent(),
+                Value<int?> count = const Value.absent(),
+                Value<String?> next = const Value.absent(),
+                Value<String?> previous = const Value.absent(),
+                Value<String> cachedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PagedQueryCachesCompanion(
+                cacheKeyPrefix: cacheKeyPrefix,
+                pageKey: pageKey,
+                count: count,
+                next: next,
+                previous: previous,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String cacheKeyPrefix,
+                required String pageKey,
+                Value<int?> count = const Value.absent(),
+                Value<String?> next = const Value.absent(),
+                Value<String?> previous = const Value.absent(),
+                required String cachedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PagedQueryCachesCompanion.insert(
+                cacheKeyPrefix: cacheKeyPrefix,
+                pageKey: pageKey,
+                count: count,
+                next: next,
+                previous: previous,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PagedQueryCachesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PagedQueryCachesTable,
+      PagedQueryCache,
+      $$PagedQueryCachesTableFilterComposer,
+      $$PagedQueryCachesTableOrderingComposer,
+      $$PagedQueryCachesTableAnnotationComposer,
+      $$PagedQueryCachesTableCreateCompanionBuilder,
+      $$PagedQueryCachesTableUpdateCompanionBuilder,
+      (
+        PagedQueryCache,
+        BaseReferences<_$AppDatabase, $PagedQueryCachesTable, PagedQueryCache>,
+      ),
+      PagedQueryCache,
+      PrefetchHooks Function()
+    >;
+typedef $$PagedQueryItemsTableCreateCompanionBuilder =
+    PagedQueryItemsCompanion Function({
+      required String cacheKeyPrefix,
+      required String pageKey,
+      required int position,
+      required int entityId,
+      Value<int> rowid,
+    });
+typedef $$PagedQueryItemsTableUpdateCompanionBuilder =
+    PagedQueryItemsCompanion Function({
+      Value<String> cacheKeyPrefix,
+      Value<String> pageKey,
+      Value<int> position,
+      Value<int> entityId,
+      Value<int> rowid,
+    });
+
+class $$PagedQueryItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $PagedQueryItemsTable> {
+  $$PagedQueryItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get cacheKeyPrefix => $composableBuilder(
+    column: $table.cacheKeyPrefix,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pageKey => $composableBuilder(
+    column: $table.pageKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PagedQueryItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PagedQueryItemsTable> {
+  $$PagedQueryItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get cacheKeyPrefix => $composableBuilder(
+    column: $table.cacheKeyPrefix,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pageKey => $composableBuilder(
+    column: $table.pageKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PagedQueryItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PagedQueryItemsTable> {
+  $$PagedQueryItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get cacheKeyPrefix => $composableBuilder(
+    column: $table.cacheKeyPrefix,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pageKey =>
+      $composableBuilder(column: $table.pageKey, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<int> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+}
+
+class $$PagedQueryItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PagedQueryItemsTable,
+          PagedQueryItem,
+          $$PagedQueryItemsTableFilterComposer,
+          $$PagedQueryItemsTableOrderingComposer,
+          $$PagedQueryItemsTableAnnotationComposer,
+          $$PagedQueryItemsTableCreateCompanionBuilder,
+          $$PagedQueryItemsTableUpdateCompanionBuilder,
+          (
+            PagedQueryItem,
+            BaseReferences<
+              _$AppDatabase,
+              $PagedQueryItemsTable,
+              PagedQueryItem
+            >,
+          ),
+          PagedQueryItem,
+          PrefetchHooks Function()
+        > {
+  $$PagedQueryItemsTableTableManager(
+    _$AppDatabase db,
+    $PagedQueryItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PagedQueryItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PagedQueryItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PagedQueryItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> cacheKeyPrefix = const Value.absent(),
+                Value<String> pageKey = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> entityId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PagedQueryItemsCompanion(
+                cacheKeyPrefix: cacheKeyPrefix,
+                pageKey: pageKey,
+                position: position,
+                entityId: entityId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String cacheKeyPrefix,
+                required String pageKey,
+                required int position,
+                required int entityId,
+                Value<int> rowid = const Value.absent(),
+              }) => PagedQueryItemsCompanion.insert(
+                cacheKeyPrefix: cacheKeyPrefix,
+                pageKey: pageKey,
+                position: position,
+                entityId: entityId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PagedQueryItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PagedQueryItemsTable,
+      PagedQueryItem,
+      $$PagedQueryItemsTableFilterComposer,
+      $$PagedQueryItemsTableOrderingComposer,
+      $$PagedQueryItemsTableAnnotationComposer,
+      $$PagedQueryItemsTableCreateCompanionBuilder,
+      $$PagedQueryItemsTableUpdateCompanionBuilder,
+      (
+        PagedQueryItem,
+        BaseReferences<_$AppDatabase, $PagedQueryItemsTable, PagedQueryItem>,
+      ),
+      PagedQueryItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -33005,15 +32479,6 @@ class $AppDatabaseManager {
         _db,
         _db.metronReadingListItems,
       );
-  $$ApiCacheTableTableManager get apiCache =>
-      $$ApiCacheTableTableManager(_db, _db.apiCache);
-  $$ImageCacheTableTableManager get imageCache =>
-      $$ImageCacheTableTableManager(_db, _db.imageCache);
-  $$SuperheroCharacterCacheTableTableManager get superheroCharacterCache =>
-      $$SuperheroCharacterCacheTableTableManager(
-        _db,
-        _db.superheroCharacterCache,
-      );
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$SeriesNameIndexTableTableManager get seriesNameIndex =>
@@ -33024,4 +32489,8 @@ class $AppDatabaseManager {
       $$OfflineWriteQueueTableTableManager(_db, _db.offlineWriteQueue);
   $$WishlistItemsTableTableManager get wishlistItems =>
       $$WishlistItemsTableTableManager(_db, _db.wishlistItems);
+  $$PagedQueryCachesTableTableManager get pagedQueryCaches =>
+      $$PagedQueryCachesTableTableManager(_db, _db.pagedQueryCaches);
+  $$PagedQueryItemsTableTableManager get pagedQueryItems =>
+      $$PagedQueryItemsTableTableManager(_db, _db.pagedQueryItems);
 }

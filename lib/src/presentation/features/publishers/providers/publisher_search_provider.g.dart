@@ -50,7 +50,7 @@ final class PublisherSearchProvider
   }
 }
 
-String _$publisherSearchHash() => r'05558134b8297d076271bf79bbe8cb5b567429e0';
+String _$publisherSearchHash() => r'b030f894d5252339b7f15fca743e2975b39d5374';
 
 final class PublisherSearchFamily extends $Family
     with

@@ -1,10 +1,10 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
-import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
@@ -26,12 +26,14 @@ class _TopEntityImageArgs {
 
 final _topEntityImageProvider = FutureProvider.autoDispose
     .family<String?, _TopEntityImageArgs>((ref, args) async {
-      ref.watch(entityImageVersionProvider);
-      final cache = ref.read(entityImageCacheProvider);
-      final syncResult = cache.getCached(args.entityType, args.id);
-      if (syncResult != null) return syncResult;
-      final result = await cache.get(args.entityType, args.id);
-      return result;
+      final db = ref.watch(driftDatabaseProvider);
+      if (args.entityType == "character") {
+        final char = await db.metronEntityDao.getCharacter(args.id);
+        return char?.imageUrl;
+      } else {
+        final creator = await db.metronEntityDao.getCreator(args.id);
+        return creator?.imageUrl;
+      }
     });
 
 class TopEntityTile extends ConsumerWidget {

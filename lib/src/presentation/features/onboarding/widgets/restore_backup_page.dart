@@ -59,6 +59,9 @@ class RestoreBackupPage extends StatelessWidget {
                     onPressed: onLocalRestore,
                     icon: const Icon(Icons.folder_open_outlined),
                     label: const Text("Restore from Local File"),
+                    style: FilledButton.styleFrom(
+                      alignment: Alignment.centerLeft,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -69,6 +72,9 @@ class RestoreBackupPage extends StatelessWidget {
                     onPressed: onDriveRestore,
                     icon: const Icon(Icons.cloud_upload_outlined),
                     label: const Text("Restore from Google Drive"),
+                    style: FilledButton.styleFrom(
+                      alignment: Alignment.centerLeft,
+                    ),
                   ),
                 ),
               ],

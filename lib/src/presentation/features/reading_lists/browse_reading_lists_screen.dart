@@ -1,0 +1,265 @@
+import "dart:async";
+
+import "package:auto_route/auto_route.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/router/app_router.gr.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/local_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/providers/metron_reading_lists_provider.dart";
+import "package:takion/src/presentation/features/reading_lists/reading_list_card.dart";
+import "package:takion/src/presentation/shared/widgets/browse_paged_list_screen.dart";
+
+@RoutePage()
+class BrowseReadingListsScreen extends ConsumerStatefulWidget {
+  const BrowseReadingListsScreen({super.key});
+
+  @override
+  ConsumerState<BrowseReadingListsScreen> createState() =>
+      _BrowseReadingListsScreenState();
+}
+
+class _BrowseReadingListsScreenState
+    extends ConsumerState<BrowseReadingListsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+  String? _selectedListType;
+  String? _selectedAttribution;
+  int _page = 1;
+
+  static const _listTypes = [
+    null,
+    "EVENT",
+    "STORY",
+    "CHARACTERS",
+    "CREATOR",
+    "TEAMS",
+    "MASTER",
+  ];
+
+  static const _attributionSources = [
+    null,
+    "CBRO",
+    "CMRO",
+    "CBH",
+    "CBT",
+    "MG",
+    "HTLC",
+    "LOCG",
+    "OTHER",
+  ];
+
+  String _listTypeLabel(String? t) =>
+      t == null ? "All Types" : t[0] + t.substring(1).toLowerCase();
+
+  String _attributionLabel(String? s) => s ?? "All Sources";
+
+  MetronReadingListFilter get _filter => MetronReadingListFilter(
+        page: _page,
+        name: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
+        listType: _selectedListType,
+        attributionSource: _selectedAttribution,
+      );
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final async = ref.watch(metronReadingListBrowseProvider(_filter));
+    final importedListsAsync = ref.watch(localReadingListsProvider);
+    final importedLists = importedListsAsync.value ?? const <LocalReadingList>[];
+    final previewItemsMap = ref.watch(metronListPreviewItemsProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Browse Reading Lists")),
+      body: BrowsePagedListScreen<MetronReadingList>(
+        title: "",
+        pageAsync: async,
+        onRefresh: () async {
+          ref.invalidate(metronReadingListBrowseProvider(_filter));
+        },
+        onPrevious: () => setState(() => _page--),
+        onNext: () => setState(() => _page++),
+        emptyMessage: "No reading lists found.",
+        emptyIcon: Icons.list_alt_outlined,
+        errorPrefix: "Failed to load",
+        header: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.search,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          hintText: "Search Metron curated reading lists...",
+                          border: InputBorder.none,
+                          isDense: true,
+                          filled: false,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        style: theme.textTheme.bodyLarge,
+                        onChanged: (value) {
+                          _searchDebounce?.cancel();
+                          _searchDebounce = Timer(
+                            const Duration(milliseconds: 400),
+                            () {
+                              if (mounted) {
+                                setState(() => _page = 1);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    if (_searchController.text.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _page = 1);
+                        },
+                      ),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      height: 44,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String?>(
+                          value: _selectedListType,
+                          isExpanded: true,
+                          hint: const Text("Type"),
+                          items: _listTypes.map((t) {
+                            return DropdownMenuItem(
+                              value: t,
+                              child: Text(_listTypeLabel(t)),
+                            );
+                          }).toList(),
+                          onChanged: (v) => setState(() {
+                            _selectedListType = v;
+                            _page = 1;
+                          }),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      height: 44,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String?>(
+                          value: _selectedAttribution,
+                          isExpanded: true,
+                          hint: const Text("Source"),
+                          items: _attributionSources.map((s) {
+                            return DropdownMenuItem(
+                              value: s,
+                              child: Text(_attributionLabel(s)),
+                            );
+                          }).toList(),
+                          onChanged: (v) => setState(() {
+                            _selectedAttribution = v;
+                            _page = 1;
+                          }),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        itemBuilder: (context, list, index, total) {
+          final localList = importedLists.cast<LocalReadingList?>().firstWhere(
+                (l) => l?.metronSourceId == list.id,
+                orElse: () => null,
+              );
+
+          final previewItems = previewItemsMap[list.id]
+                  ?.map(
+                    (item) => LocalReadingListItem(
+                      targetId: "issue-${item.issueId}",
+                      isSeries: false,
+                      role: ItemRole.standard,
+                      isRead: false,
+                      seriesName: item.seriesName,
+                      seriesVolume: item.seriesVolume,
+                      issueNumber: item.issueNumber,
+                    ),
+                  )
+                  .toList() ??
+              const [];
+
+          final displayList = localList ??
+              LocalReadingList(
+                id: "metron-${list.id}",
+                title: list.name,
+                description: "",
+                isOrdered: true,
+                contentType: ListContentType.issue,
+                createdAt: list.modified ?? DateTime.now(),
+                updatedAt: list.modified ?? DateTime.now(),
+                items: previewItems,
+                metronSourceId: list.id,
+                metronAttributionSource: list.attributionSource,
+                metronListType: list.listType,
+              );
+
+          return ReadingListCard(
+            list: displayList,
+            alreadyExists: localList != null,
+            isMetronBrowse: true,
+            averageRating: list.averageRating,
+            ratingCount: list.ratingCount,
+            onTap: () {
+              context.pushRoute(ReadingListDetailsRoute(id: list.id));
+            },
+          );
+        },
+      ),
+    );
+  }
+}

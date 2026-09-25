@@ -5,10 +5,10 @@ import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
-import "package:takion/src/presentation/features/series/providers/series_completion_provider.dart";
 import "package:takion/src/presentation/features/series/providers/series_details_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_cover_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_completion_provider.dart";
 import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 
 class SeriesListTile extends ConsumerWidget {
@@ -96,10 +96,8 @@ class SeriesListTile extends ConsumerWidget {
         remoteIssueCount ??
         cachedIssueCountAsync.asData?.value ??
         (categoryCount != null ? null : series.issueCount);
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-    final cachedImage = cache.getCached("series", series.id);
-    final coverImage = cachedImage;
+    final seriesCoverAsync = ref.watch(seriesCoverImageProvider(series.id));
+    final coverImage = seriesCoverAsync.asData?.value;
     final effectiveOnTap =
         onTap ??
         () {
@@ -111,8 +109,8 @@ class SeriesListTile extends ConsumerWidget {
           );
         };
 
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final cacheWidth = (iconWidth * devicePixelRatio).round();
+    const cacheWidth = 120;
+    const cacheHeight = 180;
 
     final cover = SizedBox(
       width: iconWidth,
@@ -120,11 +118,14 @@ class SeriesListTile extends ConsumerWidget {
       child: EntityCover(
         imageUrl: coverImage,
         placeholderLabel: initials(series.name),
-        isFavorite: false,
+        isFavorite: isFavorite,
         isRead: false,
+        role: role,
+        syncStatus: syncStatus,
         placeholderIcon: Icons.collections_bookmark_outlined,
         aspectRatio: iconWidth / iconHeight,
         cacheWidth: cacheWidth,
+        cacheHeight: cacheHeight,
       ),
     );
 
@@ -263,54 +264,6 @@ class SeriesListTile extends ConsumerWidget {
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.primary,
-                                  ),
-                                ],
-                                if (isFavorite) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 22,
-                                    height: 22,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer,
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    child: Icon(
-                                      Icons.favorite,
-                                      size: 13,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                ],
-                                if (role != null &&
-                                    role != ItemRole.standard) ...[
-                                  const SizedBox(width: 8),
-                                  RoleBadge(role: role!),
-                                ],
-                                if (syncStatus == "pending") ...[
-                                  const SizedBox(width: 8),
-                                  Tooltip(
-                                    message: "Changes queued to sync",
-                                    child: Icon(
-                                      Icons.cloud_upload_outlined,
-                                      size: 16,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                ] else if (syncStatus == "failed") ...[
-                                  const SizedBox(width: 8),
-                                  Tooltip(
-                                    message: "Sync failed - will retry",
-                                    child: Icon(
-                                      Icons.sync_problem_outlined,
-                                      size: 16,
-                                      color:
-                                          Theme.of(context).colorScheme.error,
-                                    ),
                                   ),
                                 ],
                               ],

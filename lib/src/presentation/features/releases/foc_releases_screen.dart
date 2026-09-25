@@ -39,6 +39,10 @@ class FocReleasesScreen extends ConsumerWidget {
       ),
       emptyMessage: "No FOC issues for this week.",
       emptyIcon: Icons.event_note_outlined,
+      onRefresh: () async {
+        ref.invalidate(focReleasesProvider(selectedDate));
+        await ref.read(focReleasesProvider(selectedDate).future);
+      },
     );
   }
 }

@@ -1,5 +1,4 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
 import "package:takion/src/presentation/providers/providers.dart";
@@ -37,9 +36,11 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
 
     if (imageUrl == null || imageUrl.isEmpty) {
       try {
-        imageUrl = await ref
-            .read(entityImageCacheProvider)
-            .get("issue", issueId);
+        final localIssue = await ref
+            .read(driftDatabaseProvider)
+            .metronEntityDao
+            .getIssue(issueId);
+        imageUrl = localIssue?.imageUrl;
       } catch (_) {}
     }
 

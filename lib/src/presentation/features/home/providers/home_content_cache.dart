@@ -18,23 +18,22 @@ class HomeContentCache {
   final AppDatabase _db;
 
   Future<DateTime?> getCachedAt(String metaKey) async {
-    final row = await _db.apiCacheDao.get(metaKey);
-    return row?.cachedAt;
+    final str = await _db.syncMetaDao.get(metaKey);
+    return str != null ? DateTime.tryParse(str) : null;
   }
 
   Future<void> writeCachedAtNow(String metaKey) async {
-    await _db.apiCacheDao.put(
-      cacheKey: metaKey,
-      entityType: "home_content_meta",
-      payload: "",
+    await _db.syncMetaDao.set(
+      metaKey,
+      DateTime.now().toUtc().toIso8601String(),
     );
   }
 
   Future<List<Map<String, dynamic>>?> readJsonList(String key) async {
-    final row = await _db.apiCacheDao.get("$_homeContentPrefix$key");
-    if (row == null) return null;
+    final payload = await _db.syncMetaDao.get("$_homeContentPrefix$key");
+    if (payload == null) return null;
     try {
-      final decoded = jsonDecode(row.payload) as List;
+      final decoded = jsonDecode(payload) as List;
       return decoded.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (_) {
       return null;
@@ -45,10 +44,9 @@ class HomeContentCache {
     String key,
     List<Map<String, dynamic>> value,
   ) async {
-    await _db.apiCacheDao.put(
-      cacheKey: "$_homeContentPrefix$key",
-      entityType: "home_content",
-      payload: jsonEncode(value),
+    await _db.syncMetaDao.set(
+      "$_homeContentPrefix$key",
+      jsonEncode(value),
     );
   }
 }

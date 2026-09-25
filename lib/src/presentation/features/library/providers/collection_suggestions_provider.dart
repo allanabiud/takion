@@ -64,15 +64,44 @@ LibraryItem _pickStableUnreadSuggestion(List<LibraryItem> items) {
   }
 
   final candidates = earliestBySeries.values.toList();
+  // Deterministic sort by seriesId and issueId to avoid jitter on background sync updates
   candidates.sort((a, b) {
-    final byUpdated = b.updatedAt.compareTo(a.updatedAt);
-    if (byUpdated != 0) return byUpdated;
+    final bySeries = a.metronSeriesId.compareTo(b.metronSeriesId);
+    if (bySeries != 0) return bySeries;
     return a.metronIssueId.compareTo(b.metronIssueId);
   });
   return candidates.first;
 }
 
 Future<IssueList> _toSuggestionIssueList(Ref ref, LibraryItem item) async {
+  final localCatalog = ref.read(localCatalogRepositoryProvider);
+  try {
+    final localIssue = await localCatalog.getIssue(item.metronIssueId);
+    if (localIssue != null && localIssue.seriesId != null && localIssue.seriesId! > 0) {
+      final localSeries = await localCatalog.getSeries(localIssue.seriesId!);
+      if (localSeries != null && localSeries.name.trim().isNotEmpty) {
+        final sName = localSeries.name.trim();
+        final num = localIssue.number.trim();
+        final title = num.isNotEmpty ? "$sName #$num" : sName;
+        return IssueList(
+          id: localIssue.id,
+          name: title,
+          number: localIssue.number,
+          series: Series(
+            id: localSeries.id,
+            name: sName,
+            volume: localSeries.volume,
+            yearBegan: localSeries.yearBegan,
+          ),
+          coverDate: localIssue.coverDate,
+          storeDate: localIssue.storeDate,
+          image: localIssue.imageUrl,
+          modified: localIssue.modified,
+        );
+      }
+    }
+  } catch (_) {}
+
   final catalogRepository = ref.read(catalogRepositoryProvider);
   try {
     final details = await catalogRepository.getIssueDetails(item.metronIssueId);

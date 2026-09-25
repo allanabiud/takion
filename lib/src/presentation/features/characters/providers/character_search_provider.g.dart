@@ -50,7 +50,7 @@ final class CharacterSearchProvider
   }
 }
 
-String _$characterSearchHash() => r'a6f2852e7b36691e0270a6563f5acef7ee97523a';
+String _$characterSearchHash() => r'50964f78fab95cca5ac47867dcbf1792391e811e';
 
 final class CharacterSearchFamily extends $Family
     with

@@ -1,7 +1,6 @@
 import "package:drift/native.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/data/collection/repositories/local_library_repository.dart";
 import "package:takion/src/data/wishlist/repositories/local_wishlist_repository.dart";
 import "package:takion/src/domain/entities.dart";
@@ -16,7 +15,7 @@ void main() {
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
-    libraryRepository = LocalLibraryRepository(db, UserStateCache());
+    libraryRepository = LocalLibraryRepository(db);
     wishlistRepository = LocalWishlistRepository(db);
 
     container = ProviderContainer(

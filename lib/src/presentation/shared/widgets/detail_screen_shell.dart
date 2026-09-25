@@ -103,6 +103,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
                     child: CachedNetworkImage(
                       imageUrl: loadingImageUrl!,
                       fit: BoxFit.cover,
+                      memCacheWidth: 720,
                     ),
                   ),
                   DecoratedBox(
@@ -608,6 +609,7 @@ class _CachedImageWithFallback extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: fit,
+      memCacheWidth: 720,
       alignment: alignment ?? Alignment.center,
       httpHeaders: httpHeaders,
       placeholder: placeholder,
@@ -623,6 +625,7 @@ class _CachedImageWithFallback extends StatelessWidget {
         return CachedNetworkImage(
           imageUrl: fallback,
           fit: fit,
+          memCacheWidth: 720,
           alignment: alignment ?? Alignment.center,
           placeholder: placeholder,
           errorWidget: (context, fallbackUrl, fallbackError) {

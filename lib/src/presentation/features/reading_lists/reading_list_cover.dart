@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart";
 import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart";
@@ -29,8 +28,6 @@ class ReadingListCover extends ConsumerWidget {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     final listInitials = initials(list.title);
-
-    ref.watch(entityImageVersionProvider);
 
     final items = list.items.take(3).toList();
     final horizontalOffset = peekOffset;
@@ -81,9 +78,62 @@ class ReadingListCover extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: items.isNotEmpty
-                  ? _buildCoverImage(context, ref, items[0], listInitials)
-                  : _buildItemIcon(context, listInitials),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  items.isNotEmpty
+                      ? _buildCoverImage(context, ref, items[0], listInitials)
+                      : _buildItemIcon(context, listInitials),
+                  if (list.syncStatus == "pending")
+                    Positioned(
+                      top: 3,
+                      left: 3,
+                      child: Container(
+                        padding: const EdgeInsets.all(2.5),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.92,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant
+                                .withValues(alpha: 0.5),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.cloud_upload_outlined,
+                          size: 11,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    )
+                  else if (list.syncStatus == "failed")
+                    Positioned(
+                      top: 3,
+                      left: 3,
+                      child: Container(
+                        padding: const EdgeInsets.all(2.5),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.errorContainer
+                              .withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: theme.colorScheme.error.withValues(
+                              alpha: 0.6,
+                            ),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.sync_problem_outlined,
+                          size: 11,
+                          color: theme.colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
@@ -107,14 +157,6 @@ class ReadingListCover extends ConsumerWidget {
       ),
       child: _buildCoverImage(context, ref, item, listInitials),
     );
-  }
-
-  String? _coverImageFromCache(WidgetRef ref, LocalReadingListItem item) {
-    final id = int.tryParse(item.targetId.replaceAll(RegExp(r"\D"), "")) ?? 0;
-    if (id <= 0) return null;
-    final cache = ref.read(entityImageCacheProvider);
-    final type = item.isSeries ? "series" : "issue";
-    return cache.getCached(type, id);
   }
 
   String? _cachedItemImageUrl(WidgetRef ref, LocalReadingListItem item) {
@@ -142,11 +184,6 @@ class ReadingListCover extends ConsumerWidget {
     LocalReadingListItem item,
     String listInitials,
   ) {
-    final cachedImage = _coverImageFromCache(ref, item);
-    if (cachedImage != null && cachedImage.isNotEmpty) {
-      return _buildCachedImage(context, cachedImage);
-    }
-
     final cachedImageUrl = _cachedItemImageUrl(ref, item);
     if (cachedImageUrl != null) {
       return _buildCachedImage(context, cachedImageUrl);

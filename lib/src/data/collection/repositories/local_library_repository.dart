@@ -1,5 +1,4 @@
 import "package:drift/drift.dart";
-import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/entities.dart";
@@ -7,15 +6,13 @@ import "package:takion/src/domain/repositories.dart";
 
 class LocalLibraryRepository implements LibraryRepository {
   LocalLibraryRepository(
-    this._database,
-    this._cache, {
+    this._database, {
     OfflineWriteQueue? offlineQueue,
   }) : _offlineQueue = offlineQueue;
 
   static const _localUserId = "local-user";
 
   final db.AppDatabase _database;
-  final UserStateCache _cache;
   final OfflineWriteQueue? _offlineQueue;
 
   String _idForIssue(int issueId) => "lib-$issueId";
@@ -170,15 +167,8 @@ class LocalLibraryRepository implements LibraryRepository {
 
   @override
   Future<LibraryItem?> getItemByIssueId(int metronIssueId) async {
-    final cached = _cache.getLibraryItem(metronIssueId);
-    if (cached != null) return cached;
     final d = await _database.libraryItemDao.getByIssueId(metronIssueId);
-    if (d != null) {
-      final item = _toDomain(d);
-      _cache.setLibraryItem(metronIssueId, item);
-      return item;
-    }
-    return null;
+    return d != null ? _toDomain(d) : null;
   }
 
   @override
@@ -216,9 +206,6 @@ class LocalLibraryRepository implements LibraryRepository {
     if (items.isEmpty) return;
     final companions = items.map(_itemToCompanion).toList();
     await _database.libraryItemDao.batchUpsert(companions);
-    for (final item in items) {
-      _cache.setLibraryItem(item.metronIssueId, item);
-    }
   }
 
   @override
@@ -226,9 +213,6 @@ class LocalLibraryRepository implements LibraryRepository {
     if (metronIssueIds.isEmpty) return;
     final ids = metronIssueIds.map(_idForIssue).toList();
     await _database.libraryItemDao.batchDeleteByIds(ids);
-    for (final id in metronIssueIds) {
-      _cache.removeLibraryItem(id);
-    }
   }
 
   @override
@@ -387,8 +371,6 @@ class LocalLibraryRepository implements LibraryRepository {
       }
     });
 
-    _cache.setLibraryItem(metronIssueId, item);
-
     return item;
   }
 
@@ -453,7 +435,6 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> deleteItemByIssueId(int metronIssueId) async {
     final existing = await _database.libraryItemDao.getByIssueId(metronIssueId);
     await _database.libraryItemDao.deleteById(_idForIssue(metronIssueId));
-    _cache.removeLibraryItem(metronIssueId);
 
     if (_offlineQueue != null && existing?.metronCollectionId != null) {
       await _offlineQueue.enqueueCollectionDelete(
@@ -504,12 +485,5 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> batchUpdatePricePaid(Map<int, double> priceByIssueId) async {
     if (priceByIssueId.isEmpty) return;
     await _database.libraryItemDao.batchUpdatePricePaid(priceByIssueId);
-    final updatedMap = await _database.libraryItemDao.getByIssueIds(
-      priceByIssueId.keys.toList(),
-    );
-    for (final entry in updatedMap.entries) {
-      final item = _toDomain(entry.value);
-      _cache.setLibraryItem(entry.key, item);
-    }
   }
 }

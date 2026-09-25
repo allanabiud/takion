@@ -69,20 +69,20 @@ Map<int, IssueCollectionStatus> buildStatusMap({
     );
   }
 
-  // 2. Process wishlist rows with strict mutual exclusivity (owned takes precedence)
+  // 2. Process wishlist rows: preserve collection/read status if already present, but mark isWishlisted = true
   for (final w in wishlistRows) {
     if (w.issueId <= 0) continue;
     final existing = map[w.issueId];
     if (existing != null) {
-      if (!existing.isCollected) {
-        map[w.issueId] = IssueCollectionStatus(
-          isCollected: false,
-          isWishlisted: true,
-          isRead: existing.isRead,
-          rating: existing.rating,
-          syncStatus: w.syncStatus,
-        );
-      }
+      map[w.issueId] = IssueCollectionStatus(
+        isCollected: existing.isCollected,
+        isWishlisted: true,
+        isRead: existing.isRead,
+        rating: existing.rating,
+        syncStatus: w.syncStatus == "pending" || w.syncStatus == "failed"
+            ? w.syncStatus
+            : existing.syncStatus,
+      );
     } else {
       map[w.issueId] = IssueCollectionStatus(
         isCollected: false,
@@ -104,7 +104,7 @@ final collectionStatusCacheProvider =
       return StreamGroup.merge([
         db.libraryItemDao.watchStatusRows(),
         db.wishlistDao.watchAll(),
-      ]).debounce(const Duration(milliseconds: 100)).asyncMap((_) async {
+      ]).debounce(const Duration(milliseconds: 16)).asyncMap((_) async {
         final rows = await db.libraryItemDao.getStatusRows();
         final wishlistRows = await db.wishlistDao.getAll();
         return buildStatusMap(libraryRows: rows, wishlistRows: wishlistRows);

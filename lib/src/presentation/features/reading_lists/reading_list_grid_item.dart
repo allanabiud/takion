@@ -3,7 +3,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_cached_metadata_provider.dart";
 import "package:takion/src/presentation/features/reading_lists/providers/reading_list_item_metadata_provider.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/presentation/features/issues/issue_card.dart";
 import "package:takion/src/presentation/features/series/series_card.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
@@ -139,10 +138,6 @@ class ReadingListGridItem extends ConsumerWidget {
                                 : storedName;
                           }
                           seriesId = item.seriesId;
-                          ref.watch(entityImageVersionProvider);
-                          final cache = ref.read(entityImageCacheProvider);
-                          final cachedImage = cache.getCached("issue", id);
-                          imageUrl = cachedImage;
                         }
 
                         return IssueCard(

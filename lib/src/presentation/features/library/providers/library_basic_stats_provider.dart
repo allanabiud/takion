@@ -18,34 +18,6 @@ DateTime _atStartOfWeek(DateTime date) => DateTime(
 DateTime _atStartOfMonth(DateTime date) => DateTime(date.year, date.month);
 DateTime _atStartOfYear(DateTime date) => DateTime(date.year);
 
-int _streakDays(List<DateTime> readDates) {
-  if (readDates.isEmpty) return 0;
-  final sorted =
-      readDates
-          .map((date) => DateTime(date.year, date.month, date.day))
-          .toSet()
-          .toList()
-        ..sort((a, b) => b.compareTo(a));
-
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-
-  if (sorted.isEmpty || (today.difference(sorted[0]).inDays > 1)) {
-    return 0;
-  }
-
-  var streak = 1;
-  for (var i = 1; i < sorted.length; i++) {
-    final expected = sorted[i - 1].subtract(const Duration(days: 1));
-    if (sorted[i] == expected) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
-
 List<ReadingTrendPoint> _computeReadingTrends(
   List<DateTime> readDates,
   LibraryFilter filter,
@@ -128,6 +100,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
     .family<LibraryBasicStats, LibraryFilter>((ref, filter) {
       final pullRepository = ref.watch(pullListRepositoryProvider);
       final db = ref.watch(driftDatabaseProvider);
+      final engine = ref.watch(collectionAnalyticsEngineProvider);
       final controller = StreamController<LibraryBasicStats>();
       final debounced = DebouncedWorker();
 
@@ -159,7 +132,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
       int readsInPeriod = 0;
       double averageRating = 0;
       ({String name, int yearBegan, int count})? mostReadSeries;
-      List<DateTime> readDates = [];
+      int streakDays = 0;
       int wishlistCount = 0;
       int subscriptionsCount = 0;
       int pullsInPeriod = 0;
@@ -177,7 +150,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
             subscriptionsCount: subscriptionsCount,
             pullsInPeriod: pullsInPeriod,
             readsInPeriod: readsInPeriod,
-            streakDays: _streakDays(readDates),
+            streakDays: streakDays,
             averageRating: averageRating,
             mostReadSeries: mostReadSeries?.name,
             mostReadSeriesYear: mostReadSeries?.yearBegan,
@@ -228,8 +201,8 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
       );
 
       streamSubscriptions.add(
-        db.libraryItemDao.watchAllReadDates().listen((dates) {
-          readDates = dates;
+        engine.watchReadingStreak().listen((streak) {
+          streakDays = streak.currentDays;
           debounced.schedule(emitStats);
         }),
       );

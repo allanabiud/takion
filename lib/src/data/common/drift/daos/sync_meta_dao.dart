@@ -27,4 +27,18 @@ class SyncMetaDao extends DatabaseAccessor<AppDatabase> {
       attachedDatabase.syncMeta,
     )..where((t) => t.key.equals(key))).go();
   }
+
+  Future<Map<String, String>> getByPrefix(String prefix) async {
+    final rows = await (select(
+      attachedDatabase.syncMeta,
+    )..where((t) => t.key.like("$prefix%"))).get();
+    return {for (final row in rows) row.key: row.value};
+  }
+
+  Future<void> deleteByPrefix(String prefix) async {
+    await (delete(
+      attachedDatabase.syncMeta,
+    )..where((t) => t.key.like("$prefix%"))).go();
+  }
 }
+

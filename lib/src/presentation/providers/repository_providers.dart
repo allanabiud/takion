@@ -1,8 +1,4 @@
-import "dart:async";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/metron_metadata_cache.dart";
-export "package:takion/src/core/cache/metron_metadata_cache.dart";
-import "package:takion/src/core/cache/user_state_cache.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/core/network/metron_request_scheduler.dart";
 import "package:takion/src/core/storage/drift_database_provider.dart";
@@ -10,6 +6,7 @@ export "package:takion/src/core/storage/drift_database_provider.dart";
 import "package:takion/src/data/catalog/datasources/local/metron_local_data_source.dart";
 import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source.dart";
 import "package:takion/src/data/catalog/datasources/remote/metron_remote_data_source_impl.dart";
+import "package:takion/src/data/collection/analytics/collection_analytics_engine.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source_impl.dart";
 import "package:takion/src/data/pull_list/datasources/remote/metron_pull_list_remote_data_source.dart";
@@ -48,9 +45,6 @@ import "package:takion/src/data/wishlist/repositories/metron_wishlist_repository
 import "package:takion/src/data/wishlist/sync/wishlist_sync_manager.dart";
 import "package:takion/src/domain/repositories.dart";
 
-final userStateCacheProvider = Provider<UserStateCache>((ref) {
-  return UserStateCache();
-});
 
 final offlineQueueDaoProvider = Provider<OfflineQueueDao>((ref) {
   final db = ref.watch(driftDatabaseProvider);
@@ -142,9 +136,6 @@ final metronRepositoryProvider = Provider<CatalogRepository>((ref) {
   final entityDao = ref.watch(metronEntityDaoProvider);
   final junctionDao = ref.watch(junctionDaoProvider);
   final seriesNameIndex = ref.watch(seriesNameIndexProvider);
-  final metadataCache = ref.watch(metronMetadataCacheProvider);
-
-  unawaited(metadataCache.hydrateFromDatabase(entityDao));
 
   return MetronRepositoryImpl(
     remoteDataSource,
@@ -152,7 +143,6 @@ final metronRepositoryProvider = Provider<CatalogRepository>((ref) {
     entityDao,
     junctionDao,
     seriesNameIndex,
-    metadataCache: metadataCache,
   );
 });
 
@@ -178,11 +168,16 @@ final collectionSyncManagerProvider = Provider<CollectionSyncManager>((ref) {
   );
 });
 
+final collectionAnalyticsEngineProvider =
+    Provider<CollectionAnalyticsEngine>((ref) {
+      final db = ref.watch(driftDatabaseProvider);
+      return CollectionAnalyticsEngine(db);
+    });
+
 final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
-  final cache = ref.watch(userStateCacheProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
-  return LocalLibraryRepository(db, cache, offlineQueue: offlineQueue);
+  return LocalLibraryRepository(db, offlineQueue: offlineQueue);
 });
 
 final metronPullListRepositoryProvider = Provider<MetronPullListRepository>((ref) {
@@ -201,15 +196,13 @@ final pullListSyncManagerProvider = Provider<PullListSyncManager>((ref) {
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
-  final cache = ref.watch(userStateCacheProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
-  return LocalSubscriptionRepository(db, cache, offlineQueue: offlineQueue);
+  return LocalSubscriptionRepository(db, offlineQueue: offlineQueue);
 });
 
 final pullListRepositoryProvider = Provider<PullListRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
-  final cache = ref.watch(userStateCacheProvider);
-  return LocalPullListRepository(db, cache);
+  return LocalPullListRepository(db);
 });
 
 final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {

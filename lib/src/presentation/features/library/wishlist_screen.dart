@@ -247,7 +247,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                           isLast: index == filtered.length - 1,
                           syncStatus: seriesSyncStatus,
                           onTap: () => context.pushRoute(
-                            SeriesDetailsRoute(
+                            SeriesIssuesRoute(
                               seriesId: summary.id,
                               initialFilter: "wishlist",
                               seriesName: summary.name,

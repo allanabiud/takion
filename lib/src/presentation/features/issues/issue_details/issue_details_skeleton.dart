@@ -20,7 +20,11 @@ class IssueDetailsSkeleton extends StatelessWidget {
           if (imageUrl != null && imageUrl!.isNotEmpty)
             ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: CachedNetworkImage(imageUrl: imageUrl!, fit: BoxFit.cover),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl!,
+                fit: BoxFit.cover,
+                memCacheWidth: 720,
+              ),
             )
           else
             ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
@@ -52,6 +56,7 @@ class IssueDetailsSkeleton extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: imageUrl!,
                         fit: BoxFit.cover,
+                        memCacheWidth: 720,
                         errorWidget: (context, url, error) =>
                             const Icon(Icons.image, size: 48),
                       )

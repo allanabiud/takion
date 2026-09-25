@@ -8,7 +8,8 @@ import "package:takion/src/core/sync/sync_diagnostics.dart";
 enum SyncInterval {
   hours1(Duration(hours: 1), "1 hr"),
   hours3(Duration(hours: 3), "3 hrs"),
-  hours24(Duration(hours: 24), "24 hrs");
+  hours24(Duration(hours: 24), "24 hrs"),
+  days7(Duration(days: 7), "7 days");
 
   final Duration duration;
   final String label;
@@ -32,8 +33,14 @@ enum SyncInterval {
       case "24_hrs":
       case "hours24":
         return SyncInterval.hours24;
+      case "7 days":
+      case "7d":
+      case "7_days":
+      case "days7":
+        return SyncInterval.days7;
       default:
-        return SyncInterval.hours1;
+        // Weekly automatic backup is the mission default (plan §6).
+        return SyncInterval.days7;
     }
   }
 }
@@ -58,9 +65,9 @@ class DriveSyncState {
     this.isSyncing = false,
     this.lastError,
     this.lastErrorTime,
-    this.syncInterval = SyncInterval.hours1,
-    this.syncIntervalEnabled = false,
-    this.autoBackupOnRestart = false,
+    this.syncInterval = SyncInterval.days7,
+    this.syncIntervalEnabled = true,
+    this.autoBackupOnRestart = true,
   });
 
   DriveSyncState copyWith({
@@ -127,11 +134,11 @@ class DriveSyncNotifier extends Notifier<DriveSyncState> {
     final interval = SyncInterval.fromString(intervalRaw);
     final intervalEnabled = await db.settingsDao.getBool(
       _intervalEnabledKey,
-      defaultValue: false,
+      defaultValue: true,
     );
     final autoBackupOnRestart = await db.settingsDao.getBool(
       _autoBackupKey,
-      defaultValue: false,
+      defaultValue: true,
     );
 
     final lastSyncRaw = await db.syncMetaDao.get("last_sync_timestamp");

@@ -56,7 +56,7 @@ abstract class CollectionRepository {
 
   Future<CollectionStats> getCollectionStats();
 
-  Future<List<MissingIssue>> getMissingIssues(int seriesId, {int page = 1});
+  Future<MissingIssuesPage> getMissingIssues(int seriesId, {int page = 1});
 
   Future<List<MissingSeries>> getMissingSeries({int page = 1});
 }

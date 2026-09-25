@@ -26,42 +26,44 @@ void main() {
       expect(find.byIcon(Icons.sync_problem_outlined), findsNothing);
     });
 
-    testWidgets("renders cloud_upload icon when syncStatus is pending", (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: StatusIndicatorIcons(
-              isCollected: true,
-              isRead: false,
-              isPulled: false,
-              isWishlisted: false,
-              syncStatus: "pending",
-            ),
-          ),
-        ),
-      );
-
-      expect(find.byIcon(Icons.cloud_upload_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.sync_problem_outlined), findsNothing);
-    });
-
-    testWidgets("renders sync_problem icon when syncStatus is failed", (tester) async {
+    testWidgets("renders active status icons for pulled and wishlisted", (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: StatusIndicatorIcons(
               isCollected: false,
               isRead: false,
-              isPulled: false,
+              isPulled: true,
               isWishlisted: true,
-              syncStatus: "failed",
             ),
           ),
         ),
       );
 
-      expect(find.byIcon(Icons.sync_problem_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_upload_outlined), findsNothing);
+      expect(find.byIcon(Icons.shopping_bag), findsOneWidget);
+      expect(find.byIcon(Icons.inventory_2_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.bookmark_added_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.turned_in), findsOneWidget);
+    });
+
+    testWidgets("renders tooltips for all status icons", (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: StatusIndicatorIcons(
+              isCollected: true,
+              isRead: true,
+              isPulled: true,
+              isWishlisted: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byTooltip("Pulled"), findsOneWidget);
+      expect(find.byTooltip("In collection"), findsOneWidget);
+      expect(find.byTooltip("Read"), findsOneWidget);
+      expect(find.byTooltip("Wishlisted"), findsOneWidget);
     });
   });
 }

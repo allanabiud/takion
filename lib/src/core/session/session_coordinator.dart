@@ -29,6 +29,7 @@ class SessionCoordinator {
   final Ref _ref;
   SessionState _currentState = SessionState.booting;
   bool _metronCheckedForSession = false;
+  DateTime _lastMetronSyncAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   SessionState get state => _currentState;
 
@@ -144,10 +145,13 @@ class SessionCoordinator {
   Future<void> onAppResumed({
     void Function(ProviderOrFamily)? onInvalidateCache,
   }) async {
-    AppLogger.debug("SessionCoordinator onAppResumed triggered");
     await scheduleWeeklyPullNotification(_ref);
-    await _ref.read(driftDatabaseProvider).apiCacheDao.deleteStaleEntries();
-    await syncMetronIfNeeded();
+    if (DateTime.now().difference(_lastMetronSyncAt) > const Duration(minutes: 5)) {
+      final synced = await syncMetronIfNeeded();
+      if (synced) _lastMetronSyncAt = DateTime.now();
+    } else {
+      AppLogger.debug("Metron sync skipped: cooldown (< 5m since last sync)");
+    }
     await runDriveAutoSync(onInvalidateCache: onInvalidateCache);
   }
 

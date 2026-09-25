@@ -25,8 +25,8 @@ class PullListSyncManager {
   PullListSyncManager({
     required db.AppDatabase database,
     required MetronPullListRepository pullListRepository,
-  })  : _database = database,
-        _pullListRepository = pullListRepository;
+  }) : _database = database,
+       _pullListRepository = pullListRepository;
 
   static const String _syncMetaKey = "metron_last_pull_list_sync";
   static const String _localUserId = "local-user";
@@ -42,7 +42,10 @@ class PullListSyncManager {
     return str != null ? DateTime.tryParse(str) : null;
   }
 
-  Future<PullListSyncResult> syncPullList({bool forceFullSync = false}) async {
+  Future<PullListSyncResult> syncPullList({
+    bool forceFullSync = false,
+    void Function(int seriesCount, int issuesCount)? onProgress,
+  }) async {
     if (_isSyncing) {
       return const PullListSyncResult(
         seriesFetched: 0,
@@ -61,6 +64,7 @@ class PullListSyncManager {
       // 1. Sync Pull List Series (Subscriptions)
       var seriesPage = 1;
       var totalSeriesFetched = 0;
+      var totalIssuesFetched = 0;
       while (true) {
         final pageItems = await _pullListRepository.getPullListSeries(
           page: seriesPage,
@@ -68,6 +72,7 @@ class PullListSyncManager {
         );
         if (pageItems.isEmpty) break;
         totalSeriesFetched += pageItems.length;
+        onProgress?.call(totalSeriesFetched, totalIssuesFetched);
         if (!isFullSync) {
           await _ingestIncrementalSubscriptions(pageItems);
         } else {
@@ -77,23 +82,8 @@ class PullListSyncManager {
         seriesPage++;
       }
 
-      // For full sync, reconcile subscriptions after fetching all
-      if (isFullSync) {
-        final allSeries = <PullListSeriesItem>[];
-        var p = 1;
-        while (true) {
-          final items = await _pullListRepository.getPullListSeries(page: p);
-          if (items.isEmpty) break;
-          allSeries.addAll(items);
-          if (items.length < 20) break;
-          p++;
-        }
-        await _reconcileSubscriptions(allSeries);
-      }
-
       // 2. Sync Pull List Issues
       var issuePage = 1;
-      var totalIssuesFetched = 0;
       final now = DateTime.now().toUtc();
       final storeDateAfter = now.subtract(const Duration(days: 30));
       final storeDateBefore = now.add(const Duration(days: 60));
@@ -106,6 +96,7 @@ class PullListSyncManager {
         );
         if (pageIssues.isEmpty) break;
         totalIssuesFetched += pageIssues.length;
+        onProgress?.call(totalSeriesFetched, totalIssuesFetched);
         await _ingestPullListIssues(pageIssues);
         if (pageIssues.length < 20) break;
         issuePage++;
@@ -130,10 +121,7 @@ class PullListSyncManager {
           "Pull list sync: no pull list found on remote (404), treating as empty",
         );
         final now = DateTime.now().toUtc();
-        await _database.syncMetaDao.set(
-          _syncMetaKey,
-          now.toIso8601String(),
-        );
+        await _database.syncMetaDao.set(_syncMetaKey, now.toIso8601String());
         return const PullListSyncResult(
           seriesFetched: 0,
           issuesFetched: 0,
@@ -255,7 +243,9 @@ class PullListSyncManager {
     }
   }
 
-  Future<void> _ingestPullListIssues(List<PullListIssueItem> remoteIssues) async {
+  Future<void> _ingestPullListIssues(
+    List<PullListIssueItem> remoteIssues,
+  ) async {
     if (remoteIssues.isEmpty) return;
 
     final nowIso = DateTime.now().toUtc().toIso8601String();

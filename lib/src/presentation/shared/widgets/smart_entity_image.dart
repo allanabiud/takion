@@ -1,10 +1,8 @@
 import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class SmartEntityImage extends ConsumerWidget {
+class SmartEntityImage extends StatelessWidget {
   const SmartEntityImage({
     super.key,
     this.entityType,
@@ -17,6 +15,8 @@ class SmartEntityImage extends ConsumerWidget {
     this.isCircle = true,
     this.alignment = Alignment.topCenter,
     this.fontSize = 24,
+    this.cacheWidth,
+    this.cacheHeight,
   });
 
   final String? entityType;
@@ -29,17 +29,14 @@ class SmartEntityImage extends ConsumerWidget {
   final bool isCircle;
   final Alignment alignment;
   final double fontSize;
+  final int? cacheWidth;
+  final int? cacheHeight;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    ref.watch(entityImageVersionProvider);
-    final cache = ref.read(entityImageCacheProvider);
-
-    final cachedImage = (entityType != null && entityId != null)
-        ? cache.getCached(entityType!, entityId!)
-        : null;
-    final effectiveImageUrl = imageUrl ?? cachedImage;
+    final effectiveCacheWidth = cacheWidth ?? (width.isFinite ? (width * 2).round() : null);
+    final effectiveCacheHeight = cacheHeight ?? (height.isFinite ? (height * 2).round() : null);
 
     return Container(
       width: width,
@@ -51,7 +48,7 @@ class SmartEntityImage extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: EntityCover(
-        imageUrl: effectiveImageUrl,
+        imageUrl: imageUrl,
         placeholderLabel: initials(name),
         width: width,
         height: height,
@@ -60,6 +57,8 @@ class SmartEntityImage extends ConsumerWidget {
         iconSize: fontSize,
         alignment: alignment,
         circular: isCircle,
+        cacheWidth: effectiveCacheWidth,
+        cacheHeight: effectiveCacheHeight,
         fadeInDuration: Duration.zero,
         fadeOutDuration: Duration.zero,
       ),

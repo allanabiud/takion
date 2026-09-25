@@ -1,6 +1,6 @@
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 
 mixin LookaheadImagePrecacher<T extends StatefulWidget> on State<T> {
   ScrollController? _scrollController;
@@ -50,12 +50,12 @@ mixin LookaheadImagePrecacher<T extends StatefulWidget> on State<T> {
   void onLookaheadNeeded(int startIndex, int endIndex);
 
   void precacheFromUrlList(List<String?> urls, int startIndex, int endIndex) {
-    final cache = ref.read(entityImageCacheProvider);
+    if (!mounted) return;
     final safeEnd = endIndex.clamp(0, urls.length);
     for (var i = startIndex; i < safeEnd; i++) {
       final url = urls[i];
       if (url != null && url.isNotEmpty) {
-        cache.set("issue", i, url);
+        precacheImage(CachedNetworkImageProvider(url), context);
       }
     }
   }

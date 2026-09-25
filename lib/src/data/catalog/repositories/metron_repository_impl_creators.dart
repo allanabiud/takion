@@ -308,9 +308,6 @@ mixin _CreatorsRepositoryMixin on _RepositoryState {
   }
 
   Future<void> _upsertCreatorDetails(CreatorDetailsDto dto) async {
-    if (dto.name.trim().isNotEmpty) {
-      _metadataCache?.indexCreator(dto.id, dto.name.trim());
-    }
     await _metronEntityDao.attachedDatabase.transaction(() async {
       await _metronEntityDao.upsertCreator(
         MetronCreatorsCompanion(

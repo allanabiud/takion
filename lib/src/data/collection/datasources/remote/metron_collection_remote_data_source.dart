@@ -57,7 +57,7 @@ abstract class MetronCollectionRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<List<MissingIssueDto>> getMissingIssues(
+  Future<MissingIssuesPageDto> getMissingIssues(
     int seriesId, {
     int page = 1,
     CancelToken? cancelToken,

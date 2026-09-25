@@ -18,6 +18,7 @@ class PagedIssueListScaffold extends StatefulWidget {
     this.errorTextBuilder,
     this.appBarActions,
     this.header,
+    this.onRefresh,
   });
 
   final String title;
@@ -28,6 +29,7 @@ class PagedIssueListScaffold extends StatefulWidget {
   final String Function(Object error)? errorTextBuilder;
   final List<Widget>? appBarActions;
   final Widget? header;
+  final Future<void> Function()? onRefresh;
 
   static List<IssueList> _identity(List<IssueList> issues) => issues;
 
@@ -52,6 +54,71 @@ class _PagedIssueListScaffoldState extends State<PagedIssueListScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    Widget content = widget.issuesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, _) => AsyncStatePanel.fromFailure(
+        failure: ErrorMapper.fromException(error),
+      ),
+      data: (issues) {
+        final visibleIssues = widget.transformIssues(issues);
+        if (visibleIssues.isEmpty) {
+          return LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  children: [
+                    if (widget.header != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: widget.header,
+                      ),
+                    Expanded(
+                      child: EmptyContentState(
+                        icon: widget.emptyIcon,
+                        message: widget.emptyMessage,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (widget.header != null) {
+          return _PinnedIssueList(
+            controller: _scrollController,
+            header: widget.header!,
+            issues: visibleIssues,
+          );
+        }
+
+        return ListView.builder(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 12),
+          itemCount: visibleIssues.length,
+          itemBuilder: (context, index) {
+            final issue = visibleIssues[index];
+            return IssueListTile(
+              issue: issue,
+              isFirst: index == 0,
+              isLast: index == visibleIssues.length - 1,
+            );
+          },
+        );
+      },
+    );
+
+    if (widget.onRefresh != null) {
+      content = RefreshIndicator(
+        onRefresh: widget.onRefresh!,
+        child: content,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -67,56 +134,7 @@ class _PagedIssueListScaffoldState extends State<PagedIssueListScaffold> {
       body: Column(
         children: [
           const WeekPickerBar(),
-          Expanded(
-            child: widget.issuesAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (error, _) => AsyncStatePanel.fromFailure(
-                failure: ErrorMapper.fromException(error),
-              ),
-              data: (issues) {
-                final visibleIssues = widget.transformIssues(issues);
-                if (visibleIssues.isEmpty) {
-                  return Column(
-                    children: [
-                      if (widget.header != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: widget.header,
-                        ),
-                      Expanded(
-                        child: EmptyContentState(
-                          icon: widget.emptyIcon,
-                          message: widget.emptyMessage,
-                        ),
-                      ),
-                    ],
-                  );
-                }
-
-                if (widget.header != null) {
-                  return _PinnedIssueList(
-                    controller: _scrollController,
-                    header: widget.header!,
-                    issues: visibleIssues,
-                  );
-                }
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.only(bottom: 12),
-                  itemCount: visibleIssues.length,
-                  itemBuilder: (context, index) {
-                    final issue = visibleIssues[index];
-                    return IssueListTile(
-                      issue: issue,
-                      isFirst: index == 0,
-                      isLast: index == visibleIssues.length - 1,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: content),
         ],
       ),
     );
@@ -138,6 +156,7 @@ class _PinnedIssueList extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       controller: controller,
+      physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         PinnedListHeader(child: header),
         SliverList(

@@ -14,13 +14,11 @@ class MetronSyncManager {
     required WishlistSyncManager wishlistSyncManager,
     MigrationManager? migrationManager,
     OfflineWriteQueue? offlineWriteQueue,
-    Duration periodicInterval = const Duration(minutes: 15),
   })  : _collectionSyncManager = collectionSyncManager,
         _pullListSyncManager = pullListSyncManager,
         _wishlistSyncManager = wishlistSyncManager,
         _migrationManager = migrationManager,
-        _offlineWriteQueue = offlineWriteQueue,
-        _periodicInterval = periodicInterval {
+        _offlineWriteQueue = offlineWriteQueue {
     _initAutoSyncListeners();
   }
 
@@ -29,14 +27,12 @@ class MetronSyncManager {
   final WishlistSyncManager _wishlistSyncManager;
   final MigrationManager? _migrationManager;
   final OfflineWriteQueue? _offlineWriteQueue;
-  final Duration _periodicInterval;
 
   final StreamController<MetronSyncState> _stateController =
       StreamController<MetronSyncState>.broadcast();
 
   MetronSyncState _currentState = const MetronSyncState();
   Timer? _debounceTimer;
-  Timer? _periodicTimer;
   StreamSubscription<int>? _pendingWritesSub;
   DateTime _lastSyncTriggeredAt = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -59,13 +55,6 @@ class MetronSyncManager {
                 const Duration(minutes: 1)) {
           scheduleSync();
         }
-      });
-    }
-
-    if (_periodicInterval > Duration.zero) {
-      _periodicTimer = Timer.periodic(_periodicInterval, (_) {
-        AppLogger.debug("Periodic in-app Metron sync triggered");
-        syncAll();
       });
     }
   }
@@ -115,15 +104,45 @@ class MetronSyncManager {
       _emit(_currentState.copyWith(currentPhase: "Syncing collection"));
       final colResult = await _collectionSyncManager.syncCollection(
         forceFullSync: forceFullSync,
+        onProgress: (count) {
+          _emit(_currentState.copyWith(
+            currentPhase: "Syncing collection",
+            collectionItemsSynced: count,
+          ));
+        },
       );
 
       // 4. Sync Pull List & Subscriptions
-      _emit(_currentState.copyWith(currentPhase: "Syncing pull list"));
-      final pullResult = await _pullListSyncManager.syncPullList();
+      _emit(_currentState.copyWith(
+        currentPhase: "Syncing pull list",
+        collectionItemsSynced: colResult.itemsFetched,
+      ));
+      final pullResult = await _pullListSyncManager.syncPullList(
+        forceFullSync: forceFullSync,
+        onProgress: (seriesCount, issuesCount) {
+          _emit(_currentState.copyWith(
+            currentPhase: "Syncing pull list",
+            pullListSeriesSynced: seriesCount,
+            pullListIssuesSynced: issuesCount,
+          ));
+        },
+      );
 
       // 5. Sync Wishlist
-      _emit(_currentState.copyWith(currentPhase: "Syncing wishlist"));
-      final wishResult = await _wishlistSyncManager.syncWishlist();
+      _emit(_currentState.copyWith(
+        currentPhase: "Syncing wishlist",
+        pullListSeriesSynced: pullResult.seriesFetched,
+        pullListIssuesSynced: pullResult.issuesFetched,
+      ));
+      final wishResult = await _wishlistSyncManager.syncWishlist(
+        forceFullSync: forceFullSync,
+        onProgress: (count) {
+          _emit(_currentState.copyWith(
+            currentPhase: "Syncing wishlist",
+            wishlistItemsSynced: count,
+          ));
+        },
+      );
 
       final now = DateTime.now().toUtc();
       final hasFailures = !colResult.isSuccess ||
@@ -159,7 +178,6 @@ class MetronSyncManager {
 
   void dispose() {
     _debounceTimer?.cancel();
-    _periodicTimer?.cancel();
     _pendingWritesSub?.cancel();
     _stateController.close();
   }

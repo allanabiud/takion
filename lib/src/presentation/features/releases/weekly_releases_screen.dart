@@ -39,6 +39,10 @@ class WeeklyReleasesScreen extends ConsumerWidget {
       ),
       emptyMessage: "No weekly releases for this week.",
       emptyIcon: Icons.new_releases_outlined,
+      onRefresh: () async {
+        ref.invalidate(weeklyReleasesProvider(selectedDate));
+        await ref.read(weeklyReleasesProvider(selectedDate).future);
+      },
     );
   }
 }

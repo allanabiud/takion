@@ -1,5 +1,4 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/core/cache/entity_image_cache.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart";
@@ -318,19 +317,6 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
       String issueNumber = ctx?.issueNumber ?? "#$_issueId";
       String? imageUrl = ctx?.imageUrl;
 
-      if (imageUrl == null || imageUrl.isEmpty) {
-        try {
-          imageUrl = await ref
-              .read(entityImageCacheProvider)
-              .get("issue", _issueId);
-        } catch (e) {
-          AppLogger.debug(
-            "Failed to read cached image for scrobble metadata",
-            error: e,
-          );
-        }
-      }
-
       if (imageUrl == null ||
           imageUrl.isEmpty ||
           seriesName == "Unknown Series") {
@@ -342,18 +328,6 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
             issueNumber = details.number;
           }
           imageUrl ??= details.image;
-          if (details.image != null && details.image!.isNotEmpty) {
-            try {
-              await ref
-                  .read(entityImageCacheProvider)
-                  .set("issue", _issueId, details.image!);
-            } catch (e) {
-              AppLogger.debug(
-                "Failed to cache image for scrobble metadata",
-                error: e,
-              );
-            }
-          }
         } catch (e) {
           AppLogger.debug(
             "Failed to load issue details for scrobble metadata",
