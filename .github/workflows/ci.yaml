@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -44,5 +44,5 @@ jobs:
 
       - name: Check code generation consistency
         run: |
-          dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build
           git diff --exit-code || (echo "Generated files are out of sync. Run 'dart run build_runner build' before committing." && exit 1)
